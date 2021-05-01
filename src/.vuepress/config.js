@@ -94,12 +94,12 @@ module.exports = {
           ]
         },
         {
-          title: 'High availability & Realibility',
+          title: 'High availability & Reliability',
           collapsable: false,
           children: [
             'ha/why-should-i-want-high-availability',
             'ha/how-to-make-my-code-ha-enabled',
-            'ha/zerops-enterprise-grade-realibility',
+            'ha/zerops-enterprise-grade-reliability',
           ]
         },
         {
