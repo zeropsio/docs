@@ -14,6 +14,15 @@ Each project has a unique [IPv6 address](/documentation/routing/unique-ipv4-ipv6
 
 ![Project card](/project-card.png "Project card")
 
+### Typical context schemas of Zerops Project Core Service
+
+#### With no access from the external environment
+
+It means access from outside of Zerops project infrastructure, like access from the Internet. Zerops Project Core Service is the hearth of each Zerops project. It has its own [pricing logic](/documentation/overview/pricing.html#projects). The essential parts are two running instances of the **project balancer** (one at the active state and the other at standby backup state) through which all communication is passing (either related to the project's external environment or the private network), which ensures a high degree of reliability and stability for all traffic at any time. Each of them runs in a different container located on a **different physical machine**. An independent **activity controller** continuously monitors critical operating parameters of both project balancers. If the current active instance has any abnormalities, it activates the running standby backup instead. From an external perspective, this change is not noticeable in any way.
+
+![Project card](./images/Zerops-Project-Service-Base.png "Project card")
+
+#### With access from the external environment
 
 ## Service
 
