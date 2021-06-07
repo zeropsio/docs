@@ -14,7 +14,7 @@ Each project has a unique [IPv6 address](/documentation/routing/unique-ipv4-ipv6
 
 ![Project card](/project-card.png "Project card")
 
-### Typical context schemas of Zerops Project Core Service
+### Typical functional schemas of Zerops Project
 
 #### Without external access
 
@@ -24,11 +24,12 @@ This ensures a high degree of reliability and stability for all traffic at any t
 
 An independent **scaling controller** monitors and controls [vertical scaling](/documentation/automatic-scaling/how-automatic-scaling-works.html#vertical-scaling) (vCPU, RAM, Disk) for both project balancer container. An independent **repair controller** is then responsible for removing any container that exhibit abnormal behavior and subsequently replacing them with new one.
 
-![Without external access](./images/Zerops-Project-Services-Base-NoAccess.png "Without external access")
-
 :::: tabs
-::: tab lazy Details
-![Without external access](./images/Zerops-Project-Services-Detail-NoAccess.png "Without external access")
+::: tab Simplified project schema
+![Without external access](./images/Zerops-Project-Base-NoAccess.png "Project without external access")
+:::
+::: tab Detail of Project Core Service
+![Without external access](./images/Zerops-Project-Core-Detail-NoAccess.png "Project without external access")
 :::
 ::::
 
@@ -36,11 +37,15 @@ An independent **scaling controller** monitors and controls [vertical scaling](/
 
 This means access from outside of Zerops project infrastructure, such as the Internet. The role of a **project balancer** is extended to public port routing and firewall. Again, all communication is passing through, either private network traffic or traffic concerning the Internet.
 
-![With external access](./images/Zerops-Project-Services-Base-Internet.png "With external access")
-
 :::: tabs
-::: tab lazy Details
-![With external access](./images/Zerops-Project-Services-Detail-Internet.png "With external access")
+::: tab Simplified project schema
+![With external access](./images/Zerops-Project-Services-Base-Internet.png "Project with external access")
+:::
+::: tab Detail of Project Core Service
+![With external access](./images/Zerops-Project-Services-Detail-Internet.png "Project with external access")
+:::
+::: tab Detail of Routing Service
+![With external access](./images/Zerops-Project-Routing-Detail-Internet.png "Project with external access")
 :::
 ::::
 
