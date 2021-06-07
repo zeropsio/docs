@@ -180,6 +180,7 @@ module.exports = {
     '@vuepress/plugin-back-to-top',
     '@vuepress/plugin-medium-zoom',
     [
+      'vuepress-plugin-element-tabs',
       'vuepress-plugin-zooming',
       {
         delay: 1000,

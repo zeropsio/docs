@@ -1,6 +1,6 @@
 # Project & Service Structure
 
-## Project
+## Proj
 
 The Zerops project is a group of services united by a name. It can, for example, consist of a nodejs [runtime](/documentation/services/runtimes.html) with a mongo [database](/documentation/services/databases.html) and an object storage.
 
@@ -16,13 +16,33 @@ Each project has a unique [IPv6 address](/documentation/routing/unique-ipv4-ipv6
 
 ### Typical context schemas of Zerops Project Core Service
 
-#### With no access from the external environment
+#### Without external access
 
-It means access from outside of Zerops project infrastructure, like access from the Internet. Zerops Project Core Service is the hearth of each Zerops project. It has its own [pricing logic](/documentation/overview/pricing.html#projects). The essential parts are two running instances of the **project balancer** (one at the active state and the other at standby backup state) through which all communication is passing (either related to the project's external environment or the private network), which ensures a high degree of reliability and stability for all traffic at any time. Each of them runs in a different container located on a **different physical machine**. An independent **activity controller** continuously monitors critical operating parameters of both project balancers. If the current active instance has any abnormalities, it activates the running standby backup instead. From an external perspective, this change is not noticeable in any way.
+This means no access from outside of Zerops project infrastructure, such as the Internet. Zerops Project Core Service is the heart of each Zerops project. It has its own [pricing logic](/documentation/overview/pricing.html#projects). The essential parts are two running instances of a **project balancer** (one in an active state and the other in a standby backup state) through which all communication is passing. Technically it's a Layer 3 balancer (establishing connections only on the transport layer, i.e., TCP, UDP). In this case it's communication between Zerops Project Core Service and any of Zerops Services ([databases](/documentation/services/databases.html), runtimes environments, storages, search engines, web servers, message brokers) through the private network.
 
-![Project card](./images/Zerops-Project-Service-Base.png "Project card")
+This ensures a high degree of reliability and stability for all traffic at any time. Each of them runs in a different container located on a **different physical machine**. An independent **activity controller** continuously monitors critical operating parameters of both project balancers. If the currently active instance shows any abnormalities, the running standby backup gets activated instead. From an external perspective, this change is not noticeable in any way.
 
-#### With access from the external environment
+An independent **scaling controller** monitors and controls [vertical scaling](/documentation/automatic-scaling/how-automatic-scaling-works.html#vertical-scaling) (vCPU, RAM, Disk) for both project balancer container. An independent **repair controller** is then responsible for removing any container that exhibit abnormal behavior and subsequently replacing them with new one.
+
+![Without external access](./images/Zerops-Project-Services-Base-NoAccess.png "Without external access")
+
+:::: tabs
+::: tab lazy Details
+![Without external access](./images/Zerops-Project-Services-Detail-NoAccess.png "Without external access")
+:::
+::::
+
+#### With external access
+
+This means access from outside of Zerops project infrastructure, such as the Internet. The role of a **project balancer** is extended to public port routing and firewall. Again, all communication is passing through, either private network traffic or traffic concerning the Internet.
+
+![With external access](./images/Zerops-Project-Services-Base-Internet.png "With external access")
+
+:::: tabs
+::: tab lazy Details
+![With external access](./images/Zerops-Project-Services-Detail-Internet.png "With external access")
+:::
+::::
 
 ## Service
 
