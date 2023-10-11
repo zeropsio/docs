@@ -108,7 +108,7 @@ module.exports = {
     },
     {
       type: "html",
-      value: "Perfercly suited for",
+      value: "Perfectly suited for",
       customProps: {
         sidebar_is_group_divider: true,
       },
