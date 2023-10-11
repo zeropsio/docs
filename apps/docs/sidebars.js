@@ -372,6 +372,24 @@ module.exports = {
           },
           className: "homepage-sidebar-item  service-sidebar-item",
         },
+        {
+          type: "ref",
+          id: "nginx/overview",
+          label: "Nginx",
+          customProps: {
+            sidebar_icon: "nginx",
+          },
+          className: "homepage-sidebar-item  service-sidebar-item",
+        },
+        {
+          type: "ref",
+          id: "ubuntu/overview",
+          label: "Ubuntu",
+          customProps: {
+            sidebar_icon: "ubuntu",
+          },
+          className: "homepage-sidebar-item  service-sidebar-item",
+        },
       ],
     },
     {
@@ -384,7 +402,7 @@ module.exports = {
       items: [
         {
           type: "ref",
-          id: "nodejs/overview",
+          id: "postgresql/overview",
           label: "PostgreSQL",
           customProps: {
             sidebar_icon: "postgresql",
@@ -1373,6 +1391,111 @@ module.exports = {
           type: "doc",
           id: "java/reference/cli",
           label: "CLI",
+        },
+      ],
+    },
+  ],
+  postgresql: [
+    {
+      type: "ref",
+      id: "homepage",
+      label: "Back to home",
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: "back-arrow",
+      },
+    },
+    {
+      type: "doc",
+      id: "java/overview",
+      label: "Zerops PostgreSQL Service",
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: "postgresql",
+      },
+    },
+    {
+      type: "category",
+      label: "How-to",
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: "doc",
+          id: "postgresql/how-to/create",
+          label: "Create PostgreSQL service",
+        },
+        {
+          type: "doc",
+          id: "postgresql/how-to/connect",
+          label: "Connect to PostgreSQL",
+        },
+        {
+          type: "doc",
+          id: "postgresql/how-to/manage",
+          label: "Manage users and databases",
+        },
+        {
+          type: "doc",
+          id: "postgresql/how-to/export-import-data",
+          label: "Export and import data",
+        },
+        {
+          type: "doc",
+          id: "postgresql/how-to/scale",
+          label: "Scale PostgreSQL service",
+        },
+        {
+          type: "doc",
+          id: "postgresql/how-to/control",
+          label: "Stop and start PostgreSQL service",
+        },
+        {
+          type: "doc",
+          id: "postgresql/how-to/delete",
+          label: "Stop and start PostgreSQL service",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Reference",
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: "doc",
+          id: "postgresql/reference/import",
+          label: "Import configuration",
+        },
+        {
+          type: "doc",
+          id: "postgresql/reference/cli",
+          label: "CLI",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Technical details",
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: "doc",
+          id: "postgresql/tech-details/cluster",
+          label: "PostgreSQL cluster asynchronous behaviour",
+        },
+        {
+          type: "doc",
+          id: "postgresql/tech-details/limitations",
+          label: "Technical limitations of PostgreSQL cluster",
         },
       ],
     },

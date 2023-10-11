@@ -123,6 +123,8 @@ import IconMongodb from "./Mongodb"
 import IconElasticsearch from "./Elasticsearch"
 import IconKeydb from "./Keydb"
 import IconRabbitmq from "./Rabbitmq"
+import IconNginx from "./Nginx"
+import IconUbuntu from "./Ubuntu"
 
 export default {
   "academic-cap-solid": AcademicCapSolid,
@@ -251,4 +253,6 @@ export default {
   elasticsearch: IconElasticsearch,
   keydb: IconKeydb,
   rabbitmq: IconRabbitmq,
+  nginx: IconNginx,
+  ubuntu: IconUbuntu,
 }

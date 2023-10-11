@@ -15,7 +15,7 @@ const IconRust = (props: IconProps) => {
     >
       <g transform="translate(53 53)">
         <path
-          stroke="#000"
+          fill="#000"
           strokeLinejoin="round"
           d="M-8.5-14.5h13c8 0 8 8 0 8h-13Zm-31 37h40v-11h-9v-8h10c11 0 5 19 14 19h25v-19h-6v2c0 8-9 7-10 2s-5-9-6-9c15-8 6-24-6-24h-47v11h10v26h-15Z"
         />
