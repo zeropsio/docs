@@ -128,11 +128,58 @@ module.exports = {
       items: [
         {
           type: "doc",
-          id: "frameworks/nestjs/examples",
-          label: "Examples",
-          customProps: {
-            exclude_from_doc_list: false,
-          },
+          id: "frameworks/nestjs/index",
+          label: "Overview & quickstart",
+        },
+        {
+          type: "doc",
+          id: "frameworks/nestjs/log",
+          label: "Setup & access logs",
+        },
+        {
+          type: "doc",
+          id: "frameworks/nestjs/template",
+          label: "Create templates with import & seed",
+        },
+        {
+          type: "doc",
+          id: "frameworks/nestjs/env-variables",
+          label: "Utilize environment variables",
+        },
+        {
+          type: "doc",
+          id: "frameworks/nestjs/migration",
+          label: "Migration & upgrades",
+        },
+        {
+          type: "doc",
+          id: "frameworks/nestjs/backups",
+          label: "Backups",
+        },
+        {
+          type: "doc",
+          id: "frameworks/nestjs/scaling",
+          label: "Optimize scaling",
+        },
+        {
+          type: "doc",
+          id: "frameworks/nestjs/scaling",
+          label: "High availability, when, how, why",
+        },
+        {
+          type: "doc",
+          id: "frameworks/nestjs/cron",
+          label: "CRON / Scheduled jobs",
+        },
+        {
+          type: "doc",
+          id: "frameworks/nestjs/mails",
+          label: "SMPT & sending emails",
+        },
+        {
+          type: "doc",
+          id: "frameworks/nestjs/routing",
+          label: "Public access from domain, IP, subdomain",
         },
       ],
     },
