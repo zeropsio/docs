@@ -320,7 +320,7 @@ module.exports = {
         },
         {
           type: "ref",
-          id: "nodejs/overview",
+          id: "php/overview",
           label: "PHP",
           customProps: {
             sidebar_icon: "php",
@@ -329,7 +329,7 @@ module.exports = {
         },
         {
           type: "ref",
-          id: "nodejs/overview",
+          id: "python/overview",
           label: "Python",
           customProps: {
             sidebar_icon: "python",
@@ -338,7 +338,7 @@ module.exports = {
         },
         {
           type: "ref",
-          id: "nodejs/overview",
+          id: "go/overview",
           label: "Go",
           customProps: {
             sidebar_icon: "go",
@@ -347,7 +347,7 @@ module.exports = {
         },
         {
           type: "ref",
-          id: "nodejs/overview",
+          id: "dotnet/overview",
           label: ".NET",
           customProps: {
             sidebar_icon: "dotnet",
@@ -356,7 +356,7 @@ module.exports = {
         },
         {
           type: "ref",
-          id: "nodejs/overview",
+          id: "rust/overview",
           label: "Rust",
           customProps: {
             sidebar_icon: "rust",
@@ -365,7 +365,7 @@ module.exports = {
         },
         {
           type: "ref",
-          id: "nodejs/overview",
+          id: "java/overview",
           label: "Java",
           customProps: {
             sidebar_icon: "java",
@@ -652,6 +652,726 @@ module.exports = {
         {
           type: "doc",
           id: "nodejs/reference/cli",
+          label: "CLI",
+        },
+      ],
+    },
+  ],
+  php: [
+    {
+      type: "ref",
+      id: "homepage",
+      label: "Back to home",
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: "back-arrow",
+      },
+    },
+    {
+      type: "doc",
+      id: "php/overview",
+      label: "Zerops PHP Service",
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: "php",
+      },
+    },
+    {
+      type: "category",
+      label: "How-to",
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: "doc",
+          id: "php/how-to/create",
+          label: "Create PHP service",
+        },
+        {
+          type: "doc",
+          id: "php/how-to/env-variables",
+          label: "Manage environment variables",
+        },
+        {
+          type: "doc",
+          id: "php/how-to/build-pipeline",
+          label: "Configure build & deploy pipeline",
+        },
+        {
+          type: "doc",
+          id: "php/how-to/repo-connect",
+          label: "Connect GitHub / GitLab repository",
+        },
+        {
+          type: "doc",
+          id: "php/how-to/trigger-pipeline",
+          label: "Trigger build pipeline",
+        },
+        {
+          type: "doc",
+          id: "php/how-to/customize-runtime",
+          label: "Customize PHP runtime",
+        },
+        {
+          type: "doc",
+          id: "php/how-to/logs",
+          label: "Setup & accesss logs",
+        },
+        {
+          type: "doc",
+          id: "php/how-to/filebrowser",
+          label: "Browse container files",
+        },
+        {
+          type: "doc",
+          id: "php/how-to/access",
+          label: "Access PHP runtime service",
+        },
+        {
+          type: "doc",
+          id: "php/how-to/scaling",
+          label: "Scale PHP runtime service",
+        },
+        {
+          type: "doc",
+          id: "php/how-to/controls",
+          label: "Stop & start PHP runtime service",
+        },
+        {
+          type: "doc",
+          id: "php/how-to/ports",
+          label: "Update open ports",
+        },
+        {
+          type: "doc",
+          id: "php/how-to/shared-storage",
+          label: "Connect / disconnect shared storage",
+        },
+        {
+          type: "doc",
+          id: "php/how-to/delete",
+          label: "Delete PHP service",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Reference",
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: "doc",
+          id: "php/reference/import",
+          label: "Import configuration",
+        },
+        {
+          type: "doc",
+          id: "php/reference/cli",
+          label: "CLI",
+        },
+      ],
+    },
+  ],
+  python: [
+    {
+      type: "ref",
+      id: "homepage",
+      label: "Back to home",
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: "back-arrow",
+      },
+    },
+    {
+      type: "doc",
+      id: "python/overview",
+      label: "Zerops Python Service",
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: "python",
+      },
+    },
+    {
+      type: "category",
+      label: "How-to",
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: "doc",
+          id: "python/how-to/create",
+          label: "Create Python service",
+        },
+        {
+          type: "doc",
+          id: "python/how-to/env-variables",
+          label: "Manage environment variables",
+        },
+        {
+          type: "doc",
+          id: "python/how-to/build-pipeline",
+          label: "Configure build & deploy pipeline",
+        },
+        {
+          type: "doc",
+          id: "python/how-to/repo-connect",
+          label: "Connect GitHub / GitLab repository",
+        },
+        {
+          type: "doc",
+          id: "python/how-to/trigger-pipeline",
+          label: "Trigger build pipeline",
+        },
+        {
+          type: "doc",
+          id: "python/how-to/customize-runtime",
+          label: "Customize Python runtime",
+        },
+        {
+          type: "doc",
+          id: "python/how-to/logs",
+          label: "Setup & accesss logs",
+        },
+        {
+          type: "doc",
+          id: "python/how-to/filebrowser",
+          label: "Browse container files",
+        },
+        {
+          type: "doc",
+          id: "python/how-to/access",
+          label: "Access Python runtime service",
+        },
+        {
+          type: "doc",
+          id: "python/how-to/scaling",
+          label: "Scale Python runtime service",
+        },
+        {
+          type: "doc",
+          id: "python/how-to/controls",
+          label: "Stop & start Python runtime service",
+        },
+        {
+          type: "doc",
+          id: "python/how-to/ports",
+          label: "Update open ports",
+        },
+        {
+          type: "doc",
+          id: "python/how-to/shared-storage",
+          label: "Connect / disconnect shared storage",
+        },
+        {
+          type: "doc",
+          id: "python/how-to/delete",
+          label: "Delete Python service",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Reference",
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: "doc",
+          id: "python/reference/import",
+          label: "Import configuration",
+        },
+        {
+          type: "doc",
+          id: "python/reference/cli",
+          label: "CLI",
+        },
+      ],
+    },
+  ],
+  go: [
+    {
+      type: "ref",
+      id: "homepage",
+      label: "Back to home",
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: "back-arrow",
+      },
+    },
+    {
+      type: "doc",
+      id: "go/overview",
+      label: "Zerops Go Service",
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: "go",
+      },
+    },
+    {
+      type: "category",
+      label: "How-to",
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: "doc",
+          id: "go/how-to/create",
+          label: "Create Go service",
+        },
+        {
+          type: "doc",
+          id: "go/how-to/env-variables",
+          label: "Manage environment variables",
+        },
+        {
+          type: "doc",
+          id: "go/how-to/build-pipeline",
+          label: "Configure build & deploy pipeline",
+        },
+        {
+          type: "doc",
+          id: "go/how-to/repo-connect",
+          label: "Connect GitHub / GitLab repository",
+        },
+        {
+          type: "doc",
+          id: "go/how-to/trigger-pipeline",
+          label: "Trigger build pipeline",
+        },
+        {
+          type: "doc",
+          id: "go/how-to/customize-runtime",
+          label: "Customize Go runtime",
+        },
+        {
+          type: "doc",
+          id: "go/how-to/logs",
+          label: "Setup & accesss logs",
+        },
+        {
+          type: "doc",
+          id: "go/how-to/filebrowser",
+          label: "Browse container files",
+        },
+        {
+          type: "doc",
+          id: "go/how-to/access",
+          label: "Access Go runtime service",
+        },
+        {
+          type: "doc",
+          id: "go/how-to/scaling",
+          label: "Scale Go runtime service",
+        },
+        {
+          type: "doc",
+          id: "go/how-to/controls",
+          label: "Stop & start Go runtime service",
+        },
+        {
+          type: "doc",
+          id: "go/how-to/ports",
+          label: "Update open ports",
+        },
+        {
+          type: "doc",
+          id: "go/how-to/shared-storage",
+          label: "Connect / disconnect shared storage",
+        },
+        {
+          type: "doc",
+          id: "go/how-to/delete",
+          label: "Delete Go service",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Reference",
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: "doc",
+          id: "go/reference/import",
+          label: "Import configuration",
+        },
+        {
+          type: "doc",
+          id: "go/reference/cli",
+          label: "CLI",
+        },
+      ],
+    },
+  ],
+  rust: [
+    {
+      type: "ref",
+      id: "homepage",
+      label: "Back to home",
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: "back-arrow",
+      },
+    },
+    {
+      type: "doc",
+      id: "rust/overview",
+      label: "Zerops Rust Service",
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: "rust",
+      },
+    },
+    {
+      type: "category",
+      label: "How-to",
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: "doc",
+          id: "rust/how-to/create",
+          label: "Create Rust service",
+        },
+        {
+          type: "doc",
+          id: "rust/how-to/env-variables",
+          label: "Manage environment variables",
+        },
+        {
+          type: "doc",
+          id: "rust/how-to/build-pipeline",
+          label: "Configure build & deploy pipeline",
+        },
+        {
+          type: "doc",
+          id: "rust/how-to/repo-connect",
+          label: "Connect GitHub / GitLab repository",
+        },
+        {
+          type: "doc",
+          id: "rust/how-to/trigger-pipeline",
+          label: "Trigger build pipeline",
+        },
+        {
+          type: "doc",
+          id: "rust/how-to/customize-runtime",
+          label: "Customize Rust runtime",
+        },
+        {
+          type: "doc",
+          id: "rust/how-to/logs",
+          label: "Setup & accesss logs",
+        },
+        {
+          type: "doc",
+          id: "rust/how-to/filebrowser",
+          label: "Browse container files",
+        },
+        {
+          type: "doc",
+          id: "rust/how-to/access",
+          label: "Access Rust runtime service",
+        },
+        {
+          type: "doc",
+          id: "rust/how-to/scaling",
+          label: "Scale Rust runtime service",
+        },
+        {
+          type: "doc",
+          id: "rust/how-to/controls",
+          label: "Stop & start Rust runtime service",
+        },
+        {
+          type: "doc",
+          id: "rust/how-to/ports",
+          label: "Update open ports",
+        },
+        {
+          type: "doc",
+          id: "rust/how-to/shared-storage",
+          label: "Connect / disconnect shared storage",
+        },
+        {
+          type: "doc",
+          id: "rust/how-to/delete",
+          label: "Delete Rust service",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Reference",
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: "doc",
+          id: "rust/reference/import",
+          label: "Import configuration",
+        },
+        {
+          type: "doc",
+          id: "rust/reference/cli",
+          label: "CLI",
+        },
+      ],
+    },
+  ],
+  dotnet: [
+    {
+      type: "ref",
+      id: "homepage",
+      label: "Back to home",
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: "back-arrow",
+      },
+    },
+    {
+      type: "doc",
+      id: "dotnet/overview",
+      label: "Zerops .NET Service",
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: "dotnet",
+      },
+    },
+    {
+      type: "category",
+      label: "How-to",
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: "doc",
+          id: "dotnet/how-to/create",
+          label: "Create .NET service",
+        },
+        {
+          type: "doc",
+          id: "dotnet/how-to/env-variables",
+          label: "Manage environment variables",
+        },
+        {
+          type: "doc",
+          id: "dotnet/how-to/build-pipeline",
+          label: "Configure build & deploy pipeline",
+        },
+        {
+          type: "doc",
+          id: "dotnet/how-to/repo-connect",
+          label: "Connect GitHub / GitLab repository",
+        },
+        {
+          type: "doc",
+          id: "dotnet/how-to/trigger-pipeline",
+          label: "Trigger build pipeline",
+        },
+        {
+          type: "doc",
+          id: "dotnet/how-to/customize-runtime",
+          label: "Customize .NET runtime",
+        },
+        {
+          type: "doc",
+          id: "dotnet/how-to/logs",
+          label: "Setup & accesss logs",
+        },
+        {
+          type: "doc",
+          id: "dotnet/how-to/filebrowser",
+          label: "Browse container files",
+        },
+        {
+          type: "doc",
+          id: "dotnet/how-to/access",
+          label: "Access .NET runtime service",
+        },
+        {
+          type: "doc",
+          id: "dotnet/how-to/scaling",
+          label: "Scale .NET runtime service",
+        },
+        {
+          type: "doc",
+          id: "dotnet/how-to/controls",
+          label: "Stop & start .NET runtime service",
+        },
+        {
+          type: "doc",
+          id: "dotnet/how-to/ports",
+          label: "Update open ports",
+        },
+        {
+          type: "doc",
+          id: "dotnet/how-to/shared-storage",
+          label: "Connect / disconnect shared storage",
+        },
+        {
+          type: "doc",
+          id: "dotnet/how-to/delete",
+          label: "Delete .NET service",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Reference",
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: "doc",
+          id: "dotnet/reference/import",
+          label: "Import configuration",
+        },
+        {
+          type: "doc",
+          id: "dotnet/reference/cli",
+          label: "CLI",
+        },
+      ],
+    },
+  ],
+  java: [
+    {
+      type: "ref",
+      id: "homepage",
+      label: "Back to home",
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: "back-arrow",
+      },
+    },
+    {
+      type: "doc",
+      id: "java/overview",
+      label: "Zerops .NET Service",
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: "dotnet",
+      },
+    },
+    {
+      type: "category",
+      label: "How-to",
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: "doc",
+          id: "java/how-to/create",
+          label: "Create Java service",
+        },
+        {
+          type: "doc",
+          id: "java/how-to/env-variables",
+          label: "Manage environment variables",
+        },
+        {
+          type: "doc",
+          id: "java/how-to/build-pipeline",
+          label: "Configure build & deploy pipeline",
+        },
+        {
+          type: "doc",
+          id: "java/how-to/repo-connect",
+          label: "Connect GitHub / GitLab repository",
+        },
+        {
+          type: "doc",
+          id: "java/how-to/trigger-pipeline",
+          label: "Trigger build pipeline",
+        },
+        {
+          type: "doc",
+          id: "java/how-to/customize-runtime",
+          label: "Customize Java runtime",
+        },
+        {
+          type: "doc",
+          id: "java/how-to/logs",
+          label: "Setup & accesss logs",
+        },
+        {
+          type: "doc",
+          id: "java/how-to/filebrowser",
+          label: "Browse container files",
+        },
+        {
+          type: "doc",
+          id: "java/how-to/access",
+          label: "Access Java runtime service",
+        },
+        {
+          type: "doc",
+          id: "java/how-to/scaling",
+          label: "Scale Java runtime service",
+        },
+        {
+          type: "doc",
+          id: "java/how-to/controls",
+          label: "Stop & start Java runtime service",
+        },
+        {
+          type: "doc",
+          id: "java/how-to/ports",
+          label: "Update open ports",
+        },
+        {
+          type: "doc",
+          id: "java/how-to/shared-storage",
+          label: "Connect / disconnect shared storage",
+        },
+        {
+          type: "doc",
+          id: "java/how-to/delete",
+          label: "Delete Java service",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Reference",
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: "doc",
+          id: "java/reference/import",
+          label: "Import configuration",
+        },
+        {
+          type: "doc",
+          id: "java/reference/cli",
           label: "CLI",
         },
       ],
