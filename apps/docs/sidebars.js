@@ -276,7 +276,7 @@ module.exports = {
           id: "nodejs/overview",
           label: "PHP",
           customProps: {
-            sidebar_icon: "nodejs",
+            sidebar_icon: "php",
           },
           className: "homepage-sidebar-item  service-sidebar-item",
         },
@@ -285,7 +285,7 @@ module.exports = {
           id: "nodejs/overview",
           label: "Python",
           customProps: {
-            sidebar_icon: "nodejs",
+            sidebar_icon: "python",
           },
           className: "homepage-sidebar-item  service-sidebar-item",
         },
@@ -294,7 +294,7 @@ module.exports = {
           id: "nodejs/overview",
           label: "Go",
           customProps: {
-            sidebar_icon: "nodejs",
+            sidebar_icon: "go",
           },
           className: "homepage-sidebar-item  service-sidebar-item",
         },
@@ -303,7 +303,7 @@ module.exports = {
           id: "nodejs/overview",
           label: ".NET",
           customProps: {
-            sidebar_icon: "nodejs",
+            sidebar_icon: "dotnet",
           },
           className: "homepage-sidebar-item  service-sidebar-item",
         },
@@ -312,7 +312,7 @@ module.exports = {
           id: "nodejs/overview",
           label: "Rust",
           customProps: {
-            sidebar_icon: "nodejs",
+            sidebar_icon: "rust",
           },
           className: "homepage-sidebar-item  service-sidebar-item",
         },
@@ -321,7 +321,7 @@ module.exports = {
           id: "nodejs/overview",
           label: "Java",
           customProps: {
-            sidebar_icon: "nodejs",
+            sidebar_icon: "java",
           },
           className: "homepage-sidebar-item  service-sidebar-item",
         },

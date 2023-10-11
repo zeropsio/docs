@@ -101,7 +101,7 @@ import {
   Heart,
   Medusa,
   ListBullet,
-  Swatch
+  Swatch,
 } from "@medusajs/icons"
 import IconPuzzleSolid from "./PuzzleSolid"
 import IconNextjs from "./Nextjs"
@@ -111,6 +111,12 @@ import IconGingonic from "./Gingonic"
 import IconNette from "./Nette"
 import IconStrapi from "./Strapi"
 import IconNodejs from "./Nodejs"
+import IconPhp from "./Php"
+import IconGo from "./Go"
+import IconPython from "./Python"
+import IconDotnet from "./Dotnet"
+import IconRust from "./Rust"
+import IconJava from "./Java"
 
 export default {
   "academic-cap-solid": AcademicCapSolid,
@@ -227,4 +233,10 @@ export default {
   nodejs: IconNodejs,
   "list-bullet": ListBullet,
   swatch: Swatch,
+  php: IconPhp,
+  go: IconGo,
+  python: IconPython,
+  dotnet: IconDotnet,
+  rust: IconRust,
+  java: IconJava,
 }
