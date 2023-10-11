@@ -117,6 +117,12 @@ import IconPython from "./Python"
 import IconDotnet from "./Dotnet"
 import IconRust from "./Rust"
 import IconJava from "./Java"
+import IconPostgresql from "./Postgresql"
+import IconMariadb from "./Mariadb"
+import IconMongodb from "./Mongodb"
+import IconElasticsearch from "./Elasticsearch"
+import IconKeydb from "./Keydb"
+import IconRabbitmq from "./Rabbitmq"
 
 export default {
   "academic-cap-solid": AcademicCapSolid,
@@ -239,4 +245,10 @@ export default {
   dotnet: IconDotnet,
   rust: IconRust,
   java: IconJava,
+  postgresql: IconPostgresql,
+  mariadb: IconMariadb,
+  mongodb: IconMongodb,
+  elasticsearch: IconElasticsearch,
+  keydb: IconKeydb,
+  rabbitmq: IconRabbitmq,
 }

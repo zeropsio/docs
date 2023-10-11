@@ -108,7 +108,7 @@ module.exports = {
     },
     {
       type: "html",
-      value: "Frameworks & Headless Apps",
+      value: "Perfercly suited for",
       customProps: {
         sidebar_is_group_divider: true,
       },
@@ -248,7 +248,7 @@ module.exports = {
     },
     {
       type: "html",
-      value: "Supported Services",
+      value: "All Supported Services",
       customProps: {
         sidebar_is_group_divider: true,
       },
@@ -256,7 +256,7 @@ module.exports = {
     },
     {
       type: "category",
-      label: "Runtimes & containers",
+      label: "Runtimes, web servers & Linux containers",
       collapsible: false,
       customProps: {
         sidebar_is_group_headline: true,
@@ -329,7 +329,7 @@ module.exports = {
     },
     {
       type: "category",
-      label: "Databases & message brokers",
+      label: "Databases, search engines & message brokers",
       collapsible: false,
       customProps: {
         sidebar_is_group_headline: true,
@@ -340,16 +340,16 @@ module.exports = {
           id: "nodejs/overview",
           label: "PostgreSQL",
           customProps: {
-            sidebar_icon: "nodejs",
+            sidebar_icon: "postgresql",
           },
           className: "homepage-sidebar-item  service-sidebar-item",
         },
         {
           type: "ref",
           id: "nodejs/overview",
-          label: "MariaDB",
+          label: "MariaDB (MySQL)",
           customProps: {
-            sidebar_icon: "nodejs",
+            sidebar_icon: "mariadb",
           },
           className: "homepage-sidebar-item  service-sidebar-item",
         },
@@ -358,7 +358,7 @@ module.exports = {
           id: "nodejs/overview",
           label: "MongoDB",
           customProps: {
-            sidebar_icon: "nodejs",
+            sidebar_icon: "mongodb",
           },
           className: "homepage-sidebar-item  service-sidebar-item",
         },
@@ -367,25 +367,25 @@ module.exports = {
           id: "nodejs/overview",
           label: "Elasticsearch",
           customProps: {
-            sidebar_icon: "nodejs",
+            sidebar_icon: "elasticsearch",
           },
           className: "homepage-sidebar-item  service-sidebar-item",
         },
         {
           type: "ref",
           id: "nodejs/overview",
-          label: "KeyDB",
+          label: "KeyDB (Redis)",
           customProps: {
-            sidebar_icon: "nodejs",
+            sidebar_icon: "keydb",
           },
           className: "homepage-sidebar-item  service-sidebar-item",
         },
         {
           type: "ref",
           id: "nodejs/overview",
-          label: "RabbiMQ",
+          label: "RabbitMQ",
           customProps: {
-            sidebar_icon: "nodejs",
+            sidebar_icon: "rabbitmq",
           },
           className: "homepage-sidebar-item  service-sidebar-item",
         },
@@ -404,7 +404,7 @@ module.exports = {
           id: "nodejs/overview",
           label: "Object Storage",
           customProps: {
-            sidebar_icon: "nodejs",
+            sidebar_icon: "cube-solid",
           },
           className: "homepage-sidebar-item  service-sidebar-item",
         },
@@ -413,7 +413,7 @@ module.exports = {
           id: "nodejs/overview",
           label: "Shared storage",
           customProps: {
-            sidebar_icon: "nodejs",
+            sidebar_icon: "server",
           },
           className: "homepage-sidebar-item  service-sidebar-item",
         },
