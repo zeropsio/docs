@@ -1407,7 +1407,7 @@ module.exports = {
     },
     {
       type: "doc",
-      id: "java/overview",
+      id: "postgresql/overview",
       label: "Zerops PostgreSQL Service",
       customProps: {
         sidebar_is_title: true,
