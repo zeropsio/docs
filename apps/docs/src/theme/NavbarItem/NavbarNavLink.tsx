@@ -12,6 +12,8 @@ export default function NavbarNavLink({
   label,
   html,
   prependBaseUrlToHref,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  isDropdownLink,
   ...props
 }: Props): JSX.Element {
   // TODO all this seems hacky

@@ -1,16 +1,14 @@
 import React, { useEffect, useState } from "react"
 import { useQueryStringValue } from "@docusaurus/theme-common/internal"
-import { Rating, useAnalytics, useNotifications } from "docs-ui"
+import { Rating, useNotifications } from "docs-ui"
 
 const useOnboarding = () => {
   const isOnboarding = useQueryStringValue("ref") === "onboarding"
   const [showNotification, setShowNotification] = useState(isOnboarding)
   const { addNotification, removeNotification, generateId } = useNotifications()
-  const { track } = useAnalytics()
 
   useEffect(() => {
     if (isOnboarding) {
-      track("finished_onboarding")
       const id = generateId()
       addNotification({
         title: "Thank you for installing Medusa!",

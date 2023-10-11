@@ -3,7 +3,6 @@
 import React from "react"
 import { NavbarMobileMenuButton, NavbarMobileMenuButtonProps } from "./Button"
 import { NavbarColorModeToggle } from "../ColorModeToggle"
-import { NavbarSearchModalOpener } from "../SearchModalOpener"
 import { useMobile } from "@/providers"
 import clsx from "clsx"
 import { NavbarLogo, NavbarLogoProps } from "../Logo"
@@ -39,7 +38,6 @@ export const NavbarMobileMenu = ({
             imageClassName="mx-auto"
           />
           <div className="flex">
-            <NavbarSearchModalOpener />
             <NavbarColorModeToggle
               buttonProps={{
                 className:

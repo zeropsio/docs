@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react"
 import clsx from "clsx"
 import { Star, StarSolid } from "@medusajs/icons"
 import { Button, Label, TextArea } from "@/components"
-import { useAnalytics, useNotifications } from "@/providers"
+import { useNotifications } from "@/providers"
 
 export type RatingProps = {
   event?: string
@@ -26,22 +26,7 @@ export const Rating: React.FC<RatingProps> = ({
   const [hoverRating, setHoverRating] = useState(0)
   const starElms = useRef<HTMLElement[]>([])
   const starArr = Array.from(Array(5).keys())
-  const { track } = useAnalytics()
   const { updateNotification } = useNotifications(true) || {}
-
-  const submitTracking = useCallback(
-    (selectedRating?: number, feedback?: string) => {
-      track(
-        event,
-        {
-          rating: selectedRating || rating,
-          additionalFeedback: feedback || additionalFeedback,
-        },
-        () => onRating?.(selectedRating || rating)
-      )
-    },
-    [rating, additionalFeedback]
-  )
 
   const handleRating = (selectedRating: number) => {
     if (rating) {
@@ -53,7 +38,6 @@ export const Rating: React.FC<RatingProps> = ({
       for (let i = 0; i < selectedRating; i++) {
         starElms.current[i].classList.add("animate-tada")
       }
-      submitTracking(selectedRating)
     }
   }
 
@@ -67,7 +51,7 @@ export const Rating: React.FC<RatingProps> = ({
       // update parent notification ID
       updateNotification(parentNotificationId, {
         closeButtonText: "Submit",
-        onClose: () => submitTracking(rating, additionalFeedback),
+        onClose: () => undefined,
       })
     }
   }, [additionalFeedback, rating])

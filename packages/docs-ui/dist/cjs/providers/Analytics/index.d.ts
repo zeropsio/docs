@@ -18,5 +18,4 @@ export type AnalyticsProviderProps = {
     children?: React.ReactNode;
 };
 export declare const AnalyticsProvider: ({ writeKey, children, }: AnalyticsProviderProps) => React.JSX.Element;
-export declare const useAnalytics: () => AnalyticsContextType;
 //# sourceMappingURL=index.d.ts.map

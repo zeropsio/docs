@@ -1,23 +1,16 @@
 "use client";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { Star, StarSolid } from "@medusajs/icons";
 import { Button, Label, TextArea } from "../../components";
-import { useAnalytics, useNotifications } from "../../providers";
+import { useNotifications } from "../../providers";
 export const Rating = ({ event = "rating", className = "", onRating, additionalQuestion = "What should we improve?", parentNotificationId, }) => {
     const [rating, setRating] = useState(0);
     const [additionalFeedback, setAdditionalFeedback] = useState("");
     const [hoverRating, setHoverRating] = useState(0);
     const starElms = useRef([]);
     const starArr = Array.from(Array(5).keys());
-    const { track } = useAnalytics();
     const { updateNotification } = useNotifications(true) || {};
-    const submitTracking = useCallback((selectedRating, feedback) => {
-        track(event, {
-            rating: selectedRating || rating,
-            additionalFeedback: feedback || additionalFeedback,
-        }, () => onRating === null || onRating === void 0 ? void 0 : onRating(selectedRating || rating));
-    }, [rating, additionalFeedback]);
     const handleRating = (selectedRating) => {
         if (rating) {
             return;
@@ -28,7 +21,6 @@ export const Rating = ({ event = "rating", className = "", onRating, additionalQ
             for (let i = 0; i < selectedRating; i++) {
                 starElms.current[i].classList.add("animate-tada");
             }
-            submitTracking(selectedRating);
         }
     };
     useEffect(() => {
@@ -39,7 +31,7 @@ export const Rating = ({ event = "rating", className = "", onRating, additionalQ
             // update parent notification ID
             updateNotification(parentNotificationId, {
                 closeButtonText: "Submit",
-                onClose: () => submitTracking(rating, additionalFeedback),
+                onClose: () => undefined,
             });
         }
     }, [additionalFeedback, rating]);

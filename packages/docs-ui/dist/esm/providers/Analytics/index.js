@@ -8,7 +8,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import React, { createContext, useCallback, useContext, useEffect, useState, } from "react";
+import React, { createContext, useCallback, useEffect, useState, } from "react";
 import { AnalyticsBrowser } from "@segment/analytics-next";
 const AnalyticsContext = createContext(null);
 const LOCAL_STORAGE_KEY = "ajs_anonymous_id";
@@ -72,11 +72,4 @@ export const AnalyticsProvider = ({ writeKey = "temp", children, }) => {
             track,
             loaded,
         } }, children));
-};
-export const useAnalytics = () => {
-    const context = useContext(AnalyticsContext);
-    if (!context) {
-        throw new Error("useAnalytics must be used within a AnalyticsProvider");
-    }
-    return context;
 };

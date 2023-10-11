@@ -98,9 +98,19 @@ import {
   XMark,
   XMarkMini,
   PhotoSolid,
+  Heart,
+  Medusa,
+  ListBullet,
+  Swatch
 } from "@medusajs/icons"
 import IconPuzzleSolid from "./PuzzleSolid"
 import IconNextjs from "./Nextjs"
+import IconNestjs from "./Nestjs"
+import IconLaravel from "./Laravel"
+import IconGingonic from "./Gingonic"
+import IconNette from "./Nette"
+import IconStrapi from "./Strapi"
+import IconNodejs from "./Nodejs"
 
 export default {
   "academic-cap-solid": AcademicCapSolid,
@@ -207,4 +217,14 @@ export default {
   "x-circle-solid": XCircleSolid,
   "x-mark": XMark,
   "x-mark-mini": XMarkMini,
+  heart: Heart,
+  nestjs: IconNestjs,
+  laravel: IconLaravel,
+  gingonic: IconGingonic,
+  nette: IconNette,
+  strapi: IconStrapi,
+  medusa: Medusa,
+  nodejs: IconNodejs,
+  "list-bullet": ListBullet,
+  swatch: Swatch,
 }

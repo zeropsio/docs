@@ -4,7 +4,6 @@ import { NavbarLink, NavbarLinkProps } from "./Link"
 import { NavbarColorModeToggle } from "./ColorModeToggle"
 import { NavbarLogo, NavbarLogoProps } from "./Logo"
 import { NavbarMobileMenu } from "./MobileMenu"
-import { NavbarSearchModalOpener } from "./SearchModalOpener"
 import { NavbarMobileMenuButtonProps } from "./MobileMenu/Button"
 
 export type NavbarProps = {
@@ -48,9 +47,6 @@ export const Navbar = ({
           ))}
         </div>
         <div className="hidden min-w-0 flex-1 items-center justify-end gap-docs_0.5 lg:flex">
-          {showSearchOpener && (
-            <NavbarSearchModalOpener isLoading={isLoading} />
-          )}
           {showColorModeToggle && <NavbarColorModeToggle />}
           {additionalActions}
         </div>

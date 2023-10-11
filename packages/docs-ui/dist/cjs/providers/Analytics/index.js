@@ -33,7 +33,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.useAnalytics = exports.AnalyticsProvider = void 0;
+exports.AnalyticsProvider = void 0;
 const react_1 = __importStar(require("react"));
 const analytics_next_1 = require("@segment/analytics-next");
 const AnalyticsContext = (0, react_1.createContext)(null);
@@ -100,11 +100,3 @@ const AnalyticsProvider = ({ writeKey = "temp", children, }) => {
         } }, children));
 };
 exports.AnalyticsProvider = AnalyticsProvider;
-const useAnalytics = () => {
-    const context = (0, react_1.useContext)(AnalyticsContext);
-    if (!context) {
-        throw new Error("useAnalytics must be used within a AnalyticsProvider");
-    }
-    return context;
-};
-exports.useAnalytics = useAnalytics;

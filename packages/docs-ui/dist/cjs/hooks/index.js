@@ -17,6 +17,5 @@ Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./use-copy"), exports);
 __exportStar(require("./use-keyboard-shortcut"), exports);
 __exportStar(require("./use-scroll-utils"), exports);
-__exportStar(require("./use-search-navigation"), exports);
 __exportStar(require("./use-select"), exports);
 __exportStar(require("./use-tabs"), exports);

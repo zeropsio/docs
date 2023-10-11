@@ -8,15 +8,15 @@ const announcementBar = JSON.parse(fs.readFileSync("./announcement.json"))
 
 /** @type {import('@medusajs/docs').MedusaDocusaurusConfig} */
 const config = {
-  title: "Medusa",
-  tagline: "Explore and learn how to use Medusa",
-  url: "https://docs.medusajs.com",
+  title: "Zerops",
+  tagline: "Explore and learn how to use Zerops",
+  url: process.env.URL || "http://localhost:3000",
   baseUrl: "/",
-  onBrokenLinks: "warn",
-  onBrokenMarkdownLinks: "warn",
+  onBrokenLinks: "throw",
+  onBrokenMarkdownLinks: "throw",
   favicon: "img/favicon.ico",
-  organizationName: "medusajs",
-  projectName: "medusajs/www",
+  organizationName: "zerops",
+  projectName: "zerops/docs-v2",
   plugins: [
     require.resolve("docusaurus-plugin-image-zoom"),
     async function tailwindPlugin() {
@@ -62,68 +62,6 @@ const config = {
       disableSwitch: false,
       respectPrefersColorScheme: true,
     },
-    algoliaConfig: {
-      appId: process.env.ALGOLIA_APP_ID || "temp",
-      apiKey: process.env.ALGOLIA_API_KEY || "temp",
-      indexNames: {
-        docs: process.env.DOCS_ALGOLIA_INDEX_NAME,
-        api: process.env.API_ALGOLIA_INDEX_NAME,
-      },
-      filters: [
-        {
-          value: "docs",
-          label: "Docs",
-        },
-        {
-          value: "user-guide",
-          label: "User Guide",
-        },
-        {
-          value: "admin",
-          label: "Admin API",
-        },
-        {
-          value: "store",
-          label: "Store API",
-        },
-        {
-          value: "plugins",
-          label: "Plugins",
-        },
-        {
-          value: "reference",
-          label: "References",
-        },
-        {
-          value: "ui",
-          label: "UI",
-        },
-      ],
-      defaultFiltersByPath: [
-        {
-          path: "/user-guide",
-          filters: ["user-guide"],
-        },
-        {
-          path: "/references",
-          filters: ["reference"],
-        },
-        {
-          path: "/plugins",
-          filters: ["plugins"],
-        },
-      ],
-      defaultFilters: ["docs"],
-    },
-    analytics: {
-      apiKey: process.env.SEGMENT_API_KEY || "temp",
-    },
-    aiAssistant: {
-      apiUrl: process.env.AI_ASSISTANT_URL || "temp",
-      websiteId: process.env.AI_WEBSITE_ID || "temp",
-      recaptchaSiteKey:
-        process.env.AI_API_ASSISTANT_RECAPTCHA_SITE_KEY || "temp",
-    },
     prism: {
       defaultLanguage: "js",
       plugins: ["line-numbers", "show-language"],
@@ -135,10 +73,10 @@ const config = {
     navbar: {
       hideOnScroll: false,
       logo: {
-        alt: "Medusa",
+        alt: "Zerops",
         src: "img/logo-icon.png",
         srcDark: "img/logo-icon-dark.png",
-        width: 20,
+        width: 23,
         height: 20,
       },
       items: [
@@ -155,39 +93,37 @@ const config = {
         type: "button",
         label: "Report an Issue",
         className: "max-[1014px]:hidden",
-        href: "https://github.com/medusajs/medusa/issues/new?assignees=&labels=type%3A+docs&template=docs.yml",
+        href: "https://github.com/zeropsio/docs-v2/issues/new?assignees=&labels=type%3A+docs",
       },
     ],
     mobileLogo: {
-      alt: "Medusa",
+      alt: "Zerops",
       src: "img/logo-mobile.png",
       srcDark: "img/logo-mobile-dark.png",
       width: 82,
       height: 20,
     },
     footer: {
-      copyright: `© ${new Date().getFullYear()} Medusa, Inc. All rights reserved.`,
+      copyright: `© ${new Date().getFullYear()} Zerops s.r.o.. All rights reserved.`,
     },
     socialLinks: [
       {
         type: "discord",
-        href: "https://discord.gg/medusajs",
+        href: "https://discord.gg/invite/WDvCZ54",
       },
       {
         type: "twitter",
-        href: "https://twitter.com/medusajs",
+        href: "https://twitter.com/zeropsio",
       },
       {
         type: "linkedin",
-        href: "https://www.linkedin.com/company/medusajs",
+        href: "https://www.linkedin.com/company/zeropsio",
       },
       {
         type: "github",
-        href: "https://github.com/medusajs/medusa",
+        href: "https://github.com/zeropsio",
       },
     ],
-    reportCodeLinkPrefix:
-      "https://github.com/medusajs/medusa/issues/new?assignees=&labels=type%3A+docs&template=docs.yml",
     footerFeedback: {
       event: "survey",
     },
@@ -237,7 +173,7 @@ const config = {
           customCss: require.resolve("./src/css/custom.css"),
         },
         gtag: {
-          trackingID: "G-S7G7X3JYS3",
+          trackingID: "xxx",
         },
         sitemap: {
           filename: "sitemap-docs.xml",

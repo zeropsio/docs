@@ -39,14 +39,7 @@ const Rating = ({ event = "rating", className = "", onRating, additionalQuestion
     const [hoverRating, setHoverRating] = (0, react_1.useState)(0);
     const starElms = (0, react_1.useRef)([]);
     const starArr = Array.from(Array(5).keys());
-    const { track } = (0, providers_1.useAnalytics)();
     const { updateNotification } = (0, providers_1.useNotifications)(true) || {};
-    const submitTracking = (0, react_1.useCallback)((selectedRating, feedback) => {
-        track(event, {
-            rating: selectedRating || rating,
-            additionalFeedback: feedback || additionalFeedback,
-        }, () => onRating === null || onRating === void 0 ? void 0 : onRating(selectedRating || rating));
-    }, [rating, additionalFeedback]);
     const handleRating = (selectedRating) => {
         if (rating) {
             return;
@@ -57,7 +50,6 @@ const Rating = ({ event = "rating", className = "", onRating, additionalQuestion
             for (let i = 0; i < selectedRating; i++) {
                 starElms.current[i].classList.add("animate-tada");
             }
-            submitTracking(selectedRating);
         }
     };
     (0, react_1.useEffect)(() => {
@@ -68,7 +60,7 @@ const Rating = ({ event = "rating", className = "", onRating, additionalQuestion
             // update parent notification ID
             updateNotification(parentNotificationId, {
                 closeButtonText: "Submit",
-                onClose: () => submitTracking(rating, additionalFeedback),
+                onClose: () => undefined,
             });
         }
     }, [additionalFeedback, rating]);
