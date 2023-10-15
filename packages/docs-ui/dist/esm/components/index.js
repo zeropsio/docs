@@ -9,7 +9,7 @@ export * from "./CodeTabs";
 export * from "./CopyButton";
 export * from "./Details";
 export * from "./Details/Summary";
-export * from "./Icons";
+// export * from "./Icons";
 export * from "./InlineCode";
 export * from "./Input/Text";
 export * from "./Kbd";
