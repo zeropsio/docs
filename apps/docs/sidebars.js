@@ -503,6 +503,15 @@ module.exports = {
     },
     {
       type: "doc",
+      id: "references/vpn",
+      label: "VPN",
+      customProps: {
+        sidebar_icon: "globe-europe",
+      },
+      className: "homepage-sidebar-item",
+    },
+    {
+      type: "doc",
       id: "references/zeropsyml",
       label: "zerops.yml",
       customProps: {

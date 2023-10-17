@@ -11,35 +11,31 @@ First, set up a project in Zerops GUI. Then go to the project dashboard page and
 
 **// TODO screenshot (add a new service page)**
 
-**hostname**
-
-Enter a unique service identifier like "mariadb","sql", "db" etc. Duplicate services with the same name in the same project are forbidden.
-
-Limitations:
-* maximum 25 characters
-* must contain only lowercase ASCII letters (a-z) or numbers (0-9) 
+| Parameter              | Description                                                                   | Limitations |
+| ---------------------- | ----------------------------------------------------------------------------- | ----------- |
+| **hostname**           | A unique service identifier like `mariadb`,`sql`, `db` etc.                   | - duplicate services with the same name in the same project are forbidden<br/>- maximum 25 characters<br/>- must contain only lowercase ASCII letters (a-z) or numbers (0-9) 
 
 :::caution
 The hostname is fixed after the service is created. It can't be changed later.
 :::
 
-## Single node vs. HA cluster
+### Choose MariaDB service mode
 Zerops provides MariaDB service in two modes: **Highly available** and **Single container**.
 
-**// TODO image**
+**// TODO image (add a new MariaDB page - Automatic scaling section)**
 
-### Highly available 
+#### Highly available 
 
 Creates a  MariaDB cluster with **3 database containers** and **2 free application balancers**. 
 This mode is suited for production. 
 
-Zerops always keep the 3 database containers on different physical machines. All your data is stored redundantly in 3 copies. In case of a failure of a container or the underlying physical machine, Zerops automatically disconnects the failed container from the cluster, creates a new container and syncs all data from the remaining 2 copies. Finally the broken container is automatically deleted.
+Zerops always keeps the 3 database containers on different physical machines. All your data is stored redundantly in 3 copies. In case of a failure of a container or the underlying physical machine, Zerops automatically disconnects the failed container from the cluster, creates a new container and syncs all data from the remaining 2 copies. Finally the broken container is automatically deleted.
 
 // TODO update url
 
 [Learn more ↗](/mariadb/tech-details/cluster)  about specific behaviour and technical limitations of the MariaDB cluster.
 
-### Single container
+#### Single container
 
 A MariaDB database installed in a single container is created. Useful for non-essential data or dev environments.
 
@@ -49,7 +45,7 @@ Your data is stored only in a single container. If the container or the underlyi
 The MariaDB service mode is fixed after the service is created. It can't be changed later.
 :::
 
-### Supported versions
+### Choose MariaDB version
 Currently only MariaDB **10.4** version is available.
 
 ### Set auto scaling configuration
@@ -75,15 +71,17 @@ You can change the auto scaling parameters later.
 
 MariaDB needs at least 10 vCPUs to start. Zerops automatically starts MariaDB service with at least 10 vCPUs. If the database is idle after the start, Zerops will scale the MariaDB down to selected minimum vCPU settings. If you set the minimum vCPU settings higher than 10 vCPUs, Zerops will start with the required minimum vCPU settings. 
 
-Learn more ↗ about MariaDB auto scaling.
+[Learn more ↗] about MariaDB auto scaling.
 
 ## Create MariaDB using zCLI
+zCLI is the Zerops command-line tool. To create a new MariaDB service via the command-line, follow these steps:
 1. [Install & setup zCLI ↗](/references/cli)
 2. [Create a project description file](#create-a-project-description-file) 
 3. Create a project and a MariaDB service 
 
 ### Create a project description file
-Zerops uses a yaml format to describe the project infrastructure.
+Zerops uses a yaml format file to describe the project infrastructure.
+
 #### Basic example
 Create a directory `my-project`. Create a `description.yml` file inside the directory with the following content:
 ```yml
@@ -101,7 +99,7 @@ services:
     # mode of operation "HA"/"NON_HA"
     mode: NON_HA
 ```
-The yaml file describes your future project infrastructure. The project will contain one MariaDB 10.4 service in the [single container] mode with default [auto scaling↗] configuration. Hostname will be set to `mariadb1`.
+The yaml file describes your future project infrastructure. The project will contain one MariaDB 10.4 service in the [single container](#single-container) mode with default [auto scaling↗] configuration. Hostname will be set to `mariadb1`.
 
 #### Full example
 Create a directory `my-project`. Create a `description.yml` file inside the directory with the following content:
@@ -144,6 +142,83 @@ services:
 
 The yaml file describes your future project infrastructure. The project will contain two MariaDB 10.4 services. 
 
-The hostname of the first service will be set to `mariadb1`. The [high availability] mode will be chosen and the custom [auto scaling configuration↗] will be set.
+The hostname of the first service will be set to `mariadb1`. The [high availability](#highly-available) mode will be chosen and the custom [auto scaling configuration↗] will be set.
 
-The hostname of the second service will be set to `mariadb2`. The [single container] mode will be chosen and the default [auto scaling configuration↗] will be set.
+The hostname of the second service will be set to `mariadb2`. The [single container](#single-container) mode will be chosen and the default [auto scaling configuration↗] will be set.
+
+#### Description of description.yml parameters
+The `project:` section is required. Only one project can be defined.
+
+| Parameter              | Description                                                                   |
+| ---------------------- | ----------------------------------------------------------------------------- |
+| **name**               | The name of the new project. Duplicates are allowed.          |
+| **description**        | **Optional.** Description of the new project. Maximum 255 characters.          |
+| **tags**               | **Optional.** One or more string tags. Tags do not have a functional meaning, they only provide better orientation in projects.          |
+
+At least one service in `services:` section is required. You can create a project with multiple services. The example above contains only MariaDB services but you can create a description.yml with [different types] of services.
+
+| Parameter              | Description                                                                   |
+| ---------------------- | ----------------------------------------------------------------------------- |
+| **name**               | The name of the new project. Duplicates are allowed.          |
+| **description**        | **Optional.** Description of the new project. Maximum 255 characters.          |
+| **tags**               | **Optional.** One or more string tags. Tags do not have a functional meaning, they only provide better orientation in projects.          |
+
+### Create a project based on the description.yml
+
+When you have your `description.yml` ready, use the `zcli project import` command to create a new project and the service infrastructure. 
+
+```yml
+Usage:
+  zcli project import ./my-project/description.yml [flags]
+
+Flags:
+  --clientId <string>   If you have access to more than one client, you must specify the client ID for which the project is to be created.
+  -h, --help   Displays help for the project import command.
+```
+
+
+Zerops will create a project and one or more services based on the `description.yml` content.
+
+Maximum size of the `description.yml` file is 100 kB.
+
+You don't specify the project name in the `zcli project import` command, because the project name is defined in the `description.yml`.
+
+If you have access to more than one client, you must specify the client ID for which the project is to be created. The `clientID` is located in the Zerops GUI under the client name on the project dashboard page.
+
+**// TODO screenshot (where the clientID is located in Zerops GUI)**
+
+### Add MariaDB service to an existing project
+
+#### Example
+
+Create a directory `my-project` if it doesn't exist. Create an `import.yml` file inside the `my-project` directory with following content:
+
+```bash
+# array of project services
+services:
+  -
+    # service name
+    hostname: mariadb1
+    # service type and version number in mariadb@10.4 format
+    type: mariadb@10.4
+    # mode of operation "HA"/"NON_HA"
+    mode: NON_HA
+```
+
+The yaml file describes the list of one or more services that you want to add to your existing project. In the example above, one MariaDB 10.4 service in the [single container mode](#single-container) with default [auto scaling↗] configuration will be added to your project. Hostname of the new service will be set to `mariadb1`.
+
+The content of the `services:` section of `import.yml` is identical to the [project description file](#create-a-project-description-file). The `import.yml` never contains the `project:` section because the project already exists.
+
+When you have your `import.yml` ready, use the `zcli project import` command to add one or more services to your existing Zerops project.
+
+```sh
+Usage:
+  zcli service import [projectNameOrId] ./my-project/import.yml [flags]
+
+Flags:
+  -h, --help   Displays help for the service import command.
+```
+
+You must enclose the `projectNameOrId` in quotes if it contains a space. The project name is visible in Zerops GUI. If you have more projects with a duplicate name, use the project ID instead. You'll find the project ID in the URL of the project dashboard page in Zerops GUI. <br/>E.g. <code>https://app&#46;zerops.io/project/<b>Evs8Je4NTvKeIkUqoUXp2w</b>/service-stacks</code>.
+
+Maximum size of the `import.yml` file is 100 kB.
