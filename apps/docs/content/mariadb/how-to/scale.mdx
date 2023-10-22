@@ -1,0 +1,100 @@
+---
+title: How Zerops scales MariaDB
+---
+Zerops performs an automated scaling of hardware resources required to run your database based on its usage. If the current use of your database does not require as much performance or disk space the auto scaling reduces the resources and thus reduces the costs. If your database is under heavy load or needs to store more data, then auto scaling increases the resources for the database to make sure it runs smoothly.
+## Vertical scaling
+Vertical scaling means increasing or decreasing the hardware resources (CPU, RAM and disk) of a database container. 
+
+Zerops scales MariaDB containers automatically by raising or lowering the hardware resources of the containers. If your database is in [highly available ↗](/mariadb/how-to/create#highly-available) mode, each of its 3 containers are scaled individually. The vertical scaling of different hardware resources (CPU, RAM and disk) is also  independent. For example if your database needs more CPU, Zerops will assign more CPU to the container and keep the RAM and disk unchanged. 
+
+### Automatic scale up 
+Zerops monitors CPU, RAM and disk usage in all running containers each 10 seconds. 
+
+The scale up threshold is derived from following minimum free resources:
+* 0.5 vCPU
+* 0.5 GB RAM
+* 0.5 GB disk
+
+If the minimum free CPU, RAM or disk usage of a container is lower than the defined scale up threshold, Zerops scales the container up. 
+
+The scale up of RAM or disk is immediate. If Zerops detects that the container has less than 0.5 GB RAM free or less than 0.5 GB free disk space, Zerops will assign more RAM or disk to the container immediately.
+
+The scale up of vCPU is configured to be a little less aggressive. Two consecutive measurements of free vCPU with values under the scale up threshold are required to trigger the scale up. This rule prevents excessive fluctuations of scaling up and down due to sudden changes in CPU usage.
+
+The minimum step for the vertical scaling is 
+* 1 vCPU
+* 0.25 GB RAM
+* 0.5 GB disk
+
+When the database is under a heavy load and needs to scale up faster, the scaling step will increase automatically. 
+
+Each MariaDB service has mandatory defined maximal resources. Zerops will never scale above the entered values. If your database is in [highly available ↗](/mariadb/how-to/create#highly-available) mode, maximal resources are identical for all containers of the MariaDB service.
+
+Default maximal resources are:
+* 20 vCPUs
+* 32 GB RAM
+* 100 GB disk
+
+If you need to limit the cost of the MariaDB service, lower the maximal resources. You can set your own maximal resources when creating a MariaDB service or you can change it later in Zerops GUI. Go to the MariaDB service detail and choose **Automatic scaling configuration** in the left menu.
+
+**// TODO screenshot (MariaDB - Automatic scaling configuration form)**
+
+Other configuration parameters of the scale up behaviour (scale up threshold, minimum step, etc.) are fixed and cannot be customised.
+
+### Not enough resources to scale up
+Zerops moves a container between physical machines only if there are not enough resources on the current physical machine to scale the container up. When this happens the behaviour is different for [highly available ↗](/mariadb/how-to/create#highly-available) and [single container ↗](/mariadb/how-to/create#single-container) mode.
+
+#### Highly available
+
+If one of the MariaDB containers needs more resources but there are not enough of them on the underlying machine, a new container with the required hardware resources will be started on another machine. When the new container is ready, it will be added to the MariaDB cluster. The old container will be removed from the cluster and deleted. The data synchronisation to the new container starts immediately after the new container is connected to the cluster.
+
+During this operation, the MariaDB cluster always operates on 3 database containers, the data redundancy is not decreased. You will experience a temporary reduction of performance of the database cluster till the data synchronisation is completed. Then, the MariaDB cluster will return back to the required performance. The time required for the data synchronisation depends on the database size.
+
+
+#### Single container
+
+If the container of the MariaDB needs more resources but there are not enough of them on the underlying machine, the container will be moved to another machine. During the moving operation the container must be switched off. After the container has moved to another machine, it will be started with the required hardware resources. The time required for the MariaDB container to be moved to another machine depends on the database size.
+
+Do not use the single container mode for production. This mode is useful for non-critical applications or dev environments.
+
+### Automatic scale down
+When the database no longer needs as much power or disk space, each container is gradually scaled down to the defined minimum. The automatic scale down is configured to be more cautious and defensive to prevent the database from scaling up and down rapidly.
+
+Consecutive measurements during:
+* 2 minutes for vCPU
+* 15 minutes for RAM
+* 5 minutes for disk
+
+with free resources safely above the minimum threshold are required to scale down the appropriate resource.
+
+The minimum step for the scale down is identical to the minimum step for scale up. When several scale down events are triggered in a short period of time, the scaling step increases automatically.
+
+Zerops will never scale below the defined minimal resources. Default minimal resources are:
+* 1 vCPUs
+* 1 GB RAM
+* 1 GB disk
+
+Minimal resources are identical for all containers of the MariaDB service.
+
+When you are experiencing problems with insufficient MariaDB performance or capacity, increase the minimal resources. You can set your own minimal resources when creating a MariaDB service or you can change it later in Zerops GUI. Go to the MariaDB service detail and choose **Automatic scaling configuration** in the left menu.
+
+Other configuration parameters of the scale down behaviour (scale up threshold, minimum step, etc.) are fixed and cannot be customised.
+
+### How to disable vertical auto scaling
+
+To disable the vertical auto scaling of vCPU, RAM or disk, set the minimal and maximal resources to the same value. Zerops will set the required amount of resources to all database containers and the auto scaling of the selected resource will be disabled. You can disable the auto scaling of a resource (e.g. RAM) and keep auto scaling of other resources enabled.
+
+## Horizontal scaling
+
+Zerops provides MariaDB service in two modes: [Highly available ↗] and [Single container ↗]. The MariaDB service mode is chosen when creating a new service and cannot be changed later.
+
+Zerops don't scale MariaDB service horizontally, it means no containers are added or removed from the database cluster. Only in case of a failure of a container or the underlying physical machine, Zerops automatically replaces the broken container with a new one.
+
+
+## Monitor database resources
+
+Zerops provides information about how much hardware resources the MariaDB service is currently using. Go to MariaDB service detail in Zerops GUI and select **Service dashboard & database containers** in the left menu. Zerops also provides the history of resource usage.
+
+
+
+

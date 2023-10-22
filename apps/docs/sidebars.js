@@ -1464,7 +1464,7 @@ module.exports = {
         {
           type: "doc",
           id: "mariadb/how-to/delete",
-          label: "Stop and start MariaDB service",
+          label: "Delete MariaDB service",
         },
       ],
     },
