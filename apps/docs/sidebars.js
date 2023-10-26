@@ -411,7 +411,7 @@ module.exports = {
         },
         {
           type: "ref",
-          id: "nodejs/overview",
+          id: "mariadb/overview",
           label: "MariaDB (MySQL)",
           customProps: {
             sidebar_icon: "mariadb",
@@ -420,7 +420,7 @@ module.exports = {
         },
         {
           type: "ref",
-          id: "nodejs/overview",
+          id: "mongodb/overview",
           label: "MongoDB",
           customProps: {
             sidebar_icon: "mongodb",
@@ -429,7 +429,7 @@ module.exports = {
         },
         {
           type: "ref",
-          id: "nodejs/overview",
+          id: "elasticsearch/overview",
           label: "Elasticsearch",
           customProps: {
             sidebar_icon: "elasticsearch",
@@ -438,7 +438,7 @@ module.exports = {
         },
         {
           type: "ref",
-          id: "nodejs/overview",
+          id: "keydb/overview",
           label: "KeyDB (Redis)",
           customProps: {
             sidebar_icon: "keydb",
@@ -447,7 +447,7 @@ module.exports = {
         },
         {
           type: "ref",
-          id: "nodejs/overview",
+          id: "rabbitmq/overview",
           label: "RabbitMQ",
           customProps: {
             sidebar_icon: "rabbitmq",
@@ -498,6 +498,15 @@ module.exports = {
       label: "CLI",
       customProps: {
         sidebar_icon: "command-line",
+      },
+      className: "homepage-sidebar-item",
+    },
+    {
+      type: "doc",
+      id: "references/vpn",
+      label: "VPN",
+      customProps: {
+        sidebar_icon: "globe-europe",
       },
       className: "homepage-sidebar-item",
     },
@@ -1391,6 +1400,111 @@ module.exports = {
           type: "doc",
           id: "java/reference/cli",
           label: "CLI",
+        },
+      ],
+    },
+  ],
+  mariadb: [
+    {
+      type: "ref",
+      id: "homepage",
+      label: "Back to home",
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: "back-arrow",
+      },
+    },
+    {
+      type: "doc",
+      id: "mariadb/overview",
+      label: "Zerops MariaDB Service",
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: "mariadb",
+      },
+    },
+    {
+      type: "category",
+      label: "How-to",
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: "doc",
+          id: "mariadb/how-to/create",
+          label: "Create MariaDB service",
+        },
+        {
+          type: "doc",
+          id: "mariadb/how-to/connect",
+          label: "Connect to MariaDB",
+        },
+        {
+          type: "doc",
+          id: "mariadb/how-to/manage",
+          label: "Manage users and databases",
+        },
+        {
+          type: "doc",
+          id: "mariadb/how-to/export-import-data",
+          label: "Export and import data",
+        },
+        {
+          type: "doc",
+          id: "mariadb/how-to/scale",
+          label: "Scale MariaDB service",
+        },
+        {
+          type: "doc",
+          id: "mariadb/how-to/control",
+          label: "Stop and start MariaDB service",
+        },
+        {
+          type: "doc",
+          id: "mariadb/how-to/delete",
+          label: "Delete MariaDB service",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Reference",
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: "doc",
+          id: "mariadb/reference/import",
+          label: "Import configuration",
+        },
+        {
+          type: "doc",
+          id: "mariadb/reference/cli",
+          label: "CLI",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Technical details",
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: "doc",
+          id: "mariadb/tech-details/cluster",
+          label: "MariaDB cluster asynchronous behaviour",
+        },
+        {
+          type: "doc",
+          id: "mariadb/tech-details/limitations",
+          label: "Technical limitations of MariaDB cluster",
         },
       ],
     },

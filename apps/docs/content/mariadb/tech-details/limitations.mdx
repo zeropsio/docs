@@ -1,0 +1,18 @@
+---
+title: Limitations of MariaDB cluster
+---
+The following description applies only to the [highly available mode ↗](/mariadb/how-to/create#highly-available) of the MariaDB service.
+
+#### InnoDB only
+Only the InnoDB storage engine is supported.
+
+#### Mandatory table primary key
+All database tables should have a primary key. A multi-column primary key can also be used. `DELETE` operations are unsupported on tables without a primary key. Also, rows in tables without a primary key may appear in a different order on different nodes.
+
+#### Limited locks support
+No support for explicit locks, including `LOCK TABLES`, `FLUSH TABLES {explicit table list} WITH READ LOCK`, `GET_LOCK`, `RELEASE_LOCK`. These limitations can be overcome using transactions. Global locking operators like `FLUSH TABLES WITH READ LOCK` are supported. 
+
+#### Do not use local exports
+Do not use `SELECT INTO OUTFILE` or `SELECT INTO DUMPFILE` commands. It will create a file on one of the database containers that will receive the request. Zerops doesn't support direct access into the MariaDB database containers so you won't be able to access the file. Learn more about [how to export and import MariaDB data ↗](/mariadb/how-to/export-import-data).
+
+[Full list of MariaDB cluster limitations](https://mariadb.com/kb/en/mariadb-galera-cluster-known-limitations/)
