@@ -1470,26 +1470,6 @@ module.exports = {
     },
     {
       type: "category",
-      label: "Reference",
-      collapsible: false,
-      customProps: {
-        sidebar_is_group_headline: true,
-      },
-      items: [
-        {
-          type: "doc",
-          id: "mariadb/reference/import",
-          label: "Import configuration",
-        },
-        {
-          type: "doc",
-          id: "mariadb/reference/cli",
-          label: "CLI",
-        },
-      ],
-    },
-    {
-      type: "category",
       label: "Technical details",
       collapsible: false,
       customProps: {
