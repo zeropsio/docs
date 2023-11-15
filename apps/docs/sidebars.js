@@ -32,6 +32,7 @@ module.exports = {
       label: "Getting started",
       customProps: {
         sidebar_icon: "rocket-launch",
+        sidebar_is_soon: true,
       },
       className: "homepage-sidebar-item",
     },
@@ -569,6 +570,23 @@ module.exports = {
     },
     {
       type: "html",
+      value: "FAQ",
+      customProps: {
+        sidebar_is_group_divider: true,
+      },
+      className: "homepage-sidebar-item",
+    },
+    {
+      type: "doc",
+      id: "faq/faq",
+      label: "FAQ",
+      customProps: {
+        sidebar_icon: "question-mark",
+      },
+      className: "homepage-sidebar-item",
+    },
+    {
+      type: "html",
       value: "Additional resources",
       customProps: {
         sidebar_is_group_divider: true,
@@ -616,7 +634,7 @@ module.exports = {
     {
       type: "doc",
       id: "nodejs/overview",
-      label: "Zerops Node.js Service",
+      label: "Node.js overview",
       customProps: {
         sidebar_is_title: true,
         sidebar_icon: "nodejs",
@@ -624,10 +642,27 @@ module.exports = {
     },
     {
       type: "category",
+      label: "Quick Start",
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+        sidebar_icon: "rocket-launch",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "nodejs/quickstart",
+          label: "Sample application",
+        },
+      ],
+    },
+    {
+      type: "category",
       label: "How-to",
       collapsible: false,
       customProps: {
         sidebar_is_group_headline: true,
+        sidebar_icon: "academic-cap-solid",
       },
       items: [
         {
@@ -666,12 +701,7 @@ module.exports = {
           label: "Connect GitHub / GitLab repository",
           customProps: {
             sidebar_is_soon: true,
-          }
-        },
-        {
-          type: "doc",
-          id: "nodejs/how-to/customize-runtime",
-          label: "Customize Node.js runtime",
+          },
           customProps: {
             sidebar_is_soon: true,
           }
@@ -731,24 +761,13 @@ module.exports = {
       ],
     },
     {
-      type: "category",
-      label: "Reference",
-      collapsible: false,
+      type: "doc",
+      id: "nodejs/faq",
+      label: "FAQ",
       customProps: {
-        sidebar_is_group_headline: true,
+        sidebar_is_title: true,
+        sidebar_icon: "chat-bubble-left-right",
       },
-      items: [
-        {
-          type: "doc",
-          id: "nodejs/reference/import",
-          label: "Import configuration",
-        },
-        {
-          type: "doc",
-          id: "nodejs/reference/cli",
-          label: "CLI",
-        },
-      ],
     },
   ],
   php: [
@@ -830,9 +849,6 @@ module.exports = {
           type: "doc",
           id: "php/how-to/logs",
           label: "Setup & access logs",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
