@@ -529,6 +529,24 @@ module.exports = {
       className: "homepage-sidebar-item",
     },
     {
+      type: "doc",
+      id: "references/github-integration",
+      label: "Github integration",
+      customProps: {
+        sidebar_icon: "github",
+      },
+      className: "homepage-sidebar-item",
+    },
+    {
+      type: "doc",
+      id: "references/gitlab-integration",
+      label: "Gitlab integration",
+      customProps: {
+        sidebar_icon: "cloud-arrow-up",
+      },
+      className: "homepage-sidebar-item",
+    },
+    {
       type: "html",
       value: "Additional resources",
       customProps: {

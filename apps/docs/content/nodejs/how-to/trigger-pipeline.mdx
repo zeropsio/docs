@@ -1,0 +1,102 @@
+---
+title: Trigger Node.js build & deploy pipeline
+---
+
+## Automatic builds and deploys from GitHub or GitLab
+Integrate Zerops to your GitHub or GitLab repository and configure the automatic builds and deploys.
+
+Follow these steps:
+1. Add [zerops.yml](/nodejs/how-to/build-pipeline#add-zeropsyml-to-your-repository) to your repository.
+2. Connect your [GitHub repository] or connect your [GitLab repository]
+
+Then each time you create a new tag or push to a specific branch, depending on the configuration, GitHub or GitLab will initiate a new build & deploy pipeline.
+
+:::info
+You can change the build and deploy pipeline when you need to. Just simply modify the <code>zerops.yml</code> in your repository.
+:::
+
+## Manual builds and deploys using Zerops CLI
+To start a new build & deploy pipeline manually, use the Zerops CLI.
+
+Follow these steps:
+1. Add [zerops.yml](/nodejs/how-to/build-pipeline#add-zeropsyml-to-your-repository) to your repository.
+2. [Install & setup zCLI](/references/cli) the Zerops command line tool.
+3. Run `zcli push` command.
+
+The `zcli push` command uploads your application code, builds and deploys your application in Zerops. 
+
+The command triggers the build pipeline defined in [zerops.yml](/nodejs/how-to/build-pipeline). `zerops.yml` must be in the working directory. The working directory is by default the current directory and can be changed using the `--workingDir` flag. 
+
+zCLI uploads all files and subdirectories of the working directory to Zerops and starts the build pipeline. If the `.gitignore` file is found, it is interpreted and the defined files and folders will be ignored.
+
+If you just want to deploy your application to Zerops, use the [zcli deploy](#manual-deploy-using-zerops-cli) command instead.
+
+#### Push command parameters
+```sh
+Usage:
+  zcli push [projectNameOrId] [serviceName] [flags]
+
+Flags:
+  -h, --help                       Displays help for the push command.
+
+
+      --versionName <string>       Adds a custom version name. Automatically filled if the VERSIONNAME environment variable exists. 
+
+
+      --workingDir <string>        Sets a custom working directory. Default working directory is the current directory.
+
+
+      --archiveFilePath <string>   If set, zCLI creates a tar.gz archive with the application code in the required path relative to the working directory. By default, no archive is created.
+
+
+      --uploadGitFolder            If set, zCLI the .git folder is also uploaded. By default, the .git folder is ignored.
+```
+
+You must enclose the `projectNameOrId` in quotes if it contains a space. The project name is visible in Zerops GUI. If you have more projects with a duplicate name, use the project ID instead. You'll find the project ID in the URL of the project dashboard page in Zerops GUI.<br/>E.g. <code>https://app&#46;zerops.io/project/<b>Evs8Je4NTvKeIkUqoUXp2w</b>/service-stacks</code>.
+
+:::info
+You can change the build and deploy pipeline when you need to. Just simply modify the <code>zerops.yml</code> in your repository.
+:::
+
+## Manual deploy using Zerops CLI
+To start only a deploy pipeline, use the Zerops CLI.
+
+Follow these steps:
+1. Add [zerops.yml](/nodejs/how-to/build-pipeline#add-zeropsyml-to-your-repository) to your repository. Omit the build section.
+2. [Install & setup zCLI](/references/cli) the Zerops command line tool.
+3. Run `zcli deploy` command.
+
+The `zcli deploy` command uploads your application and deploys it in Zerops. Use this tool if you have your own build process. If you want to build your application in Zerops, use an [automatic](#automatic-builds-and-deploys-from-github-or-gitlab) or [manual](#manual-builds-and-deploys-using-zerops-cli) build process.
+
+#### Deploy command parameters
+```sh
+Usage:
+  zcli deploy projectNameOrId serviceName pathToFileOrDir [pathToFileOrDir] [flags]
+
+Flags:
+  -h, --help                       Displays help for the deploy command.
+
+
+      --versionName <string>       Adds a custom version name. Automatically filled if the ZCLI_VERSION_NAMEVERSIONNAME environment variable exists.
+
+
+      --workingDir <string>        Sets a custom working directory. Default working directory is the current directory.
+
+
+      --zeropsYamlPath <string>    Sets a custom path to the zerops.yml file relative to the working directory. By default zCLI looks for zerops.yml in the working directory.
+
+
+      --archiveFilePath <string>   If set, zCLI creates a tar.gz archive with the deployed files in the required path relative to the working directory. By default no archive is created. 
+```
+
+`pathToFileOrDir` defines a path to one or more directories and/or files relative to the working directory. The working directory is by default the current directory and can be changed using the `--workingDir` flag. 
+
+`zerops.yml` must be placed in the working directory.
+
+:::info
+You can change the deploy pipeline when you need to. Just simply modify the <code>zerops.yml</code> in your working directory.
+:::
+
+ 
+
+
