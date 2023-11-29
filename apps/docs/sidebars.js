@@ -493,13 +493,34 @@ module.exports = {
       className: "homepage-sidebar-item",
     },
     {
-      type: "doc",
-      id: "references/cli",
-      label: "CLI",
+      type: "category",
+      label: "zCLI",
+      link: {
+        type: "doc",
+        id: "references/cli",
+      },
       customProps: {
         sidebar_icon: "command-line",
       },
       className: "homepage-sidebar-item",
+      items: [
+        {
+          type: "doc",
+          id: "references/cli/install",
+          label: "Install",
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        },
+        {
+          type: "doc",
+          id: "references/cli/access-logs",
+          label: "Access logs",
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        }
+      ],
     },
     {
       type: "doc",
@@ -626,13 +647,23 @@ module.exports = {
         },
         {
           type: "doc",
-          id: "nodejs/how-to/repo-connect",
-          label: "Connect GitHub / GitLab repository",
+          id: "nodejs/how-to/trigger-pipeline",
+          label: "Trigger build pipeline",
         },
         {
           type: "doc",
-          id: "nodejs/how-to/trigger-pipeline",
-          label: "Trigger build pipeline",
+          id: "nodejs/how-to/build-process",
+          label: "Build process",
+        },
+        {
+          type: "doc",
+          id: "nodejs/how-to/deploy-process",
+          label: "Deploy process",
+        },
+        {
+          type: "doc",
+          id: "nodejs/how-to/repo-connect",
+          label: "Connect GitHub / GitLab repository",
         },
         {
           type: "doc",
