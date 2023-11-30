@@ -673,7 +673,7 @@ module.exports = {
         {
           type: "doc",
           id: "nodejs/how-to/logs",
-          label: "Setup & accesss logs",
+          label: "Setup & access logs",
         },
         {
           type: "doc",
