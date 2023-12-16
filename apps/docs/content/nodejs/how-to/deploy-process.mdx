@@ -1,0 +1,114 @@
+---
+title: Node.js deploy process
+---
+
+## Application artefact
+When the [build phase](/nodejs/how-to/build-process) is finished, the application artefact is stored in the internal Zerops storage and the build container is deleted. 
+
+If you triggered the deploy pipeline [manually](/nodejs/how-to/trigger-pipeline#manual-builds-and-deploys-using-zerops-cli) using Zerops CLI, the application artefact is also uploaded to the internal Zerops storage. 
+
+Zerops uses the stored artefact to deploy the identical version of your application each time a new container is started: 
+* when a new application version is deployed
+* when the application [scales horizontally](/nodejs/how-to/create#horizontal-auto-scaling)
+* when a runtime container fails and a new container is started automatically
+
+## First deploy
+When your application is deployed for the first time, Zerops will start one or more runtime containers based on the service [auto scaling settings].
+
+Zerops performs following actions for each new container:
+1. Installs the runtime environment
+2. Downloads the application artefact from the internal storage
+3. Optionally runs the [init commands](/nodejs/how-to/build-pipeline#init)
+4. Starts your application using the [start command](/nodejs/how-to/build-pipeline#start)
+5. Optionally waits until the [readiness check](/nodejs/how-to/build-pipeline#readiness-check) succeeds
+6. The container is now active and receives incoming requests.
+
+Services with multiple containers are deployed in parallel.
+
+:::info
+If your application needs to be initialized in each runtime container, add [init commands](/nodejs/how-to/build-pipeline#init) to <code>zerops.yml</code>.
+:::
+
+:::caution
+Do not use the <code>init</code> commands for customising your runtime environment. See [how to customise the runtime environment](/nodejs/how-to/deploy-process#customise-nodejs-runtime-environment).
+:::
+ 
+## Further deploys
+When a previous version of your application is already running, Zerops will start new containers. The count of new containers will be the same as the count of existing containers. 
+
+Zerops performs the identical actions for each new container as the first deployment.
+When all new containers are started your service contains both new and old versions for a short period of time. 
+
+The old containers are then removed from the project balancer so they don't receive new requests. The Node.js process inside each of the old containers is terminated and all old containers are gradually deleted.
+
+## Readiness checks
+If your application isn't ready to handle requests right after it is started via the [start command](/nodejs/how-to/build-pipeline#start), configure a [readiness check](/nodejs/how-to/build-pipeline#readiness-check) in your `zerops.yml`. 
+
+If the readiness check is defined, Zerops will:
+1. Start your application
+2. Perform a readiness check
+3. If the readiness check fails, wait 5 seconds and repeat step 2. 
+4. If the readiness check succeeds, set the container as active.
+
+Application in the runtime container with a pending readiness check won't receive any incoming requests. Only active containers receive incoming requests to your Node.js service.
+
+If the readiness check is still failing after 5 minutes, the specific runtime container is marked as failed and Zerops will delete it, create a new runtime container and perform the deploy.
+
+The <a href="/nodejs/how-to/build-pipeline#httpget"><code>httpGet</code></a> readiness check is successful when the URL returns HTTP status code `2xx`. The timeout is 5 seconds. When the URL returns a `3xx` HTTP status, the readiness check HTTP client will follow the redirect.
+
+The <a href="/nodejs/how-to/build-pipeline#exec"><code>exec.command</code></a> readiness check is successful when the command returns status code 0. The timeout is 5 seconds.
+
+Read the [runtime log](/nodejs/how-to/logs#runtime-log) to troubleshoot failed readiness checks.
+
+## Application versions
+Zerops keeps 10 last versions of your application in the internal storage. 
+
+The list of application versions is available in Zerops GUI. Go to the service detail and choose **Service dashboard & runtime containers** from the left menu. The active version is highlighted, show all archived version by clicking on the button below.  
+
+**// TODO screenshot**
+
+The pipeline detail is accessible from the additional menu. The pipeline detail contains
+* The pipeline config (`zerops.yml`) that was used for the selected version
+* The build log (if available)
+* The prepare runtime log (if available)
+
+You can download the build artefact of the selected version or delete an inactive version manually.
+
+## Restore an archived version
+You can restore an archived version by choosing the **Activate** item from the additional menu.
+Zerops will deploy the selected version and the active version will be archived.
+
+The environment variables will be restored to the latest moment when the selected version was active.
+
+## Customise Node.js runtime environment
+The default Node.js runtime environment contains:
+* Ubuntu 18
+* selected version of Node.js selected when the runtime service was created.
+* <a href="/references/cli/install"><code>zCLI</code></a>, Zerops command line tool
+* `npm`, `yarn`, `git` and `npx` tools
+
+To install additional packages or tools add one or more <a href="/nodejs/how-to/build-pipeline#prepare-1"><code>run.prepare</code></a> commands to your `zerops.yml`.
+
+When the first deploy with a defined `prepare` attribute is triggered, Zerops will 
+1. create a prepare runtime container
+2. optionaly: [copy selected folders or files from your build container](/nodejs/how-to/build-pipeline#copy-folders-or-files-from-your-build-container)
+3. run the `run.prepare` commands in the defined order
+
+### Command exit code
+
+If any command fails, it returns an exit code other than 0 and the deploy is canceled. Read the [prepare runtime log](/nodejs/how-to/logs#prepare-runtime-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepare` commands are finished, your custom runtime environment is ready for the deploy phase.
+
+The prepare runtime container is automatically deleted after the prepare runtime phase has finished or failed.
+
+### Custom runtime environment cache 
+
+Some packages or tools can take a long time to install. Therefore, Zerops caches your custom runtime environment after the installation of your custom packages or tools is completed. When the second or following deploy is triggered, Zerops will use the custom runtime cache from the previous deploy if following conditions are met:
+1. Content of the <a href=""><code>build.addToRunPrepare</code></a> and <a href="/nodejs/how-to/build-pipeline#prepare-1"><code>run.prepare</code></a> attributes didn't change from the previous deploy
+2. The custom runtime cache wasn't invalidated in the Zerops GUI.
+
+To invalidate the custom runtime cache go to `yyy`
+
+**// TODO screenshot**
+
+When the custom runtime cache is used, Zerops doesn't create a prepare runtime container and executes the deployment of your application directly.
+

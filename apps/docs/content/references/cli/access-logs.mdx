@@ -1,0 +1,105 @@
+---
+title: How to access logs in zCLI
+---
+
+To start the VPN you need first [install & setup zCLI](/references/cli/install), the Zerops command-line tool.
+
+## Build log
+To access a build log in Zerops CLI use
+```sh
+zcli service log [projectNameOrId] [serviceName]@build                              
+```
+
+The command returns the build log to `stdout` with a streaming option. By default the command returns the last 100 log messages and exits. Use the `--follow` flag to continuously pool for new log messages.
+
+#### Command annotation
+```sh
+Usage:
+  zcli service log [projectNameOrId] [serviceName]@build [flags]
+
+Flags:
+  -h, --help                           Displays information about the service log command.
+
+
+      --limit <int>                    How many of the most recent log messages will be returned. 
+                                       Allowed interval is <1;1000>. Default value = 100.
+
+
+      --minimumSeverity <int|string>   Returns log messages with requested or higher severity. Set either severity number 
+                                       in the interval <0;7> or one of following severity codes: EMERGENCY, ALERT, CRITICAL,
+                                       ERROR, WARNING, NOTICE, INFORMATIONAL, DEBUG
+
+
+      --messageType <string>           Select either APPLICATION or WEBSERVER log messages to be returned. 
+                                       Default value = APPLICATION 
+
+
+      --follow                         If set, zCLI will continuously poll for new log messages. By default, the command will
+                                       exit once there are no more logs to display. To exit from this mode, use Control-C.
+
+
+      --format <string>                The format of returned log messages. Following formats are supported:
+                                       FULL: This is the default format. Returns messages in the complete Syslog format.
+                                       SHORT: Returns only timestamp and log message.
+                                       JSON: Returns messages in a single array of JSON objects.
+                                       JSONSTREAM: Return messages as separate JSON objects.
+                                       
+      --formatTemplate <string>        Set a custom log format. Can be used only with --format=FULL.. 
+                                       Example: --formatTemplate="{{.Timestamp}} {{.Severity}} {{.Facility}} {{.Message}}"
+```                                       
+
+You must enclose the `projectNameOrId` in quotes if it contains a space. The project name is visible in Zerops GUI. If you have more projects with a duplicate name, use the project ID instead. You'll find the project ID in the URL of the project dashboard page in Zerops GUI.<br/>E.g. <code>https://app&#46;zerops.io/project/<b>Evs8Je4NTvKeIkUqoUXp2w</b>/service-stacks</code>.
+
+## Runtime log
+To access the log of the first runtime container in Zerops CLI use
+```sh
+zcli service log [projectNameOrId] [serviceName]@N                              
+```
+
+where N is the container's number from the current container list. The number respects the order in which the containers were created.
+The sequence starts at `@1`.
+
+For an aggregate log from all service's runtime containers omit the `@N`
+```sh
+zcli service log [projectNameOrId] [serviceName]
+```
+
+The command returns the runtime log of the first container to `stdout` with a streaming option. By default the command returns the last 100 log messages and exits. Use the `--follow` flag to continuously pool for new log messages.
+
+#### Command annotation
+```sh
+Usage:
+  zcli service log [projectNameOrId] [serviceName]@N [flags]
+
+Flags:
+  -h, --help                           Displays information about the service log command.
+
+
+      --limit <int>                    How many of the most recent log messages will be returned. 
+                                       Allowed interval is <1;1000>. Default value = 100.
+
+
+      --minimumSeverity <int|string>   Returns log messages with requested or higher severity. Set either severity number 
+                                       in the interval <0;7> or one of following severity codes: EMERGENCY, ALERT, CRITICAL,
+                                       ERROR, WARNING, NOTICE, INFORMATIONAL, DEBUG
+
+
+      --messageType <string>           Select either APPLICATION or WEBSERVER log messages to be returned. 
+                                       Default value = APPLICATION 
+
+
+      --follow                         If set, zCLI will continuously poll for new log messages. By default, the command will
+                                       exit once there are no more logs to display. To exit from this mode, use Control-C.
+
+
+      --format <string>                The format of returned log messages. Following formats are supported:
+                                       FULL: This is the default format. Returns messages in the complete Syslog format.
+                                       SHORT: Returns only timestamp and log message.
+                                       JSON: Returns messages in a single array of JSON objects.
+                                       JSONSTREAM: Return messages as separate JSON objects.
+                                       
+      --formatTemplate <string>        Set a custom log format. Can be used only with --format=FULL.. 
+                                       Example: --formatTemplate="{{.Timestamp}} {{.Severity}} {{.Facility}} {{.Message}}"
+```                                       
+
+You must enclose the `projectNameOrId` in quotes if it contains a space. The project name is visible in Zerops GUI. If you have more projects with a duplicate name, use the project ID instead. You'll find the project ID in the URL of the project dashboard page in Zerops GUI.<br/>E.g. <code>https://app&#46;zerops.io/project/<b>Evs8Je4NTvKeIkUqoUXp2w</b>/service-stacks</code>.
