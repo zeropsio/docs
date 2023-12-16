@@ -1598,7 +1598,7 @@ module.exports = {
         {
           type: "doc",
           id: "postgresql/how-to/delete",
-          label: "Stop and start PostgreSQL service",
+          label: "Delete PostgreSQL service",
         },
       ],
     },
@@ -1639,6 +1639,266 @@ module.exports = {
           type: "doc",
           id: "postgresql/tech-details/limitations",
           label: "Technical limitations of PostgreSQL cluster",
+        },
+      ],
+    },
+  ],
+  mongodb: [
+    {
+      type: "ref",
+      id: "homepage",
+      label: "Back to home",
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: "back-arrow",
+      },
+    },
+    {
+      type: "doc",
+      id: "mongodb/overview",
+      label: "Zerops MongoDB Service",
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: "mongodb",
+      },
+    },
+    {
+      type: "category",
+      label: "How-to",
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: "doc",
+          id: "mongodb/how-to/create",
+          label: "Create MongoDB service",
+        },
+        {
+          type: "doc",
+          id: "mongodb/how-to/connect",
+          label: "Connect to MongoDB",
+        },
+        {
+          type: "doc",
+          id: "mongodb/how-to/manage",
+          label: "Manage users and databases",
+        },
+        {
+          type: "doc",
+          id: "mongodb/how-to/export-import-data",
+          label: "Export and import data",
+        },
+        {
+          type: "doc",
+          id: "mongodb/how-to/scale",
+          label: "Scale MongoDB service",
+        },
+        {
+          type: "doc",
+          id: "mongodb/how-to/control",
+          label: "Stop and start MongoDB service",
+        },
+        {
+          type: "doc",
+          id: "mongodb/how-to/delete",
+          label: "Delete MongoDB service",
+        },
+      ],
+    },
+  ],
+  elasticsearch: [
+    {
+      type: "ref",
+      id: "homepage",
+      label: "Back to home",
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: "back-arrow",
+      },
+    },
+    {
+      type: "doc",
+      id: "elasticsearch/overview",
+      label: "Zerops Elasticsearch Service",
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: "elasticsearch",
+      },
+    },
+    {
+      type: "category",
+      label: "How-to",
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: "doc",
+          id: "elasticsearch/how-to/create",
+          label: "Create Elasticsearch service",
+        },
+        {
+          type: "doc",
+          id: "elasticsearch/how-to/connect",
+          label: "Connect to Elasticsearch",
+        },
+        {
+          type: "doc",
+          id: "elasticsearch/how-to/manage",
+          label: "Manage users and databases",
+        },
+        {
+          type: "doc",
+          id: "elasticsearch/how-to/export-import-data",
+          label: "Export and import data",
+        },
+        {
+          type: "doc",
+          id: "elasticsearch/how-to/scale",
+          label: "Scale Elasticsearch service",
+        },
+        {
+          type: "doc",
+          id: "elasticsearch/how-to/control",
+          label: "Stop and start Elasticsearch service",
+        },
+        {
+          type: "doc",
+          id: "elasticsearch/how-to/delete",
+          label: "Delete Elasticsearch service",
+        },
+      ],
+    },
+  ],
+  keydb: [
+    {
+      type: "ref",
+      id: "homepage",
+      label: "Back to home",
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: "back-arrow",
+      },
+    },
+    {
+      type: "doc",
+      id: "keydb/overview",
+      label: "Zerops KeyDB Service",
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: "keydb",
+      },
+    },
+    {
+      type: "category",
+      label: "How-to",
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: "doc",
+          id: "keydb/how-to/create",
+          label: "Create KeyDB service",
+        },
+        {
+          type: "doc",
+          id: "keydb/how-to/connect",
+          label: "Connect to KeyDB",
+        },
+        {
+          type: "doc",
+          id: "keydb/how-to/manage",
+          label: "Manage users and databases",
+        },
+        {
+          type: "doc",
+          id: "keydb/how-to/export-import-data",
+          label: "Export and import data",
+        },
+        {
+          type: "doc",
+          id: "keydb/how-to/scale",
+          label: "Scale KeyDB service",
+        },
+        {
+          type: "doc",
+          id: "keydb/how-to/control",
+          label: "Stop and start KeyDB service",
+        },
+        {
+          type: "doc",
+          id: "keydb/how-to/delete",
+          label: "Delete KeyDB service",
+        },
+      ],
+    },
+  ],
+  rabbitmq: [
+    {
+      type: "ref",
+      id: "homepage",
+      label: "Back to home",
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: "back-arrow",
+      },
+    },
+    {
+      type: "doc",
+      id: "rabbitmq/overview",
+      label: "Zerops RabbitMQ Service",
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: "rabbitmq",
+      },
+    },
+    {
+      type: "category",
+      label: "How-to",
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: "doc",
+          id: "rabbitmq/how-to/create",
+          label: "Create RabbitMQ service",
+        },
+        {
+          type: "doc",
+          id: "rabbitmq/how-to/connect",
+          label: "Connect to RabbitMQ",
+        },
+        {
+          type: "doc",
+          id: "rabbitmq/how-to/manage",
+          label: "Manage users and databases",
+        },
+        {
+          type: "doc",
+          id: "rabbitmq/how-to/export-import-data",
+          label: "Export and import data",
+        },
+        {
+          type: "doc",
+          id: "rabbitmq/how-to/scale",
+          label: "Scale RabbitMQ service",
+        },
+        {
+          type: "doc",
+          id: "rabbitmq/how-to/control",
+          label: "Stop and start RabbitMQ service",
+        },
+        {
+          type: "doc",
+          id: "rabbitmq/how-to/delete",
+          label: "Delete RabbitMQ service",
         },
       ],
     },
