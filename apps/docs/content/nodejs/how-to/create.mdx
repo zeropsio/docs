@@ -137,7 +137,7 @@ Check if your application is ready for [highly available mode]. If not, set the 
 You can keep the minimum at 1 container, but you should do so with caution and only for non-critical or dev services. Production grade service should start with at least 2 containers.
 :::
 
-[Learn more] about Node.js auto scaling.
+[Learn more](/nodejs/how-to/scaling) about Node.js auto scaling.
 
 ## Create Node.js service using zCLI
 zCLI is the Zerops command-line tool. To create a new Node.js service via the command-line, follow these steps:
@@ -283,22 +283,18 @@ At least one service in `services:` section is required. You can create a projec
 	<tr>
 		<th>Parameter</th>
 		<th>Description</th>
-		<th>Limitations</th>
 	</tr>
 </thead>
 <tbody>
 	<tr>
 		<td><b>name</b></td>
-		<td>The unique service identifier. The hostname of the new database will be set to the <code>name</code> value.</td>
-		<td>- duplicate services with the same name in the same project are forbidden<br/>
+		<td>The unique service identifier.<br/><br/>The hostname of the new database will be set to the <code>name</code> value. <br/><br/><b>Limitations:</b><br/>- duplicate services with the same name in the same project are forbidden<br/>
     - maximum 25 characters<br/>
     - must contain only lowercase ASCII letters (a-z) or numbers (0-9)</td>
 	</tr>
 	<tr>
   <td><b>type</b></td>
-		<td>Specifies the service type <code>nodejs</code> and version.<br/>
-        </td>
-		<td>Following Node.js major versions are currently supported: <i>v18</i>,<i>v16</i>,<i>v14</i></td>
+		<td>Specifies the service type <code>nodejs</code> and version.<br/>Set type: <code>nodejs<span>@</span>&lt;version&gt;</code><br/><br/><b>Limitations:</b><br/>Following Node.js major versions are currently supported: <i>v18</i>,<i>v16</i>,<i>v14</i></td>
 	</tr>
     <tr>
   <td><b>ports</b></td>
@@ -306,35 +302,31 @@ At least one service in `services:` section is required. You can create a projec
 Each port has following attributes:
 <ul>
   <li>port <b>&lt;int&gt;</b></li>
-  <li>protocol <b>&lt;string&gt;</b> with allowed values "TCP" or "UDP"</li>
+  <li>protocol <b>&lt;string&gt;</b> with allowed values <code>"TCP"</code> or <code>"UDP"</code></li>
   <li>httpSupport <b>&lt;bool&gt;</b></li>
 </ul>
-The <b>port</b> attribute defines the port number.<br/><br/>
-The <b>protocol</b> attribute is optional. Default value is "TCP".<br/><br/>
+The <b>port</b> attribute defines the port number. At least one internal port is required for Node.js service. You can set any port number between <code>10</code> and <code>65435</code>. Ports outside this interval are reserved for internal Zerops systems.
+<br/><br/>
+The <b>protocol</b> attribute is optional. Default value is <code>"TCP"</code>.<br/><br/>
 Set <b>httpSupport = true</b> if a web server runs on the port. Zerops uses this information for the configuration of [external routing]. This option is available only in combination with the <b>TCP</b> protocol.<br/><br/>
 Learn more about [how to connect to your Node.js service].<br/>
         </td>
-		<td>At least one internal port is required for Node.js service. You can set any port number between 10 and 65435. Ports outside this interval are reserved for internal Zerops systems.</td>
 	</tr>
     <tr>
   <td><b>verticalAutoscaling</b></td>
 		<td><b>Optional.</b> Defines <a href="/nodejs/how-to/create#set-auto-scaling-configuration">custom vertical auto scaling parameters</a>.</td>
-		<td></td>
 	</tr>
         <tr>
   <td><b>minContainers</b></td>
-		<td>Defines the minimum number of containers for <a href="/nodejs/how-to/create#horizontal-auto-scaling">horizontal autoscaling</a>.</td>
-		<td>Current maximum value = 6.</td>
+		<td>Defines the minimum number of containers for <a href="/nodejs/how-to/create#horizontal-auto-scaling">horizontal autoscaling</a>.<br/><br/><b>Limitations:</b><br/>Current maximum value = 6.</td>
 	</tr>
         <tr>
   <td><b>maxContainers</b></td>
-		<td>Defines the maximum number of containers for <a href="/nodejs/how-to/create#horizontal-auto-scaling">horizontal autoscaling</a>.</td>
-		<td>Current maximum value = 6.</td>
+		<td>Defines the maximum number of containers for <a href="/nodejs/how-to/create#horizontal-auto-scaling">horizontal autoscaling</a>.<br/><br/><b>Limitations:</b><br/>Current maximum value = 6.</td>
 	</tr>
         <tr>
   <td><b>envVariables</b></td>
-		<td><b>Optional.</b> Defines one or more env variables as a key value map.</td>
-		<td>See env variable [restrictions].</td>
+		<td><b>Optional.</b> Defines one or more env variables as a key value map. See env variable <a href="/nodejs/how-to/env-variables#env-variable-restrictions">restrictions</a>.</td>
 	</tr>
 </tbody>
 </table>

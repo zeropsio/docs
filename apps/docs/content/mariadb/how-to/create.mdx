@@ -152,7 +152,7 @@ The `project:` section is required. Only one project can be defined.
 | Parameter              | Description                                                                   | Limitations             |
 | ---------------------- | ----------------------------------------------------------------------------- | -----------             |
 | **name**               | The name of the new project. Duplicates are allowed.                          |                         |
-| **description**        | **Optional.** Description of the new project.                                 | Maximum 255 characters. |
+| **description**        | **Optional.** Description of the new project.                                 | Max. 255 characters. |
 | **tags**               | **Optional.** One or more string tags. Tags do not have a functional meaning, they only provide better orientation in projects.          |
 
 At least one service in `services:` section is required. You can create a project with multiple services. The example above contains only MariaDB services but you can create a `description.yml` with [different types] of services.
@@ -162,43 +162,39 @@ At least one service in `services:` section is required. You can create a projec
 	<tr>
 		<th>Parameter</th>
 		<th>Description</th>
-		<th>Limitations</th>
 	</tr>
 </thead>
 <tbody>
 	<tr>
 		<td><b>name</b></td>
-		<td>The unique service identifier. The hostname of the new database will be set to the <code>name</code> value.</td>
-		<td>- duplicate services with the same name in the same project are forbidden<br/>
+		<td>The unique service identifier.<br/><br/>The hostname of the new database will be set to the <code>name</code> value. <br/><br/><b>Limitations:</b><br/>- duplicate services with the same name in the same project are forbidden<br/>
     - maximum 25 characters<br/>
     - must contain only lowercase ASCII letters (a-z) or numbers (0-9)</td>
 	</tr>
 	<tr>
   <td><b>type</b></td>
-		<td>Specifies the service type <code>mariadb</code> and version.<br/>Set type: <code>mariadb<span>@</span>10.4</code></td>
-		<td>Currently only MariaDB <i>10.4</i> is available.</td>
+		<td>Specifies the service type <code>mariadb</code> and version.<br/>Set type: <code>mariadb<span>@</span>10.4</code><br/><br/><b>Limitations:</b><br/>Currently only MariaDB <i>10.4</i> is available.</td>
 	</tr>
   	<tr>
   <td><b>mode</b></td>
 		<td>Defines the operation mode of MariaDB service.<br/>
     <br/><b>HA</b><br/>Zerops will create a MariaDB cluster with 3 database containers and 2 free database proxies. This mode is suited for production.<br/><br/>
-    Zerops always keep the 3 database containers on different physical machines. All your data is stored redundantly in 3 copies. In case of a failure of a container or the underlying physical machine, Zerops automatically disconnects the failed container from the cluster, creates a new container and syncs all data from the remaining 2 copies. Finally the broken container is automatically deleted.<br/><br/>
+    Zerops always keep the 3 database containers on different physical machines. All your data is stored redundantly in 3 copies. In case of a failure of a container or the underlying physical machine, Zerops automatically disconnects the failed container from the cluster, creates a new container and syncs all data from the remaining 2 copies. Finally the broken container is automatically deleted.<br/><br/><b>Limitations:</b><br/>
+    <a href="/mariadb/tech-details/limitations">Learn more</a> about specific behaviour and technical limitations of the MariaDB cluster.<br/><br/>
     <b>NON_HA</b><br/>
     Zerops will create a MariaDB database installed in a single container. Useful for non-essential data or dev environments.<br/><br/>
     Your data is stored only in a single container. If the container or the underlying physical machine fails, your data since the last backup are lost. Zerops doesn't provide any automatic repairs of single node MariaDB services.
     </td>
-		<td><a href="/mariadb/tech-details/limitations">Learn more</a> about specific behaviour and technical limitations of the MariaDB cluster.</td>
 	</tr>
   	<tr>
   <td><b>verticalAutoscaling</b></td>
 		<td><b>Optional.</b> Defines <a href="/mariadb/how-to/scale#vertical-scaling">custom auto scaling parameters</a>.</td>
-		<td></td>
 	</tr>
 </tbody>
 </table>
 
-:::caution
-The MariaDB service **hostname** and **mode** are fixed after the service is created. They can't be changed later.
+:::note
+The MariaDB service **name** and **mode** are fixed after the service is created. They can't be changed later.
 :::
 
 ### Create a project based on the description.yml
