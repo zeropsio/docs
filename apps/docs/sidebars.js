@@ -73,7 +73,7 @@ module.exports = {
     {
       type: "doc",
       id: "features/access",
-      label: "Custom domains & IP accesss",
+      label: "Custom domains & IP access",
       customProps: {
         sidebar_icon: "globe-europe",
       },
@@ -664,11 +664,17 @@ module.exports = {
           type: "doc",
           id: "nodejs/how-to/repo-connect",
           label: "Connect GitHub / GitLab repository",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "nodejs/how-to/customize-runtime",
           label: "Customize Node.js runtime",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
@@ -679,11 +685,17 @@ module.exports = {
           type: "doc",
           id: "nodejs/how-to/filebrowser",
           label: "Browse container files",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "nodejs/how-to/access",
           label: "Access Node.js runtime service",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
@@ -699,11 +711,17 @@ module.exports = {
           type: "doc",
           id: "nodejs/how-to/ports",
           label: "Update open ports",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "nodejs/how-to/shared-storage",
           label: "Connect / disconnect shared storage",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
@@ -764,51 +782,81 @@ module.exports = {
           type: "doc",
           id: "php/how-to/create",
           label: "Create PHP service",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "php/how-to/env-variables",
           label: "Manage environment variables",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "php/how-to/build-pipeline",
           label: "Configure build & deploy pipeline",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "php/how-to/repo-connect",
           label: "Connect GitHub / GitLab repository",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "php/how-to/trigger-pipeline",
           label: "Trigger build pipeline",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "php/how-to/customize-runtime",
           label: "Customize PHP runtime",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "php/how-to/logs",
-          label: "Setup & accesss logs",
+          label: "Setup & access logs",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "php/how-to/filebrowser",
           label: "Browse container files",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "php/how-to/access",
           label: "Access PHP runtime service",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "php/how-to/scaling",
           label: "Scale PHP runtime service",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
@@ -819,11 +867,17 @@ module.exports = {
           type: "doc",
           id: "php/how-to/ports",
           label: "Update open ports",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "php/how-to/shared-storage",
           label: "Connect / disconnect shared storage",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
@@ -884,51 +938,81 @@ module.exports = {
           type: "doc",
           id: "python/how-to/create",
           label: "Create Python service",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "python/how-to/env-variables",
           label: "Manage environment variables",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "python/how-to/build-pipeline",
           label: "Configure build & deploy pipeline",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "python/how-to/repo-connect",
           label: "Connect GitHub / GitLab repository",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "python/how-to/trigger-pipeline",
           label: "Trigger build pipeline",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "python/how-to/customize-runtime",
           label: "Customize Python runtime",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "python/how-to/logs",
-          label: "Setup & accesss logs",
+          label: "Setup & access logs",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "python/how-to/filebrowser",
           label: "Browse container files",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "python/how-to/access",
           label: "Access Python runtime service",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "python/how-to/scaling",
           label: "Scale Python runtime service",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
@@ -939,11 +1023,17 @@ module.exports = {
           type: "doc",
           id: "python/how-to/ports",
           label: "Update open ports",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "python/how-to/shared-storage",
           label: "Connect / disconnect shared storage",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
@@ -1004,51 +1094,81 @@ module.exports = {
           type: "doc",
           id: "go/how-to/create",
           label: "Create Go service",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "go/how-to/env-variables",
           label: "Manage environment variables",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "go/how-to/build-pipeline",
           label: "Configure build & deploy pipeline",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "go/how-to/repo-connect",
           label: "Connect GitHub / GitLab repository",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "go/how-to/trigger-pipeline",
           label: "Trigger build pipeline",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "go/how-to/customize-runtime",
           label: "Customize Go runtime",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "go/how-to/logs",
-          label: "Setup & accesss logs",
+          label: "Setup & access logs",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "go/how-to/filebrowser",
           label: "Browse container files",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "go/how-to/access",
           label: "Access Go runtime service",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "go/how-to/scaling",
           label: "Scale Go runtime service",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
@@ -1059,11 +1179,17 @@ module.exports = {
           type: "doc",
           id: "go/how-to/ports",
           label: "Update open ports",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "go/how-to/shared-storage",
           label: "Connect / disconnect shared storage",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
@@ -1124,51 +1250,81 @@ module.exports = {
           type: "doc",
           id: "rust/how-to/create",
           label: "Create Rust service",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "rust/how-to/env-variables",
           label: "Manage environment variables",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "rust/how-to/build-pipeline",
           label: "Configure build & deploy pipeline",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "rust/how-to/repo-connect",
           label: "Connect GitHub / GitLab repository",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "rust/how-to/trigger-pipeline",
           label: "Trigger build pipeline",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "rust/how-to/customize-runtime",
           label: "Customize Rust runtime",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "rust/how-to/logs",
-          label: "Setup & accesss logs",
+          label: "Setup & access logs",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "rust/how-to/filebrowser",
           label: "Browse container files",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "rust/how-to/access",
           label: "Access Rust runtime service",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "rust/how-to/scaling",
           label: "Scale Rust runtime service",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
@@ -1179,11 +1335,17 @@ module.exports = {
           type: "doc",
           id: "rust/how-to/ports",
           label: "Update open ports",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "rust/how-to/shared-storage",
           label: "Connect / disconnect shared storage",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
@@ -1244,51 +1406,81 @@ module.exports = {
           type: "doc",
           id: "dotnet/how-to/create",
           label: "Create .NET service",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "dotnet/how-to/env-variables",
           label: "Manage environment variables",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "dotnet/how-to/build-pipeline",
           label: "Configure build & deploy pipeline",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "dotnet/how-to/repo-connect",
           label: "Connect GitHub / GitLab repository",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "dotnet/how-to/trigger-pipeline",
           label: "Trigger build pipeline",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "dotnet/how-to/customize-runtime",
           label: "Customize .NET runtime",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "dotnet/how-to/logs",
-          label: "Setup & accesss logs",
+          label: "Setup & access logs",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "dotnet/how-to/filebrowser",
           label: "Browse container files",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "dotnet/how-to/access",
           label: "Access .NET runtime service",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "dotnet/how-to/scaling",
           label: "Scale .NET runtime service",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
@@ -1299,11 +1491,17 @@ module.exports = {
           type: "doc",
           id: "dotnet/how-to/ports",
           label: "Update open ports",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "dotnet/how-to/shared-storage",
           label: "Connect / disconnect shared storage",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
@@ -1364,51 +1562,81 @@ module.exports = {
           type: "doc",
           id: "java/how-to/create",
           label: "Create Java service",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "java/how-to/env-variables",
           label: "Manage environment variables",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "java/how-to/build-pipeline",
           label: "Configure build & deploy pipeline",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "java/how-to/repo-connect",
           label: "Connect GitHub / GitLab repository",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "java/how-to/trigger-pipeline",
           label: "Trigger build pipeline",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "java/how-to/customize-runtime",
           label: "Customize Java runtime",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "java/how-to/logs",
-          label: "Setup & accesss logs",
+          label: "Setup & access logs",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "java/how-to/filebrowser",
           label: "Browse container files",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "java/how-to/access",
           label: "Access Java runtime service",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "java/how-to/scaling",
           label: "Scale Java runtime service",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
@@ -1419,11 +1647,17 @@ module.exports = {
           type: "doc",
           id: "java/how-to/ports",
           label: "Update open ports",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",
           id: "java/how-to/shared-storage",
           label: "Connect / disconnect shared storage",
+          customProps: {
+            sidebar_is_soon: true,
+          }
         },
         {
           type: "doc",

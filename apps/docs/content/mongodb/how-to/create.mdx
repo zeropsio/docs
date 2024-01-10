@@ -1,0 +1,266 @@
+---
+title: Create a MongoDB service in Zerops
+---
+
+...
+
+## Create MongoDB using Zerops GUI
+First, set up a project in Zerops GUI. Then go to the project dashboard page and choose **Add new service** in the left menu in the **Services** block. Then add a new MongoDB service:
+
+**// TODO screenshot (add a new service page)**
+
+| Parameter              | Description                                                                   | Limitations |
+| ---------------------- | ----------------------------------------------------------------------------- | ----------- |
+| **hostname**           | A unique service identifier like `mongodb`,`sql`, `db` etc.                   | - duplicate services with the same name in the same project are forbidden<br/>- maximum 25 characters<br/>- must contain only lowercase ASCII letters (a-z) or numbers (0-9) 
+
+:::caution
+The hostname is fixed after the service is created. It can't be changed later.
+:::
+
+### Choose MongoDB service mode
+Zerops provides MongoDB service in two modes: **Highly available** and **Single container**.
+
+**// TODO image (add a new MongoDB page - Automatic scaling section)**
+
+#### Highly available 
+
+**//TODO review**
+
+Creates a MongoDB cluster with **3 database containers** and **2 free database proxies**. 
+This mode is suited for production. 
+
+Zerops always keeps the 3 database containers on different physical machines. All your data is stored redundantly in 3 identical copies. In case of a failure of a container or the underlying physical machine, Zerops automatically disconnects the failed container from the cluster, creates a new container and syncs all data from the remaining 2 copies. Finally the broken container is automatically deleted.
+
+// TODO update link
+
+[Learn more](/mongodb/tech-details/cluster) about specific behaviour and technical limitations of the MongoDB cluster.
+
+#### Single container
+
+A MongoDB database installed in a single container is created. Useful for non-essential data or dev environments.
+
+Your data is stored only in a single container. If the container or the underlying physical machine fails, your data since the last backup are lost. Zerops doesn't provide any automatic repairs of single node MongoDB services.
+
+:::caution
+The MongoDB service mode is fixed after the service is created. It can't be changed later.
+:::
+
+### Choose MongoDB version
+
+...
+
+### Set auto scaling configuration
+
+**//TODO review**
+
+Zerops scales the MongoDB services automatically by raising or lowering the hardware resources of each database container.
+
+Vertical auto scaling has following default configuration:
+
+| &nbsp;              | Minimum resource | Maximum resource |
+| ------------------- | ---------------- | ---------------- |
+| **vCPU**            | 1                | 20               | 
+| **RAM**             | 1 GB             | 32 GB            |
+| **Disk**            | 1 GB             | 100 GB           |
+
+For most cases, the default parameters will work without issues. If you need to limit the cost of the MongoDB service, lower the maximal resources. Zerops will never scale above the selected maximums.
+
+When you are experiencing problems with insufficient MongoDB performance or capacity, increase the minimal resources. Zerops will never scale below the selected minimums.
+
+:::info
+You can change the auto scaling parameters later.
+:::
+
+**// TODO screenshot (add a new MongoDB page - Automatic scaling section)**
+
+MongoDB needs at least 10 vCPUs to start. Zerops automatically starts MongoDB service with at least 10 vCPUs. If the database is idle after the start, Zerops will scale the MongoDB down to selected minimum vCPU settings. If you set the minimum vCPU settings higher than 10 vCPUs, Zerops will start with the required minimum vCPU settings. 
+
+[Learn more](/mongodb/how-to/scale) about MongoDB auto scaling.
+
+## Create MongoDB using zCLI
+zCLI is the Zerops command-line tool. To create a new MongoDB service via the command-line, follow these steps:
+1. [Install & setup zCLI](/references/cli/install)
+2. [Create a project description file](#create-a-project-description-file) 
+3. Create a project and a MongoDB service 
+
+### Create a project description file
+Zerops uses a yaml format file to describe the project infrastructure.
+
+#### Basic example
+Create a directory `my-project`. Create a `description.yml` file inside the directory with the following content:
+```yml
+# basic project data
+project:
+  # project name
+  name: my-project
+# array of project services
+services:
+  -
+    # service name
+    hostname: mongodb1
+    # service type and version number in mongodb@XXX format
+    type: mongodb@XXX
+    # mode of operation "HA"/"NON_HA"
+    mode: NON_HA
+```
+The yaml file describes your future project infrastructure. The project will contain one MongoDB service in the [single container](#single-container) mode with default [auto scaling](/mongodb/how-to/scale) configuration. Hostname will be set to `mongodb1`.
+
+#### Full example
+Create a directory `my-project`. Create a `description.yml` file inside the directory with the following content:
+```yml
+# basic project data
+project:
+  # project name
+  name: my-project
+  # optional: project description 
+  description: A project with a MongoDB database
+  # optional: project tags
+  tags:
+  - DEMO
+  - ZEROPS
+# array of project services
+services:
+  -
+    # first service hostname
+    hostname: mongodb1
+    # service type and version number in mongodb@XXX format
+    type: mongodb@XXX
+    # mode of operation "HA"/"NON_HA"
+    mode: HA
+    # optional: vertical auto scaling customization 
+    verticalAutoscaling: 
+      minVCpu: 10
+      maxVCpu: 20
+      minRam: 4
+      maxRam: 8
+      minDisk: 2
+      maxDisk: 10
+  -
+    # second service hostname
+    hostname: mongodb2
+    # service type and version number in mongodb@XXX format
+    type: mongodb@XXX
+    # mode of operation "HA"/"non_HA"
+    mode: NON_HA
+```
+
+The yaml file describes your future project infrastructure. The project will contain two MongoDB services. 
+
+The hostname of the first service will be set to `mongodb1`. The [high availability](#highly-available) mode will be chosen and the custom [auto scaling configuration](/mongodb/how-to/scale) will be set.
+
+The hostname of the second service will be set to `mongodb2`. The [single container](#single-container) mode will be chosen and the default [auto scaling configuration](/mongodb/how-to/scale) will be set.
+
+#### Description of description.yml parameters
+The `project:` section is required. Only one project can be defined.
+
+| Parameter              | Description                                                                   | Limitations             |
+| ---------------------- | ----------------------------------------------------------------------------- | -----------             |
+| **name**               | The name of the new project. Duplicates are allowed.                          |                         |
+| **description**        | **Optional.** Description of the new project.                                 | Maximum 255 characters. |
+| **tags**               | **Optional.** One or more string tags. Tags do not have a functional meaning, they only provide better orientation in projects.          |
+
+At least one service in `services:` section is required. You can create a project with multiple services. The example above contains only MongoDB services but you can create a `description.yml` with [different types] of services.
+
+<table>
+<thead>
+	<tr>
+		<th>Parameter</th>
+		<th>Description</th>
+		<th>Limitations</th>
+	</tr>
+</thead>
+<tbody>
+	<tr>
+		<td><b>name</b></td>
+		<td>The unique service identifier. The hostname of the new database will be set to the <code>name</code> value.</td>
+		<td>- duplicate services with the same name in the same project are forbidden<br/>
+    - maximum 25 characters<br/>
+    - must contain only lowercase ASCII letters (a-z) or numbers (0-9)</td>
+	</tr>
+	<tr>
+  <td><b>type</b></td>
+		<td>Specifies the service type <code>mongodb</code> and version.<br/>Set type: <code>mongodb<span>@</span>XXX</code></td>
+		<td>Currently only MongoDB <i>XXX</i> is available.</td>
+	</tr>
+  	<tr>
+  <td><b>mode</b></td>
+		<td>Defines the operation mode of MongoDB service.<br/>
+    <br/><b>HA</b><br/>Zerops will create a MongoDB cluster with 3 database containers and 2 free database proxies. This mode is suited for production.<br/><br/>
+    Zerops always keep the 3 database containers on different physical machines. All your data is stored redundantly in 3 copies. In case of a failure of a container or the underlying physical machine, Zerops automatically disconnects the failed container from the cluster, creates a new container and syncs all data from the remaining 2 copies. Finally the broken container is automatically deleted.<br/><br/>
+    <b>NON_HA</b><br/>
+    Zerops will create a MongoDB database installed in a single container. Useful for non-essential data or dev environments.<br/><br/>
+    Your data is stored only in a single container. If the container or the underlying physical machine fails, your data since the last backup are lost. Zerops doesn't provide any automatic repairs of single node MongoDB services.
+    </td>
+		<td><a href="/mongodb/tech-details/limitations">Learn more</a> about specific behaviour and technical limitations of the MongoDB cluster.</td>
+	</tr>
+  	<tr>
+  <td><b>verticalAutoscaling</b></td>
+		<td><b>Optional.</b> Defines <a href="/mongodb/how-to/scale#vertical-scaling">custom auto scaling parameters</a>.</td>
+		<td></td>
+	</tr>
+</tbody>
+</table>
+
+:::caution
+The MongoDB service **hostname** and **mode** are fixed after the service is created. They can't be changed later.
+:::
+
+### Create a project based on the description.yml
+
+When you have your `description.yml` ready, use the `zcli project import` command to create a new project and the service infrastructure. 
+
+```yml
+Usage:
+  zcli project import ./my-project/description.yml [flags]
+
+Flags:
+  --clientId <string>   If you have access to more than one client, you must specify the client ID for which the project is to be created.
+  -h, --help   Displays help for the project import command.
+```
+
+
+Zerops will create a project and one or more services based on the `description.yml` content.
+
+Maximum size of the `description.yml` file is 100 kB.
+
+You don't specify the project name in the `zcli project import` command, because the project name is defined in the `description.yml`.
+
+If you have access to more than one client, you must specify the client ID for which the project is to be created. The `clientID` is located in the Zerops GUI under the client name on the project dashboard page.
+
+**// TODO screenshot (where the clientID is located in Zerops GUI)**
+
+### Add MongoDB service to an existing project
+
+#### Example
+
+Create a directory `my-project` if it doesn't exist. Create an `import.yml` file inside the `my-project` directory with following content:
+
+```bash
+# array of project services
+services:
+  -
+    # service name
+    hostname: mongodb1
+    # service type and version number in mongodb@XXX format
+    type: mongodb@XXX
+    # mode of operation "HA"/"NON_HA"
+    mode: NON_HA
+```
+
+The yaml file describes the list of one or more services that you want to add to your existing project. In the example above, one MongoDB service in the [single container mode](#single-container) with default [auto scaling](/mongodb/how-to/scale) configuration will be added to your project. Hostname of the new service will be set to `mongodb1`.
+
+The content of the `services:` section of `import.yml` is identical to the [project description file](#create-a-project-description-file). The `import.yml` never contains the `project:` section because the project already exists.
+
+When you have your `import.yml` ready, use the `zcli project import` command to add one or more services to your existing Zerops project.
+
+```sh
+Usage:
+  zcli service import [projectNameOrId] ./my-project/import.yml [flags]
+
+Flags:
+  -h, --help   Displays help for the service import command.
+```
+
+You must enclose the `projectNameOrId` in quotes if it contains a space. The project name is visible in Zerops GUI. If you have more projects with a duplicate name, use the project ID instead. You'll find the project ID in the URL of the project dashboard page in Zerops GUI. <br/>E.g. <code>https://app&#46;zerops.io/project/<b>Evs8Je4NTvKeIkUqoUXp2w</b>/service-stacks</code>.
+
+Maximum size of the `import.yml` file is 100 kB.
