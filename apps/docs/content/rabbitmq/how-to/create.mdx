@@ -11,7 +11,7 @@ First, set up a project in Zerops GUI. Then go to the project dashboard page and
 
 | Parameter              | Description                                                                   | Limitations |
 | ---------------------- | ----------------------------------------------------------------------------- | ----------- |
-| **hostname**           | A unique service identifier like `rabbitmq`,`sql`, `db` etc.                   | - duplicate services with the same name in the same project are forbidden<br/>- maximum 25 characters<br/>- must contain only lowercase ASCII letters (a-z) or numbers (0-9) 
+| **hostname**           | A unique service identifier like `rabbitmq`, `db` etc.                   | - duplicate services with the same name in the same project are forbidden<br/>- maximum 25 characters<br/>- must contain only lowercase ASCII letters (a-z) or numbers (0-9) 
 
 :::caution
 The hostname is fixed after the service is created. It can't be changed later.
@@ -33,7 +33,7 @@ Zerops always keeps the 3 database containers on different physical machines. Al
 
 // TODO update link
 
-[Learn more](/rabbitmq/tech-details/cluster) about specific behaviour and technical limitations of the RabbitMQ cluster.
+[Learn more] about specific behaviour and technical limitations of the RabbitMQ cluster.
 
 #### Single container
 
@@ -60,7 +60,7 @@ Vertical auto scaling has following default configuration:
 | &nbsp;              | Minimum resource | Maximum resource |
 | ------------------- | ---------------- | ---------------- |
 | **vCPU**            | 1                | 20               | 
-| **RAM**             | 1 GB             | 32 GB            |
+| **RAM**             | 0.5 GB           | 32 GB            |
 | **Disk**            | 1 GB             | 100 GB           |
 
 For most cases, the default parameters will work without issues. If you need to limit the cost of the RabbitMQ service, lower the maximal resources. Zerops will never scale above the selected maximums.
@@ -73,7 +73,9 @@ You can change the auto scaling parameters later.
 
 **// TODO screenshot (add a new RabbitMQ page - Automatic scaling section)**
 
-RabbitMQ needs at least 10 vCPUs to start. Zerops automatically starts RabbitMQ service with at least 10 vCPUs. If the database is idle after the start, Zerops will scale the RabbitMQ down to selected minimum vCPU settings. If you set the minimum vCPU settings higher than 10 vCPUs, Zerops will start with the required minimum vCPU settings. 
+**//TODO review**
+
+RabbitMQ needs at least 20 vCPUs to start. Zerops automatically starts RabbitMQ service with at least 20 vCPUs. If the database is idle after the start, Zerops will scale the RabbitMQ down to selected minimum vCPU settings. If you set the minimum vCPU settings higher than 20 vCPUs, Zerops will start with the required minimum vCPU settings. 
 
 [Learn more](/rabbitmq/how-to/scale) about RabbitMQ auto scaling.
 
@@ -166,14 +168,12 @@ At least one service in `services:` section is required. You can create a projec
 	<tr>
 		<th>Parameter</th>
 		<th>Description</th>
-		<th>Limitations</th>
 	</tr>
 </thead>
 <tbody>
 	<tr>
-		<td><b>name</b></td>
-		<td>The unique service identifier. The hostname of the new database will be set to the <code>name</code> value.</td>
-		<td>- duplicate services with the same name in the same project are forbidden<br/>
+		<td><b>hostname</b></td>
+		<td>The unique service identifier.<br/><br/>The hostname of the new database will be set to the <code>hostname</code> value. <br/><br/><b>Limitations:</b><br/>- duplicate services with the same name in the same project are forbidden<br/>
     - maximum 25 characters<br/>
     - must contain only lowercase ASCII letters (a-z) or numbers (0-9)</td>
 	</tr>
@@ -185,13 +185,12 @@ At least one service in `services:` section is required. You can create a projec
   	<tr>
   <td><b>mode</b></td>
 		<td>Defines the operation mode of RabbitMQ service.<br/>
-    <br/><b>HA</b><br/>Zerops will create a RabbitMQ cluster with 3 database containers and 2 free database proxies. This mode is suited for production.<br/><br/>
-    Zerops always keep the 3 database containers on different physical machines. All your data is stored redundantly in 3 copies. In case of a failure of a container or the underlying physical machine, Zerops automatically disconnects the failed container from the cluster, creates a new container and syncs all data from the remaining 2 copies. Finally the broken container is automatically deleted.<br/><br/>
+    <br/><b>HA</b><br/>Creates a RabbitMQ cluster with 3 database containers and 2 free database proxies. This mode is suited for production.<br/><br/>
+    Zerops always keeps the 3 database containers on different physical machines. All your data is stored redundantly in 3 identical copies. In case of a failure of a container or the underlying physical machine, Zerops automatically disconnects the failed container from the cluster, creates a new container and syncs all data from the remaining 2 copies. Finally the broken container is automatically deleted.<br/><br/>
     <b>NON_HA</b><br/>
     Zerops will create a RabbitMQ database installed in a single container. Useful for non-essential data or dev environments.<br/><br/>
     Your data is stored only in a single container. If the container or the underlying physical machine fails, your data since the last backup are lost. Zerops doesn't provide any automatic repairs of single node RabbitMQ services.
     </td>
-		<td><a href="/rabbitmq/tech-details/limitations">Learn more</a> about specific behaviour and technical limitations of the RabbitMQ cluster.</td>
 	</tr>
   	<tr>
   <td><b>verticalAutoscaling</b></td>
@@ -224,7 +223,7 @@ Zerops will create a project and one or more services based on the `description.
 Maximum size of the `description.yml` file is 100 kB.
 
 You don't specify the project name in the `zcli project import` command, because the project name is defined in the `description.yml`.
-postgresql
+
 If you have access to more than one client, you must specify the client ID for which the project is to be created. The `clientID` is located in the Zerops GUI under the client name on the project dashboard page.
 
 **// TODO screenshot (where the clientID is located in Zerops GUI)**
