@@ -697,6 +697,11 @@ module.exports = {
         },
         {
           type: "doc",
+          id: "nodejs/how-to/customize-runtime",
+          label: "Customize runtime",
+        },
+        {
+          type: "doc",
           id: "nodejs/how-to/repo-connect",
           label: "Connect GitHub / GitLab repository",
           customProps: {
@@ -903,24 +908,13 @@ module.exports = {
       ],
     },
     {
-      type: "category",
-      label: "Reference",
-      collapsible: false,
+      type: "doc",
+      id: "php/faq",
+      label: "FAQ",
       customProps: {
-        sidebar_is_group_headline: true,
+        sidebar_is_title: true,
+        sidebar_icon: "chat-bubble-left-right",
       },
-      items: [
-        {
-          type: "doc",
-          id: "php/reference/import",
-          label: "Import configuration",
-        },
-        {
-          type: "doc",
-          id: "php/reference/cli",
-          label: "CLI",
-        },
-      ],
     },
   ],
   python: [
@@ -1059,24 +1053,13 @@ module.exports = {
       ],
     },
     {
-      type: "category",
-      label: "Reference",
-      collapsible: false,
+      type: "doc",
+      id: "python/faq",
+      label: "FAQ",
       customProps: {
-        sidebar_is_group_headline: true,
+        sidebar_is_title: true,
+        sidebar_icon: "chat-bubble-left-right",
       },
-      items: [
-        {
-          type: "doc",
-          id: "python/reference/import",
-          label: "Import configuration",
-        },
-        {
-          type: "doc",
-          id: "python/reference/cli",
-          label: "CLI",
-        },
-      ],
     },
   ],
   go: [
@@ -1215,24 +1198,13 @@ module.exports = {
       ],
     },
     {
-      type: "category",
-      label: "Reference",
-      collapsible: false,
+      type: "doc",
+      id: "go/faq",
+      label: "FAQ",
       customProps: {
-        sidebar_is_group_headline: true,
+        sidebar_is_title: true,
+        sidebar_icon: "chat-bubble-left-right",
       },
-      items: [
-        {
-          type: "doc",
-          id: "go/reference/import",
-          label: "Import configuration",
-        },
-        {
-          type: "doc",
-          id: "go/reference/cli",
-          label: "CLI",
-        },
-      ],
     },
   ],
   rust: [
@@ -1371,24 +1343,13 @@ module.exports = {
       ],
     },
     {
-      type: "category",
-      label: "Reference",
-      collapsible: false,
+      type: "doc",
+      id: "rust/faq",
+      label: "FAQ",
       customProps: {
-        sidebar_is_group_headline: true,
+        sidebar_is_title: true,
+        sidebar_icon: "chat-bubble-left-right",
       },
-      items: [
-        {
-          type: "doc",
-          id: "rust/reference/import",
-          label: "Import configuration",
-        },
-        {
-          type: "doc",
-          id: "rust/reference/cli",
-          label: "CLI",
-        },
-      ],
     },
   ],
   dotnet: [
@@ -1527,24 +1488,13 @@ module.exports = {
       ],
     },
     {
-      type: "category",
-      label: "Reference",
-      collapsible: false,
+      type: "doc",
+      id: "dotnet/faq",
+      label: "FAQ",
       customProps: {
-        sidebar_is_group_headline: true,
+        sidebar_is_title: true,
+        sidebar_icon: "chat-bubble-left-right",
       },
-      items: [
-        {
-          type: "doc",
-          id: "dotnet/reference/import",
-          label: "Import configuration",
-        },
-        {
-          type: "doc",
-          id: "dotnet/reference/cli",
-          label: "CLI",
-        },
-      ],
     },
   ],
   java: [
@@ -1683,24 +1633,13 @@ module.exports = {
       ],
     },
     {
-      type: "category",
-      label: "Reference",
-      collapsible: false,
+      type: "doc",
+      id: "java/faq",
+      label: "FAQ",
       customProps: {
-        sidebar_is_group_headline: true,
+        sidebar_is_title: true,
+        sidebar_icon: "chat-bubble-left-right",
       },
-      items: [
-        {
-          type: "doc",
-          id: "java/reference/import",
-          label: "Import configuration",
-        },
-        {
-          type: "doc",
-          id: "java/reference/cli",
-          label: "CLI",
-        },
-      ],
     },
   ],
   mariadb: [
