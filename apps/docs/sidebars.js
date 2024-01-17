@@ -702,17 +702,6 @@ module.exports = {
         },
         {
           type: "doc",
-          id: "nodejs/how-to/repo-connect",
-          label: "Connect GitHub / GitLab repository",
-          customProps: {
-            sidebar_is_soon: true,
-          },
-          customProps: {
-            sidebar_is_soon: true,
-          }
-        },
-        {
-          type: "doc",
           id: "nodejs/how-to/logs",
           label: "Setup & access logs",
         },
@@ -822,14 +811,6 @@ module.exports = {
           type: "doc",
           id: "php/how-to/build-pipeline",
           label: "Configure build & deploy pipeline",
-          customProps: {
-            sidebar_is_soon: true,
-          }
-        },
-        {
-          type: "doc",
-          id: "php/how-to/repo-connect",
-          label: "Connect GitHub / GitLab repository",
           customProps: {
             sidebar_is_soon: true,
           }
@@ -964,14 +945,6 @@ module.exports = {
           type: "doc",
           id: "python/how-to/build-pipeline",
           label: "Configure build & deploy pipeline",
-          customProps: {
-            sidebar_is_soon: true,
-          }
-        },
-        {
-          type: "doc",
-          id: "python/how-to/repo-connect",
-          label: "Connect GitHub / GitLab repository",
           customProps: {
             sidebar_is_soon: true,
           }
@@ -1115,14 +1088,6 @@ module.exports = {
         },
         {
           type: "doc",
-          id: "go/how-to/repo-connect",
-          label: "Connect GitHub / GitLab repository",
-          customProps: {
-            sidebar_is_soon: true,
-          }
-        },
-        {
-          type: "doc",
           id: "go/how-to/trigger-pipeline",
           label: "Trigger build pipeline",
           customProps: {
@@ -1254,14 +1219,6 @@ module.exports = {
           type: "doc",
           id: "rust/how-to/build-pipeline",
           label: "Configure build & deploy pipeline",
-          customProps: {
-            sidebar_is_soon: true,
-          }
-        },
-        {
-          type: "doc",
-          id: "rust/how-to/repo-connect",
-          label: "Connect GitHub / GitLab repository",
           customProps: {
             sidebar_is_soon: true,
           }
@@ -1405,14 +1362,6 @@ module.exports = {
         },
         {
           type: "doc",
-          id: "dotnet/how-to/repo-connect",
-          label: "Connect GitHub / GitLab repository",
-          customProps: {
-            sidebar_is_soon: true,
-          }
-        },
-        {
-          type: "doc",
           id: "dotnet/how-to/trigger-pipeline",
           label: "Trigger build pipeline",
           customProps: {
@@ -1544,14 +1493,6 @@ module.exports = {
           type: "doc",
           id: "java/how-to/build-pipeline",
           label: "Configure build & deploy pipeline",
-          customProps: {
-            sidebar_is_soon: true,
-          }
-        },
-        {
-          type: "doc",
-          id: "java/how-to/repo-connect",
-          label: "Connect GitHub / GitLab repository",
           customProps: {
             sidebar_is_soon: true,
           }
