@@ -697,14 +697,8 @@ module.exports = {
         },
         {
           type: "doc",
-          id: "nodejs/how-to/repo-connect",
-          label: "Connect GitHub / GitLab repository",
-          customProps: {
-            sidebar_is_soon: true,
-          },
-          customProps: {
-            sidebar_is_soon: true,
-          }
+          id: "nodejs/how-to/customize-runtime",
+          label: "Customize runtime",
         },
         {
           type: "doc",
@@ -823,14 +817,6 @@ module.exports = {
         },
         {
           type: "doc",
-          id: "php/how-to/repo-connect",
-          label: "Connect GitHub / GitLab repository",
-          customProps: {
-            sidebar_is_soon: true,
-          }
-        },
-        {
-          type: "doc",
           id: "php/how-to/trigger-pipeline",
           label: "Trigger build pipeline",
           customProps: {
@@ -903,24 +889,13 @@ module.exports = {
       ],
     },
     {
-      type: "category",
-      label: "Reference",
-      collapsible: false,
+      type: "doc",
+      id: "php/faq",
+      label: "FAQ",
       customProps: {
-        sidebar_is_group_headline: true,
+        sidebar_is_title: true,
+        sidebar_icon: "chat-bubble-left-right",
       },
-      items: [
-        {
-          type: "doc",
-          id: "php/reference/import",
-          label: "Import configuration",
-        },
-        {
-          type: "doc",
-          id: "php/reference/cli",
-          label: "CLI",
-        },
-      ],
     },
   ],
   python: [
@@ -970,14 +945,6 @@ module.exports = {
           type: "doc",
           id: "python/how-to/build-pipeline",
           label: "Configure build & deploy pipeline",
-          customProps: {
-            sidebar_is_soon: true,
-          }
-        },
-        {
-          type: "doc",
-          id: "python/how-to/repo-connect",
-          label: "Connect GitHub / GitLab repository",
           customProps: {
             sidebar_is_soon: true,
           }
@@ -1059,24 +1026,13 @@ module.exports = {
       ],
     },
     {
-      type: "category",
-      label: "Reference",
-      collapsible: false,
+      type: "doc",
+      id: "python/faq",
+      label: "FAQ",
       customProps: {
-        sidebar_is_group_headline: true,
+        sidebar_is_title: true,
+        sidebar_icon: "chat-bubble-left-right",
       },
-      items: [
-        {
-          type: "doc",
-          id: "python/reference/import",
-          label: "Import configuration",
-        },
-        {
-          type: "doc",
-          id: "python/reference/cli",
-          label: "CLI",
-        },
-      ],
     },
   ],
   go: [
@@ -1126,14 +1082,6 @@ module.exports = {
           type: "doc",
           id: "go/how-to/build-pipeline",
           label: "Configure build & deploy pipeline",
-          customProps: {
-            sidebar_is_soon: true,
-          }
-        },
-        {
-          type: "doc",
-          id: "go/how-to/repo-connect",
-          label: "Connect GitHub / GitLab repository",
           customProps: {
             sidebar_is_soon: true,
           }
@@ -1215,24 +1163,13 @@ module.exports = {
       ],
     },
     {
-      type: "category",
-      label: "Reference",
-      collapsible: false,
+      type: "doc",
+      id: "go/faq",
+      label: "FAQ",
       customProps: {
-        sidebar_is_group_headline: true,
+        sidebar_is_title: true,
+        sidebar_icon: "chat-bubble-left-right",
       },
-      items: [
-        {
-          type: "doc",
-          id: "go/reference/import",
-          label: "Import configuration",
-        },
-        {
-          type: "doc",
-          id: "go/reference/cli",
-          label: "CLI",
-        },
-      ],
     },
   ],
   rust: [
@@ -1282,14 +1219,6 @@ module.exports = {
           type: "doc",
           id: "rust/how-to/build-pipeline",
           label: "Configure build & deploy pipeline",
-          customProps: {
-            sidebar_is_soon: true,
-          }
-        },
-        {
-          type: "doc",
-          id: "rust/how-to/repo-connect",
-          label: "Connect GitHub / GitLab repository",
           customProps: {
             sidebar_is_soon: true,
           }
@@ -1371,24 +1300,13 @@ module.exports = {
       ],
     },
     {
-      type: "category",
-      label: "Reference",
-      collapsible: false,
+      type: "doc",
+      id: "rust/faq",
+      label: "FAQ",
       customProps: {
-        sidebar_is_group_headline: true,
+        sidebar_is_title: true,
+        sidebar_icon: "chat-bubble-left-right",
       },
-      items: [
-        {
-          type: "doc",
-          id: "rust/reference/import",
-          label: "Import configuration",
-        },
-        {
-          type: "doc",
-          id: "rust/reference/cli",
-          label: "CLI",
-        },
-      ],
     },
   ],
   dotnet: [
@@ -1438,14 +1356,6 @@ module.exports = {
           type: "doc",
           id: "dotnet/how-to/build-pipeline",
           label: "Configure build & deploy pipeline",
-          customProps: {
-            sidebar_is_soon: true,
-          }
-        },
-        {
-          type: "doc",
-          id: "dotnet/how-to/repo-connect",
-          label: "Connect GitHub / GitLab repository",
           customProps: {
             sidebar_is_soon: true,
           }
@@ -1527,24 +1437,13 @@ module.exports = {
       ],
     },
     {
-      type: "category",
-      label: "Reference",
-      collapsible: false,
+      type: "doc",
+      id: "dotnet/faq",
+      label: "FAQ",
       customProps: {
-        sidebar_is_group_headline: true,
+        sidebar_is_title: true,
+        sidebar_icon: "chat-bubble-left-right",
       },
-      items: [
-        {
-          type: "doc",
-          id: "dotnet/reference/import",
-          label: "Import configuration",
-        },
-        {
-          type: "doc",
-          id: "dotnet/reference/cli",
-          label: "CLI",
-        },
-      ],
     },
   ],
   java: [
@@ -1594,14 +1493,6 @@ module.exports = {
           type: "doc",
           id: "java/how-to/build-pipeline",
           label: "Configure build & deploy pipeline",
-          customProps: {
-            sidebar_is_soon: true,
-          }
-        },
-        {
-          type: "doc",
-          id: "java/how-to/repo-connect",
-          label: "Connect GitHub / GitLab repository",
           customProps: {
             sidebar_is_soon: true,
           }
@@ -1683,24 +1574,13 @@ module.exports = {
       ],
     },
     {
-      type: "category",
-      label: "Reference",
-      collapsible: false,
+      type: "doc",
+      id: "java/faq",
+      label: "FAQ",
       customProps: {
-        sidebar_is_group_headline: true,
+        sidebar_is_title: true,
+        sidebar_icon: "chat-bubble-left-right",
       },
-      items: [
-        {
-          type: "doc",
-          id: "java/reference/import",
-          label: "Import configuration",
-        },
-        {
-          type: "doc",
-          id: "java/reference/cli",
-          label: "CLI",
-        },
-      ],
     },
   ],
   mariadb: [
