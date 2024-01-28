@@ -525,6 +525,15 @@ module.exports = {
     },
     {
       type: "doc",
+      id: "references/public-access",
+      label: "Public access",
+      customProps: {
+        sidebar_icon: "link",
+      },
+      className: "homepage-sidebar-item",
+    },
+    {
+      type: "doc",
       id: "references/vpn",
       label: "VPN",
       customProps: {
@@ -717,9 +726,6 @@ module.exports = {
           type: "doc",
           id: "nodejs/how-to/access",
           label: "Access Node.js runtime service",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
@@ -848,9 +854,6 @@ module.exports = {
           type: "doc",
           id: "php/how-to/access",
           label: "Access PHP runtime service",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
@@ -985,9 +988,6 @@ module.exports = {
           type: "doc",
           id: "python/how-to/access",
           label: "Access Python runtime service",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
@@ -1122,9 +1122,6 @@ module.exports = {
           type: "doc",
           id: "go/how-to/access",
           label: "Access Go runtime service",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
@@ -1259,9 +1256,6 @@ module.exports = {
           type: "doc",
           id: "rust/how-to/access",
           label: "Access Rust runtime service",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
@@ -1396,9 +1390,6 @@ module.exports = {
           type: "doc",
           id: "dotnet/how-to/access",
           label: "Access .NET runtime service",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
@@ -1533,9 +1524,6 @@ module.exports = {
           type: "doc",
           id: "java/how-to/access",
           label: "Access Java runtime service",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
