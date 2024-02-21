@@ -364,15 +364,15 @@ module.exports = {
           },
           className: "homepage-sidebar-item  service-sidebar-item",
         },
-        {
-          type: "ref",
-          id: "java/overview",
-          label: "Java",
-          customProps: {
-            sidebar_icon: "java",
-          },
-          className: "homepage-sidebar-item  service-sidebar-item",
-        },
+//        {
+//          type: "ref",
+//          id: "java/overview",
+//          label: "Java",
+//          customProps: {
+//            sidebar_icon: "java",
+//          },
+//          className: "homepage-sidebar-item  service-sidebar-item",
+//        },
         {
           type: "ref",
           id: "nginx/overview",
@@ -419,24 +419,24 @@ module.exports = {
           },
           className: "homepage-sidebar-item  service-sidebar-item",
         },
-        {
-          type: "ref",
-          id: "mongodb/overview",
-          label: "MongoDB",
-          customProps: {
-            sidebar_icon: "mongodb",
-          },
-          className: "homepage-sidebar-item  service-sidebar-item",
-        },
-        {
-          type: "ref",
-          id: "elasticsearch/overview",
-          label: "Elasticsearch",
-          customProps: {
-            sidebar_icon: "elasticsearch",
-          },
-          className: "homepage-sidebar-item  service-sidebar-item",
-        },
+//        {
+//          type: "ref",
+//          id: "mongodb/overview",
+//          label: "MongoDB",
+//          customProps: {
+//            sidebar_icon: "mongodb",
+//          },
+//          className: "homepage-sidebar-item  service-sidebar-item",
+//        },
+//        {
+//          type: "ref",
+//          id: "elasticsearch/overview",
+//          label: "Elasticsearch",
+//          customProps: {
+//            sidebar_icon: "elasticsearch",
+//          },
+//          className: "homepage-sidebar-item  service-sidebar-item",
+//        },
         {
           type: "ref",
           id: "keydb/overview",
