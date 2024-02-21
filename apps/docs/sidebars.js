@@ -1087,6 +1087,11 @@ module.exports = {
         },
         {
           type: "doc",
+          id: "go/how-to/build-process",
+          label: "Build process",
+        },
+        {
+          type: "doc",
           id: "go/how-to/customize-runtime",
           label: "Customize Go runtime",
           customProps: {
