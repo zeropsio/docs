@@ -809,9 +809,6 @@ module.exports = {
           type: "doc",
           id: "php/how-to/env-variables",
           label: "Manage environment variables",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
@@ -940,9 +937,6 @@ module.exports = {
           type: "doc",
           id: "python/how-to/env-variables",
           label: "Manage environment variables",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
@@ -1074,9 +1068,6 @@ module.exports = {
           type: "doc",
           id: "go/how-to/env-variables",
           label: "Manage environment variables",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
@@ -1208,9 +1199,6 @@ module.exports = {
           type: "doc",
           id: "rust/how-to/env-variables",
           label: "Manage environment variables",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
@@ -1342,9 +1330,6 @@ module.exports = {
           type: "doc",
           id: "dotnet/how-to/env-variables",
           label: "Manage environment variables",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
