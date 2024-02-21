@@ -1,0 +1,85 @@
+---
+title: How to set and use environment variables in Rust service
+---
+
+Environment variables help you to run your application in different environments. They allow you to isolate all specific environment aspects from your application code and keep your app encapsulated. You can create several projects in Zerops that represent different environments (development, stage, production) or even each developer can have a project with its own environment.
+
+In Zerops you do not have to create a `.env` file manually. Zerops handles the environment variables for you.
+
+## Set env variables in Zerops GUI
+
+**// TODO screenshot (Service environment variables page)**
+
+You can set env variables when you [create](/rust/how-to/create) a new Rust service or you can set them later.
+
+To configure env variables for an existing service, Rust to the service detail and choose **Environment variables** in the left menu. Click on the **Add new variable** button and set variable key and value.
+
+Zerops creates several helper variables when a Rust service is created, e.g. `hostname`, `PATH`. Some helper variables are read-only (`hostname`), others are editable (`PATH`).
+
+You can edit or delete env variables that you've created by clicking on the menu on the right side of each row. Helper variables created by Zerops cannot be deleted.
+
+The changes you've made in the list of env variables need to be committed. Click on the **Commit x changes** button and Zerops will update the env variables in all containers of your project's services.
+
+:::caution
+You need to **restart** the runtime service after you commit the changes in env variables. The Rust process running in the container receives the list env variables only when it starts. Update of the env variables while the Rust process is running does not affect your application.
+:::
+
+## Env variable restrictions
+
+**key**
+
+* must satisfy the following regular expression: `[a-zA-Z_]+[a-zA-Z0-9_]*`
+* all variable keys in the same service must be unique regardless of case
+* keys are case sensitive
+
+**value**
+
+* must contain only ASCII characters
+* the *End of Line* character is forbidden
+
+## Referencing other env variables
+
+You can reference another variable of the same service using `${key}` in your variable value. You can even reference a variable from a different service using `${hostname_key}`. The referenced variable doesn't need to exist when you are entering your variable.
+
+### Examples:
+
+**1. Reference a local variable in another variable value**
+
+| Variable key | Variable value    | Computed variable value |
+| ------------ | ----------------- | ----------------------- |
+| id           | 12345             | 12345                   |
+| hostname     | app               | app                     |
+| name         | ${id}-${hostname} | 12345-app               |
+
+**2. Reference a variable of another project service**
+
+Let's say your project contains two PostgreSQL services `dbtest` and `dbprod`. Both services have a `connectionString` variable. Then you can create a `dbConnectionString` ENV variable in your Rust runtime and set `${dbtest_connectionString}` as the variable value. Zerops will fill in the value of the `connectionString` variable of the `dbtest` service.
+
+When you change the `dbConnectionString` value to `${dbprod_connectionString}`. Zerops will fill in the value of the `connectionString` variable of the `dbprod` service.
+
+:::caution
+When you change the value of the `connectionString` variable in the service `dbtest` and commit the changes you need to **restart** the Rust service. The Rust process running in the container receives the list env variables only when it starts. Update of the env variables while the Rust process is running does not affect your application.
+:::
+
+## How to read env variables from your Rust app
+
+Zerops passes all environment variables from all project services when your Rust app is deployed and started.
+
+To access the local environment variable i.e. the variable set to this Rust service in your app, use:
+
+```sh
+env::var("YOUR_VARIABLE_KEY_HERE")
+```
+
+## How to read env variables of another project service
+
+All services of the same project can reference environment variables from other services. To use an environment variable from one service in another service in the same project, you must prefix the environment variable key with the service hostname and underscore.
+
+#### Examples:
+
+To access the `connectionString` ENV variable of the `mariadb1` service, use `mariadb1_connectionString` as the ENV variable key.
+To access the `password` ENV variable of the `mariadb2` service, use `mariadb2_password` as the ENV variable key.
+
+
+
+
