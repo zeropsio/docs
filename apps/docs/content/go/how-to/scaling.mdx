@@ -1,0 +1,127 @@
+---
+title: How Zerops scales Go
+---
+
+Zerops performs an automated scaling of hardware resources required to run your runtime application based on its usage. If the current use of your application does not require as much performance or disk space the auto scaling reduces the resources and thus reduces the costs. If your application is under heavy load or needs to store more data, then auto scaling increases the resources to make sure it runs smoothly.
+
+## Vertical scaling
+
+Vertical scaling means increasing or decreasing the hardware resources (CPU, RAM and disk) of a runtime container.
+
+Zerops scales Go containers automatically by raising or lowering the hardware resources of the containers. If your runtime service is in [highly available] mode, all containers are scaled individually. The vertical scaling of different hardware resources (CPU, RAM and disk) is also independent. For example if your application needs more CPU, Zerops will assign more CPU to the container and keep the RAM and disk unchanged.
+
+### Automatic scale up
+
+Zerops monitors CPU, RAM and disk usage in all running containers each 10 seconds.
+
+The *scale up threshold* is derived from following *minimum free resources*:
+* 0.5 vCPU
+* 0.125 GB RAM
+* 0.5 GB disk
+
+If the minimum free CPU, RAM or disk usage of a container is lower than the defined scale up threshold, Zerops scales the container up.
+
+The scale up of RAM or disk is immediate. If Zerops detects that the container has less than 0.125 GB RAM free or less than 0.5 GB free disk space, Zerops will assign more RAM or disk to the container immediately.
+
+The scale up of vCPU is configured to be a little less aggressive. Two consecutive measurements of free vCPU with values under the scale up threshold are required to trigger the scale up. This rule prevents excessive fluctuations of scaling up and down due to sudden changes in CPU usage.
+
+The *minimum step* for the vertical scaling is
+* 1 vCPU
+* 0.25 GB RAM
+* 0.5 GB disk
+
+When the application is under a heavy load and needs to scale up faster, the scaling step will increase automatically.
+
+Maximal resources are defined for each Go service. Zerops will never scale above the entered values. If your application is in [highly available] mode, maximal resources are identical for all containers of the Go service.
+
+*Default maximal resources* are:
+* 20 vCPUs
+* 32 GB RAM
+* 100 GB disk
+
+If you need to limit the cost of the Go service, lower the maximal resources. You can set your own maximal resources when creating a Go service or you can change it later in Zerops GUI. Go to the Go service detail and choose **Automatic scaling configuration** in the left menu.
+
+**// TODO screenshot (Go - Automatic scaling configuration form)**
+
+:::caution
+Other configuration parameters of the scale up behaviour (scale up threshold, minimum step, etc.) are fixed and cannot be customised.
+:::
+
+### Not enough resources to scale up
+
+If one of the Go containers needs more resources but there are not enough of them on the underlying machine, a new container with the required hardware resources will be started on another machine. When the new container is ready, it will be added to the service balancer. The old container will be removed from the balancer and deleted.
+
+### Automatic scale down
+
+When the application no longer needs as much power or disk space, each container is gradually scaled down to the defined minimum. The automatic scale down is configured to be more cautious and defensive to prevent the application from scaling up and down rapidly.
+
+Consecutive measurements during:
+* 2 minutes for vCPU
+* 15 minutes for RAM
+* 5 minutes for disk
+with free resources safely above the minimum threshold are required to scale down the appropriate resource.
+
+The minimum step for the scale down is identical to the minimum step for scale up. When several scale down events are triggered in a short period of time, the scaling step increases automatically.
+
+Zerops will never scale below the defined minimal resources. *Default minimal resources* are:
+* 1 vCPU
+* 0.25 GB RAM
+* 1 GB disk
+
+Minimal resources are identical for all containers of the Go service.
+
+:::tip
+When you are experiencing problems with insufficient Go performance or capacity, increase the minimal resources. You can set your own minimal resources when creating a Go service or you can change it later in Zerops GUI. Go to the Go service detail and choose **Automatic scaling configuration** in the left menu.
+:::
+
+:::caution
+Other configuration parameters of the scale down behaviour (scale up threshold, minimum step, etc.) are fixed and cannot be customised.
+:::
+
+### How to disable vertical auto scaling
+
+To disable the vertical auto scaling of vCPU, RAM or disk, set the minimal and maximal resources to the same value. Zerops will set the required amount of resources to all Go containers and the auto scaling of the selected resource will be disabled. You can disable the auto scaling of a resource (e.g. RAM) and keep auto scaling of other resources enabled.
+
+## Horizontal scaling
+
+Horizontal scaling means adding or removing whole containers. When creating a new Go service, you can choose the minimum and maximum number of containers. You can change the settings anytime in Zerops GUI. Go to the Go service detail and choose **Automatic scaling configuration** in the left menu.
+
+**// TODO screenshot (automatic scaling configuration of a runtime service)**
+
+Horizontal auto scaling has following default configuration:
+
+<table>
+<tbody>
+	<tr>
+		<td><b>minimum containers</b></td>
+		<td>1</td>
+	</tr>
+	<tr>
+		<td><b>maximum containers</b></td>
+		<td>6</td>
+	</tr>
+</tbody>
+</table>
+
+If you set the maximum limit to one, the service will be run in a **single container** and no horizontal scaling will occur. By increasing the maximum number of containers for your service, you enable horizontal auto scaling. Zerops will then add containers depending on your application’s load.  Application running on two or more containers is in the **highly available** mode, which we highly recommend for production.
+
+Each container of the same service is strictly installed on a different server. This prevents the temporary outage in case any of the containers fail. If a container fails, Zerops immediately redirects incoming traffic to other containers. A new container will be started automatically and the broken container will be deleted.
+
+:::caution
+You can keep the minimum at 1 container, but you should do so with caution and only for non-critical or dev services. Production grade service should start with at least 2 containers.
+:::
+
+Zerops prefers [vertical scaling] over horizontal scaling because vertical scaling is faster and allows finer adjustment to the required performance. Horizontal scaling can be disabled by setting the same number for the minimum and maximum container count. Zerops will then scale the Go service only vertically.
+
+Your application is created with the defined minimum number of containers. Zerops will add a new container when any of the service's containers reaches the maximum limit for vertical scaling for vCPU or RAM. Zerops doesn't start a new container when the maximum disk space is reached. No more containers are added when the defined maximum container limit is reached.
+
+The new container is started with a minimum disk size and with an average vCPU and RAM of the existing containers.
+
+By customising the vertical auto scaling limits, you can cause the horizontal scaling to start earlier. For example if you lower the vertical auto scaling maximum to 10 vCPU. Zerops will start a new container if some of the running containers are using the 10 vCPU for more than 20 seconds.
+
+If the application no longer needs as much power, Zerops will gradually remove containers to the defined minimum count. The container is removed after its vCPU is scaled down to the defined minimum and the free vCPU is safely above the minimum threshold for vertical scaling. Zerops only removes containers with a minimum 15 minute lifetime.
+
+## Monitor Go resources
+
+Zerops provides information about how much hardware resources the Go service is currently using. Go to the service detail in Zerops GUI and select **Service dashboard & runtime containers** in the left menu. Zerops also provides the history of resource usage.
+
