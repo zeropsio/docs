@@ -1,0 +1,89 @@
+---
+title: Setup & access Go logs
+---
+
+Zerops provides 3 different logs:
+* [build log](#build-log)
+* [prepare runtime log](#prepare-runtime-log)
+* [runtime log](#runtime-log)
+
+## How to access logs
+### Build log
+#### Zerops GUI
+To access a build log in Zerops GUI, go to the service detail and choose **Service dashboard & runtime containers** in the left menu. Then open the pipeline detail of an application version and click on **Build log**. The build log button is available only if the [build pipeline](/go/how-to/trigger-pipeline) was triggered for the selected deploy.
+
+#### zCLI
+To access a build log in Zerops CLI use
+```sh
+zcli service log [projectNameOrId] [serviceName]@build
+```
+
+Read more about the [zcli service log](/references/cli/access-logs) command.
+
+### Prepare runtime log
+#### Zerops GUI
+To access a prepare runtime log in Zerops GUI, go to the service detail and choose **Service dashboard & runtime containers** in the left menu. Then open the pipeline detail of an application version and click on **Prepare runtime log**. The prepare runtime log button is available only if the [prepare runtime pipeline] was triggered for the selected deploy.
+
+#### zCLI
+_Prepare runtime log is currently not supported in zCLI._
+
+### Runtime log
+#### Zerops GUI
+To access a runtime log in Zerops GUI, go to the service detail and choose **Runtime log** in the left menu.
+
+**// TODO screenshot**
+
+Each runtime container has its own log. If your service has multiple containers, select the container in the log header.
+
+You can filter log records by minimum severity or by time.
+
+#### zCLI
+To access the log of the *first runtime container* in Zerops CLI use
+```sh
+zcli service log [projectNameOrId] [serviceName]@1
+```
+
+For an *aggregate log* from all service's runtime containers omit the `@1`
+```sh
+zcli service log [projectNameOrId] [serviceName]
+```
+Read more about the [zcli service log](/references/cli/access-logs) command.
+
+// TODO update:
+## Go logging configuration
+Zerops logs all messages sent
+* to the standard error (`stderr`)
+* to the standard output (`stdout`)
+* via the Go `console.log` method
+
+### Severity level
+By default the `console.log` creates a message with the `Informational (6)` severity.
+
+Add a severity number in the `<N>` format as a prefix to set a custom severity as shown below:
+
+```js
+console.log('A message with the informational severity ...');
+console.log('<0>Emergency (0) severity > system is unusable.');
+console.log('<1>Alert (1) severity > action must be taken immediately.');
+console.log('<2>Critical (2) severity > critical conditions.');
+console.log('<3>Error (3) severity > error conditions.');
+console.log('<4>Warning (4) severity > warning conditions.');
+console.log('<5>Notice (5) severity > normal, but significant, condition.');
+console.log('<6>Informational (6) severity > informational message.');
+console.log('<7>Debug (7) severity > debug-level message.');
+```
+
+:::info
+<code>console.info</code>, <code>console.warn</code>, <code>console.debug</code>, and <code>console.error</code> are just aliases to the <code>console.log</code> method. They don't set the appropriate severity number. Use the <code>&lt;N&gt;</code> prefix instead.
+:::
+
+
+
+
+
+
+
+
+
+
+

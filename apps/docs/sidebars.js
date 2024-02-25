@@ -1081,10 +1081,17 @@ module.exports = {
           type: "doc",
           id: "go/how-to/trigger-pipeline",
           label: "Trigger build pipeline",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
+        {
+          type: "doc",
+          id: "go/how-to/build-process",
+          label: "Build process",
+        },
+          {
+            type: "doc",
+            id: "go/how-to/deploy-process",
+            label: "Deploy process",
+          },
         {
           type: "doc",
           id: "go/how-to/customize-runtime",
@@ -1097,9 +1104,6 @@ module.exports = {
           type: "doc",
           id: "go/how-to/logs",
           label: "Setup & access logs",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
@@ -1118,9 +1122,6 @@ module.exports = {
           type: "doc",
           id: "go/how-to/scaling",
           label: "Scale Go runtime service",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
