@@ -9,69 +9,76 @@ Zerops provides a customizable build environment for your Node.js application.
 Start by adding `zerops.yml` file to the **root of your repository** and modify it to fit your application:
 
 ```yml
-# hostname of your service
-app:
-  # ==== how to build your application ====
-  build:
-    # REQUIRED. Set the base technology for the build environment: 
-    base: nodejs@18
-
-    # OPTIONAL. Customise the build environment by installing additional packages  
-    # or tolls to the base build environment.
-    # prepare:
-    #   - apt-get something
-    #   - curl something else
-
-    # REQUIRED. Build your application
+zerops:
+  # define hostname of your service
+  - setup: app
+    # ==== how to build your application ====
     build:
-      - npm i
-      - npm run build
+      # REQUIRED. Set the base technology for the build environment:
+      base: nodejs@18
 
-    # REQUIRED. Select which files / folders to deploy after 
-    # the build has successfully finished
-    deploy: [ dist, package.json, node_modules ]
+      # OPTIONAL. Customise the build environment by installing additional packages
+      # or tools to the base build environment.
+      # prepareCommands:
+      #   - apt-get something
+      #   - curl something else
 
-    # OPTIONAL. Which files / folders you want to cache for the next build.
-    # Next builds will be faster when the cache is used.
-    cache: [ node_modules ]
+      # REQUIRED. Build your application
+      buildCommands:
+        - npm i
+        - npm run build
 
-  # ==== how to run your application ====
-  run:
-    # OPTIONAL. Customise the runtime Node.js environment by installing additional
-    # dependencies to the base Node.js runtime environment.
-    # prepare:
-    #   - apt-get something
-    #   - curl something else
+      # REQUIRED. Select which files / folders to deploy after
+      # the build has successfully finished
+      deploy:
+        - dist
+        - package.json
+        - node_modules
 
-    # OPTIONAL. Run one or more commands each time a new runtime container
-    # is started or restarted. These commands are triggered before 
-    # your Node.js application is started. 
-    # init:
-    #  - rm -rf ./cache
+      # OPTIONAL. Which files / folders you want to cache for the next build.
+      # Next builds will be faster when the cache is used.
+      cache: node_modules
 
-    # REQUIRED. Your Node.js application start command 
-    start: npm start
+    # ==== how to run your application ====
+    run:
+      # OPTIONAL. Customise the runtime Node.js environment by installing additional
+      # dependencies to the base Node.js runtime environment.
+      # prepare:
+      #   - apt-get something
+      #   - curl something else
+
+      # OPTIONAL. Run one or more commands each time a new runtime container
+      # is started or restarted. These commands are triggered before
+      # your Node.js application is started.
+      # init:
+      #  - rm -rf ./cache
+
+      # REQUIRED. Your Node.js application start command
+      start: npm start
 ```
 
-### Hostname
+The top-level element is always `zerops`.
 
-The top-level element is the **hostname** of your service. A runtime service with the same hostname must exist in Zerops. 
-Zerops supports the definition of multiple runtime services in a single `zerops.yml`. This is useful when you use a monorepo. Just add multiple hostnames as the top-level elements:
+### Setup
+
+The first element `setup` contains the **hostname** of your service. A runtime service with the same hostname must exist in Zerops.
+Zerops supports the definition of multiple runtime services in a single `zerops.yml`. This is useful when you use a monorepo. Just add multiple setup elements in your `zerops.yml`:
 
 ```yml
-# definition for app service
-app:
-  build:
-    ...
-  run:
-    ...
+zerops:
+  # definition for app service
+  - setup: app
+    build:
+      ...
+    run:
+      ...
 
-# definition for api service
-api:
-  build:
-    ...
-  run:
-    ...
+  # definition for api service
+  - setup: api
+    build:
+      ...
+    run:
+      ...
 ```
 
 Each service configuration contains two sections: **build** and **run**. Both sections are required to build and deploy your Node.js application in Zerops.
@@ -86,13 +93,14 @@ Following options are available for Node.js builds:
 * `nodejs@v14`
 
 ```yml
-# hostname of your service
-app:
-  # ==== how to build your application ====
-  build:
-    # REQUIRED. Sets the base technology for the build environment: 
-    base: nodejs@18    
-    ...
+zerops:
+  # hostname of your service
+  - setup: app
+    # ==== how to build your application ====
+    build:
+      # REQUIRED. Sets the base technology for the build environment:
+      base: nodejs@18
+      ...
 ```
 
 The base build environment contains Ubuntu 22, the selected major version of Node.js, [Zerops command line tool](/references/cli), `npm`, `yarn`, `git` and `npx` tools.
@@ -101,16 +109,19 @@ The base build environment contains Ubuntu 22, the selected major version of Nod
 You can change the base environment when you need to. Just simply modify the `zerops.yml` in your repository.
 :::
  
-If you need to install more technologies to the build environment, set multiple values as an array. For example:
+If you need to install more technologies to the build environment, set multiple values as a yaml array. For example:
 
 ```yml
-# hostname of your service
-app:
-  # ==== how to build your application ====
-  build:
-    # REQUIRED. Install more technologies to the build environment: 
-    base: [nodejs@18,go@1]    
-    ...
+zerops:
+  # hostname of your service
+  - setup: app
+    # ==== how to build your application ====
+    build:
+      # REQUIRED. Sets the base technology for the build environment:
+      base:
+        - nodejs@18
+        - go@1
+      ...
 ```
 
 See the full list of supported [build base environments].
@@ -129,19 +140,20 @@ The base build environment contains:
 To install additional packages or tools add one or more prepare commands:
 
 ```yml
-# hostname of your service
-app:
-  # ==== how to build your application ====
-  build:
-    # REQUIRED. Set the base technology for the build environment: 
-    base: nodejs@18
+zerops:
+  # hostname of your service
+  - setup: app
+    # ==== how to build your application ====
+    build:
+      # REQUIRED. Set the base technology for the build environment:
+      base: nodejs@18
 
-    # OPTIONAL. Customise the build environment by installing additional packages  
-    # or tolls to the base build environment.
-    prepare:
-      - apt-get something
-      - curl something else
-    ...
+      # OPTIONAL. Customise the build environment by installing additional packages
+      # or tools to the base build environment.
+      prepare:
+        - apt-get something
+        - curl something else
+      ...
 ```
 
 When the first build is triggered, Zerops will 
@@ -171,22 +183,23 @@ To invalidate the Zerops build cache go to your service detail in Zerops GUI, ch
 
 When the build cache is used, Zerops doesn't run the `prepare` commands and the build of your application is faster.
 
-### build
+### buildCommands
 _REQUIRED._ Defines build commands.
 
 ```yml
-# hostname of your service
-app:
-  # ==== how to build your application ====
-  build:
-    # REQUIRED. Set the base technology for the build environment: 
-    base: nodejs@18
-
-    # REQUIRED. Build your application
+zerops:
+  # hostname of your service
+  - setup: app
+    # ==== how to build your application ====
     build:
-      - npm i
-      - npm run build
-    ...
+      # REQUIRED. Set the base technology for the build environment:
+      base: nodejs@18
+
+      # REQUIRED. Build your application
+      buildCommands:
+        - npm i
+        - npm run build
+      ...
 ```
 
 At least one command is required. Zerops triggers each command in the defined order in a dedicated build container. 
@@ -201,7 +214,7 @@ Before the build commands are triggered the build container contains:
 Use following syntax to run all commands in the same environment context. For example, if one command changes the current directory, the next command continues in that directory. When one command creates an environment variable, the next command can access it.
 
 ```yml
-build:
+buildCommands:
  - |
    npm i
    npm run build
@@ -209,10 +222,10 @@ build:
 
 #### Run build commands as a separate shell instances
 
-When following syntax is used, each command is triggered in a separate environment context. For example, each shell instance starts in the home directory again. When one command creates an environment variable, it won't be available for the next command.
+When the following syntax is used, each command is triggered in a separate environment context. For example, each shell instance starts in the home directory again. When one command creates an environment variable, it won't be available for the next command.
 
 ```yml
-build:
+buildCommands:
  - npm i
  - npm run build
 ```
@@ -222,12 +235,12 @@ build:
 If any command fails, it returns an exit code other than 0 and the build is canceled. Read the [build log] to troubleshoot the error. If the error log doesn't contain any specific error message, try to run your build with the --verbose option.
 
 ```yml
-build:
+buildCommands:
  - npm i --verbose
  - npm run build
 ```
 
-If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `build` commands are finished, the application build is completed and ready for the [deploy](/nodejs/how-to/build-pipeline#deploy) phase.
+If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `buildCommands` are finished, the application build is completed and ready for the [deploy](/nodejs/how-to/build-pipeline#deploy) phase.
 
 ### deploy
 _REQUIRED._ Selects which files or folders will be deployed after the build has successfully finished.
@@ -235,7 +248,10 @@ _REQUIRED._ Selects which files or folders will be deployed after the build has 
 ```yml
 # REQUIRED. Select which files / folders to deploy after 
 # the build has successfully finished
-deploy: [ dist, package.json, node_modules ]
+deploy:
+  - dist
+  - package.json
+  - node_modules
 ```
 
 Determines files or folders produced by your build, which should be deployed to your runtime service containers. 
@@ -246,35 +262,39 @@ The path starts from the **root directory** of your project (the location of `ze
 
 Deploys a folder, and a file from the project root directory:
 ```yml
-deploy: [ dist, package.json ]
+deploy:
+  - dist
+  - package.json
 ```
 
 Deploys the whole content of the build container:
 ```yml
-deploy: [.]
+deploy: .
 ```
 
 Deploys a folder, and a file in a defined path:
 ```yml
-deploy: [ ./path/to/file.txt, ./path/to/dir/ ]
+deploy:
+  - ./path/to/file.txt
+  - ./path/to/dir/
 ```
 
-#### How to use wildcard in path
+#### How to use a wildcard in the path
 Zerops supports the `~` character as a wildcard for one or more folders in the path.
 
 Deploys all `file.txt` files that are located in any path that begins with `/path/` and ends with `/to/`
 ```yml
-deploy: [ ./path/~/to/file.txt ]
+deploy: ./path/~/to/file.txt
 ```
 
 Deploys all folders that are located in any path that begins with `/path/to/`
 ```yml
-deploy: [ ./path/to/~/ ]
+deploy: ./path/to/~/
 ```
 
 Deploys all folders that are located in any path that begins with `/path/` and ends with `/to/`
 ```yml
-deploy: [ ./path/~/to/ ]
+deploy: ./path/~/to/
 ```
 
 ### cache
@@ -283,11 +303,11 @@ _OPTIONAL._ Defines which files or folders will be cached for the next build.
 ```yml
 # OPTIONAL. Which files / folders you want to cache for the next build.
 # Next builds will be faster when the cache is used.
-cache: [ node_modules ]
+cache: node_modules
 ```
 
 By default, Zerops doesn't cache the files in the build container. When the build phase is finished, the files and folders defined in the [deploy](/nodejs/how-to/build-pipeline#deploy) attribute are saved and deployed to your runtime containers. Then, the build container is deleted.
-To speed the second and following build up, cache the files that can be used in the next build. We recommend to cache the `node_modules` directory.
+To speed the second and following build up, cache the files that can be used in the next build. We recommend caching the `node_modules` directory.
 
 The cache attribute supports the [~ wildcard character](/nodejs/how-to/build-pipeline#how-to-use-wildcard-in-path).
 
@@ -303,20 +323,21 @@ _OPTIONAL._ Customises the Node.js runtime environment by installing additional 
 The base Node.js environment contains Ubuntu 22, the selected major version of Node.js, [Zerops command line tool](/references/cli) and `npm`, `yarn`, `git` and `npx` tools. To install additional packages or tools add one or more prepare commands:
 
 ```yml
-# hostname of your service
-app:
-  # ==== how to build your application ====
-  build:
-    ...
+zerops:
+  # hostname of your service
+  - setup: app
+    # ==== how to build your application ====
+    build:
+      ...
 
-  # ==== how to run your application ====
-  run:
-    # OPTIONAL. Customise the runtime environment by installing additional packages  
-    # or tolls to the base Node.js runtime environment.
-    prepare:
-      - apt-get something
-      - curl something else
-    ...
+    # ==== how to run your application ====
+    run:
+      # OPTIONAL. Customise the runtime environment by installing additional packages
+      # or tolls to the base Node.js runtime environment.
+      prepare:
+        - apt-get something
+        - curl something else
+      ...
 ```
 
 When the first deploy with a defined prepare attribute is triggered, Zerops will 
@@ -350,43 +371,44 @@ The prepare runtime container contains Ubuntu 22, the selected major version of 
 The prepare runtime container does not contain your application code nor the built application. If you need to copy some folders or files from the build container to the runtime container (e.g. a configuration file) use the `addToRunPrepare` attribute in the [build section].
 
 ```yml
-# hostname of your service
-app:
-  # ==== how to build your application ====
-  build:
-    ...
-    addToRunPrepare: [ './runtime-config.yml' ]
+zerops:
+  # hostname of your service
+  - setup: app
+    # ==== how to build your application ====
+    build:
+      ...
+      addToRunPrepare: ./runtime-config.yml
 
-  # ==== how to run your application ====
-  run:
-    # OPTIONAL. Customise the runtime environment by installing additional packages  
-    # or tolls to the base Node.js runtime environment.
-    prepare:
-      - apt-get something
-      - curl something else
-    ...
+    # ==== how to run your application ====
+    run:
+      # OPTIONAL. Customise the runtime environment by installing additional packages
+      # or tolls to the base Node.js runtime environment.
+      prepare:
+        - apt-get something
+        - curl something else
+      ...
 ```
 
 In the example above Zerops will copy the `runtime-config.yml` file from your build container **after the build has finished** into the new **prepare runtime** container. The copied files and folders will be available in the `xxx` folder in the new prepare runtime container before the prepare commands are triggered. 
 
-### init
+### initCommands
 _OPTIONAL._ Defines one or more commands to be run each time a new runtime container is started or a container is restarted.
 
 ```yml
-# hostname of your service
-app:
-  # ==== how to build your application ====
-  build:
-    ...
+zerops:
+  # hostname of your service
+  - setup: app
+    # ==== how to build your application ====
+    build:
+      ...
 
-  # ==== how to run your application ====
-  run:
-
-    # OPTIONAL. Run one or more commands each time a new runtime container
-    # is started or restarted. These commands are triggered before 
-    # your Node.js application is started. 
-    init:
-     - rm -rf ./cache
+    # ==== how to run your application ====
+    run:
+      # OPTIONAL. Run one or more commands each time a new runtime container
+      # is started or restarted. These commands are triggered before
+      # your Node.js application is started.
+      initCommands:
+        - rm -rf ./cache
 ```
 
 These commands are triggered in the runtime container before your Node.js application is started via the [start command](/nodejs/how-to/build-pipeline#start).
@@ -401,27 +423,28 @@ Do not use the init commands for customising your runtime environment. Use the [
 
 #### Command exit code
 
-If any `init` command fails, it returns an exit code other than 0, but deploy is **not** canceled. After all init commands are finished, regardless of the status code, the application is started. Read the [runtime log] to troubleshoot the error.
+If any `initCommands` fails, it returns an exit code other than 0, but deploy is **not** canceled. After all init commands are finished, regardless of the status code, the application is started. Read the [runtime log] to troubleshoot the error.
 
 #### Single or separated shell instances
 
-You can configure your `init` commands to be run in a single shell instance or multiple shell instances. The format is identical to [build commands].
+You can configure your `initCommands` commands to be run in a single shell instance or multiple shell instances. The format is identical to [build commands].
 
 ### start
 _REQUIRED._ Defines the start command for your Node.js application.
 
 ```yml
-# hostname of your service
-app:
-  # ==== how to build your application ====
-  build:
-    ...
+zerops:
+  # hostname of your service
+  - setup: app
+    # ==== how to build your application ====
+    build:
+      ...
 
-  # ==== how to run your application ====
-  run:
+    # ==== how to run your application ====
+    run:
 
-    # REQUIRED. Your Node.js application start command 
-    start: npm start
+      # REQUIRED. Your Node.js application start command
+      start: npm start
 ```
 
 We recommend starting your Node.js application using `npm start`.
@@ -446,24 +469,25 @@ Following attributes are available:
 **Example:**
 
 ```yml
-# hostname of your service
-app:
-  # ==== how to build your application ====
-  build:
-    ...
+zerops:
+  # hostname of your service
+  - setup: app
+    # ==== how to build your application ====
+    build:
+      ...
 
-  # ==== how to run your application ====
-  run:
+    # ==== how to run your application ====
+    run:
 
-    # REQUIRED. Your Node.js application start command 
-    start: npm start
+      # REQUIRED. Your Node.js application start command
+      start: npm start
 
-    # OPTIONAL. Define a readiness check with a HTTP GET request option.
-    # Configures the check on http://127.0.0.1:80/status
-    readinessCheck:
-      httpGet:
-        port: 80
-        path: /status
+      # OPTIONAL. Define a readiness check with a HTTP GET request option.
+      # Configures the check on http://127.0.0.1:80/status
+      readinessCheck:
+        httpGet:
+          port: 80
+          path: /status
 ```
 
 Read more about how the [readiness check works] in Zerops.
@@ -480,26 +504,27 @@ Following attributes are available:
 **Example:**
 
 ```yml
-# hostname of your service
-app:
-  # ==== how to build your application ====
-  build:
-    ...
+zerops:
+  # hostname of your service
+  - setup: app
+    # ==== how to build your application ====
+    build:
+      ...
 
-  # ==== how to run your application ====
-  run:
+    # ==== how to run your application ====
+    run:
 
-    # REQUIRED. Your Node.js application start command 
-    start: npm start
+      # REQUIRED. Your Node.js application start command
+      start: npm start
 
-    # OPTIONAL. Define a readiness check with a HTTP GET request option.
-    # Configures the check on http://127.0.0.1:80/status
-    readinessCheck:
-      exec:
-        command: |
-          touch grass
-          rm -rf life
-          mv /outside/user /home/user
+      # OPTIONAL. Define a readiness check with a HTTP GET request option.
+      # Configures the check on http://127.0.0.1:80/status
+      readinessCheck:
+        exec:
+          command: |
+            touch grass
+            rm -rf life
+            mv /outside/user /home/user
 ```
 
 Read more about how the [readiness check works] in Zerops.
@@ -524,24 +549,25 @@ Following attributes are available:
 **Example:**
 
 ```yml
-# hostname of your service
-app:
-  # ==== how to build your application ====
-  build:
-    ...
+zerops:
+  # hostname of your service
+  - setup: app
+    # ==== how to build your application ====
+    build:
+      ...
 
-  # ==== how to run your application ====
-  run:
+    # ==== how to run your application ====
+    run:
 
-    # REQUIRED. Your Node.js application start command 
-    start: npm start
+      # REQUIRED. Your Node.js application start command
+      start: npm start
 
-    # OPTIONAL. Define a health check with a HTTP GET request option.
-    # Configures the check on http://127.0.0.1:80/status
-    healthCheck:
-      httpGet:
-        port: 80
-        path: /status
+      # OPTIONAL. Define a health check with a HTTP GET request option.
+      # Configures the check on http://127.0.0.1:80/status
+      healthCheck:
+        httpGet:
+          port: 80
+          path: /status
 ```
 
 Read more about how the [health check works] in Zerops.
@@ -557,25 +583,26 @@ Following attributes are available:
 **Example:**
 
 ```yml
-# hostname of your service
-app:
-  # ==== how to build your application ====
-  build:
-    ...
+zerops:
+  # hostname of your service
+  - setup: app
+    # ==== how to build your application ====
+    build:
+      ...
 
-  # ==== how to run your application ====
-  run:
+    # ==== how to run your application ====
+    run:
 
-    # REQUIRED. Your Node.js application start command 
-    start: npm start
+      # REQUIRED. Your Node.js application start command
+      start: npm start
 
-    # OPTIONAL. Define a health check with a shell command.
-    healthCheck:
-      exec:
-        command: |
-          touch grass
-          rm -rf life
-          mv /outside/user /home/user
+      # OPTIONAL. Define a health check with a shell command.
+      healthCheck:
+        exec:
+          command: |
+            touch grass
+            rm -rf life
+            mv /outside/user /home/user
 ```
 
 Read more about how the [health check works] in Zerops.
