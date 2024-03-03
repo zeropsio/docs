@@ -1,0 +1,34 @@
+---
+title: Customise Go runtime environment
+---
+
+The default Go runtime environment contains:
+* Ubuntu 22
+* selected version of Go selected when the runtime service was created.
+* <a href="/references/cli/install"><code>zCLI</code></a>, Zerops command line tool
+* git` and `wget`
+
+To install additional packages or tools add one or more <a href="/go/how-to/build-pipeline#prepare-1"><code>run.prepare</code></a> commands to your `zerops.yml`.
+
+When the first deploy with a defined `prepare` attribute is triggered, Zerops will
+1. create a prepare runtime container
+2. optionaly: [copy selected folders or files from your build container](/go/how-to/build-pipeline#copy-folders-or-files-from-your-build-container)
+3. run the `run.prepare` commands in the defined order
+
+### Command exit code
+
+If any command fails, it returns an exit code other than 0 and the deploy is canceled. Read the [prepare runtime log](/go/how-to/logs#prepare-runtime-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepare` commands are finished, your custom runtime environment is ready for the deploy phase.
+
+The prepare runtime container is automatically deleted after the prepare runtime phase has finished or failed.
+
+### Custom runtime environment cache
+
+Some packages or tools can take a long time to install. Therefore, Zerops caches your custom runtime environment after the installation of your custom packages or tools is completed. When the second or following deploy is triggered, Zerops will use the custom runtime cache from the previous deploy if following conditions are met:
+1. Content of the <a href=""><code>build.addToRunPrepare</code></a> and <a href="/go/how-to/build-pipeline#prepare-1"><code>run.prepare</code></a> attributes didn't change from the previous deploy
+2. The custom runtime cache wasn't invalidated in the Zerops GUI.
+
+To invalidate the custom runtime cache go to `yyy`
+
+**// TODO screenshot**
+
+When the custom runtime cache is used, Zerops doesn't create a prepare runtime container and executes the deployment of your application directly.

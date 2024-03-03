@@ -1,0 +1,420 @@
+---
+title: Create a Go service in Zerops
+---
+
+Zerops provides a Go runtime service with extensive build support. Go runtime is highly scalable and customisable to suit both development and production.
+
+## Create Go service using Zerops GUI
+
+First, set up a project in Zerops GUI. Then go to the project dashboard page and choose **Add new service** in the left menu in the **Services** block. Then add a new Go service:
+
+**// TODO screenshot (add a new service page)**
+
+### Choose Go version
+Following Go major versions are currently supported:
+* v1
+
+:::caution
+The Go major version is fixed after the service is created. It can't be changed later.
+:::
+
+### Set a hostname
+Enter a unique service identifier like "app","cache", "gui" etc. Duplicate services with the same name in the same project are forbidden.
+
+#### Limitations:
+* maximum 25 characters
+* must contain only lowercase ASCII letters (a-z) or numbers (0-9)
+
+:::caution
+The hostname is fixed after the service is created. It can't be changed later.
+:::
+
+## Configure internal ports
+Specify one or more internal ports on which your application will listen. The TCP port **8080** is predefined. You can set your own port number, configure multiple ports or create a service without an internal port.
+
+Projects in Zerops represent a group of one or more services. Services can be of different types (runtime services, databases, message brokers, object storage, etc.). All services of the same project share a **dedicated private network**. To connect to a service within the same project, just use the service hostname and its internal port.
+
+For example, to connect to a Go service with hostname = "app" and port = 8080 from another service of the same project, simply use `app:8080`. Read more about [how to access a Go service].
+
+To add a new internal port, click on the **Open a new internal port** button.
+
+**// TODO screenshot (add a new internal port form)**
+
+In the form, enter following information:
+
+1. Select **TCP** or **UDP** protocol.
+2. Check **HTTP protocol support** if a web server runs on the port. Zerops uses this information for the configuration of [external routing]. This option is available only in combination with the **TCP** protocol.
+3. Enter the **port number**. The port number must be set between 10 and 65435. Ports outside this interval are reserved for internal Zerops systems.
+
+:::info
+Internal Go service ports can be changed later.
+:::
+
+### Set environment variables
+
+Environment variables help you run your application in different environments. They allow you to isolate all specific environment aspects from your application code and keep your app encapsulated. You can create several projects in Zerops that represent different environments (development, stage, production) or even each developer can have a project with its own environment.
+
+On Zerops you don't have to create a `.env` file manually. Zerops handles the environment variables for you.
+
+Just enter one or more environment variables using the **Add new variable** button. If you already have a `.env` file, paste its content into the form that opens when you click on the **Paste .env format** button.
+
+#### How to read env variables from Go
+
+Zerops passes all environment variables from all project services when your Go is deployed and started.
+To access the local environment variable i.e. the variable set to this Go service in your app, use:
+
+```os.GetEnv('YOUR_VARIABLE_KEY_HERE')```
+
+#### How to read env variables of other project services
+
+All services of the same project can reference environment variables from other services. To use an environment variable from one service in another service in the same project, you must prefix the environment variable key with the service hostname and underscore.
+
+**Examples:**
+
+To access the `connectionString` ENV variable of the `postgres1` service, use `postgres1_connectionString` as the ENV variable key.
+To access the `password` ENV variable of the `postgres2` service, use `postgres2_password` as the ENV variable key.
+
+Read more about how to create and use [environment variables](/go/how-to/env-variables).
+
+:::info
+Setting the environment variables is optional. Env variables can be changed later.
+:::
+
+### Set auto scaling configuration
+Zerops scales the Go services automatically both vertically and horizontally. Vertical scaling means increasing or decreasing the hardware resources (CPU, RAM and disk) of a Go container. Horizontal scaling adds or removes whole containers.
+
+#### Vertical auto scaling
+
+Vertical auto scaling has following default configuration:
+
+| &nbsp;              | Minimum resource | Maximum resource |
+| ------------------- | ---------------- | ---------------- |
+| **vCPU**            | 1                | 20               |
+| **RAM**             | 0.25 GB          | 32 GB            |
+| **Disk**            | 1 GB             | 100 GB           |
+
+Go service always starts with the minimal resources.
+
+For most cases, the default parameters will work without issues. If you need to limit the cost of the Go service, lower the maximal resources. Zerops will never scale above the selected maximums.
+
+When you are experiencing problems with insufficient Go performance or capacity, increase the minimal resources. Zerops will never scale below the selected minimums.
+
+:::info
+You can change the vertical auto scaling parameters later.
+:::
+
+**// TODO screenshot (add a new Go service page - Automatic scaling section)**
+
+#### Horizontal auto scaling
+
+When a container needs more CPU or RAM but already consumes maximal resources defined for the vertical auto scaling, Zerops will add a new container to your Go service. When your Go service doesn't need so much power and all containers are vertically scaled down in such a way their CPU allocation is near the minimal resources, Zerops will gradually remove whole containers.
+
+Horizontal auto scaling has following default configuration:
+<table>
+<tbody>
+	<tr>
+		<td><b>minimum containers</b></td>
+		<td>1</td>
+	</tr>
+	<tr>
+		<td><b>maximum containers</b></td>
+		<td>6</td>
+	</tr>
+</tbody>
+</table>
+
+Go service always starts with the minimum number of containers.
+
+You can increase the minimum or decrease the maximum number of containers. The horizontal scaling parameters can be changed later.
+
+:::caution
+Check if your application is ready for [highly available mode]. If not, set the maximum containers to **1**. Zerops will never add more containers to your Go service.
+:::
+
+:::caution
+You can keep the minimum at 1 container, but you should do so with caution and only for non-critical or dev services. Production grade service should start with at least 2 containers.
+:::
+
+[Learn more](/go/how-to/scaling) about Go auto scaling.
+
+## Create Go service using zCLI
+zCLI is the Zerops command-line tool. To create a new Go service via the command-line, follow these steps:
+1. [Install & setup zCLI](/references/cli)
+2. [Create a project description file](/go/how-to/create#create-a-project-description-file)
+3. [Create a project with a Go and PostgreSQL service](#full-example)
+
+### Create a project description file
+Zerops uses a yaml format to describe the project infrastructure.
+
+#### Basic example:
+
+Create a directory `my-project`. Create an `description.yml` file inside the `my-project` directory with following content:
+
+```yaml
+# basic project data
+project:
+  # project name
+  name: my-project
+# array of project services
+services:
+  -
+    # service name
+    hostname: app
+    # service type and version number in go@1 format
+    type: go@1
+    # internal ports configuration
+    ports:
+      -
+         # port number
+         port: 8080
+         # set true if a webserver is running on the port
+         httpSupport: true
+    # defines the minimum number of containers for horizontal autoscaling
+    minContainers: 1
+    # defines the maximum number of containers for horizontal autoscaling. Max value = 6.
+    maxContainers: 6
+    # optional: create env variables
+    envSecrets:
+      S3_ACCESS_KEY_ID: "P8cX1vVVb"
+      S3_ACCESS_SECRET: "ogFthuiLYki8XoL73opSCQ"
+```
+
+The yaml file describes your future project infrastructure. The project will contain one Go version 1 service with default [auto scaling](/go/how-to/scaling) configuration. Hostname will be set to "app" and the application will listen on the TCP port 8080 that supports the HTTP communication. Following env variables will be configured:
+
+```env
+S3_ACCESS_KEY_ID="P8cX1vVVb"
+S3_ACCESS_SECRET="ogFthuiLYki8XoL73opSCQ"
+```
+
+#### Full example:
+
+Create a directory my-project. Create an description.yml file inside the my-project directory with following content:
+
+```yaml
+# basic project data
+project:
+  # project name
+  name: my-project
+  # optional: project description
+  description: A project with a Go and PostgreSQL database
+  # optional: project tags
+  tags:
+    - DEMO
+    - ZEROPS
+# array of project services
+services:
+  -
+    # service name
+    hostname: app
+    # service type and version number in go@1 format
+    type: go@1
+    # internal ports configuration
+    ports:
+      -
+         # port number
+         port: 8080
+         # set true if a webserver is running on the port
+         httpSupport: true
+      -
+         # port number
+         port: 8081
+         # set true if a webserver is running on the port
+         httpSupport: false
+      -
+         # port number
+         port: 4000
+         # set the "UDP" or "TCP" protocol, default "TCP"
+         protocol: UDP
+         # set true if a webserver is running on the port
+         httpSupport: false
+    # optional: vertical auto scaling customization
+    verticalAutoscaling:
+      minVCpu: 5
+      maxVCpu: 10
+      minRam: 2
+      maxRam: 16
+      minDisk: 2.5
+      maxDisk: 50
+    # defines the minimum number of containers for horizontal autoscaling. Max value = 6.
+    minContainers: 2
+    # defines the maximum number of containers for horizontal autoscaling. Max value = 6.
+    maxContainers: 4
+    # optional: create env variables
+    envSecrets:
+      S3_ACCESS_KEY_ID: "P8cX1vVVb"
+      S3_ACCESS_SECRET: "ogFthuiLYki8XoL73opSCQ"
+  -
+    # second service hostname
+    hostname: db
+    # service type and version number in postgresql@12 format
+    type: postgresql@12
+    # mode of operation "HA"/"non_HA"
+    mode: NON_HA
+```
+
+The yaml file describes your future project infrastructure. The project will contain a Go service and a [PostgreSQL](/postgresql/overview) service.
+
+Go service with "app" hostname is configured to listen on tcp ports 8080, 8081 and on udp port 4000. Go service will run on version 1 with a custom vertical and horizontal scaling. Following env variables will be configured:
+
+```env
+S3_ACCESS_KEY_ID="P8cX1vVVb"
+S3_ACCESS_SECRET="ogFthuiLYki8XoL73opSCQ"
+```
+
+The hostname of the PostgreSQL service will be set to "db". The [single container] mode will be chosen and the default [auto scaling configuration] will be set.
+
+#### Description of description.yml parameters
+
+The `project:` section is required. Only one project can be defined.
+
+| Parameter              | Description                                                                   | Limitations             |
+| ---------------------- | ----------------------------------------------------------------------------- | -----------             |
+| **name**               | The name of the new project. Duplicates are allowed.                          |                         |
+| **description**        | **Optional.** Description of the new project.                                 | Maximum 255 characters. |
+| **tags**               | **Optional.** One or more string tags. Tags do not have a functional meaning, they only provide better orientation in projects.          |
+
+
+At least one service in `services:` section is required. You can create a project with multiple services. The example above contains Go and PostgreSQL services but you can create a `description.yml` with your own combination of [services].
+
+<table>
+<thead>
+	<tr>
+		<th>Parameter</th>
+		<th>Description</th>
+	</tr>
+</thead>
+<tbody>
+	<tr>
+		<td><b>name</b></td>
+		<td>The unique service identifier.<br/><br/>The hostname of the new database will be set to the <code>name</code> value. <br/><br/><b>Limitations:</b><br/>- duplicate services with the same name in the same project are forbidden<br/>
+    - maximum 25 characters<br/>
+    - must contain only lowercase ASCII letters (a-z) or numbers (0-9)</td>
+	</tr>
+	<tr>
+  <td><b>type</b></td>
+		<td>Specifies the service type <code>go</code> and version.<br/>Set type: <code>go<span>@</span>&lt;version&gt;</code><br/><br/><b>Limitations:</b><br/>Following Go major versions are currently supported: <i>v18</i>,<i>v16</i>,<i>v14</i></td>
+	</tr>
+    <tr>
+  <td><b>ports</b></td>
+		<td>Specify one or more internal ports on which your application will listen.<br/><br/>
+Each port has following attributes:
+<ul>
+  <li>port <b>&lt;int&gt;</b></li>
+  <li>protocol <b>&lt;string&gt;</b> with allowed values <code>"TCP"</code> or <code>"UDP"</code></li>
+  <li>httpSupport <b>&lt;bool&gt;</b></li>
+</ul>
+The <b>port</b> attribute defines the port number. At least one internal port is required for Go service. You can set any port number between <code>10</code> and <code>65435</code>. Ports outside this interval are reserved for internal Zerops systems.
+<br/><br/>
+The <b>protocol</b> attribute is optional. Default value is <code>"TCP"</code>.<br/><br/>
+Set <b>httpSupport = true</b> if a web server runs on the port. Zerops uses this information for the configuration of [external routing]. This option is available only in combination with the <b>TCP</b> protocol.<br/><br/>
+Learn more about [how to connect to your Go service].<br/>
+        </td>
+	</tr>
+    <tr>
+  <td><b>verticalAutoscaling</b></td>
+		<td><b>Optional.</b> Defines <a href="/go/how-to/create#set-auto-scaling-configuration">custom vertical auto scaling parameters</a>.</td>
+	</tr>
+        <tr>
+  <td><b>minContainers</b></td>
+		<td>Defines the minimum number of containers for <a href="/go/how-to/create#horizontal-auto-scaling">horizontal autoscaling</a>.<br/><br/><b>Limitations:</b><br/>Current maximum value = 6.</td>
+	</tr>
+        <tr>
+  <td><b>maxContainers</b></td>
+		<td>Defines the maximum number of containers for <a href="/go/how-to/create#horizontal-auto-scaling">horizontal autoscaling</a>.<br/><br/><b>Limitations:</b><br/>Current maximum value = 6.</td>
+	</tr>
+        <tr>
+  <td><b>envSecrets</b></td>
+		<td><b>Optional.</b> Defines one or more env variables as a key value map. See env variable <a href="/go/how-to/env-variables#env-variable-restrictions">restrictions</a>.</td>
+	</tr>
+</tbody>
+</table>
+
+:::info
+Internal Go service ports can be changed later.
+:::
+
+### Create a project based on the description.yml
+
+When you have your `description.yml` ready, use the `zcli project import` command to create a new project and the service infrastructure.
+
+```yml
+Usage:
+  zcli project import ./my-project/description.yml [flags]
+
+Flags:
+  --clientId <string>   If you have access to more than one client, you must specify the client ID for which the project is to be created.
+  -h, --help   Displays help for the project import command.
+```
+
+Zerops will create a project and one or more services based on the `description.yml` content.
+
+Maximum size of the `description.yml` file is 100 kB.
+
+You don't specify the project name in the `zcli project import` command, because the project name is defined in the `description.yml`.
+
+If you have access to more than one client, you must specify the client ID for which the project is to be created. The `clientID` is located in the Zerops GUI under the client name on the project dashboard page.
+
+**// TODO screenshot (where the clientID is located in Zerops GUI)**
+
+### Add Go service to an existing project
+
+#### Example:
+
+Create a directory `my-project` if it doesn't exist. Create an `import.yml` file inside the `my-project` directory with following content:
+
+```yaml
+# basic project data
+project:
+  # project name
+  name: my-project
+# array of project services
+services:
+  -
+    # service name
+    hostname: app
+    # service type and version number in go@1 format
+    type: go@1
+    # internal ports configuration
+    ports:
+      -
+         # port number
+         port: 8080
+         # set true if a webserver is running on the port
+         httpSupport: true
+    # defines the minimum number of containers for horizontal autoscaling
+    minContainers: 1
+    # defines the maximum number of containers for horizontal autoscaling. Max value = 6.
+    maxContainers: 6
+    # optional: create env variables
+    envSecrets:
+      S3_ACCESS_KEY_ID: "P8cX1vVVb"
+      S3_ACCESS_SECRET: "ogFthuiLYki8XoL73opSCQ"
+```
+
+The yaml file describes the list of one or more services that you want to add to your existing project. In the example above, one Go service version 1 listening on the port 8080 with default [auto scaling] configuration will be added to your project. Hostname of the new service will be set to `app`. Following env variables will be configured:
+
+```env
+S3_ACCESS_KEY_ID="P8cX1vVVb"
+S3_ACCESS_SECRET="ogFthuiLYki8XoL73opSCQ"
+```
+
+The content of the `services:` section of `import.yml` is identical to the project description file. The `import.yml` never contains the `project:` section because the project already exists.
+
+When you have your `import.yml` ready, use the `zcli project import` command to add one or more services to your existing Zerops project.
+
+```sh
+Usage:
+  zcli service import [projectNameOrId] ./my-project/import.yml [flags]
+
+Flags:
+  -h, --help   Displays help for the service import command.
+```
+
+You must enclose the projectNameOrId in quotes if it contains a space. The project name is visible in Zerops GUI. If you have more projects with a duplicate name, use the project ID instead. You'll find the project ID in the URL of the project dashboard page in Zerops GUI. <br/>E.g. <code>https://app&#46;zerops.io/project/<b>Evs8Je4NTvKeIkUqoUXp2w</b>/service-stacks</code>.
+
+Maximum size of the import.yml file is 100 kB.
+
+
+
+
+
