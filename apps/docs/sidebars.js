@@ -1060,9 +1060,6 @@ module.exports = {
           type: "doc",
           id: "go/how-to/create",
           label: "Create Go service",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
@@ -1073,9 +1070,6 @@ module.exports = {
           type: "doc",
           id: "go/how-to/build-pipeline",
           label: "Configure build & deploy pipeline",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
@@ -1096,9 +1090,6 @@ module.exports = {
           type: "doc",
           id: "go/how-to/customize-runtime",
           label: "Customize Go runtime",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
