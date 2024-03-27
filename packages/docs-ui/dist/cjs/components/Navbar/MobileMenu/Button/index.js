@@ -15,7 +15,7 @@ const NavbarMobileMenuButton = ({ buttonProps, mobileSidebarOpen, setMobileSideb
                 setMobileSidebarOpen((prevValue) => !prevValue);
             }
         } }),
-        !mobileSidebarOpen && react_1.default.createElement(icons_1.Sidebar, { className: "text-medusa-fg-muted" }),
+        !mobileSidebarOpen && react_1.default.createElement(icons_1.SidebarLeft, { className: "text-medusa-fg-muted" }),
         mobileSidebarOpen && react_1.default.createElement(icons_1.XMark, { className: "text-medusa-fg-muted" })));
 };
 exports.NavbarMobileMenuButton = NavbarMobileMenuButton;
