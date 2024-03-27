@@ -12,9 +12,9 @@ First, set up a project in Zerops GUI. Then go to the project dashboard page and
 
 ### Choose Node.js version
 Following Node.js major versions are currently supported:
-* v18
-* v16
-* v14
+* 20
+* 18
+* 16
 
 :::caution
 The Node.js major version is fixed after the service is created. It can't be changed later.
@@ -36,7 +36,7 @@ Specify one or more internal ports on which your application will listen. The TC
 
 Projects in Zerops represent a group of one or more services. Services can be of different types (runtime services, databases, message brokers, object storage, etc.). All services of the same project share a **dedicated private network**. To connect to a service within the same project, just use the service hostname and its internal port. 
 
-For example, to connect to a Node.js service with hostname = "app" and port = 3000 from another service of the same project, simply use `app:3000`. Read more about [how to access a Node.js service].
+For example, to connect to a Node.js service with hostname = "app" and port = 3000 from another service of the same project, simply use `app:3000`. Read more about [how to access a Node.js service](/nodejs/how-to/access).
 
 To add a new internal port, click on the **Open a new internal port** button. 
 
@@ -54,7 +54,7 @@ Internal Node.js service ports can be changed later.
 
 ### Set environment variables
 
-Environment variables help you to run your application in different environments. They allow you to isolate all specific environment aspects from your application code and keep your app encapsulated. You can create several projects in Zerops that represent different environments (development, stage, production) or even each developer can have a project with its own environment.
+Environment variables help you run your application in different environments. They allow you to isolate all specific environment aspects from your application code and keep your app encapsulated. You can create several projects in Zerops that represent different environments (development, stage, production) or even each developer can have a project with its own environment.
 
 On Zerops you don't have to create a `.env` file manually. Zerops handles the environment variables for you.
 
@@ -65,7 +65,9 @@ Just enter one or more environment variables using the **Add new variable** butt
 Zerops passes all environment variables from all project services when your Node.js is deployed and started.
 To access the local environment variable i.e. the variable set to this Node.js service in your app, use:
 
-```process.env.YOUR_VARIABLE_KEY_HERE```
+```sh
+process.env.YOUR_VARIABLE_KEY_HERE
+```
 
 #### How to read env variables of other project services
 
@@ -130,7 +132,7 @@ Node.js service always starts with the minimum number of containers.
 You can increase the minimum or decrease the maximum number of containers. The horizontal scaling parameters can be changed later.
 
 :::caution
-Check if your application is ready for [highly available mode]. If not, set the maximum containers to **1**. Zerops will never add more containers to your Node.js service.
+Check if your application is ready for [highly available mode](/nodejs/how-to/scaling#horizontal-scaling). If not, set the maximum containers to **1**. Zerops will never add more containers to your Node.js service.
 :::
 
 :::caution
@@ -162,8 +164,8 @@ services:
   -
     # service name
     hostname: app
-    # service type and version number in nodejs@18 format
-    type: nodejs@18
+    # service type and version number in nodejs@20 format
+    type: nodejs@20
     # internal ports configuration
     ports:
       - 
@@ -181,7 +183,7 @@ services:
       S3_ACCESS_SECRET: "ogFthuiLYki8XoL73opSCQ"
 ```
 
-The yaml file describes your future project infrastructure. The project will contain one Node.js version 18 service with default [auto scaling](/nodejs/how-to/scaling) configuration. Hostname will be set to "app" and the application will listen on the TCP port 3000 that supports the HTTP communication. Following env variables will be configured:
+The yaml file describes your future project infrastructure. The project will contain one Node.js version 20 service with default [auto scaling](/nodejs/how-to/scaling) configuration. Hostname will be set to "app" and the application will listen on the TCP port 3000 that supports the HTTP communication. Following env variables will be configured:
 
 ```env
 S3_ACCESS_KEY_ID="P8cX1vVVb"
@@ -208,8 +210,8 @@ services:
   -
     # service name
     hostname: app
-    # service type and version number in nodejs@18 format
-    type: nodejs@18
+    # service type and version number in nodejs@20 format
+    type: nodejs@20
     # internal ports configuration
     ports:
       - 
@@ -256,14 +258,14 @@ services:
 
 The yaml file describes your future project infrastructure. The project will contain a Node.js service and a [PostgreSQL](/postgresql/overview) service. 
 
-Node.js service with "app" hostname is configured to listen on tcp ports 3000, 3001 and on udp port 4000. Node.js service will run on version 18 with a custom vertical and horizontal scaling. Following env variables will be configured:
+Node.js service with "app" hostname is configured to listen on tcp ports 3000, 3001 and on udp port 4000. Node.js service will run on version 20 with a custom vertical and horizontal scaling. Following env variables will be configured:
 
 ```env
 S3_ACCESS_KEY_ID="P8cX1vVVb"
 S3_ACCESS_SECRET="ogFthuiLYki8XoL73opSCQ"
 ```
 
-The hostname of the PostgreSQL service will be set to "db". The [single container] mode will be chosen and the default [auto scaling configuration] will be set.
+The hostname of the PostgreSQL service will be set to "db". The [single container](/postgresql/how-to/create#single-container) mode will be chosen and the default [auto scaling configuration](/postgresql/how-to/create#set-auto-scaling-configuration) will be set.
 
 #### Description of description.yml parameters
 
@@ -294,7 +296,7 @@ At least one service in `services:` section is required. You can create a projec
 	</tr>
 	<tr>
   <td><b>type</b></td>
-		<td>Specifies the service type <code>nodejs</code> and version.<br/>Set type: <code>nodejs<span>@</span>&lt;version&gt;</code><br/><br/><b>Limitations:</b><br/>Following Node.js major versions are currently supported: <i>v18</i>,<i>v16</i>,<i>v14</i></td>
+		<td>Specifies the service type <code>nodejs</code> and version.<br/>Set type: <code>nodejs<span>@</span>&lt;version&gt;</code><br/><br/><b>Limitations:</b><br/>Following Node.js major versions are currently supported: <i>20</i>,<i>18</i>,<i>16</i></td>
 	</tr>
     <tr>
   <td><b>ports</b></td>
@@ -309,7 +311,7 @@ The <b>port</b> attribute defines the port number. At least one internal port is
 <br/><br/>
 The <b>protocol</b> attribute is optional. Default value is <code>"TCP"</code>.<br/><br/>
 Set <b>httpSupport = true</b> if a web server runs on the port. Zerops uses this information for the configuration of [external routing]. This option is available only in combination with the <b>TCP</b> protocol.<br/><br/>
-Learn more about [how to connect to your Node.js service].<br/>
+Learn more about [how to connect to your Node.js service](/nodejs/how-to/access).<br/>
         </td>
 	</tr>
     <tr>
@@ -374,8 +376,8 @@ services:
   -
     # service name
     hostname: app
-    # service type and version number in nodejs@18 format
-    type: nodejs@18
+    # service type and version number in nodejs@20 format
+    type: nodejs@20
     # internal ports configuration
     ports:
       - 
@@ -393,7 +395,7 @@ services:
       S3_ACCESS_SECRET: "ogFthuiLYki8XoL73opSCQ"
 ```
 
-The yaml file describes the list of one or more services that you want to add to your existing project. In the example above, one Node.js service version 18 listening on the port 3000 with default [auto scaling] configuration will be added to your project. Hostname of the new service will be set to `app`. Following env variables will be configured:
+The yaml file describes the list of one or more services that you want to add to your existing project. In the example above, one Node.js service version 20 listening on the port 3000 with default [auto scaling](/nodejs/how-to/scaling) configuration will be added to your project. Hostname of the new service will be set to `app`. Following env variables will be configured:
 
 ```env
 S3_ACCESS_KEY_ID="P8cX1vVVb"

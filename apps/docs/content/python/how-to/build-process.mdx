@@ -1,16 +1,15 @@
 ---
-title: Node.js build process
+title: Python build process
 ---
 
 ## Description of the build process
 Zerops starts a temporary build container and performs following actions:
 1. Installs the build environment
 2. Downloads your application source code from [GitHub ↗](https://www.github.com), [GitLab ↗](https://www.gitlab.com) or via [Zerops CLI](/references/cli/install)
-3. Optionally [customises the build environment](/nodejs/how-to/build-process#customise-nodejs-build-environment)
-4. Runs the build commands
-5. Uploads the application artefact to the internal Zerops storage
-6. Optionally [customizes the runtime environment](/nodejs/how-to/customize-runtime)
-7. [Deploys your application](/nodejs/how-to/deploy-process)
+3. Optionally [customises the build environment](/python/how-to/build-process#customise-python-build-environment)
+4. Uploads the application artefact to the internal Zerops storage
+5. Optionally [customizes the runtime environment](/python/how-to/customize-runtime)
+6. [Deploys your application](/python/how-to/deploy-process)
 
 The build container is automatically deleted after the build has finished or failed.
 
@@ -21,21 +20,21 @@ When you know that the running build is not correct and you want to cancel it, y
 
 The build cancellation is available before the build pipeline is finished. When the build is finished, the deployment cannot be cancelled.
 
-## Customise Node.js build environment
-The default Node.js build environment contains:
+## Customise Python build environment
+The default Python build environment contains:
 * Ubuntu 22
-* selected version of Node.js defined in `zerops.yml` [build.base](/nodejs/how-to/build-pipeline#base) parameter
+* selected version of Python defined in `zerops.yml` [build.base](/python/how-to/build-pipeline#base) parameter
 * [zCLI](/references/cli/install), Zerops command line tool
-* `npm`, `yarn`, `git` and `npx` tools
+* `pip` and `git`
 
-To install additional packages or tools add one or more [build.prepareCommands](/nodejs/how-to/build-pipeline#preparecommands) commands to your `zerops.yml`.
+To install additional packages or tools add one or more [build.prepareCommands](/python/how-to/build-pipeline#preparecommands) commands to your `zerops.yml`.
 
 :::info
 The application code is available in the `/var/www` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
 :::
 
-## Node.js build hardware resources 
-Build of your Node.js application is run in a separate build container with following resource configuration: 
+## Python build hardware resources
+Build of your Python application is run in a separate build container with following resource configuration:
 
 | HW resource     | Minimum | Maximum |
 | --------------- | ------- | ------- |
@@ -57,12 +56,12 @@ The time limit for the whole build pipeline is **1 hour**. After 1 hour, Zerops 
 ## Troubleshooting build-related problems
 ### Failure of a build prepare command
 
-If any [prepare command](/nodejs/how-to/build-pipeline#preparecommands) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/nodejs/how-to/logs#build-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom build environment is ready for the build phase.
+If any [prepare command](/python/how-to/build-pipeline#preparecommands) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/python/how-to/logs#build-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom build environment is ready for the build phase.
 
 ### Invalidate the build cache
 
 Some packages or tools can take a long time to install. Therefore, Zerops caches your custom build environment after each successful build where the `prepareCommands` commands were used. When the second or following build is triggered, Zerops will use the build cache from the previous build if both following conditions are met:
-1. Content of the [build.base](/nodejs/how-to/build-pipeline#base) and [build.prepareCommands](/nodejs/how-to/build-pipeline#preparecommands) attributes didn't change from the previous build
+1. Content of the [build.base](/python/how-to/build-pipeline#base) and [build.prepareCommands](/python/how-to/build-pipeline#preparecommands) attributes didn't change from the previous build
 2. The build cache wasn't invalidated in the Zerops GUI.
 
 To invalidate the Zerops build cache go to your service detail in Zerops GUI, choose **Service dashboard & runtime containers** from the left menu and click on the **Open pipeline detail** button. Then click on the **Invalidate build cache** icon.
@@ -70,19 +69,5 @@ To invalidate the Zerops build cache go to your service detail in Zerops GUI, ch
 **// TODO screenshot**
 
 When the build cache is used, Zerops doesn't run the prepare commands and the build of your application is faster.
-
-### Failure of a build command
-
-If any [build command](/nodejs/how-to/build-pipeline#build) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/nodejs/how-to/logs#build-log) to troubleshoot the error. If the error log doesn't contain any specific error message, try to run your build with the `--verbose` option.
-
-```yml
-buildCommands:
- - npm i --verbose
- - npm run build
-```
-
-If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `buildCommands` are finished, the application build is completed and ready for the [deploy](/nodejs/how-to/deploy-process) phase.
-
-
 
 

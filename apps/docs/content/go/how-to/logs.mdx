@@ -22,7 +22,7 @@ Read more about the [zcli service log](/references/cli/access-logs) command.
 
 ### Prepare runtime log
 #### Zerops GUI
-To access a prepare runtime log in Zerops GUI, go to the service detail and choose **Service dashboard & runtime containers** in the left menu. Then open the pipeline detail of an application version and click on **Prepare runtime log**. The prepare runtime log button is available only if the [prepare runtime pipeline] was triggered for the selected deploy.
+To access a prepare runtime log in Zerops GUI, go to the service detail and choose **Service dashboard & runtime containers** in the left menu. Then open the pipeline detail of an application version and click on **Prepare runtime log**. The prepare runtime log button is available only if the [prepare runtime pipeline](/go/how-to/build-pipeline#preparecommands-1) was triggered for the selected deploy.
 
 #### zCLI
 _Prepare runtime log is currently not supported in zCLI._
@@ -49,41 +49,29 @@ zcli service log [projectNameOrId] [serviceName]
 ```
 Read more about the [zcli service log](/references/cli/access-logs) command.
 
-// TODO update:
 ## Go logging configuration
 Zerops logs all messages sent
 * to the standard error (`stderr`)
 * to the standard output (`stdout`)
-* via the Go `console.log` method
+* via the Go `fmt.Println` or `slog.Info` methods etc.
 
 ### Severity level
-By default the `console.log` creates a message with the `Informational (6)` severity.
+By default the `fmt.Println` or `slog` methods create messages with the `Informational (6)` severity.
 
 Add a severity number in the `<N>` format as a prefix to set a custom severity as shown below:
 
-```js
-console.log('A message with the informational severity ...');
-console.log('<0>Emergency (0) severity > system is unusable.');
-console.log('<1>Alert (1) severity > action must be taken immediately.');
-console.log('<2>Critical (2) severity > critical conditions.');
-console.log('<3>Error (3) severity > error conditions.');
-console.log('<4>Warning (4) severity > warning conditions.');
-console.log('<5>Notice (5) severity > normal, but significant, condition.');
-console.log('<6>Informational (6) severity > informational message.');
-console.log('<7>Debug (7) severity > debug-level message.');
+```go
+slog.Info("A message with the informational severity ...")
+slog.Info("<0>Emergency (0) severity > system is unusable.")
+slog.Info("<1>Alert (1) severity > action must be taken immediately.")
+slog.Info("<2>Critical (2) severity > critical conditions.")
+slog.Info("<3>Error (3) severity > error conditions.")
+slog.Info("<4>Warning (4) severity > warning conditions.")
+slog.Info("<5>Notice (5) severity > normal, but significant, condition.")
+slog.Info("<6>Informational (6) severity > informational message.")
+slog.Info("<7>Debug (7) severity > debug-level message.")
 ```
 
 :::info
-<code>console.info</code>, <code>console.warn</code>, <code>console.debug</code>, and <code>console.error</code> are just aliases to the <code>console.log</code> method. They don't set the appropriate severity number. Use the <code>&lt;N&gt;</code> prefix instead.
+<code>slog.Info</code>, <code>slog.Debug</code>, <code>slog.Warn</code>, and <code>slog.Error</code> are just aliases to the <code>slog.Info</code> method. They don't set the appropriate severity number. Use the <code>&lt;N&gt;</code> prefix instead.
 :::
-
-
-
-
-
-
-
-
-
-
-

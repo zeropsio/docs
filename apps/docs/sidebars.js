@@ -801,9 +801,6 @@ module.exports = {
           type: "doc",
           id: "php/how-to/create",
           label: "Create PHP service",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
@@ -814,25 +811,26 @@ module.exports = {
           type: "doc",
           id: "php/how-to/build-pipeline",
           label: "Configure build & deploy pipeline",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
           id: "php/how-to/trigger-pipeline",
           label: "Trigger build pipeline",
-          customProps: {
-            sidebar_is_soon: true,
-          }
+        },
+        {
+          type: "doc",
+          id: "php/how-to/build-process",
+          label: "Build process",
+        },
+        {
+          type: "doc",
+          id: "php/how-to/deploy-process",
+          label: "Deploy process",
         },
         {
           type: "doc",
           id: "php/how-to/customize-runtime",
           label: "Customize PHP runtime",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
@@ -856,9 +854,6 @@ module.exports = {
           type: "doc",
           id: "php/how-to/scaling",
           label: "Scale PHP runtime service",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
@@ -929,9 +924,6 @@ module.exports = {
           type: "doc",
           id: "python/how-to/create",
           label: "Create Python service",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
@@ -942,33 +934,31 @@ module.exports = {
           type: "doc",
           id: "python/how-to/build-pipeline",
           label: "Configure build & deploy pipeline",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
           id: "python/how-to/trigger-pipeline",
           label: "Trigger build pipeline",
-          customProps: {
-            sidebar_is_soon: true,
-          }
+        },
+        {
+          type: "doc",
+          id: "python/how-to/build-process",
+          label: "Build process",
+        },
+        {
+          type: "doc",
+          id: "python/how-to/deploy-process",
+          label: "Deploy process",
         },
         {
           type: "doc",
           id: "python/how-to/customize-runtime",
           label: "Customize Python runtime",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
           id: "python/how-to/logs",
           label: "Setup & access logs",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
@@ -987,9 +977,6 @@ module.exports = {
           type: "doc",
           id: "python/how-to/scaling",
           label: "Scale Python runtime service",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
@@ -1183,9 +1170,6 @@ module.exports = {
           type: "doc",
           id: "rust/how-to/create",
           label: "Create Rust service",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
@@ -1196,25 +1180,26 @@ module.exports = {
           type: "doc",
           id: "rust/how-to/build-pipeline",
           label: "Configure build & deploy pipeline",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
           id: "rust/how-to/trigger-pipeline",
           label: "Trigger build pipeline",
-          customProps: {
-            sidebar_is_soon: true,
-          }
+        },
+        {
+          type: "doc",
+          id: "rust/how-to/build-process",
+          label: "Build process",
+        },
+        {
+          type: "doc",
+          id: "rust/how-to/deploy-process",
+          label: "Deploy process",
         },
         {
           type: "doc",
           id: "rust/how-to/customize-runtime",
           label: "Customize Rust runtime",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
@@ -1241,9 +1226,6 @@ module.exports = {
           type: "doc",
           id: "rust/how-to/scaling",
           label: "Scale Rust runtime service",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
@@ -1314,9 +1296,6 @@ module.exports = {
           type: "doc",
           id: "dotnet/how-to/create",
           label: "Create .NET service",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
@@ -1327,33 +1306,31 @@ module.exports = {
           type: "doc",
           id: "dotnet/how-to/build-pipeline",
           label: "Configure build & deploy pipeline",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
           id: "dotnet/how-to/trigger-pipeline",
           label: "Trigger build pipeline",
-          customProps: {
-            sidebar_is_soon: true,
-          }
+        },
+        {
+          type: "doc",
+          id: "dotnet/how-to/build-process",
+          label: "Build process",
+        },
+        {
+          type: "doc",
+          id: "dotnet/how-to/deploy-process",
+          label: "Deploy process",
         },
         {
           type: "doc",
           id: "dotnet/how-to/customize-runtime",
           label: "Customize .NET runtime",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
           id: "dotnet/how-to/logs",
           label: "Setup & access logs",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
@@ -1372,9 +1349,6 @@ module.exports = {
           type: "doc",
           id: "dotnet/how-to/scaling",
           label: "Scale .NET runtime service",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
