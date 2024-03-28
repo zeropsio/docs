@@ -107,193 +107,193 @@ module.exports = {
       },
       className: "homepage-sidebar-item",
     },
-    {
-      type: "html",
-      value: "Perfectly suited for",
-      customProps: {
-        sidebar_is_group_divider: true,
-      },
-      className: "homepage-sidebar-item",
-    },
-    {
-      type: "category",
-      label: "Nest.js",
-      link: {
-        type: "doc",
-        id: "frameworks/nestjs/index",
-      },
-      customProps: {
-        sidebar_icon: "nestjs",
-      },
-      className: "homepage-sidebar-item",
-      items: [
-        {
-          type: "doc",
-          id: "frameworks/nestjs/index",
-          label: "Overview & quickstart",
-        },
-        {
-          type: "doc",
-          id: "frameworks/nestjs/log",
-          label: "Setup & access logs",
-        },
-        {
-          type: "doc",
-          id: "frameworks/nestjs/template",
-          label: "Create templates with import & seed",
-        },
-        {
-          type: "doc",
-          id: "frameworks/nestjs/env-variables",
-          label: "Utilize environment variables",
-        },
-        {
-          type: "doc",
-          id: "frameworks/nestjs/migration",
-          label: "Migration & upgrades",
-        },
-        {
-          type: "doc",
-          id: "frameworks/nestjs/backups",
-          label: "Backups",
-        },
-        {
-          type: "doc",
-          id: "frameworks/nestjs/scaling",
-          label: "Optimize scaling",
-        },
-        {
-          type: "doc",
-          id: "frameworks/nestjs/scaling",
-          label: "High availability, when, how, why",
-        },
-        {
-          type: "doc",
-          id: "frameworks/nestjs/cron",
-          label: "CRON / Scheduled jobs",
-        },
-        {
-          type: "doc",
-          id: "frameworks/nestjs/mails",
-          label: "SMPT & sending emails",
-        },
-        {
-          type: "doc",
-          id: "frameworks/nestjs/routing",
-          label: "Public access from domain, IP, subdomain",
-        },
-      ],
-    },
-    {
-      type: "category",
-      label: "Laravel",
-      link: {
-        type: "doc",
-        id: "frameworks/laravel/index",
-      },
-      customProps: {
-        sidebar_icon: "laravel",
-      },
-      className: "homepage-sidebar-item",
-      items: [
-        {
-          type: "doc",
-          id: "frameworks/laravel/examples",
-          label: "Examples",
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-      ],
-    },
-    {
-      type: "category",
-      label: "Gingonic",
-      link: {
-        type: "doc",
-        id: "frameworks/gingonic/index",
-      },
-      customProps: {
-        sidebar_icon: "gingonic",
-      },
-      className: "homepage-sidebar-item",
-      items: [
-        {
-          type: "doc",
-          id: "frameworks/gingonic/examples",
-          label: "Examples",
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-      ],
-    },
-    {
-      type: "category",
-      label: "Nette",
-      link: {
-        type: "doc",
-        id: "frameworks/nette/index",
-      },
-      customProps: {
-        sidebar_icon: "nette",
-      },
-      className: "homepage-sidebar-item",
-      items: [
-        {
-          type: "doc",
-          id: "frameworks/nette/examples",
-          label: "Examples",
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-      ],
-    },
-    {
-      type: "category",
-      label: "Strapi",
-      link: {
-        type: "doc",
-        id: "frameworks/strapi/index",
-      },
-      customProps: {
-        sidebar_icon: "strapi",
-      },
-      className: "homepage-sidebar-item",
-      items: [
-        {
-          type: "doc",
-          id: "frameworks/strapi/examples",
-          label: "Examples",
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-      ],
-    },
-    {
-      type: "category",
-      label: "Medusa",
-      link: {
-        type: "doc",
-        id: "frameworks/medusa/index",
-      },
-      customProps: {
-        sidebar_icon: "medusa",
-      },
-      className: "homepage-sidebar-item",
-      items: [
-        {
-          type: "doc",
-          id: "frameworks/medusa/examples",
-          label: "Examples",
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-      ],
-    },
+//    {
+//      type: "html",
+//      value: "Perfectly suited for",
+//      customProps: {
+//        sidebar_is_group_divider: true,
+//      },
+//      className: "homepage-sidebar-item",
+//    },
+//    {
+//      type: "category",
+//      label: "Nest.js",
+//      link: {
+//        type: "doc",
+//        id: "frameworks/nestjs/index",
+//      },
+//      customProps: {
+//        sidebar_icon: "nestjs",
+//      },
+//      className: "homepage-sidebar-item",
+//      items: [
+//        {
+//          type: "doc",
+//          id: "frameworks/nestjs/index",
+//          label: "Overview & quickstart",
+//        },
+//        {
+//          type: "doc",
+//          id: "frameworks/nestjs/log",
+//          label: "Setup & access logs",
+//        },
+//        {
+//          type: "doc",
+//          id: "frameworks/nestjs/template",
+//          label: "Create templates with import & seed",
+//        },
+//        {
+//          type: "doc",
+//          id: "frameworks/nestjs/env-variables",
+//          label: "Utilize environment variables",
+//        },
+//        {
+//          type: "doc",
+//          id: "frameworks/nestjs/migration",
+//          label: "Migration & upgrades",
+//        },
+//        {
+//          type: "doc",
+//          id: "frameworks/nestjs/backups",
+//          label: "Backups",
+//        },
+//        {
+//          type: "doc",
+//          id: "frameworks/nestjs/scaling",
+//          label: "Optimize scaling",
+//        },
+//        {
+//          type: "doc",
+//          id: "frameworks/nestjs/scaling",
+//          label: "High availability, when, how, why",
+//        },
+//        {
+//          type: "doc",
+//          id: "frameworks/nestjs/cron",
+//          label: "CRON / Scheduled jobs",
+//        },
+//        {
+//          type: "doc",
+//          id: "frameworks/nestjs/mails",
+//          label: "SMPT & sending emails",
+//        },
+//        {
+//          type: "doc",
+//          id: "frameworks/nestjs/routing",
+//          label: "Public access from domain, IP, subdomain",
+//        },
+//      ],
+//    },
+//    {
+//      type: "category",
+//      label: "Laravel",
+//      link: {
+//        type: "doc",
+//        id: "frameworks/laravel/index",
+//      },
+//      customProps: {
+//        sidebar_icon: "laravel",
+//      },
+//      className: "homepage-sidebar-item",
+//      items: [
+//        {
+//          type: "doc",
+//          id: "frameworks/laravel/examples",
+//          label: "Examples",
+//          customProps: {
+//            exclude_from_doc_list: false,
+//          },
+//        },
+//      ],
+//    },
+//    {
+//      type: "category",
+//      label: "Gingonic",
+//      link: {
+//        type: "doc",
+//        id: "frameworks/gingonic/index",
+//      },
+//      customProps: {
+//        sidebar_icon: "gingonic",
+//      },
+//      className: "homepage-sidebar-item",
+//      items: [
+//        {
+//          type: "doc",
+//          id: "frameworks/gingonic/examples",
+//          label: "Examples",
+//          customProps: {
+//            exclude_from_doc_list: false,
+//          },
+//        },
+//      ],
+//    },
+//    {
+//      type: "category",
+//      label: "Nette",
+//      link: {
+//        type: "doc",
+//        id: "frameworks/nette/index",
+//      },
+//      customProps: {
+//        sidebar_icon: "nette",
+//      },
+//      className: "homepage-sidebar-item",
+//      items: [
+//        {
+//          type: "doc",
+//          id: "frameworks/nette/examples",
+//          label: "Examples",
+//          customProps: {
+//            exclude_from_doc_list: false,
+//          },
+//        },
+//      ],
+//    },
+//    {
+//      type: "category",
+//      label: "Strapi",
+//      link: {
+//        type: "doc",
+//        id: "frameworks/strapi/index",
+//      },
+//      customProps: {
+//        sidebar_icon: "strapi",
+//      },
+//      className: "homepage-sidebar-item",
+//      items: [
+//        {
+//          type: "doc",
+//          id: "frameworks/strapi/examples",
+//          label: "Examples",
+//          customProps: {
+//            exclude_from_doc_list: false,
+//          },
+//        },
+//      ],
+//    },
+//    {
+//      type: "category",
+//      label: "Medusa",
+//      link: {
+//        type: "doc",
+//        id: "frameworks/medusa/index",
+//      },
+//      customProps: {
+//        sidebar_icon: "medusa",
+//      },
+//      className: "homepage-sidebar-item",
+//      items: [
+//        {
+//          type: "doc",
+//          id: "frameworks/medusa/examples",
+//          label: "Examples",
+//          customProps: {
+//            exclude_from_doc_list: false,
+//          },
+//        },
+//      ],
+//    },
     {
       type: "html",
       value: "All Supported Services",
