@@ -65,7 +65,7 @@ const config = {
     announcementBar: {
       id: '/help/contacts',
       content:
-        'DOCS STILL IN PROGRESS!\nContact us on Discord or email if you need any help.',
+        'DOCS STILL IN PROGRESS!<br><br>Contact us if you need any help.',
       backgroundColor: '#FF937B',
       textColor: '#091E42',
       isCloseable: false,
@@ -112,9 +112,6 @@ const config = {
       height: 20,
     },
     footer: {
-      copyright: `© ${new Date().getFullYear()} Zerops s.r.o.. All rights reserved.`,
-    },
-    header: {
       copyright: `© ${new Date().getFullYear()} Zerops s.r.o.. All rights reserved.`,
     },
     socialLinks: [
