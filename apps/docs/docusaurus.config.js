@@ -56,11 +56,19 @@ const config = {
     },
   ],
   themeConfig: {
-    image: "img/docs-meta.jpg",
+    image: "img/docs-meta.jpeg",
     colorMode: {
       defaultMode: "light",
       disableSwitch: false,
       respectPrefersColorScheme: true,
+    },
+    announcementBar: {
+      id: '/help/contacts',
+      content:
+        'DOCS STILL IN PROGRESS!\nContact us on Discord or email if you need any help.',
+      backgroundColor: '#FF937B',
+      textColor: '#091E42',
+      isCloseable: false,
     },
     prism: {
       defaultLanguage: "js",
@@ -104,6 +112,9 @@ const config = {
       height: 20,
     },
     footer: {
+      copyright: `© ${new Date().getFullYear()} Zerops s.r.o.. All rights reserved.`,
+    },
+    header: {
       copyright: `© ${new Date().getFullYear()} Zerops s.r.o.. All rights reserved.`,
     },
     socialLinks: [
@@ -150,7 +161,7 @@ const config = {
         docs: {
           sidebarPath: require.resolve("./sidebars.js"),
           editUrl:
-            "https://github.com/medusajs/medusa/edit/develop/www/apps/docs",
+            "https://github.com/zeropsio/docs/tree/main/apps/docs",
           path: "content",
           routeBasePath: "/",
           remarkPlugins: [

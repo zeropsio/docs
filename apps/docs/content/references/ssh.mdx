@@ -1,0 +1,99 @@
+---
+title: How to connect to your service via SSH
+---
+
+:::note
+This function is available only for runtime services and web servers. The SSH connection is not available for databases, message brokers or object storage.
+:::
+
+To establish a SSH connection to your runtime service you need to start the Zerops VPN first.
+
+## Start VPN
+Zerops VPN client is included into zCLI, the Zerops command-line tool. To start a VPN connection to the selected Zerops project, follow these steps:
+
+1. [Install & setup zCLI](/references/cli)
+2. [Start the Zerops VPN](/references/vpn#start-the-vpn)
+
+## Establish the SSH connection
+
+When the VPN session is active, you can connect to the specific container via SSH.
+Use following command:
+
+```sh
+ssh <your service hostname>
+```
+
+For example, if you service hostname = `app`
+```sh
+ssh app
+```
+
+Following SSH warning message will be shown:
+```sh
+The authenticity of host 'app (10.0.92.14)' can't be established.
+RSA key fingerprint is SHA256:5wdgRcp/8saPEH0bIF2iHeBKFFEImX+EWMDyPsJlec0.
+This key is not known by any other names
+Are you sure you want to continue connecting (yes/no/[fingerprint])?
+```
+
+Type `yes` to confirm that you trust the host. The security is assured by the VPN.
+Then the SSH connection is established and following messages will appear:
+
+```sh
+Warning: Permanently added app' (RSA) to the list of known hosts.
+Welcome to a Zerops container SSH session!
+You are logged in as root. Be careful making permanent changes, you can lose stuff.
+Hostname: node-id-1.runtime.app.zerops
+ Service: app
+    IPv4: 10.0.92.14
+    IPv6: fda0:5ef:16:c0de:10:0:92:14
+root@node-id-1:/var/www#
+```
+
+## Connect to the specific container
+
+If your service is in the [HA mode], the command ssh `<your service hostname>` will select one of the service's containers randomly. To connect to a specific container, go to the Zerops GUI and in the service detail choose **Service containers & resources overview** and scroll down to the list of containers.
+
+// TODO screenshot
+(Containers list in the service detail)
+
+Copy the container hostname, e.g. `node-id-1.runtime.app.zerops` and enter it as the ssh command parameter:
+
+```sh
+ssh <container hostname>
+```
+
+For example:
+
+```sh
+ssh node-id-1.runtime.app.zerops
+```
+
+If the service or container doesn't exist, a following message is shown:
+
+```sh
+ssh: Could not resolve hostname node-id-3.runtime.app.zerops: nodename nor servname provided, or not known
+```
+
+The `node-id-1.runtime.app.zerops` hostname is unique for each container within your project. When your application [scales horizontally] new containers with higher numbers are added, e.g. `node-id-2.runtime.app.zerops`, `node-id-3.runtime.app.zerops`, etc.
+
+When the application scales down and some containers are deleted, the unique hostnames are not reused later for new containers. So after several scale ups and scale downs your application can contain for example 2 containers with hostnames `node-id-5.runtime.app.zerops`, `node-id-12.runtime.app.zerops`.
+
+Alternatively, you can use a following sequential names for your containers:
+* `node1.runtime.app.zerops`
+* `node2.runtime.app.zerops`
+* `node3.runtime.app.zerops`
+etc. where `app` is the name of your service.
+
+These names represent the number of your service's containers in the order in which they were created. This sequence is updated each time your service scales horizontally. Keep in mind that the number of containers can change in time and that the sequential names can reference different containers after each horizontal scaling occurs.
+
+When a SSH connection to the container is established, its local IPv4 and IPv6 address is shown. Do not use the IP addresses in the `ssh` command. The IP address can change when the container fails and is automatically replaced by a new one or when your service scales horizontally.
+
+## Changes made inside the container are temporary
+:::caution
+Do not use the SSH to make any changes that should persist in your service.
+:::
+
+If your service is in the [HA mode], the changes will affect only the single container you are connected to. If your service [scales horizontally] or if a container fails and is automatically replaced, the active version of the [application artefact] is deployed into the new container.
+
+If you want to make any changes that will affect all containers and remain during the lifetime of your current application version, use the [run.prepare] or [run.init] pipeline commands.

@@ -24,16 +24,6 @@ export default function AnnouncementBar(): JSX.Element | null {
         "print:hidden"
       )}
     >
-      <Bordered wrapperClassName="mr-0.75">
-        <div
-          className={clsx(
-            "p-[6px] flex justify-center items-center",
-            "rounded-xs bg-medusa-bg-component"
-          )}
-        >
-          <BellAlertSolid className="text-medusa-fg-subtle" />
-        </div>
-      </Bordered>
       <AnnouncementBarContent className={clsx("flex-1")} />
       {isCloseable && (
         <AnnouncementBarCloseButton

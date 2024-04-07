@@ -534,6 +534,15 @@ module.exports = {
     },
     {
       type: "doc",
+      id: "references/ssh",
+      label: "SSH",
+      customProps: {
+        sidebar_icon: "command-line",
+      },
+      className: "homepage-sidebar-item",
+    },
+    {
+      type: "doc",
       id: "references/vpn",
       label: "VPN",
       customProps: {
@@ -579,7 +588,7 @@ module.exports = {
     },
     {
       type: "html",
-      value: "FAQ",
+      value: "Help",
       customProps: {
         sidebar_is_group_divider: true,
       },
@@ -587,10 +596,19 @@ module.exports = {
     },
     {
       type: "doc",
-      id: "faq/faq",
+      id: "help/faq",
       label: "FAQ",
       customProps: {
         sidebar_icon: "question-mark",
+      },
+      className: "homepage-sidebar-item",
+    },
+    {
+      type: "doc",
+      id: "help/contacts",
+      label: "Contacts",
+      customProps: {
+        sidebar_icon: "chat-bubble-left-right",
       },
       className: "homepage-sidebar-item",
     },
@@ -718,9 +736,6 @@ module.exports = {
           type: "doc",
           id: "nodejs/how-to/filebrowser",
           label: "Browse container files",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
@@ -791,6 +806,22 @@ module.exports = {
     },
     {
       type: "category",
+      label: "Quick Start",
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+        sidebar_icon: "rocket-launch",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "php/quickstart",
+          label: "Sample application",
+        },
+      ],
+    },
+    {
+      type: "category",
       label: "How-to",
       collapsible: false,
       customProps: {
@@ -841,9 +872,6 @@ module.exports = {
           type: "doc",
           id: "php/how-to/filebrowser",
           label: "Browse container files",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
@@ -914,6 +942,22 @@ module.exports = {
     },
     {
       type: "category",
+      label: "Quick Start",
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+        sidebar_icon: "rocket-launch",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "python/quickstart",
+          label: "Sample application",
+        },
+      ],
+    },
+    {
+      type: "category",
       label: "How-to",
       collapsible: false,
       customProps: {
@@ -964,9 +1008,6 @@ module.exports = {
           type: "doc",
           id: "python/how-to/filebrowser",
           label: "Browse container files",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
@@ -1037,6 +1078,22 @@ module.exports = {
     },
     {
       type: "category",
+      label: "Quick Start",
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+        sidebar_icon: "rocket-launch",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "go/quickstart",
+          label: "Sample application",
+        },
+      ],
+    },
+    {
+      type: "category",
       label: "How-to",
       collapsible: false,
       customProps: {
@@ -1087,9 +1144,6 @@ module.exports = {
           type: "doc",
           id: "go/how-to/filebrowser",
           label: "Browse container files",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
@@ -1160,6 +1214,22 @@ module.exports = {
     },
     {
       type: "category",
+      label: "Quick Start",
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+        sidebar_icon: "rocket-launch",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "rust/quickstart",
+          label: "Sample application",
+        },
+      ],
+    },
+    {
+      type: "category",
       label: "How-to",
       collapsible: false,
       customProps: {
@@ -1205,17 +1275,11 @@ module.exports = {
           type: "doc",
           id: "rust/how-to/logs",
           label: "Setup & access logs",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
           id: "rust/how-to/filebrowser",
           label: "Browse container files",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
@@ -1286,6 +1350,22 @@ module.exports = {
     },
     {
       type: "category",
+      label: "Quick Start",
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+        sidebar_icon: "rocket-launch",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "dotnet/quickstart",
+          label: "Sample application",
+        },
+      ],
+    },
+    {
+      type: "category",
       label: "How-to",
       collapsible: false,
       customProps: {
@@ -1336,9 +1416,6 @@ module.exports = {
           type: "doc",
           id: "dotnet/how-to/filebrowser",
           label: "Browse container files",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
