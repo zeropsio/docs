@@ -5,7 +5,7 @@ import AnnouncementBarCloseButton from "@theme/AnnouncementBar/CloseButton"
 import AnnouncementBarContent from "@theme/AnnouncementBar/Content"
 import clsx from "clsx"
 import { Bordered } from "docs-ui"
-import { BellAlertSolid } from "@medusajs/icons"
+import { Tools } from "@medusajs/icons"
 
 export default function AnnouncementBar(): JSX.Element | null {
   const { announcementBar } = useThemeConfig()
@@ -24,6 +24,16 @@ export default function AnnouncementBar(): JSX.Element | null {
         "print:hidden"
       )}
     >
+      <Bordered wrapperClassName="mr-0.75">
+        <div
+          className={clsx(
+            "p-[6px] flex justify-center items-center",
+            "rounded-xs bg-medusa-bg-component"
+          )}
+        >
+          <Tools className="text-medusa-fg-subtle" />
+        </div>
+      </Bordered>
       <AnnouncementBarContent className={clsx("flex-1")} />
       {isCloseable && (
         <AnnouncementBarCloseButton
