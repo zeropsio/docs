@@ -32,7 +32,6 @@ module.exports = {
       label: "Getting started",
       customProps: {
         sidebar_icon: "rocket-launch",
-        sidebar_is_soon: true,
       },
       className: "homepage-sidebar-item",
     },
