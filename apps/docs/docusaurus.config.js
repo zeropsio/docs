@@ -65,8 +65,8 @@ const config = {
     announcementBar: {
       id: '/help/contacts',
       content:
-        'DOCS IS STILL A WIP!<br><br>Contact us if you need any help.',
-      backgroundColor: '#FF937B',
+        '<b><i>WORK IN PROGRESS!</i></b><br>Inconsistencies may occur. Contact us if you need any help.',
+      backgroundColor: '#fccccc',
       textColor: '#091E42',
       isCloseable: false,
     },

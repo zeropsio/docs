@@ -13,9 +13,10 @@ export default function AnnouncementBar(): JSX.Element | null {
   if (!isActive) {
     return null
   }
-  const { isCloseable, id } = announcementBar!
+  const { isCloseable, id, backgroundColor } = announcementBar!
   return (
     <div
+      style={{backgroundColor: backgroundColor}}
       className={clsx(
         "relative flex items-center h-auto bg-medusa-bg-subtle dark:bg-medusa-bg-base p-0.75",
         "rounded mx-1.5 mb-1 shadow-card-rest dark:shadow-card-rest-dark",
