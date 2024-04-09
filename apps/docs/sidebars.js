@@ -32,6 +32,7 @@ module.exports = {
       label: "Getting started",
       customProps: {
         sidebar_icon: "rocket-launch",
+        sidebar_is_soon: true,
       },
       className: "homepage-sidebar-item",
     },
@@ -668,18 +669,32 @@ module.exports = {
     },
     {
       type: "category",
-      label: "Quick Start",
-      collapsible: false,
+      label: "Quickstart",
+      link: {
+        type: "doc",
+        id: "nodejs/quickstart",
+      },
       customProps: {
-        sidebar_is_group_headline: true,
         sidebar_icon: "rocket-launch",
       },
+      className: "homepage-sidebar-item",
       items: [
         {
           type: "doc",
-          id: "nodejs/quickstart",
-          label: "Sample application",
+          id: "nodejs/quickstart/speedy-trial",
+          label: "Speedy trial",
+          customProps: {
+            exclude_from_doc_list: false,
+          },
         },
+        {
+          type: "doc",
+          id: "nodejs/quickstart/easy-learn",
+          label: "Step-by-step tutorial",
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        }
       ],
     },
     {
@@ -802,18 +817,32 @@ module.exports = {
     },
     {
       type: "category",
-      label: "Quick Start",
-      collapsible: false,
+      label: "Quickstart",
+      link: {
+        type: "doc",
+        id: "php/quickstart",
+      },
       customProps: {
-        sidebar_is_group_headline: true,
         sidebar_icon: "rocket-launch",
       },
+      className: "homepage-sidebar-item",
       items: [
         {
           type: "doc",
-          id: "php/quickstart",
-          label: "Sample application",
+          id: "php/quickstart/speedy-trial",
+          label: "Speedy trial",
+          customProps: {
+            exclude_from_doc_list: false,
+          },
         },
+        {
+          type: "doc",
+          id: "php/quickstart/easy-learn",
+          label: "Step-by-step tutorial",
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        }
       ],
     },
     {
@@ -935,18 +964,32 @@ module.exports = {
     },
     {
       type: "category",
-      label: "Quick Start",
-      collapsible: false,
+      label: "Quickstart",
+      link: {
+        type: "doc",
+        id: "python/quickstart",
+      },
       customProps: {
-        sidebar_is_group_headline: true,
         sidebar_icon: "rocket-launch",
       },
+      className: "homepage-sidebar-item",
       items: [
         {
           type: "doc",
-          id: "python/quickstart",
-          label: "Sample application",
+          id: "python/quickstart/speedy-trial",
+          label: "Speedy trial",
+          customProps: {
+            exclude_from_doc_list: false,
+          },
         },
+        {
+          type: "doc",
+          id: "python/quickstart/easy-learn",
+          label: "Step-by-step tutorial",
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        }
       ],
     },
     {
@@ -1068,18 +1111,32 @@ module.exports = {
     },
     {
       type: "category",
-      label: "Quick Start",
-      collapsible: false,
+      label: "Quickstart",
+      link: {
+        type: "doc",
+        id: "go/quickstart",
+      },
       customProps: {
-        sidebar_is_group_headline: true,
         sidebar_icon: "rocket-launch",
       },
+      className: "homepage-sidebar-item",
       items: [
         {
           type: "doc",
-          id: "go/quickstart",
-          label: "Sample application",
+          id: "go/quickstart/speedy-trial",
+          label: "Speedy trial",
+          customProps: {
+            exclude_from_doc_list: false,
+          },
         },
+        {
+          type: "doc",
+          id: "go/quickstart/easy-learn",
+          label: "Step-by-step tutorial",
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        }
       ],
     },
     {
@@ -1201,18 +1258,32 @@ module.exports = {
     },
     {
       type: "category",
-      label: "Quick Start",
-      collapsible: false,
+      label: "Quickstart",
+      link: {
+        type: "doc",
+        id: "rust/quickstart",
+      },
       customProps: {
-        sidebar_is_group_headline: true,
         sidebar_icon: "rocket-launch",
       },
+      className: "homepage-sidebar-item",
       items: [
         {
           type: "doc",
-          id: "rust/quickstart",
-          label: "Sample application",
+          id: "rust/quickstart/speedy-trial",
+          label: "Speedy trial",
+          customProps: {
+            exclude_from_doc_list: false,
+          },
         },
+        {
+          type: "doc",
+          id: "rust/quickstart/easy-learn",
+          label: "Step-by-step tutorial",
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        }
       ],
     },
     {
@@ -1334,18 +1405,32 @@ module.exports = {
     },
     {
       type: "category",
-      label: "Quick Start",
-      collapsible: false,
+      label: "Quickstart",
+      link: {
+        type: "doc",
+        id: "dotnet/quickstart",
+      },
       customProps: {
-        sidebar_is_group_headline: true,
         sidebar_icon: "rocket-launch",
       },
+      className: "homepage-sidebar-item",
       items: [
         {
           type: "doc",
-          id: "dotnet/quickstart",
-          label: "Sample application",
+          id: "dotnet/quickstart/speedy-trial",
+          label: "Speedy trial",
+          customProps: {
+            exclude_from_doc_list: false,
+          },
         },
+        {
+          type: "doc",
+          id: "dotnet/quickstart/easy-learn",
+          label: "Step-by-step tutorial",
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        }
       ],
     },
     {
