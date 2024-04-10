@@ -26,10 +26,10 @@ Zerops provides RabbitMQ service in two modes: **Highly available** and **Single
 
 **//TODO review**
 
-Creates a RabbitMQ cluster with **3 database containers** and **2 free database proxies**. 
+Creates a RabbitMQ cluster with **3 message queue containers** and **2 free proxy containers**.
 This mode is suited for production. 
 
-Zerops always keeps the 3 database containers on different physical machines. All your data is stored redundantly in 3 identical copies. In case of a failure of a container or the underlying physical machine, Zerops automatically disconnects the failed container from the cluster, creates a new container and syncs all data from the remaining 2 copies. Finally the broken container is automatically deleted.
+Zerops always keeps the 3 message queue containers on different physical machines. All your data is stored redundantly in 3 identical copies. In case of a failure of a container or the underlying physical machine, Zerops automatically disconnects the failed container from the cluster, creates a new container and syncs all data from the remaining 2 copies. Finally the broken container is automatically deleted.
 
 // TODO update link
 
@@ -37,7 +37,7 @@ Zerops always keeps the 3 database containers on different physical machines. Al
 
 #### Single container
 
-A RabbitMQ database installed in a single container is created. Useful for non-essential data or dev environments.
+A RabbitMQ message broker installed in a single container is created. Useful for non-essential data or dev environments.
 
 Your data is stored only in a single container. If the container or the underlying physical machine fails, your data since the last backup are lost. Zerops doesn't provide any automatic repairs of single node RabbitMQ services.
 
@@ -53,7 +53,7 @@ Currently only RabbitMQ **v3** (3.9.13) version is available.
 
 **//TODO review**
 
-Zerops scales the RabbitMQ services automatically by raising or lowering the hardware resources of each database container.
+Zerops scales the RabbitMQ services automatically by raising or lowering the hardware resources of each message queue container.
 
 Vertical auto scaling has following default configuration:
 
@@ -75,7 +75,7 @@ You can change the auto scaling parameters later.
 
 **//TODO review**
 
-RabbitMQ needs at least 20 vCPUs to start. Zerops automatically starts RabbitMQ service with at least 20 vCPUs. If the database is idle after the start, Zerops will scale the RabbitMQ down to selected minimum vCPU settings. If you set the minimum vCPU settings higher than 20 vCPUs, Zerops will start with the required minimum vCPU settings. 
+RabbitMQ needs at least 20 vCPUs to start. Zerops automatically starts RabbitMQ service with at least 20 vCPUs. If the service is idle after the start, Zerops will scale the RabbitMQ down to selected minimum vCPU settings. If you set the minimum vCPU settings higher than 20 vCPUs, Zerops will start with the required minimum vCPU settings.
 
 [Learn more](/rabbitmq/how-to/scale) about RabbitMQ auto scaling.
 
@@ -115,7 +115,7 @@ project:
   # project name
   name: my-project
   # optional: project description 
-  description: A project with a RabbitMQ database
+  description: A project with a RabbitMQ message broker
   # optional: project tags
   tags:
   - DEMO
@@ -173,7 +173,7 @@ At least one service in `services:` section is required. You can create a projec
 <tbody>
 	<tr>
 		<td><b>hostname</b></td>
-		<td>The unique service identifier.<br/><br/>The hostname of the new database will be set to the <code>hostname</code> value. <br/><br/><b>Limitations:</b><br/>- duplicate services with the same name in the same project are forbidden<br/>
+		<td>The unique service identifier.<br/><br/>The hostname of the new service will be set to the <code>hostname</code> value. <br/><br/><b>Limitations:</b><br/>- duplicate services with the same name in the same project are forbidden<br/>
     - maximum 25 characters<br/>
     - must contain only lowercase ASCII letters (a-z) or numbers (0-9)</td>
 	</tr>
@@ -185,10 +185,10 @@ At least one service in `services:` section is required. You can create a projec
   	<tr>
   <td><b>mode</b></td>
 		<td>Defines the operation mode of RabbitMQ service.<br/>
-    <br/><b>HA</b><br/>Creates a RabbitMQ cluster with 3 database containers and 2 free database proxies. This mode is suited for production.<br/><br/>
-    Zerops always keeps the 3 database containers on different physical machines. All your data is stored redundantly in 3 identical copies. In case of a failure of a container or the underlying physical machine, Zerops automatically disconnects the failed container from the cluster, creates a new container and syncs all data from the remaining 2 copies. Finally the broken container is automatically deleted.<br/><br/>
+    <br/><b>HA</b><br/>Creates a RabbitMQ cluster with 3 message queue containers and 2 free database proxies. This mode is suited for production.<br/><br/>
+    Zerops always keeps the 3 message queue containers on different physical machines. All your data is stored redundantly in 3 identical copies. In case of a failure of a container or the underlying physical machine, Zerops automatically disconnects the failed container from the cluster, creates a new container and syncs all data from the remaining 2 copies. Finally the broken container is automatically deleted.<br/><br/>
     <b>NON_HA</b><br/>
-    Zerops will create a RabbitMQ database installed in a single container. Useful for non-essential data or dev environments.<br/><br/>
+    Zerops will create a RabbitMQ message broker installed in a single container. Useful for non-essential data or dev environments.<br/><br/>
     Your data is stored only in a single container. If the container or the underlying physical machine fails, your data since the last backup are lost. Zerops doesn't provide any automatic repairs of single node RabbitMQ services.
     </td>
 	</tr>
