@@ -1814,46 +1814,26 @@ module.exports = {
         },
       ],
     },
-    {
-      type: "category",
-      label: "Reference",
-      collapsible: false,
-      customProps: {
-        sidebar_is_group_headline: true,
-      },
-      items: [
-        {
-          type: "doc",
-          id: "postgresql/reference/import",
-          label: "Import configuration",
-        },
-        {
-          type: "doc",
-          id: "postgresql/reference/cli",
-          label: "CLI",
-        },
-      ],
-    },
-    {
-      type: "category",
-      label: "Technical details",
-      collapsible: false,
-      customProps: {
-        sidebar_is_group_headline: true,
-      },
-      items: [
-        {
-          type: "doc",
-          id: "postgresql/tech-details/cluster",
-          label: "PostgreSQL cluster asynchronous behaviour",
-        },
-        {
-          type: "doc",
-          id: "postgresql/tech-details/limitations",
-          label: "Technical limitations of PostgreSQL cluster",
-        },
-      ],
-    },
+//    {
+//      type: "category",
+//      label: "Technical details",
+//      collapsible: false,
+//      customProps: {
+//        sidebar_is_group_headline: true,
+//      },
+//      items: [
+//        {
+//          type: "doc",
+//          id: "postgresql/tech-details/cluster",
+//          label: "PostgreSQL cluster asynchronous behaviour",
+//        },
+//        {
+//          type: "doc",
+//          id: "postgresql/tech-details/limitations",
+//          label: "Technical limitations of PostgreSQL cluster",
+//        },
+//      ],
+//    },
   ],
   mongodb: [
     {
