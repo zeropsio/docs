@@ -919,9 +919,6 @@ module.exports = {
           type: "doc",
           id: "php/how-to/shared-storage",
           label: "Connect / disconnect shared storage",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
@@ -1066,9 +1063,6 @@ module.exports = {
           type: "doc",
           id: "python/how-to/shared-storage",
           label: "Connect / disconnect shared storage",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
@@ -1213,9 +1207,6 @@ module.exports = {
           type: "doc",
           id: "go/how-to/shared-storage",
           label: "Connect / disconnect shared storage",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
@@ -1360,9 +1351,6 @@ module.exports = {
           type: "doc",
           id: "rust/how-to/shared-storage",
           label: "Connect / disconnect shared storage",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
@@ -1507,9 +1495,6 @@ module.exports = {
           type: "doc",
           id: "dotnet/how-to/shared-storage",
           label: "Connect / disconnect shared storage",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
