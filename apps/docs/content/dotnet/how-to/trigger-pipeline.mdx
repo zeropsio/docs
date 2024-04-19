@@ -21,9 +21,9 @@ To start a new build & deploy pipeline manually, use the Zerops CLI.
 Follow these steps:
 1. Add <a href="/dotnet/how-to/build-pipeline#add-zeropsyml-to-your-repository"><code>zerops.yml</code></a> to your repository.
 2. [Install & setup zCLI](/references/cli) the Zerops command line tool.
-3. Run `zcli push` command.
+3. Run `zcli service push` command.
 
-The `zcli push` command uploads your application code, builds and deploys your application in Zerops.
+The `zcli service push` command uploads your application code, builds and deploys your application in Zerops.
 
 The command triggers the [build pipeline](/dotnet/how-to/build-pipeline) defined in `zerops.yml`. `zerops.yml` must be in the working directory. The working directory is by default the current directory and can be changed using the `--workingDir` flag.
 
@@ -35,25 +35,24 @@ If you just want to deploy your application to Zerops, use the [zcli deploy](#ma
 
 ```sh
 Usage:
-  zcli push [projectNameOrId] [serviceName] [flags]
+  zcli service push [flags]
 
 Flags:
-  -h, --help                       Displays help for the push command.
-
-
-      --versionName <string>       Adds a custom version name. Automatically filled if the VERSIONNAME environment variable exists.
-
-
-      --workingDir <string>        Sets a custom working directory. Default working directory is the current directory.
-
-
-      --archiveFilePath <string>   If set, zCLI creates a tar.gz archive with the application code in the required path relative to the working directory. By default, no archive is created.
-
-
-      --uploadGitFolder            If set, zCLI the .git folder is also uploaded. By default, the .git folder is ignored.
+      --archiveFilePath string   If set, zCLI creates a tar.gz archive with the application code in the required path relative
+                                 to the working directory. By default, no archive is created.
+      --deployGitFolder          If set, zCLI the .git folder is also uploaded. By default, the .git folder is ignored.
+  -h, --help                     the service push command.
+      --projectId string         If you have access to more than one project, you must specify the project ID for which the
+                                 command is to be executed.
+      --serviceId string         If you have access to more than one service, you must specify the service ID for which the
+                                 command is to be executed.
+      --versionName string       Adds a custom version name. Automatically filled if the VERSIONNAME environment variable exists.
+      --workingDir string        Sets a custom working directory. Default working directory is the current directory. (default "./")
+      --zeropsYamlPath string    Sets a custom path to the zerops.yml file relative to the working directory. By default zCLI
+                                 looks for zerops.yml in the working directory.
 ```
 
-You must enclose the `projectNameOrId` in quotes if it contains a space. The project name is visible in Zerops GUI. If you have more projects with a duplicate name, use the project ID instead. You'll find the project ID in the URL of the project dashboard page in Zerops GUI.<br/>E.g. <code>https://app&#46;zerops.io/project/<b>Evs8Je4NTvKeIkUqoUXp2w</b>/service-stacks</code>.
+zCLI commands are interactive, when you press enter after `zcli service push`, you will be given a list of your projects to choose from.
 
 :::info
 You can change the build and deploy pipeline when you need to. Just simply modify the <code>zerops.yml</code> in your repository.
@@ -65,29 +64,29 @@ To start only a deploy pipeline, use the Zerops CLI.
 Follow these steps:
 1. Add [zerops.yml](/dotnet/how-to/build-pipeline#add-zeropsyml-to-your-repository) to your repository. Omit the build section.
 2. [Install & setup zCLI](/references/cli) the Zerops command line tool.
-3. Run `zcli deploy` command.
+3. Run `zcli service deploy` command.
 
-The `zcli deploy` command uploads your application and deploys it in Zerops. Use this tool if you have your own build process. If you want to build your application in Zerops, use an [automatic](#automatic-builds-and-deploys-from-github-or-gitlab) or [manual](#manual-builds-and-deploys-using-zerops-cli) build process.
+The `zcli service deploy` command uploads your application and deploys it in Zerops. Use this tool if you have your own build process. If you want to build your application in Zerops, use an [automatic](#automatic-builds-and-deploys-from-github-or-gitlab) or [manual](#manual-builds-and-deploys-using-zerops-cli) build process.
 
 #### Deploy command parameters
 ```sh
 Usage:
-  zcli deploy projectNameOrId serviceName pathToFileOrDir [pathToFileOrDir] [flags]
+  zcli service deploy pathToFileOrDir [flags]
 
 Flags:
-  -h, --help                       Displays help for the deploy command.
-
-
-      --versionName <string>       Adds a custom version name. Automatically filled if the ZCLI_VERSION_NAMEVERSIONNAME environment variable exists.
-
-
-      --workingDir <string>        Sets a custom working directory. Default working directory is the current directory.
-
-
-      --zeropsYamlPath <string>    Sets a custom path to the zerops.yml file relative to the working directory. By default zCLI looks for zerops.yml in the working directory.
-
-
-      --archiveFilePath <string>   If set, zCLI creates a tar.gz archive with the deployed files in the required path relative to the working directory. By default no archive is created.
+      --archiveFilePath string   If set, zCLI creates a tar.gz archive with the application code in the required path relative
+                                 to the working directory. By default, no archive is created.
+      --deployGitFolder          Sets a custom path to the zerops.yml file relative to the working directory. By default zCLI
+                                 looks for zerops.yml in the working directory.
+  -h, --help                     the service deploy command.
+      --projectId string         If you have access to more than one project, you must specify the project ID for which the
+                                 command is to be executed.
+      --serviceId string         If you have access to more than one service, you must specify the service ID for which the
+                                 command is to be executed.
+      --versionName string       Adds a custom version name. Automatically filled if the VERSIONNAME environment variable exists.
+      --workingDir string        Sets a custom working directory. Default working directory is the current directory. (default "./")
+      --zeropsYamlPath string    Sets a custom path to the zerops.yml file relative to the working directory. By default zCLI
+                                 looks for zerops.yml in the working directory.
 ```
 
 `pathToFileOrDir` defines a path to one or more directories and/or files relative to the working directory. The working directory is by default the current directory and can be changed using the `--workingDir` flag.
