@@ -467,7 +467,7 @@ module.exports = {
       items: [
         {
           type: "ref",
-          id: "nodejs/overview",
+          id: "object-storage/overview",
           label: "Object Storage",
           customProps: {
             sidebar_icon: "cube-solid",
@@ -476,7 +476,7 @@ module.exports = {
         },
         {
           type: "ref",
-          id: "nodejs/overview",
+          id: "shared-storage/overview",
           label: "Shared storage",
           customProps: {
             sidebar_icon: "server",
@@ -775,9 +775,6 @@ module.exports = {
           type: "doc",
           id: "nodejs/how-to/shared-storage",
           label: "Connect / disconnect shared storage",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
