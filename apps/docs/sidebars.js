@@ -32,7 +32,6 @@ module.exports = {
       label: "Getting started",
       customProps: {
         sidebar_icon: "rocket-launch",
-        sidebar_is_soon: true,
       },
       className: "homepage-sidebar-item",
     },
@@ -669,10 +668,10 @@ module.exports = {
     },
     {
       type: "category",
-      label: "Quickstart",
+      label: "Getting started",
       link: {
         type: "doc",
-        id: "nodejs/quickstart",
+        id: "nodejs/getting-started",
       },
       customProps: {
         sidebar_icon: "rocket-launch",
@@ -681,16 +680,24 @@ module.exports = {
       items: [
         {
           type: "doc",
-          id: "nodejs/quickstart/speedy-trial",
-          label: "Speedy trial",
+          id: "nodejs/tutorial/quickstart",
+          label: "Quickstart",
           customProps: {
             exclude_from_doc_list: false,
           },
         },
         {
           type: "doc",
-          id: "nodejs/quickstart/easy-learn",
+          id: "nodejs/tutorial/step-by-step",
           label: "Step-by-step tutorial",
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        },
+        {
+          type: "doc",
+          id: "nodejs/tutorial/runtime-sql",
+          label: "Runtime + SQL",
           customProps: {
             exclude_from_doc_list: false,
           },
@@ -814,10 +821,10 @@ module.exports = {
     },
     {
       type: "category",
-      label: "Quickstart",
+      label: "Getting started",
       link: {
         type: "doc",
-        id: "php/quickstart",
+        id: "php/getting-started",
       },
       customProps: {
         sidebar_icon: "rocket-launch",
@@ -826,20 +833,28 @@ module.exports = {
       items: [
         {
           type: "doc",
-          id: "php/quickstart/speedy-trial",
-          label: "Speedy trial",
+          id: "php/tutorial/quickstart",
+          label: "Quickstart",
           customProps: {
             exclude_from_doc_list: false,
           },
         },
         {
           type: "doc",
-          id: "php/quickstart/easy-learn",
+          id: "php/tutorial/step-by-step",
           label: "Step-by-step tutorial",
           customProps: {
             exclude_from_doc_list: false,
           },
-        }
+        },
+         {
+           type: "doc",
+           id: "php/tutorial/runtime-sql",
+           label: "Runtime + SQL",
+           customProps: {
+             exclude_from_doc_list: false,
+           },
+         }
       ],
     },
     {
@@ -958,10 +973,10 @@ module.exports = {
     },
     {
       type: "category",
-      label: "Quickstart",
+      label: "Getting started",
       link: {
         type: "doc",
-        id: "python/quickstart",
+        id: "python/getting-started",
       },
       customProps: {
         sidebar_icon: "rocket-launch",
@@ -970,16 +985,24 @@ module.exports = {
       items: [
         {
           type: "doc",
-          id: "python/quickstart/speedy-trial",
-          label: "Speedy trial",
+          id: "python/tutorial/quickstart",
+          label: "Quickstart",
           customProps: {
             exclude_from_doc_list: false,
           },
         },
         {
           type: "doc",
-          id: "python/quickstart/easy-learn",
+          id: "python/tutorial/step-by-step",
           label: "Step-by-step tutorial",
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        },
+        {
+          type: "doc",
+          id: "python/tutorial/runtime-sql",
+          label: "Runtime + SQL",
           customProps: {
             exclude_from_doc_list: false,
           },
@@ -1102,10 +1125,10 @@ module.exports = {
     },
     {
       type: "category",
-      label: "Quickstart",
+      label: "Getting started",
       link: {
         type: "doc",
-        id: "go/quickstart",
+        id: "go/getting-started",
       },
       customProps: {
         sidebar_icon: "rocket-launch",
@@ -1114,20 +1137,28 @@ module.exports = {
       items: [
         {
           type: "doc",
-          id: "go/quickstart/speedy-trial",
-          label: "Speedy trial",
+          id: "go/tutorial/quickstart",
+          label: "Quickstart",
           customProps: {
             exclude_from_doc_list: false,
           },
         },
         {
           type: "doc",
-          id: "go/quickstart/easy-learn",
+          id: "go/tutorial/step-by-step",
           label: "Step-by-step tutorial",
           customProps: {
             exclude_from_doc_list: false,
           },
-        }
+        },
+         {
+           type: "doc",
+           id: "go/tutorial/runtime-sql",
+           label: "Runtime + SQL",
+           customProps: {
+             exclude_from_doc_list: false,
+           },
+         }
       ],
     },
     {
@@ -1246,10 +1277,10 @@ module.exports = {
     },
     {
       type: "category",
-      label: "Quickstart",
+      label: "Getting started",
       link: {
         type: "doc",
-        id: "rust/quickstart",
+        id: "rust/getting-started",
       },
       customProps: {
         sidebar_icon: "rocket-launch",
@@ -1258,16 +1289,24 @@ module.exports = {
       items: [
         {
           type: "doc",
-          id: "rust/quickstart/speedy-trial",
-          label: "Speedy trial",
+          id: "rust/tutorial/quickstart",
+          label: "Quickstart",
           customProps: {
             exclude_from_doc_list: false,
           },
         },
         {
           type: "doc",
-          id: "rust/quickstart/easy-learn",
+          id: "rust/tutorial/step-by-step",
           label: "Step-by-step tutorial",
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        },
+        {
+          type: "doc",
+          id: "rust/tutorial/runtime-sql",
+          label: "Runtime + SQL",
           customProps: {
             exclude_from_doc_list: false,
           },
@@ -1390,10 +1429,10 @@ module.exports = {
     },
     {
       type: "category",
-      label: "Quickstart",
+      label: "Getting started",
       link: {
         type: "doc",
-        id: "dotnet/quickstart",
+        id: "dotnet/getting-started",
       },
       customProps: {
         sidebar_icon: "rocket-launch",
@@ -1402,20 +1441,28 @@ module.exports = {
       items: [
         {
           type: "doc",
-          id: "dotnet/quickstart/speedy-trial",
-          label: "Speedy trial",
+          id: "dotnet/tutorial/quickstart",
+          label: "Quickstart",
           customProps: {
             exclude_from_doc_list: false,
           },
         },
         {
           type: "doc",
-          id: "dotnet/quickstart/easy-learn",
+          id: "dotnet/tutorial/step-by-step",
           label: "Step-by-step tutorial",
           customProps: {
             exclude_from_doc_list: false,
           },
-        }
+        },
+         {
+           type: "doc",
+           id: "dotnet/tutorial/runtime-sql",
+           label: "Runtime + SQL",
+           customProps: {
+             exclude_from_doc_list: false,
+           },
+         }
       ],
     },
     {
@@ -1750,6 +1797,36 @@ module.exports = {
         sidebar_is_title: true,
         sidebar_icon: "postgresql",
       },
+    },
+    {
+      type: "category",
+      label: "Getting started",
+      link: {
+        type: "doc",
+        id: "postgresql/getting-started",
+      },
+      customProps: {
+        sidebar_icon: "rocket-launch",
+      },
+      className: "homepage-sidebar-item",
+      items: [
+        {
+          type: "doc",
+          id: "postgresql/tutorial/quickstart",
+          label: "Quickstart",
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        },
+        {
+          type: "doc",
+          id: "postgresql/tutorial/step-by-step",
+          label: "Step-by-step tutorial",
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        }
+      ],
     },
     {
       type: "category",
