@@ -1778,6 +1778,15 @@ module.exports = {
         },
       ],
     },
+    {
+      type: "doc",
+      id: "mariadb/faq",
+      label: "FAQ",
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: "chat-bubble-left-right",
+      },
+    },
   ],
   postgresql: [
     {
@@ -1893,6 +1902,15 @@ module.exports = {
 //        },
 //      ],
 //    },
+    {
+      type: "doc",
+      id: "postgresql/faq",
+      label: "FAQ",
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: "chat-bubble-left-right",
+      },
+    },
   ],
   mongodb: [
     {
@@ -2045,6 +2063,37 @@ module.exports = {
     },
     {
       type: "category",
+      label: "Getting started",
+      link: {
+        type: "doc",
+        id: "keydb/getting-started",
+      },
+      customProps: {
+        sidebar_icon: "rocket-launch",
+        sidebar_is_soon: true,
+      },
+      className: "homepage-sidebar-item",
+      items: [
+        {
+          type: "doc",
+          id: "keydb/tutorial/quickstart",
+          label: "Quickstart",
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        },
+        {
+          type: "doc",
+          id: "keydb/tutorial/step-by-step",
+          label: "Step-by-step tutorial",
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        }
+      ],
+    },
+    {
+      type: "category",
       label: "How-to",
       collapsible: false,
       customProps: {
@@ -2087,6 +2136,15 @@ module.exports = {
           label: "Delete KeyDB service",
         },
       ],
+    },
+    {
+      type: "doc",
+      id: "keydb/faq",
+      label: "FAQ",
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: "chat-bubble-left-right",
+      },
     },
   ],
 //  rabbitmq: [
