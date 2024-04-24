@@ -514,6 +514,14 @@ module.exports = {
         },
         {
           type: "doc",
+          id: "references/cli/commands",
+          label: "Available commands",
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        },
+        {
+          type: "doc",
           id: "references/cli/access-logs",
           label: "Access logs",
           customProps: {
