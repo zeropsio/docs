@@ -2220,4 +2220,40 @@ module.exports = {
 //      ],
 //    },
 //  ],
+  sharedstorage: [
+    {
+      type: "ref",
+      id: "homepage",
+      label: "Back to home",
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: "back-arrow",
+      },
+    },
+    {
+      type: "doc",
+      id: "shared-storage/overview",
+      label: "Shared storage overview",
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: "storage",
+      },
+    },
+    {
+      type: "category",
+      label: "How-to",
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+        sidebar_icon: "academic-cap-solid",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "shared-storage/how-to/create",
+          label: "Create shared storage service",
+        },
+      ],
+    },
+  ],
 }
