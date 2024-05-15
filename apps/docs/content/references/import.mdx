@@ -1,0 +1,275 @@
+---
+title: Import configuration
+---
+
+In this section you will find the fullest example of import yaml configuration file.
+
+:::caution
+Consider this a guideline only, not all keys are valid for all service types. If you want to know about the specifics of each technology, head to their **Create service** page in **How To** section.
+:::
+
+:::note
+* `REQUIRED.` If a parent object is defined, the key-value pair is required to be filled. All other key-value pairs are optional.
+:::
+
+```yml
+# ==== Define a project to import ====
+project:
+  # REQUIRED. Name of your project
+  name: project0
+  # Project description
+  description: "This project is an example only"
+  # List of project tags for filtering
+  tags:
+    - test
+    - dev
+# ==== Define a list of services to import into the project ====
+services:
+  # REQUIRED. Name of your service
+  - hostname: service1
+    # REQUIRED. Choose from list of supported technologies and their versions
+    type: nodejs@20
+    # HA or NON_HA mode
+    mode: HA
+    # Map of secret environment variables
+    envSecrets:
+      DATABASE_HOST: ${db_hostname}
+      DATABASE_NAME: ${db_hostname}
+    # List of port objects of the service
+    ports:
+      # REQUIRED (if port object defined). Port number
+      - port: 3000
+        # tcp or udp port protocol
+        protocol: tcp
+        # true or false
+        httpSupport: true
+    # Object storage size in GB
+    objectStorageSize: 2
+    # Choose object storage policy from a predefined list
+    objectStoragePolicy: public-read-write
+    # Define additional policy
+    objectStorageRawPolicy:
+    # One time build git repository
+    buildFromGit: https://github.com/zeropsio/recipe-nodejs-hello-world@main
+    # true or false
+    enableSubdomainAccess: true
+    # The higher the sooner the service is created
+    priority: 1
+    # Vertical autoscaling configuration object
+    verticalAutoscaling:
+      minVCpu: 1
+      maxVCpu: 5
+      # Choose SHARED or DEDICATED
+      cpuMode: DEDICATED
+      minRam: 1
+      maxRam: 32
+      minDisk: 1
+      maxDisk: 100
+      startCpuCoreCount:
+      minFreeCpuCores:
+      minFreeCpuPercent:
+      minFreeRamGB:
+      minFreeRamPercent:
+    # Minimum number of containers
+    minContainers: 2
+    # Maximum number of containers
+    maxContainers: 3
+    # List of shared storage services to connect to
+    mount:
+      - teststorage1
+    # Full nginx config
+    nginxConfig: |-
+      server {
+          listen 80 default_server;
+          listen [::]:80 default_server;
+
+          server_name _;
+          root /var/www;
+
+          location / {
+              try_files $uri $uri/ /index.html;
+          }
+
+          access_log syslog:server=unix:/dev/log,facility=local1 default_short;
+          error_log syslog:server=unix:/dev/log,facility=local1;
+      }
+    # Zerops.yml service config file
+    zeropsYaml:
+      build:
+        base: nodejs@20
+        buildCommands:
+          - echo zerops.yml from import
+          - yarn
+          - yarn run build
+        deploy: ./
+        cache: node_modules
+      run:
+        initCommands:
+          - |
+            if ! zcli bucket s3 create $STORAGE_HOSTNAME $STORAGE_BUCKET_NAME --x-amz-acl=private; then
+            echo "The bucket was not created, you have to do it manually!"
+            fi
+        start: yarn start
+  # REQUIRED. Name of your other service
+  - hostname: teststorage1
+    type: shared-storage
+    ...
+```
+
+## project
+*REQUIRED, iff a whole project is imported*
+
+Only one project can be defined.
+
+### name
+*string, REQUIRED*
+
+The name of the new project. Duplicates are allowed.
+### description
+*string*
+
+Description of the new project.
+### tags
+*list of strings*
+
+One or more string tags. Tags do not have a functional meaning, they only provide better orientation in projects.
+## services
+*REQUIRED section*
+
+At least one service is required.
+### hostname
+*string, REQUIRED*
+
+The unique service identifier.
+Limitations:
+- duplicates in the same project forbidden
+- maximum 25 characters, lowercase ASCII letters (a-z) or numbers (0-9) only
+
+### type
+*choose a value, REQUIRED*
+
+Specifies the service type and version.
+
+### mode
+*choose a value*
+* **HA / NON_HA** (default NON_HA)
+
+Defines the operation mode of the service.
+
+### envSecrets
+*list of key-value pairs*
+
+Environment variables that are blurred by default in Zerops GUI. Can be edited or deleted in Zerops GUI.
+
+### ports
+*list of nested objects*
+
+Specify internal ports on which your application will listen.
+#### port
+*int, REQUIRED*
+
+Defines a port number, numbers between 10 and 65435 are allowed.
+#### protocol
+*choose a value*
+* **tcp / udp** (default 'tcp')
+
+#### httpSupport
+*boolean* (default true for tcp protocol)
+
+Set false if a web server is not running on the port. To be used with tcp protocol only.
+### objectStorageSize
+*int*
+
+Object storage size in GB.
+
+### objectStoragePolicy
+*choose a value*
+* **private / public-read / public-objects-read / public-write / public-read-write / custom**
+
+Select a predefined AWS S3 bucket access policy.
+
+### objectStorageRawPolicy
+*json*
+
+Define your own AWS S3 bucket access policy. See [AWS docs](https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-policy-language-overview.html) for details.
+
+Use `{{ .BucketName }}` placeholder if you need to use bucket name in your custom policy rules.
+
+### buildFromGit
+*url string*
+
+A URL of a Github or Gitlab repository used for a one-time build of your service.
+
+### enableSubdomainAccess
+*boolean* (default false)
+
+Set `true`, if you want to enable a public access to your service via a Zerops subdomain. Not suitable for production.
+
+### priority
+*int*
+
+Services are sorted before creation by priority in descending order, i.e. the higher the priority the sooner the service is created.
+### verticalAutoscaling
+*nested object*
+#### minVCpu
+#### maxVCpu
+#### cpuMode
+*choose a value*
+* **SHARED / DEDICATED**
+
+#### minRam
+*float*
+
+Minimum RAM in GB that each container of the service can scale down to.
+#### maxRam
+*float*
+
+Minimum RAM in GB that each container of the service can scale up to.
+#### minDisk
+*float*
+
+Minimum disk space in GB that each container of the service can scale down to.
+#### maxDisk
+*float*
+
+Minimum disk space in GB that each container of the service can scale up to.
+#### startCpuCoreCount
+*int*
+
+Number of CPU cores with which each container starts.
+#### minFreeCpuCores
+*float*
+
+Minimum number of unused CPU cores before a container starts scaling.
+#### minFreeCpuPercent
+*float*
+
+Minimum percentage of unused CPU cores before a container starts scaling.
+#### minFreeRamGB
+*float*
+
+Minimum unused memory in GB before a container starts scaling.
+#### minFreeRamPercent
+*float*
+
+Minimum percentage of unused memory before a container starts scaling.
+### minContainers
+*int* (default 1, maximum value 6)
+
+Minimum number of containers of the service.
+### maxContainers
+*int* (maximum value 6)
+
+Maximum number of containers of the service.
+### mount
+*list of shared storage service hostnames*
+
+Mount shared storages to the service. `buildFromGit` must be filled.
+### nginxConfig
+*nginx config*
+
+Insert full nginx config.
+### zeropsYaml
+*yaml format*
+
+Insert full [zerops.yml configuration file](/references/zeropsyml).

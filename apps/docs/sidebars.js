@@ -2236,7 +2236,7 @@ module.exports = {
       label: "Shared storage overview",
       customProps: {
         sidebar_is_title: true,
-        sidebar_icon: "storage",
+        sidebar_icon: "server",
       },
     },
     {
