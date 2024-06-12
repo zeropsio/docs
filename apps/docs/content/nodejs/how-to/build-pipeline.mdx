@@ -361,10 +361,62 @@ zerops:
 Read more about [environment variables](/nodejs/how-to/env-variables) in Zerops.
 
 ## Runtime configuration
-### Node.js runtime version
+### base
+_OPTIONAL._ Sets the base technology for the runtime environment.
+If you don't specify the `run.base` attribute, Zerops keeps the current Node.js version for your runtime.
 
-The runtime base environment can't be defined in the `zerops.yml` because it is specified by the runtime service type. You select the service type when the service is created. The service type cannot be changed.
-If you need to upgrade the major Node.js version, create a new service with the required version and set a new [hostname](/nodejs/how-to/build-pipeline#hostname) in your `zerops.yml`.
+Following options are available for Node.js builds:
+* `nodejs@20`
+* `nodejs@18`
+* `nodejs@16`
+
+```yml
+zerops:
+  # hostname of your service
+  - setup: app
+    # ==== how to build your application ====
+    build:
+      # REQUIRED. Sets the base technology for the build environment:
+      base: nodejs@20
+      ...
+
+    # ==== how to run your application ====
+    run:
+      # OPTIONAL. Sets the base technology for the runtime environment:
+        base: nodejs@20
+      ...
+```
+
+<p>The base runtime environment contains {data.alpineVersion}, the selected major version of Node.js, Zerops command line tool, `npm`, `yarn`, `git` and `npx` tools.</p>
+
+:::info
+You can change the base environment when you need to. Just simply modify the `zerops.yml` in your repository.
+:::
+
+If you need to install more technologies to the runtime environment, set multiple values as a yaml array. For example:
+
+```yml
+zerops:
+  # hostname of your service
+  - setup: app
+    # ==== how to build your application ====
+    build:
+      # REQUIRED. Sets the base technology for the build environment:
+      base: nodejs@20
+      ...
+
+    # ==== how to run your application ====
+    run:
+      # OPTIONAL. Sets the base technology for the runtime environment:
+      base:
+        - nodejs@20
+        - golang@1
+      ...
+```
+
+See the full list of supported [run base environments].
+
+To customise your build environment use the `prepareCommands` attribute.
 
 ### prepareCommands
 _OPTIONAL._ Customises the Node.js runtime environment by installing additional dependencies or tools to the runtime base environment.
