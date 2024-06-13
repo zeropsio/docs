@@ -594,6 +594,15 @@ module.exports = {
       className: "homepage-sidebar-item",
     },
     {
+      type: "doc",
+      id: "references/base-list",
+      label: "Base technologies",
+      customProps: {
+        sidebar_icon: "swatch",
+      },
+      className: "homepage-sidebar-item",
+    },
+    {
       type: "html",
       value: "Help",
       customProps: {
