@@ -6,6 +6,22 @@ Environment variables help you run your application in different environments. T
 
 In Zerops you do not have to create a `.env` file manually. Zerops handles the environment variables for you.
 
+## Types of env variables in Zerops
+
+There are 3 different sets of env variables in Zerops:
+
+| environment | type   | defined in |
+| ----------- | ------ | ---------- |
+| build       | basic  | [zerops.yml](/nodejs/how-to/build-pipeline#envvariables) |
+| runtime     | basic  | [zerops.yml](/nodejs/how-to/build-pipeline#envvariables-1) |
+| runtime     | secret | [Zerops GUI](/nodejs/how-to/env-variables#set-secret-env-variables-in-zerops-gui) |
+
+Use the [secret env variables](/nodejs/how-to/create#set-secret-env-variables) for all sensitive data you don't want to store in your application code. Secret env variables are also useful if you need for testing where you need to change the value of some env variables frequently. Secret variables are managed in Zerops GUI and you don't have to redeploy your application.
+
+The basic build and runtime env variables are listed in your [zerops.yml](/references/zeropsyml) and deployed together with your application code. When you need to update a value of an existing env variable or change the set of build or runtime env variables, update your zerops.yml and redeploy your application to Zerops.
+
+You can [reference](/nodejs/how-to/env-variables#reference-a-local-variable-in-another-variable-value) another variable of the same service or even a variable of [another service](/nodejs/how-to/env-variables#reference-a-variable-of-another-project-service) within the same project.
+
 ## Set secret env variables in Zerops GUI
 
 Use secret variables to store passwords, tokens and other sensitive information that shouldn't be part of your repository and listed in zerops.yml.
@@ -25,6 +41,50 @@ The changes you've made in the list of env variables need to be committed. Click
 :::caution
 You need to **restart** the runtime service after you commit the changes in env variables. The Node.js process running in the container receives the list env variables only when it starts. Update of the env variables while the Node.js process is running does not affect your application. 
 :::
+
+## Set basic build env variables in zerops.yml
+To set basic env variables for the build environment, add the `envVariables` attribute to the build section in your `zerops.yml`
+
+```yml
+zerops:
+  # define hostname of your service
+  - setup: app
+    # ==== how to build your application ====
+    build:
+       …
+
+      # OPTIONAL. Defines the env variables for the build environment:
+      envVariables:
+        NODE_ENV: production
+        DB_NAME: db
+        DB_HOST: db
+        DB_USER: db
+        DB_PASS: ${db_password}
+```
+
+When you need to update a value of an existing env variable or change the set of build or runtime env variables, update your `zerops.yml` and redeploy your application to Zerops.
+
+## Set basic runtime env variables in zerops.yml
+To set basic env variables for the runtime environment, add the `envVariables` attribute to the runtime section in your `zerops.yml`
+
+```yml
+zerops:
+  # define hostname of your service
+  - setup: app
+    # ==== how to build your application ====
+    run:
+       …
+
+      # OPTIONAL. Defines the env variables for the runtime environment:
+      envVariables:
+        NODE_ENV: production
+        DB_NAME: db
+        DB_HOST: db
+        DB_USER: db
+        DB_PASS: ${db_password}
+```
+
+When you need to update a value of an existing env variable or change the set of build or runtime env variables, update your `zerops.yml` and redeploy your application to Zerops.
  
 ## Env variable restrictions
 
@@ -39,13 +99,13 @@ You need to **restart** the runtime service after you commit the changes in env 
 * must contain only ASCII characters 
 * the *End of Line* character is forbidden
 
+These restrictions apply to all [types of env variables](/nodejs/how-to/env-variables#types-of-env-variables-in-zerops).
+
 ## Referencing other env variables
 
 You can reference another variable of the same service using `${key}` in your variable value. You can even reference a variable from a different service using `${hostname_key}`. The referenced variable doesn't need to exist when you are entering your variable.
 
-### Examples:
-
-**1. Reference a local variable in another variable value**
+### Reference a local variable in another variable value
 
 | Variable key | Variable value    | Computed variable value |
 | ------------ | ----------------- | ----------------------- |
@@ -53,7 +113,7 @@ You can reference another variable of the same service using `${key}` in your va
 | hostname     | app               | app                     |
 | name         | ${id}-${hostname} | 12345-app               |
 
-**2. Reference a variable of another project service**
+### Reference a variable of another project service
 
 Let's say your project contains two PostgreSQL services `dbtest` and `dbprod`. Both services have a `connectionString` variable. Then you can create a `dbConnectionString` ENV variable in your Node.js runtime and set `${dbtest_connectionString}` as the variable value. Zerops will fill in the value of the `connectionString` variable of the `dbtest` service.
 
@@ -83,7 +143,7 @@ To access the local environment variable i.e. the variable set to this Node.js s
 process.env.YOUR_VARIABLE_KEY_HERE 
 ```
 
-## How to read env variables of another project service 
+## How to read env variables of another service
 
 All services of the same project can reference environment variables from other services. To use an environment variable from one service in another service in the same project, you must prefix the environment variable key with the service hostname and underscore.
 
@@ -92,6 +152,10 @@ All services of the same project can reference environment variables from other 
 To access the `connectionString` ENV variable of the `mariadb1` service, use `mariadb1_connectionString` as the ENV variable key. 
 To access the `password` ENV variable of the `mariadb2` service, use `mariadb2_password` as the ENV variable key.
 
+## How to read runtime env variables in the build environment
+You can use runtime env variables in the build environment using the `RUNTIME_` prefix. For example if you have a runtime variable with the `connectionString` key, use the `RUNTIME_connectionString` to read the variable in the build environment. This rule applies both for basic and secret runtime variables.
 
+## Basic and secret env variable with the same key
+If you create a secret env variable and a basic runtime env variable with the same key, Zerops saves the basic runtime env variable from your zerops.yml and ignores the secret env variable.
 
-
+If you create a basic build env variable and a runtime env variable with the same key, Zerops saves both because the build and runtime environments have separate sets of env variables.
