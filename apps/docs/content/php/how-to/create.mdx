@@ -31,7 +31,7 @@ Enter a unique service identifier like "app","cache", "gui" etc. Duplicate servi
 The hostname is fixed after the service is created. It can't be changed later.
 :::
 
-## Configure internal ports
+### Configure internal ports
 Specify one or more internal ports on which your application will listen. The TCP port **80** is predefined. You can set your own port number, configure multiple ports or create a service without an internal port.
 
 Projects in Zerops represent a group of one or more services. Services can be of different types (runtime services, databases, message brokers, object storage, etc.). All services of the same project share a **dedicated private network**. To connect to a service within the same project, just use the service hostname and its internal port.
@@ -54,37 +54,12 @@ In the form, enter following information:
 Internal PHP service ports can be changed later.
 :::
 
-### Set environment variables
+## Set secret env variables
+Add environment variables with sensitive data, such as password, tokens, salts, certificates etc. These will be securely saved inside Zerops and added to your runtime service upon start.
 
-Environment variables help you run your application in different environments. They allow you to isolate all specific environment aspects from your application code and keep your app encapsulated. You can create several projects in Zerops that represent different environments (development, stage, production) or even each developer can have a project with its own environment.
+Setting the secret environment variables is optional. You can set them later in Zerops GUI.
 
-On Zerops you don't have to create a `.env` file manually. Zerops handles the environment variables for you.
-
-Just enter one or more environment variables using the **Add new variable** button. If you already have a `.env` file, paste its content into the form that opens when you click on the **Paste .env format** button.
-
-#### How to read env variables from PHP
-
-Zerops passes all environment variables from all project services when your PHP is deployed and started.
-To access the local environment variable i.e. the variable set to this PHP service in your app, use:
-
-```sh
-getenv('YOUR_VARIABLE_KEY_HERE');
-```
-
-#### How to read env variables of other project services
-
-All services of the same project can reference environment variables from other services. To use an environment variable from one service in another service in the same project, you must prefix the environment variable key with the service hostname and underscore.
-
-**Examples:**
-
-To access the `connectionString` ENV variable of the `postgres1` service, use `postgres1_connectionString` as the ENV variable key.
-To access the `password` ENV variable of the `postgres2` service, use `postgres2_password` as the ENV variable key.
-
-Read more about how to create and use [environment variables](/nodejs/how-to/env-variables).
-
-:::info
-Setting the environment variables is optional. Env variables can be changed later.
-:::
+Read more about [different types of env variables](/php/how-to/env-variables#types-of-env-variables-in-zerops) in Zerops.
 
 ### Set auto scaling configuration
 Zerops scales the PHP services automatically both vertically and horizontally. Vertical scaling means increasing or decreasing the hardware resources (CPU, RAM and disk) of a PHP container. Horizontal scaling adds or removes whole containers.
@@ -241,7 +216,7 @@ services:
     minContainers: 2
     # defines the maximum number of containers for horizontal autoscaling. Max value = 6.
     maxContainers: 4
-    # optional: create env variables
+    # optional: create secret env variables
     envSecrets:
       S3_ACCESS_KEY_ID: "P8cX1vVVb"
       S3_ACCESS_SECRET: "ogFthuiLYki8XoL73opSCQ"
@@ -256,7 +231,7 @@ services:
 
 The yaml file describes your future project infrastructure. The project will contain a PHP service and a [PostgreSQL](/postgresql/overview) service.
 
-PHP service with "app" hostname is configured to listen on tcp ports 80, 8080 and on udp port 8081. PHP service will run on version 8.1 with a custom vertical and horizontal scaling. Following env variables will be configured:
+PHP service with "app" hostname is configured to listen on tcp ports 80, 8080 and on udp port 8081. PHP service will run on version 8.1 with a custom vertical and horizontal scaling. Following secret env variables will be configured:
 
 ```env
 S3_ACCESS_KEY_ID="P8cX1vVVb"
@@ -326,7 +301,7 @@ Learn more about [how to connect to your PHP service](/php/how-to/access).<br/>
 	</tr>
         <tr>
   <td><b>envSecrets</b></td>
-		<td><b>Optional.</b> Defines one or more env variables as a key value map. See env variable <a href="/nodejs/how-to/env-variables#env-variable-restrictions">restrictions</a>.</td>
+		<td><b>Optional.</b> Defines one or more secret env variables as a key value map. See env variable <a href="/nodejs/how-to/env-variables#env-variable-restrictions">restrictions</a>.</td>
 	</tr>
 </tbody>
 </table>

@@ -35,7 +35,7 @@ Enter a unique service identifier like "app","cache", "gui" etc. Duplicate servi
 The hostname is fixed after the service is created. It can't be changed later.
 :::
 
-## Configure internal ports
+### Configure internal ports
 Specify one or more internal ports on which your application will listen. The TCP port **3000** is predefined. You can set your own port number, configure multiple ports or create a service without an internal port. 
 
 Projects in Zerops represent a group of one or more services. Services can be of different types (runtime services, databases, message brokers, object storage, etc.). All services of the same project share a **dedicated private network**. To connect to a service within the same project, just use the service hostname and its internal port. 
@@ -58,37 +58,12 @@ In the form, enter following information:
 Internal Node.js service ports can be changed later.
 :::
 
-### Set environment variables
+## Set secret env variables
+Add environment variables with sensitive data, such as password, tokens, salts, certificates etc. These will be securely saved inside Zerops and added to your runtime service upon start.
 
-Environment variables help you run your application in different environments. They allow you to isolate all specific environment aspects from your application code and keep your app encapsulated. You can create several projects in Zerops that represent different environments (development, stage, production) or even each developer can have a project with its own environment.
+Setting the secret environment variables is optional. You can set them later in Zerops GUI.
 
-On Zerops you don't have to create a `.env` file manually. Zerops handles the environment variables for you.
-
-Just enter one or more environment variables using the **Add new variable** button. If you already have a `.env` file, paste its content into the form that opens when you click on the **Paste .env format** button.
-
-#### How to read env variables from Node.js
-
-Zerops passes all environment variables from all project services when your Node.js is deployed and started.
-To access the local environment variable i.e. the variable set to this Node.js service in your app, use:
-
-```sh
-process.env.YOUR_VARIABLE_KEY_HERE
-```
-
-#### How to read env variables of other project services
-
-All services of the same project can reference environment variables from other services. To use an environment variable from one service in another service in the same project, you must prefix the environment variable key with the service hostname and underscore.
-
-**Examples:**
-
-To access the `connectionString` ENV variable of the `postgres1` service, use `postgres1_connectionString` as the ENV variable key.
-To access the `password` ENV variable of the `postgres2` service, use `postgres2_password` as the ENV variable key.
-
-Read more about how to create and use [environment variables](/nodejs/how-to/env-variables).
-
-:::info
-Setting the environment variables is optional. Env variables can be changed later.
-:::
+Read more about [different types of env variables](/nodejs/how-to/env-variables#types-of-env-variables-in-zerops) in Zerops.
 
 ### Set auto scaling configuration
 Zerops scales the Node.js services automatically both vertically and horizontally. Vertical scaling means increasing or decreasing the hardware resources (CPU, RAM and disk) of a Node.js container. Horizontal scaling adds or removes whole containers.
@@ -330,7 +305,7 @@ Learn more about [how to connect to your Node.js service](/nodejs/how-to/access)
 	</tr>
         <tr>
   <td><b>envSecrets</b></td>
-		<td><b>Optional.</b> Defines one or more env variables as a key value map. See env variable <a href="/nodejs/how-to/env-variables#env-variable-restrictions">restrictions</a>.</td>
+		<td><b>Optional.</b> Defines one or more secret env variables as a key value map. See env variable <a href="/nodejs/how-to/env-variables#env-variable-restrictions">restrictions</a>.</td>
 	</tr>
 </tbody>
 </table>
