@@ -108,7 +108,7 @@ const config = {
       alt: "Zerops",
       src: "img/logo-mobile.png",
       srcDark: "img/logo-mobile-dark.png",
-      width: 82,
+      width: 23,
       height: 20,
     },
     footer: {
