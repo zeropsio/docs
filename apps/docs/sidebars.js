@@ -558,22 +558,48 @@ module.exports = {
       className: "homepage-sidebar-item",
     },
     {
-      type: "doc",
-      id: "references/zeropsyml",
+      type: "category",
       label: "zerops.yml",
+      link: {
+        type: "doc",
+        id: "references/zeropsyml",
+      },
       customProps: {
         sidebar_icon: "document-text",
       },
       className: "homepage-sidebar-item",
+      items: [
+        {
+          type: "doc",
+          id: "references/zeropsyml/base-list",
+          label: "Base technologies",
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        },
+      ],
     },
     {
-      type: "doc",
-      id: "references/import",
-      label: "Import yaml",
+      type: "category",
+      label: "Import file",
+      link: {
+        type: "doc",
+        id: "references/import",
+      },
       customProps: {
         sidebar_icon: "cloud-arrow-up",
       },
       className: "homepage-sidebar-item",
+      items: [
+        {
+          type: "doc",
+          id: "references/importyml/type-list",
+          label: "Service types",
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        },
+      ],
     },
     {
       type: "doc",
@@ -590,15 +616,6 @@ module.exports = {
       label: "Gitlab integration",
       customProps: {
         sidebar_icon: "cloud-arrow-up",
-      },
-      className: "homepage-sidebar-item",
-    },
-    {
-      type: "doc",
-      id: "references/base-list",
-      label: "Base technologies",
-      customProps: {
-        sidebar_icon: "swatch",
       },
       className: "homepage-sidebar-item",
     },
