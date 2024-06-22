@@ -4,7 +4,14 @@ title: Configure public access for your application
 
 ## Public access through zerops.io subdomain
 By default, your runtime service is not publicly accessible. 
-To test your application, you can enable public access through zerops.io subdomain. Go to the service detail page in Zerops GUI and select **Public access & internal ports** in the left menu. Then toggle the **Zerops subdomain access** switch. Zerops will assign the unique zerops.io subdomain for your application. If you have configured more [internal ports] with http support, Zerops will create the unique zerops.io subdomain for each port.
+To test your application, you can enable public access through zerops.io subdomain. Go to the service detail page in Zerops GUI and select **Public access & internal ports** in the left menu. Then toggle the **Zerops subdomain access** switch. Zerops will assign the unique zerops.io subdomain for your application. If you have defined more internal ports with http support in your zerops.yml, Zerops will create the unique zerops.io subdomain for each port. Learn more about how to define internal ports for your runtime:
+
+* [Node.js](/nodejs/how-to/build-pipeline#ports)
+* [PHP](/php/how-to/build-pipeline#ports)
+* [Python](/python/how-to/build-pipeline#ports)
+* [Go](/go/how-to/build-pipeline#ports)
+* [.NET](/dotnet/how-to/build-pipeline#ports)
+* [Rust](/rust/how-to/build-pipeline#ports)
 
 ** // TODO screenshot (block with enabled zerops.io access)**
 
@@ -45,7 +52,7 @@ Follow these steps:
 
 1. Enter your domain name e.g. `mydomain.com` to the **domains** input. You can enter a subdomain e.g. `app.mydomain.com`, the level of your subdomain is not limited. If you have multiple domains and you want to set the identical routing for them, for example if you have multiple domains for different languages, add them to the input. 
 2. If you don't want Zerops to install and maintain the Let's Encrypt SSL certificate for your domain(s), disable the **Automatically install SSL certificates** switch. The SSL certificate installed by Zerops is free of charge.
-3. Add one or more routing configurations. Each routing configuration has 2 settings: The source in the form of a public path (the part of the URL after your domain(s)) and the destination where you choose to which application and port you want to redirect the incoming traffic from the defined source.
+3. Add one or more routing configurations. Each routing configuration has 2 settings: The source in the form of a public path (the part of the URL after your domain(s)) and the destination where you choose to which application and internal port you want to redirect the incoming traffic from the defined source.
 
 :::tip
 You can change these settings any time. 
@@ -61,7 +68,7 @@ After the TTL of your domain's DNS expires, your application in Zerops will be a
 ### HTTPS
 If you have enabled the Let's Encrypt certificate for your domain(s), use the `https://` protocol to access your application through your domain. Zerops instals and renews the SSL certificate for you. A dedicated https balancer is installed to your project and Zerops redirect all the traffic that is coming through your project's public IPv4 and IPv6 address to the https balancer. 
 
-The https balancer redirects the traffic to the specific service and its port based on the public http routing configuration. The SSL certificate is installed in the https balancer and it's where the `https://` connection is terminated. The traffic is then redirected to your service on the `http://` protocol. 
+The https balancer redirects the traffic to the specific service and its internal port based on the public http routing configuration. The SSL certificate is installed in the https balancer and it's where the `https://` connection is terminated. The traffic is then redirected to your service on the `http://` protocol.
 
 Thanks to this solution, the SSL certificate is separated from your application environment and all the internal traffic in your project private network uses the `http://` protocol.
 

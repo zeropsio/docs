@@ -44,6 +44,14 @@ zerops:
 
     # ==== how to run your application ====
     run:
+      # OPTIONAL. Sets the base technology for the runtime environment:
+      base: php-apache@latest
+
+      # OPTIONAL. Sets the internal port(s) your app listens on:
+      ports:
+        # port number
+        - port: 80
+
       # OPTIONAL. Customise the runtime PHP environment by installing additional
       # dependencies to the base PHP runtime environment.
       # prepareCommands:
@@ -433,6 +441,21 @@ We are currently using following os version:
 :::caution
 The os version is fixed and cannot be customised.
 :::
+
+### ports
+_OPTIONAL._ Specifies one or more internal ports on which your application will listen.
+
+Projects in Zerops represent a group of one or more services. Services can be of different types (runtime services, databases, message brokers, object storage, etc.). All services of the same project share a **dedicated private network**. To connect to a service within the same project, just use the service hostname and its internal port.
+
+For example, to connect to a PHP service with hostname = "app" and port = 80 from another service of the same project, simply use `app:80`. Read more about [how to access a PHP service](/php/how-to/access).
+
+Each port has following attributes:
+
+| parameter   | description |
+| ----------- | ----------- |
+| port        | Defines the port number. At least one internal port is required for PHP service. You can set any port number between *10* and *65435*. Ports outside this interval are reserved for internal Zerops systems. |
+| protocol    | **Optional.** Defines the protocol. Allowed values are `TCP` or `UDP`. Default value is `TCP`. |
+| httpSupport | **Optional.** `httpSupport = true` is the default setting for TCP protocol. Set `httpSupport = false` if a web server isn't running on the port. Zerops uses this information for the configuration of public access [/references/public-access]. `httpSupport = true` is available only in combination with the TCP protocol. |
 
 ### prepareCommands
 _OPTIONAL._ Customises the PHP runtime environment by installing additional dependencies or tools to the runtime base environment.

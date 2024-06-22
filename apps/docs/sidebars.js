@@ -809,11 +809,6 @@ module.exports = {
         },
         {
           type: "doc",
-          id: "nodejs/how-to/ports",
-          label: "Update open ports",
-        },
-        {
-          type: "doc",
           id: "nodejs/how-to/shared-storage",
           label: "Connect / disconnect shared storage",
         },
@@ -958,11 +953,6 @@ module.exports = {
           type: "doc",
           id: "php/how-to/controls",
           label: "Stop & start PHP runtime service",
-        },
-        {
-          type: "doc",
-          id: "php/how-to/ports",
-          label: "Update open ports",
         },
         {
           type: "doc",
@@ -1113,11 +1103,6 @@ module.exports = {
         },
         {
           type: "doc",
-          id: "python/how-to/ports",
-          label: "Update open ports",
-        },
-        {
-          type: "doc",
           id: "python/how-to/shared-storage",
           label: "Connect / disconnect shared storage",
         },
@@ -1262,11 +1247,6 @@ module.exports = {
           type: "doc",
           id: "go/how-to/controls",
           label: "Stop & start Go runtime service",
-        },
-        {
-          type: "doc",
-          id: "go/how-to/ports",
-          label: "Update open ports",
         },
         {
           type: "doc",
@@ -1417,11 +1397,6 @@ module.exports = {
         },
         {
           type: "doc",
-          id: "rust/how-to/ports",
-          label: "Update open ports",
-        },
-        {
-          type: "doc",
           id: "rust/how-to/shared-storage",
           label: "Connect / disconnect shared storage",
         },
@@ -1569,11 +1544,6 @@ module.exports = {
         },
         {
           type: "doc",
-          id: "dotnet/how-to/ports",
-          label: "Update open ports",
-        },
-        {
-          type: "doc",
           id: "dotnet/how-to/shared-storage",
           label: "Connect / disconnect shared storage",
         },
@@ -1694,14 +1664,6 @@ module.exports = {
           type: "doc",
           id: "java/how-to/controls",
           label: "Stop & start Java runtime service",
-        },
-        {
-          type: "doc",
-          id: "java/how-to/ports",
-          label: "Update open ports",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",

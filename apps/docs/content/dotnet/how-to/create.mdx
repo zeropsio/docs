@@ -29,29 +29,6 @@ Enter a unique service identifier like "app","cache", "gui" etc. Duplicate servi
 The hostname is fixed after the service is created. It can't be changed later.
 :::
 
-### Configure internal ports
-Specify one or more internal ports on which your application will listen. The TCP port **5000** is predefined. You can set your own port number, configure multiple ports or create a service without an internal port.
-
-Projects in Zerops represent a group of one or more services. Services can be of different types (runtime services, databases, message brokers, object storage, etc.). All services of the same project share a **dedicated private network**. To connect to a service within the same project, just use the service hostname and its internal port.
-
-For example, to connect to a .NET service with hostname = "app" and port = 5000 from another service of the same project, simply use `app:5000`. Read more about [how to access a .NET service](/dotnet/how-to/access).
-
-To add a new internal port, click on the **Open a new internal port** button.
-
-<p align="center">
-<img src="/img/screenshots/create_nodejs_service_1.png" alt="image" width="50%" height="auto"/>
-</p>
-
-In the form, enter following information:
-
-1. Select **TCP** or **UDP** protocol.
-2. Check **HTTP protocol support** if a web server runs on the port. Zerops uses this information for the configuration of [external routing]. This option is available only in combination with the **TCP** protocol.
-3. Enter the **port number**. The port number must be set between 10 and 65435. Ports outside this interval are reserved for internal Zerops systems.
-
-:::info
-Internal .NET service ports can be changed later.
-:::
-
 ## Set secret env variables
 Add environment variables with sensitive data, such as password, tokens, salts, certificates etc. These will be securely saved inside Zerops and added to your runtime service upon start.
 
@@ -143,11 +120,6 @@ services:
     hostname: app
     # service type and version number in dotnet@6 format
     type: dotnet@6
-    # internal ports configuration
-    ports:
-      -
-         # port number
-         port: 5000
     # defines the minimum number of containers for horizontal autoscaling
     minContainers: 1
     # defines the maximum number of containers for horizontal autoscaling. Max value = 6.
@@ -158,7 +130,7 @@ services:
       S3_ACCESS_SECRET: "ogFthuiLYki8XoL73opSCQ"
 ```
 
-The yaml file describes your future project infrastructure. The project will contain one .NET version 6 service with default [auto scaling](/dotnet/how-to/scaling) configuration. Hostname will be set to "app" and the application will listen on the TCP port 5000 that supports the HTTP communication. Following env variables will be configured:
+The yaml file describes your future project infrastructure. The project will contain one .NET version 6 service with default [auto scaling](/dotnet/how-to/scaling) configuration. Hostname will be set to "app", the internal port(s) the service listens on will be defined later in the [zerops.yml](/dotnet/how-to/build-pipeline#ports). Following secret env variables will be configured:
 
 ```env
 S3_ACCESS_KEY_ID="P8cX1vVVb"
@@ -187,21 +159,6 @@ services:
     hostname: app
     # service type and version number in dotnet@6 format
     type: dotnet@6
-    # internal ports configuration
-    ports:
-      -
-         # port number
-         port: 5000
-      -
-         # port number
-         port: 5001
-         # set false if a webserver is NOT running on the port. Default = true.
-         httpSupport: false
-      -
-         # port number
-         port: 6000
-         # set the "UDP" or "TCP" protocol, default "TCP"
-         protocol: UDP
     # optional: vertical auto scaling customization
     verticalAutoscaling:
       minVCpu: 5
@@ -229,7 +186,7 @@ services:
 
 The yaml file describes your future project infrastructure. The project will contain a .NET service and a [PostgreSQL](/postgresql/overview) service.
 
-.NET service with "app" hostname is configured to listen on tcp ports 5000, 5001 and on udp port 6000. .NET service will run on version 6 with a custom vertical and horizontal scaling. Following secret env variables will be configured:
+.NET service with "app" hostname, the internal port(s) the service listens on will be defined later in the [zerops.yml](/dotnet/how-to/build-pipeline#ports). .NET service will run on version 6 with a custom vertical and horizontal scaling. Following secret env variables will be configured:
 
 ```env
 S3_ACCESS_KEY_ID="P8cX1vVVb"
@@ -270,22 +227,6 @@ At least one service in `services:` section is required. You can create a projec
 		<td>Specifies the service type <code>dotnet</code> and version.<br/>Set type: <code>dotnet<span>@</span>&lt;version&gt;</code><br/><br/><b>Limitations:</b><br/>Following .NET major versions are currently supported: <i>6</i></td>
 	</tr>
     <tr>
-  <td><b>ports</b></td>
-		<td>Specify one or more internal ports on which your application will listen.<br/><br/>
-Each port has following attributes:
-<ul>
-  <li>port <b>&lt;int&gt;</b></li>
-  <li>protocol <b>&lt;string&gt;</b> with allowed values <code>"TCP"</code> or <code>"UDP"</code></li>
-  <li>httpSupport <b>&lt;bool&gt;</b>, optional</li>
-</ul>
-The <b>port</b> attribute defines the port number. At least one internal port is required for .NET service. You can set any port number between <code>10</code> and <code>65435</code>. Ports outside this interval are reserved for internal Zerops systems.
-<br/><br/>
-The <b>protocol</b> attribute is optional. Default value is <code>"TCP"</code>.<br/><br/>
-httpSupport = true is the default setting for TCP protocol. Set <b>httpSupport = false</b> if a web server doesn't runs on the port. Zerops uses this information for the configuration of [external routing]. This option is available only in combination with the <b>TCP</b> protocol.<br/><br/>
-Learn more about [how to connect to your .NET service](/dotnet/how-to/access).<br/>
-        </td>
-	</tr>
-    <tr>
   <td><b>verticalAutoscaling</b></td>
 		<td><b>Optional.</b> Defines <a href="/dotnet/how-to/create#set-auto-scaling-configuration">custom vertical auto scaling parameters</a>.</td>
 	</tr>
@@ -303,10 +244,6 @@ Learn more about [how to connect to your .NET service](/dotnet/how-to/access).<b
 	</tr>
 </tbody>
 </table>
-
-:::info
-Internal .NET service ports can be changed later.
-:::
 
 ### Create a project based on the description.yml
 
@@ -351,11 +288,6 @@ services:
     hostname: app
     # service type and version number in dotnet@6 format
     type: dotnet@6
-    # internal ports configuration
-    ports:
-      -
-         # port number
-         port: 5000
     # defines the minimum number of containers for horizontal autoscaling
     minContainers: 1
     # defines the maximum number of containers for horizontal autoscaling. Max value = 6.
@@ -366,7 +298,7 @@ services:
       S3_ACCESS_SECRET: "ogFthuiLYki8XoL73opSCQ"
 ```
 
-The yaml file describes the list of one or more services that you want to add to your existing project. In the example above, one .NET service version 6 listening on the port 5000 with default [auto scaling](/dotnet/how-to/scaling) configuration will be added to your project. Hostname of the new service will be set to `app`. Following env variables will be configured:
+The yaml file describes the list of one or more services that you want to add to your existing project. In the example above, one .NET service version 6 listening on the port 5000 with default [auto scaling](/dotnet/how-to/scaling) configuration will be added to your project. Hostname of the new service will be set to `app`. Following secret env variables will be configured:
 
 ```env
 S3_ACCESS_KEY_ID="P8cX1vVVb"
