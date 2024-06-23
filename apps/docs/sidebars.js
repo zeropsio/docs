@@ -506,14 +506,6 @@ module.exports = {
       items: [
         {
           type: "doc",
-          id: "references/cli/install",
-          label: "Install",
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-        {
-          type: "doc",
           id: "references/cli/commands",
           label: "Available commands",
           customProps: {
