@@ -2,10 +2,14 @@
 title: .NET deploy process
 ---
 
+<p align="center">
+<img src="/img/screenshots/build_deploy_pipeline-step3.png" alt="image" width="100%" height="auto"/>
+</p>
+
 ## Application artefact
 When the [build phase](/dotnet/how-to/build-process) is finished, the application artefact is stored in the internal Zerops storage and the build container is deleted.
 
-If you triggered the deploy pipeline [manually](/dotnet/how-to/trigger-pipeline#manual-builds-and-deploys-using-zerops-cli) using Zerops CLI, the application artefact is also uploaded to the internal Zerops storage.
+If you triggered the deploy pipeline [manually](/dotnet/how-to/trigger-pipeline#manual-deploy-using-zerops-cli) using Zerops CLI, the application artefact is also uploaded to the internal Zerops storage.
 
 Zerops uses the stored artefact to deploy the identical version of your application each time a new container is started: 
 * when a new application version is deployed
@@ -18,7 +22,7 @@ When your application is deployed for the first time, Zerops will start one or m
 Zerops performs following actions for each new container:
 1. Installs the runtime environment
 2. Downloads the application artefact from the internal storage
-3. Optionally runs the [init commands](/dotnet/how-to/build-pipeline#init)
+3. Optionally runs the [init commands](/dotnet/how-to/build-pipeline#initcommands)
 4. Starts your application using the [start command](/dotnet/how-to/build-pipeline#start)
 5. Optionally waits until the [readiness check](/dotnet/how-to/build-pipeline#readiness-check) succeeds
 6. The container is now active and receives incoming requests.
@@ -26,7 +30,7 @@ Zerops performs following actions for each new container:
 Services with multiple containers are deployed in parallel.
 
 :::info
-If your application needs to be initialized in each runtime container, add [init commands](/dotnet/how-to/build-pipeline#init) to <code>zerops.yml</code>.
+If your application needs to be initialized in each runtime container, add [init commands](/dotnet/how-to/build-pipeline#initcommands) to <code>zerops.yml</code>.
 :::
 
 :::caution
@@ -65,7 +69,9 @@ Zerops keeps 10 last versions of your application in the internal storage.
 
 The list of application versions is available in Zerops GUI. Go to the service detail and choose **Service dashboard & runtime containers** from the left menu. The active version is highlighted, show all archived version by clicking on the button below.  
 
-**// TODO screenshot**
+<p align="center">
+<img src="/img/screenshots/pipeline_history.png" alt="image" width="100%" height="auto"/>
+</p>
 
 The pipeline detail is accessible from the additional menu. The pipeline detail contains
 * The pipeline config (`zerops.yml`) that was used for the selected version
