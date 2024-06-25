@@ -1,14 +1,14 @@
 import React from "react"
 import type { Props } from "@theme/DocItem/Layout"
 
-export default function UnorderedList({ data }: Props): JSX.Element {
+export default function UnorderedCodeList({ data }: Props): JSX.Element {
   return (
         <ul>
         {
           data.map((token, i) => {
             return(
               <li>
-                {token}
+                <code>{token}</code>
               </li>
             )
           })
