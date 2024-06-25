@@ -363,15 +363,15 @@ module.exports = {
           },
           className: "homepage-sidebar-item  service-sidebar-item",
         },
-//        {
-//          type: "ref",
-//          id: "java/overview",
-//          label: "Java",
-//          customProps: {
-//            sidebar_icon: "java",
-//          },
-//          className: "homepage-sidebar-item  service-sidebar-item",
-//        },
+        {
+          type: "ref",
+          id: "java/overview",
+          label: "Java",
+          customProps: {
+            sidebar_icon: "java",
+          },
+          className: "homepage-sidebar-item  service-sidebar-item",
+        },
         {
           type: "ref",
           id: "nginx/overview",
@@ -1569,10 +1569,10 @@ module.exports = {
     {
       type: "doc",
       id: "java/overview",
-      label: "Zerops .NET Service",
+      label: "Zerops Java Service",
       customProps: {
         sidebar_is_title: true,
-        sidebar_icon: "dotnet",
+        sidebar_icon: "java",
       },
     },
     {
@@ -1587,57 +1587,46 @@ module.exports = {
           type: "doc",
           id: "java/how-to/create",
           label: "Create Java service",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
           id: "java/how-to/env-variables",
           label: "Manage environment variables",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
           id: "java/how-to/build-pipeline",
           label: "Configure build & deploy pipeline",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
           id: "java/how-to/trigger-pipeline",
           label: "Trigger build pipeline",
-          customProps: {
-            sidebar_is_soon: true,
-          }
+        },
+        {
+          type: "doc",
+          id: "java/how-to/build-process",
+          label: "Build process",
+        },
+        {
+          type: "doc",
+          id: "java/how-to/deploy-process",
+          label: "Deploy process",
         },
         {
           type: "doc",
           id: "java/how-to/customize-runtime",
-          label: "Customize Java runtime",
-          customProps: {
-            sidebar_is_soon: true,
-          }
+          label: "Customize .NET runtime",
         },
         {
           type: "doc",
           id: "java/how-to/logs",
           label: "Setup & access logs",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
           id: "java/how-to/filebrowser",
           label: "Browse container files",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
@@ -1648,9 +1637,6 @@ module.exports = {
           type: "doc",
           id: "java/how-to/scaling",
           label: "Scale Java runtime service",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",
@@ -1661,9 +1647,6 @@ module.exports = {
           type: "doc",
           id: "java/how-to/shared-storage",
           label: "Connect / disconnect shared storage",
-          customProps: {
-            sidebar_is_soon: true,
-          }
         },
         {
           type: "doc",

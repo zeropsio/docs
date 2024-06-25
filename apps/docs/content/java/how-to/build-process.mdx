@@ -1,5 +1,5 @@
 ---
-title: Go build process
+title: Java build process
 ---
 
 import data from "@site/static/data.json"
@@ -12,11 +12,11 @@ import data from "@site/static/data.json"
 Zerops starts a temporary build container and performs following actions:
 1. Installs the build environment
 2. Downloads your application source code from [GitHub ↗](https://www.github.com), [GitLab ↗](https://www.gitlab.com) or via [Zerops CLI](/references/cli)
-3. Optionally [customises the build environment](/go/how-to/build-process#customise-go-build-environment)
+3. Optionally [customises the build environment](/java/how-to/build-process#customise-java-build-environment)
 4. Runs the build commands
 5. Uploads the application artefact to the internal Zerops storage
-6. Optionally [customizes the runtime environment](/go/how-to/customize-runtime)
-7. [Deploys your application](/go/how-to/deploy-process)
+6. Optionally [customizes the runtime environment](/java/how-to/customize-runtime)
+7. [Deploys your application](/java/how-to/deploy-process)
 
 The build container is automatically deleted after the build has finished or failed.
 
@@ -27,21 +27,21 @@ When you know that the running build is not correct and you want to cancel it, y
 
 The build cancellation is available before the build pipeline is finished. When the build is finished, the deployment cannot be cancelled.
 
-## Customise Go build environment
-The default Go build environment contains:
+## Customise Java build environment
+The default Java build environment contains:
 * <span>{data.alpineVersion}</span>
-* selected version of Go defined in `zerops.yml` [build.base](/go/how-to/build-pipeline#base) parameter
+* selected version of Java defined in `zerops.yml` [build.base](/java/how-to/build-pipeline#base) parameter
 * [zCLI](/references/cli), Zerops command line tool
 * `git` and `wget`
 
-If you prefer the Ubuntu OS instead of Alpine, set the <code><a href="/go/how-to/build-pipeline#os">build.os</a></code> attribute to `ubuntu`. To install additional packages or tools add one or more [build.prepareCommands](/go/how-to/build-pipeline#preparecommands) commands to your `zerops.yml`.
+If you prefer the Ubuntu OS instead of Alpine, set the <code><a href="/java/how-to/build-pipeline#os">build.os</a></code> attribute to `ubuntu`. To install additional packages or tools add one or more [build.prepareCommands](/java/how-to/build-pipeline#preparecommands) commands to your `zerops.yml`.
 
 :::info
 The application code is available in the `/var/www` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
 :::
 
-## Go build hardware resources
-Build of your Go application is run in a separate build container with following resource configuration:
+## Java build hardware resources
+Build of your Java application is run in a separate build container with following resource configuration:
 
 | HW resource     | Minimum | Maximum |
 | --------------- | ------- | ------- |
@@ -63,12 +63,12 @@ The time limit for the whole build pipeline is **1 hour**. After 1 hour, Zerops 
 ## Troubleshooting build-related problems
 ### Failure of a build prepare command
 
-If any [prepare command](/go/how-to/build-pipeline#preparecommands) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/go/how-to/logs#build-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom build environment is ready for the build phase.
+If any [prepare command](/java/how-to/build-pipeline#preparecommands) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/java/how-to/logs#build-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom build environment is ready for the build phase.
 
 ### Invalidate the build cache
 
 Some packages or tools can take a long time to install. Therefore, Zerops caches your custom build environment after each successful build where the `prepareCommands` commands were used. When the second or following build is triggered, Zerops will use the build cache from the previous build if both following conditions are met:
-1. Content of the [build.base](/go/how-to/build-pipeline#base) and [build.prepareCommands](/go/how-to/build-pipeline#preparecommands) attributes didn't change from the previous build
+1. Content of the [build.base](/java/how-to/build-pipeline#base) and [build.prepareCommands](/java/how-to/build-pipeline#preparecommands) attributes didn't change from the previous build
 2. The build cache wasn't invalidated in the Zerops GUI.
 
 To invalidate the Zerops build cache go to your service detail in Zerops GUI, choose **Service dashboard & runtime containers** from the left menu and click on the **Open pipeline detail** button. Then click on the **Invalidate build cache** icon.
@@ -79,14 +79,14 @@ When the build cache is used, Zerops doesn't run the prepare commands and the bu
 
 ### Failure of a build command
 
-If any [build command](/go/how-to/build-pipeline#build) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/go/how-to/logs#build-log) to troubleshoot the error. If the error log doesn't contain any specific error message, try to run your build with the verbose `-v` option.
+If any [build command](/java/how-to/build-pipeline#build) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/java/how-to/logs#build-log) to troubleshoot the error. If the error log doesn't contain any specific error message, try to run your build with the verbose `-X` debug option.
 
 ```yml
 build:
- - go build -v
+ - ./mvnw -X clean install
 ```
 
-If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `buildCommands` are finished, the application build is completed and ready for the [deploy](/go/how-to/deploy-process) phase.
+If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `buildCommands` are finished, the application build is completed and ready for the [deploy](/java/how-to/deploy-process) phase.
 
 
 

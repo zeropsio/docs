@@ -1,0 +1,80 @@
+---
+title: Setup & access Java logs
+---
+
+Zerops provides 3 different logs:
+* [build log](#build-log)
+* [prepare runtime log](#prepare-runtime-log)
+* [runtime log](#runtime-log)
+
+## How to access logs
+### Build log
+#### Zerops GUI
+To access a build log in Zerops GUI, go to the service detail and choose **Service dashboard & runtime containers** in the left menu. Then open the pipeline detail of an application version and click on **Build log**. The build log button is available only if the [build pipeline](/java/how-to/trigger-pipeline) was triggered for the selected deploy.
+
+#### zCLI
+To access a build log in Zerops CLI use
+```sh
+zcli service log --showBuildLogs
+```
+
+Read more about the [zcli service log](/references/cli/access-logs) command.
+
+### Prepare runtime log
+#### Zerops GUI
+To access a prepare runtime log in Zerops GUI, go to the service detail and choose **Service dashboard & runtime containers** in the left menu. Then open the pipeline detail of an application version and click on **Prepare runtime log**. The prepare runtime log button is available only if the [prepare runtime pipeline](/java/how-to/build-pipeline#preparecommands-1) was triggered for the selected deploy.
+
+#### zCLI
+_Prepare runtime log is currently not supported in zCLI._
+
+### Runtime log
+#### Zerops GUI
+To access a runtime log in Zerops GUI, go to the service detail and choose **Runtime log** in the left menu.
+
+**// TODO screenshot**
+
+Each runtime container has its own log. If your service has multiple containers, select the container in the log header.
+
+You can filter log records by minimum severity or by time.
+
+#### zCLI
+To access the log of the runtime containers in Zerops CLI use
+```sh
+zcli service log
+```
+
+Read more about the [zcli service log](/references/cli/access-logs) command.
+
+## Java logging configuration
+Zerops logs all messages sent
+* to the standard error (`stderr`)
+* to the standard output (`stdout`)
+* via the Apache `log4j` package etc.
+
+### Severity level
+By default the `log4j` methods create messages with the `Informational (6)` severity.
+
+Add a severity number in the `<N>` format as a prefix to set a custom severity as shown below:
+
+```java
+import org.apache.log4j.*;
+
+public class LogClass {
+   private static org.apache.log4j.Logger log = Logger.getLogger(LogClass.class);
+   public static void main(String[] args) {
+        log.info("A message with the informational severity ...")
+        log.info("<0>Emergency (0) severity > system is unusable.")
+        log.info("<1>Alert (1) severity > action must be taken immediately.")
+        log.info("<2>Critical (2) severity > critical conditions.")
+        log.info("<3>Error (3) severity > error conditions.")
+        log.info("<4>Warning (4) severity > warning conditions.")
+        log.info("<5>Notice (5) severity > normal, but significant, condition.")
+        log.info("<6>Informational (6) severity > informational message.")
+        log.info("<7>Debug (7) severity > debug-level message.")
+   }
+}
+```
+
+:::info
+<code>log.trace</code>, <code>log.info</code>, <code>log.debug</code>, <code>log.warn</code>, <code>log.error</code>, and <code>log.fatal</code> are just aliases to the <code>log.Info</code> method. They don't set the appropriate severity number. Use the <code>&lt;N&gt;</code> prefix instead.
+:::
