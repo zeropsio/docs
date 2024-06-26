@@ -751,6 +751,11 @@ module.exports = {
         },
         {
           type: "doc",
+          id: "nodejs/how-to/upgrade",
+          label: "Upgrade Node.js service",
+        },
+        {
+          type: "doc",
           id: "nodejs/how-to/build-pipeline",
           label: "Configure build & deploy pipeline",
         },
@@ -895,6 +900,11 @@ module.exports = {
           type: "doc",
           id: "php/how-to/env-variables",
           label: "Manage environment variables",
+        },
+        {
+          type: "doc",
+          id: "php/how-to/upgrade",
+          label: "Upgrade PHP service",
         },
         {
           type: "doc",
@@ -1045,6 +1055,11 @@ module.exports = {
         },
         {
           type: "doc",
+          id: "python/how-to/upgrade",
+          label: "Upgrade Python service",
+        },
+        {
+          type: "doc",
           id: "python/how-to/build-pipeline",
           label: "Configure build & deploy pipeline",
         },
@@ -1189,6 +1204,11 @@ module.exports = {
           type: "doc",
           id: "go/how-to/env-variables",
           label: "Manage environment variables",
+        },
+        {
+          type: "doc",
+          id: "go/how-to/upgrade",
+          label: "Upgrade Go service",
         },
         {
           type: "doc",
@@ -1339,6 +1359,11 @@ module.exports = {
         },
         {
           type: "doc",
+          id: "rust/how-to/upgrade",
+          label: "Upgrade Rust service",
+        },
+        {
+          type: "doc",
           id: "rust/how-to/build-pipeline",
           label: "Configure build & deploy pipeline",
         },
@@ -1486,6 +1511,11 @@ module.exports = {
         },
         {
           type: "doc",
+          id: "dotnet/how-to/upgrade",
+          label: "Upgrade .NET service",
+        },
+        {
+          type: "doc",
           id: "dotnet/how-to/build-pipeline",
           label: "Configure build & deploy pipeline",
         },
@@ -1592,6 +1622,11 @@ module.exports = {
           type: "doc",
           id: "java/how-to/env-variables",
           label: "Manage environment variables",
+        },
+        {
+          type: "doc",
+          id: "java/how-to/upgrade",
+          label: "Upgrade Java service",
         },
         {
           type: "doc",
