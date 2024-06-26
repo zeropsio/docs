@@ -105,100 +105,203 @@ zerops:
     ...
 ```
 
-### zerops
-*REQUIRED section*
+## zerops
+*REQUIRED array of sections*
 
 Mandatory root key of a `zerops.yml` config file. Consists of a list of service configurations.
 
-### setup
+## setup
 *string, REQUIRED*
 
 Specifies the hostname of a service, if the service already exists in the project, the names must match
-: app
-    # Which application's config to extend
-    extends: devel
-    # ==== How to build your application ====
-  	build:
-  	  # Set the operating system for the build environment:
-  	  os:
-  	  # Set the base technology for the build environment:
-  	  base:
-      # Customise the build environment by installing additional packages
-      # or tools to the base build environment
-      prepareCommands:
-      # Build your application
-      buildCommands:
-      # Select which files / folders to deploy after
-      # the build has successfully finished
-      deployFiles:
-      # Which files / folders you want to cache for the next build.
-      # Next builds will be faster when the cache is used.
-      cache:
-      # Copy folders or files from the build container to the runtime container.
-      addToRunPrepare:
-      # Define environment variables for build environment
-      envVariables:
-    # ==== How to deploy your application ====
-  	deploy:
-  	  # Define a readiness check.
-  	  readinessCheck:
-  	    # Define a readiness check with a HTTP GET request option.
-        httpGet:
-          scheme:
-          host:
-          port:
-          path:
-        # Define a readiness check with a shell command.
-        exec:
-          command:
-      # Define if new containers are started before or after all old containers are removed.
-      temporaryShutdown:
-    # ==== How to run your application ====
-  	run:
-      # Set the operating system for the run environment:
-      os:
-      # Set the base technology for the run environment:
-      base:
-      # Run one or more commands each time a new runtime container
-      # is started or restarted. These commands are triggered before
-      # your application is started.
-  	  initCommands:
-      # Customise the runtime environment by installing additional
-      # dependencies to the base Go runtime environment.
-      prepareCommands:
-      # Your Go application start command
-      start:
-      # Folder name used as the root of the publicly accessible web server content.
-      documentRoot:
-      #
-      siteConfigPath:
-      #
-      envReplace:
-       	target:
-       	delimiter:
-      # Define a health check.
-      healthCheck:
-        # Define a health check with a HTTP GET request option.
-	    httpGet:
-	      scheme:
-          host:
-          port:
-          path:
-        # Define a health check with a shell command.
-	    exec:
-	      command:
-	  #
-	  routing:
-	    root:
-	    redirects:
-	      - from:
-	        to:
-	        status:
-	  #
-	  ports:
-	    - protocol:
-	      port:
-	      description:
-	      httpSupport:
-	  # Set environment variables for your service
-  	  envVariables:
+
+## extends
+*string*
+Name of which application's config to extend.
+
+## build
+*section*
+Define how to build your application.
+
+### os
+*choose a value*
+* **alpine / ubuntu ** (default `alpine`)
+
+Set the operating system for the build environment.
+
+### base
+*choose a [value](/references/zeropsyml/base-list)*
+
+Set the base technology for the build environment.
+
+### prepareCommands
+*list of string commands*
+
+Customise the build environment by installing additional packages or tools to the base build environment
+
+### buildCommands
+*list of string commands*
+
+Build your application.
+
+### deployFiles
+*list of string paths, REQUIRED*
+
+Select which files / folders to deploy after the build has successfully finished.
+
+### cache
+*list of string paths*
+
+Which files / folders to cache for the next build. Next builds will be faster when the cache is used.
+
+### addToRunPrepare
+*list of string paths*
+
+Which files / folders to copy from the build container to the runtime container.
+
+### envVariables
+*list of key-value pairs*
+
+Define environment variables for the build environment. Can be edited and deleted in zerops.yml config file only.
+
+## deploy
+*section*
+
+Define how to deploy your application.
+
+### readinessCheck
+*section, choose `httpGet` / `exec`*
+
+Define a readiness check.
+
+#### httpGet
+*section*
+
+Define a readiness check with a HTTP GET request option.
+
+**scheme** - *string*, set `https` if application requires secure connection
+
+**host** - *string*, localhost by default
+
+**port** - *string, REQUIRED*, define the port of http request
+
+**path** - *string, REQUIRED*, define path of http request
+
+#### exec
+*section*
+
+Define a readiness check with a shell command.
+
+**command** - *string, REQUIRED*
+
+#### temporaryShutdown
+*boolean* (default false)
+
+Define if new containers are started before (false) or after (true) all old containers are removed.
+
+## run
+*section*
+
+Define how to run your application.
+### os
+*choose a value*
+* **alpine / ubuntu ** (default `alpine`)
+
+Set the operating system for the run environment.
+
+### base
+*choose a [value](/references/zeropsyml/base-list)*
+
+Set the base technology for the run environment.
+
+### initCommands
+*list of string commands*
+
+Run one or more commands each time a new runtime container is started or restarted. These commands are triggered before your application is started.
+
+### prepareCommands
+*list of string commands*
+
+Customise the runtime environment by installing additional dependencies to the base Go runtime environment.
+
+### start
+*string command*
+Your application start command.
+
+### documentRoot
+*string path*
+
+Folder name used as the root of the publicly accessible web server content.
+
+### siteConfigPath
+*string path*
+
+Define path to an nginx config file excl. the root folder `/var/www`.
+### envReplace
+#### target
+#### delimiter
+
+### healthCheck
+Define a health check.
+#### httpGet
+*section*
+
+Define a health check with a HTTP GET request option.
+
+**scheme** - *string*, set `https` if application requires secure connection
+
+**host** - *string*, localhost by default
+
+**port** - *string, REQUIRED*, define the port of http request
+
+**path** - *string, REQUIRED*, define path of http request
+
+#### exec
+*section*
+
+Define a health check with a shell command.
+
+**command** - *string, REQUIRED*
+
+### routing
+*section*
+
+#### root
+*string path*
+
+Specify a root of nginx config.
+#### redirects
+*array of sections*
+
+**from**
+
+*string path, REQUIRED*
+
+**to**
+
+*string path, REQUIRED*
+
+**status**
+
+### ports
+*array of sections*
+
+Specifies one or more internal ports on which your application will listen.
+#### protocol
+*choose a value*
+* **TCP / UDP** (default TCP)
+
+#### port
+*int, REQUIRED*
+
+Defines the port number. At least one internal port is required for Python service. You can set any port number between *10* and *65435*.
+#### description
+*string*
+
+#### httpSupport
+*boolean* (default true)
+
+### envVariables
+*list of key-value pairs*
+
+Define environment variables for the run environment. Can be edited and deleted in zerops.yml config file only.
