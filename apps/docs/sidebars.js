@@ -524,15 +524,6 @@ module.exports = {
     },
     {
       type: "doc",
-      id: "references/public-access",
-      label: "Public access",
-      customProps: {
-        sidebar_icon: "link",
-      },
-      className: "homepage-sidebar-item",
-    },
-    {
-      type: "doc",
       id: "references/ssh",
       label: "SSH",
       customProps: {
