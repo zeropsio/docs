@@ -1,0 +1,207 @@
+---
+title: Customize web server
+---
+
+## PHP + Nginx
+### Default Nginx configuration
+
+The default PHP+Nginx service has following Nginx configuration:
+
+```
+server {
+    listen 80;
+    listen [::]:80;
+
+    server_name _;
+
+    # Be sure that you set up the correct document root!
+    root {{.DocumentRoot}};
+
+    location ~ \.php {
+        try_files _ @backend;
+    }
+
+    location / {
+        # use this for pretty url
+        try_files $uri /$uri /index.html /index.php$is_args$args;
+    }
+
+    location @backend {
+        fastcgi_pass unix:{{.PhpSocket}};
+        fastcgi_split_path_info ^(.+\.php)(/.*)$;
+        include fastcgi_params;
+
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        fastcgi_param DOCUMENT_ROOT $realpath_root;
+        internal;
+    }
+
+    access_log syslog:server=unix:/dev/log,facility=local1,tag=nginx,severity=info default_short;
+    error_log syslog:server=unix:/dev/log,facility=local1,tag=nginx,severity=error;
+}
+```
+
+The configuration contains 2 variables:
+
+* **{{.DocumentRoot}}** is replaced by the <a href="/php/how-to/build-pipeline#documentroot"><code>run.documentRoot</code></a> attribute from the `zerops.yml`. If the attribute is not specified, the default value `/var/www` is used.
+
+* **{{.PhpSocket}}** is replaced by a path to the PHP socket based on the PHP version.
+
+### Customize Nginx configuration
+Follow these steps to customize the Nginx configuration in PHP+Nginx service:
+
+1. Create a **.tmpl** file with the Nginx configuration in your repository.
+
+2. Optionally use following variables:
+
+* **{{.DocumentRoot}}** is replaced by the <a href="/php/how-to/build-pipeline#documentroot"><code>run.documentRoot</code></a> attribute from the `zerops.yml`. If the attribute is not specified, the default value `/var/www` is used.
+
+Example:
+```
+root {{.DocumentRoot}};
+```
+
+* **{{.PhpSocket}}** is replaced by a path to the PHP socket based on the PHP version.
+
+Example:
+```
+fastcgi_pass unix:{{.PhpSocket}};
+```
+
+* **{{.Environment.ENV_NAME}}** is replaced by the [env variable](/php/how-to/env-variables) value. The env variable must be either defined in [run.envVariables](/php/how-to/build-pipeline#envvariables-1) in `zerops.yml` or set as a [secret](/php/how-to/env-variables#set-secret-env-variables-in-zerops-gui) or [generated](/php/how-to/env-variables#generated-env-variables) env variable in Zerops GUI.
+
+:::caution
+Use the **.tmpl** file extension to make Zerops interpret the file as a template. Zerops will replace the supported variables listed above.
+:::
+
+3. Check that your Nginx configuration is consistent with Zerops requirements:
+
+* Do not use IP addresses in the `listen` directive
+* If you use other ports than `:80` in the `listen` directive, add them to the <a href="/php/how-to/build-pipeline#ports"><code>run.ports</code></a> in your `zerops.yml` as well.
+* Do not use the port **:443**. All the incoming `https://` traffic is terminated on the Zerops internal balancer where the SSL certificate is installed and the request is forwarded to your PHP+Nginx service as a **http://** on the port **:80**.
+
+4. Add the <a href="/php/how-to/build-pipeline#siteconfigpath"><code>siteConfigPath</code></a> to the run section of your `zerops.yml`
+
+```yml
+zerops:
+  # define hostname of your service
+  - setup: app
+    # ==== how to build your application ====
+    build:
+      # REQUIRED. Set the base technology for the build environment:
+      base: php-nginx@latest
+
+      # REQUIRED. Select which files / folders to deploy after
+      # the build has successfully finished
+      deployFiles:
+        - vendor
+        - public
+
+    # ==== how to run your application ====
+    run:
+      documentRoot: public
+
+      # OPTIONAL. Sets the custom Nginx or Apache configuration. The file must be deployed in the runtime container. Enter the path to the file relative to the /var/www folder
+      siteConfigPath: site_config.tmpl
+```
+
+5. Ensure that the <a href="/php/how-to/build-pipeline#deployfiles"><code>build.deployFiles</code></a> contains the folder with the `siteConfigPath` or add the path to the Nginx config file to the `deployFiles` list. Zerops will deploy the file to the runtime container(s).
+
+6. [Trigger]((/php/how-to/trigger-pipeline)) the build & deploy pipeline.
+
+## PHP + Apache
+### Default Apache configuration
+
+The default PHP+Apache service has following Apache configuration:
+
+```
+<VirtualHost *:80>
+    ServerName localhost
+    DocumentRoot {{.DocumentRoot}}
+    DirectoryIndex index.htm index.html index.shtml index.php index.phtml
+
+    <Directory {{.DocumentRoot}}>
+        Options -Indexes
+        Options FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    <FilesMatch ".php$">
+        SetHandler "proxy:unix:{{.PhpSocket}}|fcgi://localhost/"
+    </FilesMatch>
+
+    ErrorLog  "| /usr/bin/logger -tapache -plocal1.err"
+    CustomLog "| /usr/bin/logger -tapache -plocal1.notice" combined
+</VirtualHost>
+```
+
+The configuration contains 2 variables:
+
+* **{{.DocumentRoot}}** is replaced by the <a href="/php/how-to/build-pipeline#documentroot"><code>run.documentRoot</code></a> attribute from the `zerops.yml`. If the attribute is not specified, the default value `/var/www` is used.
+
+* **{{.PhpSocket}}** is replaced by a path to the PHP socket based on the PHP version.
+
+### Customize Apache configuration
+Follow these steps to customize the Apache configuration in PHP+Apache service:
+
+1. Create a **.tmpl** file with the Nginx configuration in your repository.
+
+2. Optionally use following variables:
+
+* **{{.DocumentRoot}}** is replaced by the <a href="/php/how-to/build-pipeline#documentroot"><code>run.documentRoot</code></a> attribute from the `zerops.yml`. If the attribute is not specified, the default value `/var/www` is used.
+
+Example:
+```
+DocumentRoot {{.DocumentRoot}};
+```
+
+* **{{.PhpSocket}}** is replaced by a path to the PHP socket based on the PHP version.
+
+Example:
+```
+<FilesMatch ".php$">
+    SetHandler "proxy:unix:{{.PhpSocket}}|fcgi://localhost/"
+</FilesMatch>
+```
+
+* **{{.Environment.ENV_NAME}}** is replaced by the [env variable](/php/how-to/env-variables) value. The env variable must be either defined in [run.envVariables]((/php/how-to/build-pipeline#envvariables-1)) in `zerops.yml` or set as a [secret](/php/how-to/env-variables#set-secret-env-variables-in-zerops-gui) or [generated](/php/how-to/env-variables#generated-env-variables) env variable in Zerops GUI.
+
+:::caution
+Use the **.tmpl** file extension to make Zerops interpret the file as a template. Zerops will replace the supported variables listed above.
+:::
+
+3. Check that your Apache configuration is consistent with Zerops requirements:
+
+* Do not use IP addresses in the `<VirtualHost>` directive
+* If you use other ports than `:80` in the `<VirtualHost>` directive, add them to the <a href="/php/how-to/build-pipeline#ports"><code>run.ports</code></a> in your `zerops.yml` as well.
+Do not use the port **:443**. All the incoming `https://` traffic is terminated on the Zerops internal balancer where the SSL certificate is installed and the request is forwarded to your PHP+Apache service as a **http://** on the port **:80**.
+
+4. Add the <a href="/php/how-to/build-pipeline#siteconfigpath"><code>siteConfigPath</code></a> to the run section of your `zerops.yml`.
+
+```yml
+zerops:
+  # define hostname of your service
+  - setup: app
+    # ==== how to build your application ====
+    build:
+      # REQUIRED. Set the base technology for the build environment:
+      base: php-apache@latest
+
+      # REQUIRED. Select which files / folders to deploy after
+      # the build has successfully finished
+      deployFiles:
+        - vendor
+        - public
+
+    # ==== how to run your application ====
+    run:
+      documentRoot: public
+
+      # OPTIONAL. Sets the custom Nginx or Apache configuration. The file must be deployed in the runtime container. Enter the path to the file relative to the /var/www folder
+      siteConfigPath: site_config.tmpl
+```
+
+5. Ensure that the <a href="/php/how-to/build-pipeline#deployfiles"><code>build.deployFiles</code></a> contains the folder with the `siteConfigPath` or add the path to the Apache config file to the `deployFiles` list. Zerops will deploy the file to the runtime container(s).
+
+6. [Trigger](/php/how-to/trigger-pipeline) the build & deploy pipeline.

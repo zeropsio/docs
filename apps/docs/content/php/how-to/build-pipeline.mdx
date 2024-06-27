@@ -48,11 +48,6 @@ zerops:
       # OPTIONAL. Sets the base technology for the runtime environment:
       base: php-apache@latest
 
-      # OPTIONAL. Sets the internal port(s) your app listens on:
-      ports:
-        # port number
-        - port: 80
-
       # OPTIONAL. Customise the runtime PHP environment by installing additional
       # dependencies to the base PHP runtime environment.
       # prepareCommands:
@@ -65,8 +60,14 @@ zerops:
       # init:
       #  - rm -rf ./cache
 
-      # REQUIRED. Folder name used as the root of the publicly accessible web server content.
+      # OPTIONAL. Customise the folder that will be used as the root of the publicly
+      # accessible web server content. Enter the path relative to the /var/www folder.
       documentRoot: public
+
+      # OPTIONAL. Sets the custom Nginx or Apache configuration. The file must be deployed in
+      # the runtime container. Enter the path to the file relative to the /var/www folder
+      siteConfigPath: site_config.tmpl
+
 ```
 
 The top-level element is always `zerops`.
@@ -206,7 +207,9 @@ Some packages or tools can take a long time to install. Therefore, Zerops caches
 
 To invalidate the Zerops build cache go to your service detail in Zerops GUI, choose **Service dashboard & runtime containers** from the left menu and click on the **Open pipeline detail** button. Then click on the **Invalidate build cache** icon.
 
-**// TODO screenshot**
+<p align="center">
+<img src="/img/screenshots/runtime_clear_build_cache.png" alt="image" width="100%" height="auto"/>
+</p>
 
 When the build cache is used, Zerops doesn't run the `prepareCommands` commands and the build of your application is faster.
 
@@ -436,9 +439,21 @@ The os version is fixed and cannot be customised.
 ### ports
 _OPTIONAL._ Specifies one or more internal ports on which your application will listen.
 
+:::info
+If no ports are specified, Zerops adds the port TCP 80 automatically.
+:::
+
+:::caution
+If you want the web server to listen on other port(s) than `:80`, you must [customize](/php/how-to/build-pipeline#customize-web-server) your web server configuration as well.
+:::
+
 Projects in Zerops represent a group of one or more services. Services can be of different types (runtime services, databases, message brokers, object storage, etc.). All services of the same project share a **dedicated private network**. To connect to a service within the same project, just use the service hostname and its internal port.
 
 For example, to connect to a PHP service with hostname = "app" and port = 80 from another service of the same project, simply use `app:80`. Read more about [how to access a PHP service](/php/how-to/access).
+
+:::info
+Do not use the port **:443**. All the incoming traffic is terminated on the Zerops internal balancer where the SSL certificate is installed and the request is forwarded to your PHP+Nginx / PHP+Apache service as a **http://** on the port **:80**.
+:::
 
 Each port has following attributes:
 
@@ -488,7 +503,9 @@ Some packages or tools can take a long time to install. Therefore, Zerops caches
 
 To invalidate the Zerops custom runtime cache go to `yyy`
 
-**// TODO screenshot**
+<p align="center">
+<img src="/img/screenshots/runtime_clear_build_cache.png" alt="image" width="100%" height="auto"/>
+</p>
 
 When the prepare cache is used, Zerops doesn't create a prepare runtime container and executes the deployment of your application directly.
 
@@ -562,7 +579,14 @@ If any of the `initCommands` fails, it returns an exit code other than 0, but de
 You can configure your `initCommands` to be run in a single shell instance or multiple shell instances. The format is identical to [build commands](#buildcommands).
 
 ### documentRoot
-_REQUIRED._ Defines the folder name used as the root of the publicly accessible web server content of your PHP application.
+_OPTIONAL._ Customizes the filter that will be used as the root of the publicly accessible web server content.
+
+:::info
+By default, the document root is configured to `/var/www`.
+:::
+
+Customize the folder that will be used as the root of the publicly accessible web server content. Enter the path relative to the `/var/www` folder.
+E.g. `documentRoot: public` will set the web server document root to `/var/www/public`.
 
 ```yml
 zerops:
@@ -575,9 +599,20 @@ zerops:
     # ==== how to run your application ====
     run:
 
-      # REQUIRED. Folder name used as the root of the publicly accessible web server content.
+      # OPTIONAL. Customise the folder that will be used as the root of the publicly
+      # accessible web server content. Enter the path relative to the /var/www folder.
       documentRoot: public
 ```
+
+### siteConfigPath
+_OPTIONAL._ Sets the custom Nginx or Apache configuration.
+
+:::info
+By default, the default [nginx](/php/how-to/customize-web-server#default-nginx-configuration) or [Apache](/php/how-to/customize-web-server#default-apache-configuration) web server configuration is set.
+:::
+
+The file must be deployed in the runtime container. Enter the path to the file relative to the `/var/www` folder.
+Read more about the [web server customization](/php/how-to/customize-web-server).
 
 ### envVariables
 _OPTIONAL._ Defines the environment variables for the runtime environment.
@@ -632,7 +667,8 @@ zerops:
     # ==== how to run your application ====
     run:
 
-      # REQUIRED. Folder name used as the root of the publicly accessible web server content.
+      # OPTIONAL. Customise the folder that will be used as the root of the publicly
+      # accessible web server content. Enter the path relative to the /var/www folder.
       documentRoot: public
 
       # OPTIONAL. Define a health check with a HTTP GET request option.
@@ -666,7 +702,8 @@ zerops:
     # ==== how to run your application ====
     run:
 
-      # REQUIRED. Folder name used as the root of the publicly accessible web server content.
+      # OPTIONAL. Customise the folder that will be used as the root of the publicly
+      # accessible web server content. Enter the path relative to the /var/www folder.
       documentRoot: public
 
       # OPTIONAL. Define a health check with a shell command.

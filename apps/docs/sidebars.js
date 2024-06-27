@@ -924,6 +924,11 @@ module.exports = {
         },
         {
           type: "doc",
+          id: "php/how-to/customize-web-server",
+          label: "Customize web server",
+        },
+        {
+          type: "doc",
           id: "php/how-to/logs",
           label: "Setup & access logs",
         },
