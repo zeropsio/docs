@@ -22,17 +22,19 @@ The basic build and runtime env variables are listed in your [zerops.yml](/refer
 
 You can [reference](/python/how-to/env-variables#reference-a-local-variable-in-another-variable-value) another variable of the same service or even a variable of [another service](/python/how-to/env-variables#reference-a-variable-of-another-project-service) within the same project.
 
-## Set env variables in Zerops GUI
+## Set secret env variables in Zerops GUI
 
-**// TODO screenshot (Service environment variables page)**
+Use secret variables to store passwords, tokens and other sensitive information that shouldn't be part of your repository and listed in zerops.yml.
+
+<p align="center">
+<img src="/img/screenshots/secret_env.png" alt="image" width="100%" height="auto"/>
+</p>
 
 You can set env variables when you [create](/python/how-to/create) a new Python service or you can set them later.
 
-To configure env variables for an existing service, go to the service detail and choose **Environment variables** in the left menu. Click on the **Add new variable** button and set variable key and value.
+To configure env variables for an existing service, go to the service detail and choose **Environment variables** in the left menu. Scroll to the **Secret variables** section and click on the **Add secret variable** button and set variable key and value.
 
-Zerops creates several helper variables when a Python service is created, e.g. `hostname`, `PATH`. Some helper variables are read-only (`hostname`), others are editable (`PATH`).
-
-You can edit or delete env variables that you've created by clicking on the menu on the right side of each row. Helper variables created by Zerops cannot be deleted.
+You can edit or delete env variables that you've created by clicking on the menu on the right side of each row.
 
 The changes you've made in the list of env variables need to be committed. Click on the **Commit x changes** button and Zerops will update the env variables in all containers of your project's services.
 
@@ -53,7 +55,6 @@ zerops:
 
       # OPTIONAL. Defines the env variables for the build environment:
       envVariables:
-        NODE_ENV: production
         DB_NAME: db
         DB_HOST: db
         DB_USER: db
@@ -75,7 +76,6 @@ zerops:
 
       # OPTIONAL. Defines the env variables for the runtime environment:
       envVariables:
-        NODE_ENV: production
         DB_NAME: db
         DB_HOST: db
         DB_USER: db
@@ -120,6 +120,16 @@ When you change the `dbConnectionString` value to `${dbprod_connectionString}`, 
 :::caution
 When you change the value of the `connectionString` variable in the service `dbtest` and commit the changes you need to **restart** the Python service. The Python process running in the container receives the list env variables only when it starts. Update of the env variables while the Python process is running does not affect your application.
 :::
+
+## Generated env variables
+
+Zerops creates several helper variables when a Python service is created, e.g. `hostname`, `PATH`. Some helper variables are read-only (`hostname`), others are editable (`PATH`). Generated variables cannot be deleted.
+
+Generated env variables are listed on the **Environment variables** page. Scroll to the **Generated variables** section.
+
+<p align="center">
+<img src="/img/screenshots/nodejs_generated_variables.png" alt="image" width="100%" height="auto"/>
+</p>
 
 ## How to read env variables from your Python app
 

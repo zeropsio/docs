@@ -5,7 +5,7 @@ title: Create a PHP service in Zerops
 import data from "@site/static/data.json"
 import UnorderedList from '@site/src/components/UnorderedList'
 
-Zerops provides a PHP runtime service with extensive build support. PHP runtime is highly scalable and customisable to suit both development and production.
+Zerops provides 2 PHP services with an included web server: **PHP+Nginx** and **PHP+Apache**. PHP runtime is highly scalable and customisable to suit both development and production.
 
 ## Create PHP service using Zerops GUI
 
@@ -17,8 +17,8 @@ First, set up a project in Zerops GUI. Then go to the project dashboard page and
 Following PHP major versions are currently supported:
 <UnorderedList data={data.phpMajorVersions}/>
 
-:::caution
-The PHP major version is fixed after the service is created. It can't be changed later.
+:::info
+You can [change](/php/how-to/upgrade) the major version at any time later.
 :::
 
 ### Set a hostname
@@ -96,12 +96,12 @@ Check if your application is ready for [highly available mode](/php/how-to/scali
 You can keep the minimum at 1 container, but you should do so with caution and only for non-critical or dev services. Production grade service should start with at least 2 containers.
 :::
 
-[Learn more](/nodejs/how-to/scaling) about PHP auto scaling.
+[Learn more](/php/how-to/scaling) about PHP auto scaling.
 
 ## Create PHP service using zCLI
 zCLI is the Zerops command-line tool. To create a new PHP service via the command-line, follow these steps:
 1. [Install & setup zCLI](/references/cli)
-2. [Create a project description file](/nodejs/how-to/create#create-a-project-description-file)
+2. [Create a project description file](/php/how-to/create#create-a-project-description-file)
 3. [Create a project with a PHP and PostgreSQL service](#full-example)
 
 ### Create a project description file
@@ -133,7 +133,7 @@ services:
       S3_ACCESS_SECRET: "ogFthuiLYki8XoL73opSCQ"
 ```
 
-The yaml file describes your future project infrastructure. The project will contain one PHP version 8.1 service with default [auto scaling](/nodejs/how-to/scaling) configuration. Hostname will be set to "app", the internal port(s) the service listens on will be defined later in the [zerops.yml](/php/how-to/build-pipeline#ports). Following secret env variables will be configured:
+The yaml file describes your future project infrastructure. The project will contain one PHP version 8.1 service with default [auto scaling](/php/how-to/scaling) configuration. Hostname will be set to "app", the internal port(s) the service listens on will be defined later in the [zerops.yml](/php/how-to/build-pipeline#ports). Following secret env variables will be configured:
 
 ```env
 S3_ACCESS_KEY_ID="P8cX1vVVb"
@@ -227,23 +227,23 @@ At least one service in `services:` section is required. You can create a projec
 	</tr>
 	<tr>
   <td><b>type</b></td>
-		<td>Specifies the service type <code>nodejs</code> and version.<br/>Set type: <code>nodejs<span>@</span>&lt;version&gt;</code><br/><br/><b>Limitations:</b><br/>Following PHP major versions are currently supported: <i>7.4</i>,<i>8.0</i>,<i>8.1</i></td>
+		<td>Specifies the service type <code>php-apache</code> or <code>php-nginx</code> and version.<br/>Set type: <code>php-apache<span>@</span>&lt;version&gt;</code> or <code>php-nginx<span>@</span>&lt;version&gt;</code><br/><br/><b>Limitations:</b><br/>Following PHP major versions are currently supported: <i>7.4</i>,<i>8.0</i>,<i>8.1</i></td>
 	</tr>
     <tr>
   <td><b>verticalAutoscaling</b></td>
-		<td><b>Optional.</b> Defines <a href="/nodejs/how-to/create#set-auto-scaling-configuration">custom vertical auto scaling parameters</a>.</td>
+		<td><b>Optional.</b> Defines <a href="/php/how-to/create#set-auto-scaling-configuration">custom vertical auto scaling parameters</a>.</td>
 	</tr>
         <tr>
   <td><b>minContainers</b></td>
-		<td>Defines the minimum number of containers for <a href="/nodejs/how-to/create#horizontal-auto-scaling">horizontal autoscaling</a>.<br/><br/><b>Limitations:</b><br/>Current maximum value = 6.</td>
+		<td>Defines the minimum number of containers for <a href="/php/how-to/create#horizontal-auto-scaling">horizontal autoscaling</a>.<br/><br/><b>Limitations:</b><br/>Current maximum value = 6.</td>
 	</tr>
         <tr>
   <td><b>maxContainers</b></td>
-		<td>Defines the maximum number of containers for <a href="/nodejs/how-to/create#horizontal-auto-scaling">horizontal autoscaling</a>.<br/><br/><b>Limitations:</b><br/>Current maximum value = 6.</td>
+		<td>Defines the maximum number of containers for <a href="/php/how-to/create#horizontal-auto-scaling">horizontal autoscaling</a>.<br/><br/><b>Limitations:</b><br/>Current maximum value = 6.</td>
 	</tr>
         <tr>
   <td><b>envSecrets</b></td>
-		<td><b>Optional.</b> Defines one or more secret env variables as a key value map. See env variable <a href="/nodejs/how-to/env-variables#env-variable-restrictions">restrictions</a>.</td>
+		<td><b>Optional.</b> Defines one or more secret env variables as a key value map. See env variable <a href="/php/how-to/env-variables#env-variable-restrictions">restrictions</a>.</td>
 	</tr>
 </tbody>
 </table>
@@ -271,7 +271,9 @@ You don't specify the project name in the `zcli project project-import` command,
 
 If you have access to more than one client, you must specify the client ID for which the project is to be created. The `clientID` is located in the Zerops GUI under the client name on the project dashboard page.
 
-**// TODO screenshot (where the clientID is located in Zerops GUI)**
+<p align="center">
+<img src="/img/screenshots/client_id.png" alt="image" width="70%" height="auto"/>
+</p>
 
 ### Add PHP service to an existing project
 
