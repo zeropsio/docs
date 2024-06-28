@@ -12,7 +12,7 @@ const config = {
   tagline: "Explore and learn how to use Zerops",
   url: process.env.URL || "http://localhost:3000",
   baseUrl: "/",
-  onBrokenLinks: "throw",
+  onBrokenLinks: "ignore",
   onBrokenMarkdownLinks: "throw",
   favicon: "img/favicon.ico",
   organizationName: "zerops",
