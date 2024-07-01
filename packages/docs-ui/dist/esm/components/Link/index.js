@@ -10,8 +10,12 @@ var __rest = (this && this.__rest) || function (s, e) {
     return t;
 };
 import React from "react";
+import NextLink from "next/link";
 import clsx from "clsx";
 export const Link = (_a) => {
     var { href, children, className } = _a, rest = __rest(_a, ["href", "children", "className"]);
-    return (React.createElement("a", Object.assign({ href: href || "" }, rest, { className: clsx("text-medusa-fg-interactive hover:text-medusa-fg-interactive-hover", className) }), children));
+    if (href === null || href === void 0 ? void 0 : href.replace(/#.*$/, "").endsWith("page.mdx")) {
+        href = href.replace("/page.mdx", "");
+    }
+    return (React.createElement(NextLink, Object.assign({ href: href || "" }, rest, { className: clsx("text-medusa-fg-interactive hover:text-medusa-fg-interactive-hover", className) }), children));
 };

@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useEffect } from "react"
 import clsx from "clsx"
 import ErrorBoundary from "@docusaurus/ErrorBoundary"
 import {
@@ -12,6 +12,8 @@ import Navbar from "@theme/Navbar"
 import LayoutProvider from "@theme/Layout/Provider"
 import ErrorPageContent from "@theme/ErrorPageContent"
 import type { Props } from "@theme/Layout"
+import useIsBrowser from "@docusaurus/useIsBrowser"
+import { useLocation } from "@docusaurus/router"
 
 export default function Layout(props: Props): JSX.Element {
   const {
@@ -23,10 +25,31 @@ export default function Layout(props: Props): JSX.Element {
   } = props
 
   useKeyboardNavigation()
+  const isBrowser = useIsBrowser()
+  const location = useLocation()
+
+  useEffect(() => {
+    if (isBrowser) {
+      const handlePlay = () => {}
+
+      const videos = document.querySelectorAll("video")
+      videos.forEach((video) =>
+        video.addEventListener("play", handlePlay, {
+          once: true,
+          capture: true,
+        })
+      )
+
+      return () => {
+        videos.forEach((video) => video.removeEventListener("play", handlePlay))
+      }
+    }
+  }, [isBrowser, location.pathname])
 
   return (
     <LayoutProvider>
       <PageMetadata title={title} description={description} />
+
       <SkipToContent />
 
       <Navbar />

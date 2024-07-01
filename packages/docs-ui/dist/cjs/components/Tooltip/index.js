@@ -43,15 +43,9 @@ const react_1 = __importStar(require("react"));
 const react_tooltip_1 = require("react-tooltip");
 const clsx_1 = __importDefault(require("clsx"));
 require("react-tooltip/dist/react-tooltip.css");
-const react_uuid_1 = __importDefault(require("react-uuid"));
 const Tooltip = (_a) => {
     var { text = "", tooltipClassName = "", children, html = "", tooltipChildren, className } = _a, tooltipProps = __rest(_a, ["text", "tooltipClassName", "children", "html", "tooltipChildren", "className"]);
-    const [elementId, setElementId] = (0, react_1.useState)("");
-    (0, react_1.useEffect)(() => {
-        if (!elementId) {
-            setElementId((0, react_uuid_1.default)());
-        }
-    }, [elementId]);
+    const elementId = (0, react_1.useId)();
     return (react_1.default.createElement(react_1.default.Fragment, null,
         react_1.default.createElement("span", { id: elementId, "data-tooltip-content": text, "data-tooltip-html": html, "data-tooltip-id": elementId, className: className }, children),
         react_1.default.createElement(react_tooltip_1.Tooltip, Object.assign({ anchorId: elementId, 

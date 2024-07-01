@@ -13,5 +13,5 @@ import React from "react";
 import clsx from "clsx";
 export const Kbd = (_a) => {
     var { children, className } = _a, props = __rest(_a, ["children", "className"]);
-    return (React.createElement("kbd", Object.assign({ className: clsx("rounded-docs_sm border-solid py-0 px-[6px]", "inline-flex items-center justify-center", "border-medusa-tag-neutral-border border", "bg-medusa-tag-neutral-bg", "text-medusa-tag-neutral-text", "text-compact-x-small-plus font-monospace shadow-none", className) }, props), children));
+    return (React.createElement("kbd", Object.assign({ className: clsx("rounded-docs_sm border-solid py-0 px-[6px]", "inline-flex items-center justify-center", "border-medusa-tag-neutral-border border", "bg-medusa-tag-neutral-bg", "text-medusa-tag-neutral-text", "text-compact-x-small-plus font-base shadow-none", className) }, props), children));
 };

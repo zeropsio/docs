@@ -106,193 +106,193 @@ module.exports = {
       },
       className: "homepage-sidebar-item",
     },
-//    {
-//      type: "html",
-//      value: "Perfectly suited for",
-//      customProps: {
-//        sidebar_is_group_divider: true,
-//      },
-//      className: "homepage-sidebar-item",
-//    },
-//    {
-//      type: "category",
-//      label: "Nest.js",
-//      link: {
-//        type: "doc",
-//        id: "frameworks/nestjs/index",
-//      },
-//      customProps: {
-//        sidebar_icon: "nestjs",
-//      },
-//      className: "homepage-sidebar-item",
-//      items: [
-//        {
-//          type: "doc",
-//          id: "frameworks/nestjs/index",
-//          label: "Overview & quickstart",
-//        },
-//        {
-//          type: "doc",
-//          id: "frameworks/nestjs/log",
-//          label: "Setup & access logs",
-//        },
-//        {
-//          type: "doc",
-//          id: "frameworks/nestjs/template",
-//          label: "Create templates with import & seed",
-//        },
-//        {
-//          type: "doc",
-//          id: "frameworks/nestjs/env-variables",
-//          label: "Utilize environment variables",
-//        },
-//        {
-//          type: "doc",
-//          id: "frameworks/nestjs/migration",
-//          label: "Migration & upgrades",
-//        },
-//        {
-//          type: "doc",
-//          id: "frameworks/nestjs/backups",
-//          label: "Backups",
-//        },
-//        {
-//          type: "doc",
-//          id: "frameworks/nestjs/scaling",
-//          label: "Optimize scaling",
-//        },
-//        {
-//          type: "doc",
-//          id: "frameworks/nestjs/scaling",
-//          label: "High availability, when, how, why",
-//        },
-//        {
-//          type: "doc",
-//          id: "frameworks/nestjs/cron",
-//          label: "CRON / Scheduled jobs",
-//        },
-//        {
-//          type: "doc",
-//          id: "frameworks/nestjs/mails",
-//          label: "SMPT & sending emails",
-//        },
-//        {
-//          type: "doc",
-//          id: "frameworks/nestjs/routing",
-//          label: "Public access from domain, IP, subdomain",
-//        },
-//      ],
-//    },
-//    {
-//      type: "category",
-//      label: "Laravel",
-//      link: {
-//        type: "doc",
-//        id: "frameworks/laravel/index",
-//      },
-//      customProps: {
-//        sidebar_icon: "laravel",
-//      },
-//      className: "homepage-sidebar-item",
-//      items: [
-//        {
-//          type: "doc",
-//          id: "frameworks/laravel/examples",
-//          label: "Examples",
-//          customProps: {
-//            exclude_from_doc_list: false,
-//          },
-//        },
-//      ],
-//    },
-//    {
-//      type: "category",
-//      label: "Gingonic",
-//      link: {
-//        type: "doc",
-//        id: "frameworks/gingonic/index",
-//      },
-//      customProps: {
-//        sidebar_icon: "gingonic",
-//      },
-//      className: "homepage-sidebar-item",
-//      items: [
-//        {
-//          type: "doc",
-//          id: "frameworks/gingonic/examples",
-//          label: "Examples",
-//          customProps: {
-//            exclude_from_doc_list: false,
-//          },
-//        },
-//      ],
-//    },
-//    {
-//      type: "category",
-//      label: "Nette",
-//      link: {
-//        type: "doc",
-//        id: "frameworks/nette/index",
-//      },
-//      customProps: {
-//        sidebar_icon: "nette",
-//      },
-//      className: "homepage-sidebar-item",
-//      items: [
-//        {
-//          type: "doc",
-//          id: "frameworks/nette/examples",
-//          label: "Examples",
-//          customProps: {
-//            exclude_from_doc_list: false,
-//          },
-//        },
-//      ],
-//    },
-//    {
-//      type: "category",
-//      label: "Strapi",
-//      link: {
-//        type: "doc",
-//        id: "frameworks/strapi/index",
-//      },
-//      customProps: {
-//        sidebar_icon: "strapi",
-//      },
-//      className: "homepage-sidebar-item",
-//      items: [
-//        {
-//          type: "doc",
-//          id: "frameworks/strapi/examples",
-//          label: "Examples",
-//          customProps: {
-//            exclude_from_doc_list: false,
-//          },
-//        },
-//      ],
-//    },
-//    {
-//      type: "category",
-//      label: "Medusa",
-//      link: {
-//        type: "doc",
-//        id: "frameworks/medusa/index",
-//      },
-//      customProps: {
-//        sidebar_icon: "medusa",
-//      },
-//      className: "homepage-sidebar-item",
-//      items: [
-//        {
-//          type: "doc",
-//          id: "frameworks/medusa/examples",
-//          label: "Examples",
-//          customProps: {
-//            exclude_from_doc_list: false,
-//          },
-//        },
-//      ],
-//    },
+    // //    {
+    // //      type: "html",
+    // //      value: "Perfectly suited for",
+    // //      customProps: {
+    // //        sidebar_is_group_divider: true,
+    // //      },
+    // //      className: "homepage-sidebar-item",
+    // //    },
+    // //    {
+    // //      type: "category",
+    // //      label: "Nest.js",
+    // //      link: {
+    // //        type: "doc",
+    // //        id: "frameworks/nestjs/index",
+    // //      },
+    // //      customProps: {
+    // //        sidebar_icon: "nestjs",
+    // //      },
+    // //      className: "homepage-sidebar-item",
+    // //      items: [
+    // //        {
+    // //          type: "doc",
+    // //          id: "frameworks/nestjs/index",
+    // //          label: "Overview & quickstart",
+    // //        },
+    // //        {
+    // //          type: "doc",
+    // //          id: "frameworks/nestjs/log",
+    // //          label: "Setup & access logs",
+    // //        },
+    // //        {
+    // //          type: "doc",
+    // //          id: "frameworks/nestjs/template",
+    // //          label: "Create templates with import & seed",
+    // //        },
+    // //        {
+    // //          type: "doc",
+    // //          id: "frameworks/nestjs/env-variables",
+    // //          label: "Utilize environment variables",
+    // //        },
+    // //        {
+    // //          type: "doc",
+    // //          id: "frameworks/nestjs/migration",
+    // //          label: "Migration & upgrades",
+    // //        },
+    // //        {
+    // //          type: "doc",
+    // //          id: "frameworks/nestjs/backups",
+    // //          label: "Backups",
+    // //        },
+    // //        {
+    // //          type: "doc",
+    // //          id: "frameworks/nestjs/scaling",
+    // //          label: "Optimize scaling",
+    // //        },
+    // //        {
+    // //          type: "doc",
+    // //          id: "frameworks/nestjs/scaling",
+    // //          label: "High availability, when, how, why",
+    // //        },
+    // //        {
+    // //          type: "doc",
+    // //          id: "frameworks/nestjs/cron",
+    // //          label: "CRON / Scheduled jobs",
+    // //        },
+    // //        {
+    // //          type: "doc",
+    // //          id: "frameworks/nestjs/mails",
+    // //          label: "SMPT & sending emails",
+    // //        },
+    // //        {
+    // //          type: "doc",
+    // //          id: "frameworks/nestjs/routing",
+    // //          label: "Public access from domain, IP, subdomain",
+    // //        },
+    // //      ],
+    // //    },
+    // //    {
+    // //      type: "category",
+    // //      label: "Laravel",
+    // //      link: {
+    // //        type: "doc",
+    // //        id: "frameworks/laravel/index",
+    // //      },
+    // //      customProps: {
+    // //        sidebar_icon: "laravel",
+    // //      },
+    // //      className: "homepage-sidebar-item",
+    // //      items: [
+    // //        {
+    // //          type: "doc",
+    // //          id: "frameworks/laravel/examples",
+    // //          label: "Examples",
+    // //          customProps: {
+    // //            exclude_from_doc_list: false,
+    // //          },
+    // //        },
+    // //      ],
+    // //    },
+    // //    {
+    // //      type: "category",
+    // //      label: "Gingonic",
+    // //      link: {
+    // //        type: "doc",
+    // //        id: "frameworks/gingonic/index",
+    // //      },
+    // //      customProps: {
+    // //        sidebar_icon: "gingonic",
+    // //      },
+    // //      className: "homepage-sidebar-item",
+    // //      items: [
+    // //        {
+    // //          type: "doc",
+    // //          id: "frameworks/gingonic/examples",
+    // //          label: "Examples",
+    // //          customProps: {
+    // //            exclude_from_doc_list: false,
+    // //          },
+    // //        },
+    // //      ],
+    // //    },
+    // //    {
+    // //      type: "category",
+    // //      label: "Nette",
+    // //      link: {
+    // //        type: "doc",
+    // //        id: "frameworks/nette/index",
+    // //      },
+    // //      customProps: {
+    // //        sidebar_icon: "nette",
+    // //      },
+    // //      className: "homepage-sidebar-item",
+    // //      items: [
+    // //        {
+    // //          type: "doc",
+    // //          id: "frameworks/nette/examples",
+    // //          label: "Examples",
+    // //          customProps: {
+    // //            exclude_from_doc_list: false,
+    // //          },
+    // //        },
+    // //      ],
+    // //    },
+    // //    {
+    // //      type: "category",
+    // //      label: "Strapi",
+    // //      link: {
+    // //        type: "doc",
+    // //        id: "frameworks/strapi/index",
+    // //      },
+    // //      customProps: {
+    // //        sidebar_icon: "strapi",
+    // //      },
+    // //      className: "homepage-sidebar-item",
+    // //      items: [
+    // //        {
+    // //          type: "doc",
+    // //          id: "frameworks/strapi/examples",
+    // //          label: "Examples",
+    // //          customProps: {
+    // //            exclude_from_doc_list: false,
+    // //          },
+    // //        },
+    // //      ],
+    // //    },
+    // //    {
+    // //      type: "category",
+    // //      label: "Medusa",
+    // //      link: {
+    // //        type: "doc",
+    // //        id: "frameworks/medusa/index",
+    // //      },
+    // //      customProps: {
+    // //        sidebar_icon: "medusa",
+    // //      },
+    // //      className: "homepage-sidebar-item",
+    // //      items: [
+    // //        {
+    // //          type: "doc",
+    // //          id: "frameworks/medusa/examples",
+    // //          label: "Examples",
+    // //          customProps: {
+    // //            exclude_from_doc_list: false,
+    // //          },
+    // //        },
+    // //      ],
+    // //    },
     {
       type: "html",
       value: "All Supported Services",
@@ -418,24 +418,24 @@ module.exports = {
           },
           className: "homepage-sidebar-item  service-sidebar-item",
         },
-//        {
-//          type: "ref",
-//          id: "mongodb/overview",
-//          label: "MongoDB",
-//          customProps: {
-//            sidebar_icon: "mongodb",
-//          },
-//          className: "homepage-sidebar-item  service-sidebar-item",
-//        },
-//        {
-//          type: "ref",
-//          id: "elasticsearch/overview",
-//          label: "Elasticsearch",
-//          customProps: {
-//            sidebar_icon: "elasticsearch",
-//          },
-//          className: "homepage-sidebar-item  service-sidebar-item",
-//        },
+        //        {
+        //          type: "ref",
+        //          id: "mongodb/overview",
+        //          label: "MongoDB",
+        //          customProps: {
+        //            sidebar_icon: "mongodb",
+        //          },
+        //          className: "homepage-sidebar-item  service-sidebar-item",
+        //        },
+        //        {
+        //          type: "ref",
+        //          id: "elasticsearch/overview",
+        //          label: "Elasticsearch",
+        //          customProps: {
+        //            sidebar_icon: "elasticsearch",
+        //          },
+        //          className: "homepage-sidebar-item  service-sidebar-item",
+        //        },
         {
           type: "ref",
           id: "keydb/overview",
@@ -445,15 +445,15 @@ module.exports = {
           },
           className: "homepage-sidebar-item  service-sidebar-item",
         },
-//        {
-//          type: "ref",
-//          id: "rabbitmq/overview",
-//          label: "RabbitMQ",
-//          customProps: {
-//            sidebar_icon: "rabbitmq",
-//          },
-//          className: "homepage-sidebar-item  service-sidebar-item",
-//        },
+        //        {
+        //          type: "ref",
+        //          id: "rabbitmq/overview",
+        //          label: "RabbitMQ",
+        //          customProps: {
+        //            sidebar_icon: "rabbitmq",
+        //          },
+        //          className: "homepage-sidebar-item  service-sidebar-item",
+        //        },
       ],
     },
     {
@@ -519,7 +519,7 @@ module.exports = {
           customProps: {
             exclude_from_doc_list: false,
           },
-        }
+        },
       ],
     },
     {
@@ -718,7 +718,7 @@ module.exports = {
           customProps: {
             exclude_from_doc_list: false,
           },
-        }
+        },
       ],
     },
     {
@@ -864,14 +864,14 @@ module.exports = {
             exclude_from_doc_list: false,
           },
         },
-         {
-           type: "doc",
-           id: "php/tutorial/runtime-sql",
-           label: "Runtime + SQL",
-           customProps: {
-             exclude_from_doc_list: false,
-           },
-         }
+        {
+          type: "doc",
+          id: "php/tutorial/runtime-sql",
+          label: "Runtime + SQL",
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        },
       ],
     },
     {
@@ -1028,7 +1028,7 @@ module.exports = {
           customProps: {
             exclude_from_doc_list: false,
           },
-        }
+        },
       ],
     },
     {
@@ -1173,14 +1173,14 @@ module.exports = {
             exclude_from_doc_list: false,
           },
         },
-         {
-           type: "doc",
-           id: "go/tutorial/runtime-sql",
-           label: "Runtime + SQL",
-           customProps: {
-             exclude_from_doc_list: false,
-           },
-         }
+        {
+          type: "doc",
+          id: "go/tutorial/runtime-sql",
+          label: "Runtime + SQL",
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        },
       ],
     },
     {
@@ -1221,11 +1221,11 @@ module.exports = {
           id: "go/how-to/build-process",
           label: "Build process",
         },
-          {
-            type: "doc",
-            id: "go/how-to/deploy-process",
-            label: "Deploy process",
-          },
+        {
+          type: "doc",
+          id: "go/how-to/deploy-process",
+          label: "Deploy process",
+        },
         {
           type: "doc",
           id: "go/how-to/customize-runtime",
@@ -1332,7 +1332,7 @@ module.exports = {
           customProps: {
             exclude_from_doc_list: false,
           },
-        }
+        },
       ],
     },
     {
@@ -1477,14 +1477,14 @@ module.exports = {
             exclude_from_doc_list: false,
           },
         },
-         {
-           type: "doc",
-           id: "dotnet/tutorial/runtime-sql",
-           label: "Runtime + SQL",
-           customProps: {
-             exclude_from_doc_list: false,
-           },
-         }
+        {
+          type: "doc",
+          id: "dotnet/tutorial/runtime-sql",
+          label: "Runtime + SQL",
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        },
       ],
     },
     {
@@ -1836,7 +1836,7 @@ module.exports = {
           customProps: {
             exclude_from_doc_list: false,
           },
-        }
+        },
       ],
     },
     {
@@ -1884,26 +1884,26 @@ module.exports = {
         },
       ],
     },
-//    {
-//      type: "category",
-//      label: "Technical details",
-//      collapsible: false,
-//      customProps: {
-//        sidebar_is_group_headline: true,
-//      },
-//      items: [
-//        {
-//          type: "doc",
-//          id: "postgresql/tech-details/cluster",
-//          label: "PostgreSQL cluster asynchronous behaviour",
-//        },
-//        {
-//          type: "doc",
-//          id: "postgresql/tech-details/limitations",
-//          label: "Technical limitations of PostgreSQL cluster",
-//        },
-//      ],
-//    },
+    //    {
+    //      type: "category",
+    //      label: "Technical details",
+    //      collapsible: false,
+    //      customProps: {
+    //        sidebar_is_group_headline: true,
+    //      },
+    //      items: [
+    //        {
+    //          type: "doc",
+    //          id: "postgresql/tech-details/cluster",
+    //          label: "PostgreSQL cluster asynchronous behaviour",
+    //        },
+    //        {
+    //          type: "doc",
+    //          id: "postgresql/tech-details/limitations",
+    //          label: "Technical limitations of PostgreSQL cluster",
+    //        },
+    //      ],
+    //    },
     {
       type: "doc",
       id: "postgresql/faq",
@@ -2091,7 +2091,7 @@ module.exports = {
           customProps: {
             exclude_from_doc_list: false,
           },
-        }
+        },
       ],
     },
     {
@@ -2149,71 +2149,71 @@ module.exports = {
       },
     },
   ],
-//  rabbitmq: [
-//    {
-//      type: "ref",
-//      id: "homepage",
-//      label: "Back to home",
-//      customProps: {
-//        sidebar_is_back_link: true,
-//        sidebar_icon: "back-arrow",
-//      },
-//    },
-//    {
-//      type: "doc",
-//      id: "rabbitmq/overview",
-//      label: "Zerops RabbitMQ Service",
-//      customProps: {
-//        sidebar_is_title: true,
-//        sidebar_icon: "rabbitmq",
-//      },
-//    },
-//    {
-//      type: "category",
-//      label: "How-to",
-//      collapsible: false,
-//      customProps: {
-//        sidebar_is_group_headline: true,
-//      },
-//      items: [
-//        {
-//          type: "doc",
-//          id: "rabbitmq/how-to/create",
-//          label: "Create RabbitMQ service",
-//        },
-//        {
-//          type: "doc",
-//          id: "rabbitmq/how-to/connect",
-//          label: "Connect to RabbitMQ",
-//        },
-//        {
-//          type: "doc",
-//          id: "rabbitmq/how-to/manage",
-//          label: "Manage users and databases",
-//        },
-//        {
-//          type: "doc",
-//          id: "rabbitmq/how-to/export-import-data",
-//          label: "Export and import data",
-//        },
-//        {
-//          type: "doc",
-//          id: "rabbitmq/how-to/scale",
-//          label: "Scale RabbitMQ service",
-//        },
-//        {
-//          type: "doc",
-//          id: "rabbitmq/how-to/control",
-//          label: "Stop and start RabbitMQ service",
-//        },
-//        {
-//          type: "doc",
-//          id: "rabbitmq/how-to/delete",
-//          label: "Delete RabbitMQ service",
-//        },
-//      ],
-//    },
-//  ],
+  //  rabbitmq: [
+  //    {
+  //      type: "ref",
+  //      id: "homepage",
+  //      label: "Back to home",
+  //      customProps: {
+  //        sidebar_is_back_link: true,
+  //        sidebar_icon: "back-arrow",
+  //      },
+  //    },
+  //    {
+  //      type: "doc",
+  //      id: "rabbitmq/overview",
+  //      label: "Zerops RabbitMQ Service",
+  //      customProps: {
+  //        sidebar_is_title: true,
+  //        sidebar_icon: "rabbitmq",
+  //      },
+  //    },
+  //    {
+  //      type: "category",
+  //      label: "How-to",
+  //      collapsible: false,
+  //      customProps: {
+  //        sidebar_is_group_headline: true,
+  //      },
+  //      items: [
+  //        {
+  //          type: "doc",
+  //          id: "rabbitmq/how-to/create",
+  //          label: "Create RabbitMQ service",
+  //        },
+  //        {
+  //          type: "doc",
+  //          id: "rabbitmq/how-to/connect",
+  //          label: "Connect to RabbitMQ",
+  //        },
+  //        {
+  //          type: "doc",
+  //          id: "rabbitmq/how-to/manage",
+  //          label: "Manage users and databases",
+  //        },
+  //        {
+  //          type: "doc",
+  //          id: "rabbitmq/how-to/export-import-data",
+  //          label: "Export and import data",
+  //        },
+  //        {
+  //          type: "doc",
+  //          id: "rabbitmq/how-to/scale",
+  //          label: "Scale RabbitMQ service",
+  //        },
+  //        {
+  //          type: "doc",
+  //          id: "rabbitmq/how-to/control",
+  //          label: "Stop and start RabbitMQ service",
+  //        },
+  //        {
+  //          type: "doc",
+  //          id: "rabbitmq/how-to/delete",
+  //          label: "Delete RabbitMQ service",
+  //        },
+  //      ],
+  //    },
+  //  ],
   sharedstorage: [
     {
       type: "ref",

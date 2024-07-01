@@ -19,33 +19,13 @@ const react_1 = __importDefault(require("react"));
 const react_markdown_1 = __importDefault(require("react-markdown"));
 const components_1 = require("../../components");
 const clsx_1 = __importDefault(require("clsx"));
-const MarkdownContent = ({ children }) => {
-    return (react_1.default.createElement(react_markdown_1.default, { components: {
-            code: components_1.CodeMdx,
-            pre: (_a) => {
+const MarkdownContent = (_a) => {
+    var { children, components } = _a, props = __rest(_a, ["children", "components"]);
+    return (react_1.default.createElement(react_markdown_1.default, Object.assign({ components: components || Object.assign(Object.assign({}, components_1.MDXComponents), { pre: (_a) => {
                 var { className, children } = _a, props = __rest(_a, ["className", "children"]);
                 return (react_1.default.createElement("pre", Object.assign({ className: (0, clsx_1.default)("p-0 bg-transparent", className) }, props), children));
-            },
-            kbd: components_1.Kbd,
-            details: components_1.Details,
-            a: components_1.Link,
-            ul: (_a) => {
-                var { className, children } = _a, props = __rest(_a, ["className", "children"]);
-                return (react_1.default.createElement("ul", Object.assign({}, props, { className: (0, clsx_1.default)("list-disc px-docs_1 mb-docs_1.5", className) }), children));
-            },
-            ol: (_a) => {
-                var { className, children } = _a, props = __rest(_a, ["className", "children"]);
-                return (react_1.default.createElement("ol", Object.assign({}, props, { className: (0, clsx_1.default)("list-decimal px-docs_1 mb-docs_1.5", className) }), children));
-            },
-            li: (_a) => {
-                var { className, children } = _a, props = __rest(_a, ["className", "children"]);
-                return (react_1.default.createElement("li", Object.assign({ className: (0, clsx_1.default)("text-medusa-fg-subtle", className) }, props),
-                    react_1.default.createElement("span", null, children)));
-            },
-            p: (_a) => {
-                var { className } = _a, props = __rest(_a, ["className"]);
-                return (react_1.default.createElement("p", Object.assign({ className: (0, clsx_1.default)("text-medusa-fg-subtle [&:not(:last-child)]:mb-docs_1.5 last:!mb-0", className) }, props)));
-            },
-        } }, children));
+            }, 
+            // TODO replace with Link once we move away from Docusaurus
+            a: components_1.LegacyLink }) }, props), children));
 };
 exports.MarkdownContent = MarkdownContent;

@@ -1,3 +1,3 @@
-export type ReportLinkType = "default" | "ui";
-export declare function formatReportLink(title: string, sectionTitle: string, type?: ReportLinkType): string;
+export type ReportLinkType = "default";
+export declare function formatReportLink(title: string, sectionTitle: string): string;
 //# sourceMappingURL=format-report-link.d.ts.map

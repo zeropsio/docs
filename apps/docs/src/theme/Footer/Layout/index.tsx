@@ -1,8 +1,8 @@
 import React from "react"
 import clsx from "clsx"
 import type { Props } from "@theme/Footer/Layout"
-import { useThemeConfig } from "@docusaurus/theme-common"
 import { ThemeConfig } from "@medusajs/docs"
+import { useThemeConfig } from "@docusaurus/theme-common"
 import SocialLinks from "@site/src/components/Footer/SocialLinks"
 
 export default function FooterLayout({
@@ -34,14 +34,14 @@ export default function FooterLayout({
         )}
       >
         {(logo || copyright || socialLinks) && (
-          <div className="col col--6">
+          <div className="col col--9">
             <div className={clsx("lg:mb-0 mb-2")}>
               {logo && <div>{logo}</div>}
               {copyright}
             </div>
           </div>
         )}
-        <div className={clsx("col col--6 row lg:justify-end justify-start")}>
+        <div className={clsx("col col--3 row lg:justify-end justify-start")}>
           {socialLinks && <SocialLinks links={socialLinks} />}
           {links}
         </div>

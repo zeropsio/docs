@@ -11,7 +11,7 @@ First, set up a project in Zerops GUI. Then go to the project dashboard page and
 
 | Parameter              | Description                                                                   | Limitations |
 | ---------------------- | ----------------------------------------------------------------------------- | ----------- |
-| **hostname**           | A unique service identifier like `rabbitmq`, `db` etc.                   | - duplicate services with the same name in the same project are forbidden<br/>- maximum 25 characters<br/>- must contain only lowercase ASCII letters (a-z) or numbers (0-9) 
+| **hostname**           | A unique service identifier like `rabbitmq`, `db` etc.                   | - duplicate services with the same name in the same project are forbidden<br/>- maximum 25 characters<br/>- must contain only lowercase ASCII letters (a-z) or numbers (0-9)
 
 :::caution
 The hostname is fixed after the service is created. It can't be changed later.
@@ -22,12 +22,12 @@ Zerops provides RabbitMQ service in two modes: **Highly available** and **Single
 
 **// TODO image (add a new RabbitMQ page - Automatic scaling section)**
 
-#### Highly available 
+#### Highly available
 
 **//TODO review**
 
 Creates a RabbitMQ cluster with **3 message queue containers** and **2 free proxy containers**.
-This mode is suited for production. 
+This mode is suited for production.
 
 Zerops always keeps the 3 message queue containers on different physical machines. All your data is stored redundantly in 3 identical copies. In case of a failure of a container or the underlying physical machine, Zerops automatically disconnects the failed container from the cluster, creates a new container and syncs all data from the remaining 2 copies. Finally the broken container is automatically deleted.
 
@@ -59,7 +59,7 @@ Vertical auto scaling has following default configuration:
 
 | &nbsp;              | Minimum resource | Maximum resource |
 | ------------------- | ---------------- | ---------------- |
-| **vCPU**            | 1                | 20               | 
+| **vCPU**            | 1                | 20               |
 | **RAM**             | 0.5 GB           | 32 GB            |
 | **Disk**            | 1 GB             | 100 GB           |
 
@@ -82,8 +82,8 @@ RabbitMQ needs at least 20 vCPUs to start. Zerops automatically starts RabbitMQ 
 ## Create RabbitMQ using zCLI
 zCLI is the Zerops command-line tool. To create a new RabbitMQ service via the command-line, follow these steps:
 1. [Install & setup zCLI](/references/cli)
-2. [Create a project description file](#create-a-project-description-file) 
-3. Create a project and a RabbitMQ service 
+2. [Create a project description file](#create-a-project-description-file)
+3. Create a project and a RabbitMQ service
 
 ### Create a project description file
 Zerops uses a yaml format file to describe the project infrastructure.
@@ -114,7 +114,7 @@ Create a directory `my-project`. Create a `description.yml` file inside the dire
 project:
   # project name
   name: my-project
-  # optional: project description 
+  # optional: project description
   description: A project with a RabbitMQ message broker
   # optional: project tags
   tags:
@@ -129,8 +129,8 @@ services:
     type: rabbitmq@3
     # mode of operation "HA"/"NON_HA"
     mode: HA
-    # optional: vertical auto scaling customization 
-    verticalAutoscaling: 
+    # optional: vertical auto scaling customization
+    verticalAutoscaling:
       minVCpu: 10
       maxVCpu: 20
       minRam: 4
@@ -146,7 +146,7 @@ services:
     mode: NON_HA
 ```
 
-The yaml file describes your future project infrastructure. The project will contain two RabbitMQ services. 
+The yaml file describes your future project infrastructure. The project will contain two RabbitMQ services.
 
 The hostname of the first service will be set to `rabbitmq1`. The [high availability](#highly-available) mode will be chosen and the custom [auto scaling configuration](/rabbitmq/how-to/scale) will be set.
 
@@ -172,10 +172,14 @@ At least one service in `services:` section is required. You can create a projec
 </thead>
 <tbody>
 	<tr>
-		<td><b>hostname</b></td>
-		<td>The unique service identifier.<br/><br/>The hostname of the new service will be set to the <code>hostname</code> value. <br/><br/><b>Limitations:</b><br/>- duplicate services with the same name in the same project are forbidden<br/>
+		<td>
+      <b>hostname</b>
+    </td>
+		<td>
+      The unique service identifier.<br/><br/>The hostname of the new service will be set to the <code>hostname</code> value. <br/><br/><b>Limitations:</b><br/>- duplicate services with the same name in the same project are forbidden<br/>
     - maximum 25 characters<br/>
-    - must contain only lowercase ASCII letters (a-z) or numbers (0-9)</td>
+    - must contain only lowercase ASCII letters (a-z) or numbers (0-9)
+    </td>
 	</tr>
 	<tr>
   <td><b>type</b></td>
@@ -183,13 +187,16 @@ At least one service in `services:` section is required. You can create a projec
 		<td>Currently only RabbitMQ <i>XXX</i> is available.</td>
 	</tr>
   	<tr>
-  <td><b>mode</b></td>
-		<td>Defines the operation mode of RabbitMQ service.<br/>
-    <br/><b>HA</b><br/>Creates a RabbitMQ cluster with 3 message queue containers and 2 free database proxies. This mode is suited for production.<br/><br/>
-    Zerops always keeps the 3 message queue containers on different physical machines. All your data is stored redundantly in 3 identical copies. In case of a failure of a container or the underlying physical machine, Zerops automatically disconnects the failed container from the cluster, creates a new container and syncs all data from the remaining 2 copies. Finally the broken container is automatically deleted.<br/><br/>
-    <b>NON_HA</b><br/>
-    Zerops will create a RabbitMQ message broker installed in a single container. Useful for non-essential data or dev environments.<br/><br/>
-    Your data is stored only in a single container. If the container or the underlying physical machine fails, your data since the last backup are lost. Zerops doesn't provide any automatic repairs of single node RabbitMQ services.
+    <td>
+      <b>mode</b>
+    </td>
+		<td>
+      Defines the operation mode of RabbitMQ service.<br/>
+      <br/><b>HA</b><br/>Creates a RabbitMQ cluster with 3 message queue containers and 2 free database proxies. This mode is suited for production.<br/><br/>
+      Zerops always keeps the 3 message queue containers on different physical machines. All your data is stored redundantly in 3 identical copies. In case of a failure of a container or the underlying physical machine, Zerops automatically disconnects the failed container from the cluster, creates a new container and syncs all data from the remaining 2 copies. Finally the broken container is automatically deleted.<br/><br/>
+      <b>NON_HA</b><br/>
+      Zerops will create a RabbitMQ message broker installed in a single container. Useful for non-essential data or dev environments.<br/><br/>
+      Your data is stored only in a single container. If the container or the underlying physical machine fails, your data since the last backup are lost. Zerops doesn't provide any automatic repairs of single node RabbitMQ services.
     </td>
 	</tr>
   	<tr>

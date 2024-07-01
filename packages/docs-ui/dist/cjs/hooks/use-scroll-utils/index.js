@@ -24,7 +24,12 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.useScrollPositionBlocker = exports.useScrollPosition = exports.useScrollController = exports.ScrollControllerProvider = exports.usePrevious = exports.useEvent = void 0;
+exports.useEvent = useEvent;
+exports.usePrevious = usePrevious;
+exports.ScrollControllerProvider = ScrollControllerProvider;
+exports.useScrollController = useScrollController;
+exports.useScrollPosition = useScrollPosition;
+exports.useScrollPositionBlocker = useScrollPositionBlocker;
 /* Copied from Docusaurus to maintain scroll position on re-renders. Useful when content of the page is updated dynamically */
 /**
  * Copyright (c) Facebook, Inc. and its affiliates.
@@ -33,6 +38,7 @@ exports.useScrollPositionBlocker = exports.useScrollPosition = exports.useScroll
  * LICENSE file in the root directory of this source tree.
  */
 const react_1 = __importStar(require("react"));
+const utils_1 = require("../../utils");
 function useEvent(callback) {
     const ref = (0, react_1.useRef)(callback);
     (0, react_1.useLayoutEffect)(() => {
@@ -42,7 +48,6 @@ function useEvent(callback) {
     // but good enough for our use
     return (0, react_1.useCallback)((...args) => ref.current(...args), []);
 }
-exports.useEvent = useEvent;
 /**
  * Gets `value` from the last render.
  */
@@ -53,12 +58,15 @@ function usePrevious(value) {
     });
     return ref.current;
 }
-exports.usePrevious = usePrevious;
-function useScrollControllerContextValue(scrollableSelector) {
+function useScrollControllerContextValue({ scrollableSelector, }) {
     const scrollEventsEnabledRef = (0, react_1.useRef)(true);
-    const getScrollableElement = (0, react_1.useCallback)(() => {
-        return document.querySelector(scrollableSelector) || window;
-    }, [scrollableSelector]);
+    const [scrollableElement, setScrollableElement] = (0, react_1.useState)();
+    (0, react_1.useEffect)(() => {
+        setScrollableElement(document.querySelector(scrollableSelector) || window);
+    }, []);
+    const getScrolledTop = () => {
+        return scrollableElement ? (0, utils_1.getScrolledTop)(scrollableElement) : 0;
+    };
     return (0, react_1.useMemo)(() => ({
         scrollEventsEnabledRef,
         enableScrollEvents: () => {
@@ -67,15 +75,17 @@ function useScrollControllerContextValue(scrollableSelector) {
         disableScrollEvents: () => {
             scrollEventsEnabledRef.current = false;
         },
-        getScrollableElement,
-    }), [getScrollableElement]);
+        scrollableElement,
+        getScrolledTop,
+    }), [scrollableElement]);
 }
 const ScrollMonitorContext = react_1.default.createContext(undefined);
 function ScrollControllerProvider({ children, scrollableSelector = "", }) {
-    const value = useScrollControllerContextValue(scrollableSelector);
+    const value = useScrollControllerContextValue({
+        scrollableSelector,
+    });
     return (react_1.default.createElement(ScrollMonitorContext.Provider, { value: value }, children));
 }
-exports.ScrollControllerProvider = ScrollControllerProvider;
 /**
  * We need a way to update the scroll position while ignoring scroll events
  * so as not to toggle Navbar/BackToTop visibility.
@@ -90,7 +100,6 @@ function useScrollController() {
     }
     return context;
 }
-exports.useScrollController = useScrollController;
 const getScrollPosition = () => ({
     scrollX: window.pageXOffset,
     scrollY: window.pageYOffset,
@@ -124,9 +133,8 @@ function useScrollPosition(effect, deps = []) {
         return () => window.removeEventListener("scroll", handleScroll, opts);
     }, [dynamicEffect, scrollEventsEnabledRef, ...deps]);
 }
-exports.useScrollPosition = useScrollPosition;
 function useScrollPositionSaver() {
-    const { getScrollableElement } = useScrollController();
+    const { scrollableElement } = useScrollController();
     const lastElementRef = (0, react_1.useRef)({
         elem: null,
         top: 0,
@@ -145,7 +153,7 @@ function useScrollPositionSaver() {
         const newTop = elem.getBoundingClientRect().top;
         const heightDiff = newTop - top;
         if (heightDiff) {
-            getScrollableElement().scrollBy({ left: 0, top: heightDiff });
+            scrollableElement === null || scrollableElement === void 0 ? void 0 : scrollableElement.scrollBy({ left: 0, top: heightDiff });
         }
         lastElementRef.current = { elem: null, top: 0 };
         return { restored: heightDiff !== 0 };
@@ -198,4 +206,3 @@ function useScrollPositionBlocker() {
         blockElementScrollPositionUntilNextRender,
     };
 }
-exports.useScrollPositionBlocker = useScrollPositionBlocker;

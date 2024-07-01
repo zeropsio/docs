@@ -1,14 +1,12 @@
 import React from "react";
-import { CodeBlockProps } from "../../components";
-import { BaseTabType } from "../../hooks";
-export type TabType = {
-    code?: CodeBlockProps;
-    codeBlock?: React.ReactNode;
-} & BaseTabType;
-export type CodeTabsProps = {
-    tabs: TabType[];
+import { CodeBlockStyle } from "../..";
+type CodeTabProps = {
+    children: React.ReactNode;
     className?: string;
     group?: string;
+    title?: string;
+    blockStyle?: CodeBlockStyle;
 };
-export declare const CodeTabs: ({ tabs, className, group, }: CodeTabsProps) => React.JSX.Element;
+export declare const CodeTabs: ({ children, className, group, title, blockStyle, }: CodeTabProps) => React.JSX.Element;
+export {};
 //# sourceMappingURL=index.d.ts.map

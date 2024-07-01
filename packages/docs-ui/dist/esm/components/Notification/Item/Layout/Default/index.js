@@ -3,7 +3,7 @@ import clsx from "clsx";
 import { CheckCircleSolid, ExclamationCircleSolid, InformationCircleSolid, XCircleSolid, } from "@medusajs/icons";
 import { Button } from "../../../../../components";
 export const NotificationItemLayoutDefault = ({ type = "info", title = "", text = "", children, isClosable = true, handleClose, CustomIcon, closeButtonText = "Close", }) => {
-    return (React.createElement(React.Fragment, null,
+    return (React.createElement("div", { className: "bg-medusa-bg-base w-full h-full shadow-flyout dark:shadow-flyout-dark rounded-docs_DEFAULT" },
         React.createElement("div", { className: clsx("flex gap-docs_1 p-docs_1") },
             type !== "none" && (React.createElement("div", { className: clsx(type !== "custom" && "w-docs_2 flex justify-center items-center") },
                 type === "info" && (React.createElement(InformationCircleSolid, { className: "text-medusa-tag-blue-icon" })),

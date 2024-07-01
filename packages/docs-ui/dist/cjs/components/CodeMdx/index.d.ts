@@ -1,7 +1,8 @@
 import React from "react";
+import { CodeBlockMetaFields } from "../../components";
 export type CodeMdxProps = {
     className?: string;
     children?: React.ReactNode;
-};
-export declare const CodeMdx: ({ className, children }: CodeMdxProps) => React.JSX.Element;
+} & CodeBlockMetaFields;
+export declare const CodeMdx: ({ className, children, ...rest }: CodeMdxProps) => React.JSX.Element;
 //# sourceMappingURL=index.d.ts.map

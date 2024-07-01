@@ -1,10 +1,8 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
-require("dotenv").config()
-const fs = require("fs")
+import "dotenv/config"
+import { themes as prismThemes } from "prism-react-renderer"
 const reverseSidebar = require("./src/utils/reverse-sidebar")
 const excludeSidebarResults = require("./src/utils/exclude-sidebar-results")
-
-const announcementBar = JSON.parse(fs.readFileSync("./announcement.json"))
 
 /** @type {import('@medusajs/docs').MedusaDocusaurusConfig} */
 const config = {
@@ -12,11 +10,12 @@ const config = {
   tagline: "Explore and learn how to use Zerops",
   url: process.env.URL || "http://localhost:3000",
   baseUrl: "/",
-  onBrokenLinks: "throw",
+  trailingSlash: false,
+  onBrokenLinks: "ignore",
   onBrokenMarkdownLinks: "throw",
   favicon: "img/favicon.ico",
   organizationName: "zerops",
-  projectName: "zerops/docs-v2",
+  projectName: "zerops/docs",
   plugins: [
     require.resolve("docusaurus-plugin-image-zoom"),
     async function tailwindPlugin() {
@@ -55,25 +54,48 @@ const config = {
       }
     },
   ],
+  themes: ["@docusaurus/theme-mermaid"],
   themeConfig: {
-    image: "img/docs-meta.jpeg",
+    mermaid: {
+      theme: {
+        light: "base",
+        dark: "base",
+      },
+      options: {
+        themeVariables: {
+          background: "#FFFFFF",
+          mainBkg: "#FFFFFF",
+          primaryColor: "#FFFFFF",
+          primaryTextColor: "#030712",
+          primaryBorderColor: "#D1D5DB",
+          nodeBorder: "#D1D5DB",
+          lineColor: "#11181C",
+          fontFamily: "Inter",
+          fontSize: "13px",
+          tertiaryColor: "#F3F4F6",
+          tertiaryBorderColor: "#D1D5DB",
+          tertiaryTextColor: "#030712",
+          clusterBkg: "#F3F4F6",
+        },
+      },
+    },
+    image: "img/docs-meta.jpg",
     colorMode: {
       defaultMode: "light",
       disableSwitch: false,
       respectPrefersColorScheme: true,
     },
-    announcementBar: {
-      id: '/help/contacts',
-      content:
-        '<b><i>WORK IN PROGRESS!</i></b><br>Inconsistencies may occur. Contact us if you need any help.',
-      backgroundColor: '#fccccc',
-      textColor: '#091E42',
-      isCloseable: false,
-    },
     prism: {
-      defaultLanguage: "js",
+      defaultLanguage: "ts",
+      additionalLanguages: ["bash", "json"],
       plugins: ["line-numbers", "show-language"],
-      theme: require("./src/themes/medusaDocs"),
+      theme: {
+        ...prismThemes.vsDark,
+        plain: {
+          ...prismThemes.vsDark.plain,
+          backgroundColor: "#111827",
+        },
+      },
     },
     zoom: {
       selector: ".markdown :not(.no-zoom-img) > img:not(.no-zoom-img)",
@@ -94,16 +116,13 @@ const config = {
           label: "Docs",
           position: "left",
         },
+        {
+          type: "search",
+          position: "right",
+        },
       ],
     },
-    navbarActions: [
-      {
-        type: "button",
-        label: "Report an Issue",
-        className: "max-[1014px]:hidden",
-        href: "https://github.com/zeropsio/docs-v2/issues/new?assignees=&labels=type%3A+docs",
-      },
-    ],
+    navbarActions: [],
     mobileLogo: {
       alt: "Zerops",
       src: "img/logo-mobile.png",
@@ -112,7 +131,7 @@ const config = {
       height: 20,
     },
     footer: {
-      copyright: `© ${new Date().getFullYear()} Zerops s.r.o.. All rights reserved.`,
+      copyright: `Docs theme & components by the amazing medusajs.com <br/> © ${new Date().getFullYear()} Zerops s.r.o..`,
     },
     socialLinks: [
       {
@@ -132,6 +151,7 @@ const config = {
         href: "https://github.com/zeropsio",
       },
     ],
+    reportCodeLinkPrefix: "",
     footerFeedback: {
       event: "survey",
     },
@@ -157,8 +177,7 @@ const config = {
       {
         docs: {
           sidebarPath: require.resolve("./sidebars.js"),
-          editUrl:
-            "https://github.com/zeropsio/docs/tree/main/apps/docs",
+          editUrl: "https://github.com/zeropsio/docs/tree/main/apps/docs",
           path: "content",
           routeBasePath: "/",
           remarkPlugins: [
@@ -189,10 +208,15 @@ const config = {
       },
     ],
   ],
-}
-
-if (Object.keys(announcementBar).length) {
-  config.themeConfig.announcementBar = announcementBar
+  customFields: {
+    meilisearchHost:
+      process.env.MEILISEARCH_HOST ||
+      "https://meilisearch-279-7700.prg1.zerops.app",
+    meilisearchApiKey:
+      process.env.MEILISEARCH_API_KEY ||
+      "c8f5b89c64aacb12345ced6c90920286ca5efcfb0c21f61afa6dbd70b5e71363",
+    meilisearchIndexUid: process.env.MEILISEARCH_INDEX_UID || "docs",
+  },
 }
 
 module.exports = config

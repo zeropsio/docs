@@ -8,7 +8,6 @@ type Props = WrapperProps<typeof FooterType>
 
 export default function FooterWrapper(props: Props): JSX.Element {
   const { metadata } = useDoc()
-
   return (
     <>
       {!metadata.frontMatter?.hide_footer && (

@@ -1,6 +1,6 @@
 import { ColorModeProvider, ModalProvider, NotificationProvider } from "docs-ui"
 import React from "react"
-import LearningPathProvider from "../LearningPath"
+import SkipToContent from "@theme/SkipToContent"
 
 type DocsProvidersProps = {
   children?: React.ReactNode
@@ -10,9 +10,10 @@ const DocsProviders = ({ children }: DocsProvidersProps) => {
   return (
     <ColorModeProvider>
       <ModalProvider>
-        <LearningPathProvider>
-          <NotificationProvider>{children}</NotificationProvider>
-        </LearningPathProvider>
+        <NotificationProvider>
+          <SkipToContent />
+          {children}
+        </NotificationProvider>
       </ModalProvider>
     </ColorModeProvider>
   )

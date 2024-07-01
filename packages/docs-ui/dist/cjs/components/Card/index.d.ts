@@ -1,10 +1,14 @@
 import React from "react";
 export type CardProps = {
-    icon?: React.ReactNode;
-    title: string;
+    startIcon?: React.ReactNode;
+    endIcon?: React.ReactNode;
+    title?: string;
     text?: string;
     href?: string;
     className?: string;
+    contentClassName?: string;
+    children?: React.ReactNode;
+    showLinkIcon?: boolean;
 };
-export declare const Card: ({ icon, title, text, href, className }: CardProps) => React.JSX.Element;
+export declare const Card: ({ startIcon, endIcon, title, text, href, className, contentClassName, children, showLinkIcon, }: CardProps) => React.JSX.Element;
 //# sourceMappingURL=index.d.ts.map

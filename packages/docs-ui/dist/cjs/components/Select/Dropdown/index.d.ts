@@ -1,6 +1,6 @@
 import React from "react";
 import { OptionType } from "../../../hooks";
-import { Ref } from "../../../types";
+import { Ref } from "types";
 export type SelectDropdownProps = {
     options: OptionType[];
     open: boolean;

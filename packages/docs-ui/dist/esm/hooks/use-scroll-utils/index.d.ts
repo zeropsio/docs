@@ -19,11 +19,14 @@ type ScrollController = {
     /** Disable scroll events in `useScrollPosition`. */
     disableScrollEvents: () => void;
     /** Retrieves the scrollable element. By default, it's window. */
-    getScrollableElement: () => Element | Window;
+    scrollableElement: Element | Window | undefined;
+    /** Retrieves the scroll top if the scrollable element */
+    getScrolledTop: () => number;
 };
 export declare function ScrollControllerProvider({ children, scrollableSelector, }: {
     children: ReactNode;
     scrollableSelector?: string;
+    restoreScrollOnReload?: boolean;
 }): JSX.Element;
 /**
  * We need a way to update the scroll position while ignoring scroll events

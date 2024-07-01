@@ -9,7 +9,7 @@ const clsx_1 = __importDefault(require("clsx"));
 const icons_1 = require("@medusajs/icons");
 const components_1 = require("../../../../../components");
 const NotificationItemLayoutDefault = ({ type = "info", title = "", text = "", children, isClosable = true, handleClose, CustomIcon, closeButtonText = "Close", }) => {
-    return (react_1.default.createElement(react_1.default.Fragment, null,
+    return (react_1.default.createElement("div", { className: "bg-medusa-bg-base w-full h-full shadow-flyout dark:shadow-flyout-dark rounded-docs_DEFAULT" },
         react_1.default.createElement("div", { className: (0, clsx_1.default)("flex gap-docs_1 p-docs_1") },
             type !== "none" && (react_1.default.createElement("div", { className: (0, clsx_1.default)(type !== "custom" && "w-docs_2 flex justify-center items-center") },
                 type === "info" && (react_1.default.createElement(icons_1.InformationCircleSolid, { className: "text-medusa-tag-blue-icon" })),

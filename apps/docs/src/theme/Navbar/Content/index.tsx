@@ -8,13 +8,13 @@ import NavbarItem, { type Props as NavbarItemConfig } from "@theme/NavbarItem"
 import NavbarColorModeToggle from "@theme/Navbar/ColorModeToggle"
 import NavbarMobileSidebarToggle from "@theme/Navbar/MobileSidebar/Toggle"
 import NavbarLogo from "@theme/Navbar/Logo"
-import NavbarActions from "../../../components/Navbar/Actions"
-import { ThemeConfig } from "@medusajs/docs"
-import useIsBrowser from "@docusaurus/useIsBrowser"
 import clsx from "clsx"
+import { ThemeConfig } from "@medusajs/docs"
 import { useSidebar } from "../../../providers/Sidebar"
+import useIsBrowser from "@docusaurus/useIsBrowser"
 import { Tooltip } from "docs-ui"
-import { ChevronDoubleLeftMiniSolid, Sidebar } from "@medusajs/icons"
+import NavbarActions from "../../../components/Navbar/Actions"
+import { ChevronDoubleLeftMiniSolid, SidebarLeft } from "@medusajs/icons"
 
 function useNavbarItems() {
   // TODO temporary casting until ThemeConfig type is improved
@@ -142,7 +142,7 @@ export default function NavbarContent(): JSX.Element {
                     },
                   },
                   Icon: !sidebarContext?.hiddenSidebarContainer ? (
-                    <Sidebar className="text-medusa-fg-muted" />
+                    <SidebarLeft className="text-medusa-fg-muted" />
                   ) : (
                     <ChevronDoubleLeftMiniSolid className="text-medusa-fg-muted" />
                   ),

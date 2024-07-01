@@ -1,7 +1,7 @@
 "use strict";
 "use client";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.useTabs = void 0;
+exports.useTabs = useTabs;
 const react_1 = require("react");
 function useTabs({ tabs, group }) {
     const [selectedTab, setSelectedTab] = (0, react_1.useState)(null);
@@ -52,4 +52,3 @@ function useTabs({ tabs, group }) {
     }, [selectedTab]);
     return { selectedTab, changeSelectedTab };
 }
-exports.useTabs = useTabs;

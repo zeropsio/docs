@@ -1,11 +1,11 @@
 import React, { useEffect, useRef } from "react"
 import clsx from "clsx"
 import { useThemeConfig } from "@docusaurus/theme-common"
+import AnnouncementBar from "@theme/AnnouncementBar"
 import Content from "@theme/DocSidebar/Desktop/Content"
 import type { Props } from "@theme/DocSidebar/Desktop"
 import useIsBrowser from "@docusaurus/useIsBrowser"
 import { useLocation } from "@docusaurus/router"
-import AnnouncementBar from "../../AnnouncementBar/index"
 
 function DocSidebarDesktop({ path, sidebar }: Props) {
   const {
@@ -76,7 +76,7 @@ function DocSidebarDesktop({ path, sidebar }: Props) {
   return (
     <div
       className={clsx(
-        "lg:flex lg:flex-col lg:max-h-screen lg:h-full lg:sticky lg:top-0 lg:transition-opacity lg:duration-[50ms] lg:ease-ease lg:pt-1.5",
+        "lg:flex lg:flex-col lg:max-h-[calc(100vh-57px)] lg:h-full lg:sticky lg:top-0 lg:transition-opacity lg:duration-[50ms] lg:ease-ease lg:pt-1.5",
         "sidebar-desktop",
         hideOnScroll && "lg:pt-0"
       )}

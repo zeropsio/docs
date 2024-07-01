@@ -40,16 +40,25 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Details = void 0;
 const react_1 = __importStar(require("react"));
-const Loading_1 = require("../../components/Loading");
+const components_1 = require("../../components");
 const clsx_1 = __importDefault(require("clsx"));
 const react_transition_group_1 = require("react-transition-group");
 const Summary_1 = require("./Summary");
 const Details = (_a) => {
-    var { openInitial = false, summaryContent, summaryElm, children } = _a, props = __rest(_a, ["openInitial", "summaryContent", "summaryElm", "children"]);
+    var { openInitial = false, summaryContent, summaryElm, children, heightAnimation = false } = _a, props = __rest(_a, ["openInitial", "summaryContent", "summaryElm", "children", "heightAnimation"]);
     const [open, setOpen] = (0, react_1.useState)(openInitial);
     const [showContent, setShowContent] = (0, react_1.useState)(openInitial);
     const ref = (0, react_1.useRef)(null);
-    const handleToggle = () => {
+    const handleToggle = (e) => {
+        const targetElm = e.target;
+        if (targetElm.tagName.toLowerCase() === "a") {
+            window.location.href =
+                targetElm.getAttribute("href") || window.location.href;
+            return;
+        }
+        if (targetElm.tagName.toLowerCase() === "code") {
+            return;
+        }
         if (open) {
             setShowContent(false);
         }
@@ -67,20 +76,46 @@ const Details = (_a) => {
             // https://github.com/facebook/react/issues/22718
             event.stopPropagation();
         }, className: (0, clsx_1.default)("border-medusa-border-base border-y border-solid border-x-0", "overflow-hidden [&>summary]:relative", props.className) }),
-        summaryContent && (react_1.default.createElement(Summary_1.DetailsSummary, { onClick: handleToggle, className: "cursor-pointer", title: summaryContent })),
+        summaryContent && (react_1.default.createElement(Summary_1.DetailsSummary, { open: open, onClick: handleToggle, className: "cursor-pointer", title: summaryContent })),
         summaryElm &&
             (0, react_1.cloneElement)(summaryElm, {
                 open,
                 onClick: handleToggle,
             }),
         react_1.default.createElement(react_transition_group_1.CSSTransition, { unmountOnExit: true, in: showContent, timeout: 150, onEnter: (node) => {
-                node.classList.add("!mb-docs_2", "!mt-0", "translate-y-docs_1", "transition-transform");
+                if (heightAnimation) {
+                    node.classList.add("transition-[height]");
+                    node.style.height = `0px`;
+                }
+                else {
+                    node.classList.add("!mb-docs_2", "!mt-0", "translate-y-docs_1", "transition-transform");
+                }
+            }, onEntering: (node) => {
+                if (heightAnimation) {
+                    node.style.height = `${node.scrollHeight}px`;
+                }
+            }, onEntered: (node) => {
+                if (heightAnimation) {
+                    node.style.height = `auto`;
+                }
             }, onExit: (node) => {
-                node.classList.add("transition-transform", "!-translate-y-docs_1");
-                setTimeout(() => {
-                    setOpen(false);
-                }, 100);
+                if (heightAnimation) {
+                    node.style.height = `${node.scrollHeight}px`;
+                }
+                else {
+                    node.classList.add("transition-transform", "!-translate-y-docs_1");
+                    setTimeout(() => {
+                        setOpen(false);
+                    }, 100);
+                }
+            }, onExiting: (node) => {
+                if (heightAnimation) {
+                    node.style.height = `0px`;
+                    setTimeout(() => {
+                        setOpen(false);
+                    }, 100);
+                }
             } },
-            react_1.default.createElement(react_1.Suspense, { fallback: react_1.default.createElement(Loading_1.Loading, { className: "!mb-docs_2 !mt-0" }) }, children))));
+            react_1.default.createElement(react_1.Suspense, { fallback: react_1.default.createElement(components_1.Loading, { className: "!mb-docs_2 !mt-0" }) }, children))));
 };
 exports.Details = Details;

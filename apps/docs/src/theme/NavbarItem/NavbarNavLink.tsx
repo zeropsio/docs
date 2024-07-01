@@ -12,10 +12,9 @@ export default function NavbarNavLink({
   label,
   html,
   prependBaseUrlToHref,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   isDropdownLink,
   ...props
-}: Props): JSX.Element {
+}: Omit<Props, "key">): JSX.Element {
   // TODO all this seems hacky
   // {to: 'version'} should probably be forbidden, in favor of {to: '/version'}
   const toUrl = useBaseUrl(to)

@@ -1,7 +1,7 @@
 import React from "react"
 import { useNavbarMobileSidebar } from "@docusaurus/theme-common/internal"
 import { translate } from "@docusaurus/Translate"
-import { Sidebar, XMark } from "@medusajs/icons"
+import { SidebarLeft, XMark } from "@medusajs/icons"
 
 export default function MobileSidebarToggle(): JSX.Element {
   const { toggle, shown } = useNavbarMobileSidebar()
@@ -18,7 +18,7 @@ export default function MobileSidebarToggle(): JSX.Element {
       className="navbar__toggle !block lg:!hidden clean-btn"
       type="button"
     >
-      {!shown && <Sidebar className="text-medusa-fg-muted" />}
+      {!shown && <SidebarLeft className="text-medusa-fg-muted" />}
       {shown && <XMark className="text-medusa-fg-muted" />}
     </button>
   )

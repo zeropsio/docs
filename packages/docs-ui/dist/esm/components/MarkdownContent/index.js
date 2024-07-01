@@ -11,34 +11,14 @@ var __rest = (this && this.__rest) || function (s, e) {
 };
 import React from "react";
 import ReactMarkdown from "react-markdown";
-import { CodeMdx, Details, Kbd, Link } from "../../components";
+import { MDXComponents, LegacyLink } from "../../components";
 import clsx from "clsx";
-export const MarkdownContent = ({ children }) => {
-    return (React.createElement(ReactMarkdown, { components: {
-            code: CodeMdx,
-            pre: (_a) => {
+export const MarkdownContent = (_a) => {
+    var { children, components } = _a, props = __rest(_a, ["children", "components"]);
+    return (React.createElement(ReactMarkdown, Object.assign({ components: components || Object.assign(Object.assign({}, MDXComponents), { pre: (_a) => {
                 var { className, children } = _a, props = __rest(_a, ["className", "children"]);
                 return (React.createElement("pre", Object.assign({ className: clsx("p-0 bg-transparent", className) }, props), children));
-            },
-            kbd: Kbd,
-            details: Details,
-            a: Link,
-            ul: (_a) => {
-                var { className, children } = _a, props = __rest(_a, ["className", "children"]);
-                return (React.createElement("ul", Object.assign({}, props, { className: clsx("list-disc px-docs_1 mb-docs_1.5", className) }), children));
-            },
-            ol: (_a) => {
-                var { className, children } = _a, props = __rest(_a, ["className", "children"]);
-                return (React.createElement("ol", Object.assign({}, props, { className: clsx("list-decimal px-docs_1 mb-docs_1.5", className) }), children));
-            },
-            li: (_a) => {
-                var { className, children } = _a, props = __rest(_a, ["className", "children"]);
-                return (React.createElement("li", Object.assign({ className: clsx("text-medusa-fg-subtle", className) }, props),
-                    React.createElement("span", null, children)));
-            },
-            p: (_a) => {
-                var { className } = _a, props = __rest(_a, ["className"]);
-                return (React.createElement("p", Object.assign({ className: clsx("text-medusa-fg-subtle [&:not(:last-child)]:mb-docs_1.5 last:!mb-0", className) }, props)));
-            },
-        } }, children));
+            }, 
+            // TODO replace with Link once we move away from Docusaurus
+            a: LegacyLink }) }, props), children));
 };

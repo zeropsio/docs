@@ -19,6 +19,6 @@ const react_1 = __importDefault(require("react"));
 const clsx_1 = __importDefault(require("clsx"));
 const Kbd = (_a) => {
     var { children, className } = _a, props = __rest(_a, ["children", "className"]);
-    return (react_1.default.createElement("kbd", Object.assign({ className: (0, clsx_1.default)("rounded-docs_sm border-solid py-0 px-[6px]", "inline-flex items-center justify-center", "border-medusa-tag-neutral-border border", "bg-medusa-tag-neutral-bg", "text-medusa-tag-neutral-text", "text-compact-x-small-plus font-monospace shadow-none", className) }, props), children));
+    return (react_1.default.createElement("kbd", Object.assign({ className: (0, clsx_1.default)("rounded-docs_sm border-solid py-0 px-[6px]", "inline-flex items-center justify-center", "border-medusa-tag-neutral-border border", "bg-medusa-tag-neutral-bg", "text-medusa-tag-neutral-text", "text-compact-x-small-plus font-base shadow-none", className) }, props), children));
 };
 exports.Kbd = Kbd;

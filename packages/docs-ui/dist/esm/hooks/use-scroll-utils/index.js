@@ -6,7 +6,8 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import React, { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, } from "react";
+import React, { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, } from "react";
+import { getScrolledTop as getScrolledTopUtil } from "../../utils";
 export function useEvent(callback) {
     const ref = useRef(callback);
     useLayoutEffect(() => {
@@ -26,11 +27,15 @@ export function usePrevious(value) {
     });
     return ref.current;
 }
-function useScrollControllerContextValue(scrollableSelector) {
+function useScrollControllerContextValue({ scrollableSelector, }) {
     const scrollEventsEnabledRef = useRef(true);
-    const getScrollableElement = useCallback(() => {
-        return document.querySelector(scrollableSelector) || window;
-    }, [scrollableSelector]);
+    const [scrollableElement, setScrollableElement] = useState();
+    useEffect(() => {
+        setScrollableElement(document.querySelector(scrollableSelector) || window);
+    }, []);
+    const getScrolledTop = () => {
+        return scrollableElement ? getScrolledTopUtil(scrollableElement) : 0;
+    };
     return useMemo(() => ({
         scrollEventsEnabledRef,
         enableScrollEvents: () => {
@@ -39,12 +44,15 @@ function useScrollControllerContextValue(scrollableSelector) {
         disableScrollEvents: () => {
             scrollEventsEnabledRef.current = false;
         },
-        getScrollableElement,
-    }), [getScrollableElement]);
+        scrollableElement,
+        getScrolledTop,
+    }), [scrollableElement]);
 }
 const ScrollMonitorContext = React.createContext(undefined);
 export function ScrollControllerProvider({ children, scrollableSelector = "", }) {
-    const value = useScrollControllerContextValue(scrollableSelector);
+    const value = useScrollControllerContextValue({
+        scrollableSelector,
+    });
     return (React.createElement(ScrollMonitorContext.Provider, { value: value }, children));
 }
 /**
@@ -95,7 +103,7 @@ export function useScrollPosition(effect, deps = []) {
     }, [dynamicEffect, scrollEventsEnabledRef, ...deps]);
 }
 function useScrollPositionSaver() {
-    const { getScrollableElement } = useScrollController();
+    const { scrollableElement } = useScrollController();
     const lastElementRef = useRef({
         elem: null,
         top: 0,
@@ -114,7 +122,7 @@ function useScrollPositionSaver() {
         const newTop = elem.getBoundingClientRect().top;
         const heightDiff = newTop - top;
         if (heightDiff) {
-            getScrollableElement().scrollBy({ left: 0, top: heightDiff });
+            scrollableElement === null || scrollableElement === void 0 ? void 0 : scrollableElement.scrollBy({ left: 0, top: heightDiff });
         }
         lastElementRef.current = { elem: null, top: 0 };
         return { restored: heightDiff !== 0 };

@@ -1,3 +1,6 @@
-export declare const GITHUB_ISSUES_PREFIX = "https://github.com/medusajs/medusa/issues/new?assignees=&labels=type%3A+docs&template=docs.yml";
-export declare const GITHUB_UI_ISSUES_PREFIX = "https://github.com/medusajs/ui/issues/new?labels=documentation";
+import { NavbarLinkProps } from "./components";
+import { SidebarItemType } from "types";
+export declare const GITHUB_ISSUES_PREFIX = "https://github.com/zeropsio/docs/issues/new";
+export declare const navbarItems: NavbarLinkProps[];
+export declare const mobileSidebarItems: SidebarItemType[];
 //# sourceMappingURL=constants.d.ts.map

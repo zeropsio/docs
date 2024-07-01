@@ -1,23 +1,15 @@
 import React, { ReactNode } from "react";
-export declare enum SidebarItemSections {
-    TOP = "top",
-    BOTTOM = "bottom",
-    MOBILE = "mobile"
-}
-export type SidebarItemType = {
-    path?: string;
-    title: string;
-    additionalElms?: React.ReactNode;
-    children?: SidebarItemType[];
-    loaded?: boolean;
-    isPathHref?: boolean;
-    linkProps?: React.AllHTMLAttributes<HTMLAnchorElement>;
+import { SidebarItemSections, SidebarItemType, SidebarSectionItemsType } from "types";
+export type CurrentItemsState = SidebarSectionItemsType & {
+    previousSidebar?: CurrentItemsState;
 };
-export type SidebarSectionItemsType = {
-    [k in SidebarItemSections]: SidebarItemType[];
+export type SidebarStyleOptions = {
+    disableActiveTransition?: boolean;
+    noTitleStyling?: boolean;
 };
 export type SidebarContextType = {
     items: SidebarSectionItemsType;
+    currentItems: CurrentItemsState | undefined;
     activePath: string | null;
     getActiveItem: () => SidebarItemType | undefined;
     setActivePath: (path: string | null) => void;
@@ -37,7 +29,11 @@ export type SidebarContextType = {
     isSidebarEmpty: () => boolean;
     desktopSidebarOpen: boolean;
     setDesktopSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
-};
+    staticSidebarItems?: boolean;
+    shouldHandleHashChange: boolean;
+    sidebarRef: React.RefObject<HTMLUListElement>;
+    goBack: () => void;
+} & SidebarStyleOptions;
 export declare const SidebarContext: React.Context<SidebarContextType | null>;
 export type ActionOptionsType = {
     section?: SidebarItemSections;
@@ -61,7 +57,9 @@ export type SidebarProviderProps = {
     initialItems?: SidebarSectionItemsType;
     shouldHandleHashChange?: boolean;
     shouldHandlePathChange?: boolean;
-};
-export declare const SidebarProvider: ({ children, isLoading, setIsLoading, initialItems, shouldHandleHashChange, shouldHandlePathChange, }: SidebarProviderProps) => React.JSX.Element;
+    scrollableElement?: Element | Window;
+    staticSidebarItems?: boolean;
+} & SidebarStyleOptions;
+export declare const SidebarProvider: ({ children, isLoading, setIsLoading, initialItems, shouldHandleHashChange, shouldHandlePathChange, scrollableElement, staticSidebarItems, disableActiveTransition, noTitleStyling, }: SidebarProviderProps) => React.JSX.Element;
 export declare const useSidebar: () => SidebarContextType;
 //# sourceMappingURL=index.d.ts.map

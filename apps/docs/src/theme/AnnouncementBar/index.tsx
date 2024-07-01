@@ -3,9 +3,11 @@ import { useThemeConfig } from "@docusaurus/theme-common"
 import { useAnnouncementBar } from "@docusaurus/theme-common/internal"
 import AnnouncementBarCloseButton from "@theme/AnnouncementBar/CloseButton"
 import AnnouncementBarContent from "@theme/AnnouncementBar/Content"
+
 import clsx from "clsx"
 import { Bordered } from "docs-ui"
-import { Tools } from "@medusajs/icons"
+import { BellAlertSolid } from "@medusajs/icons"
+import Link from "@docusaurus/Link"
 
 export default function AnnouncementBar(): JSX.Element | null {
   const { announcementBar } = useThemeConfig()
@@ -13,10 +15,9 @@ export default function AnnouncementBar(): JSX.Element | null {
   if (!isActive) {
     return null
   }
-  const { isCloseable, id, backgroundColor } = announcementBar!
+  const { isCloseable, id } = announcementBar!
   return (
     <div
-      style={{backgroundColor: backgroundColor}}
       className={clsx(
         "relative flex items-center h-auto bg-medusa-bg-subtle dark:bg-medusa-bg-base p-0.75",
         "rounded mx-1.5 mb-1 shadow-card-rest dark:shadow-card-rest-dark",
@@ -32,7 +33,7 @@ export default function AnnouncementBar(): JSX.Element | null {
             "rounded-xs bg-medusa-bg-component"
           )}
         >
-          <Tools className="text-medusa-fg-subtle" />
+          <BellAlertSolid className="text-medusa-fg-subtle" />
         </div>
       </Bordered>
       <AnnouncementBarContent className={clsx("flex-1")} />
@@ -42,7 +43,7 @@ export default function AnnouncementBar(): JSX.Element | null {
           className={clsx("z-[101] text-right lg:basis-[50px]")}
         />
       )}
-      <a
+      <Link
         href={id}
         className={clsx("absolute top-0 left-0 w-full h-full z-[100]")}
       />

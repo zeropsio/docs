@@ -16,9 +16,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Link = void 0;
 const react_1 = __importDefault(require("react"));
+const link_1 = __importDefault(require("next/link"));
 const clsx_1 = __importDefault(require("clsx"));
 const Link = (_a) => {
     var { href, children, className } = _a, rest = __rest(_a, ["href", "children", "className"]);
-    return (react_1.default.createElement("a", Object.assign({ href: href || "" }, rest, { className: (0, clsx_1.default)("text-medusa-fg-interactive hover:text-medusa-fg-interactive-hover", className) }), children));
+    if (href === null || href === void 0 ? void 0 : href.replace(/#.*$/, "").endsWith("page.mdx")) {
+        href = href.replace("/page.mdx", "");
+    }
+    return (react_1.default.createElement(link_1.default, Object.assign({ href: href || "" }, rest, { className: (0, clsx_1.default)("text-medusa-fg-interactive hover:text-medusa-fg-interactive-hover", className) }), children));
 };
 exports.Link = Link;

@@ -1,4 +1,2 @@
-export declare function checkSidebarItemVisibility(item: Element, options?: {
-    topMargin?: number;
-}): boolean;
+export declare function checkSidebarItemVisibility(item: HTMLElement, withTransition?: boolean): boolean;
 //# sourceMappingURL=check-sidebar-item-visibility.d.ts.map

@@ -23,19 +23,48 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.useSidebar = exports.SidebarProvider = exports.reducer = exports.SidebarContext = exports.SidebarItemSections = void 0;
+exports.useSidebar = exports.SidebarProvider = exports.reducer = exports.SidebarContext = void 0;
 const react_1 = __importStar(require("react"));
 const navigation_1 = require("next/navigation");
-var SidebarItemSections;
-(function (SidebarItemSections) {
-    SidebarItemSections["TOP"] = "top";
-    SidebarItemSections["BOTTOM"] = "bottom";
-    SidebarItemSections["MOBILE"] = "mobile";
-})(SidebarItemSections || (exports.SidebarItemSections = SidebarItemSections = {}));
+const utils_1 = require("../../utils");
+const hooks_1 = require("../../hooks");
+const types_1 = require("types");
 exports.SidebarContext = (0, react_1.createContext)(null);
+const findItem = (section, item, checkChildren = true) => {
+    let foundItem;
+    section.some((i) => {
+        if ((!item.path && !i.path && i.title === item.title) ||
+            i.path === item.path) {
+            foundItem = i;
+        }
+        else if (checkChildren && i.children) {
+            foundItem = findItem(i.children, item);
+        }
+        return foundItem !== undefined;
+    });
+    return foundItem;
+};
 const reducer = (state, { type, items, options }) => {
-    const { section = SidebarItemSections.TOP, parent, indexPosition, } = options || {};
+    const { section = types_1.SidebarItemSections.TOP, parent, ignoreExisting = false, indexPosition, } = options || {};
+    if (!ignoreExisting) {
+        const selectedSection = section === types_1.SidebarItemSections.BOTTOM ? state.bottom : state.top;
+        items = items.filter((item) => !findItem(selectedSection, item));
+    }
+    if (!items.length) {
+        return state;
+    }
     switch (type) {
         case "add":
             return Object.assign(Object.assign({}, state), { [section]: indexPosition !== undefined
@@ -58,27 +87,24 @@ const reducer = (state, { type, items, options }) => {
     }
 };
 exports.reducer = reducer;
-const SidebarProvider = ({ children, isLoading = false, setIsLoading, initialItems, shouldHandleHashChange = false, shouldHandlePathChange = false, }) => {
+const SidebarProvider = ({ children, isLoading = false, setIsLoading, initialItems, shouldHandleHashChange = false, shouldHandlePathChange = false, scrollableElement, staticSidebarItems = false, disableActiveTransition = false, noTitleStyling = false, }) => {
     const [items, dispatch] = (0, react_1.useReducer)(exports.reducer, {
         top: (initialItems === null || initialItems === void 0 ? void 0 : initialItems.top) || [],
         bottom: (initialItems === null || initialItems === void 0 ? void 0 : initialItems.bottom) || [],
         mobile: (initialItems === null || initialItems === void 0 ? void 0 : initialItems.mobile) || [],
     });
+    const [currentItems, setCurrentItems] = (0, react_1.useState)();
     const [activePath, setActivePath] = (0, react_1.useState)("");
     const [mobileSidebarOpen, setMobileSidebarOpen] = (0, react_1.useState)(false);
     const [desktopSidebarOpen, setDesktopSidebarOpen] = (0, react_1.useState)(true);
+    const sidebarRef = (0, react_1.useRef)(null);
     const pathname = (0, navigation_1.usePathname)();
-    const findItemInSection = (0, react_1.useCallback)((section, item, checkChildren = true) => {
-        return section.find((i) => {
-            if (!item.path) {
-                return !i.path && i.title === item.title;
-            }
-            else {
-                return (i.path === item.path ||
-                    (checkChildren && i.children && findItemInSection(i.children, item)));
-            }
-        });
-    }, []);
+    const router = (0, navigation_1.useRouter)();
+    const isBrowser = (0, hooks_1.useIsBrowser)();
+    const getResolvedScrollableElement = (0, react_1.useCallback)(() => {
+        return scrollableElement || window;
+    }, [scrollableElement]);
+    const findItemInSection = (0, react_1.useCallback)(findItem, []);
     const getActiveItem = (0, react_1.useCallback)(() => {
         if (activePath === null) {
             return undefined;
@@ -88,16 +114,8 @@ const SidebarProvider = ({ children, isLoading = false, setIsLoading, initialIte
             findItemInSection(items.bottom, { path: activePath }));
     }, [activePath, items, findItemInSection]);
     const addItems = (newItems, options) => {
-        const { section = SidebarItemSections.TOP, parent, ignoreExisting = false, } = options || {};
-        if (!ignoreExisting) {
-            const selectedSection = section === SidebarItemSections.BOTTOM ? items.bottom : items.top;
-            newItems = newItems.filter((item) => !findItemInSection(selectedSection, item));
-        }
-        if (!newItems.length) {
-            return;
-        }
         dispatch({
-            type: parent ? "update" : "add",
+            type: (options === null || options === void 0 ? void 0 : options.parent) ? "update" : "add",
             items: newItems,
             options,
         });
@@ -107,7 +125,12 @@ const SidebarProvider = ({ children, isLoading = false, setIsLoading, initialIte
             (checkChildren && (activePath === null || activePath === void 0 ? void 0 : activePath.split("_")[0]) === item.path));
     }, [activePath]);
     const isSidebarEmpty = (0, react_1.useCallback)(() => {
-        return Object.values(items).every((sectionItems) => sectionItems.length === 0);
+        return Object.values(items).every((sectionItems) => {
+            if (!Array.isArray(sectionItems)) {
+                return true;
+            }
+            return sectionItems.length === 0;
+        });
     }, [items]);
     const init = () => {
         const currentPath = location.hash.replace("#", "");
@@ -115,45 +138,122 @@ const SidebarProvider = ({ children, isLoading = false, setIsLoading, initialIte
             setActivePath(currentPath);
         }
     };
-    // this is mainly triggered by Algolia
-    const handleHashChange = (0, react_1.useCallback)(() => {
-        const currentPath = location.hash.replace("#", "");
-        if (currentPath !== activePath) {
-            setActivePath(currentPath);
+    const getCurrentSidebar = (0, react_1.useCallback)((searchItems) => {
+        let currentSidebar;
+        searchItems.some((item) => {
+            var _a, _b;
+            if (item.isChildSidebar) {
+                if (isItemActive(item)) {
+                    currentSidebar = item;
+                }
+                else if ((_a = item.children) === null || _a === void 0 ? void 0 : _a.length) {
+                    const childSidebar = getCurrentSidebar(item.children) ||
+                        findItem(item.children, { path: activePath || undefined });
+                    if (childSidebar) {
+                        currentSidebar = childSidebar.isChildSidebar ? childSidebar : item;
+                    }
+                }
+            }
+            else if ((_b = item.children) === null || _b === void 0 ? void 0 : _b.length) {
+                currentSidebar = getCurrentSidebar(item.children);
+            }
+            return currentSidebar !== undefined;
+        });
+        return currentSidebar;
+    }, [isItemActive, activePath]);
+    const goBack = () => {
+        if (!currentItems) {
+            return;
         }
-    }, [activePath]);
+        const previousSidebar = currentItems.previousSidebar || items;
+        const backItem = previousSidebar.top.find((item) => item.path && !item.isChildSidebar) ||
+            previousSidebar.bottom.find((item) => item.path && !item.isChildSidebar);
+        if (!backItem) {
+            return;
+        }
+        setActivePath(backItem.path);
+        setCurrentItems(currentItems.previousSidebar);
+        router.replace(backItem.path);
+    };
+    (0, react_1.useEffect)(() => {
+        if (shouldHandleHashChange) {
+            init();
+        }
+    }, [shouldHandleHashChange]);
     (0, react_1.useEffect)(() => {
         if (!shouldHandleHashChange) {
             return;
         }
-        init();
+        const resolvedScrollableElement = getResolvedScrollableElement();
         const handleScroll = () => {
-            if (window.scrollY === 0) {
+            if ((0, utils_1.getScrolledTop)(resolvedScrollableElement) === 0) {
                 setActivePath("");
                 // can't use next router as it doesn't support
                 // changing url without scrolling
                 history.replaceState({}, "", location.pathname);
             }
         };
-        window.addEventListener("scroll", handleScroll);
+        resolvedScrollableElement.addEventListener("scroll", handleScroll);
+        return () => {
+            resolvedScrollableElement.removeEventListener("scroll", handleScroll);
+        };
+    }, [shouldHandleHashChange, getResolvedScrollableElement]);
+    (0, react_1.useEffect)(() => {
+        if (!shouldHandleHashChange || !isBrowser) {
+            return;
+        }
+        // this is mainly triggered by Algolia
+        const handleHashChange = () => {
+            const currentPath = location.hash.replace("#", "");
+            if (currentPath !== activePath) {
+                setActivePath(currentPath);
+            }
+        };
         window.addEventListener("hashchange", handleHashChange);
         return () => {
-            window.removeEventListener("scroll", handleScroll);
             window.removeEventListener("hashchange", handleHashChange);
         };
-    }, [handleHashChange, shouldHandleHashChange]);
+    }, [shouldHandleHashChange, isBrowser]);
     (0, react_1.useEffect)(() => {
         if (isLoading && items.top.length && items.bottom.length) {
             setIsLoading === null || setIsLoading === void 0 ? void 0 : setIsLoading(false);
         }
     }, [items, isLoading, setIsLoading]);
     (0, react_1.useEffect)(() => {
-        if (shouldHandlePathChange && pathname !== activePath) {
+        if (!shouldHandlePathChange) {
+            return;
+        }
+        if (pathname !== activePath) {
             setActivePath(pathname);
         }
     }, [shouldHandlePathChange, pathname]);
+    (0, react_1.useEffect)(() => {
+        var _a;
+        if (!(activePath === null || activePath === void 0 ? void 0 : activePath.length)) {
+            setCurrentItems(undefined);
+            return;
+        }
+        const currentSidebar = getCurrentSidebar(items.top) || getCurrentSidebar(items.bottom);
+        if (!currentSidebar) {
+            setCurrentItems(undefined);
+            return;
+        }
+        if (currentSidebar.isChildSidebar &&
+            currentSidebar.children &&
+            ((_a = currentItems === null || currentItems === void 0 ? void 0 : currentItems.parentItem) === null || _a === void 0 ? void 0 : _a.path) !== currentSidebar.path) {
+            const { children } = currentSidebar, parentItem = __rest(currentSidebar, ["children"]);
+            setCurrentItems({
+                top: children,
+                bottom: [],
+                mobile: items.mobile,
+                parentItem: parentItem,
+                previousSidebar: currentItems,
+            });
+        }
+    }, [getCurrentSidebar, activePath]);
     return (react_1.default.createElement(exports.SidebarContext.Provider, { value: {
             items,
+            currentItems,
             addItems,
             activePath,
             setActivePath,
@@ -165,6 +265,12 @@ const SidebarProvider = ({ children, isLoading = false, setIsLoading, initialIte
             getActiveItem,
             desktopSidebarOpen,
             setDesktopSidebarOpen,
+            staticSidebarItems,
+            disableActiveTransition,
+            noTitleStyling,
+            shouldHandleHashChange,
+            sidebarRef,
+            goBack,
         } }, children));
 };
 exports.SidebarProvider = SidebarProvider;

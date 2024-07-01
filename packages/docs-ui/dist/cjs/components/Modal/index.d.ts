@@ -1,6 +1,6 @@
 import React from "react";
 import { ButtonProps } from "../../components";
-import { Ref } from "../../types";
+import { Ref } from "types";
 export type ModalProps = {
     className?: string;
     title?: React.ReactNode;
@@ -12,6 +12,6 @@ export type ModalProps = {
     footerContent?: React.ReactNode;
     passedRef?: Ref<HTMLDialogElement>;
     headerClassName?: string;
-} & Omit<React.ComponentProps<"dialog">, "ref" | "title">;
+} & Omit<React.ComponentProps<"dialog">, "ref" | "title" | "key">;
 export declare const Modal: ({ className, title, actions, children, contentClassName, modalContainerClassName, onClose, open, footerContent, passedRef, ...props }: ModalProps) => React.JSX.Element;
 //# sourceMappingURL=index.d.ts.map

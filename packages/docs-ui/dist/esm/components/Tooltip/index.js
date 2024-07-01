@@ -10,19 +10,13 @@ var __rest = (this && this.__rest) || function (s, e) {
         }
     return t;
 };
-import React, { useEffect, useState } from "react";
+import React, { useId } from "react";
 import { Tooltip as ReactTooltip } from "react-tooltip";
 import clsx from "clsx";
 import "react-tooltip/dist/react-tooltip.css";
-import uuid from "react-uuid";
 export const Tooltip = (_a) => {
     var { text = "", tooltipClassName = "", children, html = "", tooltipChildren, className } = _a, tooltipProps = __rest(_a, ["text", "tooltipClassName", "children", "html", "tooltipChildren", "className"]);
-    const [elementId, setElementId] = useState("");
-    useEffect(() => {
-        if (!elementId) {
-            setElementId(uuid());
-        }
-    }, [elementId]);
+    const elementId = useId();
     return (React.createElement(React.Fragment, null,
         React.createElement("span", { id: elementId, "data-tooltip-content": text, "data-tooltip-html": html, "data-tooltip-id": elementId, className: className }, children),
         React.createElement(ReactTooltip, Object.assign({ anchorId: elementId, 
