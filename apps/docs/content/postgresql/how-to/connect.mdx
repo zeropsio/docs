@@ -79,9 +79,12 @@ Zerops creates following environment variables when the PostgreSQL service is cr
 
 :::caution
 When you change the value of the password env variable, only the env variable is updated, not the actual password of the PostgreSQL user. You have to update the password of the database user manually.
+
+When you change the password of the default PostgreSQL user in the database, the new password is not synchronised to the password env variable. You have to update the `password` env variable manually.
 :::
 :::caution
-When you change the password of the default PostgreSQL user in the database, the new password is not synchronised to the password env variable. You have to update the `password` env variable manually.
+The official PostgreSQL documentation states that both `postgresql://` and `postgres://` URIs are valid. In Zerops, we chose to generate the connection string with the widely used `postgresql://` schema.
+Some softwares however require the connection string to start with the shorter `postgres://` version only, which might cause errors. To fix that, create your own environment variable with the correct URI, e.g. when your PostgreSQL service is called `db` - `postgres://${db_user}:${db_password}@${db_hostname}:${db_port}`.
 :::
 
 You can create own custom [environment variables](/features/env-variables) for the PostgreSQL service in Zerops GUI and use them in the same way as the default variables.
