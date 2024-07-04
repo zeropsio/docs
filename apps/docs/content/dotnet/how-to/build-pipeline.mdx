@@ -272,7 +272,7 @@ buildCommands:
 If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `buildCommands` are finished, the application build is completed and ready for the [deploy](/dotnet/how-to/build-pipeline#deploy) phase.
 
 ### deployFiles
-_REQUIRED._ Selects which files or folders will be deployed after the build has successfully finished.
+_REQUIRED._ Selects which files or folders will be deployed after the build has successfully finished. To filter out specific files or folders, use <a href="#deployignore"><code>.deployignore</code></a> file.
 
 ```yml
 # REQUIRED. Select which files / folders to deploy after
@@ -323,6 +323,25 @@ Deploys all folders that are located in any path that begins with `/path/` and e
 ```yml
 deployFiles: ./path/~/to/
 ```
+
+#### .deployignore
+Add a `.deployignore` file to the root of your project and specify which files and folders Zerops should ignore during deploy. The syntax is the same as of a <a href="https://git-scm.com/docs/gitignore#_pattern_format"><code>.gitignore</code></a> file.
+
+Example to ignore `src/file.txt` file in deploy:
+```jsx title="zerops.yml"
+zerops:
+  - setup: app
+    build:
+      deployFiles: ./
+```
+
+```jsx title=".deployignore"
+src/file.txt
+```
+
+:::note
+`.deployignore` file also works with <a href="/references/cli/commands#deploy"><code>zcli service deploy</code></a> command.
+:::
 
 ### cache
 _OPTIONAL._ Defines which files or folders will be cached for the next build.
