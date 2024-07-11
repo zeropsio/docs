@@ -387,6 +387,7 @@ module.exports = {
           label: "Ubuntu",
           customProps: {
             sidebar_icon: "ubuntu",
+            sidebar_is_soon: true,
           },
           className: "homepage-sidebar-item  service-sidebar-item",
         },
@@ -633,36 +634,37 @@ module.exports = {
       value: "Additional resources",
       customProps: {
         sidebar_is_group_divider: true,
+        sidebar_is_soon: true,
       },
       className: "homepage-sidebar-item",
     },
-    {
-      type: "doc",
-      id: "additional-resources/utility-recipes",
-      label: "Utility recipes",
-      customProps: {
-        sidebar_icon: "swatch",
-      },
-      className: "homepage-sidebar-item",
-    },
-    {
-      type: "doc",
-      id: "additional-resources/glossary",
-      label: "Glossary",
-      customProps: {
-        sidebar_icon: "list-bullet",
-      },
-      className: "homepage-sidebar-item",
-    },
-    {
-      type: "doc",
-      id: "additional-resources/roadmap",
-      label: "Roadmap",
-      customProps: {
-        sidebar_icon: "map",
-      },
-      className: "homepage-sidebar-item",
-    },
+//    {
+//      type: "doc",
+//      id: "additional-resources/utility-recipes",
+//      label: "Utility recipes",
+//      customProps: {
+//        sidebar_icon: "swatch",
+//      },
+//      className: "homepage-sidebar-item",
+//    },
+//    {
+//      type: "doc",
+//      id: "additional-resources/glossary",
+//      label: "Glossary",
+//      customProps: {
+//        sidebar_icon: "list-bullet",
+//      },
+//      className: "homepage-sidebar-item",
+//    },
+//    {
+//      type: "doc",
+//      id: "additional-resources/roadmap",
+//      label: "Roadmap",
+//      customProps: {
+//        sidebar_icon: "map",
+//      },
+//      className: "homepage-sidebar-item",
+//    },
   ],
   nodejs: [
     {
