@@ -1745,6 +1745,11 @@ module.exports = {
         },
         {
           type: "doc",
+          id: "mariadb/how-to/backup",
+          label: "Backup data",
+        },
+        {
+          type: "doc",
           id: "mariadb/how-to/scale",
           label: "Scale MariaDB service",
         },
