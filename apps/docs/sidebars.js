@@ -1699,6 +1699,16 @@ module.exports = {
       },
     },
   ],
+nginx: [
+  {
+    type: "ref",
+    id: "homepage",
+    label: "Back to home",
+    customProps: {
+      sidebar_is_back_link: true,
+      sidebar_icon: "back-arrow",
+    },
+  },
   {
     type: "doc",
     id: "nginx/overview",
