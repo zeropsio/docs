@@ -375,9 +375,10 @@ module.exports = {
         {
           type: "ref",
           id: "nginx/overview",
-          label: "Nginx",
+          label: "Nginx static",
           customProps: {
             sidebar_icon: "nginx",
+            sidebar_is_soon: true,
           },
           className: "homepage-sidebar-item  service-sidebar-item",
         },
@@ -1698,6 +1699,140 @@ module.exports = {
       },
     },
   ],
+  {
+    type: "doc",
+    id: "nginx/overview",
+    label: "Zerops Nginx static Service",
+    customProps: {
+      sidebar_is_title: true,
+      sidebar_icon: "nginx",
+    },
+  },
+  {
+    type: "category",
+    label: "Getting started",
+    link: {
+      type: "doc",
+      id: "nginx/getting-started",
+    },
+    customProps: {
+      sidebar_icon: "rocket-launch",
+    },
+    className: "homepage-sidebar-item",
+    items: [
+      {
+        type: "doc",
+        id: "nginx/tutorial/quickstart",
+        label: "Quickstart",
+        customProps: {
+          exclude_from_doc_list: false,
+        },
+      },
+      {
+        type: "doc",
+        id: "nginx/tutorial/step-by-step",
+        label: "Step-by-step tutorial",
+        customProps: {
+          exclude_from_doc_list: false,
+        },
+      },
+    ],
+  },
+  {
+    type: "category",
+    label: "How-to",
+    collapsible: false,
+    customProps: {
+      sidebar_is_group_headline: true,
+    },
+    items: [
+      {
+        type: "doc",
+        id: "nginx/how-to/create",
+        label: "Create Nginx static service",
+      },
+      {
+        type: "doc",
+        id: "nginx/how-to/env-variables",
+        label: "Manage environment variables",
+      },
+      {
+        type: "doc",
+        id: "nginx/how-to/upgrade",
+        label: "Upgrade Nginx service",
+      },
+      {
+        type: "doc",
+        id: "nginx/how-to/build-pipeline",
+        label: "Configure build & deploy pipeline",
+      },
+      {
+        type: "doc",
+        id: "nginx/how-to/trigger-pipeline",
+        label: "Trigger build pipeline",
+      },
+      {
+        type: "doc",
+        id: "nginx/how-to/deploy-process",
+        label: "Deploy process",
+      },
+      {
+        type: "doc",
+        id: "nginx/how-to/customize-runtime",
+        label: "Customize Nginx static runtime",
+      },
+      {
+        type: "doc",
+        id: "nginx/how-to/customize-web-server",
+        label: "Customize web server",
+      },
+      {
+        type: "doc",
+        id: "nginx/how-to/logs",
+        label: "Setup & access logs",
+      },
+      {
+        type: "doc",
+        id: "nginx/how-to/filebrowser",
+        label: "Browse container files",
+      },
+      {
+        type: "doc",
+        id: "nginx/how-to/access",
+        label: "Access Nginx runtime service",
+      },
+      {
+        type: "doc",
+        id: "nginx/how-to/scaling",
+        label: "Scale Nginx static service",
+      },
+      {
+        type: "doc",
+        id: "nginx/how-to/controls",
+        label: "Stop & start Nginx static service",
+      },
+      {
+        type: "doc",
+        id: "nginx/how-to/shared-storage",
+        label: "Connect / disconnect shared storage",
+      },
+      {
+        type: "doc",
+        id: "nginx/how-to/delete",
+        label: "Delete Nginx static service",
+      },
+    ],
+  },
+  {
+    type: "doc",
+    id: "nginx/faq",
+    label: "FAQ",
+    customProps: {
+      sidebar_is_title: true,
+      sidebar_icon: "chat-bubble-left-right",
+    },
+  },
+],
   mariadb: [
     {
       type: "ref",

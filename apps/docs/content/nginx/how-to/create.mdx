@@ -1,0 +1,327 @@
+---
+title: Create a Nginx static service in Zerops
+---
+
+import data from "@site/static/data.json"
+import UnorderedList from '@site/src/components/UnorderedList'
+
+The Nginx static service contains the Nginx web server optimized for your static content. Nginx static service is highly scalable and customisable to suit both development and production.
+
+## Create Nginx static service using Zerops GUI
+
+First, set up a project in Zerops GUI. Then go to the project dashboard page and choose **Add new service** in the left menu in the **Services** block. Then add a new Nginx static service:
+
+**// TODO screenshot (add a new service page)**
+
+### Choose Nginx version
+Following Nginx major versions are currently supported:
+<UnorderedList data={data.nginxMajorVersions}/>
+
+:::info
+You can [change](/nginx/how-to/upgrade) the major version at any time later.
+:::
+
+### Set a hostname
+Enter a unique service identifier like "app","cache", "gui" etc. Duplicate services with the same name in the same project are forbidden.
+
+#### Limitations:
+* maximum 25 characters
+* must contain only lowercase ASCII letters (a-z) or numbers (0-9)
+
+:::caution
+The hostname is fixed after the service is created. It can't be changed later.
+:::
+
+## Set secret env variables
+Add environment variables with sensitive data, such as password, tokens, salts, certificates etc. These will be securely saved inside Zerops and added to your runtime service upon start.
+
+Setting the secret environment variables is optional. You can set them later in Zerops GUI.
+
+Read more about [different types of env variables](/nginx/how-to/env-variables#types-of-env-variables-in-zerops) in Zerops.
+
+### Set auto scaling configuration
+Zerops scales the Nginx static services automatically both vertically and horizontally. Vertical scaling means increasing or decreasing the hardware resources (CPU, RAM and disk) of a Nginx container. Horizontal scaling adds or removes whole containers.
+
+#### Vertical auto scaling
+
+Vertical auto scaling has following default configuration:
+
+| &nbsp;              | Minimum resource | Maximum resource |
+| ------------------- | ---------------- | ---------------- |
+| **vCPU**            | 1                | 20               |
+| **RAM**             | 0.25 GB          | 32 GB            |
+| **Disk**            | 1 GB             | 100 GB           |
+
+Nginx static service always starts with the minimal resources.
+
+For most cases, the default parameters will work without issues. If you need to limit the cost of the Nginx static service, lower the maximal resources. Zerops will never scale above the selected maximums.
+
+When you are experiencing problems with insufficient Nginx performance or capacity, increase the minimal resources. Zerops will never scale below the selected minimums.
+
+:::info
+You can change the vertical auto scaling parameters later.
+:::
+
+<p align="center">
+<img src="/img/screenshots/create_nodejs_service_2.png" alt="image"/>
+</p>
+
+#### Horizontal auto scaling
+
+When a container needs more CPU or RAM but already consumes maximal resources defined for the vertical auto scaling, Zerops will add a new container to your Nginx static service. When your Nginx static service doesn't need so much power and all containers are vertically scaled down in such a way their CPU allocation is near the minimal resources, Zerops will gradually remove whole containers.
+
+Horizontal auto scaling has following default configuration:
+<table>
+<tbody>
+	<tr>
+		<td><b>minimum containers</b></td>
+		<td>1</td>
+	</tr>
+	<tr>
+		<td><b>maximum containers</b></td>
+		<td>6</td>
+	</tr>
+</tbody>
+</table>
+
+Nginx static service always starts with the minimum number of containers.
+
+You can increase the minimum or decrease the maximum number of containers. The horizontal scaling parameters can be changed later.
+
+:::caution
+Check if your application is ready for [highly available mode](/nginx/how-to/scaling#horizontal-scaling). If not, set the maximum containers to **1**. Zerops will never add more containers to your Nginx static service.
+:::
+
+:::caution
+You can keep the minimum at 1 container, but you should do so with caution and only for non-critical or dev services. Production grade service should start with at least 2 containers.
+:::
+
+[Learn more](/nginx/how-to/scaling) about Nginx auto scaling.
+
+## Create Nginx static service using zCLI
+zCLI is the Zerops command-line tool. To create a new Nginx static service via the command-line, follow these steps:
+1. [Install & setup zCLI](/references/cli)
+2. [Create a project description file](/nginx/how-to/create#create-a-project-description-file)
+3. [Create a project with a Nginx and PostgreSQL service](#full-example)
+
+### Create a project description file
+Zerops uses a yaml format to describe the project infrastructure.
+
+#### Basic example:
+
+Create a directory `my-project`. Create an `description.yml` file inside the `my-project` directory with following content:
+
+```yaml
+# basic project data
+project:
+  # project name
+  name: my-project
+# array of project services
+services:
+  -
+    # service name
+    hostname: app
+    # service type and version number in nginx@{version} format
+    type: nginx@latest
+    # defines the minimum number of containers for horizontal autoscaling
+    minContainers: 1
+    # defines the maximum number of containers for horizontal autoscaling. Max value = 6.
+    maxContainers: 6
+    # optional: create env variables
+    envSecrets:
+      S3_ACCESS_KEY_ID: "P8cX1vVVb"
+      S3_ACCESS_SECRET: "ogFthuiLYki8XoL73opSCQ"
+```
+
+The yaml file describes your future project infrastructure. The project will contain one Nginx version 8.1 service with default [auto scaling](/nginx/how-to/scaling) configuration. Hostname will be set to "app", the internal port(s) the service listens on will be defined later in the [zerops.yml](/nginx/how-to/build-pipeline#ports). Following secret env variables will be configured:
+
+```env
+S3_ACCESS_KEY_ID="P8cX1vVVb"
+S3_ACCESS_SECRET="ogFthuiLYki8XoL73opSCQ"
+```
+
+#### Full example:
+
+Create a directory my-project. Create an description.yml file inside the my-project directory with following content:
+
+```yaml
+# basic project data
+project:
+  # project name
+  name: my-project
+  # optional: project description
+  description: A project with a Nginx static service
+  # optional: project tags
+  tags:
+    - DEMO
+    - ZEROPS
+# array of project services
+services:
+  -
+    # service name
+    hostname: app
+    # service type and version number in nginx@{version} format
+    type: nginx@latest
+    # optional: vertical auto scaling customization
+    verticalAutoscaling:
+      minVCpu: 5
+      maxVCpu: 10
+      minRam: 2
+      maxRam: 16
+      minDisk: 2.5
+      maxDisk: 50
+    # defines the minimum number of containers for horizontal autoscaling. Max value = 6.
+    minContainers: 2
+    # defines the maximum number of containers for horizontal autoscaling. Max value = 6.
+    maxContainers: 4
+    # optional: create secret env variables
+    envSecrets:
+      S3_ACCESS_KEY_ID: "P8cX1vVVb"
+      S3_ACCESS_SECRET: "ogFthuiLYki8XoL73opSCQ"
+```
+
+The yaml file describes your future project infrastructure. The project will contain an Nginx static service with `app` hostname. The internal port(s) the service listens on will be defined later in the [zerops.yml](/nginx/how-to/build-pipeline#ports). Nginx static service will run on version 1.22 with a custom vertical and horizontal scaling. Following secret env variables will be configured:
+
+```env
+S3_ACCESS_KEY_ID="P8cX1vVVb"
+S3_ACCESS_SECRET="ogFthuiLYki8XoL73opSCQ"
+```
+
+#### Description of description.yml parameters
+
+The `project:` section is required. Only one project can be defined.
+
+| Parameter              | Description                                                                   | Limitations             |
+| ---------------------- | ----------------------------------------------------------------------------- | -----------             |
+| **name**               | The name of the new project. Duplicates are allowed.                          |                         |
+| **description**        | **Optional.** Description of the new project.                                 | Maximum 255 characters. |
+| **tags**               | **Optional.** One or more string tags. Tags do not have a functional meaning, they only provide better orientation in projects.          |
+
+
+At least one service in `services:` section is required. You can create a project with multiple services. The example above contains an Nginx static service but you can create a `description.yml` with your own combination of [services](/features/infrastructure).
+
+<table>
+<thead>
+	<tr>
+		<th>Parameter</th>
+		<th>Description</th>
+	</tr>
+</thead>
+<tbody>
+	<tr>
+		<td>
+      <b>hostname</b>
+    </td>
+		<td>
+    The unique service identifier.<br/><br/>The hostname of the new database will be set to the <code>hostname</code> value. <br/><br/><b>Limitations:</b><br/>- duplicate services with the same name in the same project are forbidden<br/>
+    - maximum 25 characters<br/>
+    - must contain only lowercase ASCII letters (a-z) or numbers (0-9)
+    </td>
+	</tr>
+	<tr>
+  <td><b>type</b></td>
+		<td>Specifies the service type <code>nginx</code> and version.<br/>Set type: <code>nginx<span>@</span>&lt;version&gt;</code> or <code>nginx<span>@</span>latest</code><br/><br/><b>Limitations:</b><br/>Following Nginx major versions are currently supported: <i>1.22</i></td>
+	</tr>
+    <tr>
+  <td><b>verticalAutoscaling</b></td>
+		<td><b>Optional.</b> Defines <a href="/nginx/how-to/create#set-auto-scaling-configuration">custom vertical auto scaling parameters</a>.</td>
+	</tr>
+        <tr>
+  <td><b>minContainers</b></td>
+		<td>Defines the minimum number of containers for <a href="/nginx/how-to/create#horizontal-auto-scaling">horizontal autoscaling</a>.<br/><br/><b>Limitations:</b><br/>Current maximum value = 6.</td>
+	</tr>
+        <tr>
+  <td><b>maxContainers</b></td>
+		<td>Defines the maximum number of containers for <a href="/nginx/how-to/create#horizontal-auto-scaling">horizontal autoscaling</a>.<br/><br/><b>Limitations:</b><br/>Current maximum value = 6.</td>
+	</tr>
+        <tr>
+  <td><b>envSecrets</b></td>
+		<td><b>Optional.</b> Defines one or more secret env variables as a key value map. See env variable <a href="/nginx/how-to/env-variables#env-variable-restrictions">restrictions</a>.</td>
+	</tr>
+</tbody>
+</table>
+
+### Create a project based on the description.yml
+
+When you have your `description.yml` ready, use the `zcli project project-import` command to create a new project and the service infrastructure.
+
+```sh
+Usage:
+  zcli project project-import importYamlPath [flags]
+
+Flags:
+  -h, --help                the project import command.
+      --orgId string        If you have access to more than one organization, you must specify the org ID for which the
+                            project is to be created.
+      --workingDie string   Sets a custom working directory. Default working directory is the current directory. (default "./")
+```
+
+Zerops will create a project and one or more services based on the `description.yml` content.
+
+Maximum size of the `description.yml` file is 100 kB.
+
+You don't specify the project name in the `zcli project project-import` command, because the project name is defined in the `description.yml`.
+
+If you have access to more than one client, you must specify the client ID for which the project is to be created. The `clientID` is located in the Zerops GUI under the client name on the project dashboard page.
+
+<p align="center">
+<img src="/img/screenshots/client_id.png" alt="image" width="70%" height="auto"/>
+</p>
+
+### Add Nginx static service to an existing project
+
+#### Example:
+
+Create a directory `my-project` if it doesn't exist. Create an `import.yml` file inside the `my-project` directory with following content:
+
+```yaml
+# basic project data
+project:
+  # project name
+  name: my-project
+# array of project services
+services:
+  -
+    # service name
+    hostname: app
+    # service type and version number in nginx@{version} format
+    type: nginx@latest
+    # defines the minimum number of containers for horizontal autoscaling
+    minContainers: 1
+    # defines the maximum number of containers for horizontal autoscaling. Max value = 6.
+    maxContainers: 6
+    # optional: create env variables
+    envSecrets:
+      S3_ACCESS_KEY_ID: "P8cX1vVVb"
+      S3_ACCESS_SECRET: "ogFthuiLYki8XoL73opSCQ"
+```
+
+The yaml file describes the list of one or more services that you want to add to your existing project. In the example above, one Nginx static service version 1.22 with default [auto scaling](/nginx/how-to/scaling) configuration will be added to your project. Hostname of the new service will be set to `app`. Following secret env variables will be configured:
+
+```env
+S3_ACCESS_KEY_ID="P8cX1vVVb"
+S3_ACCESS_SECRET="ogFthuiLYki8XoL73opSCQ"
+```
+
+The content of the `services:` section of `import.yml` is identical to the project description file. The `import.yml` never contains the `project:` section because the project already exists.
+
+When you have your `import.yml` ready, use the `zcli project service-import` command to add one or more services to your existing Zerops project.
+
+```sh
+Usage:
+  zcli project service-import importYamlPath [flags]
+
+Flags:
+  -h, --help               the project service import command.
+      --projectId string   If you have access to more than one project, you must specify the project ID for which the
+                           command is to be executed.
+```
+
+zCLI commands are interactive, when you press enter after `zcli project service-import importYamlPath`, you will be given a list of your projects to choose from.
+
+Maximum size of the import.yml file is 100 kB.
+
+
+
+
+
