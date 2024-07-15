@@ -73,11 +73,13 @@ function CardLayout({
         !isSoon && "hover:shadow-card-hover dark:hover:shadow-card-hover-dark"
       )}
     >
-      <div className={clsx("mb-1 flex justify-between items-center")}>
-        {icon}
-        {isSoon && <Badge variant={"purple"}>Guide coming soon</Badge>}
-        {badge && <Badge {...badge} />}
-      </div>
+      {(icon || isSoon || badge) && (
+        <div className={clsx("mb-1 flex justify-between items-center")}>
+          {icon}
+          {isSoon && <Badge variant={"purple"}>Guide coming soon</Badge>}
+          {badge && <Badge {...badge} />}
+        </div>
+      )}
       <div className={clsx("w-[calc(100%-20px)] [&>*:last-child]:mb-0")}>
         <span
           className={clsx(
@@ -162,7 +164,7 @@ function getCardIcon(item: ModifiedSidebarItem): JSX.Element {
         iconClassName={clsx("h-[20px] w-[20px]")}
       />
     )
-  } else {
+  } else if (!item.customProps?.disableIcon) {
     return (
       <div
         className={clsx(

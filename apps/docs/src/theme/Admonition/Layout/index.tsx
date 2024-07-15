@@ -11,9 +11,11 @@ function AdmonitionContainer({
   return (
     <div
       className={clsx(
-        "p-1 border border-solid  rounded shadow-none",
+        "p-1 border border-solid rounded shadow-none",
         (type === "note" || type === "info" || type === "tip") &&
-          "bg-medusa-tag-neutral-bg border-medusa-tag-neutral-border",
+          (type === "tip"
+            ? "bg-blue-50 border-blue-100 dark:bg-slate-900 dark:border-slate-800"
+            : "bg-medusa-tag-neutral-bg border-medusa-tag-neutral-border"),
         (type === "danger" || type === "warning" || type === "caution") &&
           "bg-medusa-tag-red-bg border-medusa-tag-red-border",
         "[&_a]:no-underline [&_a]:text-medusa-fg-interactive hover:[&_a]:text-medusa-fg-interactive-hover ",
@@ -39,7 +41,9 @@ function AdmonitionContent({
     <div
       className={clsx(
         (type === "note" || type === "info" || type === "tip") &&
-          "text-medusa-tag-neutral-text",
+          (type === "tip"
+            ? "text-blue-900 dark:text-slate-100"
+            : "text-medusa-tag-neutral-text"),
         (type === "danger" || type === "warning" || type === "caution") &&
           "text-medusa-tag-red-text",
         "text-medium flex-1 [&>*:last-child]:mb-0",
@@ -79,7 +83,7 @@ function transformAdmonitionTitle<T = unknown>(title: T): T | string {
     case "warning":
     case "info":
     case "caution":
-      return title.charAt(0).toUpperCase + title.substring(1)
+      return title.charAt(0).toUpperCase() + title.substring(1)
     default:
       return title
   }
