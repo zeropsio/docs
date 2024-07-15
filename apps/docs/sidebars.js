@@ -26,15 +26,15 @@ module.exports = {
       },
       className: "homepage-sidebar-item",
     },
-    {
-      type: "doc",
-      id: "getting-started",
-      label: "Getting started",
-      customProps: {
-        sidebar_icon: "rocket-launch",
-      },
-      className: "homepage-sidebar-item",
-    },
+    // {
+    //   type: "doc",
+    //   id: "getting-started",
+    //   label: "Getting started",
+    //   customProps: {
+    //     sidebar_icon: "rocket-launch",
+    //   },
+    //   className: "homepage-sidebar-item",
+    // },
     {
       type: "html",
       value: "Features",
@@ -502,7 +502,7 @@ module.exports = {
         id: "references/cli",
       },
       customProps: {
-        sidebar_icon: "command-line",
+        sidebar_icon: "window",
       },
       className: "homepage-sidebar-item",
       items: [

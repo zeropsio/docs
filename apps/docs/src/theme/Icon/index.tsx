@@ -103,6 +103,7 @@ import {
   Heart,
   QuestionMark,
   ChatBubbleLeftRight,
+  Window,
 } from "@medusajs/icons"
 import IconPuzzleSolid from "./PuzzleSolid"
 import IconNextjs from "./Nextjs"
@@ -248,6 +249,7 @@ export default {
   medusa: Medusa,
   nodejs: IconNodejs,
   "list-bullet": ListBullet,
+  window: Window,
   swatch: Swatch,
   php: IconPhp,
   go: IconGo,
