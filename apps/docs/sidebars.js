@@ -469,7 +469,7 @@ module.exports = {
         {
           type: "ref",
           id: "object-storage/overview",
-          label: "Object Storage",
+          label: "Object storage",
           customProps: {
             sidebar_icon: "cube-solid",
           },

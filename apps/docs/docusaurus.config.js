@@ -210,11 +210,8 @@ const config = {
   ],
   customFields: {
     meilisearchHost:
-      process.env.MEILISEARCH_HOST ||
-      "https://meilisearch-279-7700.prg1.zerops.app",
-    meilisearchApiKey:
-      process.env.MEILISEARCH_API_KEY ||
-      "c8f5b89c64aacb12345ced6c90920286ca5efcfb0c21f61afa6dbd70b5e71363",
+      process.env.MEILISEARCH_HOST || "https://docs-search.zerops.io",
+    meilisearchApiKey: process.env.MEILISEARCH_API_KEY || "foo",
     meilisearchIndexUid: process.env.MEILISEARCH_INDEX_UID || "docs",
   },
 }
