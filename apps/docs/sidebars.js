@@ -378,7 +378,6 @@ module.exports = {
           label: "Nginx static",
           customProps: {
             sidebar_icon: "nginx",
-            sidebar_is_soon: true,
           },
           className: "homepage-sidebar-item  service-sidebar-item",
         },
