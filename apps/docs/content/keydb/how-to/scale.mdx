@@ -2,91 +2,119 @@
 title: How Zerops scales KeyDB
 ---
 Zerops performs an automated scaling of hardware resources required to run your database based on its usage. If the current use of your database does not require as much performance or disk space the auto scaling reduces the resources and thus reduces the costs. If your database is under heavy load or needs to store more data, then auto scaling increases the resources for the database to make sure it runs smoothly.
-## Vertical scaling
-Vertical scaling means increasing or decreasing the hardware resources (CPU, RAM and disk) of a database container.
 
-Zerops scales KeyDB containers automatically by raising or lowering the hardware resources of the containers. If your database is in [highly available](/keydb/how-to/create#highly-available) mode, each of its 2 containers are scaled individually. The vertical scaling of different hardware resources (CPU, RAM and disk) is also  independent. For example if your database needs more CPU, Zerops will assign more CPU to the container and keep the RAM and disk unchanged.
+## Configure auto scaling
 
+To change the auto scaling settings go to the KeyDB service detail and choose **Automatic scaling configuration** in the left menu.
+
+<p align="center">
+<img src="/img/screenshots/keydb_autoscaling.png" alt="image" width="100%" height="auto"/>
+</p>
+
+### CPU Mode
+
+**Shared**
+Your database gets a full physical CPU core, but it is shared with up to 10 other applications. In this mode the power your database gets is depended on other applications running on the same CPU core. At best case scenario your database gets 10/10 of CPU core power and 1/10 at worst case scenario.
+
+**Dedicated**
+The CPU core is dedicated to your database.
+
+:::info
+See the [pricing](https://zerops.io/#pricing) for the difference between CPU modes.
+:::
+
+Choose the CPU mode when starting a new service or change it later. The CPU mode doesn't change automatically.
+
+### Vertical auto scaling
+Vertical auto scaling has following default configuration:
+
+| &nbsp;              | Minimum resource | Maximum resource |
+| ------------------- | ---------------- | ---------------- |
+| **CPU cores**            | 1                | 5               |
+| **RAM**             | 0.25 GB          | 32 GB            |
+| **Disk**            | 1 GB             | 100 GB           |
+
+For most cases, the default parameters will work without issues. If you need to limit the cost of the KeyDB service, lower the maximal resources. Zerops will never scale above the selected maximums.
+
+When you are experiencing problems with insufficient KeyDB performance or capacity, increase the minimal resources. Zerops will never scale below the selected minimums.
+
+:::tip
+Learn more about how to [fine tune](/keydb/how-to/scaling#fine-tune-the-auto-scaling) the auto scaling to fit your database needs.
+:::
+
+:::tip
+[Learn more](/keydb/how-to/scale) about KeyDB auto scaling.
+:::
+
+## Fine-tune the auto scaling
+### Advanced CPU settings
+
+If you've experienced problems with not enough power when your database starts, increase the default Start CPU core count. Alternatively switch the [CPU mode](#shared-vs-dedicated-cpu) to dedicated to allocate the stable CPU power to your database.
+
+<p align="center">
+<img src="/img/screenshots/scaling5.png" alt="image" width="80%" height="auto"/>
+</p>
+
+If your database doesn't need so much power after it is started, Zerops will scale down the allocated CPU cores to the defined minimum.
+
+You can disable the CPU vertical auto scaling by setting the minimum and maximum to the same value. This setting doesn't affect the RAM and Disk scaling. Zerops scales each hardware resource independently.
+
+### Advanced RAM settings
+
+The default minimum free RAM is preset according to the database type and version. This setting will ensure that most applications will run smoothly. Zerops monitors the minimum free RAM every 10 seconds.
+
+But if your database need a more memory faster or if you have experienced problems with insufficient memory or even restarts due to Out Of Memory (OOM) errors, we recommend
+
+1. Increasing the minimum RAM for the auto scaling
+2. or increasing the minimum free RAM in GB
+3. or setting the minimum free RAM in % of the RAM assigned to the container
+
+<p align="center">
+<img src="/img/screenshots/scaling6.png" alt="image" width="80%" height="auto"/>
+</p>
+
+You can set the minimum free RAM both in GB and in percent, Zerops will apply the larger value based on the current RAM assigned to the container.
+
+You can disable the RAM vertical auto scaling by setting the minimum and maximum to the same value. This setting doesn't affect the CPU core and Disk scaling. Zerops scales each hardware resource independently.
+
+## Technical details
 ### Automatic scale up
-Zerops monitors CPU, RAM and disk usage in all running containers each 10 seconds.
-
-The scale up threshold is derived from following minimum free resources:
-* 0.65 vCPU
-* 0.125 GB RAM
+Zerops monitors CPU, RAM and Disk usage in all running containers each 10 seconds.
+The **scale up threshold** is derived from following **minimum free resources**:
+* 0.1 CPU core
+* 0.25 GB RAM (You can [fine tune](#fine-tune-the-auto-scaling) this setting)
 * 0.5 GB disk
 
 If the minimum free CPU, RAM or disk usage of a container is lower than the defined scale up threshold, Zerops scales the container up.
 
-The scale up of RAM or disk is immediate. If Zerops detects that the container has less than 0.125 GB RAM free or less than 0.5 GB free disk space, Zerops will assign more RAM or disk to the container immediately.
+The scale up of RAM or disk is immediate. The scale up of CPU is configured to be a little less aggressive. Two consecutive measurements of free CPU with values under the scale up threshold are required to trigger the scale up. This rule prevents excessive fluctuations of scaling up and down due to sudden changes in CPU usage.
 
-The scale up of vCPU is configured to be a little less aggressive. Two consecutive measurements of free vCPU with values under the scale up threshold are required to trigger the scale up. This rule prevents excessive fluctuations of scaling up and down due to sudden changes in CPU usage.
-
-The minimum step for the vertical scaling is
-* 1 vCPU
+The **minimum step** for the vertical scaling is
+* 1 CPU core
 * 0.25 GB RAM
 * 0.5 GB disk
 
 When the database is under a heavy load and needs to scale up faster, the scaling step will increase automatically.
 
-Each KeyDB service has mandatory defined maximal resources. Zerops will never scale above the entered values. If your database is in [highly available](/keydb/how-to/create#highly-available) mode, maximal resources are identical for all containers of the KeyDB service.
-
-Default maximal resources are:
-* 20 vCPUs
-* 32 GB RAM
-* 100 GB disk
-
-If you need to limit the cost of the KeyDB service, lower the maximal resources. You can set your own maximal resources when creating a KeyDB service or you can change it later in Zerops GUI. Go to the KeyDB service detail and choose **Automatic scaling configuration** in the left menu.
-
-**// TODO screenshot (KeyDB - Automatic scaling configuration form)**
-
-Other configuration parameters of the scale up behaviour (scale up threshold, minimum step, etc.) are fixed and cannot be customised.
+Maximal resources are defined for each KeyDB service. Zerops will never scale above the entered values. If your database is in [highly available mode], maximal resources are identical for all containers of the KeyDB service.
 
 ### Not enough resources to scale up
 Zerops moves a container between physical machines only if there are not enough resources on the current physical machine to scale the container up. When this happens the behaviour is different for [highly available](/keydb/how-to/create#highly-available) and [single container](/keydb/how-to/create#single-container) mode.
-
-#### Highly available
-
-If one of the KeyDB containers needs more resources but there are not enough of them on the underlying machine, a new container with the required hardware resources will be started on another machine. When the new container is ready, it will be added to the KeyDB cluster. The old container will be removed from the cluster and deleted. The data synchronisation to the new container starts immediately after the new container is connected to the cluster.
-
-During this operation, the KeyDB cluster always operates on 2 database containers, the data redundancy is not decreased. You will experience a temporary reduction of performance of the database cluster till the data synchronisation is completed. Then, the KeyDB cluster will return back to the required performance. The time required for the data synchronisation depends on the database size.
-
-
-#### Single container
-
-If the container of the KeyDB needs more resources but there are not enough of them on the underlying machine, the container will be moved to another machine. During the moving operation the container must be switched off. After the container has moved to another machine, it will be started with the required hardware resources. The time required for the KeyDB container to be moved to another machine depends on the database size.
-
-:::caution
-Do not use the single container mode for production. This mode is useful for non-critical applications or dev environments.
-:::
 
 ### Automatic scale down
 When the database no longer needs as much power or disk space, each container is gradually scaled down to the defined minimum. The automatic scale down is configured to be more cautious and defensive to prevent the database from scaling up and down rapidly.
 
 Consecutive measurements during:
-* 2 minutes for vCPU
-* 15 minutes for RAM
+
+* 1 minute for CPU
+* 2 minutes for RAM
 * 5 minutes for disk
 
 with free resources safely above the minimum threshold are required to scale down the appropriate resource.
 
 The minimum step for the scale down is identical to the minimum step for scale up. When several scale down events are triggered in a short period of time, the scaling step increases automatically.
 
-Zerops will never scale below the defined minimal resources. Default minimal resources are:
-* 1 vCPUs
-* 0.25 GB RAM
-* 1 GB disk
-
-Minimal resources are identical for all containers of the KeyDB service.
-
-When you are experiencing problems with insufficient KeyDB performance or capacity, increase the minimal resources. You can set your own minimal resources when creating a KeyDB service or you can change it later in Zerops GUI. Go to the KeyDB service detail and choose **Automatic scaling configuration** in the left menu.
-
-Other configuration parameters of the scale down behaviour (scale up threshold, minimum step, etc.) are fixed and cannot be customised.
-
-### How to disable vertical auto scaling
-
-To disable the vertical auto scaling of vCPU, RAM or disk, set the minimal and maximal resources to the same value. Zerops will set the required amount of resources to all database containers and the auto scaling of the selected resource will be disabled. You can disable the auto scaling of a resource (e.g. RAM) and keep auto scaling of other resources enabled.
-
-## Horizontal scaling
+### Horizontal scaling
 
 Zerops provides KeyDB service in two modes: [Highly available](/keydb/how-to/create#highly-available) and [Single container](/keydb/how-to/create#single-container). The KeyDB service mode is chosen when creating a new service and cannot be changed later.
 

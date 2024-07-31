@@ -1,5 +1,5 @@
 ---
-title: Create a KeyDB service in Zerops
+title: Create a KeyDB service
 ---
 
 [KeyDB ↗](https://docs.keydb.dev/) is a fully open source database, backed by Snap, and a faster drop in alternative to Redis.
@@ -20,7 +20,9 @@ The hostname is fixed after the service is created. It can't be changed later.
 ### Choose KeyDB service mode
 Zerops provides KeyDB service in two modes: **Highly available** and **Single container**.
 
-**// TODO image (add a new KeyDB page - Automatic scaling section)**
+<p align="center">
+<img src="/img/screenshots/keydb_autoscaling.png" alt="image" width="100%" height="auto"/>
+</p>
 
 #### Highly available
 
@@ -31,17 +33,17 @@ This mode is suited for production.
 
 Zerops always keeps the 2 database containers on different physical machines. All your data is stored redundantly in 2 identical copies. In case of a failure of a container or the underlying physical machine, Zerops automatically disconnects the failed container from the cluster, creates a new container and syncs all data from the remaining copy. Finally the broken container is automatically deleted.
 
-// TODO update link
-
 [Learn more] about specific behaviour and technical limitations of the KeyDB cluster.
 
 #### Single container
 
 A KeyDB database installed in a single container is created. Useful for non-essential data or dev environments.
 
-Your data is stored only in a single container. If the container or the underlying physical machine fails, your data since the last backup are lost. Zerops doesn't provide any automatic repairs of single node KeyDB services.
-
 :::caution
+Your data is stored only in a single container. If the container or the underlying physical machine fails, your data since the last backup are lost. Zerops doesn't provide any automatic repairs of single node KeyDB services.
+:::
+
+:::info
 The KeyDB service mode is fixed after the service is created. It can't be changed later.
 :::
 
@@ -51,15 +53,28 @@ Currently only KeyDB **v6** version is available.
 
 ### Set auto scaling configuration
 
-**//TODO review**
-
 Zerops scales the KeyDB services automatically by raising or lowering the hardware resources of each database container.
 
+#### CPU Mode
+
+**Shared**
+Your application gets a full physical CPU core, but it is shared with up to 10 other applications. In this mode the power your application gets is depended on other applications running on the same CPU core. At best case scenario your application gets 10/10 of CPU core power and 1/10 at worst case scenario.
+
+**Dedicated**
+The CPU core is dedicated to your application.
+
+:::info
+See the [pricing](https://zerops.io/#pricing) for the difference between CPU modes.
+:::
+
+Choose the CPU mode when starting a new service or change it later. The CPU mode doesn't change automatically.
+
+#### Vertical auto scaling
 Vertical auto scaling has following default configuration:
 
 | &nbsp;              | Minimum resource | Maximum resource |
 | ------------------- | ---------------- | ---------------- |
-| **vCPU**            | 1                | 20               |
+| **CPU cores**            | 1                | 5               |
 | **RAM**             | 0.25 GB          | 32 GB            |
 | **Disk**            | 1 GB             | 100 GB           |
 
@@ -67,17 +82,17 @@ For most cases, the default parameters will work without issues. If you need to 
 
 When you are experiencing problems with insufficient KeyDB performance or capacity, increase the minimal resources. Zerops will never scale below the selected minimums.
 
+:::tip
+Learn more about how to [fine tune](/keydb/how-to/scaling#fine-tune-the-auto-scaling) the auto scaling to fit your application needs.
+:::
+
 :::info
 You can change the auto scaling parameters later.
 :::
 
-**// TODO screenshot (add a new KeyDB page - Automatic scaling section)**
-
-**//TODO review**
-
-KeyDB needs at least 5 vCPUs to start. Zerops automatically starts KeyDB service with at least 5 vCPUs. If the database is idle after the start, Zerops will scale the KeyDB down to selected minimum vCPU settings. If you set the minimum vCPU settings higher than 5 vCPUs, Zerops will start with the required minimum vCPU settings.
-
+:::tip
 [Learn more](/keydb/how-to/scale) about KeyDB auto scaling.
+:::
 
 ## Create KeyDB using zCLI
 zCLI is the Zerops command-line tool. To create a new KeyDB service via the command-line, follow these steps:
@@ -131,12 +146,16 @@ services:
     mode: HA
     # optional: vertical auto scaling customization
     verticalAutoscaling:
-      minVCpu: 10
-      maxVCpu: 20
-      minRam: 4
-      maxRam: 8
-      minDisk: 2
-      maxDisk: 10
+      cpuMode: DEDICATED
+      minCpu: 2
+      maxCpu: 5
+      minRam: 2
+      maxRam: 24
+      minDisk: 6
+      maxDisk: 50
+      startCpuCoreCount: 3
+      minFreeRamGB: 0.5
+      minFreeRamPercent: 20
   -
     # second service hostname
     hostname: keydb2
@@ -201,10 +220,22 @@ At least one service in `services:` section is required. You can create a projec
     </td>
 	</tr>
   <tr>
-    <td><b>verticalAutoscaling</b></td>
-		<td><b>Optional.</b> Defines <a href="/keydb/how-to/scale#vertical-scaling">custom auto scaling parameters</a>.</td>
-		<td></td>
-	</tr>
+  <td><b>verticalAutoscaling</b></td>
+		<td><b>Optional.</b> Defines <a href="/keydb/how-to/create#set-auto-scaling-configuration">custom vertical auto scaling parameters</a>.<br/>
+		All verticalAutoscaling attributes are optional. Not specified attributes will be set to their default values.</td>
+		</tr>
+    <tr>
+  <td><b> - cpuMode</b></td>
+         <td><b>Optional.</b> Accepts <code>SHARED</code>, <code>DEDICATED</code> values. Default is <code>SHARED</code></td>
+     </tr>
+  <tr>
+    <td><b> - minCpu/maxCpu</b></td>
+        <td><b>Optional.</b> Set the minCpu or maxCpu in CPU cores (integer).</td>
+        </tr>
+     <tr><td><b> - minRam/maxRam</b></td>
+     <td><b>Optional.</b> Set the minRam or maxRam in GB (float).</td></tr>
+       <tr><td><b> - minDisk/maxDisk</b></td>
+       <td><b>Optional.</b> Set the minDisk or maxDisk in GB (float).</td></tr>
 </tbody>
 </table>
 

@@ -32,7 +32,7 @@ Enter a unique service identifier like "app","cache", "gui" etc. Duplicate servi
 The hostname is fixed after the service is created. It can't be changed later.
 :::
 
-## Set secret env variables
+### Set secret env variables
 Add environment variables with sensitive data, such as password, tokens, salts, certificates etc. These will be securely saved inside Zerops and added to your runtime service upon start.
 
 Setting the secret environment variables is optional. You can set them later in Zerops GUI.
@@ -42,13 +42,31 @@ Read more about [different types of env variables](/rust/how-to/env-variables#ty
 ### Set auto scaling configuration
 Zerops scales the Rust services automatically both vertically and horizontally. Vertical scaling means increasing or decreasing the hardware resources (CPU, RAM and disk) of a Rust container. Horizontal scaling adds or removes whole containers.
 
+<p align="center">
+<img src="/img/screenshots/create_nodejs_service_2.png" alt="image"/>
+</p>
+
+#### CPU Mode
+
+**Shared**
+Your application gets a full physical CPU core, but it is shared with up to 10 other applications. In this mode the power your application gets is depended on other applications running on the same CPU core. At best case scenario your application gets 10/10 of CPU core power and 1/10 at worst case scenario.
+
+**Dedicated**
+The CPU core is dedicated to your application.
+
+:::info
+See the [pricing](https://zerops.io/#pricing) for the difference between CPU modes.
+:::
+
+Choose the CPU mode when starting a new service or change it later. The CPU mode doesn't change automatically.
+
 #### Vertical auto scaling
 
 Vertical auto scaling has following default configuration:
 
 | &nbsp;              | Minimum resource | Maximum resource |
 | ------------------- | ---------------- | ---------------- |
-| **vCPU**            | 1                | 20               |
+| **CPU cores**            | 1                | 5               |
 | **RAM**             | 0.25 GB          | 32 GB            |
 | **Disk**            | 1 GB             | 100 GB           |
 
@@ -58,13 +76,13 @@ For most cases, the default parameters will work without issues. If you need to 
 
 When you are experiencing problems with insufficient Rust performance or capacity, increase the minimal resources. Zerops will never scale below the selected minimums.
 
+:::tip
+Learn more about how to [fine tune](/rust/how-to/scaling#fine-tune-the-auto-scaling) the auto scaling to fit your application needs.
+:::
+
 :::info
 You can change the vertical auto scaling parameters later.
 :::
-
-<p align="center">
-<img src="/img/screenshots/create_nodejs_service_2.png" alt="image"/>
-</p>
 
 #### Horizontal auto scaling
 
@@ -88,15 +106,23 @@ Rust service always starts with the minimum number of containers.
 
 You can increase the minimum or decrease the maximum number of containers. The horizontal scaling parameters can be changed later.
 
-:::caution
-Check if your application is ready for [highly available mode](/rust/how-to/scaling#horizontal-scaling). If not, set the maximum containers to **1**. Zerops will never add more containers to your Rust service.
-:::
-
-:::caution
-You can keep the minimum at 1 container, but you should do so with caution and only for non-critical or dev services. Production grade service should start with at least 2 containers.
-:::
-
 [Learn more](/rust/how-to/scaling) about Rust auto scaling.
+
+#### Single container vs. High Availability
+
+When creating a new runtime service, you can choose the minimum and maximum number of containers. If you set the maximum limit to one, the service will be run in a **single container** and no horizontal scaling will occur.
+
+:::Caution
+If the single container fails, Zerops will start a new container and deploy your application automatically. The application won't be available for a short period. This mode is recommended for non-critical applications or dev environments.
+:::
+
+By increasing the maximum number of containers for your service, you enable horizontal auto scaling. Zerops will then add containers depending on your application’s load. Application running on two or more containers is in **High Availability** mode, which we highly recommend for production. When the load drops, containers will be gradually removed to the defined minimum.
+
+Each container of the same service is strictly installed on a **different server**. This prevents the temporary outage in case any of Zerops servers fail. If the connection to a container is broken, Zerops immediately redirects incoming traffic to other containers. A new container will be started automatically and the broken container will be deleted.
+
+:::caution
+Check if your application is ready to be run in multiple containers.
+:::
 
 ## Create Rust service using zCLI
 zCLI is the Zerops command-line tool. To create a new Rust service via the command-line, follow these steps:
@@ -164,12 +190,16 @@ services:
     type: rust@latest
     # optional: vertical auto scaling customization
     verticalAutoscaling:
-      minVCpu: 5
-      maxVCpu: 10
+      cpuMode: DEDICATED
+      minCpu: 2
+      maxCpu: 5
       minRam: 2
-      maxRam: 16
-      minDisk: 2.5
+      maxRam: 24
+      minDisk: 6
       maxDisk: 50
+      startCpuCoreCount: 3
+      minFreeRamGB: 0.5
+      minFreeRamPercent: 20
     # defines the minimum number of containers for horizontal autoscaling. Max value = 6.
     minContainers: 2
     # defines the maximum number of containers for horizontal autoscaling. Max value = 6.
@@ -235,11 +265,24 @@ At least one service in `services:` section is required. You can create a projec
 	</tr>
     <tr>
   <td><b>verticalAutoscaling</b></td>
-		<td><b>Optional.</b> Defines <a href="/rust/how-to/create#set-auto-scaling-configuration">custom vertical auto scaling parameters</a>.</td>
-	</tr>
+		<td><b>Optional.</b> Defines <a href="/rust/how-to/create#set-auto-scaling-configuration">custom vertical auto scaling parameters</a>.<br/>
+		All verticalAutoscaling attributes are optional. Not specified attributes will be set to their default values.</td>
+		</tr>
+    <tr>
+  <td><b> - cpuMode</b></td>
+         <td><b>Optional.</b> Accepts <code>SHARED</code>, <code>DEDICATED</code> values. Default is <code>SHARED</code></td>
+     </tr>
+  <tr>
+    <td><b> - minCpu/maxCpu</b></td>
+        <td><b>Optional.</b> Set the minCpu or maxCpu in CPU cores (integer).</td>
+        </tr>
+     <tr><td><b> - minRam/maxRam</b></td>
+     <td><b>Optional.</b> Set the minRam or maxRam in GB (float).</td></tr>
+       <tr><td><b> - minDisk/maxDisk</b></td>
+       <td><b>Optional.</b> Set the minDisk or maxDisk in GB (float).</td></tr>
         <tr>
   <td><b>minContainers</b></td>
-		<td>Defines the minimum number of containers for <a href="/rust/how-to/create#horizontal-auto-scaling">horizontal autoscaling</a>.<br/><br/><b>Limitations:</b><br/>Current maximum value = 6.</td>
+		<td><b>Optional.</b> Default = 1. Defines the minimum number of containers for <a href="/rust/how-to/create#horizontal-auto-scaling">horizontal autoscaling</a>.<br/><br/><b>Limitations:</b><br/>Current maximum value = 6.</td>
 	</tr>
         <tr>
   <td><b>maxContainers</b></td>
