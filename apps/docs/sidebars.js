@@ -2401,4 +2401,55 @@ nginx: [
       ],
     },
   ],
+  objectstorage: [
+    {
+      type: "ref",
+      id: "homepage",
+      label: "Back to home",
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: "back-arrow",
+      },
+    },
+    {
+      type: "doc",
+      id: "object-storage/overview",
+      label: "Object storage overview",
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: "server",
+      },
+    },
+    {
+      type: "category",
+      label: "How-to",
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+        sidebar_icon: "academic-cap-solid",
+      },
+      items: [
+        {
+          type: "doc",
+          id: "object-storage/how-to/create",
+          label: "Create object storage service",
+        },
+        {
+          type: "doc",
+          id: "object-storage/how-to/update-bucket",
+          label: "Change bucket size or access policy",
+        },
+        {
+          type: "doc",
+          id: "object-storage/how-to/access",
+          label: "Access object storage service",
+        },
+        {
+          type: "doc",
+          id: "object-storage/how-to/delete",
+          label: "Delete object storage service",
+        }
+      ]
+    }
+  ]
 }
