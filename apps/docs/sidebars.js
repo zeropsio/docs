@@ -533,13 +533,26 @@ module.exports = {
       className: "homepage-sidebar-item",
     },
     {
-      type: "doc",
-      id: "references/vpn",
+      type: "category",
       label: "VPN",
+      link: {
+        type: "doc",
+        id: "references/vpn",
+      },
       customProps: {
         sidebar_icon: "globe-europe",
       },
       className: "homepage-sidebar-item",
+      items: [
+        {
+          type: "doc",
+          id: "references/vpn/faq",
+          label: "faq",
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        },
+      ],
     },
     {
       type: "category",
