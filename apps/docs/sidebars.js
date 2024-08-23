@@ -547,7 +547,7 @@ module.exports = {
         {
           type: "doc",
           id: "references/vpn/faq",
-          label: "faq",
+          label: "FAQ",
           customProps: {
             exclude_from_doc_list: false,
           },
