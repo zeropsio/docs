@@ -1,6 +1,6 @@
 ![Docs cover](https://github.com/zeropsio/recipe-shared-assets/blob/main/covers/svg/cover-docs.svg)
 
-<h2><img height="20" src="https://github.com/zeropsio/recipe-shared-assets/blob/main/logos/zerops-green.svg" >&nbsp;&nbsp;Zerops Documentation </h2>
+<h2>&nbsp;&nbsp;Zerops Documentation <p align="end"><img height="40" src="https://github.com/zeropsio/recipe-shared-assets/blob/main/logos/zerops-green.svg" ></p> </h2>
 https://docs.zerops.io
 
 Docusaurus theme and components from the amazing and powerful https://medusajs.com
