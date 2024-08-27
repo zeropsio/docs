@@ -1,6 +1,6 @@
 ![Docs](https://github.com/zeropsio/recipe-shared-assets/blob/main/covers/svg/cover-docs.svg)
 
-# Zerops Documentation
+# Zerops Documentation ![zerops-logo](https://github.com/zeropsio/recipe-shared-assets/blob/main/logos/zerops-green.svg)
 https://docs.zerops.io
 
 Docusaurus theme and components from the amazing and powerful https://medusajs.com
