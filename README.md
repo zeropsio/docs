@@ -1,3 +1,5 @@
+![Docs](https://github.com/zeropsio/recipe-shared-assets/blob/main/covers/svg/cover-docs.svg)
+
 # Zerops Documentation
 https://docs.zerops.io
 
