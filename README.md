@@ -1,4 +1,9 @@
 ![Docs cover](https://github.com/zeropsio/recipe-shared-assets/blob/main/covers/svg/cover-docs.svg)
+[![CI](https://img.shields.io/github/actions/workflow/status/zeropsio/docs/build.yml?labelColor=EDEFF3&color=8F9DA8)](https://github.com/zeropsio/docs/actions/workflows/build.yml)
+![GitHub contributors](https://img.shields.io/github/contributors/zeropsio/docs?labelColor=EDEFF3&color=8F9DA8)
+[![Discord](https://img.shields.io/discord/735781031147208777?labelColor=EDEFF3&color=8F9DA8)](https://discord.gg/xxzmJSDKPT)
+![X (formerly Twitter) Follow](https://img.shields.io/twitter/follow/zeropsio)
+
 
 
 <h2>Zerops Documentation</h2>
@@ -14,11 +19,6 @@ Our <b>Documentation</b> for people who want help with interacting with <a href=
 
 <br/>
 <br />
-
-[![CI](https://img.shields.io/github/actions/workflow/status/zeropsio/docs/build.yml?labelColor=EDEFF3&color=8F9DA8)](https://github.com/zeropsio/docs/actions/workflows/build.yml)
-![GitHub contributors](https://img.shields.io/github/contributors/zeropsio/docs?labelColor=EDEFF3&color=8F9DA8)
-[![Discord](https://img.shields.io/discord/735781031147208777?labelColor=EDEFF3&color=8F9DA8)](https://discord.gg/xxzmJSDKPT)
-![X (formerly Twitter) Follow](https://img.shields.io/twitter/follow/zeropsio)
 
 <br/>
 
