@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/zeropsio/docs/actions/workflows/build.yml/badge.svg)](https://github.com/zeropsio/docs/actions/workflows/build.yml)
 
-![Node Current](https://img.shields.io/node/v/18%20or%20above)
+![Node Current](https://img.shields.io/node/v/18)
 
 
 https://docs.zerops.io
