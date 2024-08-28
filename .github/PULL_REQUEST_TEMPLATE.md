@@ -2,9 +2,9 @@
 
 #### What Type of Change is this?
 
-- [] New Page
-- [] Minor Fix
-- [] Major Improvement
+- [ ] New Page
+- [ ] Minor Fix
+- [ ] Major Improvement
 
 #### Description (required)
 
