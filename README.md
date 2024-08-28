@@ -19,20 +19,16 @@
 </p>
 
 <p align="center">
-<b>Made with</b> ❤️ for <b>CI/CD</b> development and <b>CLI</b> lovers.
+<b>Made with</b> ❤️ for <b>Documentation</b> lovers.
 <br/>
 </p>
 
 <br />
 
-<div align="center">
-
 [![CI](https://github.com/zeropsio/docs/actions/workflows/build.yml/badge.svg)](https://github.com/zeropsio/docs/actions/workflows/build.yml)
 [![](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat)](https://github.com/zeropsio/docs/blob/CONTRIBUTING.md)
 ![GitHub contributors](https://img.shields.io/github/contributors/zeropsio/docs)
 [![Discord](https://img.shields.io/discord/735781031147208777)](https://discord.gg/xxzmJSDKPT)
-
-</div>
 
 <br/>
 
