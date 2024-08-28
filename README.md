@@ -1,7 +1,14 @@
 ![Docs cover](https://github.com/zeropsio/recipe-shared-assets/blob/main/covers/svg/cover-docs.svg)
 
 <h2>Zerops Documentation</h2>
+
+[![CI](https://github.com/zeropsio/docs/actions/workflows/build.yml/badge.svg)](https://github.com/zeropsio/docs/actions/workflows/build.yml)
+
+![Node Current](https://img.shields.io/node/v/18%20or%20above)
+
+
 https://docs.zerops.io
+
 
 Docusaurus theme and components from the amazing and powerful https://medusajs.com
 
