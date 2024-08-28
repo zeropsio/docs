@@ -11,13 +11,14 @@ Our <b>Documentation</b> for people who want help with interacting with <a href=
 
 ### About
 
-This repository utilizies Docusaurus Theme and components from the amazing and powerful https://medusajs.com.
+This repository utilizes the powerful [MedusaJS Docs](http://docs.medusajs.com/) theme and components, combined with Docusaurus, to serve users a seamless documentation experience.
+
 
 ## Contributing Guide
 
-Go ahead and check out [CONTRIBUTING.md](https://github.com/zeropsio/docs/blob/main/CONTRIBUTING.md) If you're planning to contribute to our documentation.
+If you're planning to contribute to our documentation, please check out our [CONTRIBUTING.md](https://github.com/zeropsio/docs/blob/main/CONTRIBUTING.md) guide.
 
-If you have any questions, please feel free to join Zerops Discord Server
+If you have any questions, please feel free to join [Zerops Discord Server](https://discord.gg/xxzmJSDKPT).
 
 ## Links
 
@@ -31,7 +32,6 @@ If you have any questions, please feel free to join Zerops Discord Server
   </b>
 </p>
 
-<br/>
 <br/>
 
 <p align="center">
