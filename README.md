@@ -24,6 +24,8 @@ If you have any questions, please feel free to join [Zerops Discord Server](http
 
 <p align="center">
   <b>
+  <a href="https://zerops.io">Website</a>
+  •
   <a href="https://x.com/zeropsio">Twitter</a>
   •
   <a href="https://discord.gg/xxzmJSDKPT">Discord Server</a>
