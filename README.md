@@ -1,24 +1,12 @@
 ![Docs cover](https://github.com/zeropsio/recipe-shared-assets/blob/main/covers/svg/cover-docs.svg)
 
 <h2>Zerops Documentation</h2>
-
-
-
-
-
-<h2 align="start">
-   Zerops Documentation
   <br/>
-  <br/>
-</h2>
+Our <b>Documentation</b> for people who want help with interacting with <a href="https://zerops.io/" target="_blank">Zerops</a> platform.
 
-<p align="center">
-  <br/>
-   Our<b>Documentation</b> used for interacting with <a href="https://zerops.io/" target="_blank">Zerops</a> platform.
-  <br/>
-</p>
+<br/>
 
-<p align="center">
+<p align="end">
 <b>Made with</b> ❤️ for <b>Documentation</b> lovers.
 <br/>
 </p>
