@@ -12,7 +12,7 @@
 
 #### Related issues & labels (optional)
 
-- Closes #<!-- Add an issue number  -->
+- /closes # <!-- Add an issue number  -->
 
 
 <!-- #### First-time contributor to Zerops Docs? -->
