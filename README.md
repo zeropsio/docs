@@ -5,12 +5,6 @@
 Our <b>Documentation</b> for people who want help with interacting with <a href="https://zerops.io/" target="_blank">Zerops</a> platform.
 
 <br/>
-
-<p align="end">
-<b>Made with</b> ❤️ for <b>Documentation</b> lovers.
-<br/>
-</p>
-
 <br />
 
 [![CI](https://github.com/zeropsio/docs/actions/workflows/build.yml/badge.svg)](https://github.com/zeropsio/docs/actions/workflows/build.yml)
@@ -19,6 +13,11 @@ Our <b>Documentation</b> for people who want help with interacting with <a href=
 [![Discord](https://img.shields.io/discord/735781031147208777)](https://discord.gg/xxzmJSDKPT)
 
 <br/>
+
+<p align="center">
+<b>Made with</b> ❤️ for <b>Documentation</b> lovers.
+<br/>
+</p>
 
 <h3 align="end">
 <a href="https://docs.zerops.io/" target="_blank">Read the docs →</a>
