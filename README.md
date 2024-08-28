@@ -9,8 +9,8 @@ Our <b>Documentation</b> for people who want help with interacting with <a href=
 
 [![CI](https://github.com/zeropsio/docs/actions/workflows/build.yml/badge.svg)](https://github.com/zeropsio/docs/actions/workflows/build.yml)
 [![Prs Welcome](https://img.shields.io/badge/PRs_are-Welcome-8F9DA8)](https://github.com/zeropsio/docs/blob/CONTRIBUTING.md)
-![GitHub contributors](https://img.shields.io/github/contributors/zeropsio/docs)
-[![Discord](https://img.shields.io/discord/735781031147208777)](https://discord.gg/xxzmJSDKPT)
+![GitHub contributors](https://img.shields.io/github/contributors/zeropsio/docs-8F9DA8)
+[![Discord](https://img.shields.io/discord/735781031147208777-8F9DA8)](https://discord.gg/xxzmJSDKPT)
 
 <br/>
 
