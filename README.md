@@ -8,7 +8,7 @@ Our <b>Documentation</b> for people who want help with interacting with <a href=
 <br />
 
 [![CI](https://github.com/zeropsio/docs/actions/workflows/build.yml/?labelColor=EDEFF3&color=8F9DA8)](https://github.com/zeropsio/docs/actions/workflows/build.yml)
-[![Prs Welcome](https://img.shields.io/badge/PRs_are-Welcome_%3F?labelColor=EDEFF3&color=8F9DA8)](https://github.com/zeropsio/docs/blob/CONTRIBUTING.md)
+[![Prs Welcome](https://img.shields.io/badge/PRs_are_Welcome-?labelColor=EDEFF3&color=8F9DA8)](https://github.com/zeropsio/docs/blob/CONTRIBUTING.md)
 ![GitHub contributors](https://img.shields.io/github/contributors/zeropsio/docs?labelColor=EDEFF3&color=8F9DA8)
 [![Discord](https://img.shields.io/discord/735781031147208777?labelColor=EDEFF3&color=8F9DA8)](https://discord.gg/xxzmJSDKPT)
 
