@@ -33,10 +33,11 @@ If you have any questions, please feel free to join [Zerops Discord Server](http
 </p>
 
 <br/>
-
+<!---
 <p align="center">
 <b>Made with</b> ❤️ for <b>Documentation</b> lovers.
 <br/>
 </p>
 
 <p align="end"><img height="36" src="https://github.com/zeropsio/recipe-shared-assets/blob/main/logos/zerops-green.svg" ></p>
+ -->
