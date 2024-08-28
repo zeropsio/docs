@@ -1,6 +1,6 @@
-import { IconProps } from "@medusajs/icons/dist/types"
-import clsx from "clsx"
-import React from "react"
+import { IconProps } from "@medusajs/icons/dist/types";
+import clsx from "clsx";
+import React from "react";
 
 const IconRust = (props: IconProps) => {
   return (
@@ -15,15 +15,22 @@ const IconRust = (props: IconProps) => {
     >
       <g transform="translate(53 53)">
         <path
-          fill="#000"
+          className={clsx("fill-black dark:fill-[#ADB1B8]")}
           strokeLinejoin="round"
           d="M-8.5-14.5h13c8 0 8 8 0 8h-13Zm-31 37h40v-11h-9v-8h10c11 0 5 19 14 19h25v-19h-6v2c0 8-9 7-10 2s-5-9-6-9c15-8 6-24-6-24h-47v11h10v26h-15Z"
         />
         <g mask="url(#a)">
-          <circle r="43" fill="none" stroke="#000" strokeWidth="9" />
+          <circle
+            r="43"
+            fill="none"
+            stroke="currentColor"
+            className="dark:stroke-[#ADB1B8]"
+            strokeWidth="9"
+          />
           <path
             id="b"
-            stroke="#000"
+            stroke="currentColor"
+            className="dark:stroke-[#ADB1B8]"
             strokeWidth="3"
             strokeLinejoin="round"
             d="m46 3 5-3-5-3z"
@@ -61,7 +68,8 @@ const IconRust = (props: IconProps) => {
           <use xlinkHref="#b" transform="rotate(348.75)" />
           <path
             id="c"
-            stroke="#000"
+            stroke="currentColor"
+            className="dark:stroke-[#ADB1B8]"
             strokeWidth="6"
             strokeLinejoin="round"
             d="m-7-42 7 7 7-7z"
@@ -72,7 +80,7 @@ const IconRust = (props: IconProps) => {
           <use xlinkHref="#c" transform="rotate(288)" />
         </g>
         <mask id="a">
-          <path fill="#fff" d="M-60-60H60V60H-60z" />
+          <path fill="white" d="M-60-60H60V60H-60z" />
           <circle id="d" cy="-40" r="3" />
           <use xlinkHref="#d" transform="rotate(72)" />
           <use xlinkHref="#d" transform="rotate(144)" />
@@ -81,7 +89,7 @@ const IconRust = (props: IconProps) => {
         </mask>
       </g>
     </svg>
-  )
-}
+  );
+};
 
-export default IconRust
+export default IconRust;
