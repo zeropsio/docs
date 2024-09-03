@@ -24,12 +24,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.useEvent = useEvent;
-exports.usePrevious = usePrevious;
-exports.ScrollControllerProvider = ScrollControllerProvider;
-exports.useScrollController = useScrollController;
-exports.useScrollPosition = useScrollPosition;
-exports.useScrollPositionBlocker = useScrollPositionBlocker;
+exports.useScrollPositionBlocker = exports.useScrollPosition = exports.useScrollController = exports.ScrollControllerProvider = exports.usePrevious = exports.useEvent = void 0;
 /* Copied from Docusaurus to maintain scroll position on re-renders. Useful when content of the page is updated dynamically */
 /**
  * Copyright (c) Facebook, Inc. and its affiliates.
@@ -48,6 +43,7 @@ function useEvent(callback) {
     // but good enough for our use
     return (0, react_1.useCallback)((...args) => ref.current(...args), []);
 }
+exports.useEvent = useEvent;
 /**
  * Gets `value` from the last render.
  */
@@ -58,6 +54,7 @@ function usePrevious(value) {
     });
     return ref.current;
 }
+exports.usePrevious = usePrevious;
 function useScrollControllerContextValue({ scrollableSelector, }) {
     const scrollEventsEnabledRef = (0, react_1.useRef)(true);
     const [scrollableElement, setScrollableElement] = (0, react_1.useState)();
@@ -86,6 +83,7 @@ function ScrollControllerProvider({ children, scrollableSelector = "", }) {
     });
     return (react_1.default.createElement(ScrollMonitorContext.Provider, { value: value }, children));
 }
+exports.ScrollControllerProvider = ScrollControllerProvider;
 /**
  * We need a way to update the scroll position while ignoring scroll events
  * so as not to toggle Navbar/BackToTop visibility.
@@ -100,6 +98,7 @@ function useScrollController() {
     }
     return context;
 }
+exports.useScrollController = useScrollController;
 const getScrollPosition = () => ({
     scrollX: window.pageXOffset,
     scrollY: window.pageYOffset,
@@ -133,6 +132,7 @@ function useScrollPosition(effect, deps = []) {
         return () => window.removeEventListener("scroll", handleScroll, opts);
     }, [dynamicEffect, scrollEventsEnabledRef, ...deps]);
 }
+exports.useScrollPosition = useScrollPosition;
 function useScrollPositionSaver() {
     const { scrollableElement } = useScrollController();
     const lastElementRef = (0, react_1.useRef)({
@@ -206,3 +206,4 @@ function useScrollPositionBlocker() {
         blockElementScrollPositionUntilNextRender,
     };
 }
+exports.useScrollPositionBlocker = useScrollPositionBlocker;

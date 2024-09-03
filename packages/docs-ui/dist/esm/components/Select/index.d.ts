@@ -1,3 +1,4 @@
+/// <reference types="react" />
 import type { OptionType, SelectOptions } from "../../hooks";
 export type SelectProps = {
     options: OptionType[];

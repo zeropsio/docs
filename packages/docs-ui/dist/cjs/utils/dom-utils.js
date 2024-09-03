@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.findPrevSibling = findPrevSibling;
-exports.findNextSibling = findNextSibling;
+exports.findNextSibling = exports.findPrevSibling = void 0;
 function findPrevSibling(element, selector) {
     let prevElement = element.previousElementSibling;
     while (prevElement !== null) {
@@ -12,6 +11,7 @@ function findPrevSibling(element, selector) {
     }
     return null;
 }
+exports.findPrevSibling = findPrevSibling;
 function findNextSibling(element, selector) {
     let nextElement = element.nextElementSibling;
     while (nextElement !== null) {
@@ -22,3 +22,4 @@ function findNextSibling(element, selector) {
     }
     return null;
 }
+exports.findNextSibling = findNextSibling;

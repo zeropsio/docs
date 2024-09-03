@@ -1,12 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.checkSidebarItemVisibility = checkSidebarItemVisibility;
+exports.checkSidebarItemVisibility = void 0;
 const TOP_MARGIN = 57;
 function checkSidebarItemVisibility(item, withTransition = false) {
     return withTransition
         ? checkSidebarItemVisibilityTransition(item)
         : checkSidebarItemVisibilityRelative(item);
 }
+exports.checkSidebarItemVisibility = checkSidebarItemVisibility;
 function checkSidebarItemVisibilityRelative(item) {
     const sidebar = document.getElementById("sidebar");
     if (!sidebar) {
