@@ -15,6 +15,18 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
+      
+      - uses: actions/cache@v4
+        id: yarn-cache
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
       - name: Node.js 18
         uses: actions/setup-node@v3
         with:
@@ -23,6 +35,8 @@ jobs:
       - name: Install Dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Build
+      - name: Run Build
         run: yarn build
-        
+
+      # - name: Run Lint
+      #   run: yarn lint
