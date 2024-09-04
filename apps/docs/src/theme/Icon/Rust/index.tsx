@@ -1,6 +1,6 @@
-import { IconProps } from "@medusajs/icons/dist/types";
-import clsx from "clsx";
-import React from "react";
+import { IconProps } from "@medusajs/icons/dist/types"
+import clsx from "clsx"
+import React from "react"
 
 const IconRust = (props: IconProps) => {
   return (
@@ -89,7 +89,7 @@ const IconRust = (props: IconProps) => {
         </mask>
       </g>
     </svg>
-  );
-};
+  )
+}
 
-export default IconRust;
+export default IconRust

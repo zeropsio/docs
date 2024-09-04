@@ -7,6 +7,8 @@ We're excited you're interested in contributing to our Turborepo-based Docusauru
 - [Node.js](https://nodejs.org/en/) (version 18 or above)
 - [Yarn](https://yarnpkg.com/) package manager
 
+For installing dependencies faster using [Bun](http://bun.sh/): `bun install`
+
 ## Project Structure
 
 This project uses Turborepo to manage a monorepo structure. The documentation site is likely one of the workspaces within this structure.
