@@ -68,4 +68,4 @@ Please note that this project is released with a [Contributor Code of Conduct](C
 
 If you have any questions or need help with your contribution, please open an issue or reach out to the maintainers.
 
-Thank you for contributing to [Repository Name]!
+Thank you for contributing to Zerops Docs.
