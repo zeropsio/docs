@@ -4,6 +4,7 @@
 
 - [ ] New Page
 - [ ] Minor Fix
+- [ ] Minor Improvement
 - [ ] Major Improvement
 
 #### Description (required)
