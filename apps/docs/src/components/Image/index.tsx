@@ -4,7 +4,7 @@ import { useColorMode } from '@docusaurus/theme-common';
 
 type ImageProps = {
   lightImage: string;
-  darkImage: string;
+  darkImage?: string;
   alt: string;
   [key: string]: any;
 };
@@ -14,7 +14,7 @@ const Image: React.FC<ImageProps> = ({ lightImage, darkImage, alt, ...props }) =
 
   const imageUrl = colorMode === 'dark' ? darkImage : lightImage;
 
-  return <img src={useBaseUrl(imageUrl)} alt={alt} {...props} />;
+  return <img className="py-1.5" src={useBaseUrl(imageUrl)} alt={alt} {...props} />;
 };
 
 export default Image;
