@@ -6,15 +6,16 @@ type ImageProps = {
   lightImage: string;
   darkImage?: string;
   alt: string;
+  caption?: string;
   [key: string]: any;
 };
 
-const Image: React.FC<ImageProps> = ({ lightImage, darkImage, alt, ...props }) => {
+const Image: React.FC<ImageProps> = ({ lightImage, darkImage, alt, caption, ...props }) => {
   const { colorMode } = useColorMode();
 
   const imageUrl = colorMode === 'dark' ? darkImage : lightImage;
 
-  return <img className="py-1.5" src={useBaseUrl(imageUrl)} alt={alt} {...props} />;
+  return <div className="py-0.5 text-center text-sm flex flex-col "><img className="mx-auto" src={useBaseUrl(imageUrl)} alt={alt} {...props} /><span className="pt-0.5 opacity-65">{caption}</span></div>;
 };
 
 export default Image;
