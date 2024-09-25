@@ -14,6 +14,7 @@ import ErrorPageContent from "@theme/ErrorPageContent"
 import type { Props } from "@theme/Layout"
 import useIsBrowser from "@docusaurus/useIsBrowser"
 import { useLocation } from "@docusaurus/router"
+import Wip from "@site/src/components/work-in-progress"
 
 export default function Layout(props: Props): JSX.Element {
   const {
@@ -51,7 +52,7 @@ export default function Layout(props: Props): JSX.Element {
       <PageMetadata title={title} description={description} />
 
       <SkipToContent />
-
+      <Wip />
       <Navbar />
 
       <div
