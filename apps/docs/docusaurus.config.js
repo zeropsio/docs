@@ -151,7 +151,7 @@ const config = {
         href: "https://github.com/zeropsio",
       },
     ],
-    reportCodeLinkPrefix: "",
+    reportCodeLinkPrefix: "https://github.com/zeropsio/docs/issues/new?assignees=&labels=type%3A+docs&template=docs.yml&title=",
     footerFeedback: {
       event: "survey",
     },
