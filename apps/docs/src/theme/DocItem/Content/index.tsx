@@ -7,6 +7,7 @@ import MDXContent from "@theme/MDXContent"
 import type { Props } from "@theme/DocItem/Content"
 import { DocContextValue } from "@medusajs/docs"
 import { Badge, BadgeVariant } from "docs-ui"
+import Head from "@docusaurus/Head"
 
 /**
  Title can be declared inside md content or declared through
@@ -30,37 +31,46 @@ function useSyntheticTitle(): string | null {
 
 export default function DocItemContent({ children }: Props): JSX.Element {
   const {
-    frontMatter: { badge },
+    frontMatter: { badge, description },
+    metadata,
   } = useDoc() as DocContextValue
   const syntheticTitle = useSyntheticTitle()
+
   return (
-    <div className={clsx(ThemeClassNames.docs.docMarkdown, "markdown")}>
-      {syntheticTitle && (
-        <header
-          className={clsx(badge && "md:flex md:items-center md:gap-0.5 mb-2")}
-        >
-          <Heading as="h1" className={clsx(badge && "!mb-0")}>
-            {syntheticTitle}
+    <>
+      <Head>
+        <title>{metadata.title} - Zerops</title>
+        {description && <meta name="description" content={description} />}
+      </Head>
+
+      <div className={clsx(ThemeClassNames.docs.docMarkdown, "markdown")}>
+        {syntheticTitle && (
+          <header
+            className={clsx(badge && "md:flex md:items-center md:gap-0.5 mb-2")}
+          >
+            <Heading as="h1" className={clsx(badge && "!mb-0")}>
+              {syntheticTitle}
+              {badge && (
+                <Badge
+                  variant={badge.variant as BadgeVariant}
+                  className="md:hidden ml-1 align-middle"
+                >
+                  {badge.text}
+                </Badge>
+              )}
+            </Heading>
             {badge && (
               <Badge
                 variant={badge.variant as BadgeVariant}
-                className="md:hidden ml-1 align-middle"
+                className={clsx("md:block hidden")}
               >
                 {badge.text}
               </Badge>
             )}
-          </Heading>
-          {badge && (
-            <Badge
-              variant={badge.variant as BadgeVariant}
-              className={clsx("md:block hidden")}
-            >
-              {badge.text}
-            </Badge>
-          )}
-        </header>
-      )}
-      <MDXContent>{children}</MDXContent>
-    </div>
+          </header>
+        )}
+        <MDXContent>{children}</MDXContent>
+      </div>
+    </>
   )
 }
