@@ -1,17 +1,17 @@
-"use client"
+'use client';
 
-import React, { Suspense, cloneElement, useRef, useState } from "react"
-import { Loading } from "@/components"
-import clsx from "clsx"
-import { CSSTransition } from "react-transition-group"
-import { DetailsSummary } from "./Summary"
+import React, { Suspense, cloneElement, useRef, useState } from 'react';
+import { Loading } from '@/components';
+import clsx from 'clsx';
+import { CSSTransition } from 'react-transition-group';
+import { DetailsSummary } from './Summary';
 
 export type DetailsProps = {
-  openInitial?: boolean
-  summaryContent?: React.ReactNode
-  summaryElm?: React.ReactNode
-  heightAnimation?: boolean
-} & React.HTMLAttributes<HTMLDetailsElement>
+  openInitial?: boolean;
+  summaryContent?: React.ReactNode;
+  summaryElm?: React.ReactNode;
+  heightAnimation?: boolean;
+} & React.HTMLAttributes<HTMLDetailsElement>;
 
 export const Details = ({
   openInitial = false,
@@ -21,27 +21,27 @@ export const Details = ({
   heightAnimation = false,
   ...props
 }: DetailsProps) => {
-  const [open, setOpen] = useState(openInitial)
-  const [showContent, setShowContent] = useState(openInitial)
-  const ref = useRef<HTMLDetailsElement>(null)
+  const [open, setOpen] = useState(openInitial);
+  const [showContent, setShowContent] = useState(openInitial);
+  const ref = useRef<HTMLDetailsElement>(null);
 
   const handleToggle = (e: React.MouseEvent<HTMLElement>) => {
-    const targetElm = e.target as HTMLElement
-    if (targetElm.tagName.toLowerCase() === "a") {
+    const targetElm = e.target as HTMLElement;
+    if (targetElm.tagName.toLowerCase() === 'a') {
       window.location.href =
-        targetElm.getAttribute("href") || window.location.href
-      return
+        targetElm.getAttribute('href') || window.location.href;
+      return;
     }
-    if (targetElm.tagName.toLowerCase() === "code") {
-      return
+    if (targetElm.tagName.toLowerCase() === 'code') {
+      return;
     }
     if (open) {
-      setShowContent(false)
+      setShowContent(false);
     } else {
-      setOpen(true)
-      setShowContent(true)
+      setOpen(true);
+      setShowContent(true);
     }
-  }
+  };
 
   return (
     <details
@@ -49,18 +49,18 @@ export const Details = ({
       ref={ref}
       open={open}
       onClick={(event) => {
-        event.preventDefault()
+        event.preventDefault();
       }}
       onToggle={(event) => {
         // this is to avoid event propagation
         // when details are nested, which is a bug
         // in react. Learn more here:
         // https://github.com/facebook/react/issues/22718
-        event.stopPropagation()
+        event.stopPropagation();
       }}
       className={clsx(
-        "border-medusa-border-base border-y border-solid border-x-0",
-        "overflow-hidden [&>summary]:relative",
+        'border-medusa-border-base border-y border-solid border-x-0',
+        'overflow-hidden [&>summary]:relative',
         props.className
       )}
     >
@@ -83,43 +83,43 @@ export const Details = ({
         timeout={150}
         onEnter={(node: HTMLElement) => {
           if (heightAnimation) {
-            node.classList.add("transition-[height]")
-            node.style.height = `0px`
+            node.classList.add('transition-[height]');
+            node.style.height = `0px`;
           } else {
             node.classList.add(
-              "!mb-docs_2",
-              "!mt-0",
-              "translate-y-docs_1",
-              "transition-transform"
-            )
+              '!mb-docs_2',
+              '!mt-0',
+              'translate-y-docs_1',
+              'transition-transform'
+            );
           }
         }}
         onEntering={(node: HTMLElement) => {
           if (heightAnimation) {
-            node.style.height = `${node.scrollHeight}px`
+            node.style.height = `${node.scrollHeight}px`;
           }
         }}
         onEntered={(node: HTMLElement) => {
           if (heightAnimation) {
-            node.style.height = `auto`
+            node.style.height = `auto`;
           }
         }}
         onExit={(node: HTMLElement) => {
           if (heightAnimation) {
-            node.style.height = `${node.scrollHeight}px`
+            node.style.height = `${node.scrollHeight}px`;
           } else {
-            node.classList.add("transition-transform", "!-translate-y-docs_1")
+            node.classList.add('transition-transform', '!-translate-y-docs_1');
             setTimeout(() => {
-              setOpen(false)
-            }, 100)
+              setOpen(false);
+            }, 100);
           }
         }}
         onExiting={(node: HTMLElement) => {
           if (heightAnimation) {
-            node.style.height = `0px`
+            node.style.height = `0px`;
             setTimeout(() => {
-              setOpen(false)
-            }, 100)
+              setOpen(false);
+            }, 100);
           }
         }}
       >
@@ -128,5 +128,5 @@ export const Details = ({
         </Suspense>
       </CSSTransition>
     </details>
-  )
-}
+  );
+};

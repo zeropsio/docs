@@ -1,27 +1,27 @@
-import React from "react"
-import { NavbarAction } from "@medusajs/docs"
-import Icon from "../../../theme/Icon"
-import clsx from "clsx"
-import { Button, Tooltip } from "docs-ui"
-import Link from "@docusaurus/Link"
+import React from 'react';
+import { NavbarAction } from '@medusajs/docs';
+import Icon from '../../../theme/Icon';
+import clsx from 'clsx';
+import { Button, Tooltip } from 'docs-ui';
+import Link from '@docusaurus/Link';
 
 type NavbarActionsProps = {
-  items: NavbarAction[]
-  className?: string
-} & React.HTMLAttributes<HTMLDivElement>
+  items: NavbarAction[];
+  className?: string;
+} & React.HTMLAttributes<HTMLDivElement>;
 
 const NavbarActions: React.FC<NavbarActionsProps> = ({
   items = [],
-  className = "",
+  className = '',
 }) => {
   return (
-    <div className={clsx("lg:block hidden", className)}>
+    <div className={clsx('lg:block hidden', className)}>
       {items.map((item, index) => {
         // eslint-disable-next-line no-case-declarations
-        const ItemIconElm = item.Icon
-        const ItemIcon = item.icon ? Icon[item.icon] : null
+        const ItemIconElm = item.Icon;
+        const ItemIcon = item.icon ? Icon[item.icon] : null;
         switch (item.type) {
-          case "link":
+          case 'link':
             return (
               <Tooltip
                 text={item.title}
@@ -33,7 +33,7 @@ const NavbarActions: React.FC<NavbarActionsProps> = ({
                   href={item.href}
                   title={item.title}
                   className={clsx(
-                    (ItemIcon || ItemIconElm) && "navbar-action-icon-item",
+                    (ItemIcon || ItemIconElm) && 'navbar-action-icon-item',
                     item.className
                   )}
                 >
@@ -42,8 +42,8 @@ const NavbarActions: React.FC<NavbarActionsProps> = ({
                   {ItemIcon && <ItemIcon />}
                 </Link>
               </Tooltip>
-            )
-          case "button":
+            );
+          case 'button':
             return (
               <Tooltip
                 text={item.title}
@@ -52,9 +52,9 @@ const NavbarActions: React.FC<NavbarActionsProps> = ({
                 tooltipClassName="!text-compact-x-small-plus"
               >
                 <Button
-                  className={clsx(item.href && "relative", item.className)}
-                  variant={item.variant || "secondary"}
-                  buttonType={item.buttonType || "default"}
+                  className={clsx(item.href && 'relative', item.className)}
+                  variant={item.variant || 'secondary'}
+                  buttonType={item.buttonType || 'default'}
                   {...item.events}
                 >
                   {item.label}
@@ -68,13 +68,13 @@ const NavbarActions: React.FC<NavbarActionsProps> = ({
                   )}
                 </Button>
               </Tooltip>
-            )
+            );
           default:
-            return <></>
+            return <></>;
         }
       })}
     </div>
-  )
-}
+  );
+};
 
-export default NavbarActions
+export default NavbarActions;

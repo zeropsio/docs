@@ -1,10 +1,10 @@
-import React, { isValidElement, type ReactNode } from "react"
-import useIsBrowser from "@docusaurus/useIsBrowser"
-import ElementContent from "@theme/CodeBlock/Content/Element"
-import StringContent from "@theme/CodeBlock/Content/String"
-import type { Props } from "@theme/CodeBlock"
-import clsx from "clsx"
-import { Badge, BadgeVariant } from "docs-ui"
+import React, { isValidElement, type ReactNode } from 'react';
+import useIsBrowser from '@docusaurus/useIsBrowser';
+import ElementContent from '@theme/CodeBlock/Content/Element';
+import StringContent from '@theme/CodeBlock/Content/String';
+import type { Props } from '@theme/CodeBlock';
+import clsx from 'clsx';
+import { Badge, BadgeVariant } from 'docs-ui';
 
 /**
  * Best attempt to make the children a plain string so it is copyable. If there
@@ -14,10 +14,10 @@ import { Badge, BadgeVariant } from "docs-ui"
  */
 function maybeStringifyChildren(children: ReactNode): ReactNode {
   if (React.Children.toArray(children).some((el) => isValidElement(el))) {
-    return children
+    return children;
   }
   // The children is now guaranteed to be one/more plain strings
-  return Array.isArray(children) ? children.join("") : (children as string)
+  return Array.isArray(children) ? children.join('') : (children as string);
 }
 
 export default function CodeBlock({
@@ -30,42 +30,42 @@ export default function CodeBlock({
   // be in a different mode. React hydration doesn't update DOM styles that come
   // from SSR. Hence force a re-render after mounting to apply the current
   // relevant styles.
-  const isBrowser = useIsBrowser()
-  const children = maybeStringifyChildren(rawChildren)
+  const isBrowser = useIsBrowser();
+  const children = maybeStringifyChildren(rawChildren);
   const CodeBlockComp =
-    typeof children === "string" ? StringContent : ElementContent
+    typeof children === 'string' ? StringContent : ElementContent;
 
-  const metastringTitleRegex = /title="?([^"]*)"?/
-  const metastringBadgeLabelRegex = /badgeLabel="?([^"]*)"?/
-  const metastringBadgeColorRegex = /badgeColor="?([^"]*)"?/
+  const metastringTitleRegex = /title="?([^"]*)"?/;
+  const metastringBadgeLabelRegex = /badgeLabel="?([^"]*)"?/;
+  const metastringBadgeColorRegex = /badgeColor="?([^"]*)"?/;
 
-  let title = props.title
-  delete props.title
+  let title = props.title;
+  delete props.title;
 
   function extractFromMetastring(regex: RegExp): string {
     if (!props.metastring) {
-      return ""
+      return '';
     }
 
-    let value = ""
+    let value = '';
 
-    const matched = props.metastring.match(regex)
+    const matched = props.metastring.match(regex);
     if (matched?.length) {
-      value = matched[1].replace(/^"/, "").replace(/"$/, "")
-      props.metastring = props.metastring.replace(regex, "")
+      value = matched[1].replace(/^"/, '').replace(/"$/, '');
+      props.metastring = props.metastring.replace(regex, '');
     }
 
-    return value
+    return value;
   }
 
   if (!title) {
-    title = extractFromMetastring(metastringTitleRegex)
+    title = extractFromMetastring(metastringTitleRegex);
   }
 
   const badge = {
     label: extractFromMetastring(metastringBadgeLabelRegex),
     color: extractFromMetastring(metastringBadgeColorRegex),
-  }
+  };
 
   return (
     <div className="code-wrapper">
@@ -74,7 +74,7 @@ export default function CodeBlock({
           {title}
           {badge.label && (
             <Badge
-              variant={(badge.color as BadgeVariant) || "green"}
+              variant={(badge.color as BadgeVariant) || 'green'}
               className="justify-end"
             >
               {badge.label}
@@ -88,8 +88,8 @@ export default function CodeBlock({
         noCopy={noCopy}
         {...props}
         className={clsx(
-          !title && "rounded",
-          title && "!rounded-t-none !rounded-b",
+          !title && 'rounded',
+          title && '!rounded-t-none !rounded-b',
           props.className
         )}
         showLineNumbers={true}
@@ -97,5 +97,5 @@ export default function CodeBlock({
         {children as string}
       </CodeBlockComp>
     </div>
-  )
+  );
 }

@@ -1,6 +1,6 @@
-import { IconProps } from "@medusajs/icons/dist/types"
-import clsx from "clsx"
-import React from "react"
+import { IconProps } from '@medusajs/icons/dist/types';
+import clsx from 'clsx';
+import React from 'react';
 
 const IconCircleDottedLine = (props: IconProps) => {
   return (
@@ -11,7 +11,7 @@ const IconCircleDottedLine = (props: IconProps) => {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       {...props}
-      className={clsx("text-ui-fg-subtle", props.className)}
+      className={clsx('text-ui-fg-subtle', props.className)}
     >
       <path
         d="M12.5 2.93589C10.884 2.3547 9.116 2.3547 7.5 2.93589"
@@ -56,7 +56,7 @@ const IconCircleDottedLine = (props: IconProps) => {
         strokeLinejoin="round"
       />
     </svg>
-  )
-}
+  );
+};
 
-export default IconCircleDottedLine
+export default IconCircleDottedLine;

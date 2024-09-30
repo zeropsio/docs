@@ -10,10 +10,10 @@ In Zerops you do not have to create a `.env` file manually. Zerops handles the e
 
 There are 3 different sets of env variables in Zerops:
 
-| environment | type   | defined in |
-| ----------- | ------ | ---------- |
-| build       | basic  | [zerops.yml](/nodejs/how-to/build-pipeline#envvariables) |
-| runtime     | basic  | [zerops.yml](/nodejs/how-to/build-pipeline#envvariables-1) |
+| environment | type   | defined in                                                                        |
+| ----------- | ------ | --------------------------------------------------------------------------------- |
+| build       | basic  | [zerops.yml](/nodejs/how-to/build-pipeline#envvariables)                          |
+| runtime     | basic  | [zerops.yml](/nodejs/how-to/build-pipeline#envvariables-1)                        |
 | runtime     | secret | [Zerops GUI](/nodejs/how-to/env-variables#set-secret-env-variables-in-zerops-gui) |
 
 Use the secret env variables for all sensitive data you don't want to store in your application code. Secret env variables are also useful if you need for testing where you need to change the value of some env variables frequently. Secret variables are managed in Zerops GUI and you don't have to redeploy your application.
@@ -23,10 +23,16 @@ The basic build and runtime env variables are listed in your zerops.yml and depl
 You can reference another variable of the same service or even a variable of another service within the same project.
 
 ## Set secret runtime env variables in Zerops GUI
+
 Use secret variables to store passwords, tokens and other sensitive information that shouldn't be part of your repository and listed in zerops.yml.
 
 <p align="center">
-<img src="/img/screenshots/runtime_secret_variables.png" alt="image" width="100%" height="auto"/>
+  <img
+    src="/img/screenshots/runtime_secret_variables.png"
+    alt="image"
+    width="100%"
+    height="auto"
+  />
 </p>
 
 You can set env variables when you create a new runtime service or you can set them later.
@@ -42,6 +48,7 @@ You need to **restart** the runtime service after you commit the changes in env 
 :::
 
 ## Set basic build env variables in zerops.yml
+
 To set basic env variables for the build environment, add the `envVariables` attribute to the `build` section in your `zerops.yml`.
 
 ```yml
@@ -63,6 +70,7 @@ zerops:
 When you need to update a value of an existing env variable or change the set of build or runtime env variables, update your `zerops.yml` and redeploy your application to Zerops.
 
 ## Set basic runtime env variables in zerops.yml
+
 To set basic env variables for the runtime environment, add the `envVariables` attribute to the runtime section in your `zerops.yml`.
 
 ```yml
@@ -84,16 +92,17 @@ zerops:
 When you need to update a value of an existing env variable or change the set of build or runtime env variables, update your `zerops.yml` and redeploy your application to Zerops.
 
 ## Env variable restrictions
+
 **key**
 
-* must satisfy the following regular expression: `[a-zA-Z_]+[a-zA-Z0-9_]*`
-* all variable keys in the same service must be unique regardless of case
-* keys are case sensitive
+- must satisfy the following regular expression: `[a-zA-Z_]+[a-zA-Z0-9_]*`
+- all variable keys in the same service must be unique regardless of case
+- keys are case sensitive
 
 **value**
 
-* must contain only ASCII characters
-* the *End of Line* character is forbidden
+- must contain only ASCII characters
+- the _End of Line_ character is forbidden
 
 These restrictions apply to all [types of env variables](#types-of-env-variables-in-zerops).
 
@@ -120,21 +129,25 @@ When you change the value of the `connectionString` variable in the service `dbt
 :::
 
 ## Generated env variables
+
 Zerops creates several helper variables when a runtime service is created, e.g. `hostname`, `PATH`. Some helper variables are read-only (`hostname`), others are editable (`PATH`). Generated variables cannot be deleted.
 
 Generated env variables are listed on the **Environment variables** page. Scroll to the **Generated variables** section.
 
 ## How to read env variables from your application
+
 Choose your runtime:
-* [Node.js](/nodejs/how-to/env-variables#how-to-read-env-variables-from-your-nodejs-app)
-* [PHP](/php/how-to/env-variables#how-to-read-env-variables-from-your-php-app)
-* [Python](/python/how-to/env-variables#how-to-read-env-variables-from-your-python-app)
-* [Go](/go/how-to/env-variables#how-to-read-env-variables-from-your-go-app)
-* [.NET](/dotnet/how-to/env-variables#how-to-read-env-variables-from-your-dotnet-app)
-* [Rust](/rust/how-to/env-variables#how-to-read-env-variables-from-your-rust-app)
-* [Rust](/rust/how-to/env-variables#how-to-read-env-variables-from-your-rust-app)
+
+- [Node.js](/nodejs/how-to/env-variables#how-to-read-env-variables-from-your-nodejs-app)
+- [PHP](/php/how-to/env-variables#how-to-read-env-variables-from-your-php-app)
+- [Python](/python/how-to/env-variables#how-to-read-env-variables-from-your-python-app)
+- [Go](/go/how-to/env-variables#how-to-read-env-variables-from-your-go-app)
+- [.NET](/dotnet/how-to/env-variables#how-to-read-env-variables-from-your-dotnet-app)
+- [Rust](/rust/how-to/env-variables#how-to-read-env-variables-from-your-rust-app)
+- [Rust](/rust/how-to/env-variables#how-to-read-env-variables-from-your-rust-app)
 
 ## How to read env variables of another service
+
 All services of the same project can reference environment variables from other services. To use an environment variable from one service in another service in the same project, you must prefix the environment variable key with the service hostname and underscore.
 
 #### Examples:
@@ -143,9 +156,11 @@ To access the `connectionString` env variable of the `mariadb1` service, use `ma
 To access the `password` env variable of the `mariadb2` service, use `mariadb2_password` as the env variable key.
 
 ## How to read runtime env variables in the build environment
+
 You can use runtime env variables in the build environment using the `RUNTIME_` prefix. For example if you have a runtime variable with the `connectionString` key, use the `RUNTIME_connectionString` to read the variable in the build environment. This rule applies both for basic and secret runtime variables.
 
 ## Basic and secret env variable with the same key
+
 If you create a secret env variable and a basic runtime env variable with the same key, Zerops saves the basic runtime env variable from your zerops.yml and ignores the secret env variable.
 
 If you create a basic build env variable and a runtime env variable with the same key, Zerops saves both because the build and runtime environments have separate sets of env variables.

@@ -10,10 +10,10 @@ In Zerops you do not have to create a `.env` file manually. Zerops handles the e
 
 There are 3 different sets of env variables in Zerops:
 
-| environment | type   | defined in |
-| ----------- | ------ | ---------- |
-| build       | basic  | [zerops.yml](/dotnet/how-to/build-pipeline#envvariables) |
-| runtime     | basic  | [zerops.yml](/dotnet/how-to/build-pipeline#envvariables-1) |
+| environment | type   | defined in                                                                        |
+| ----------- | ------ | --------------------------------------------------------------------------------- |
+| build       | basic  | [zerops.yml](/dotnet/how-to/build-pipeline#envvariables)                          |
+| runtime     | basic  | [zerops.yml](/dotnet/how-to/build-pipeline#envvariables-1)                        |
 | runtime     | secret | [Zerops GUI](/dotnet/how-to/env-variables#set-secret-env-variables-in-zerops-gui) |
 
 Use the [secret env variables](/dotnet/how-to/create#set-secret-env-variables) for all sensitive data you don't want to store in your application code. Secret env variables are also useful if you need for testing where you need to change the value of some env variables frequently. Secret variables are managed in Zerops GUI and you don't have to redeploy your application.
@@ -27,7 +27,12 @@ You can [reference](/dotnet/how-to/env-variables#reference-a-local-variable-in-a
 Use secret variables to store passwords, tokens and other sensitive information that shouldn't be part of your repository and listed in zerops.yml.
 
 <p align="center">
-<img src="/img/screenshots/secret_env.png" alt="image" width="100%" height="auto"/>
+  <img
+    src="/img/screenshots/secret_env.png"
+    alt="image"
+    width="100%"
+    height="auto"
+  />
 </p>
 
 You can set env variables when you [create](/dotnet/how-to/create) a new .NET service or you can set them later.
@@ -43,6 +48,7 @@ You need to **restart** the runtime service after you commit the changes in env 
 :::
 
 ## Set basic build env variables in zerops.yml
+
 To set basic env variables for the build environment, add the `envVariables` attribute to the build section in your `zerops.yml`
 
 ```yml
@@ -64,6 +70,7 @@ zerops:
 When you need to update a value of an existing env variable or change the set of build or runtime env variables, update your `zerops.yml` and redeploy your application to Zerops.
 
 ## Set basic runtime env variables in zerops.yml
+
 To set basic env variables for the runtime environment, add the `envVariables` attribute to the runtime section in your `zerops.yml`
 
 ```yml
@@ -88,14 +95,14 @@ When you need to update a value of an existing env variable or change the set of
 
 **key**
 
-* must satisfy the following regular expression: `[a-zA-Z_]+[a-zA-Z0-9_]*`
-* all variable keys in the same service must be unique regardless of case
-* keys are case sensitive
+- must satisfy the following regular expression: `[a-zA-Z_]+[a-zA-Z0-9_]*`
+- all variable keys in the same service must be unique regardless of case
+- keys are case sensitive
 
 **value**
 
-* must contain only ASCII characters
-* the *End of Line* character is forbidden
+- must contain only ASCII characters
+- the _End of Line_ character is forbidden
 
 These restrictions apply to all [types of env variables](/dotnet/how-to/env-variables#types-of-env-variables-in-zerops).
 
@@ -128,7 +135,12 @@ Zerops creates several helper variables when a .NET service is created, e.g. `ho
 Generated env variables are listed on the **Environment variables** page. Scroll to the **Generated variables** section.
 
 <p align="center">
-<img src="/img/screenshots/nodejs_generated_variables.png" alt="image" width="100%" height="auto"/>
+  <img
+    src="/img/screenshots/nodejs_generated_variables.png"
+    alt="image"
+    width="100%"
+    height="auto"
+  />
 </p>
 
 ## How to read env variables from your .NET app
@@ -151,9 +163,11 @@ To access the `connectionString` env variable of the `mariadb1` service, use `ma
 To access the `password` env variable of the `mariadb2` service, use `mariadb2_password` as the env variable key.
 
 ## How to read runtime env variables in the build environment
+
 You can use runtime env variables in the build environment using the `RUNTIME_` prefix. For example if you have a runtime variable with the `connectionString` key, use the `RUNTIME_connectionString` to read the variable in the build environment. This rule applies both for basic and secret runtime variables.
 
 ## Basic and secret env variable with the same key
+
 If you create a secret env variable and a basic runtime env variable with the same key, Zerops saves the basic runtime env variable from your zerops.yml and ignores the secret env variable.
 
 If you create a basic build env variable and a runtime env variable with the same key, Zerops saves both because the build and runtime environments have separate sets of env variables.

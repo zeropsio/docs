@@ -1,6 +1,6 @@
-import React from "react"
-import clsx from "clsx"
-import { ThemeImage, ThemeImageProps } from "../.."
+import React from 'react';
+import clsx from 'clsx';
+import { ThemeImage, ThemeImageProps } from '../..';
 
 export const InlineThemeImage = (props: ThemeImageProps) => {
   return (
@@ -8,7 +8,7 @@ export const InlineThemeImage = (props: ThemeImageProps) => {
       {...props}
       width={20}
       height={20}
-      className={clsx(props.className, "inline")}
+      className={clsx(props.className, 'inline')}
     />
-  )
-}
+  );
+};

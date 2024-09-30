@@ -1,10 +1,14 @@
-import { ColorModeProvider, ModalProvider, NotificationProvider } from "docs-ui"
-import React from "react"
-import SkipToContent from "@theme/SkipToContent"
+import {
+  ColorModeProvider,
+  ModalProvider,
+  NotificationProvider,
+} from 'docs-ui';
+import React from 'react';
+import SkipToContent from '@theme/SkipToContent';
 
 type DocsProvidersProps = {
-  children?: React.ReactNode
-}
+  children?: React.ReactNode;
+};
 
 const DocsProviders = ({ children }: DocsProvidersProps) => {
   return (
@@ -16,7 +20,7 @@ const DocsProviders = ({ children }: DocsProvidersProps) => {
         </NotificationProvider>
       </ModalProvider>
     </ColorModeProvider>
-  )
-}
+  );
+};
 
-export default DocsProviders
+export default DocsProviders;

@@ -1,3 +1,3 @@
-export * from "./root"
-export * from "./tight"
-export * from "./wide"
+export * from './root';
+export * from './tight';
+export * from './wide';

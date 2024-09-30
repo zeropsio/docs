@@ -1,21 +1,21 @@
-import Admonition, { Props as AdmonitionProps } from "@theme/Admonition"
-import { useQueryStringValue } from "@docusaurus/theme-common/internal"
-import React from "react"
+import Admonition, { Props as AdmonitionProps } from '@theme/Admonition';
+import { useQueryStringValue } from '@docusaurus/theme-common/internal';
+import React from 'react';
 
 type QueryNoteProps = {
   query: {
-    key: string
-    value?: string
-  }
-  admonition: AdmonitionProps
-} & React.HTMLAttributes<HTMLDivElement>
+    key: string;
+    value?: string;
+  };
+  admonition: AdmonitionProps;
+} & React.HTMLAttributes<HTMLDivElement>;
 
 const QueryNote: React.FC<QueryNoteProps> = ({
-  query: { key, value = "" },
+  query: { key, value = '' },
   admonition,
   children,
 }) => {
-  const queryValue = useQueryStringValue(key)
+  const queryValue = useQueryStringValue(key);
 
   return (
     <>
@@ -23,7 +23,7 @@ const QueryNote: React.FC<QueryNoteProps> = ({
         <Admonition {...admonition}>{children}</Admonition>
       )}
     </>
-  )
-}
+  );
+};
 
-export default QueryNote
+export default QueryNote;

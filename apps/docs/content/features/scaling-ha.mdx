@@ -6,14 +6,19 @@ title: Automatic scaling and High Availability
 
 Zerops scales your application or a database based on the current load. If your application isn’t used so often the auto scaling reduces the amount of required hardware resources and thus reduces the costs. If your application is used more, then auto scaling increases the resources for the application to make sure it runs smoothly even with the higher demand.
 
-On Zerops, you never pay for resources you don’t need. At the same time you don’t have to worry about traffic peaks or fast growth as the auto scaling feature handles this with no trouble. By default Zerops scales the applications and databases based on the best practices but you are always in control. Set the ranges for the auto scaling and fine-tune the settings so it  fits the exact project and environment needs.
+On Zerops, you never pay for resources you don’t need. At the same time you don’t have to worry about traffic peaks or fast growth as the auto scaling feature handles this with no trouble. By default Zerops scales the applications and databases based on the best practices but you are always in control. Set the ranges for the auto scaling and fine-tune the settings so it fits the exact project and environment needs.
 
 ## Vertical and horizontal auto scaling
 
 Each application you deploy starts with the minimum hardware resources: **CPU** cores, **RAM** and **Disk**. Zerops monitors the usage of these 3 resources and if the usage exceeds a set threshold, more CPU cores, RAM or Disk is allocated to the service. This is called **vertical scaling**.
 
 <p align="center">
-<img src="/img/screenshots/scaling1.png" alt="image" width="80%" height="auto"/>
+  <img
+    src="/img/screenshots/scaling1.png"
+    alt="image"
+    width="80%"
+    height="auto"
+  />
 </p>
 
 **Horizontal scaling** adds or removes whole containers.
@@ -21,7 +26,12 @@ Each application you deploy starts with the minimum hardware resources: **CPU** 
 Zerops has a preference for vertical scaling because it's faster and more precise. If the vertical auto scaling hits the defined maximum a new container is started automatically. When your application doesn't need so much power and all containers are vertically scaled down, Zerops will gradually remove whole containers.
 
 <p align="center">
-<img src="/img/screenshots/scaling2.png" alt="image" width="100%" height="auto"/>
+  <img
+    src="/img/screenshots/scaling2.png"
+    alt="image"
+    width="100%"
+    height="auto"
+  />
 </p>
 
 ## Auto scaling configuration for runtimes
@@ -29,7 +39,12 @@ Zerops has a preference for vertical scaling because it's faster and more precis
 Both minimum and maximum limits for auto scaling are under your control. Technical minimums for CPU cores, RAM and Disk are preset for each runtime service. Configure the minimums and maximums CPU cores, RAM and Disk depending on the needs of your application and Zerops will scale them within defined limits.
 
 <p align="center">
-<img src="/img/screenshots/scaling3.png" alt="image" width="100%" height="auto"/>
+  <img
+    src="/img/screenshots/scaling3.png"
+    alt="image"
+    width="100%"
+    height="auto"
+  />
 </p>
 
 You can change the settings any time, Zerops will update the number of containers and their allocated resources accordingly.
@@ -39,7 +54,12 @@ You can change the settings any time, Zerops will update the number of container
 When creating a new runtime service, you can choose the minimum and maximum number of containers. If you set the maximum limit to one, the service will be run in a **single container** and no horizontal scaling will occur.
 
 <p align="center">
-<img src="/img/screenshots/scaling4.png" alt="image" width="100%" height="auto"/>
+  <img
+    src="/img/screenshots/scaling4.png"
+    alt="image"
+    width="100%"
+    height="auto"
+  />
 </p>
 
 By increasing the maximum number of containers for your service, you enable horizontal auto scaling. Zerops will then add containers depending on your application’s load. Application running on two or more containers is in **High Availability** mode, which we highly recommend for production. When the load drops, containers will be gradually removed to the defined minimum.
@@ -47,12 +67,15 @@ By increasing the maximum number of containers for your service, you enable hori
 Each container of the same service is strictly installed on a **different server**. This prevents the temporary outage in case any of Zerops servers fail. If the connection to a container is broken, Zerops immediately redirects incoming traffic to other containers. A new container will be started automatically and the broken container will be deleted.
 
 ## Shared vs. dedicated CPU
+
 Zerops offers 2 CPU modes:
 
 #### Shared
+
 Your application gets a full physical CPU core, but it is shared with up to 10 other applications. In this mode the power your application gets is dependent on other applications running on the same CPU core. At best case scenario your application gets 10/10 of CPU core power and 1/10 at worst case scenario.
 
 #### Dedicated
+
 The CPU core is dedicated to your application.
 
 :::info
@@ -62,12 +85,18 @@ See the [pricing](https://zerops.io/#pricing) for the difference between CPU mod
 Choose the CPU mode when starting a new service or change it later. The CPU mode doesn't change automatically.
 
 ## Fine-tune the auto scaling
+
 ### Advanced CPU settings
 
 If you've experienced problems with not enough power when your application starts, increase the default Start CPU core count. Alternatively switch the [CPU mode](#shared-vs-dedicated-cpu) to dedicated to allocate the stable CPU power to your application.
 
 <p align="center">
-<img src="/img/screenshots/scaling5.png" alt="image" width="80%" height="auto"/>
+  <img
+    src="/img/screenshots/scaling5.png"
+    alt="image"
+    width="80%"
+    height="auto"
+  />
 </p>
 
 If your application doesn't need so much power after it is started, Zerops will scale down the allocated CPU cores to the defined minimum.
@@ -85,7 +114,12 @@ But if your application need a more memory faster or if you have experienced pro
 3. or setting the minimum free RAM in % of the RAM assigned to the container
 
 <p align="center">
-<img src="/img/screenshots/scaling6.png" alt="image" width="80%" height="auto"/>
+  <img
+    src="/img/screenshots/scaling6.png"
+    alt="image"
+    width="80%"
+    height="auto"
+  />
 </p>
 
 You can set the minimum free RAM both in GB and in percent, Zerops will apply the larger value based on the current RAM assigned to the container.
@@ -99,7 +133,12 @@ Vertical auto scaling configuration for databases is identical to runtime servic
 You can choose 2 modes for each database: **Single Container** or **Highly Available** mode. The mode cannot be changed after the database is created.
 
 <p align="center">
-<img src="/img/screenshots/scaling7.png" alt="image" width="100%" height="auto"/>
+  <img
+    src="/img/screenshots/scaling7.png"
+    alt="image"
+    width="100%"
+    height="auto"
+  />
 </p>
 
 ### Database in the Single Container mode
@@ -123,6 +162,7 @@ This mode is highly recommended for production use.
 Zerops always keeps the database containers on different physical machines. All your data is stored redundantly in 3 identical copies (2 in case of Redis). In case of a failure of a container or the underlying physical machine, Zerops automatically disconnects the failed container from the cluster, creates a new container and syncs all data from the remaining copies. Finally the broken container is automatically deleted.
 
 ## Auto scaling configuration for shared storage
+
 Vertical auto scaling configuration for shared storage is identical to database. Technical minimums for CPU cores, RAM and Disk are preset.
 
 You can choose 2 modes for a shared storage service: Single Container or Highly Available mode. The mode cannot be changed after the shared storage is created.
@@ -134,7 +174,12 @@ In the **Single Container** mode the shared storage is deployed in a single cont
 Your data is stored only in a single container. If the container or the underlying physical machine fails, your data since the last backup will be lost. Zerops is not able to provide any automatic repair of single container mode shared storages.
 
 <p align="center">
-<img src="/img/screenshots/scaling8.png" alt="image" width="90%" height="auto"/>
+  <img
+    src="/img/screenshots/scaling8.png"
+    alt="image"
+    width="90%"
+    height="auto"
+  />
 </p>
 
 ### Highly Available mode shared storage

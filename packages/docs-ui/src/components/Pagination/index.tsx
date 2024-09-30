@@ -1,12 +1,12 @@
-"use client"
+'use client';
 
-import React from "react"
-import { usePagination } from "../../providers"
-import { Card } from "../Card"
-import { ChevronLeft, ChevronRight } from "@medusajs/icons"
+import React from 'react';
+import { usePagination } from '../../providers';
+import { Card } from '../Card';
+import { ChevronLeft, ChevronRight } from '@medusajs/icons';
 
 export const Pagination = () => {
-  const { previousPage, nextPage } = usePagination()
+  const { previousPage, nextPage } = usePagination();
 
   return (
     <div className="flex justify-between">
@@ -29,5 +29,5 @@ export const Pagination = () => {
         />
       )}
     </div>
-  )
-}
+  );
+};

@@ -104,142 +104,142 @@ import {
   QuestionMark,
   ChatBubbleLeftRight,
   Window,
-} from "@medusajs/icons"
-import IconPuzzleSolid from "./PuzzleSolid"
-import IconNextjs from "./Nextjs"
-import IconFlagMini from "./FlagMini"
-import IconBeaker from "./Beaker"
-import IconGitHub from "./GitHub"
-import IconNestjs from "./Nestjs"
-import IconLaravel from "./Laravel"
-import IconGingonic from "./Gingonic"
-import IconNette from "./Nette"
-import IconStrapi from "./Strapi"
-import IconNodejs from "./Nodejs"
-import IconPhp from "./Php"
-import IconGo from "./Go"
-import IconPython from "./Python"
-import IconDotnet from "./Dotnet"
-import IconRust from "./Rust"
-import IconJava from "./Java"
-import IconPostgresql from "./Postgresql"
-import IconMariadb from "./Mariadb"
-import IconMongodb from "./Mongodb"
-import IconElasticsearch from "./Elasticsearch"
-import IconKeydb from "./Keydb"
-import IconRabbitmq from "./Rabbitmq"
-import IconNginx from "./Nginx"
-import IconUbuntu from "./Ubuntu"
+} from '@medusajs/icons';
+import IconPuzzleSolid from './PuzzleSolid';
+import IconNextjs from './Nextjs';
+import IconFlagMini from './FlagMini';
+import IconBeaker from './Beaker';
+import IconGitHub from './GitHub';
+import IconNestjs from './Nestjs';
+import IconLaravel from './Laravel';
+import IconGingonic from './Gingonic';
+import IconNette from './Nette';
+import IconStrapi from './Strapi';
+import IconNodejs from './Nodejs';
+import IconPhp from './Php';
+import IconGo from './Go';
+import IconPython from './Python';
+import IconDotnet from './Dotnet';
+import IconRust from './Rust';
+import IconJava from './Java';
+import IconPostgresql from './Postgresql';
+import IconMariadb from './Mariadb';
+import IconMongodb from './Mongodb';
+import IconElasticsearch from './Elasticsearch';
+import IconKeydb from './Keydb';
+import IconRabbitmq from './Rabbitmq';
+import IconNginx from './Nginx';
+import IconUbuntu from './Ubuntu';
 
 export default {
-  "academic-cap-solid": AcademicCapSolid,
+  'academic-cap-solid': AcademicCapSolid,
   adjustments: Adjustments,
   alert: ExclamationCircleSolid,
-  "arrow-down-left-mini": ArrowDownLeftMini,
-  "arrow-down-tray": ArrowDownTray,
-  "back-arrow": ArrowUturnLeft,
-  "bars-three": BarsThree,
+  'arrow-down-left-mini': ArrowDownLeftMini,
+  'arrow-down-tray': ArrowDownTray,
+  'back-arrow': ArrowUturnLeft,
+  'bars-three': BarsThree,
   beaker: IconBeaker,
   bell: BellAlert,
-  "bell-alert-solid": BellAlertSolid,
+  'bell-alert-solid': BellAlertSolid,
   bolt: Bolt,
-  "bolt-solid": BoltSolid,
-  "book-open": BookOpen,
+  'bolt-solid': BoltSolid,
+  'book-open': BookOpen,
   bug: Bug,
-  "bug-ant-solid": BugAntSolid,
-  "building-solid": BuildingsSolid,
-  "building-storefront": BuildingStorefront,
-  "building-tax": BuildingTax,
+  'bug-ant-solid': BugAntSolid,
+  'building-solid': BuildingsSolid,
+  'building-storefront': BuildingStorefront,
+  'building-tax': BuildingTax,
   calendar: Calendar,
-  "cash-solid": CashSolid,
-  "channels-solid": ChannelsSolid,
+  'cash-solid': CashSolid,
+  'channels-solid': ChannelsSolid,
   channels: Channels,
-  "check-circle-solid": CheckCircleSolid,
-  "check-mini": CheckMini,
-  "chevron-double-left-mini-solid": ChevronDoubleLeftMiniSolid,
-  "chevron-up-down": ChevronUpDown,
-  "circle-dotted-line": CircleDottedLine,
-  "circle-mini-solid": CircleMiniSolid,
-  "circle-stack": CircleStack,
-  "circle-stack-solid": CircleStackSolid,
-  "clock-solid-mini": ClockSolidMini,
+  'check-circle-solid': CheckCircleSolid,
+  'check-mini': CheckMini,
+  'chevron-double-left-mini-solid': ChevronDoubleLeftMiniSolid,
+  'chevron-up-down': ChevronUpDown,
+  'circle-dotted-line': CircleDottedLine,
+  'circle-mini-solid': CircleMiniSolid,
+  'circle-stack': CircleStack,
+  'circle-stack-solid': CircleStackSolid,
+  'clock-solid-mini': ClockSolidMini,
   close: XMark,
-  "cloud-arrow-up": CloudArrowUp,
-  "cog-six-tooth": CogSixTooth,
-  "cog-six-tooth-solid": CogSixToothSolid,
-  "command-line": CommandLine,
-  "command-line-solid": CommandLineSolid,
-  "component-solid": ComponentSolid,
-  "computer-desktop": ComputerDesktop,
-  "computer-desktop-solid": ComputerDesktopSolid,
+  'cloud-arrow-up': CloudArrowUp,
+  'cog-six-tooth': CogSixTooth,
+  'cog-six-tooth-solid': CogSixToothSolid,
+  'command-line': CommandLine,
+  'command-line-solid': CommandLineSolid,
+  'component-solid': ComponentSolid,
+  'computer-desktop': ComputerDesktop,
+  'computer-desktop-solid': ComputerDesktopSolid,
   copy: SquareTwoStackSolid,
-  "credit-card-solid": CreditCardSolid,
-  "cube-solid": CubeSolid,
-  "currency-dollar": CurrencyDollar,
-  "currency-dollar-solid": CurrencyDollarSolid,
-  "dark-mode": Moon,
+  'credit-card-solid': CreditCardSolid,
+  'cube-solid': CubeSolid,
+  'currency-dollar': CurrencyDollar,
+  'currency-dollar-solid': CurrencyDollarSolid,
+  'dark-mode': Moon,
   discord: Discord,
-  "document-text": DocumentText,
-  "document-text-solid": DocumentTextSolid,
-  "ellipse-mini-solid": EllipseMiniSolid,
-  "exclamation-circle-solid": ExclamationCircleSolid,
-  "external-link": ArrowUpRightOnBox,
-  "flying-box": FlyingBox,
+  'document-text': DocumentText,
+  'document-text-solid': DocumentTextSolid,
+  'ellipse-mini-solid': EllipseMiniSolid,
+  'exclamation-circle-solid': ExclamationCircleSolid,
+  'external-link': ArrowUpRightOnBox,
+  'flying-box': FlyingBox,
   folder: Folder,
-  "folder-open": FolderOpen,
+  'folder-open': FolderOpen,
   gatsby: Gatsby,
-  "gift-solid": GiftSolid,
-  "flag-mini": IconFlagMini,
+  'gift-solid': GiftSolid,
+  'flag-mini': IconFlagMini,
   github: IconGitHub,
-  "globe-europe": GlobeEurope,
-  "globe-europe-solid": GlobeEuropeSolid,
-  "information-circle-solid": InformationCircleSolid,
+  'globe-europe': GlobeEurope,
+  'globe-europe-solid': GlobeEuropeSolid,
+  'information-circle-solid': InformationCircleSolid,
   javascript: JavascriptEx,
   key: Key,
-  "key-solid": KeySolid,
-  "light-bulb": LightBulb,
-  "light-bulb-solid": LightBulbSolid,
-  "light-mode": Sun,
+  'key-solid': KeySolid,
+  'light-bulb': LightBulb,
+  'light-bulb-solid': LightBulbSolid,
+  'light-mode': Sun,
   linkedin: Linkedin,
-  "magnifying-glass": MagnifyingGlass,
+  'magnifying-glass': MagnifyingGlass,
   map: Map,
   newspaper: Newspaper,
   nextjs: IconNextjs,
-  "pencil-square-solid": PencilSquareSolid,
-  "photo-solid": PhotoSolid,
+  'pencil-square-solid': PencilSquareSolid,
+  'photo-solid': PhotoSolid,
   puzzle: Puzzle,
   // TODO change once available in Icons package
-  "puzzle-solid": IconPuzzleSolid,
+  'puzzle-solid': IconPuzzleSolid,
   react: ReactJsEx,
-  "receipt-percent": ReceiptPercent,
+  'receipt-percent': ReceiptPercent,
   report: ExclamationCircle,
-  "rocket-launch": RocketLaunch,
+  'rocket-launch': RocketLaunch,
   server: Server,
-  "server-solid": ServerSolid,
-  "server-stack": ServerStack,
-  "server-stack-solid": ServerStackSolid,
-  "shopping-cart": ShoppingCart,
-  "shopping-cart-solid": ShoppingCartSolid,
+  'server-solid': ServerSolid,
+  'server-stack': ServerStack,
+  'server-stack-solid': ServerStackSolid,
+  'shopping-cart': ShoppingCart,
+  'shopping-cart-solid': ShoppingCartSolid,
   sidebar: SidebarLeft,
   sparkles: Sparkles,
-  "sparkles-solid": SparklesSolid,
-  "squares-plus": SquaresPlus,
-  "squares-plus-solid": SquaresPlusSolid,
+  'sparkles-solid': SparklesSolid,
+  'squares-plus': SquaresPlus,
+  'squares-plus-solid': SquaresPlusSolid,
   star: Star,
-  "star-solid": StarSolid,
+  'star-solid': StarSolid,
   stripe: Stripe,
-  "swatch-solid": SwatchSolid,
-  "tag-solid": TagSolid,
+  'swatch-solid': SwatchSolid,
+  'tag-solid': TagSolid,
   tools: Tools,
-  "tools-solid": ToolsSolid,
+  'tools-solid': ToolsSolid,
   twitter: Twitter,
   user: User,
-  "users-solid": UsersSolid,
-  "x-circle-solid": XCircleSolid,
-  "x-mark": XMark,
-  "x-mark-mini": XMarkMini,
-  "question-mark": QuestionMark,
-  "chat-bubble-left-right": ChatBubbleLeftRight,
+  'users-solid': UsersSolid,
+  'x-circle-solid': XCircleSolid,
+  'x-mark': XMark,
+  'x-mark-mini': XMarkMini,
+  'question-mark': QuestionMark,
+  'chat-bubble-left-right': ChatBubbleLeftRight,
   heart: Heart,
   nestjs: IconNestjs,
   laravel: IconLaravel,
@@ -248,7 +248,7 @@ export default {
   strapi: IconStrapi,
   medusa: Medusa,
   nodejs: IconNodejs,
-  "list-bullet": ListBullet,
+  'list-bullet': ListBullet,
   window: Window,
   swatch: Swatch,
   php: IconPhp,
@@ -265,4 +265,4 @@ export default {
   rabbitmq: IconRabbitmq,
   nginx: IconNginx,
   ubuntu: IconUbuntu,
-}
+};

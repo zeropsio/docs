@@ -3,17 +3,23 @@ title: Setup & access .NET logs
 ---
 
 Zerops provides 3 different logs:
-* [build log](#build-log)
-* [prepare runtime log](#prepare-runtime-log)
-* [runtime log](#runtime-log)
+
+- [build log](#build-log)
+- [prepare runtime log](#prepare-runtime-log)
+- [runtime log](#runtime-log)
 
 ## How to access logs
+
 ### Build log
+
 #### Zerops GUI
+
 To access a build log in Zerops GUI, go to the service detail and choose **Service dashboard & runtime containers** in the left menu. Then open the pipeline detail of an application version and click on **Build log**. The build log button is available only if the [build pipeline](/dotnet/how-to/trigger-pipeline) was triggered for the selected deploy.
 
 #### zCLI
+
 To access a build log in Zerops CLI use
+
 ```sh
 zcli service log --showBuildLogs
 ```
@@ -21,14 +27,19 @@ zcli service log --showBuildLogs
 Read more about the [zcli service log](/references/cli/access-logs) command.
 
 ### Prepare runtime log
+
 #### Zerops GUI
+
 To access a prepare runtime log in Zerops GUI, go to the service detail and choose **Service dashboard & runtime containers** in the left menu. Then open the pipeline detail of an application version and click on **Prepare runtime log**. The prepare runtime log button is available only if the [prepare runtime pipeline](/dotnet/how-to/build-pipeline#preparecommands-1) was triggered for the selected deploy.
 
 #### zCLI
+
 _Prepare runtime log is currently not supported in zCLI._
 
 ### Runtime log
+
 #### Zerops GUI
+
 To access a runtime log in Zerops GUI, go to the service detail and choose **Runtime log** in the left menu.
 
 **// TODO screenshot**
@@ -38,7 +49,9 @@ Each runtime container has its own log. If your service has multiple containers,
 You can filter log records by minimum severity or by time.
 
 #### zCLI
+
 To access the log of the runtime containers in Zerops CLI use
+
 ```sh
 zcli service log
 ```
@@ -46,12 +59,15 @@ zcli service log
 Read more about the [zcli service log](/references/cli/access-logs) command.
 
 ## .NET logging configuration
+
 Zerops logs all messages sent
-* to the standard error (`stderr`)
-* to the standard output (`stdout`)
-* via the .NET `Console` logging provider and `Log{LogLevel}` method
+
+- to the standard error (`stderr`)
+- to the standard output (`stdout`)
+- via the .NET `Console` logging provider and `Log{LogLevel}` method
 
 ### Severity level
+
 By default the `Log{LogLevel}` methods create messages with the `Informational (6)` severity.
 
 Add a severity number in the `<N>` format as a prefix to set a custom severity as shown below:
@@ -71,5 +87,12 @@ app.Logger.LogInformation('<7>Debug (7) severity > debug-level message.');
 ```
 
 :::info
-<code>logger.LogTrace</code>, <code>logger.LogInformation</code>, <code>logger.LogWarning</code>, <code>logger.LogDebug</code>, <code>logger.LogError</code> and <code>logger.LogCritical</code> are just aliases to the <code>logger.LogInformation</code> method. They don't set the appropriate severity number. Use the <code>&lt;N&gt;</code> prefix instead.
-:::
+
+<code>logger.LogTrace</code>, <code>logger.LogInformation</code>, <code>
+  logger.LogWarning
+</code>
+, <code>logger.LogDebug</code>, <code>logger.LogError</code> and <code>
+  logger.LogCritical
+</code> are just aliases to the <code>logger.LogInformation</code> method. They
+don't set the appropriate severity number. Use the <code>&lt;N&gt;</code> prefix
+instead. :::

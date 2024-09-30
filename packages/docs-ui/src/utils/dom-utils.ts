@@ -2,28 +2,28 @@ export function findPrevSibling(
   element: HTMLElement,
   selector: string
 ): HTMLElement | null {
-  let prevElement = element.previousElementSibling
+  let prevElement = element.previousElementSibling;
   while (prevElement !== null) {
     if (prevElement.matches(selector)) {
-      return prevElement as HTMLElement
+      return prevElement as HTMLElement;
     }
-    prevElement = prevElement.previousElementSibling
+    prevElement = prevElement.previousElementSibling;
   }
 
-  return null
+  return null;
 }
 
 export function findNextSibling(
   element: HTMLElement,
   selector: string
 ): HTMLElement | null {
-  let nextElement = element.nextElementSibling
+  let nextElement = element.nextElementSibling;
   while (nextElement !== null) {
     if (nextElement.matches(selector)) {
-      return nextElement as HTMLElement
+      return nextElement as HTMLElement;
     }
-    nextElement = nextElement.nextElementSibling
+    nextElement = nextElement.nextElementSibling;
   }
 
-  return null
+  return null;
 }

@@ -1,17 +1,17 @@
 function excludeSidebarResults(sidebarItems, categoryItem) {
-  const results = []
+  const results = [];
   sidebarItems.forEach((item) => {
-    if (item.type === "category") {
+    if (item.type === 'category') {
       results.push({
         ...item,
         items: excludeSidebarResults(item.items, categoryItem),
-      })
+      });
     } else if (!item.customProps?.exclude_from_auto_sidebar) {
-      return results.push(item)
+      return results.push(item);
     }
-  })
+  });
 
-  return results
+  return results;
 }
 
-module.exports = excludeSidebarResults
+module.exports = excludeSidebarResults;

@@ -1,8 +1,8 @@
-import React from "react"
-import { useThemeConfig } from "@docusaurus/theme-common"
+import React from 'react';
+import { useThemeConfig } from '@docusaurus/theme-common';
 // @ts-expect-error: wait until docusaurus uses type: module
-import { Cloudinary } from "@cloudinary/url-gen"
-import MDXImg, { Props as MDXImgProps } from "@theme/MDXComponents/Img"
+import { Cloudinary } from '@cloudinary/url-gen';
+import MDXImg, { Props as MDXImgProps } from '@theme/MDXComponents/Img';
 import {
   pad,
   imaggaScale,
@@ -18,9 +18,9 @@ import {
   minimumFit,
   limitPad,
   fillPad,
-} from "@cloudinary/url-gen/actions/resize"
-import { byRadius } from "@cloudinary/url-gen/actions/roundCorners"
-import { ThemeConfig } from "@medusajs/docs"
+} from '@cloudinary/url-gen/actions/resize';
+import { byRadius } from '@cloudinary/url-gen/actions/roundCorners';
+import { ThemeConfig } from '@medusajs/docs';
 
 const resizeActions = {
   pad: pad,
@@ -37,16 +37,16 @@ const resizeActions = {
   minimumFit: minimumFit,
   limitPad: limitPad,
   fillPad: fillPad,
-}
+};
 
 const imageRegex =
-  /^https:\/\/res.cloudinary.com\/.*\/upload\/v[0-9]+\/(?<imageId>.*)$/
+  /^https:\/\/res.cloudinary.com\/.*\/upload\/v[0-9]+\/(?<imageId>.*)$/;
 
-type CloudinaryImageProps = MDXImgProps
+type CloudinaryImageProps = MDXImgProps;
 
 const CloudinaryImage: React.FC<CloudinaryImageProps> = ({ src, ...props }) => {
-  const { cloudinaryConfig } = useThemeConfig() as ThemeConfig
-  const matchingRegex = src.match(imageRegex)
+  const { cloudinaryConfig } = useThemeConfig() as ThemeConfig;
+  const matchingRegex = src.match(imageRegex);
   if (
     !cloudinaryConfig ||
     !matchingRegex?.groups ||
@@ -55,52 +55,52 @@ const CloudinaryImage: React.FC<CloudinaryImageProps> = ({ src, ...props }) => {
     // either cloudinary isn't configured or
     // could not match url to a cloudinary url
     // default to docusaurus's image component
-    return <MDXImg src={src} {...props} />
+    return <MDXImg src={src} {...props} />;
   }
 
   const cloudinary = new Cloudinary({
     cloud: {
       cloudName: cloudinaryConfig.cloudName,
     },
-  })
+  });
   const image = cloudinary.image(
-    matchingRegex.groups.imageId.replaceAll("%20", " ")
-  )
+    matchingRegex.groups.imageId.replaceAll('%20', ' ')
+  );
 
-  cloudinaryConfig.flags?.forEach((flag) => image.addTransformation(flag))
+  cloudinaryConfig.flags?.forEach((flag) => image.addTransformation(flag));
 
   if (cloudinaryConfig.roundCorners) {
-    image.roundCorners(byRadius(cloudinaryConfig.roundCorners))
+    image.roundCorners(byRadius(cloudinaryConfig.roundCorners));
   }
   if (cloudinaryConfig.resize) {
-    const action = resizeActions[cloudinaryConfig.resize.action]
-    let resizeAction = action()
+    const action = resizeActions[cloudinaryConfig.resize.action];
+    let resizeAction = action();
     if (props.width || props.height) {
       if (props.width) {
-        resizeAction = resizeAction.width(props.width)
+        resizeAction = resizeAction.width(props.width);
       }
 
       if (props.height) {
-        resizeAction = resizeAction.height(props.height)
+        resizeAction = resizeAction.height(props.height);
       }
     } else if (cloudinaryConfig.resize.aspectRatio) {
       resizeAction = resizeAction.aspectRatio(
         cloudinaryConfig.resize.aspectRatio
-      )
+      );
     } else {
       if (cloudinaryConfig.resize.width) {
-        resizeAction = resizeAction.width(cloudinaryConfig.resize.width)
+        resizeAction = resizeAction.width(cloudinaryConfig.resize.width);
       }
 
       if (cloudinaryConfig.resize.height) {
-        resizeAction = resizeAction.height(cloudinaryConfig.resize.height)
+        resizeAction = resizeAction.height(cloudinaryConfig.resize.height);
       }
     }
 
-    image.resize(resizeAction)
+    image.resize(resizeAction);
   }
 
-  return <MDXImg {...props} src={image.toURL()} />
-}
+  return <MDXImg {...props} src={image.toURL()} />;
+};
 
-export default CloudinaryImage
+export default CloudinaryImage;

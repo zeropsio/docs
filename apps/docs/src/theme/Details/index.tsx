@@ -1,13 +1,13 @@
-import React from "react"
+import React from 'react';
 import {
   Details as UiDetails,
   type DetailsProps as UiDetailsProps,
-} from "docs-ui"
+} from 'docs-ui';
 
 export type DetailsProps = {
-  summary: React.ReactNode
-  children?: React.ReactNode
-} & UiDetailsProps
+  summary: React.ReactNode;
+  children?: React.ReactNode;
+} & UiDetailsProps;
 
 export default function Details({
   summary,
@@ -22,5 +22,5 @@ export default function Details({
     >
       {children}
     </UiDetails>
-  )
+  );
 }

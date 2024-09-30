@@ -1,5 +1,5 @@
-import { IconProps } from "@medusajs/icons/dist/types"
-import React from "react"
+import { IconProps } from '@medusajs/icons/dist/types';
+import React from 'react';
 
 export const ThumbUpIcon = (props: IconProps) => {
   return (
@@ -19,5 +19,5 @@ export const ThumbUpIcon = (props: IconProps) => {
         strokeLinejoin="round"
       />
     </svg>
-  )
-}
+  );
+};

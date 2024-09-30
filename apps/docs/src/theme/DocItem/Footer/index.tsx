@@ -1,13 +1,13 @@
-import React from "react"
-import Footer from "@theme-original/DocItem/Footer"
-import type FooterType from "@theme/DocItem/Footer"
-import type { WrapperProps } from "@docusaurus/types"
-import { useDoc } from "@docusaurus/theme-common/internal"
+import React from 'react';
+import Footer from '@theme-original/DocItem/Footer';
+import type FooterType from '@theme/DocItem/Footer';
+import type { WrapperProps } from '@docusaurus/types';
+import { useDoc } from '@docusaurus/theme-common/internal';
 
-type Props = WrapperProps<typeof FooterType>
+type Props = WrapperProps<typeof FooterType>;
 
 export default function FooterWrapper(props: Props): JSX.Element {
-  const { metadata } = useDoc()
+  const { metadata } = useDoc();
   return (
     <>
       {!metadata.frontMatter?.hide_footer && (
@@ -16,5 +16,5 @@ export default function FooterWrapper(props: Props): JSX.Element {
         </div>
       )}
     </>
-  )
+  );
 }

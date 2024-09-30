@@ -25,23 +25,25 @@ server {
 
 The configuration contains 2 variables:
 
-* **`{{.DocumentRoot}}`** is replaced by the <a href="/nginx/how-to/build-pipeline#documentroot"><code>run.documentRoot</code></a> attribute from the `zerops.yml`. If the attribute is not specified, the default value `/var/www` is used.
+- **`{{.DocumentRoot}}`** is replaced by the <a href="/nginx/how-to/build-pipeline#documentroot"><code>run.documentRoot</code></a> attribute from the `zerops.yml`. If the attribute is not specified, the default value `/var/www` is used.
 
 ## Customize Nginx configuration
+
 Follow these steps to customize the Nginx configuration in Nginx static service:
 
 1. Create a **.tmpl** file with the Nginx configuration in your repository.
 
 2. Optionally use following variables:
 
-* **`{{.DocumentRoot}}`** is replaced by the <a href="/nginx/how-to/build-pipeline#documentroot"><code>run.documentRoot</code></a> attribute from the `zerops.yml`. If the attribute is not specified, the default value `/var/www` is used.
+- **`{{.DocumentRoot}}`** is replaced by the <a href="/nginx/how-to/build-pipeline#documentroot"><code>run.documentRoot</code></a> attribute from the `zerops.yml`. If the attribute is not specified, the default value `/var/www` is used.
 
 Example:
+
 ```
 root {{.DocumentRoot}};
 ```
 
-* **`{{.Environment.ENV_NAME}}`** is replaced by the [env variable](/nginx/how-to/env-variables) value. The env variable must be either defined in [run.envVariables](/nginx/how-to/build-pipeline#envvariables-1) in `zerops.yml` or set as a [secret](/nginx/how-to/env-variables#set-secret-env-variables-in-zerops-gui) or [generated](/nginx/how-to/env-variables#generated-env-variables) env variable in Zerops GUI.
+- **`{{.Environment.ENV_NAME}}`** is replaced by the [env variable](/nginx/how-to/env-variables) value. The env variable must be either defined in [run.envVariables](/nginx/how-to/build-pipeline#envvariables-1) in `zerops.yml` or set as a [secret](/nginx/how-to/env-variables#set-secret-env-variables-in-zerops-gui) or [generated](/nginx/how-to/env-variables#generated-env-variables) env variable in Zerops GUI.
 
 :::caution
 Use the **.tmpl** file extension to make Zerops interpret the file as a template. Zerops will replace the supported variables listed above.
@@ -49,9 +51,9 @@ Use the **.tmpl** file extension to make Zerops interpret the file as a template
 
 3. Check that your Nginx configuration is consistent with Zerops requirements:
 
-* Do not use IP addresses in the `listen` directive
-* If you use other ports than `:80` in the `listen` directive, add them to the <a href="/nginx/how-to/build-pipeline#ports"><code>run.ports</code></a> in your `zerops.yml` as well.
-* Do not use the port **:443**. All the incoming `https://` traffic is terminated on the Zerops internal balancer where the SSL certificate is installed and the request is forwarded to your Nginx static service as a **http://** on the port **:80**.
+- Do not use IP addresses in the `listen` directive
+- If you use other ports than `:80` in the `listen` directive, add them to the <a href="/nginx/how-to/build-pipeline#ports"><code>run.ports</code></a> in your `zerops.yml` as well.
+- Do not use the port **:443**. All the incoming `https://` traffic is terminated on the Zerops internal balancer where the SSL certificate is installed and the request is forwarded to your Nginx static service as a **http://** on the port **:80**.
 
 4. Add the <a href="/nginx/how-to/build-pipeline#siteconfigpath"><code>siteConfigPath</code></a> to the run section of your `zerops.yml`
 

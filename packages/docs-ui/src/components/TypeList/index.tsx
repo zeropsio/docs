@@ -1,33 +1,33 @@
-import clsx from "clsx"
-import React, { Suspense, lazy } from "react"
-import { Loading } from "@/components"
+import clsx from 'clsx';
+import React, { Suspense, lazy } from 'react';
+import { Loading } from '@/components';
 
 export type CommonProps = {
-  expandUrl?: string
-  sectionTitle?: string
-  siteUrl?: string
+  expandUrl?: string;
+  sectionTitle?: string;
+  siteUrl?: string;
   // TODO replace this with inferring pathname when using Next.js only
-  pathname?: string
-}
+  pathname?: string;
+};
 
 export type Type = {
-  name: string
-  type: string
-  optional?: boolean
-  defaultValue?: string
-  description?: string
-  featureFlag?: string
-  expandable: boolean
-  children?: Type[]
-}
+  name: string;
+  type: string;
+  optional?: boolean;
+  defaultValue?: string;
+  description?: string;
+  featureFlag?: string;
+  expandable: boolean;
+  children?: Type[];
+};
 
 type ParameterTypesType = {
-  types: Type[]
-  sectionTitle?: string
+  types: Type[];
+  sectionTitle?: string;
 } & CommonProps &
-  React.HTMLAttributes<HTMLDivElement>
+  React.HTMLAttributes<HTMLDivElement>;
 
-const TypeListItems = lazy(async () => import("./Items"))
+const TypeListItems = lazy(async () => import('./Items'));
 
 export const TypeList = ({
   types,
@@ -41,7 +41,7 @@ export const TypeList = ({
   return (
     <div
       className={clsx(
-        "bg-docs-bg-surface shadow-card-rest rounded my-docs_1",
+        'bg-docs-bg-surface shadow-card-rest rounded my-docs_1',
         className
       )}
       {...props}
@@ -56,5 +56,5 @@ export const TypeList = ({
         />
       </Suspense>
     </div>
-  )
-}
+  );
+};

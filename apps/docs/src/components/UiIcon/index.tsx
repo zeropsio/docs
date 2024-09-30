@@ -1,16 +1,16 @@
-import React from "react"
-import ThemedImage from "@theme/ThemedImage"
+import React from 'react';
+import ThemedImage from '@theme/ThemedImage';
 
 type UiIconProps = {
-  lightIcon: string
-  darkIcon?: string
-  alt?: string
-}
+  lightIcon: string;
+  darkIcon?: string;
+  alt?: string;
+};
 
 const UiIcon: React.FC<UiIconProps> = ({
   lightIcon,
-  darkIcon = "",
-  alt = "",
+  darkIcon = '',
+  alt = '',
 }) => {
   return (
     <ThemedImage
@@ -21,7 +21,7 @@ const UiIcon: React.FC<UiIconProps> = ({
       }}
       className="align-sub w-[20px] h-[20px]"
     />
-  )
-}
+  );
+};
 
-export default UiIcon
+export default UiIcon;

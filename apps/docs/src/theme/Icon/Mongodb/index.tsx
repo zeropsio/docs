@@ -1,6 +1,6 @@
-import { IconProps } from "@medusajs/icons/dist/types"
-import clsx from "clsx"
-import React from "react"
+import { IconProps } from '@medusajs/icons/dist/types';
+import clsx from 'clsx';
+import React from 'react';
 
 const IconMongodb = (props: IconProps) => {
   return (
@@ -11,7 +11,7 @@ const IconMongodb = (props: IconProps) => {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       {...props}
-      className={clsx("text-ui-fg-subtle", props.className)}
+      className={clsx('text-ui-fg-subtle', props.className)}
     >
       <path
         d="m15.9.087.854 1.604c.192.296.4.558.645.802a22.406 22.406 0 0 1 2.004 2.266c1.447 1.9 2.423 4.01 3.12 6.292.418 1.394.645 2.824.662 4.27.07 4.323-1.412 8.035-4.4 11.12a12.7 12.7 0 0 1-1.57 1.342c-.296 0-.436-.227-.558-.436a3.589 3.589 0 0 1-.436-1.255c-.105-.523-.174-1.046-.14-1.586v-.244C16.057 24.21 15.796.21 15.9.087z"
@@ -26,7 +26,7 @@ const IconMongodb = (props: IconProps) => {
         fill="#c2bfbf"
       />
     </svg>
-  )
-}
+  );
+};
 
-export default IconMongodb
+export default IconMongodb;

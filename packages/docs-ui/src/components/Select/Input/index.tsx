@@ -1,11 +1,11 @@
-"use client"
+'use client';
 
-import React, { useRef, useState } from "react"
-import clsx from "clsx"
-import { useSelect } from "@/hooks"
-import { SelectDropdown, SelectProps } from ".."
-import { Badge } from "docs-ui"
-import { ChevronUpDown, XMarkMini } from "@medusajs/icons"
+import React, { useRef, useState } from 'react';
+import clsx from 'clsx';
+import { useSelect } from '@/hooks';
+import { SelectDropdown, SelectProps } from '..';
+import { Badge } from 'docs-ui';
+import { ChevronUpDown, XMarkMini } from '@medusajs/icons';
 
 export const SelectInput = ({
   value,
@@ -20,9 +20,9 @@ export const SelectInput = ({
   showClearButton = true,
   ...props
 }: SelectProps) => {
-  const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
-  const dropdownRef = useRef<HTMLDivElement>(null)
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const {
     isValueSelected,
     hasSelectedValue,
@@ -39,41 +39,41 @@ export const SelectInput = ({
     removeSelected,
     addSelected,
     handleAddAll,
-  })
+  });
 
   return (
     <div
       className={clsx(
-        "px-docs_0.75 relative py-[9px]",
-        "border-medusa-border-base rounded-docs_sm border border-solid",
-        "bg-medusa-bg-field shadow-button-neutral dark:shadow-button-neutral-dark",
-        "hover:bg-medusa-bg-field-hover",
-        "active:shadow-active dark:active:shadow-active-dark",
-        "focus:shadow-active dark:focus:shadow-active-dark",
-        "text-medusa-fg-base text-compact-medium",
-        "disabled:bg-medusa-bg-disabled",
-        "disabled:text-medusa-fg-disabled",
-        "flex items-center gap-docs_0.5",
-        !hasSelectedValues && "placeholder:text-medusa-fg-muted",
-        hasSelectedValues && "placeholder:text-medusa-fg-base",
+        'px-docs_0.75 relative py-[9px]',
+        'border-medusa-border-base rounded-docs_sm border border-solid',
+        'bg-medusa-bg-field shadow-button-neutral dark:shadow-button-neutral-dark',
+        'hover:bg-medusa-bg-field-hover',
+        'active:shadow-active dark:active:shadow-active-dark',
+        'focus:shadow-active dark:focus:shadow-active-dark',
+        'text-medusa-fg-base text-compact-medium',
+        'disabled:bg-medusa-bg-disabled',
+        'disabled:text-medusa-fg-disabled',
+        'flex items-center gap-docs_0.5',
+        !hasSelectedValues && 'placeholder:text-medusa-fg-muted',
+        hasSelectedValues && 'placeholder:text-medusa-fg-base',
         className
       )}
       ref={ref}
       onClick={(e) => {
         if (!dropdownRef.current?.contains(e.target as Element)) {
-          setOpen((prev) => !prev)
+          setOpen((prev) => !prev);
         }
       }}
     >
       {hasSelectedValues && (
         <Badge
           variant="neutral"
-          className={clsx("flex", showClearButton && "flex-1")}
+          className={clsx('flex', showClearButton && 'flex-1')}
         >
           <span
             className={clsx(
-              "text-compact-medium-plus inline-block",
-              showClearButton && "mr-docs_0.125"
+              'text-compact-medium-plus inline-block',
+              showClearButton && 'mr-docs_0.125'
             )}
           >
             {(value as string[]).length}
@@ -82,8 +82,8 @@ export const SelectInput = ({
             <XMarkMini
               className="text-medusa-tag-neutral-icon"
               onClick={(e) => {
-                e.stopPropagation()
-                setSelected?.([])
+                e.stopPropagation();
+                setSelected?.([]);
               }}
             />
           )}
@@ -91,8 +91,8 @@ export const SelectInput = ({
       )}
       <span
         className={clsx(
-          "inline-block flex-1 select-none overflow-ellipsis whitespace-nowrap break-words",
-          hasSelectedValues && "max-w-1/3"
+          'inline-block flex-1 select-none overflow-ellipsis whitespace-nowrap break-words',
+          hasSelectedValues && 'max-w-1/3'
         )}
       >
         {!multiple && hasSelectedValue && selectedValues.length
@@ -103,7 +103,7 @@ export const SelectInput = ({
       <input
         type="hidden"
         name={props.name}
-        value={Array.isArray(value) ? value.join(",") : value}
+        value={Array.isArray(value) ? value.join(',') : value}
       />
       <SelectDropdown
         options={options}
@@ -119,5 +119,5 @@ export const SelectInput = ({
         passedRef={dropdownRef}
       />
     </div>
-  )
-}
+  );
+};

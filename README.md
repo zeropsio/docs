@@ -13,7 +13,6 @@ Our <b>Documentation</b> for people who want help with interacting with <a href=
 
 This repository utilizes the powerful [MedusaJS Docs](http://docs.medusajs.com/) theme and components, combined with Docusaurus, to serve users a seamless documentation experience.
 
-
 ## Contributing Guide
 
 If you're planning to contribute to our documentation, please check out our [CONTRIBUTING.md](https://github.com/zeropsio/docs/blob/main/CONTRIBUTING.md) guide.

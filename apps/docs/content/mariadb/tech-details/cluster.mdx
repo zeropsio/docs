@@ -1,24 +1,28 @@
 ---
 title: ​​​​Asynchronous behaviour of MariaDB cluster
 ---
+
 The following description applies only to the [highly available mode](/mariadb/how-to/create#highly-available) of the MariaDB service.
 
 ## Description of MariaDB cluster
+
 MariaDB cluster in highly available mode contains 3 database containers and 2 free database proxies.
 
 **// TODO diagram [inspirace](https://mariadb.com/resources/blog/mariadb-maxscale-6-0-native-clustering/)**
 
 #### 1 write node + 2 read nodes
-Zerops always keeps the 3 database containers on different physical machines. A MariaDB cluster node is installed in each database container. First a writer node is started followed by 2 read nodes. All your data is stored redundantly in 3 identical copies. 
+
+Zerops always keeps the 3 database containers on different physical machines. A MariaDB cluster node is installed in each database container. First a writer node is started followed by 2 read nodes. All your data is stored redundantly in 3 identical copies.
 
 If the container with one of the reader nodes fails, Zerops disconnects it from the MariaDB cluster. Zerops then creates a new container with a MariaDB read node inside, connects it to the cluster and starts the synchronisation of the data to the new node. Finally the broken container is deleted.
 
 If the container with the writer node fails, Zerops disconnects it from the MariaDB cluster and one of the read nodes is automatically promoted to the writer node. Zerops creates a new container with a MariaDB read node inside, connects it to the cluster and starts the synchronisation of the data to the new node. Finally the broken container is deleted.
 
 #### 2 database proxies
-Zerops uses [MaxScale 2.5 ↗](https://mariadb.com/kb/en/maxscale/), this database proxy is optimised specifically for MariaDB. MaxScale database proxy understands the mysql protocol. It forwards all **write requests** to the writer node and all **read requests** to read nodes. 
 
-Zerops creates 2 containers with MaxScale database proxy and connects them to the database cluster in the highly available infrastructure. Zerops always keep the 2 database proxies on different physical machines. 
+Zerops uses [MaxScale 2.5 ↗](https://mariadb.com/kb/en/maxscale/), this database proxy is optimised specifically for MariaDB. MaxScale database proxy understands the mysql protocol. It forwards all **write requests** to the writer node and all **read requests** to read nodes.
+
+Zerops creates 2 containers with MaxScale database proxy and connects them to the database cluster in the highly available infrastructure. Zerops always keep the 2 database proxies on different physical machines.
 
 If a container with the database proxy fails, Zerops starts a new container automatically. Database proxy doesn't contain any data therefore the start of the new database proxy is fast.
 
@@ -42,17 +46,14 @@ Zerops uses the asynchronous replication in MariaDB cluster.
 
 MariaDB cluster returns old data most often when you use the `SELECT` query right after the `COMMIT` in the same algorithm. This problem can be solved by moving the `SELECT` query into the transaction. All queries inside a `BEGIN..COMMIT` transaction are always executed against the write node.
 
-#### Enable synchronous checks for SELECT queries 
+#### Enable synchronous checks for SELECT queries
 
 For a critical read that must have the most up-to-date data use the `wsrep_sync_wait` option:
 
 ```sh
-SET SESSION wsrep_sync_wait=1; 
-SELECT ...; 
+SET SESSION wsrep_sync_wait=1;
+SELECT ...;
 SET SESSION wsrep_sync_wait=0;
 ```
 
-
 When the `wsrep_sync_wait=1` option is used, the read node will synchronise data from the write node before executing the query. The read node will wait until all updates from the write node that were committed before the `SELECT` query was received and only then executes the query.
-
-

@@ -1,4 +1,4 @@
-"use client"
+'use client';
 
 import React, {
   createContext,
@@ -7,50 +7,50 @@ import React, {
   useState,
   useMemo,
   useRef,
-} from "react"
-import { BadgeProps, Modal, Search, SearchProps } from "@/components"
-import { checkArraySameElms } from "../../utils"
-import algoliasearch, { SearchClient } from "algoliasearch/lite"
-import clsx from "clsx"
-import { CSSTransition, SwitchTransition } from "react-transition-group"
+} from 'react';
+import { BadgeProps, Modal, Search, SearchProps } from '@/components';
+import { checkArraySameElms } from '../../utils';
+import algoliasearch, { SearchClient } from 'algoliasearch/lite';
+import clsx from 'clsx';
+import { CSSTransition, SwitchTransition } from 'react-transition-group';
 
 export type SearchCommand = {
-  name: string
-  component: React.ReactNode
-  icon?: React.ReactNode
-  title: string
-  badge?: BadgeProps
-}
+  name: string;
+  component: React.ReactNode;
+  icon?: React.ReactNode;
+  title: string;
+  badge?: BadgeProps;
+};
 
 export type SearchContextType = {
-  isOpen: boolean
-  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>
-  defaultFilters: string[]
-  setDefaultFilters: (value: string[]) => void
-  searchClient: SearchClient
-  commands: SearchCommand[]
-  command: SearchCommand | null
-  setCommand: React.Dispatch<React.SetStateAction<SearchCommand | null>>
-  modalRef: React.MutableRefObject<HTMLDialogElement | null>
-}
+  isOpen: boolean;
+  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  defaultFilters: string[];
+  setDefaultFilters: (value: string[]) => void;
+  searchClient: SearchClient;
+  commands: SearchCommand[];
+  command: SearchCommand | null;
+  setCommand: React.Dispatch<React.SetStateAction<SearchCommand | null>>;
+  modalRef: React.MutableRefObject<HTMLDialogElement | null>;
+};
 
-const SearchContext = createContext<SearchContextType | null>(null)
+const SearchContext = createContext<SearchContextType | null>(null);
 
 export type AlgoliaProps = {
-  appId: string
-  apiKey: string
-  mainIndexName: string
-  indices: string[]
-}
+  appId: string;
+  apiKey: string;
+  mainIndexName: string;
+  indices: string[];
+};
 
 export type SearchProviderProps = {
-  children: React.ReactNode
-  initialDefaultFilters?: string[]
-  algolia: AlgoliaProps
-  searchProps: Omit<SearchProps, "algolia">
-  commands?: SearchCommand[]
-  modalClassName?: string
-}
+  children: React.ReactNode;
+  initialDefaultFilters?: string[];
+  algolia: AlgoliaProps;
+  searchProps: Omit<SearchProps, 'algolia'>;
+  commands?: SearchCommand[];
+  modalClassName?: string;
+};
 
 export const SearchProvider = ({
   children,
@@ -60,16 +60,16 @@ export const SearchProvider = ({
   commands = [],
   modalClassName,
 }: SearchProviderProps) => {
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(false);
   const [defaultFilters, setDefaultFilters] = useState<string[]>(
     initialDefaultFilters
-  )
-  const [command, setCommand] = useState<SearchCommand | null>(null)
+  );
+  const [command, setCommand] = useState<SearchCommand | null>(null);
 
-  const modalRef = useRef<HTMLDialogElement | null>(null)
+  const modalRef = useRef<HTMLDialogElement | null>(null);
 
   const searchClient: SearchClient = useMemo(() => {
-    const algoliaClient = algoliasearch(algolia.appId, algolia.apiKey)
+    const algoliaClient = algoliasearch(algolia.appId, algolia.apiKey);
     return {
       ...algoliaClient,
       async search(requests) {
@@ -83,25 +83,25 @@ export const SearchProvider = ({
               processingTimeMS: 0,
               hitsPerPage: 0,
               exhaustiveNbHits: false,
-              query: "",
-              params: "",
+              query: '',
+              params: '',
             })),
-          })
+          });
         }
 
-        return algoliaClient.search(requests)
+        return algoliaClient.search(requests);
       },
-    }
-  }, [algolia.appId, algolia.apiKey])
+    };
+  }, [algolia.appId, algolia.apiKey]);
 
   useEffect(() => {
     if (
       initialDefaultFilters.length &&
       !checkArraySameElms(defaultFilters, initialDefaultFilters)
     ) {
-      setDefaultFilters(initialDefaultFilters)
+      setDefaultFilters(initialDefaultFilters);
     }
-  }, [initialDefaultFilters])
+  }, [initialDefaultFilters]);
 
   return (
     <SearchContext.Provider
@@ -120,14 +120,14 @@ export const SearchProvider = ({
       {children}
       <Modal
         contentClassName={clsx(
-          "!p-0 overflow-hidden relative h-full",
-          "rounded-none md:rounded-docs_lg flex flex-col justify-between"
+          '!p-0 overflow-hidden relative h-full',
+          'rounded-none md:rounded-docs_lg flex flex-col justify-between'
         )}
         modalContainerClassName={clsx(
-          "!rounded-none md:!rounded-docs_lg",
-          "md:!h-[480px] h-screen",
-          "md:!w-[640px] w-screen",
-          "bg-medusa-bg-base"
+          '!rounded-none md:!rounded-docs_lg',
+          'md:!h-[480px] h-screen',
+          'md:!w-[640px] w-screen',
+          'bg-medusa-bg-base'
         )}
         open={isOpen}
         onClose={() => setIsOpen(false)}
@@ -139,15 +139,15 @@ export const SearchProvider = ({
             classNames={{
               enter:
                 command === null
-                  ? "animate-fadeInLeft animate-fast"
-                  : "animate-fadeInRight animate-fast",
+                  ? 'animate-fadeInLeft animate-fast'
+                  : 'animate-fadeInRight animate-fast',
               exit:
                 command === null
-                  ? "animate-fadeOutLeft animate-fast"
-                  : "animate-fadeOutRight animate-fast",
+                  ? 'animate-fadeOutLeft animate-fast'
+                  : 'animate-fadeOutRight animate-fast',
             }}
             timeout={300}
-            key={command?.name || "search"}
+            key={command?.name || 'search'}
           >
             <>
               {command === null && (
@@ -159,15 +159,15 @@ export const SearchProvider = ({
         </SwitchTransition>
       </Modal>
     </SearchContext.Provider>
-  )
-}
+  );
+};
 
 export const useSearch = (): SearchContextType => {
-  const context = useContext(SearchContext)
+  const context = useContext(SearchContext);
 
   if (!context) {
-    throw new Error("useSearch must be used inside a SearchProvider")
+    throw new Error('useSearch must be used inside a SearchProvider');
   }
 
-  return context
-}
+  return context;
+};

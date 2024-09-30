@@ -1,6 +1,4 @@
 module.exports = {
   root: true,
-  extends: [
-    "docs/content"
-  ],
-}
+  extends: ['docs/content'],
+};

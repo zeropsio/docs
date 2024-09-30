@@ -1,11 +1,11 @@
-import React from "react"
-import clsx from "clsx"
+import React from 'react';
+import clsx from 'clsx';
 
 export type LegacyLinkProps = {
-  href?: string
-  children?: React.ReactNode
-  className?: string
-} & React.AllHTMLAttributes<HTMLAnchorElement>
+  href?: string;
+  children?: React.ReactNode;
+  className?: string;
+} & React.AllHTMLAttributes<HTMLAnchorElement>;
 
 export const LegacyLink = ({
   href,
@@ -15,14 +15,14 @@ export const LegacyLink = ({
 }: LegacyLinkProps) => {
   return (
     <a
-      href={href || ""}
+      href={href || ''}
       {...rest}
       className={clsx(
-        "text-medusa-fg-interactive hover:text-medusa-fg-interactive-hover",
+        'text-medusa-fg-interactive hover:text-medusa-fg-interactive-hover',
         className
       )}
     >
       {children}
     </a>
-  )
-}
+  );
+};

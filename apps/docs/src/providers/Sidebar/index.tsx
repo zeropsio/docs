@@ -4,76 +4,76 @@ import React, {
   useContext,
   useEffect,
   useState,
-} from "react"
-import { prefersReducedMotion } from "@docusaurus/theme-common"
+} from 'react';
+import { prefersReducedMotion } from '@docusaurus/theme-common';
 
 type SidebarContextType = {
-  hasSidebar: boolean
-  hiddenSidebar: boolean
-  setHiddenSidebar: (value: boolean) => void
-  hiddenSidebarContainer: boolean
-  setHiddenSidebarContainer: (value: boolean) => void
-  floatingSidebar: boolean
-  setFloatingSidebar: (value: boolean) => void
-  onCollapse: () => void
-}
+  hasSidebar: boolean;
+  hiddenSidebar: boolean;
+  setHiddenSidebar: (value: boolean) => void;
+  hiddenSidebarContainer: boolean;
+  setHiddenSidebarContainer: (value: boolean) => void;
+  floatingSidebar: boolean;
+  setFloatingSidebar: (value: boolean) => void;
+  onCollapse: () => void;
+};
 
-const SidebarContext = createContext<SidebarContextType | null>(null)
+const SidebarContext = createContext<SidebarContextType | null>(null);
 
 type SidebarProviderProps = {
-  sidebarName?: string
-  children?: React.ReactNode
-}
+  sidebarName?: string;
+  children?: React.ReactNode;
+};
 
 const SidebarProvider: React.FC<SidebarProviderProps> = ({
   sidebarName,
   children,
 }) => {
-  const [hiddenSidebar, setHiddenSidebar] = useState(false)
-  const [hiddenSidebarContainer, setHiddenSidebarContainer] = useState(false)
-  const [floatingSidebar, setFloatingSidebar] = useState(false)
+  const [hiddenSidebar, setHiddenSidebar] = useState(false);
+  const [hiddenSidebarContainer, setHiddenSidebarContainer] = useState(false);
+  const [floatingSidebar, setFloatingSidebar] = useState(false);
 
   const toggleSidebar = useCallback(() => {
     if (hiddenSidebar) {
-      setHiddenSidebar(false)
+      setHiddenSidebar(false);
     }
     // onTransitionEnd won't fire when sidebar animation is disabled
     // fixes https://github.com/facebook/docusaurus/issues/8918
     if (!hiddenSidebar && prefersReducedMotion()) {
-      setHiddenSidebar(true)
+      setHiddenSidebar(true);
     }
-    setHiddenSidebarContainer((value) => !value)
-  }, [setHiddenSidebarContainer, hiddenSidebar])
+    setHiddenSidebarContainer((value) => !value);
+  }, [setHiddenSidebarContainer, hiddenSidebar]);
 
   useEffect(() => {
     function isEditingContent(event: KeyboardEvent) {
-      const element = event.target as HTMLElement
-      const tagName = element.tagName
+      const element = event.target as HTMLElement;
+      const tagName = element.tagName;
       return (
         element.isContentEditable ||
-        tagName === "INPUT" ||
-        tagName === "SELECT" ||
-        tagName === "TEXTAREA"
-      )
+        tagName === 'INPUT' ||
+        tagName === 'SELECT' ||
+        tagName === 'TEXTAREA'
+      );
     }
 
     function sidebarShortcut(e: KeyboardEvent) {
       if (
         (e.metaKey || e.ctrlKey) &&
-        e.key.toLowerCase() === "i" &&
+        e.key.toLowerCase() === 'i' &&
         !isEditingContent(e)
       ) {
-        e.preventDefault()
-        toggleSidebar()
+        e.preventDefault();
+        toggleSidebar();
       }
     }
 
-    window.addEventListener("keydown", sidebarShortcut)
+    window.addEventListener('keydown', sidebarShortcut);
 
     return () => {
-      window.removeEventListener("keydown", sidebarShortcut)
-    }
-  })
+      window.removeEventListener('keydown', sidebarShortcut);
+    };
+  });
 
   return (
     <SidebarContext.Provider
@@ -90,13 +90,13 @@ const SidebarProvider: React.FC<SidebarProviderProps> = ({
     >
       {children}
     </SidebarContext.Provider>
-  )
-}
+  );
+};
 
-export default SidebarProvider
+export default SidebarProvider;
 
 export const useSidebar = () => {
-  const context = useContext(SidebarContext)
+  const context = useContext(SidebarContext);
 
-  return context
-}
+  return context;
+};

@@ -2,8 +2,8 @@
 title: Create a Python service in Zerops
 ---
 
-import data from "@site/static/data.json"
-import UnorderedList from '@site/src/components/UnorderedList'
+import data from '@site/static/data.json';
+import UnorderedList from '@site/src/components/UnorderedList';
 
 Zerops provides a Python runtime service with extensive build support. Python runtime is highly scalable and customisable to suit both development and production.
 
@@ -14,25 +14,30 @@ First, set up a project in Zerops GUI. Then go to the project dashboard page and
 **// TODO screenshot (add a new service page)**
 
 ### Choose Python version
+
 Following Python major versions are currently supported:
-<UnorderedList data={data.pythonMajorVersions}/>
+
+<UnorderedList data={data.pythonMajorVersions} />
 
 :::info
 You can [change](/python/how-to/upgrade) the major version at any time later.
 :::
 
 ### Set a hostname
+
 Enter a unique service identifier like "app","cache", "gui" etc. Duplicate services with the same name in the same project are forbidden.
 
 #### Limitations:
-* maximum 25 characters
-* must contain only lowercase ASCII letters (a-z) or numbers (0-9)
+
+- maximum 25 characters
+- must contain only lowercase ASCII letters (a-z) or numbers (0-9)
 
 :::caution
 The hostname is fixed after the service is created. It can't be changed later.
 :::
 
 ### Set secret env variables
+
 Add environment variables with sensitive data, such as password, tokens, salts, certificates etc. These will be securely saved inside Zerops and added to your runtime service upon start.
 
 Setting the secret environment variables is optional. You can set them later in Zerops GUI.
@@ -40,10 +45,11 @@ Setting the secret environment variables is optional. You can set them later in 
 Read more about [different types of env variables](/python/how-to/env-variables#types-of-env-variables-in-zerops) in Zerops.
 
 ### Set auto scaling configuration
+
 Zerops scales the Python services automatically both vertically and horizontally. Vertical scaling means increasing or decreasing the hardware resources (CPU, RAM and disk) of a Python container. Horizontal scaling adds or removes whole containers.
 
 <p align="center">
-<img src="/img/screenshots/create_nodejs_service_2.png" alt="image"/>
+  <img src="/img/screenshots/create_nodejs_service_2.png" alt="image" />
 </p>
 
 #### CPU Mode
@@ -64,11 +70,11 @@ Choose the CPU mode when starting a new service or change it later. The CPU mode
 
 Vertical auto scaling has following default configuration:
 
-| &nbsp;              | Minimum resource | Maximum resource |
-| ------------------- | ---------------- | ---------------- |
-| **CPU cores**            | 1                | 5               |
-| **RAM**             | 0.25 GB          | 32 GB            |
-| **Disk**            | 5 GB             | 100 GB           |
+| &nbsp;        | Minimum resource | Maximum resource |
+| ------------- | ---------------- | ---------------- |
+| **CPU cores** | 1                | 5                |
+| **RAM**       | 0.25 GB          | 32 GB            |
+| **Disk**      | 5 GB             | 100 GB           |
 
 Python service always starts with the minimal resources.
 
@@ -89,17 +95,22 @@ You can change the vertical auto scaling parameters later.
 When a container needs more CPU or RAM but already consumes maximal resources defined for the vertical auto scaling, Zerops will add a new container to your Python service. When your Python service doesn't need so much power and all containers are vertically scaled down in such a way their CPU allocation is near the minimal resources, Zerops will gradually remove whole containers.
 
 Horizontal auto scaling has following default configuration:
+
 <table>
-<tbody>
-	<tr>
-		<td><b>minimum containers</b></td>
-		<td>1</td>
-	</tr>
-	<tr>
-		<td><b>maximum containers</b></td>
-		<td>6</td>
-	</tr>
-</tbody>
+  <tbody>
+    <tr>
+      <td>
+        <b>minimum containers</b>
+      </td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>
+        <b>maximum containers</b>
+      </td>
+      <td>6</td>
+    </tr>
+  </tbody>
 </table>
 
 Python service always starts with the minimum number of containers.
@@ -125,12 +136,15 @@ Check if your application is ready to be run in multiple containers.
 :::
 
 ## Create Python service using zCLI
+
 zCLI is the Zerops command-line tool. To create a new Python service via the command-line, follow these steps:
+
 1. [Install & setup zCLI](/references/cli)
 2. [Create a project description file](/python/how-to/create#create-a-project-description-file)
 3. [Create a project with a Python and PostgreSQL service](#full-example)
 
 ### Create a project description file
+
 Zerops uses a yaml format to describe the project infrastructure.
 
 #### Basic example:
@@ -144,8 +158,7 @@ project:
   name: my-project
 # array of project services
 services:
-  -
-    # service name
+  - # service name
     hostname: app
     # service type and version number in python@{version} format
     type: python@latest
@@ -155,8 +168,8 @@ services:
     maxContainers: 6
     # optional: create env variables
     envSecrets:
-      S3_ACCESS_KEY_ID: "P8cX1vVVb"
-      S3_ACCESS_SECRET: "ogFthuiLYki8XoL73opSCQ"
+      S3_ACCESS_KEY_ID: 'P8cX1vVVb'
+      S3_ACCESS_SECRET: 'ogFthuiLYki8XoL73opSCQ'
 ```
 
 The yaml file describes your future project infrastructure. The project will contain one Python version 3.12 service with default [auto scaling](/python/how-to/scaling) configuration. Hostname will be set to "app", the internal port(s) the service listens on will be defined later in the [zerops.yml](/python/how-to/build-pipeline#ports). Following secret env variables will be configured:
@@ -183,8 +196,7 @@ project:
     - ZEROPS
 # array of project services
 services:
-  -
-    # service name
+  - # service name
     hostname: app
     # service type and version number in python@{version} format
     type: python@latest
@@ -206,10 +218,9 @@ services:
     maxContainers: 4
     # optional: create secret env variables
     envSecrets:
-      S3_ACCESS_KEY_ID: "P8cX1vVVb"
-      S3_ACCESS_SECRET: "ogFthuiLYki8XoL73opSCQ"
-  -
-    # second service hostname
+      S3_ACCESS_KEY_ID: 'P8cX1vVVb'
+      S3_ACCESS_SECRET: 'ogFthuiLYki8XoL73opSCQ'
+  - # second service hostname
     hostname: db
     # service type and version number in postgresql@{version} format
     type: postgresql@12
@@ -232,67 +243,158 @@ The hostname of the PostgreSQL service will be set to "db". The [single containe
 
 The `project:` section is required. Only one project can be defined.
 
-| Parameter              | Description                                                                   | Limitations             |
-| ---------------------- | ----------------------------------------------------------------------------- | -----------             |
-| **name**               | The name of the new project. Duplicates are allowed.                          |                         |
-| **description**        | **Optional.** Description of the new project.                                 | Maximum 255 characters. |
-| **tags**               | **Optional.** One or more string tags. Tags do not have a functional meaning, they only provide better orientation in projects.          |
-
+| Parameter       | Description                                                                                                                     | Limitations             |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| **name**        | The name of the new project. Duplicates are allowed.                                                                            |                         |
+| **description** | **Optional.** Description of the new project.                                                                                   | Maximum 255 characters. |
+| **tags**        | **Optional.** One or more string tags. Tags do not have a functional meaning, they only provide better orientation in projects. |
 
 At least one service in `services:` section is required. You can create a project with multiple services. The example above contains Python and PostgreSQL services but you can create a `description.yml` with your own combination of [services](/features/infrastructure).
 
 <table>
-<thead>
-	<tr>
-		<th>Parameter</th>
-		<th>Description</th>
-	</tr>
-</thead>
-<tbody>
-	<tr>
-		<td>
-      <b>hostname</b>
-    </td>
-		<td>
-      The unique service identifier.<br/><br/>The hostname of the new database will be set to the <code>hostname</code> value. <br/><br/><b>Limitations:</b><br/>- duplicate services with the same name in the same project are forbidden<br/>
-      - maximum 25 characters<br/>
-      - must contain only lowercase ASCII letters (a-z) or numbers (0-9)
-    </td>
-	</tr>
-	<tr>
-  <td><b>type</b></td>
-		<td>Specifies the service type <code>python</code> and version.<br/>Set type: <code>python<span>@</span>&lt;version&gt;</code> or <code>python<span>@</span>latest</code><br/><br/><b>Limitations:</b><br/>Following Python major versions are currently supported: <i>3.8</i>,<i>3.9</i>,<i>3.10</i>,<i>3.11</i>,<i>3.12</i></td>
-	</tr>
+  <thead>
     <tr>
-  <td><b>verticalAutoscaling</b></td>
-		<td><b>Optional.</b> Defines <a href="/python/how-to/create#set-auto-scaling-configuration">custom vertical auto scaling parameters</a>.<br/>
-		All verticalAutoscaling attributes are optional. Not specified attributes will be set to their default values.</td>
-		</tr>
+      <th>Parameter</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
     <tr>
-  <td><b> - cpuMode</b></td>
-         <td><b>Optional.</b> Accepts <code>SHARED</code>, <code>DEDICATED</code> values. Default is <code>SHARED</code></td>
-     </tr>
-  <tr>
-    <td><b> - minCpu/maxCpu</b></td>
-        <td><b>Optional.</b> Set the minCpu or maxCpu in CPU cores (integer).</td>
-        </tr>
-     <tr><td><b> - minRam/maxRam</b></td>
-     <td><b>Optional.</b> Set the minRam or maxRam in GB (float).</td></tr>
-       <tr><td><b> - minDisk/maxDisk</b></td>
-       <td><b>Optional.</b> Set the minDisk or maxDisk in GB (float).</td></tr>
-        <tr>
-  <td><b>minContainers</b></td>
-		<td><b>Optional.</b> Default = 1. Defines the minimum number of containers for <a href="/python/how-to/create#horizontal-auto-scaling">horizontal autoscaling</a>.<br/><br/><b>Limitations:</b><br/>Current maximum value = 6.</td>
-	</tr>
-        <tr>
-  <td><b>maxContainers</b></td>
-		<td>Defines the maximum number of containers for <a href="/python/how-to/create#horizontal-auto-scaling">horizontal autoscaling</a>.<br/><br/><b>Limitations:</b><br/>Current maximum value = 6.</td>
-	</tr>
-        <tr>
-  <td><b>envSecrets</b></td>
-		<td><b>Optional.</b> Defines one or more secret env variables as a key value map. See env variable <a href="/python/how-to/env-variables#env-variable-restrictions">restrictions</a>.</td>
-	</tr>
-</tbody>
+      <td>
+        <b>hostname</b>
+      </td>
+      <td>
+        The unique service identifier.
+        <br />
+        <br />
+        The hostname of the new database will be set to the{' '}
+        <code>hostname</code> value. <br />
+        <br />
+        <b>Limitations:</b>
+        <br />- duplicate services with the same name in the same project are
+        forbidden
+        <br />
+        - maximum 25 characters
+        <br />- must contain only lowercase ASCII letters (a-z) or numbers (0-9)
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <b>type</b>
+      </td>
+      <td>
+        Specifies the service type <code>python</code> and version.
+        <br />
+        Set type:{' '}
+        <code>
+          python<span>@</span>&lt;version&gt;
+        </code>{' '}
+        or{' '}
+        <code>
+          python<span>@</span>latest
+        </code>
+        <br />
+        <br />
+        <b>Limitations:</b>
+        <br />
+        Following Python major versions are currently supported: <i>3.8</i>,
+        <i>3.9</i>,<i>3.10</i>,<i>3.11</i>,<i>3.12</i>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <b>verticalAutoscaling</b>
+      </td>
+      <td>
+        <b>Optional.</b> Defines{' '}
+        <a href="/python/how-to/create#set-auto-scaling-configuration">
+          custom vertical auto scaling parameters
+        </a>
+        .<br />
+        All verticalAutoscaling attributes are optional. Not specified
+        attributes will be set to their default values.
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <b> - cpuMode</b>
+      </td>
+      <td>
+        <b>Optional.</b> Accepts <code>SHARED</code>, <code>DEDICATED</code>{' '}
+        values. Default is <code>SHARED</code>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <b> - minCpu/maxCpu</b>
+      </td>
+      <td>
+        <b>Optional.</b> Set the minCpu or maxCpu in CPU cores (integer).
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <b> - minRam/maxRam</b>
+      </td>
+      <td>
+        <b>Optional.</b> Set the minRam or maxRam in GB (float).
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <b> - minDisk/maxDisk</b>
+      </td>
+      <td>
+        <b>Optional.</b> Set the minDisk or maxDisk in GB (float).
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <b>minContainers</b>
+      </td>
+      <td>
+        <b>Optional.</b> Default = 1. Defines the minimum number of containers
+        for{' '}
+        <a href="/python/how-to/create#horizontal-auto-scaling">
+          horizontal autoscaling
+        </a>
+        .<br />
+        <br />
+        <b>Limitations:</b>
+        <br />
+        Current maximum value = 6.
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <b>maxContainers</b>
+      </td>
+      <td>
+        Defines the maximum number of containers for{' '}
+        <a href="/python/how-to/create#horizontal-auto-scaling">
+          horizontal autoscaling
+        </a>
+        .<br />
+        <br />
+        <b>Limitations:</b>
+        <br />
+        Current maximum value = 6.
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <b>envSecrets</b>
+      </td>
+      <td>
+        <b>Optional.</b> Defines one or more secret env variables as a key value
+        map. See env variable{' '}
+        <a href="/python/how-to/env-variables#env-variable-restrictions">
+          restrictions
+        </a>
+        .
+      </td>
+    </tr>
+  </tbody>
 </table>
 
 ### Create a project based on the description.yml
@@ -319,7 +421,12 @@ You don't specify the project name in the `zcli project project-import` command,
 If you have access to more than one client, you must specify the client ID for which the project is to be created. The `clientID` is located in the Zerops GUI under the client name on the project dashboard page.
 
 <p align="center">
-<img src="/img/screenshots/client_id.png" alt="image" width="70%" height="auto"/>
+  <img
+    src="/img/screenshots/client_id.png"
+    alt="image"
+    width="70%"
+    height="auto"
+  />
 </p>
 ### Add Python service to an existing project
 
@@ -334,8 +441,7 @@ project:
   name: my-project
 # array of project services
 services:
-  -
-    # service name
+  - # service name
     hostname: app
     # service type and version number in python@{version} format
     type: python@latest
@@ -345,8 +451,8 @@ services:
     maxContainers: 6
     # optional: create env variables
     envSecrets:
-      S3_ACCESS_KEY_ID: "P8cX1vVVb"
-      S3_ACCESS_SECRET: "ogFthuiLYki8XoL73opSCQ"
+      S3_ACCESS_KEY_ID: 'P8cX1vVVb'
+      S3_ACCESS_SECRET: 'ogFthuiLYki8XoL73opSCQ'
 ```
 
 The yaml file describes the list of one or more services that you want to add to your existing project. In the example above, one Python service version 3.12 with default [auto scaling](/python/how-to/scaling) configuration will be added to your project. Hostname of the new service will be set to `app`. Following secret env variables will be configured:
@@ -373,8 +479,3 @@ Flags:
 zCLI commands are interactive, when you press enter after `zcli project service-import importYamlPath`, you will be given a list of your projects to choose from.
 
 Maximum size of the import.yml file is 100 kB.
-
-
-
-
-

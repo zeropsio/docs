@@ -9,8 +9,9 @@ Consider this a guideline only, not all keys are valid for all service types. If
 :::
 
 :::note
-* `REQUIRED.` If a parent object is defined, the key-value pair is required to be filled. All other key-value pairs are optional.
-:::
+
+- `REQUIRED.` If a parent object is defined, the key-value pair is required to be filled. All other key-value pairs are optional.
+  :::
 
 ```yml
 # ==== Define a project to import ====
@@ -109,143 +110,199 @@ services:
 ```
 
 ## project
-*REQUIRED, iff a whole project is imported*
+
+_REQUIRED, iff a whole project is imported_
 
 Only one project can be defined.
 
 ### name
-*string, REQUIRED*
+
+_string, REQUIRED_
 
 The name of the new project. Duplicates are allowed.
+
 ### description
-*string*
+
+_string_
 
 Description of the new project.
+
 ### tags
-*list of strings*
+
+_list of strings_
 
 One or more string tags. Tags do not have a functional meaning, they only provide better orientation in projects.
+
 ## services
-*REQUIRED section*
+
+_REQUIRED section_
 
 At least one service is required.
+
 ### hostname
-*string, REQUIRED*
+
+_string, REQUIRED_
 
 The unique service identifier.
 Limitations:
+
 - duplicates in the same project forbidden
 - maximum 25 characters, lowercase ASCII letters (a-z) or numbers (0-9) only
 
 ### type
-*choose a [value](/references/importyml/type-list), REQUIRED*
+
+_choose a [value](/references/importyml/type-list), REQUIRED_
 
 Specifies the service type and version.
 
 ### mode
-*choose a value*
-* **HA / NON_HA** (default NON_HA)
+
+_choose a value_
+
+- **HA / NON_HA** (default NON_HA)
 
 Defines the operation mode of the service.
 
 ### envSecrets
-*list of key-value pairs*
+
+_list of key-value pairs_
 
 Environment variables that are blurred by default in Zerops GUI. Can be edited or deleted in Zerops GUI.
 
 ### objectStorageSize
-*int*
+
+_int_
 
 Object storage size in GB.
 
 ### objectStoragePolicy
-*choose a value*
-* **private / public-read / public-objects-read / public-write / public-read-write / custom**
+
+_choose a value_
+
+- **private / public-read / public-objects-read / public-write / public-read-write / custom**
 
 Select a predefined AWS S3 bucket access policy.
 
 ### objectStorageRawPolicy
-*json*
+
+_json_
 
 Define your own AWS S3 bucket access policy. See [AWS docs](https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-policy-language-overview.html) for details.
 
 Use `{{ .BucketName }}` placeholder if you need to use bucket name in your custom policy rules.
 
 ### buildFromGit
-*url string*
+
+_url string_
 
 A URL of a Github or Gitlab repository used for a one-time build of your service.
 
 ### enableSubdomainAccess
-*boolean* (default false)
+
+_boolean_ (default false)
 
 Set `true`, if you want to enable a public access to your service via a Zerops subdomain. Not suitable for production.
 
 ### priority
-*int*
+
+_int_
 
 Services are sorted before creation by priority in descending order, i.e. the higher the priority the sooner the service is created.
+
 ### verticalAutoscaling
-*nested object*
+
+_nested object_
+
 #### minVCpu
+
 #### maxVCpu
+
 #### cpuMode
-*choose a value*
-* **SHARED / DEDICATED**
+
+_choose a value_
+
+- **SHARED / DEDICATED**
 
 #### minRam
-*float*
+
+_float_
 
 Minimum RAM in GB that each container of the service can scale down to.
+
 #### maxRam
-*float*
+
+_float_
 
 Minimum RAM in GB that each container of the service can scale up to.
+
 #### minDisk
-*float*
+
+_float_
 
 Minimum disk space in GB that each container of the service can scale down to.
+
 #### maxDisk
-*float*
+
+_float_
 
 Minimum disk space in GB that each container of the service can scale up to.
+
 #### startCpuCoreCount
-*int*
+
+_int_
 
 Number of CPU cores with which each container starts.
+
 #### minFreeCpuCores
-*float*
+
+_float_
 
 Minimum number of unused CPU cores before a container starts scaling.
+
 #### minFreeCpuPercent
-*float*
+
+_float_
 
 Minimum percentage of unused CPU cores before a container starts scaling.
+
 #### minFreeRamGB
-*float*
+
+_float_
 
 Minimum unused memory in GB before a container starts scaling.
+
 #### minFreeRamPercent
-*float*
+
+_float_
 
 Minimum percentage of unused memory before a container starts scaling.
+
 ### minContainers
-*int* (default 1, maximum value 6)
+
+_int_ (default 1, maximum value 6)
 
 Minimum number of containers of the service.
+
 ### maxContainers
-*int* (maximum value 6)
+
+_int_ (maximum value 6)
 
 Maximum number of containers of the service.
+
 ### mount
-*list of shared storage service hostnames*
+
+_list of shared storage service hostnames_
 
 Mount shared storages to the service. `buildFromGit` must be filled.
+
 ### nginxConfig
-*nginx config*
+
+_nginx config_
 
 Insert full nginx config.
+
 ### zeropsSetup
-*string / yaml format*
+
+_string / yaml format_
 
 Provide name of the service from your zerops.yml (find it under `-setup: {name}`) or insert full [zerops.yml configuration file](/references/zeropsyml).

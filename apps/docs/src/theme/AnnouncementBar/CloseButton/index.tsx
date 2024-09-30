@@ -1,8 +1,8 @@
-import React from "react"
-import clsx from "clsx"
-import { translate } from "@docusaurus/Translate"
-import IconClose from "@theme/Icon/Close"
-import type { Props } from "@theme/AnnouncementBar/CloseButton"
+import React from 'react';
+import clsx from 'clsx';
+import { translate } from '@docusaurus/Translate';
+import IconClose from '@theme/Icon/Close';
+import type { Props } from '@theme/AnnouncementBar/CloseButton';
 
 export default function AnnouncementBarCloseButton(
   props: Props
@@ -11,14 +11,14 @@ export default function AnnouncementBarCloseButton(
     <button
       type="button"
       aria-label={translate({
-        id: "theme.AnnouncementBar.closeButtonAriaLabel",
-        message: "Close",
-        description: "The ARIA label for close button of announcement bar",
+        id: 'theme.AnnouncementBar.closeButtonAriaLabel',
+        message: 'Close',
+        description: 'The ARIA label for close button of announcement bar',
       })}
       {...props}
       className={clsx(
-        "p-0 leading-[0] self-start opacity-100 hover:opacity-100",
-        "bg-transparent border-0 cursor-pointer",
+        'p-0 leading-[0] self-start opacity-100 hover:opacity-100',
+        'bg-transparent border-0 cursor-pointer',
         props.className
       )}
     >
@@ -29,5 +29,5 @@ export default function AnnouncementBarCloseButton(
         className="!text-medusa-fg-muted"
       />
     </button>
-  )
+  );
 }

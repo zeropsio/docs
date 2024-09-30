@@ -1,20 +1,20 @@
-"use client"
+'use client';
 
-import React from "react"
-import { useEffect, useMemo, useState } from "react"
-import { useRequestRunner } from "../../../hooks"
-import { CodeBlock } from ".."
-import { Card } from "../../Card"
-import { Button, InputText } from "../../.."
-import { ApiMethod, ApiDataOptions, ApiTestingOptions } from "types"
+import React from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useRequestRunner } from '../../../hooks';
+import { CodeBlock } from '..';
+import { Card } from '../../Card';
+import { Button, InputText } from '../../..';
+import { ApiMethod, ApiDataOptions, ApiTestingOptions } from 'types';
 
 type ApiRunnerProps = {
-  apiMethod: ApiMethod
-  apiUrl: string
-  pathData?: Record<string, unknown>
-  queryData?: Record<string, unknown>
-  bodyData?: Record<string, unknown>
-}
+  apiMethod: ApiMethod;
+  apiUrl: string;
+  pathData?: Record<string, unknown>;
+  queryData?: Record<string, unknown>;
+  bodyData?: Record<string, unknown>;
+};
 
 export const ApiRunner = ({
   apiMethod,
@@ -32,11 +32,11 @@ export const ApiRunner = ({
       bodyData,
       queryData,
     }
-  )
-  const [isRunning, setIsRunning] = useState(false)
-  const [ran, setRan] = useState(false)
+  );
+  const [isRunning, setIsRunning] = useState(false);
+  const [ran, setRan] = useState(false);
   const hasData = (data?: Record<string, unknown>): boolean =>
-    data !== undefined && Object.keys(data).length > 0
+    data !== undefined && Object.keys(data).length > 0;
   // TODO change to be based on whether auth/data needed
   const manualTestTrigger = useMemo(
     () =>
@@ -44,38 +44,38 @@ export const ApiRunner = ({
       hasData(apiTestingOptions.queryData) ||
       hasData(apiTestingOptions.bodyData),
     [apiTestingOptions]
-  )
-  const [responseLogs, setResponseLogs] = useState<string[]>([])
+  );
+  const [responseLogs, setResponseLogs] = useState<string[]>([]);
   const pushMessage = (...message: string[]) =>
-    setResponseLogs((prev) => [...prev, ...message])
+    setResponseLogs((prev) => [...prev, ...message]);
   const { runRequest } = useRequestRunner({
     pushLog: pushMessage,
     onFinish: () => setIsRunning(false),
     replaceLog: (message) => setResponseLogs([message]),
-  })
+  });
 
   useEffect(() => {
     if (!isRunning && !manualTestTrigger && !ran) {
-      setIsRunning(true)
+      setIsRunning(true);
     }
-  }, [apiTestingOptions, manualTestTrigger, isRunning, ran])
+  }, [apiTestingOptions, manualTestTrigger, isRunning, ran]);
 
   useEffect(() => {
     if (isRunning && !ran) {
-      setRan(true)
-      setResponseLogs(["Sending request..."])
-      runRequest(apiTestingOptions)
+      setRan(true);
+      setResponseLogs(['Sending request...']);
+      runRequest(apiTestingOptions);
     }
-  }, [isRunning, ran])
+  }, [isRunning, ran]);
 
   const getParamsElms = ({
     data,
     title,
     nameInApiOptions,
   }: {
-    data: ApiDataOptions
-    title: string
-    nameInApiOptions: "pathData" | "bodyData" | "queryData"
+    data: ApiDataOptions;
+    title: string;
+    nameInApiOptions: 'pathData' | 'bodyData' | 'queryData';
   }) => (
     <div className="flex flex-col gap-docs_0.5">
       <span className="text-compact-medium-plus text-medusa-fg-base">
@@ -97,17 +97,17 @@ export const ApiRunner = ({
             key={index}
             placeholder={pathParam}
             value={
-              typeof data[pathParam] === "string"
+              typeof data[pathParam] === 'string'
                 ? (data[pathParam] as string)
-                : typeof data[pathParam] === "number"
-                ? (data[pathParam] as number)
-                : `${data[pathParam]}`
+                : typeof data[pathParam] === 'number'
+                  ? (data[pathParam] as number)
+                  : `${data[pathParam]}`
             }
           />
         ))}
       </div>
     </div>
-  )
+  );
 
   return (
     <>
@@ -116,25 +116,25 @@ export const ApiRunner = ({
           {apiTestingOptions.pathData &&
             getParamsElms({
               data: apiTestingOptions.pathData,
-              title: "Path Parameters",
-              nameInApiOptions: "pathData",
+              title: 'Path Parameters',
+              nameInApiOptions: 'pathData',
             })}
           {apiTestingOptions.bodyData &&
             getParamsElms({
               data: apiTestingOptions.bodyData,
-              title: "Request Body Parameters",
-              nameInApiOptions: "bodyData",
+              title: 'Request Body Parameters',
+              nameInApiOptions: 'bodyData',
             })}
           {apiTestingOptions.queryData &&
             getParamsElms({
               data: apiTestingOptions.queryData,
-              title: "Request Query Parameters",
-              nameInApiOptions: "queryData",
+              title: 'Request Query Parameters',
+              nameInApiOptions: 'queryData',
             })}
           <Button
             onClick={() => {
-              setIsRunning(true)
-              setRan(false)
+              setIsRunning(true);
+              setRan(false);
             }}
           >
             Send Request
@@ -143,7 +143,7 @@ export const ApiRunner = ({
       )}
       {(isRunning || ran) && (
         <CodeBlock
-          source={responseLogs.join("\n")}
+          source={responseLogs.join('\n')}
           lang="json"
           title="Testing Result"
           collapsed={true}
@@ -152,5 +152,5 @@ export const ApiRunner = ({
         />
       )}
     </>
-  )
-}
+  );
+};

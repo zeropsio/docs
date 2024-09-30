@@ -1,10 +1,10 @@
-import React from "react"
-import Translate from "@docusaurus/Translate"
-import { ThemeClassNames } from "@docusaurus/theme-common"
-import type { Props } from "@theme/EditThisPage"
-import { Button } from "docs-ui"
-import clsx from "clsx"
-import Link from "@docusaurus/Link"
+import React from 'react';
+import Translate from '@docusaurus/Translate';
+import { ThemeClassNames } from '@docusaurus/theme-common';
+import type { Props } from '@theme/EditThisPage';
+import { Button } from 'docs-ui';
+import clsx from 'clsx';
+import Link from '@docusaurus/Link';
 
 export default function EditThisPage({ editUrl }: Props): JSX.Element {
   return (
@@ -23,5 +23,5 @@ export default function EditThisPage({ editUrl }: Props): JSX.Element {
         </Translate>
       </Link>
     </Button>
-  )
+  );
 }

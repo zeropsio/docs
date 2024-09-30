@@ -9,6 +9,7 @@ This function is available only for runtime services and web servers. The SSH co
 To establish a SSH connection to your runtime service you need to start the Zerops VPN first.
 
 ## Start VPN
+
 Zerops VPN client is included into zCLI, the Zerops command-line tool. To start a VPN connection to the selected Zerops project, follow these steps:
 
 1. [Install & setup zCLI](/references/cli)
@@ -24,11 +25,13 @@ ssh <your service hostname>
 ```
 
 For example, if you service hostname = `app`
+
 ```sh
 ssh app
 ```
 
 Following SSH warning message will be shown:
+
 ```sh
 The authenticity of host 'app (10.0.92.14)' can't be established.
 RSA key fingerprint is SHA256:5wdgRcp/8saPEH0bIF2iHeBKFFEImX+EWMDyPsJlec0.
@@ -55,7 +58,7 @@ root@node-id-1:/var/www#
 If your service is in the [HA mode], the command ssh `<your service hostname>` will select one of the service's containers randomly. To connect to a specific container, go to the Zerops GUI and in the service detail choose **Service containers & resources overview** and scroll down to the list of containers.
 
 <p align="center">
-<img src="/img/screenshots/ssh.png" alt="image" width="100%" height="auto"/>
+  <img src="/img/screenshots/ssh.png" alt="image" width="100%" height="auto" />
 </p>
 
 Copy the container hostname, e.g. `node-id-1.runtime.app.zerops` and enter it as the ssh command parameter:
@@ -81,16 +84,18 @@ The `node-id-1.runtime.app.zerops` hostname is unique for each container within 
 When the application scales down and some containers are deleted, the unique hostnames are not reused later for new containers. So after several scale ups and scale downs your application can contain for example 2 containers with hostnames `node-id-5.runtime.app.zerops`, `node-id-12.runtime.app.zerops`.
 
 Alternatively, you can use a following sequential names for your containers:
-* `node1.runtime.app.zerops`
-* `node2.runtime.app.zerops`
-* `node3.runtime.app.zerops`
-etc. where `app` is the name of your service.
+
+- `node1.runtime.app.zerops`
+- `node2.runtime.app.zerops`
+- `node3.runtime.app.zerops`
+  etc. where `app` is the name of your service.
 
 These names represent the number of your service's containers in the order in which they were created. This sequence is updated each time your service scales horizontally. Keep in mind that the number of containers can change in time and that the sequential names can reference different containers after each horizontal scaling occurs.
 
 When a SSH connection to the container is established, its local IPv4 and IPv6 address is shown. Do not use the IP addresses in the `ssh` command. The IP address can change when the container fails and is automatically replaced by a new one or when your service scales horizontally.
 
 ## Changes made inside the container are temporary
+
 :::caution
 Do not use the SSH to make any changes that should persist in your service.
 :::

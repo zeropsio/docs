@@ -1,4 +1,4 @@
-"use client"
+'use client';
 
 /* Copied from Docusaurus to maintain scroll position on re-renders. Useful when content of the page is updated dynamically */
 
@@ -18,107 +18,107 @@ import React, {
   useRef,
   type ReactNode,
   useState,
-} from "react"
-import { getScrolledTop as getScrolledTopUtil, isElmWindow } from "../../utils"
+} from 'react';
+import { getScrolledTop as getScrolledTopUtil, isElmWindow } from '../../utils';
 
-type EventFunc = (...args: never[]) => unknown
+type EventFunc = (...args: never[]) => unknown;
 
 export function useEvent<T extends EventFunc>(callback: T): T {
-  const ref = useRef<T>(callback)
+  const ref = useRef<T>(callback);
 
   useLayoutEffect(() => {
-    ref.current = callback
-  }, [callback])
+    ref.current = callback;
+  }, [callback]);
 
   // @ts-expect-error: TS is right that this callback may be a supertype of T,
   // but good enough for our use
-  return useCallback<T>((...args) => ref.current(...args), [])
+  return useCallback<T>((...args) => ref.current(...args), []);
 }
 
 /**
  * Gets `value` from the last render.
  */
 export function usePrevious<T>(value: T): T | undefined {
-  const ref = useRef<T>()
+  const ref = useRef<T>();
 
   useLayoutEffect(() => {
-    ref.current = value
-  })
+    ref.current = value;
+  });
 
-  return ref.current
+  return ref.current;
 }
 
 type ScrollController = {
   /** A boolean ref tracking whether scroll events are enabled. */
-  scrollEventsEnabledRef: React.MutableRefObject<boolean>
+  scrollEventsEnabledRef: React.MutableRefObject<boolean>;
   /** Enable scroll events in `useScrollPosition`. */
-  enableScrollEvents: () => void
+  enableScrollEvents: () => void;
   /** Disable scroll events in `useScrollPosition`. */
-  disableScrollEvents: () => void
+  disableScrollEvents: () => void;
   /** Retrieves the scrollable element. By default, it's window. */
-  scrollableElement: Element | Window | undefined
+  scrollableElement: Element | Window | undefined;
   /** Retrieves the scroll top if the scrollable element */
-  getScrolledTop: () => number
-}
+  getScrolledTop: () => number;
+};
 
 function useScrollControllerContextValue({
   scrollableSelector,
 }: {
-  scrollableSelector: string
-  restoreScrollOnReload?: boolean
+  scrollableSelector: string;
+  restoreScrollOnReload?: boolean;
 }): ScrollController {
-  const scrollEventsEnabledRef = useRef(true)
+  const scrollEventsEnabledRef = useRef(true);
 
   const [scrollableElement, setScrollableElement] = useState<
     Element | Window | undefined
-  >()
+  >();
 
   useEffect(() => {
     setScrollableElement(
       (document.querySelector(scrollableSelector) as Element) || window
-    )
-  }, [])
+    );
+  }, []);
 
   const getScrolledTop = () => {
-    return scrollableElement ? getScrolledTopUtil(scrollableElement) : 0
-  }
+    return scrollableElement ? getScrolledTopUtil(scrollableElement) : 0;
+  };
 
   return useMemo(
     () => ({
       scrollEventsEnabledRef,
       enableScrollEvents: () => {
-        scrollEventsEnabledRef.current = true
+        scrollEventsEnabledRef.current = true;
       },
       disableScrollEvents: () => {
-        scrollEventsEnabledRef.current = false
+        scrollEventsEnabledRef.current = false;
       },
       scrollableElement,
       getScrolledTop,
     }),
     [scrollableElement]
-  )
+  );
 }
 
 const ScrollMonitorContext = React.createContext<ScrollController | undefined>(
   undefined
-)
+);
 
 export function ScrollControllerProvider({
   children,
-  scrollableSelector = "",
+  scrollableSelector = '',
 }: {
-  children: ReactNode
-  scrollableSelector?: string
-  restoreScrollOnReload?: boolean
+  children: ReactNode;
+  scrollableSelector?: string;
+  restoreScrollOnReload?: boolean;
 }): JSX.Element {
   const value = useScrollControllerContextValue({
     scrollableSelector,
-  })
+  });
   return (
     <ScrollMonitorContext.Provider value={value}>
       {children}
     </ScrollMonitorContext.Provider>
-  )
+  );
 }
 
 /**
@@ -129,21 +129,21 @@ export function ScrollControllerProvider({
  * https://github.com/facebook/docusaurus/pull/5618
  */
 export function useScrollController(): ScrollController {
-  const context = useContext(ScrollMonitorContext)
+  const context = useContext(ScrollMonitorContext);
   if (context == null) {
     throw new Error(
       `useScrollController must be used by elements in ScrollControllerProvider`
-    )
+    );
   }
-  return context
+  return context;
 }
 
-type ScrollPosition = { scrollX: number; scrollY: number }
+type ScrollPosition = { scrollX: number; scrollY: number };
 
 const getScrollPosition = (): ScrollPosition | null => ({
   scrollX: window.pageXOffset,
   scrollY: window.pageYOffset,
-})
+});
 
 /**
  * This hook fires an effect when the scroll position changes. The effect will
@@ -160,74 +160,74 @@ export function useScrollPosition(
   ) => void,
   deps: unknown[] = []
 ): void {
-  const { scrollEventsEnabledRef } = useScrollController()
-  const lastPositionRef = useRef<ScrollPosition | null>(getScrollPosition())
+  const { scrollEventsEnabledRef } = useScrollController();
+  const lastPositionRef = useRef<ScrollPosition | null>(getScrollPosition());
 
-  const dynamicEffect = useEvent(effect)
+  const dynamicEffect = useEvent(effect);
 
   useEffect(() => {
     const handleScroll = () => {
       if (!scrollEventsEnabledRef.current) {
-        return
+        return;
       }
-      const currentPosition = getScrollPosition()!
-      dynamicEffect(currentPosition, lastPositionRef.current)
-      lastPositionRef.current = currentPosition
-    }
+      const currentPosition = getScrollPosition()!;
+      dynamicEffect(currentPosition, lastPositionRef.current);
+      lastPositionRef.current = currentPosition;
+    };
 
     const opts: AddEventListenerOptions & EventListenerOptions = {
       passive: true,
-    }
+    };
 
-    handleScroll()
-    window.addEventListener("scroll", handleScroll, opts)
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, opts);
 
-    return () => window.removeEventListener("scroll", handleScroll, opts)
-  }, [dynamicEffect, scrollEventsEnabledRef, ...deps])
+    return () => window.removeEventListener('scroll', handleScroll, opts);
+  }, [dynamicEffect, scrollEventsEnabledRef, ...deps]);
 }
 
 type UseScrollPositionSaver = {
   /** Measure the top of an element, and store the details. */
-  save: (elem: HTMLElement) => void
+  save: (elem: HTMLElement) => void;
   /**
    * Restore the page position to keep the stored element's position from
    * the top of the viewport, and remove the stored details.
    */
-  restore: () => { restored: boolean }
-}
+  restore: () => { restored: boolean };
+};
 
 function useScrollPositionSaver(): UseScrollPositionSaver {
-  const { scrollableElement } = useScrollController()
+  const { scrollableElement } = useScrollController();
   const lastElementRef = useRef<{ elem: HTMLElement | null; top: number }>({
     elem: null,
     top: 0,
-  })
+  });
 
   const save = useCallback((elem: HTMLElement) => {
     lastElementRef.current = {
       elem,
       top: elem.getBoundingClientRect().top,
-    }
-  }, [])
+    };
+  }, []);
 
   const restore = useCallback(() => {
     const {
       current: { elem, top },
-    } = lastElementRef
+    } = lastElementRef;
     if (!elem) {
-      return { restored: false }
+      return { restored: false };
     }
-    const newTop = elem.getBoundingClientRect().top
-    const heightDiff = newTop - top
+    const newTop = elem.getBoundingClientRect().top;
+    const heightDiff = newTop - top;
     if (heightDiff) {
-      scrollableElement?.scrollBy({ left: 0, top: heightDiff })
+      scrollableElement?.scrollBy({ left: 0, top: heightDiff });
     }
-    lastElementRef.current = { elem: null, top: 0 }
+    lastElementRef.current = { elem: null, top: 0 };
 
-    return { restored: heightDiff !== 0 }
-  }, [])
+    return { restored: heightDiff !== 0 };
+  }, []);
 
-  return useMemo(() => ({ save, restore }), [restore, save])
+  return useMemo(() => ({ save, restore }), [restore, save]);
 }
 
 /**
@@ -246,48 +246,48 @@ export function useScrollPositionBlocker(): {
    * Takes an element, and keeps its screen position no matter what's getting
    * rendered above it, until the next render.
    */
-  blockElementScrollPositionUntilNextRender: (el: HTMLElement) => void
+  blockElementScrollPositionUntilNextRender: (el: HTMLElement) => void;
 } {
-  const scrollController = useScrollController()
-  const scrollPositionSaver = useScrollPositionSaver()
+  const scrollController = useScrollController();
+  const scrollPositionSaver = useScrollPositionSaver();
 
   const nextLayoutEffectCallbackRef = useRef<(() => void) | undefined>(
     undefined
-  )
+  );
 
   const blockElementScrollPositionUntilNextRender = useCallback(
     (el: HTMLElement) => {
-      scrollPositionSaver.save(el)
-      scrollController.disableScrollEvents()
+      scrollPositionSaver.save(el);
+      scrollController.disableScrollEvents();
       nextLayoutEffectCallbackRef.current = () => {
-        const { restored } = scrollPositionSaver.restore()
-        nextLayoutEffectCallbackRef.current = undefined
+        const { restored } = scrollPositionSaver.restore();
+        nextLayoutEffectCallbackRef.current = undefined;
 
         // Restoring the former scroll position will trigger a scroll event. We
         // need to wait for next scroll event to happen before enabling the
         // scrollController events again.
         if (restored) {
           const handleScrollRestoreEvent = () => {
-            scrollController.enableScrollEvents()
-            window.removeEventListener("scroll", handleScrollRestoreEvent)
-          }
-          window.addEventListener("scroll", handleScrollRestoreEvent)
+            scrollController.enableScrollEvents();
+            window.removeEventListener('scroll', handleScrollRestoreEvent);
+          };
+          window.addEventListener('scroll', handleScrollRestoreEvent);
         } else {
-          scrollController.enableScrollEvents()
+          scrollController.enableScrollEvents();
         }
-      }
+      };
     },
     [scrollController, scrollPositionSaver]
-  )
+  );
 
   useLayoutEffect(() => {
     // Queuing permits to restore scroll position after all useLayoutEffect
     // have run, and yet preserve the sync nature of the scroll restoration
     // See https://github.com/facebook/docusaurus/issues/8625
-    queueMicrotask(() => nextLayoutEffectCallbackRef.current?.())
-  })
+    queueMicrotask(() => nextLayoutEffectCallbackRef.current?.());
+  });
 
   return {
     blockElementScrollPositionUntilNextRender,
-  }
+  };
 }

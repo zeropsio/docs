@@ -1,9 +1,9 @@
-const path = require("path")
+const path = require('path');
 
 module.exports = {
-  extends: ["docs"],
+  extends: ['docs'],
   parserOptions: {
     project: true,
-    tsconfigRootDir: path.join(__dirname, "..", ".."),
-  }
-}
+    tsconfigRootDir: path.join(__dirname, '..', '..'),
+  },
+};

@@ -1,9 +1,9 @@
-import React from "react"
+import React from 'react';
 
 interface CustomCardProps {
-  emoji: string
-  title: string
-  children: React.ReactNode
+  emoji: string;
+  title: string;
+  children: React.ReactNode;
 }
 
 const CustomCard: React.FC<CustomCardProps> = ({ title, children, emoji }) => {
@@ -15,7 +15,7 @@ const CustomCard: React.FC<CustomCardProps> = ({ title, children, emoji }) => {
         <div className="pb-0 pt-px -mb-1">{children}</div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default CustomCard
+export default CustomCard;

@@ -5,18 +5,30 @@ title: Create Object storage service
 Zerops provides a S3 compatible Object storage service to store your files. Zerops Object storage is powered by [MinIO](https://min,io), a high-performance, S3 compatible object store. MinIO is built for large scale AI/ML, data lake and database workloads.
 
 ## Create Object storage service using Zerops GUI
+
 First, set up a project in Zerops GUI and add a runtime service. Then go to the project dashboard page and choose **Add new service** in the left menu in the **Services** block. Then add a new Object storage service:
 
 <p>
-    <video width="100%" autoplay="true" loop="loop" muted="muted" plays-inline="true">
-        <source src="/img/screenshots/create_object_storage_cast.mp4" type="video/mp4" />
-    </video>
+  <video
+    width="100%"
+    autoplay="true"
+    loop="loop"
+    muted="muted"
+    plays-inline="true"
+  >
+    <source
+      src="/img/screenshots/create_object_storage_cast.mp4"
+      type="video/mp4"
+    />
+  </video>
 </p>
 
 ### Set a name
+
 Enter a unique service identifier like `storage`,`s3` etc. Duplicate services with the same name in the same project are forbidden.
 
 #### Limitations:
+
 maximum 25 characters
 must contain only lowercase ASCII letters (a-z) or numbers (0-9)
 
@@ -25,6 +37,7 @@ The name is fixed after the service is created. It can't be changed later.
 :::
 
 ### Object storage bucket
+
 Zerops creates one bucket automatically for each new Object storage service.
 
 :::note
@@ -32,56 +45,43 @@ Each Object storage service can only contain one bucket. If your application nee
 :::
 
 #### Name
+
 Bucket will be created with a name based on the given service name and a random prefix. The name of the bucket cannot be changed later.
 
 #### Access policy
+
 Select one of the basic policy templates:
 
-| Template | Description |
-| -------- | ----------- |
-| <b>Public read</b> | Allows anyone:<ul><li>to read the bucket's location <code>(s3:GetBucketLocation)</code></li><li>to list all bucket's objects <code>(s3:ListBucket)</code></li><li>to get any object of the bucket <code>(s3:GetObject)</code></li></ul> |
-| <b>Public objects read</b> | Allows anyone:<ul><li>to read the bucket's location <code>(s3:GetBucketLocation)</code></li><li>to get any object of the bucket <code>(s3:GetObject)</code></li></ul> |
-| <b>Public read write</b> | Allows anyone:<ul><li>to read the bucket's location <code>(s3:GetBucketLocation)</code></li><li>to list all bucket's objects <code>(s3:ListBucket)</code></li><li>to get any object of the bucket <code>(s3:GetObject)</code></li><li>to create a new object in the bucket <code>(s3:PutObject,s3:ListMultipartUploadParts, s3:AbortMultipartUpload, s3:ListBucketMultipartUploads)</code></li><li>to delete any object of the bucket <code>(s3:DeleteObject)</code></li></ul> |
-| <b>Public write</b> | Allows anyone to create objects in the bucket <code>(PutObject action)</code> |
-| <b>Private</b> | Denies the access to unauthenticated users. |
+| Template                   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| <b>Public read</b>         | Allows anyone:<ul><li>to read the bucket's location <code>(s3:GetBucketLocation)</code></li><li>to list all bucket's objects <code>(s3:ListBucket)</code></li><li>to get any object of the bucket <code>(s3:GetObject)</code></li></ul>                                                                                                                                                                                                                                        |
+| <b>Public objects read</b> | Allows anyone:<ul><li>to read the bucket's location <code>(s3:GetBucketLocation)</code></li><li>to get any object of the bucket <code>(s3:GetObject)</code></li></ul>                                                                                                                                                                                                                                                                                                          |
+| <b>Public read write</b>   | Allows anyone:<ul><li>to read the bucket's location <code>(s3:GetBucketLocation)</code></li><li>to list all bucket's objects <code>(s3:ListBucket)</code></li><li>to get any object of the bucket <code>(s3:GetObject)</code></li><li>to create a new object in the bucket <code>(s3:PutObject,s3:ListMultipartUploadParts, s3:AbortMultipartUpload, s3:ListBucketMultipartUploads)</code></li><li>to delete any object of the bucket <code>(s3:DeleteObject)</code></li></ul> |
+| <b>Public write</b>        | Allows anyone to create objects in the bucket <code>(PutObject action)</code>                                                                                                                                                                                                                                                                                                                                                                                                  |
+| <b>Private</b>             | Denies the access to unauthenticated users.                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 
 Or you can set your own access policy in the [IAM Policy JSON format](https://min.io/docs/minio/linux/administration/identity-access-management/policy-based-access-control.html#policy-document-structure).
 
 #### Example:
+
 ```yml
 {
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": [
-          "*"
-        ]
+  'Version': '2012-10-17',
+  'Statement':
+    [
+      {
+        'Effect': 'Allow',
+        'Principal': { 'AWS': ['*'] },
+        'Action': ['s3:GetBucketLocation', 's3:ListBucket'],
+        'Resource': ['arn:aws:s3:::{{.BucketName}}'],
       },
-      "Action": [
-        "s3:GetBucketLocation",
-        "s3:ListBucket"
-      ],
-      "Resource": [
-        "arn:aws:s3:::{{.BucketName}}"
-      ]
-    },
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": [
-          "*"
-        ]
+      {
+        'Effect': 'Allow',
+        'Principal': { 'AWS': ['*'] },
+        'Action': ['s3:GetObject'],
+        'Resource': ['arn:aws:s3:::{{.BucketName}}/*'],
       },
-      "Action": [
-        "s3:GetObject"
-      ],
-      "Resource": [
-        "arn:aws:s3:::{{.BucketName}}/*"
-      ]
-    }
-  ]
+    ],
 }
 ```
 
@@ -92,13 +92,20 @@ The `{{ .BucketName }}` variable will be replaced by the bucket name.
 The bucket's policy can be changed later in Zerops GUI.
 
 #### Quota
+
 Set the bucket quota size in GB. The quota must be set manually. It can be changed later in Zerops GUI. Zerops doesn't support Object storage autoscaling. You can set the bucket quota from 1 to 100 GB.
 
 <p align="center">
-<img src="/img/screenshots/object_storage_bucket_quota.png" alt="image" width="80%" height="auto"/>
+  <img
+    src="/img/screenshots/object_storage_bucket_quota.png"
+    alt="image"
+    width="80%"
+    height="auto"
+  />
 </p>
 
 ## Create Object storage using zCLI
+
 zCLI is the Zerops command-line tool. To create a new Object storage service via the command-line, follow these steps:
 
 1. [Install & setup zCLI](/references/cli)
@@ -106,15 +113,16 @@ zCLI is the Zerops command-line tool. To create a new Object storage service via
 3. Create a project and an Object storage service
 
 ### Create a project description file
+
 Zerops uses a yaml format file to describe the project infrastructure.
 
 #### Example
+
 Create a directory `my-project`. Create a `description.yml` file inside the directory with the following content:
 
 ```yml
 # basic project data
 project:
-
   # project name
   name: my-project
 
@@ -123,13 +131,12 @@ project:
 
   # optional: project tags
   tags:
-  - DEMO
-  - ZEROPS
+    - DEMO
+    - ZEROPS
 
 # array of project services
 services:
-  -
-    # service name
+  - # service name
     hostname: upload
 
     # service type
@@ -151,21 +158,21 @@ The yaml file describes your future project infrastructure. The project will con
 
 The `project:` section is required. Only one project can be defined.
 
-| Parameter | Description | Limitations |
-| --------- | ----------- | ----------- |
-| **name**      | The name of the new project. Duplicates are allowed. | Maximum 255 characters |
-| **description** | **Optional.** Description of the new project. |  |
-| **tags** | **Optional.** One or more string tags. Tags do not have a functional meaning, they only provide better orientation in projects. |  |
+| Parameter       | Description                                                                                                                     | Limitations            |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
+| **name**        | The name of the new project. Duplicates are allowed.                                                                            | Maximum 255 characters |
+| **description** | **Optional.** Description of the new project.                                                                                   |                        |
+| **tags**        | **Optional.** One or more string tags. Tags do not have a functional meaning, they only provide better orientation in projects. |                        |
 
 At least one service in `services:` section is required. You can create a project with multiple services. The example above contains only Object storage service but you can create a description.yml with different types of services.
 
-| Parameter | Description |
-| --------- | ----------- |
-| **hostname** | The unique service identifier.<br/>The name of the new Object storage will be set to the hostname value.<br/>**Limitations:**<br/><ul><li>duplicate services with the same name in the same project are forbidden</li><li>maximum 25 characters</li><li>must contain only lowercase ASCII letters (a-z) or numbers (0-9)</li></ul> |
-| **type** | Specifies the Object storage type objectstorage and version.<br/>Set type: `objectstorage`<br/>**Limitations:** Currently `objectstorage` or `object-storage` is available. |
-| **objectStorageSize** | The size of the bucket quota in GB.<br/>**Limitations:** Set a whole number between 1 and 100. |
-| **objectStoragePolicy** | **Optional.** Either `objectStoragePolicy` or `objectStorageRawPolicy` is required.<br/>Set one of allowed values:<ul><li><code>public-read</code></li><li><code>public-objects-read</code></li><li><code>public-read-write</code></li><li><code>public-write</code></li><li><code>private</code></li></ul> Read more about [the basic policy templates]. |
-| **objectStorageRawPolicy** | **Optional.** Either `objectStoragePolicy` or `objectStorageRawPolicy` is required.<br/>Set your own access policy in the [IAM Policy JSON format].<br/>The `{{ .BucketName }}` variable will be replaced by the bucket name. |
+| Parameter                  | Description                                                                                                                                                                                                                                                                                                                                               |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **hostname**               | The unique service identifier.<br/>The name of the new Object storage will be set to the hostname value.<br/>**Limitations:**<br/><ul><li>duplicate services with the same name in the same project are forbidden</li><li>maximum 25 characters</li><li>must contain only lowercase ASCII letters (a-z) or numbers (0-9)</li></ul>                        |
+| **type**                   | Specifies the Object storage type objectstorage and version.<br/>Set type: `objectstorage`<br/>**Limitations:** Currently `objectstorage` or `object-storage` is available.                                                                                                                                                                               |
+| **objectStorageSize**      | The size of the bucket quota in GB.<br/>**Limitations:** Set a whole number between 1 and 100.                                                                                                                                                                                                                                                            |
+| **objectStoragePolicy**    | **Optional.** Either `objectStoragePolicy` or `objectStorageRawPolicy` is required.<br/>Set one of allowed values:<ul><li><code>public-read</code></li><li><code>public-objects-read</code></li><li><code>public-read-write</code></li><li><code>public-write</code></li><li><code>private</code></li></ul> Read more about [the basic policy templates]. |
+| **objectStorageRawPolicy** | **Optional.** Either `objectStoragePolicy` or `objectStorageRawPolicy` is required.<br/>Set your own access policy in the [IAM Policy JSON format].<br/>The `{{ .BucketName }}` variable will be replaced by the bucket name.                                                                                                                             |
 
 Zerops creates one bucket automatically for each new Object storage service.
 
@@ -199,17 +206,22 @@ You don't specify the project name in the `zcli project project-import` command,
 If you have access to more than one client, you must specify the client ID for which the project is to be created. The `clientID` is located in the Zerops GUI under the client name on the project dashboard page.
 
 <p align="center">
-<img src="/img/screenshots/client_id.png" alt="image" width="70%" height="auto"/>
+  <img
+    src="/img/screenshots/client_id.png"
+    alt="image"
+    width="70%"
+    height="auto"
+  />
 </p>
 
 ### Add Object service to an existing project
+
 Create a directory `my-project` if it doesn't exist. Create an `import.yml` file inside the `my-project` directory with following content:
 
 ```yml
 # array of project services
 services:
-  -
-    # service name
+  - # service name
     hostname: upload
 
     # service type

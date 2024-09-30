@@ -1,16 +1,16 @@
-import React from "react"
-import ReactMarkdown from "react-markdown"
-import { ReactMarkdownOptions } from "react-markdown/lib/react-markdown"
-import { MDXComponents, LegacyLink } from "@/components"
-import clsx from "clsx"
-import { NormalComponents } from "react-markdown/lib/complex-types"
-import { SpecialComponents } from "react-markdown/lib/ast-to-react"
+import React from 'react';
+import ReactMarkdown from 'react-markdown';
+import { ReactMarkdownOptions } from 'react-markdown/lib/react-markdown';
+import { MDXComponents, LegacyLink } from '@/components';
+import clsx from 'clsx';
+import { NormalComponents } from 'react-markdown/lib/complex-types';
+import { SpecialComponents } from 'react-markdown/lib/ast-to-react';
 
 export type MarkdownContentProps = ReactMarkdownOptions & {
   components?: Partial<
     Omit<NormalComponents, keyof SpecialComponents> & SpecialComponents
-  >
-}
+  >;
+};
 
 export const MarkdownContent = ({
   children,
@@ -28,10 +28,10 @@ export const MarkdownContent = ({
             ...props
           }: React.HTMLAttributes<HTMLPreElement>) => {
             return (
-              <pre className={clsx("p-0 bg-transparent", className)} {...props}>
+              <pre className={clsx('p-0 bg-transparent', className)} {...props}>
                 {children}
               </pre>
-            )
+            );
           },
           // TODO replace with Link once we move away from Docusaurus
           a: LegacyLink,
@@ -41,5 +41,5 @@ export const MarkdownContent = ({
     >
       {children}
     </ReactMarkdown>
-  )
-}
+  );
+};

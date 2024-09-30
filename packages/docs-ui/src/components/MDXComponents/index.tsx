@@ -1,5 +1,5 @@
-import React from "react"
-import type { MDXComponents as MDXComponentsType } from "mdx/types"
+import React from 'react';
+import type { MDXComponents as MDXComponentsType } from 'mdx/types';
 import {
   CodeMdx,
   Details,
@@ -11,9 +11,9 @@ import {
   DetailsSummary,
   DetailsProps,
   ZoomImg,
-} from "@/components"
-import clsx from "clsx"
-import { Text } from "@medusajs/ui"
+} from '@/components';
+import clsx from 'clsx';
+import { Text } from '@medusajs/ui';
 
 export const MDXComponents: MDXComponentsType = {
   code: CodeMdx,
@@ -22,7 +22,7 @@ export const MDXComponents: MDXComponentsType = {
   Note,
   details: Details,
   Details: ({ className, ...props }: DetailsProps) => {
-    return <Details {...props} className={clsx(className, "my-docs_1")} />
+    return <Details {...props} className={clsx(className, 'my-docs_1')} />;
   },
   Summary: DetailsSummary,
   Card,
@@ -31,12 +31,12 @@ export const MDXComponents: MDXComponentsType = {
     return (
       <h1
         className={clsx(
-          "h1-docs [&_code]:!h1-docs [&_code]:!font-mono mb-docs_1 text-medusa-fg-base",
+          'h1-docs [&_code]:!h1-docs [&_code]:!font-mono mb-docs_1 text-medusa-fg-base',
           className
         )}
         {...props}
       />
-    )
+    );
   },
   h2: ({
     className,
@@ -46,8 +46,8 @@ export const MDXComponents: MDXComponentsType = {
     return (
       <h2
         className={clsx(
-          "h2-docs [&_code]:!h2-docs [&_code]:!font-mono mb-docs_1 mt-docs_4 text-medusa-fg-base",
-          props.id && "group/h2",
+          'h2-docs [&_code]:!h2-docs [&_code]:!font-mono mb-docs_1 mt-docs_4 text-medusa-fg-base',
+          props.id && 'group/h2',
           className
         )}
         {...props}
@@ -63,7 +63,7 @@ export const MDXComponents: MDXComponentsType = {
           </LegacyLink>
         )}
       </h2>
-    )
+    );
   },
   h3: ({
     className,
@@ -73,8 +73,8 @@ export const MDXComponents: MDXComponentsType = {
     return (
       <h3
         className={clsx(
-          "h3-docs [&_code]:!h3-docs [&_code]:!font-mono mb-docs_0.5 mt-docs_3 text-medusa-fg-base",
-          props.id && "group/h3",
+          'h3-docs [&_code]:!h3-docs [&_code]:!font-mono mb-docs_0.5 mt-docs_3 text-medusa-fg-base',
+          props.id && 'group/h3',
           className
         )}
         {...props}
@@ -90,26 +90,26 @@ export const MDXComponents: MDXComponentsType = {
           </LegacyLink>
         )}
       </h3>
-    )
+    );
   },
   h4: ({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => {
     return (
       <h4
-        className={clsx("mb-docs_0.5 text-medusa-fg-base text-h4", className)}
+        className={clsx('mb-docs_0.5 text-medusa-fg-base text-h4', className)}
         {...props}
       />
-    )
+    );
   },
   p: ({ className, ...props }: React.HTMLAttributes<HTMLParagraphElement>) => {
     return (
       <p
         className={clsx(
-          "text-medusa-fg-subtle [&:not(:last-child)]:mb-docs_1.5 last:!mb-0",
+          'text-medusa-fg-subtle [&:not(:last-child)]:mb-docs_1.5 last:!mb-0',
           className
         )}
         {...props}
       />
-    )
+    );
   },
   ul: ({
     className,
@@ -120,13 +120,13 @@ export const MDXComponents: MDXComponentsType = {
       <ul
         {...props}
         className={clsx(
-          "list-disc px-docs_1 mb-docs_1.5 [&_ul]:mb-0 [&_ol]:mb-0 [&_p]:!mb-0",
+          'list-disc px-docs_1 mb-docs_1.5 [&_ul]:mb-0 [&_ol]:mb-0 [&_p]:!mb-0',
           className
         )}
       >
         {children}
       </ul>
-    )
+    );
   },
   ol: ({
     className,
@@ -137,13 +137,13 @@ export const MDXComponents: MDXComponentsType = {
       <ol
         {...props}
         className={clsx(
-          "list-decimal px-docs_1 mb-docs_1.5 [&_ul]:mb-0 [&_ol]:mb-0 [&_p]:!mb-0",
+          'list-decimal px-docs_1 mb-docs_1.5 [&_ul]:mb-0 [&_ol]:mb-0 [&_p]:!mb-0',
           className
         )}
       >
         {children}
       </ol>
-    )
+    );
   },
   li: ({
     className,
@@ -151,21 +151,21 @@ export const MDXComponents: MDXComponentsType = {
     ...props
   }: React.HTMLAttributes<HTMLElement>) => {
     return (
-      <li className={clsx("text-medusa-fg-subtle", className)} {...props}>
+      <li className={clsx('text-medusa-fg-subtle', className)} {...props}>
         <Text as="span">{children}</Text>
       </li>
-    )
+    );
   },
   hr: ({ className, ...props }: React.HTMLAttributes<HTMLHRElement>) => {
     return (
       <hr
         className={clsx(
-          "my-docs_2 h-[1px] w-full border-0 bg-medusa-border-base",
+          'my-docs_2 h-[1px] w-full border-0 bg-medusa-border-base',
           className
         )}
         {...props}
       />
-    )
+    );
   },
   img: (
     props: React.DetailedHTMLProps<
@@ -175,7 +175,7 @@ export const MDXComponents: MDXComponentsType = {
   ) => {
     // omit key to resolve errors
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { key, ...rest } = props
-    return <ZoomImg {...rest} />
+    const { key, ...rest } = props;
+    return <ZoomImg {...rest} />;
   },
-}
+};

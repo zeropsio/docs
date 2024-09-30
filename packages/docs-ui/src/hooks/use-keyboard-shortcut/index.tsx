@@ -1,15 +1,15 @@
-"use client"
+'use client';
 
-import { useCallback, useEffect } from "react"
+import { useCallback, useEffect } from 'react';
 
 export type useKeyboardShortcutOptions = {
-  metakey?: boolean
-  shortcutKeys: string[]
-  action: (e: KeyboardEvent) => void
-  checkEditing?: boolean
-  preventDefault?: boolean
-  isLoading?: boolean
-}
+  metakey?: boolean;
+  shortcutKeys: string[];
+  action: (e: KeyboardEvent) => void;
+  checkEditing?: boolean;
+  preventDefault?: boolean;
+  isLoading?: boolean;
+};
 
 export const useKeyboardShortcut = ({
   metakey = true,
@@ -20,25 +20,25 @@ export const useKeyboardShortcut = ({
   isLoading = false,
 }: useKeyboardShortcutOptions) => {
   function isEditingContent(event: KeyboardEvent) {
-    const element = event.target as HTMLElement
-    const tagName = element.tagName
+    const element = event.target as HTMLElement;
+    const tagName = element.tagName;
     return (
       element.isContentEditable ||
-      tagName === "INPUT" ||
-      tagName === "SELECT" ||
-      tagName === "TEXTAREA"
-    )
+      tagName === 'INPUT' ||
+      tagName === 'SELECT' ||
+      tagName === 'TEXTAREA'
+    );
   }
 
   const checkKeysPressed = useCallback(
     (pressedKey: string) => {
-      const lowerPressedKey = pressedKey.toLowerCase()
+      const lowerPressedKey = pressedKey.toLowerCase();
       return shortcutKeys.some(
         (value) => lowerPressedKey === value.toLowerCase()
-      )
+      );
     },
     [shortcutKeys]
-  )
+  );
 
   const sidebarShortcut = useCallback(
     (e: KeyboardEvent) => {
@@ -46,7 +46,7 @@ export const useKeyboardShortcut = ({
       // autocompletes, and in that case
       // e.key will be empty
       if (isLoading || !e.key) {
-        return
+        return;
       }
       if (
         (!metakey || e.metaKey || e.ctrlKey) &&
@@ -54,19 +54,19 @@ export const useKeyboardShortcut = ({
         (!checkEditing || !isEditingContent(e))
       ) {
         if (preventDefault) {
-          e.preventDefault()
+          e.preventDefault();
         }
-        action(e)
+        action(e);
       }
     },
     [isLoading, metakey, checkKeysPressed, checkEditing, action, preventDefault]
-  )
+  );
 
   useEffect(() => {
-    window.addEventListener("keydown", sidebarShortcut)
+    window.addEventListener('keydown', sidebarShortcut);
 
     return () => {
-      window.removeEventListener("keydown", sidebarShortcut)
-    }
-  }, [sidebarShortcut])
-}
+      window.removeEventListener('keydown', sidebarShortcut);
+    };
+  }, [sidebarShortcut]);
+};

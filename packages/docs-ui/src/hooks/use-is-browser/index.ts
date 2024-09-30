@@ -1,13 +1,13 @@
-"use client"
+'use client';
 
-import { useEffect, useState } from "react"
+import { useEffect, useState } from 'react';
 
 export const useIsBrowser = () => {
-  const [isBrowser, setIsBrowser] = useState(false)
+  const [isBrowser, setIsBrowser] = useState(false);
 
   useEffect(() => {
-    setIsBrowser(typeof window !== "undefined")
-  }, [])
+    setIsBrowser(typeof window !== 'undefined');
+  }, []);
 
-  return isBrowser
-}
+  return isBrowser;
+};

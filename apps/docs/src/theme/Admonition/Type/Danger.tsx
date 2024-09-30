@@ -1,11 +1,11 @@
-import React from "react"
-import clsx from "clsx"
-import Translate from "@docusaurus/Translate"
-import type { Props } from "@theme/Admonition/Type/Danger"
-import AdmonitionLayout from "@theme/Admonition/Layout"
-import IconDanger from "@theme/Admonition/Icon/Danger"
+import React from 'react';
+import clsx from 'clsx';
+import Translate from '@docusaurus/Translate';
+import type { Props } from '@theme/Admonition/Type/Danger';
+import AdmonitionLayout from '@theme/Admonition/Layout';
+import IconDanger from '@theme/Admonition/Icon/Danger';
 
-const infimaClassName = "alert alert--danger"
+const infimaClassName = 'alert alert--danger';
 
 const defaultProps = {
   icon: <IconDanger />,
@@ -17,7 +17,7 @@ const defaultProps = {
       Danger
     </Translate>
   ),
-}
+};
 
 export default function AdmonitionTypeDanger(props: Props): JSX.Element {
   return (
@@ -28,5 +28,5 @@ export default function AdmonitionTypeDanger(props: Props): JSX.Element {
     >
       {props.children}
     </AdmonitionLayout>
-  )
+  );
 }

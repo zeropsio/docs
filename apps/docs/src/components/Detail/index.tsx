@@ -1,5 +1,5 @@
-import { ChevronDownMini, ChevronUpMini } from "@medusajs/icons";
-import React, { ReactNode, useState, useRef, useEffect } from "react";
+import { ChevronDownMini, ChevronUpMini } from '@medusajs/icons';
+import React, { ReactNode, useState, useRef, useEffect } from 'react';
 
 interface DetailProps {
   title: string;
@@ -40,9 +40,7 @@ export function Detail({ title, children }: DetailProps) {
           style={{ height }}
           role="region"
         >
-          <div className={`px-0.75 py-0.75`}>
-            {children}
-          </div>
+          <div className={`px-0.75 py-0.75`}>{children}</div>
         </div>
       </div>
     </div>

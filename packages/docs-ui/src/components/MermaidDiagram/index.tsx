@@ -1,4 +1,4 @@
-"use client"
+'use client';
 import React, {
   Suspense,
   useCallback,
@@ -6,29 +6,29 @@ import React, {
   useMemo,
   useRef,
   useState,
-} from "react"
-import { Loading } from "@/components"
-import mermaid from "mermaid"
-import type { RenderResult } from "mermaid"
-import { Controlled as ControlledZoom } from "react-medium-image-zoom"
-import "react-medium-image-zoom/dist/styles.css"
-import clsx from "clsx"
+} from 'react';
+import { Loading } from '@/components';
+import mermaid from 'mermaid';
+import type { RenderResult } from 'mermaid';
+import { Controlled as ControlledZoom } from 'react-medium-image-zoom';
+import 'react-medium-image-zoom/dist/styles.css';
+import clsx from 'clsx';
 
 type MermaidDiagramProps = {
-  diagramContent: string
-}
+  diagramContent: string;
+};
 
-const VIEWBOX_REGEX = /viewBox="([0-9.-]+\s*){4}"/
+const VIEWBOX_REGEX = /viewBox="([0-9.-]+\s*){4}"/;
 
 export const MermaidDiagram = ({ diagramContent }: MermaidDiagramProps) => {
-  const [result, setResult] = useState<RenderResult | null>(null)
-  const [isZoomed, setIsZoomed] = useState(false)
+  const [result, setResult] = useState<RenderResult | null>(null);
+  const [isZoomed, setIsZoomed] = useState(false);
   const mermaidId = useRef(
     `mermaid-svg-${Math.round(Math.random() * 10000000)}`
-  ).current!
+  ).current!;
 
   useEffect(() => {
-    mermaid.mermaidAPI.initialize()
+    mermaid.mermaidAPI.initialize();
 
     mermaid
       .render(mermaidId, diagramContent)
@@ -37,18 +37,18 @@ export const MermaidDiagram = ({ diagramContent }: MermaidDiagramProps) => {
         console.error(
           `An error occurred while rendering Mermaid.js diagram. Content: \n ${diagramContent}\n Error: ${e}`
         )
-      )
-  }, [mermaidId, diagramContent])
+      );
+  }, [mermaidId, diagramContent]);
 
   const matchedRegex = useMemo(() => {
-    return result ? VIEWBOX_REGEX.exec(result.svg) : undefined
-  }, [result])
+    return result ? VIEWBOX_REGEX.exec(result.svg) : undefined;
+  }, [result]);
 
   const handleZoomChange = useCallback((shouldZoom: boolean) => {
-    setIsZoomed(shouldZoom)
-  }, [])
+    setIsZoomed(shouldZoom);
+  }, []);
 
-  console.log(matchedRegex, result?.svg)
+  console.log(matchedRegex, result?.svg);
 
   return (
     <Suspense fallback={<Loading />}>
@@ -56,22 +56,22 @@ export const MermaidDiagram = ({ diagramContent }: MermaidDiagramProps) => {
         isZoomed={isZoomed}
         onZoomChange={handleZoomChange}
         classDialog={clsx(
-          "[&_data-rmiz-modal-img]:!top-0 [&_data-rmiz-modal-img]:!left-0 [&_data-rmiz-modal-img]:!transform-x-0",
-          ["[&_data-rmiz-modal-img]:!transform-y-0 [&_data-rmiz-modal-img]:"]
+          '[&_data-rmiz-modal-img]:!top-0 [&_data-rmiz-modal-img]:!left-0 [&_data-rmiz-modal-img]:!transform-x-0',
+          ['[&_data-rmiz-modal-img]:!transform-y-0 [&_data-rmiz-modal-img]:']
         )}
       >
         <svg
           dangerouslySetInnerHTML={result ? { __html: result.svg } : undefined}
-          width={isZoomed ? "100vw" : "100%"}
+          width={isZoomed ? '100vw' : '100%'}
           height={
             isZoomed
               ? `100vh`
               : matchedRegex && matchedRegex.length >= 1
-              ? `${matchedRegex[1]}px`
-              : "100%"
+                ? `${matchedRegex[1]}px`
+                : '100%'
           }
         />
       </ControlledZoom>
     </Suspense>
-  )
-}
+  );
+};

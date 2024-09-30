@@ -2,14 +2,21 @@
 title: PHP build process
 ---
 
-import data from "@site/static/data.json"
+import data from '@site/static/data.json';
 
 <p align="center">
-<img src="/img/screenshots/build_deploy_pipeline-step2.png" alt="image" width="100%" height="auto"/>
+  <img
+    src="/img/screenshots/build_deploy_pipeline-step2.png"
+    alt="image"
+    width="100%"
+    height="auto"
+  />
 </p>
 
 ## Description of the build process
+
 Zerops starts a temporary build container and performs following actions:
+
 1. Installs the build environment
 2. Downloads your application source code from [GitHub ↗](https://www.github.com), [GitLab ↗](https://www.gitlab.com) or via [Zerops CLI](/references/cli)
 3. Optionally [customises the build environment](/php/how-to/build-process#customise-php-build-environment)
@@ -21,6 +28,7 @@ Zerops starts a temporary build container and performs following actions:
 The build container is automatically deleted after the build has finished or failed.
 
 ## Cancel running build
+
 When you know that the running build is not correct and you want to cancel it, you can do it in Zerops GUI. Go to the service detail, select **Service dashboard & runtime containers** from the left menu and click on the **Open pipeline detail** button. Then click on the **Cancel build** button.
 
 **// TODO screenshot of a running build pipeline**
@@ -28,11 +36,13 @@ When you know that the running build is not correct and you want to cancel it, y
 The build cancellation is available before the build pipeline is finished. When the build is finished, the deployment cannot be cancelled.
 
 ## Customise PHP build environment
+
 The default PHP build environment contains:
-* <span>{data.alpineCurrentVersion}</span>
-* selected version of PHP defined in `zerops.yml` [build.base](/php/how-to/build-pipeline#base) parameter
-* [zCLI](/references/cli), Zerops command line tool
-* `composer`, `git` and `wget`.
+
+- <span>{data.alpineCurrentVersion}</span>
+- selected version of PHP defined in `zerops.yml` [build.base](/php/how-to/build-pipeline#base) parameter
+- [zCLI](/references/cli), Zerops command line tool
+- `composer`, `git` and `wget`.
 
 If you prefer the Ubuntu OS instead of Alpine, set the <code><a href="/php/how-to/build-pipeline#os">build.os</a></code> attribute to `ubuntu`. To install additional packages or tools add one or more [build.prepareCommands](/php/how-to/build-pipeline#preparecommands) commands to your `zerops.yml`.
 
@@ -41,26 +51,27 @@ The application code is available in the `/var/www` folder in your build contain
 :::
 
 ## PHP build hardware resources
+
 Build of your PHP application is run in a separate build container with following resource configuration:
 
-| HW resource     | Minimum | Maximum |
-| --------------- | ------- | ------- |
-| **CPU cores**        | 6       | 20      |
-| **RAM**         | 8 GB    | 8 GB    |
-| **Disk**        | 1 GB    | 100 GB  |
-
+| HW resource   | Minimum | Maximum |
+| ------------- | ------- | ------- |
+| **CPU cores** | 6       | 20      |
+| **RAM**       | 8 GB    | 8 GB    |
+| **Disk**      | 1 GB    | 100 GB  |
 
 The build container is always started with the minimum hardware resources and scales vertically up to the maximum resources.
 
 :::info
 Hardware resources of the build containers are not charged. The build costs are covered by the standard Zerops [project fee](https://zerops.io/#pricing).
 :::
- 
+
 ## Build time limit
 
 The time limit for the whole build pipeline is **1 hour**. After 1 hour, Zerops will terminate the build pipeline and delete the build container.
 
 ## Troubleshooting build-related problems
+
 ### Failure of a build prepare command
 
 If any [prepare command](/php/how-to/build-pipeline#preparecommands) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/php/how-to/logs#build-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom build environment is ready for the build phase.
@@ -68,6 +79,7 @@ If any [prepare command](/php/how-to/build-pipeline#preparecommands) fails, it r
 ### Invalidate the build cache
 
 Some packages or tools can take a long time to install. Therefore, Zerops caches your custom build environment after each successful build where the `prepareCommands` commands were used. When the second or following build is triggered, Zerops will use the build cache from the previous build if both following conditions are met:
+
 1. Content of the [build.base](/php/how-to/build-pipeline#base) and [build.prepareCommands](/php/how-to/build-pipeline#preparecommands) attributes didn't change from the previous build
 2. The build cache wasn't invalidated in the Zerops GUI.
 
@@ -83,11 +95,7 @@ If any [build command](/php/how-to/build-pipeline#build) fails, it returns an ex
 
 ```yml
 buildCommands:
- - composer install -v
+  - composer install -v
 ```
 
 If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `buildCommands` are finished, the application build is completed and ready for the [deploy](/php/how-to/deploy-process) phase.
-
-
-
-

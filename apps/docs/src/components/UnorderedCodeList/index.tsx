@@ -1,7 +1,7 @@
-import React from "react"
+import React from 'react';
 
 interface Props {
-  data: string[]
+  data: string[];
 }
 
 export default function UnorderedCodeList({ data }: Props): JSX.Element {
@@ -12,8 +12,8 @@ export default function UnorderedCodeList({ data }: Props): JSX.Element {
           <li key={index}>
             <code>{token}</code>
           </li>
-        )
+        );
       })}
     </ul>
-  )
+  );
 }

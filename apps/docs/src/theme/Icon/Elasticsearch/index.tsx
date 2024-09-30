@@ -1,6 +1,6 @@
-import { IconProps } from "@medusajs/icons/dist/types"
-import clsx from "clsx"
-import React from "react"
+import { IconProps } from '@medusajs/icons/dist/types';
+import clsx from 'clsx';
+import React from 'react';
 
 const IconElasticsearch = (props: IconProps) => {
   return (
@@ -11,7 +11,7 @@ const IconElasticsearch = (props: IconProps) => {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       {...props}
-      className={clsx("text-ui-fg-subtle", props.className)}
+      className={clsx('text-ui-fg-subtle', props.className)}
     >
       <path
         d="M62.8 32.5H41.9c.1.5.3 1 .4 1.4.7 2.4 1.1 4.9 1.3 7.5.1 1 .1 2.1.1 3.1s0 2.1-.1 3.1c-.2 2.6-.6 5.1-1.3 7.5-.1.5-.3 1-.4 1.4h20.9c6.6 0 11.9-5.4 11.9-12s-5.3-12-11.9-12z"
@@ -38,7 +38,7 @@ const IconElasticsearch = (props: IconProps) => {
         fill="#fed10a"
       />
     </svg>
-  )
-}
+  );
+};
 
-export default IconElasticsearch
+export default IconElasticsearch;

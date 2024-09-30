@@ -1,7 +1,7 @@
-import React from "react"
-import { InformationCircleSolid } from "@medusajs/icons"
-import type { IconProps } from "@medusajs/icons/dist/types"
-import clsx from "clsx"
+import React from 'react';
+import { InformationCircleSolid } from '@medusajs/icons';
+import type { IconProps } from '@medusajs/icons/dist/types';
+import clsx from 'clsx';
 
 export default function AdmonitionIconNote({
   className,
@@ -11,9 +11,9 @@ export default function AdmonitionIconNote({
     <InformationCircleSolid
       {...props}
       className={clsx(
-        "inline-block mr-0.125 text-medusa-tag-neutral-icon",
+        'inline-block mr-0.125 text-medusa-tag-neutral-icon',
         className
       )}
     />
-  )
+  );
 }

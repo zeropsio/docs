@@ -5,38 +5,45 @@ title: Backup
 Zerops provides data backup for certain services, including MariaDB. The data is stored in S3 storage.
 
 ## Frequency and volume
+
 By default, your data is backed up automatically **every day** at 00:00:00 UTC, unless you update your settings:
 
 ### In GUI
+
 Following changes are available in Zerops GUI. Go to the service detail and choose **Backups List & Configuration** section in the left menu.
-* do a one-time backup of your data
-* change time of your automatic backup
-* turn off backing up your data completely
-* view all of your backups
-* download a backup
-* delete a backup
+
+- do a one-time backup of your data
+- change time of your automatic backup
+- turn off backing up your data completely
+- view all of your backups
+- download a backup
+- delete a backup
 
 ### Via API
-* do a one-time backup of your data
-* change time of your automatic backup
+
+- do a one-time backup of your data
+- change time of your automatic backup
 
 ### Limits
-* Each backup is stored for a maximum period of **1 month**.
-* For each **service** a maximum of **100 backups** is stored.
-* For each **project** a maximum of **25 GiB** of backup volume is stored. Only full backups are stored, the backup that exceeds the limit by its part is not stored.
+
+- Each backup is stored for a maximum period of **1 month**.
+- For each **service** a maximum of **100 backups** is stored.
+- For each **project** a maximum of **25 GiB** of backup volume is stored. Only full backups are stored, the backup that exceeds the limit by its part is not stored.
 
 #### Examples
+
 1. If you backup your data every day, and the total volume is less than 25 GiB, the maximum number of backups is ~30 for the last month. A new backup is stored every day (with the oldest one being deleted), unless you exceed the 25 GiB limit.
 2. If you backup your data every hour, and the total volume is less than 25 GiB, the total number of backups is 100 for the last 100 hours. A new backup is stored every hour (with the oldest one being deleted), unless you exceed the 25 GiB limit.
 3. If you backup your data every hour, and your backups exceed 25 GiB after 50 hours, the total number of backups is 50, unless you delete some of your backups or wait the oldest one is older than 1 month.
 
 ## Persistence
+
 Let's say you have a project `my-project`, which contains a MariaDB service `db` with backups.
 
 If you delete `db` service, but not `my-project` project, the service backups are kept untouched. The backups will be deleted only after you also delete a project `my-project`. After you delete the project, all project backups are deleted after 7 days.
 
 ## Security
+
 All backups are stored in a separate S3 instance, isolated from the instance accessible by users.
 
 A unique encryption key is created for every project and each backup of the project is encrypted with this key.
-

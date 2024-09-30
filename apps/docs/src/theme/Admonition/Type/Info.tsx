@@ -1,11 +1,11 @@
-import React from "react"
-import clsx from "clsx"
-import Translate from "@docusaurus/Translate"
-import type { Props } from "@theme/Admonition/Type/Info"
-import AdmonitionLayout from "@theme/Admonition/Layout"
-import IconInfo from "@theme/Admonition/Icon/Info"
+import React from 'react';
+import clsx from 'clsx';
+import Translate from '@docusaurus/Translate';
+import type { Props } from '@theme/Admonition/Type/Info';
+import AdmonitionLayout from '@theme/Admonition/Layout';
+import IconInfo from '@theme/Admonition/Icon/Info';
 
-const infimaClassName = "alert alert--info"
+const infimaClassName = 'alert alert--info';
 
 const defaultProps = {
   icon: <IconInfo />,
@@ -17,7 +17,7 @@ const defaultProps = {
       Info
     </Translate>
   ),
-}
+};
 
 export default function AdmonitionTypeInfo(props: Props): JSX.Element {
   return (
@@ -28,5 +28,5 @@ export default function AdmonitionTypeInfo(props: Props): JSX.Element {
     >
       {props.children}
     </AdmonitionLayout>
-  )
+  );
 }

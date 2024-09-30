@@ -1,6 +1,6 @@
-import { IconProps } from "@medusajs/icons/dist/types"
-import clsx from "clsx"
-import React from "react"
+import { IconProps } from '@medusajs/icons/dist/types';
+import clsx from 'clsx';
+import React from 'react';
 
 const IconStrapi = (props: IconProps) => {
   return (
@@ -12,7 +12,7 @@ const IconStrapi = (props: IconProps) => {
       focusable="false"
       xmlns="http://www.w3.org/2000/svg"
       {...props}
-      className={clsx("text-ui-fg-subtle", props.className)}
+      className={clsx('text-ui-fg-subtle', props.className)}
     >
       <g fill="#8E75FF" fillRule="evenodd">
         <path d="M161.893 165.833v-78.73a5.077 5.077 0 0 0-5.077-5.076H78.178V.76h159.815a5.077 5.077 0 0 1 5.078 5.077v159.996h-81.178Z" />
@@ -22,7 +22,7 @@ const IconStrapi = (props: IconProps) => {
         />
       </g>
     </svg>
-  )
-}
+  );
+};
 
-export default IconStrapi
+export default IconStrapi;
