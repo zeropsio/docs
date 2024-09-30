@@ -1,4 +1,4 @@
-"use client"
+'use client';
 
 import React, {
   ReactNode,
@@ -9,99 +9,99 @@ import React, {
   useReducer,
   useRef,
   useState,
-} from "react"
-import { usePathname, useRouter } from "next/navigation"
-import { getScrolledTop } from "@/utils"
-import { useIsBrowser } from "@/hooks"
+} from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { getScrolledTop } from '@/utils';
+import { useIsBrowser } from '@/hooks';
 import {
   SidebarItemSections,
   SidebarItemType,
   SidebarSectionItemsType,
-} from "types"
+} from 'types';
 
 export type CurrentItemsState = SidebarSectionItemsType & {
-  previousSidebar?: CurrentItemsState
-}
+  previousSidebar?: CurrentItemsState;
+};
 
 export type SidebarStyleOptions = {
-  disableActiveTransition?: boolean
-  noTitleStyling?: boolean
-}
+  disableActiveTransition?: boolean;
+  noTitleStyling?: boolean;
+};
 
 export type SidebarContextType = {
-  items: SidebarSectionItemsType
-  currentItems: CurrentItemsState | undefined
-  activePath: string | null
-  getActiveItem: () => SidebarItemType | undefined
-  setActivePath: (path: string | null) => void
-  isItemActive: (item: SidebarItemType, checkChildren?: boolean) => boolean
+  items: SidebarSectionItemsType;
+  currentItems: CurrentItemsState | undefined;
+  activePath: string | null;
+  getActiveItem: () => SidebarItemType | undefined;
+  setActivePath: (path: string | null) => void;
+  isItemActive: (item: SidebarItemType, checkChildren?: boolean) => boolean;
   addItems: (
     item: SidebarItemType[],
     options?: {
-      section?: SidebarItemSections
+      section?: SidebarItemSections;
       parent?: {
-        path: string
-        changeLoaded?: boolean
-      }
-      indexPosition?: number
-      ignoreExisting?: boolean
+        path: string;
+        changeLoaded?: boolean;
+      };
+      indexPosition?: number;
+      ignoreExisting?: boolean;
     }
-  ) => void
+  ) => void;
   findItemInSection: (
     section: SidebarItemType[],
     item: Partial<SidebarItemType>,
     checkChildren?: boolean
-  ) => SidebarItemType | undefined
-  mobileSidebarOpen: boolean
-  setMobileSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>
-  isSidebarEmpty: () => boolean
-  desktopSidebarOpen: boolean
-  setDesktopSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>
-  staticSidebarItems?: boolean
-  shouldHandleHashChange: boolean
-  sidebarRef: React.RefObject<HTMLUListElement>
-  goBack: () => void
-} & SidebarStyleOptions
+  ) => SidebarItemType | undefined;
+  mobileSidebarOpen: boolean;
+  setMobileSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  isSidebarEmpty: () => boolean;
+  desktopSidebarOpen: boolean;
+  setDesktopSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  staticSidebarItems?: boolean;
+  shouldHandleHashChange: boolean;
+  sidebarRef: React.RefObject<HTMLUListElement>;
+  goBack: () => void;
+} & SidebarStyleOptions;
 
-export const SidebarContext = createContext<SidebarContextType | null>(null)
+export const SidebarContext = createContext<SidebarContextType | null>(null);
 
 export type ActionOptionsType = {
-  section?: SidebarItemSections
+  section?: SidebarItemSections;
   parent?: {
-    path: string
-    changeLoaded?: boolean
-  }
-  indexPosition?: number
-  ignoreExisting?: boolean
-}
+    path: string;
+    changeLoaded?: boolean;
+  };
+  indexPosition?: number;
+  ignoreExisting?: boolean;
+};
 
 export type ActionType = {
-  type: "add" | "update"
-  items: SidebarItemType[]
-  options?: ActionOptionsType
-}
+  type: 'add' | 'update';
+  items: SidebarItemType[];
+  options?: ActionOptionsType;
+};
 
 const findItem = (
   section: SidebarItemType[],
   item: Partial<SidebarItemType>,
   checkChildren = true
 ): SidebarItemType | undefined => {
-  let foundItem: SidebarItemType | undefined
+  let foundItem: SidebarItemType | undefined;
   section.some((i) => {
     if (
       (!item.path && !i.path && i.title === item.title) ||
       i.path === item.path
     ) {
-      foundItem = i
+      foundItem = i;
     } else if (checkChildren && i.children) {
-      foundItem = findItem(i.children, item)
+      foundItem = findItem(i.children, item);
     }
 
-    return foundItem !== undefined
-  })
+    return foundItem !== undefined;
+  });
 
-  return foundItem
-}
+  return foundItem;
+};
 
 export const reducer = (
   state: SidebarSectionItemsType,
@@ -112,20 +112,20 @@ export const reducer = (
     parent,
     ignoreExisting = false,
     indexPosition,
-  } = options || {}
+  } = options || {};
 
   if (!ignoreExisting) {
     const selectedSection =
-      section === SidebarItemSections.BOTTOM ? state.bottom : state.top
-    items = items.filter((item) => !findItem(selectedSection, item))
+      section === SidebarItemSections.BOTTOM ? state.bottom : state.top;
+    items = items.filter((item) => !findItem(selectedSection, item));
   }
 
   if (!items.length) {
-    return state
+    return state;
   }
 
   switch (type) {
-    case "add":
+    case 'add':
       return {
         ...state,
         [section]:
@@ -136,8 +136,8 @@ export const reducer = (
                 ...state[section].slice(indexPosition),
               ]
             : [...state[section], ...items],
-      }
-    case "update":
+      };
+    case 'update':
       // find item index
       return {
         ...state,
@@ -147,26 +147,26 @@ export const reducer = (
               ...i,
               children: [...(i.children || []), ...items],
               loaded: parent.changeLoaded ? true : i.loaded,
-            }
+            };
           }
-          return i
+          return i;
         }),
-      }
+      };
     default:
-      return state
+      return state;
   }
-}
+};
 
 export type SidebarProviderProps = {
-  children?: ReactNode
-  isLoading?: boolean
-  setIsLoading?: React.Dispatch<React.SetStateAction<boolean>>
-  initialItems?: SidebarSectionItemsType
-  shouldHandleHashChange?: boolean
-  shouldHandlePathChange?: boolean
-  scrollableElement?: Element | Window
-  staticSidebarItems?: boolean
-} & SidebarStyleOptions
+  children?: ReactNode;
+  isLoading?: boolean;
+  setIsLoading?: React.Dispatch<React.SetStateAction<boolean>>;
+  initialItems?: SidebarSectionItemsType;
+  shouldHandleHashChange?: boolean;
+  shouldHandlePathChange?: boolean;
+  scrollableElement?: Element | Window;
+  staticSidebarItems?: boolean;
+} & SidebarStyleOptions;
 
 export const SidebarProvider = ({
   children,
@@ -184,207 +184,209 @@ export const SidebarProvider = ({
     top: initialItems?.top || [],
     bottom: initialItems?.bottom || [],
     mobile: initialItems?.mobile || [],
-  })
+  });
   const [currentItems, setCurrentItems] = useState<
     CurrentItemsState | undefined
-  >()
-  const [activePath, setActivePath] = useState<string | null>("")
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState<boolean>(false)
-  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true)
-  const sidebarRef = useRef<HTMLUListElement>(null)
+  >();
+  const [activePath, setActivePath] = useState<string | null>('');
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState<boolean>(false);
+  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true);
+  const sidebarRef = useRef<HTMLUListElement>(null);
 
-  const pathname = usePathname()
-  const router = useRouter()
-  const isBrowser = useIsBrowser()
+  const pathname = usePathname();
+  const router = useRouter();
+  const isBrowser = useIsBrowser();
   const getResolvedScrollableElement = useCallback(() => {
-    return scrollableElement || window
-  }, [scrollableElement])
+    return scrollableElement || window;
+  }, [scrollableElement]);
 
-  const findItemInSection = useCallback(findItem, [])
+  const findItemInSection = useCallback(findItem, []);
 
   const getActiveItem = useCallback(() => {
     if (activePath === null) {
-      return undefined
+      return undefined;
     }
 
     return (
       findItemInSection(items.mobile, { path: activePath }) ||
       findItemInSection(items.top, { path: activePath }) ||
       findItemInSection(items.bottom, { path: activePath })
-    )
-  }, [activePath, items, findItemInSection])
+    );
+  }, [activePath, items, findItemInSection]);
 
   const addItems = (
     newItems: SidebarItemType[],
     options?: {
-      section?: SidebarItemSections
+      section?: SidebarItemSections;
       parent?: {
-        path: string
-        changeLoaded?: boolean
-      }
-      indexPosition?: number
-      ignoreExisting?: boolean
+        path: string;
+        changeLoaded?: boolean;
+      };
+      indexPosition?: number;
+      ignoreExisting?: boolean;
     }
   ) => {
     dispatch({
-      type: options?.parent ? "update" : "add",
+      type: options?.parent ? 'update' : 'add',
       items: newItems,
       options,
-    })
-  }
+    });
+  };
 
   const isItemActive = useCallback(
     (item: SidebarItemType, checkChildren = false): boolean => {
       return (
         item.path === activePath ||
-        (checkChildren && activePath?.split("_")[0] === item.path)
-      )
+        (checkChildren && activePath?.split('_')[0] === item.path)
+      );
     },
     [activePath]
-  )
+  );
 
   const isSidebarEmpty = useCallback((): boolean => {
     return Object.values(items).every((sectionItems) => {
       if (!Array.isArray(sectionItems)) {
-        return true
+        return true;
       }
 
-      return sectionItems.length === 0
-    })
-  }, [items])
+      return sectionItems.length === 0;
+    });
+  }, [items]);
 
   const init = () => {
-    const currentPath = location.hash.replace("#", "")
+    const currentPath = location.hash.replace('#', '');
     if (currentPath) {
-      setActivePath(currentPath)
+      setActivePath(currentPath);
     }
-  }
+  };
 
   const getCurrentSidebar = useCallback(
     (searchItems: SidebarItemType[]): SidebarItemType | undefined => {
-      let currentSidebar: SidebarItemType | undefined
+      let currentSidebar: SidebarItemType | undefined;
       searchItems.some((item) => {
         if (item.isChildSidebar) {
           if (isItemActive(item)) {
-            currentSidebar = item
+            currentSidebar = item;
           } else if (item.children?.length) {
             const childSidebar =
               getCurrentSidebar(item.children) ||
-              findItem(item.children, { path: activePath || undefined })
+              findItem(item.children, { path: activePath || undefined });
 
             if (childSidebar) {
-              currentSidebar = childSidebar.isChildSidebar ? childSidebar : item
+              currentSidebar = childSidebar.isChildSidebar
+                ? childSidebar
+                : item;
             }
           }
         } else if (item.children?.length) {
-          currentSidebar = getCurrentSidebar(item.children)
+          currentSidebar = getCurrentSidebar(item.children);
         }
 
-        return currentSidebar !== undefined
-      })
+        return currentSidebar !== undefined;
+      });
 
-      return currentSidebar
+      return currentSidebar;
     },
     [isItemActive, activePath]
-  )
+  );
 
   const goBack = () => {
     if (!currentItems) {
-      return
+      return;
     }
 
-    const previousSidebar = currentItems.previousSidebar || items
+    const previousSidebar = currentItems.previousSidebar || items;
 
     const backItem =
       previousSidebar.top.find((item) => item.path && !item.isChildSidebar) ||
-      previousSidebar.bottom.find((item) => item.path && !item.isChildSidebar)
+      previousSidebar.bottom.find((item) => item.path && !item.isChildSidebar);
 
     if (!backItem) {
-      return
+      return;
     }
 
-    setActivePath(backItem.path!)
-    setCurrentItems(currentItems.previousSidebar)
-    router.replace(backItem.path!)
-  }
+    setActivePath(backItem.path!);
+    setCurrentItems(currentItems.previousSidebar);
+    router.replace(backItem.path!);
+  };
 
   useEffect(() => {
     if (shouldHandleHashChange) {
-      init()
+      init();
     }
-  }, [shouldHandleHashChange])
+  }, [shouldHandleHashChange]);
 
   useEffect(() => {
     if (!shouldHandleHashChange) {
-      return
+      return;
     }
 
-    const resolvedScrollableElement = getResolvedScrollableElement()
+    const resolvedScrollableElement = getResolvedScrollableElement();
 
     const handleScroll = () => {
       if (getScrolledTop(resolvedScrollableElement) === 0) {
-        setActivePath("")
+        setActivePath('');
         // can't use next router as it doesn't support
         // changing url without scrolling
-        history.replaceState({}, "", location.pathname)
+        history.replaceState({}, '', location.pathname);
       }
-    }
+    };
 
-    resolvedScrollableElement.addEventListener("scroll", handleScroll)
+    resolvedScrollableElement.addEventListener('scroll', handleScroll);
 
     return () => {
-      resolvedScrollableElement.removeEventListener("scroll", handleScroll)
-    }
-  }, [shouldHandleHashChange, getResolvedScrollableElement])
+      resolvedScrollableElement.removeEventListener('scroll', handleScroll);
+    };
+  }, [shouldHandleHashChange, getResolvedScrollableElement]);
 
   useEffect(() => {
     if (!shouldHandleHashChange || !isBrowser) {
-      return
+      return;
     }
 
     // this is mainly triggered by Algolia
     const handleHashChange = () => {
-      const currentPath = location.hash.replace("#", "")
+      const currentPath = location.hash.replace('#', '');
       if (currentPath !== activePath) {
-        setActivePath(currentPath)
+        setActivePath(currentPath);
       }
-    }
+    };
 
-    window.addEventListener("hashchange", handleHashChange)
+    window.addEventListener('hashchange', handleHashChange);
 
     return () => {
-      window.removeEventListener("hashchange", handleHashChange)
-    }
-  }, [shouldHandleHashChange, isBrowser])
+      window.removeEventListener('hashchange', handleHashChange);
+    };
+  }, [shouldHandleHashChange, isBrowser]);
 
   useEffect(() => {
     if (isLoading && items.top.length && items.bottom.length) {
-      setIsLoading?.(false)
+      setIsLoading?.(false);
     }
-  }, [items, isLoading, setIsLoading])
+  }, [items, isLoading, setIsLoading]);
 
   useEffect(() => {
     if (!shouldHandlePathChange) {
-      return
+      return;
     }
 
     if (pathname !== activePath) {
-      setActivePath(pathname)
+      setActivePath(pathname);
     }
-  }, [shouldHandlePathChange, pathname])
+  }, [shouldHandlePathChange, pathname]);
 
   useEffect(() => {
     if (!activePath?.length) {
-      setCurrentItems(undefined)
-      return
+      setCurrentItems(undefined);
+      return;
     }
 
     const currentSidebar =
-      getCurrentSidebar(items.top) || getCurrentSidebar(items.bottom)
+      getCurrentSidebar(items.top) || getCurrentSidebar(items.bottom);
 
     if (!currentSidebar) {
-      setCurrentItems(undefined)
-      return
+      setCurrentItems(undefined);
+      return;
     }
 
     if (
@@ -392,16 +394,16 @@ export const SidebarProvider = ({
       currentSidebar.children &&
       currentItems?.parentItem?.path !== currentSidebar.path
     ) {
-      const { children, ...parentItem } = currentSidebar
+      const { children, ...parentItem } = currentSidebar;
       setCurrentItems({
         top: children,
         bottom: [],
         mobile: items.mobile,
         parentItem: parentItem,
         previousSidebar: currentItems,
-      })
+      });
     }
-  }, [getCurrentSidebar, activePath])
+  }, [getCurrentSidebar, activePath]);
 
   return (
     <SidebarContext.Provider
@@ -429,15 +431,15 @@ export const SidebarProvider = ({
     >
       {children}
     </SidebarContext.Provider>
-  )
-}
+  );
+};
 
 export const useSidebar = (): SidebarContextType => {
-  const context = useContext(SidebarContext)
+  const context = useContext(SidebarContext);
 
   if (!context) {
-    throw new Error("useSidebar must be used inside a SidebarProvider")
+    throw new Error('useSidebar must be used inside a SidebarProvider');
   }
 
-  return context
-}
+  return context;
+};

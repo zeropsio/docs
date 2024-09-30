@@ -5,19 +5,21 @@ title: Create an Elasticsearch service
 ...
 
 ## Create Elasticsearch using Zerops GUI
+
 First, set up a project in Zerops GUI. Then go to the project dashboard page and choose **Add new service** in the left menu in the **Services** block. Then add a new Elasticsearch service:
 
 **// TODO screenshot (add a new service page)**
 
-| Parameter              | Description                                                                   | Limitations |
-| ---------------------- | ----------------------------------------------------------------------------- | ----------- |
-| **hostname**           | A unique service identifier like `elasticsearch`,`es` etc.                   | - duplicate services with the same name in the same project are forbidden<br/>- maximum 25 characters<br/>- must contain only lowercase ASCII letters (a-z) or numbers (0-9)
+| Parameter    | Description                                                | Limitations                                                                                                                                                                  |
+| ------------ | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **hostname** | A unique service identifier like `elasticsearch`,`es` etc. | - duplicate services with the same name in the same project are forbidden<br/>- maximum 25 characters<br/>- must contain only lowercase ASCII letters (a-z) or numbers (0-9) |
 
 :::caution
 The hostname is fixed after the service is created. It can't be changed later.
 :::
 
 ### Choose Elasticsearch service mode
+
 Zerops provides Elasticsearch service in two modes: **Highly available** and **Single container**.
 
 **// TODO image (add a new Elasticsearch page - Automatic scaling section)**
@@ -69,11 +71,11 @@ Choose the CPU mode when starting a new service or change it later. The CPU mode
 
 Vertical auto scaling has following default configuration:
 
-| &nbsp;              | Minimum resource | Maximum resource |
-| ------------------- | ---------------- | ---------------- |
-| **CPU cores**            | 1                | 5               |
-| **RAM**             | 0.5 GB             | 32 GB            |
-| **Disk**            | 1 GB             | 100 GB           |
+| &nbsp;        | Minimum resource | Maximum resource |
+| ------------- | ---------------- | ---------------- |
+| **CPU cores** | 1                | 5                |
+| **RAM**       | 0.5 GB           | 32 GB            |
+| **Disk**      | 1 GB             | 100 GB           |
 
 For most cases, the default parameters will work without issues. If you need to limit the cost of the Elasticsearch service, lower the maximal resources. Zerops will never scale above the selected maximums.
 
@@ -92,16 +94,21 @@ You can change the auto scaling parameters later.
 :::
 
 ## Create Elasticsearch using zCLI
+
 zCLI is the Zerops command-line tool. To create a new Elasticsearch service via the command-line, follow these steps:
+
 1. [Install & setup zCLI](/references/cli)
 2. [Create a project description file](#create-a-project-description-file)
 3. Create a project and a Elasticsearch service
 
 ### Create a project description file
+
 Zerops uses a yaml format file to describe the project infrastructure.
 
 #### Basic example
+
 Create a directory `my-project`. Create a `description.yml` file inside the directory with the following content:
+
 ```yml
 # basic project data
 project:
@@ -109,18 +116,20 @@ project:
   name: my-project
 # array of project services
 services:
-  -
-    # service name
+  - # service name
     hostname: elasticsearch1
     # service type and version number in elasticsearch@7 format
     type: elasticsearch@7
     # mode of operation "HA"/"NON_HA"
     mode: NON_HA
 ```
+
 The yaml file describes your future project infrastructure. The project will contain one Elasticsearch service in the [single container](#single-container) mode with default [auto scaling](/elasticsearch/how-to/scale) configuration. Hostname will be set to `elasticsearch1`.
 
 #### Full example
+
 Create a directory `my-project`. Create a `description.yml` file inside the directory with the following content:
+
 ```yml
 # basic project data
 project:
@@ -130,12 +139,11 @@ project:
   description: A project with a Elasticsearch database
   # optional: project tags
   tags:
-  - DEMO
-  - ZEROPS
+    - DEMO
+    - ZEROPS
 # array of project services
 services:
-  -
-    # first service hostname
+  - # first service hostname
     hostname: elasticsearch1
     # service type and version number in elasticsearch@7 format
     type: elasticsearch@7
@@ -153,8 +161,7 @@ services:
       startCpuCoreCount: 3
       minFreeRamGB: 0.5
       minFreeRamPercent: 20
-  -
-    # second service hostname
+  - # second service hostname
     hostname: elasticsearch2
     # service type and version number in elasticsearch@7 format
     type: elasticsearch@7
@@ -169,13 +176,14 @@ The hostname of the first service will be set to `elasticsearch1`. The [high ava
 The hostname of the second service will be set to `elasticsearch2`. The [single container](#single-container) mode will be chosen and the default [auto scaling configuration](/elasticsearch/how-to/scale) will be set.
 
 #### Description of description.yml parameters
+
 The `project:` section is required. Only one project can be defined.
 
-| Parameter              | Description                                                                   | Limitations             |
-| ---------------------- | ----------------------------------------------------------------------------- | -----------             |
-| **name**               | The name of the new project. Duplicates are allowed.                          |                         |
-| **description**        | **Optional.** Description of the new project.                                 | Maximum 255 characters. |
-| **tags**               | **Optional.** One or more string tags. Tags do not have a functional meaning, they only provide better orientation in projects.          |
+| Parameter       | Description                                                                                                                     | Limitations             |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| **name**        | The name of the new project. Duplicates are allowed.                                                                            |                         |
+| **description** | **Optional.** Description of the new project.                                                                                   | Maximum 255 characters. |
+| **tags**        | **Optional.** One or more string tags. Tags do not have a functional meaning, they only provide better orientation in projects. |
 
 At least one service in `services:` section is required. You can create a project with multiple services. The example above contains only Elasticsearch services but you can create a `description.yml` with [different types] of services.
 
@@ -216,23 +224,55 @@ At least one service in `services:` section is required. You can create a projec
     </td>
 	</tr>
 
-  <tr>
-  <td><b>verticalAutoscaling</b></td>
-		<td><b>Optional.</b> Defines <a href="/elasticsearch/how-to/create#set-auto-scaling-configuration">custom vertical auto scaling parameters</a>.<br/>
-		All verticalAutoscaling attributes are optional. Not specified attributes will be set to their default values.</td>
-		</tr>
-    <tr>
-  <td><b> - cpuMode</b></td>
-         <td><b>Optional.</b> Accepts <code>SHARED</code>, <code>DEDICATED</code> values. Default is <code>SHARED</code></td>
-     </tr>
-  <tr>
-    <td><b> - minCpu/maxCpu</b></td>
-        <td><b>Optional.</b> Set the minCpu or maxCpu in CPU cores (integer).</td>
-        </tr>
-     <tr><td><b> - minRam/maxRam</b></td>
-     <td><b>Optional.</b> Set the minRam or maxRam in GB (float).</td></tr>
-       <tr><td><b> - minDisk/maxDisk</b></td>
-       <td><b>Optional.</b> Set the minDisk or maxDisk in GB (float).</td></tr>
+{" "}
+
+<tr>
+  <td>
+    <b>verticalAutoscaling</b>
+  </td>
+  <td>
+    <b>Optional.</b> Defines{' '}
+    <a href="/elasticsearch/how-to/create#set-auto-scaling-configuration">
+      custom vertical auto scaling parameters
+    </a>
+    .<br />
+    All verticalAutoscaling attributes are optional. Not specified attributes
+    will be set to their default values.
+  </td>
+</tr>
+<tr>
+  <td>
+    <b> - cpuMode</b>
+  </td>
+  <td>
+    <b>Optional.</b> Accepts <code>SHARED</code>, <code>DEDICATED</code> values.
+    Default is <code>SHARED</code>
+  </td>
+</tr>
+<tr>
+  <td>
+    <b> - minCpu/maxCpu</b>
+  </td>
+  <td>
+    <b>Optional.</b> Set the minCpu or maxCpu in CPU cores (integer).
+  </td>
+</tr>
+<tr>
+  <td>
+    <b> - minRam/maxRam</b>
+  </td>
+  <td>
+    <b>Optional.</b> Set the minRam or maxRam in GB (float).
+  </td>
+</tr>
+<tr>
+  <td>
+    <b> - minDisk/maxDisk</b>
+  </td>
+  <td>
+    <b>Optional.</b> Set the minDisk or maxDisk in GB (float).
+  </td>
+</tr>
 
 </tbody>
 </table>
@@ -265,7 +305,12 @@ You don't specify the project name in the `zcli project project-import` command,
 If you have access to more than one client, you must specify the client ID for which the project is to be created. The `clientID` is located in the Zerops GUI under the client name on the project dashboard page.
 
 <p align="center">
-<img src="/img/screenshots/client_id.png" alt="image" width="70%" height="auto"/>
+  <img
+    src="/img/screenshots/client_id.png"
+    alt="image"
+    width="70%"
+    height="auto"
+  />
 </p>
 ### Add Elasticsearch service to an existing project
 

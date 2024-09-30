@@ -1,27 +1,27 @@
-"use client"
+'use client';
 
-import React from "react"
-import { useColorMode } from "@/providers"
+import React from 'react';
+import { useColorMode } from '@/providers';
 
 export type ThemeImageProps = {
-  light: string
-  dark?: string
-  alt?: string
-} & React.AllHTMLAttributes<HTMLImageElement>
+  light: string;
+  dark?: string;
+  alt?: string;
+} & React.AllHTMLAttributes<HTMLImageElement>;
 
 export const ThemeImage = ({
   light,
   dark,
-  alt = "",
+  alt = '',
   ...props
 }: ThemeImageProps) => {
-  const { colorMode } = useColorMode()
+  const { colorMode } = useColorMode();
 
   return (
     <img
       alt={alt}
-      src={colorMode === "light" ? light : dark || light}
+      src={colorMode === 'light' ? light : dark || light}
       {...props}
     />
-  )
-}
+  );
+};

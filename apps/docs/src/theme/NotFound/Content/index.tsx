@@ -1,13 +1,13 @@
-import React from "react"
-import clsx from "clsx"
-import Translate from "@docusaurus/Translate"
-import type { Props } from "@theme/NotFound/Content"
-import Heading from "@theme/Heading"
+import React from 'react';
+import clsx from 'clsx';
+import Translate from '@docusaurus/Translate';
+import type { Props } from '@theme/NotFound/Content';
+import Heading from '@theme/Heading';
 
 export default function NotFoundContent({ className }: Props): JSX.Element {
   return (
     <main
-      className={clsx("container markdown theme-doc-markdown my-4", className)}
+      className={clsx('container markdown theme-doc-markdown my-4', className)}
     >
       <div className="row">
         <div className="col col--6 col--offset-3">
@@ -22,5 +22,5 @@ export default function NotFoundContent({ className }: Props): JSX.Element {
         </div>
       </div>
     </main>
-  )
+  );
 }

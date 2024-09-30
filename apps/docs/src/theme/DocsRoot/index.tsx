@@ -1,14 +1,14 @@
-import React from "react"
-import clsx from "clsx"
+import React from 'react';
+import clsx from 'clsx';
 import {
   ThemeClassNames,
   HtmlClassNameProvider,
-} from "@docusaurus/theme-common"
-import renderRoutes from "@docusaurus/renderRoutes"
-import Layout from "@theme/Layout"
+} from '@docusaurus/theme-common';
+import renderRoutes from '@docusaurus/renderRoutes';
+import Layout from '@theme/Layout';
 
-import type { Props } from "@theme/DocVersionRoot"
-import DocsProviders from "../../providers/DocsProviders"
+import type { Props } from '@theme/DocVersionRoot';
+import DocsProviders from '../../providers/DocsProviders';
 
 export default function DocsRoot(props: Props): JSX.Element {
   return (
@@ -17,5 +17,5 @@ export default function DocsRoot(props: Props): JSX.Element {
         <Layout>{renderRoutes(props.route.routes!)}</Layout>
       </DocsProviders>
     </HtmlClassNameProvider>
-  )
+  );
 }

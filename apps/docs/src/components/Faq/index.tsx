@@ -1,5 +1,5 @@
-import { ChevronDownMini, ChevronUpMini } from "@medusajs/icons";
-import React, { ReactNode, useState, useRef, useEffect } from "react";
+import { ChevronDownMini, ChevronUpMini } from '@medusajs/icons';
+import React, { ReactNode, useState, useRef, useEffect } from 'react';
 
 interface FAQItemProps {
   question: string;

@@ -1,11 +1,11 @@
-import React from "react"
-import { NoteProps } from ".."
-import { NoteLayout } from "../Layout"
-import { CheckCircleSolid } from "@medusajs/icons"
-import clsx from "clsx"
+import React from 'react';
+import { NoteProps } from '..';
+import { NoteLayout } from '../Layout';
+import { CheckCircleSolid } from '@medusajs/icons';
+import clsx from 'clsx';
 
 export const CheckNote = ({
-  title = "Prerequisites",
+  title = 'Prerequisites',
   icon,
   ...props
 }: NoteProps) => {
@@ -16,12 +16,12 @@ export const CheckNote = ({
         icon || (
           <CheckCircleSolid
             className={clsx(
-              "inline-block mr-docs_0.125 text-medusa-tag-neutral-icon"
+              'inline-block mr-docs_0.125 text-medusa-tag-neutral-icon'
             )}
           />
         )
       }
       {...props}
     />
-  )
-}
+  );
+};

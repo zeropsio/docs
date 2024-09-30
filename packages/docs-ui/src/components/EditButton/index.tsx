@@ -1,9 +1,9 @@
-import React from "react"
-import { Button } from "../.."
+import React from 'react';
+import { Button } from '../..';
 
 type EditButtonProps = {
-  filePath: string
-}
+  filePath: string;
+};
 
 export const EditButton = ({ filePath }: EditButtonProps) => {
   return (
@@ -12,5 +12,5 @@ export const EditButton = ({ filePath }: EditButtonProps) => {
         Edit this page
       </a>
     </Button>
-  )
-}
+  );
+};

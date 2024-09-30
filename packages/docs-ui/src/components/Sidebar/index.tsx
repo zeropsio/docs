@@ -1,21 +1,21 @@
-"use client"
+'use client';
 
-import React, { useMemo } from "react"
-import { useSidebar } from "@/providers"
-import clsx from "clsx"
-import { Loading } from "@/components"
-import { SidebarItem } from "./Item"
-import { SidebarTitle } from "./Title"
-import { SidebarBack } from "./Back"
-import { CSSTransition, SwitchTransition } from "react-transition-group"
+import React, { useMemo } from 'react';
+import { useSidebar } from '@/providers';
+import clsx from 'clsx';
+import { Loading } from '@/components';
+import { SidebarItem } from './Item';
+import { SidebarTitle } from './Title';
+import { SidebarBack } from './Back';
+import { CSSTransition, SwitchTransition } from 'react-transition-group';
 
 export type SidebarProps = {
-  className?: string
-  expandItems?: boolean
-}
+  className?: string;
+  expandItems?: boolean;
+};
 
 export const Sidebar = ({
-  className = "",
+  className = '',
   expandItems = false,
 }: SidebarProps) => {
   const {
@@ -25,42 +25,42 @@ export const Sidebar = ({
     desktopSidebarOpen,
     staticSidebarItems,
     sidebarRef,
-  } = useSidebar()
+  } = useSidebar();
 
   const sidebarItems = useMemo(
     () => currentItems || items,
     [items, currentItems]
-  )
+  );
 
   return (
     <aside
       className={clsx(
-        "clip bg-docs-bg dark:bg-docs-bg-dark block",
-        "border-medusa-border-base border-0 border-r border-solid",
-        "fixed -left-full top-0 h-screen transition-[left] lg:relative lg:left-0 lg:top-auto lg:h-auto",
-        "lg:w-sidebar w-full",
-        mobileSidebarOpen && "!left-0 z-50 top-[57px]",
-        !desktopSidebarOpen && "!absolute !-left-full",
+        'clip bg-docs-bg dark:bg-docs-bg-dark block',
+        'border-medusa-border-base border-0 border-r border-solid',
+        'fixed -left-full top-0 h-screen transition-[left] lg:relative lg:left-0 lg:top-auto lg:h-auto',
+        'lg:w-sidebar w-full',
+        mobileSidebarOpen && '!left-0 z-50 top-[57px]',
+        !desktopSidebarOpen && '!absolute !-left-full',
         className
       )}
       style={{
-        animationFillMode: "forwards",
+        animationFillMode: 'forwards',
       }}
     >
       <SwitchTransition>
         <CSSTransition
-          key={sidebarItems.parentItem?.title || "home"}
+          key={sidebarItems.parentItem?.title || 'home'}
           nodeRef={sidebarRef}
           classNames={{
-            enter: "animate-fadeInLeft animate-fast",
-            exit: "animate-fadeOutLeft animate-fast",
+            enter: 'animate-fadeInLeft animate-fast',
+            exit: 'animate-fadeOutLeft animate-fast',
           }}
           timeout={200}
         >
           <ul
             className={clsx(
-              "sticky top-0 h-screen max-h-screen w-full list-none overflow-auto p-0",
-              "px-docs_1.5 pb-[57px] pt-docs_1.5"
+              'sticky top-0 h-screen max-h-screen w-full list-none overflow-auto p-0',
+              'px-docs_1.5 pb-[57px] pt-docs_1.5'
             )}
             id="sidebar"
             ref={sidebarRef}
@@ -111,5 +111,5 @@ export const Sidebar = ({
         </CSSTransition>
       </SwitchTransition>
     </aside>
-  )
-}
+  );
+};

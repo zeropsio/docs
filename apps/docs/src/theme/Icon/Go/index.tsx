@@ -1,6 +1,6 @@
-import { IconProps } from "@medusajs/icons/dist/types"
-import clsx from "clsx"
-import React from "react"
+import { IconProps } from '@medusajs/icons/dist/types';
+import clsx from 'clsx';
+import React from 'react';
 
 const IconGo = (props: IconProps) => {
   return (
@@ -10,7 +10,7 @@ const IconGo = (props: IconProps) => {
       viewBox="0 0 128 128"
       xmlns="http://www.w3.org/2000/svg"
       {...props}
-      className={clsx("text-ui-fg-subtle", props.className)}
+      className={clsx('text-ui-fg-subtle', props.className)}
     >
       <g fill="#00acd7" fillRule="evenodd">
         <path
@@ -20,7 +20,7 @@ const IconGo = (props: IconProps) => {
         <path d="M99.64 87.253c-5.515-.122-10.546-1.697-14.788-5.334-3.576-3.09-5.818-7.03-6.545-11.697-1.091-6.848.787-12.909 4.909-18.302 4.424-5.819 9.757-8.849 16.97-10.122 6.181-1.09 12-.484 17.272 3.091 4.788 3.273 7.757 7.697 8.545 13.515 1.03 8.182-1.333 14.849-6.97 20.546-4 4.06-8.909 6.606-14.545 7.757-1.636.303-3.273.364-4.848.546zm14.424-24.485c-.06-.788-.06-1.394-.182-2-1.09-6-6.606-9.394-12.363-8.06-5.637 1.272-9.273 4.848-10.606 10.545-1.091 4.727 1.212 9.515 5.575 11.454 3.334 1.455 6.667 1.273 9.879-.363 4.788-2.485 7.394-6.364 7.697-11.576z" />
       </g>
     </svg>
-  )
-}
+  );
+};
 
-export default IconGo
+export default IconGo;

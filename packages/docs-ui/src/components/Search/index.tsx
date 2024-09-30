@@ -1,24 +1,24 @@
-"use client"
+'use client';
 
-import React, { useEffect, useMemo, useRef, useState } from "react"
-import { InstantSearch, SearchBox } from "react-instantsearch"
-import clsx from "clsx"
-import { SearchEmptyQueryBoundary } from "./EmptyQueryBoundary"
-import { SearchSuggestions, type SearchSuggestionType } from "./Suggestions"
-import { AlgoliaProps, useSearch } from "@/providers"
-import { checkArraySameElms } from "@/utils"
-import { SearchHitsWrapper } from "./Hits"
-import { Button, Kbd, SelectBadge } from "@/components"
-import { MagnifyingGlass, XMark } from "@medusajs/icons"
-import { useSearchNavigation, type OptionType } from "@/hooks"
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { InstantSearch, SearchBox } from 'react-instantsearch';
+import clsx from 'clsx';
+import { SearchEmptyQueryBoundary } from './EmptyQueryBoundary';
+import { SearchSuggestions, type SearchSuggestionType } from './Suggestions';
+import { AlgoliaProps, useSearch } from '@/providers';
+import { checkArraySameElms } from '@/utils';
+import { SearchHitsWrapper } from './Hits';
+import { Button, Kbd, SelectBadge } from '@/components';
+import { MagnifyingGlass, XMark } from '@medusajs/icons';
+import { useSearchNavigation, type OptionType } from '@/hooks';
 
 export type SearchProps = {
-  algolia: AlgoliaProps
-  isLoading?: boolean
-  suggestions: SearchSuggestionType[]
-  checkInternalPattern?: RegExp
-  filterOptions?: OptionType[]
-}
+  algolia: AlgoliaProps;
+  isLoading?: boolean;
+  suggestions: SearchSuggestionType[];
+  checkInternalPattern?: RegExp;
+  filterOptions?: OptionType[];
+};
 
 export const Search = ({
   algolia,
@@ -28,57 +28,57 @@ export const Search = ({
   filterOptions = [],
 }: SearchProps) => {
   const { isOpen, setIsOpen, defaultFilters, searchClient, modalRef } =
-    useSearch()
-  const [filters, setFilters] = useState<string[]>(defaultFilters)
+    useSearch();
+  const [filters, setFilters] = useState<string[]>(defaultFilters);
   const formattedFilters: string = useMemo(() => {
-    let formatted = ""
+    let formatted = '';
     filters.forEach((filter) => {
-      const split = filter.split("_")
+      const split = filter.split('_');
       split.forEach((f) => {
         if (formatted.length) {
-          formatted += " OR "
+          formatted += ' OR ';
         }
-        formatted += `_tags:${f}`
-      })
-    })
-    return formatted
-  }, [filters])
-  const searchBoxRef = useRef<HTMLFormElement>(null)
+        formatted += `_tags:${f}`;
+      });
+    });
+    return formatted;
+  }, [filters]);
+  const searchBoxRef = useRef<HTMLFormElement>(null);
 
   const focusSearchInput = () =>
-    searchBoxRef.current?.querySelector("input")?.focus()
+    searchBoxRef.current?.querySelector('input')?.focus();
 
   useEffect(() => {
     if (!checkArraySameElms(defaultFilters, filters)) {
-      setFilters(defaultFilters)
+      setFilters(defaultFilters);
     }
-  }, [defaultFilters])
+  }, [defaultFilters]);
 
   useEffect(() => {
     if (isOpen && searchBoxRef.current) {
-      focusSearchInput()
+      focusSearchInput();
     } else if (!isOpen) {
       const focusedItem = modalRef.current?.querySelector(
-        ":focus"
-      ) as HTMLElement
+        ':focus'
+      ) as HTMLElement;
       if (
         focusedItem &&
-        focusedItem === searchBoxRef.current?.querySelector("input")
+        focusedItem === searchBoxRef.current?.querySelector('input')
       ) {
         // remove focus
-        focusedItem.blur()
+        focusedItem.blur();
       }
     }
-  }, [isOpen])
+  }, [isOpen]);
 
   useSearchNavigation({
     getInputElm: () =>
-      searchBoxRef.current?.querySelector("input") as HTMLInputElement,
+      searchBoxRef.current?.querySelector('input') as HTMLInputElement,
     focusInput: focusSearchInput,
     keyboardProps: {
       isLoading,
     },
-  })
+  });
 
   return (
     <div className="h-full">
@@ -86,27 +86,27 @@ export const Search = ({
         indexName={algolia.mainIndexName}
         searchClient={searchClient}
       >
-        <div className={clsx("bg-medusa-bg-base flex")}>
+        <div className={clsx('bg-medusa-bg-base flex')}>
           <SearchBox
             classNames={{
               root: clsx(
-                "h-[57px] w-full md:rounded-t-docs_xl relative border-0 border-solid",
-                "border-b border-medusa-border-base",
-                "bg-transparent"
+                'h-[57px] w-full md:rounded-t-docs_xl relative border-0 border-solid',
+                'border-b border-medusa-border-base',
+                'bg-transparent'
               ),
-              form: clsx("h-full md:rounded-t-docs_xl bg-transparent"),
+              form: clsx('h-full md:rounded-t-docs_xl bg-transparent'),
               input: clsx(
-                "w-full h-full pl-docs_3 text-medusa-fg-base",
-                "placeholder:text-medusa-fg-muted",
-                "md:rounded-t-docs_xl text-compact-medium bg-transparent",
-                "appearance-none search-cancel:hidden border-0 active:outline-none focus:outline-none"
+                'w-full h-full pl-docs_3 text-medusa-fg-base',
+                'placeholder:text-medusa-fg-muted',
+                'md:rounded-t-docs_xl text-compact-medium bg-transparent',
+                'appearance-none search-cancel:hidden border-0 active:outline-none focus:outline-none'
               ),
-              submit: clsx("absolute top-[18px] left-docs_1 btn-clear p-0"),
+              submit: clsx('absolute top-[18px] left-docs_1 btn-clear p-0'),
               reset: clsx(
-                "absolute top-docs_0.75 right-docs_1 hover:bg-medusa-bg-base-hover",
-                "p-[5px] md:rounded-docs_DEFAULT btn-clear"
+                'absolute top-docs_0.75 right-docs_1 hover:bg-medusa-bg-base-hover',
+                'p-[5px] md:rounded-docs_DEFAULT btn-clear'
               ),
-              loadingIndicator: clsx("absolute top-[18px] right-docs_1"),
+              loadingIndicator: clsx('absolute top-[18px] right-docs_1'),
             }}
             submitIconComponent={() => (
               <MagnifyingGlass className="text-medusa-fg-muted" />
@@ -121,10 +121,10 @@ export const Search = ({
           <Button
             variant="clear"
             className={clsx(
-              "bg-medusa-bg-base block md:hidden",
-              "border-0 border-solid",
-              "border-medusa-border-base border-b",
-              "pr-docs_1"
+              'bg-medusa-bg-base block md:hidden',
+              'border-0 border-solid',
+              'border-medusa-border-base border-b',
+              'pr-docs_1'
             )}
             onClick={() => setIsOpen(false)}
           >
@@ -139,16 +139,16 @@ export const Search = ({
               configureProps={{
                 filters: formattedFilters,
                 attributesToSnippet: [
-                  "content",
-                  "hierarchy.lvl1",
-                  "hierarchy.lvl2",
-                  "hierarchy.lvl3",
+                  'content',
+                  'hierarchy.lvl1',
+                  'hierarchy.lvl2',
+                  'hierarchy.lvl3',
                 ],
                 attributesToHighlight: [
-                  "content",
-                  "hierarchy.lvl1",
-                  "hierarchy.lvl2",
-                  "hierarchy.lvl3",
+                  'content',
+                  'hierarchy.lvl1',
+                  'hierarchy.lvl2',
+                  'hierarchy.lvl3',
                 ],
               }}
               indices={algolia.indices}
@@ -159,10 +159,10 @@ export const Search = ({
       </InstantSearch>
       <div
         className={clsx(
-          "py-docs_0.75 flex items-center justify-between px-docs_1",
-          "border-0 border-solid h-[57px]",
-          "border-medusa-border-base border-t",
-          "bg-medusa-bg-base"
+          'py-docs_0.75 flex items-center justify-between px-docs_1',
+          'border-0 border-solid h-[57px]',
+          'border-medusa-border-base border-t',
+          'bg-medusa-bg-base'
         )}
       >
         {filterOptions.length && (
@@ -181,9 +181,9 @@ export const Search = ({
             placeholder="Filters"
             handleAddAll={(isAllSelected: boolean) => {
               if (isAllSelected) {
-                setFilters(defaultFilters)
+                setFilters(defaultFilters);
               } else {
-                setFilters(filterOptions.map((option) => option.value))
+                setFilters(filterOptions.map((option) => option.value));
               }
             }}
           />
@@ -191,7 +191,7 @@ export const Search = ({
         <div className="hidden items-center gap-docs_1 md:flex">
           <div className="flex items-center gap-docs_0.5">
             <span
-              className={clsx("text-medusa-fg-subtle", "text-compact-x-small")}
+              className={clsx('text-medusa-fg-subtle', 'text-compact-x-small')}
             >
               Navigation
             </span>
@@ -202,7 +202,7 @@ export const Search = ({
           </div>
           <div className="flex items-center gap-docs_0.5">
             <span
-              className={clsx("text-medusa-fg-subtle", "text-compact-x-small")}
+              className={clsx('text-medusa-fg-subtle', 'text-compact-x-small')}
             >
               Open Result
             </span>
@@ -211,5 +211,5 @@ export const Search = ({
         </div>
       </div>
     </div>
-  )
-}
+  );
+};

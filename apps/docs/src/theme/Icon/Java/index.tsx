@@ -1,6 +1,6 @@
-import { IconProps } from "@medusajs/icons/dist/types"
-import clsx from "clsx"
-import React from "react"
+import { IconProps } from '@medusajs/icons/dist/types';
+import clsx from 'clsx';
+import React from 'react';
 
 const IconJava = (props: IconProps) => {
   return (
@@ -11,7 +11,7 @@ const IconJava = (props: IconProps) => {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       {...props}
-      className={clsx("text-ui-fg-subtle", props.className)}
+      className={clsx('text-ui-fg-subtle', props.className)}
     >
       <path
         fill="#4e7896"
@@ -22,7 +22,7 @@ const IconJava = (props: IconProps) => {
         d="M18.996.001s3.313 3.366-3.152 8.442c-5.183 4.114-1.175 6.465 0 9.137-3.046-2.725-5.236-5.13-3.74-7.373C14.294 6.893 20.332 5.3 18.996.001zm-1.7 15.335c1.55 1.763-.427 3.366-.427 3.366s3.954-2.03 2.137-4.542c-1.656-2.404-2.94-3.58 4.007-7.587 0 0-10.953 2.725-5.717 8.763z"
       />
     </svg>
-  )
-}
+  );
+};
 
-export default IconJava
+export default IconJava;

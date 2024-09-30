@@ -1,25 +1,25 @@
-import React from "react"
-import Link from "@docusaurus/Link"
-import useBaseUrl from "@docusaurus/useBaseUrl"
-import useDocusaurusContext from "@docusaurus/useDocusaurusContext"
-import { useThemeConfig, type NavbarLogo } from "@docusaurus/theme-common"
-import ThemedImage from "@theme/ThemedImage"
-import type { Props } from "@theme/Logo"
-import { ThemeConfig } from "@medusajs/docs"
+import React from 'react';
+import Link from '@docusaurus/Link';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
+import { useThemeConfig, type NavbarLogo } from '@docusaurus/theme-common';
+import ThemedImage from '@theme/ThemedImage';
+import type { Props } from '@theme/Logo';
+import { ThemeConfig } from '@medusajs/docs';
 
 function LogoThemedImage({
   logo,
   alt,
   imageClassName,
 }: {
-  logo: NavbarLogo
-  alt: string
-  imageClassName?: string
+  logo: NavbarLogo;
+  alt: string;
+  imageClassName?: string;
 }) {
   const sources = {
     light: useBaseUrl(logo.src),
     dark: useBaseUrl(logo.srcDark || logo.src),
-  }
+  };
   const themedImage = (
     <ThemedImage
       className={logo.className}
@@ -29,7 +29,7 @@ function LogoThemedImage({
       alt={alt}
       style={logo.style}
     />
-  )
+  );
 
   // Is this extra div really necessary?
   // introduced in https://github.com/facebook/docusaurus/pull/5666
@@ -37,28 +37,28 @@ function LogoThemedImage({
     <div className={imageClassName}>{themedImage}</div>
   ) : (
     themedImage
-  )
+  );
 }
 
-export default function MobileLogo(props: Omit<Props, "key">): JSX.Element {
+export default function MobileLogo(props: Omit<Props, 'key'>): JSX.Element {
   const {
     siteConfig: { title },
-  } = useDocusaurusContext()
+  } = useDocusaurusContext();
   const {
     navbar: { title: navbarTitle },
     mobileLogo: logo,
-  } = useThemeConfig() as ThemeConfig
+  } = useThemeConfig() as ThemeConfig;
 
-  const { imageClassName, titleClassName, ...propsRest } = props
-  const logoLink = useBaseUrl(logo?.href || "/")
+  const { imageClassName, titleClassName, ...propsRest } = props;
+  const logoLink = useBaseUrl(logo?.href || '/');
 
   // If visible title is shown, fallback alt text should be
   // an empty string to mark the logo as decorative.
-  const fallbackAlt = navbarTitle ? "" : title
+  const fallbackAlt = navbarTitle ? '' : title;
 
   // Use logo alt text if provided (including empty string),
   // and provide a sensible fallback otherwise.
-  const alt = logo?.alt ?? fallbackAlt
+  const alt = logo?.alt ?? fallbackAlt;
 
   return (
     <Link
@@ -75,5 +75,5 @@ export default function MobileLogo(props: Omit<Props, "key">): JSX.Element {
       )}
       {navbarTitle != null && <b className={titleClassName}>{navbarTitle}</b>}
     </Link>
-  )
+  );
 }

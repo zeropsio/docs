@@ -1,13 +1,13 @@
-import React from "react"
-import clsx from "clsx"
-import { ThemeClassNames } from "@docusaurus/theme-common"
-import { useDoc } from "@docusaurus/theme-common/internal"
-import Heading from "@theme/Heading"
-import MDXContent from "@theme/MDXContent"
-import type { Props } from "@theme/DocItem/Content"
-import { DocContextValue } from "@medusajs/docs"
-import { Badge, BadgeVariant } from "docs-ui"
-import Head from "@docusaurus/Head"
+import React from 'react';
+import clsx from 'clsx';
+import { ThemeClassNames } from '@docusaurus/theme-common';
+import { useDoc } from '@docusaurus/theme-common/internal';
+import Heading from '@theme/Heading';
+import MDXContent from '@theme/MDXContent';
+import type { Props } from '@theme/DocItem/Content';
+import { DocContextValue } from '@medusajs/docs';
+import { Badge, BadgeVariant } from 'docs-ui';
+import Head from '@docusaurus/Head';
 
 /**
  Title can be declared inside md content or declared through
@@ -20,21 +20,21 @@ import Head from "@docusaurus/Head"
  - the markdown content does not already contain a top-level h1 heading
 */
 function useSyntheticTitle(): string | null {
-  const { metadata, frontMatter, contentTitle } = useDoc()
+  const { metadata, frontMatter, contentTitle } = useDoc();
   const shouldRender =
-    !frontMatter.hide_title && typeof contentTitle === "undefined"
+    !frontMatter.hide_title && typeof contentTitle === 'undefined';
   if (!shouldRender) {
-    return null
+    return null;
   }
-  return metadata.title
+  return metadata.title;
 }
 
 export default function DocItemContent({ children }: Props): JSX.Element {
   const {
     frontMatter: { badge, description },
     metadata,
-  } = useDoc() as DocContextValue
-  const syntheticTitle = useSyntheticTitle()
+  } = useDoc() as DocContextValue;
+  const syntheticTitle = useSyntheticTitle();
 
   return (
     <>
@@ -43,12 +43,12 @@ export default function DocItemContent({ children }: Props): JSX.Element {
         {description && <meta name="description" content={description} />}
       </Head>
 
-      <div className={clsx(ThemeClassNames.docs.docMarkdown, "markdown")}>
+      <div className={clsx(ThemeClassNames.docs.docMarkdown, 'markdown')}>
         {syntheticTitle && (
           <header
-            className={clsx(badge && "md:flex md:items-center md:gap-0.5 mb-2")}
+            className={clsx(badge && 'md:flex md:items-center md:gap-0.5 mb-2')}
           >
-            <Heading as="h1" className={clsx(badge && "!mb-0")}>
+            <Heading as="h1" className={clsx(badge && '!mb-0')}>
               {syntheticTitle}
               {badge && (
                 <Badge
@@ -62,7 +62,7 @@ export default function DocItemContent({ children }: Props): JSX.Element {
             {badge && (
               <Badge
                 variant={badge.variant as BadgeVariant}
-                className={clsx("md:block hidden")}
+                className={clsx('md:block hidden')}
               >
                 {badge.text}
               </Badge>
@@ -72,5 +72,5 @@ export default function DocItemContent({ children }: Props): JSX.Element {
         <MDXContent>{children}</MDXContent>
       </div>
     </>
-  )
+  );
 }

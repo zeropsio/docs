@@ -1,28 +1,28 @@
-import React from "react"
-import { Diagram2CodeSpec } from "@medusajs/docs"
-import Tabs from "@theme/Tabs"
-import TabItem from "@theme/TabItem"
-import { specs } from "../../utils/specs"
-import CodeBlock from "../../theme/CodeBlock"
-import Mermaid from "@docusaurus/theme-mermaid/lib/theme/Mermaid/index.js"
-import Heading from "@theme/Heading"
+import React from 'react';
+import { Diagram2CodeSpec } from '@medusajs/docs';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import { specs } from '../../utils/specs';
+import CodeBlock from '../../theme/CodeBlock';
+import Mermaid from '@docusaurus/theme-mermaid/lib/theme/Mermaid/index.js';
+import Heading from '@theme/Heading';
 
 type WorkflowReferenceProps = {
-  specName: string
-}
+  specName: string;
+};
 
 const Diagram2CodeSpecs = ({ specName }: WorkflowReferenceProps) => {
   if (!Object.hasOwn(specs, specName)) {
-    return <></>
+    return <></>;
   }
-  const specsData: Diagram2CodeSpec = specs[specName]
+  const specsData: Diagram2CodeSpec = specs[specName];
 
   const transformTitle = (title: string): string => {
     return title
-      .split("-")
+      .split('-')
       .map((word) => `${word.charAt(0).toUpperCase()}${word.substring(1)}`)
-      .join(" ")
-  }
+      .join(' ');
+  };
 
   return (
     <>
@@ -48,7 +48,7 @@ const Diagram2CodeSpecs = ({ specName }: WorkflowReferenceProps) => {
         </React.Fragment>
       ))}
     </>
-  )
-}
+  );
+};
 
-export default Diagram2CodeSpecs
+export default Diagram2CodeSpecs;

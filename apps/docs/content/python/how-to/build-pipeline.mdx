@@ -2,8 +2,8 @@
 title: Configure Python build & deploy pipeline
 ---
 
-import data from "@site/static/data.json"
-import UnorderedCodeList from '@site/src/components/UnorderedCodeList'
+import data from '@site/static/data.json';
+import UnorderedCodeList from '@site/src/components/UnorderedCodeList';
 
 Zerops provides a customizable build and runtime environment for your Python application.
 
@@ -78,27 +78,26 @@ Zerops supports the definition of multiple runtime services in a single `zerops.
 zerops:
   # definition for app service
   - setup: app
-    build:
-      ...
-    run:
-      ...
+    build: ...
+    run: ...
 
   # definition for api service
   - setup: api
-    build:
-      ...
-    run:
-      ...
+    build: ...
+    run: ...
 ```
 
 Each service configuration contains at least two sections: **build** and **run**. Both sections are required to build and deploy your Python application in Zerops. If you'd like to use a readiness check, add an optional **deploy** section.
 
 ## Build pipeline configuration
+
 ### base
+
 _REQUIRED._ Sets the base technology for the build environment.
 
 Following options are available for Python builds:
-<UnorderedCodeList data={data.pythonVersions}/>
+
+<UnorderedCodeList data={data.pythonVersions} />
 
 ```yml
 zerops:
@@ -111,7 +110,12 @@ zerops:
       ...
 ```
 
-<p>The base build environment contains {data.alpineCurrentVersion}, the selected major version of Python, <a href="/references/cli">Zerops command line tool</a>, <code>pip</code> and <code>git</code>.</p>
+<p>
+  The base build environment contains {data.alpineCurrentVersion}, the selected
+  major version of Python,{' '}
+  <a href="/references/cli">Zerops command line tool</a>, <code>pip</code> and{' '}
+  <code>git</code>.
+</p>
 
 :::info
 You can change the base environment when you need to. Just simply modify the `zerops.yml` in your repository.
@@ -137,30 +141,35 @@ See the full list of supported [build base environments](/references/zeropsyml/b
 To customise your build environment use the [prepareCommands](/python/how-to/build-pipeline#preparecommands) attribute.
 
 ### os
+
 _OPTIONAL._ Sets the operating system for the build environment.
 
 Following options are available:
-* `alpine`
-* `ubuntu`
+
+- `alpine`
+- `ubuntu`
 
 Default value is `alpine`.
 
 We are currently using following os version:
-* <span>{data.alpineCurrentVersion}</span>
-* <span>{data.ubuntuCurrentVersion}</span>
+
+- <span>{data.alpineCurrentVersion}</span>
+- <span>{data.ubuntuCurrentVersion}</span>
 
 :::caution
 The os version is fixed and cannot be customised.
 :::
 
 ### prepareCommands
+
 _OPTIONAL._ Customises the build environment by installing additional dependencies or tools to the base build environment.
 
 The base build environment contains:
-* <span>{data.alpineCurrentVersion}</span>
-* selected version of Python defined in the [base](/python/how-to/build-pipeline#base) attribute
-* [Zerops command line tool](/references/cli)
-* `pip` and `git`
+
+- <span>{data.alpineCurrentVersion}</span>
+- selected version of Python defined in the [base](/python/how-to/build-pipeline#base) attribute
+- [Zerops command line tool](/references/cli)
+- `pip` and `git`
 
 To install additional packages or tools add one or more prepare commands:
 
@@ -181,6 +190,7 @@ zerops:
 ```
 
 When the first build is triggered, Zerops will
+
 1. create a build container
 2. download your application code from your repository
 3. run the prepare commands in the defined order
@@ -197,9 +207,9 @@ Use following syntax to run all commands in the same environment context. For ex
 
 ```yml
 prepareCommands:
- - |
-   apt update
-   apt install python3-pip # already installed for Python services
+  - |
+    apt update
+    apt install python3-pip # already installed for Python services
 ```
 
 #### Run prepare commands as a separate shell instances
@@ -208,25 +218,32 @@ When the following syntax is used, each command is triggered in a separate envir
 
 ```yml
 prepareCommands:
- - apt update
- - apt install python3-pip # already installed for Python services
+  - apt update
+  - apt install python3-pip # already installed for Python services
 ```
 
 #### Cache of your custom build environment
 
 Some packages or tools can take a long time to install. Therefore, Zerops caches your custom build environment after each successful build where the prepare commands were used. When the second or following build is triggered, Zerops will use the build cache from the previous build if both following conditions are met:
+
 1. Content of the base and prepare attributes didn't change from the previous build
 2. The build cache wasn't invalidated in the Zerops GUI.
 
 To invalidate the Zerops build cache go to your service detail in Zerops GUI, choose **Service dashboard & runtime containers** from the left menu and click on the **Open pipeline detail** button. Then click on the **Invalidate build cache** icon.
 
 <p align="center">
-<img src="/img/screenshots/runtime_clear_build_cache.png" alt="image" width="100%" height="auto"/>
+  <img
+    src="/img/screenshots/runtime_clear_build_cache.png"
+    alt="image"
+    width="100%"
+    height="auto"
+  />
 </p>
 
 When the build cache is used, Zerops doesn't run the `prepareCommands` commands and the build of your application is faster.
 
 ### deployFiles
+
 _REQUIRED._ Selects which files or folders will be deployed after the build has successfully finished. To filter out specific files or folders, use <a href="#deployignore"><code>.deployignore</code></a> file.
 
 ```yml
@@ -243,17 +260,20 @@ The path starts from the **root directory** of your project (the location of `ze
 #### Examples
 
 Deploys a folder, and a file from the project root directory:
+
 ```yml
 deployFiles:
   - app.py
 ```
 
 Deploys the whole content of the build container:
+
 ```yml
 deployFiles: .
 ```
 
 Deploys a folder, and a file in a defined path:
+
 ```yml
 deployFiles:
   - ./path/to/file.txt
@@ -261,27 +281,33 @@ deployFiles:
 ```
 
 #### How to use a wildcard in the path
+
 Zerops supports the `~` character as a wildcard for one or more folders in the path.
 
 Deploys all `file.txt` files that are located in any path that begins with `/path/` and ends with `/to/`
+
 ```yml
 deployFiles: ./path/~/to/file.txt
 ```
 
 Deploys all folders that are located in any path that begins with `/path/to/`
+
 ```yml
 deployFiles: ./path/to/~/
 ```
 
 Deploys all folders that are located in any path that begins with `/path/` and ends with `/to/`
+
 ```yml
 deployFiles: ./path/~/to/
 ```
 
 #### .deployignore
+
 Add a `.deployignore` file to the root of your project and specify which files and folders Zerops should ignore during deploy. The syntax is the same as of a <a href="https://git-scm.com/docs/gitignore#_pattern_format"><code>.gitignore</code></a> file.
 
 Example to ignore `src/file.txt` file in deploy:
+
 ```jsx title="zerops.yml"
 zerops:
   - setup: app
@@ -290,7 +316,7 @@ zerops:
 ```
 
 ```jsx title=".deployignore"
-src/file.txt
+src / file.txt;
 ```
 
 :::note
@@ -298,6 +324,7 @@ src/file.txt
 :::
 
 ### cache
+
 _OPTIONAL._ Defines which files or folders will be cached for the next build.
 
 ```yml
@@ -312,6 +339,7 @@ To speed the second and following build up, cache the files that can be used in 
 The cache attribute supports the [~ wildcard character](#how-to-use-a-wildcard-in-the-path).
 
 ### envVariables
+
 _OPTIONAL._ Defines the environment variables for the build environment.
 
 Enter one or more env variables in following format:
@@ -323,7 +351,7 @@ zerops:
     # ==== how to build your application ====
     build:
       base: python@latest
-            …
+        …
 
       # OPTIONAL. Defines the env variables for the build environment:
       envVariables:
@@ -337,12 +365,15 @@ zerops:
 Read more about [environment variables](/python/how-to/env-variables) in Zerops.
 
 ## Runtime configuration
+
 ### base
+
 _OPTIONAL._ Sets the base technology for the runtime environment.
 If you don't specify the `run.base` attribute, Zerops keeps the current Python version for your runtime.
 
 Following options are available for Python builds:
-<UnorderedCodeList data={data.pythonVersions}/>
+
+<UnorderedCodeList data={data.pythonVersions} />
 
 ```yml
 zerops:
@@ -361,7 +392,12 @@ zerops:
       ...
 ```
 
-<p>The base runtime environment contains {data.alpineCurrentVersion}, the selected major version of Python, <a href="/references/cli">Zerops command line tool</a>, <code>pip</code> and <code>git</code>.</p>
+<p>
+  The base runtime environment contains {data.alpineCurrentVersion}, the
+  selected major version of Python,{' '}
+  <a href="/references/cli">Zerops command line tool</a>, <code>pip</code> and{' '}
+  <code>git</code>.
+</p>
 
 :::info
 You can change the base environment when you need to. Just simply modify the `zerops.yml` in your repository.
@@ -393,23 +429,27 @@ See the full list of supported [run base environments](/references/zeropsyml/bas
 To customise your build environment use the `prepareCommands` attribute.
 
 ### os
+
 _OPTIONAL._ Sets the operating system for the runtime environment.
 
 Following options are available:
-* `alpine`
-* `ubuntu`
+
+- `alpine`
+- `ubuntu`
 
 Default value is `alpine`.
 
 We are currently using following os version:
-* <span>{data.alpineCurrentVersion}</span>
-* <span>{data.ubuntuCurrentVersion}</span>
+
+- <span>{data.alpineCurrentVersion}</span>
+- <span>{data.ubuntuCurrentVersion}</span>
 
 :::caution
 The os version is fixed and cannot be customised.
 :::
 
 ### ports
+
 _OPTIONAL._ Specifies one or more internal ports on which your application will listen.
 
 Projects in Zerops represent a group of one or more services. Services can be of different types (runtime services, databases, message brokers, object storage, etc.). All services of the same project share a **dedicated private network**. To connect to a service within the same project, just use the service hostname and its internal port.
@@ -418,16 +458,23 @@ For example, to connect to a Python service with hostname = "app" and port = 800
 
 Each port has following attributes:
 
-| parameter   | description |
-| ----------- | ----------- |
-| port        | Defines the port number. You can set any port number between *10* and *65435*. Ports outside this interval are reserved for internal Zerops systems. |
-| protocol    | **Optional.** Defines the protocol. Allowed values are `TCP` or `UDP`. Default value is `TCP`. |
+| parameter   | description                                                                                                                                                                                                                                                                                                            |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| port        | Defines the port number. You can set any port number between _10_ and _65435_. Ports outside this interval are reserved for internal Zerops systems.                                                                                                                                                                   |
+| protocol    | **Optional.** Defines the protocol. Allowed values are `TCP` or `UDP`. Default value is `TCP`.                                                                                                                                                                                                                         |
 | httpSupport | **Optional.** `httpSupport = true` is the default setting for TCP protocol. Set `httpSupport = false` if a web server isn't running on the port. Zerops uses this information for the configuration of [public access](/features/access). `httpSupport = true` is available only in combination with the TCP protocol. |
 
 ### prepareCommands
+
 _OPTIONAL._ Customises the Python runtime environment by installing additional dependencies or tools to the runtime base environment.
 
-<p>The base Python environment contains {data.alpineCurrentVersion}, the selected major version of Python, <a href="/references/cli">Zerops command line tool</a>, <code>pip</code> and <code>git</code>. To install additional packages or tools add one or more prepare commands:</p>
+<p>
+  The base Python environment contains {data.alpineCurrentVersion}, the selected
+  major version of Python,{' '}
+  <a href="/references/cli">Zerops command line tool</a>, <code>pip</code> and{' '}
+  <code>git</code>. To install additional packages or tools add one or more
+  prepare commands:
+</p>
 
 ```yml
 zerops:
@@ -447,6 +494,7 @@ zerops:
 ```
 
 When the first deploy with a defined prepare attribute is triggered, Zerops will
+
 1. create a prepare runtime container
 2. optionally: [copy selected folders or files from your build container](/python/how-to/build-pipeline#copy-folders-or-files-from-your-build-container)
 3. run the `prepareCommands` commands in the defined order
@@ -458,6 +506,7 @@ If any command fails, it returns an exit code other than 0 and the deploy is can
 #### Cache of your custom runtime environment
 
 Some packages or tools can take a long time to install. Therefore, Zerops caches your custom runtime environment after the installation of your custom packages or tools is completed. When the second or following deploy is triggered, Zerops will use the custom runtime cache from the previous deploy if following conditions are met:
+
 1. Content of the [build.addToRunPrepare](#copy-folders-or-files-from-your-build-container) and `run.prepareCommands` attributes didn't change from the previous deploy
 2. The custom runtime cache wasn't invalidated in the Zerops GUI.
 
@@ -473,7 +522,12 @@ You can configure your prepare commands to be run in a single shell instance or 
 
 ### Copy folders or files from your build container
 
-<p>The prepare runtime container contains {data.alpineCurrentVersion} the selected major version of Python, <a href="/references/cli">Zerops command line tool</a>, <code>pip</code> and <code>git</code>.</p>
+<p>
+  The prepare runtime container contains {data.alpineCurrentVersion} the
+  selected major version of Python,{' '}
+  <a href="/references/cli">Zerops command line tool</a>, <code>pip</code> and{' '}
+  <code>git</code>.
+</p>
 
 The prepare runtime container does not contain your application code nor the built application. If you need to copy some folders or files from the build container to the runtime container (e.g. a configuration file) use the `addToRunPrepare` attribute in the [build section](#build-pipeline-configuration).
 
@@ -499,6 +553,7 @@ zerops:
 In the example above Zerops will copy the `runtime-config.yml` file from your build container **after the build has finished** into the new **prepare runtime** container. The copied files and folders will be available in the `xxx` folder in the new prepare runtime container before the prepare commands are triggered.
 
 ### initCommands
+
 _OPTIONAL._ Defines one or more commands to be run each time a new runtime container is started or a container is restarted.
 
 ```yml
@@ -506,8 +561,7 @@ zerops:
   # hostname of your service
   - setup: app
     # ==== how to build your application ====
-    build:
-      ...
+    build: ...
 
     # ==== how to run your application ====
     run:
@@ -537,6 +591,7 @@ If any of the `initCommands` fails, it returns an exit code other than 0, but de
 You can configure your `initCommands` to be run in a single shell instance or multiple shell instances. The format is identical to [build:prepareCommands](#preparecommands).
 
 ### envVariables
+
 _OPTIONAL._ Defines the environment variables for the runtime environment.
 
 Enter one or more env variables in following format:
@@ -547,7 +602,6 @@ zerops:
   - setup: app
     # ==== how to run your application ====
     run:
-
       # OPTIONAL. Defines the env variables for the runtime environment:
       envVariables:
         PYTHON_ENV: production
@@ -560,6 +614,7 @@ zerops:
 Read more about [environment variables](/python/how-to/env-variables) in Zerops.
 
 ### start
+
 _REQUIRED._ Defines the start command for your Python application.
 
 ```yml
@@ -567,32 +622,32 @@ zerops:
   # hostname of your service
   - setup: app
     # ==== how to build your application ====
-    build:
-      ...
+    build: ...
 
     # ==== how to run your application ====
     run:
-
       # REQUIRED. Your Python application start command
       start: app.py
 ```
 
 ### health check
+
 _OPTIONAL._ Defines a health check.
 
 `healthCheck` requires either one `httpGet` object or one `exec` object.
 
 #### httpGet
+
 Configures the health check to request a local URL using a HTTP GET method.
 
 Following attributes are available:
 
-| Parameter              | Description                                                                   |
-| ---------------------- | ----------------------------------------------------------------------------- |
-| **port**               | Defines the port of the HTTP GET request.<br/>The readiness check will trigger a GET request on `http://127.0.0.1:{port}/{path}` |
-| **path**               | Defines the URL path of the HTTP GET request.<br/>The readiness check will trigger a GET request on `http://127.0.0.1:{port}/{path}`                                 |
-| **host**               | **Optional.**  The readiness check is triggered from inside of your runtime container so it always uses the localhost (`127.0.0.1`). If you need to add a `host` to the request header, specify it in the `host` attribute.          |
-| **scheme**               | **Optional.** The readiness check is triggered from inside of your runtime container so no https is required.<br/>If your application requires a https request, set `scheme: https`          |
+| Parameter  | Description                                                                                                                                                                                                                |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **port**   | Defines the port of the HTTP GET request.<br/>The readiness check will trigger a GET request on `http://127.0.0.1:{port}/{path}`                                                                                           |
+| **path**   | Defines the URL path of the HTTP GET request.<br/>The readiness check will trigger a GET request on `http://127.0.0.1:{port}/{path}`                                                                                       |
+| **host**   | **Optional.** The readiness check is triggered from inside of your runtime container so it always uses the localhost (`127.0.0.1`). If you need to add a `host` to the request header, specify it in the `host` attribute. |
+| **scheme** | **Optional.** The readiness check is triggered from inside of your runtime container so no https is required.<br/>If your application requires a https request, set `scheme: https`                                        |
 
 **Example:**
 
@@ -601,12 +656,10 @@ zerops:
   # hostname of your service
   - setup: app
     # ==== how to build your application ====
-    build:
-      ...
+    build: ...
 
     # ==== how to run your application ====
     run:
-
       # REQUIRED. Your Python application start command
       start: app.py
 
@@ -621,11 +674,12 @@ zerops:
 Read more about how the [health check works] in Zerops.
 
 #### exec
+
 Configures the health check to run a local command.
 Following attributes are available:
 
-| Parameter              | Description                                                                   |
-| ---------------------- | ----------------------------------------------------------------------------- |
+| Parameter   | Description                                                                                                                                                                                                                                                                                                                    |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **command** | Defines a local command to be run.<br/>The command has access to the same [environment variables](/python/how-to/create#set-environment-variables) as your Python application.<br/>A single string is required. If you need to run multiple commands create a shell script or, use a multiline format as in the example below. |
 
 **Example:**
@@ -635,12 +689,10 @@ zerops:
   # hostname of your service
   - setup: app
     # ==== how to build your application ====
-    build:
-      ...
+    build: ...
 
     # ==== how to run your application ====
     run:
-
       # REQUIRED. Your Python application start command
       start: app.py
 
@@ -655,25 +707,26 @@ zerops:
 
 Read more about how the [health check works] in Zerops.
 
-
 ## Deploy configuration
 
 ### readiness check
+
 _OPTIONAL._ Defines a readiness check. Read more about how the [readiness check works](/python/how-to/deploy-process#readiness-checks) in Zerops.
 
 `readinessCheck` requires either one `httpGet` object or one `exec` object.
 
 #### httpGet
+
 Configures the readiness check to request a local URL using a http GET method.
 
 Following attributes are available:
 
-| Parameter              | Description                                                                   |
-| ---------------------- | ----------------------------------------------------------------------------- |
-| **port**               | Defines the port of the HTTP GET request.<br/>The readiness check will trigger a GET request on `http://127.0.0.1:{port}/{path}` |
-| **path**               | Defines the URL path of the HTTP GET request.<br/>The readiness check will trigger a GET request on `http://127.0.0.1:{port}/{path}`                                 |
-| **host**               | **Optional.**  The readiness check is triggered from inside of your runtime container so it always uses the localhost (`127.0.0.1`). If you need to add a `host` to the request header, specify it in the `host` attribute.          |
-| **scheme**               | **Optional.** The readiness check is triggered from inside of your runtime container so no https is required.<br/>If your application requires a https request, set `scheme: https`          |
+| Parameter  | Description                                                                                                                                                                                                                |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **port**   | Defines the port of the HTTP GET request.<br/>The readiness check will trigger a GET request on `http://127.0.0.1:{port}/{path}`                                                                                           |
+| **path**   | Defines the URL path of the HTTP GET request.<br/>The readiness check will trigger a GET request on `http://127.0.0.1:{port}/{path}`                                                                                       |
+| **host**   | **Optional.** The readiness check is triggered from inside of your runtime container so it always uses the localhost (`127.0.0.1`). If you need to add a `host` to the request header, specify it in the `host` attribute. |
+| **scheme** | **Optional.** The readiness check is triggered from inside of your runtime container so no https is required.<br/>If your application requires a https request, set `scheme: https`                                        |
 
 **Example:**
 
@@ -682,12 +735,10 @@ zerops:
   # hostname of your service
   - setup: app
     # ==== how to build your application ====
-    build:
-      ...
+    build: ...
 
     # ==== how to deploy your application ====
     deploy:
-
       # OPTIONAL. Define a readiness check with a HTTP GET request option.
       # Configures the check on http://127.0.0.1:80/status
       readinessCheck:
@@ -696,18 +747,18 @@ zerops:
           path: /status
 
     # ==== how to run your application ====
-    run:
-      ...
+    run: ...
 ```
 
 Read more about how the [readiness check works](/python/how-to/deploy-process#readiness-checks) in Zerops.
 
 #### exec
+
 Configures the readiness check to run a local command.
 Following attributes are available:
 
-| Parameter              | Description                                                                   |
-| ---------------------- | ----------------------------------------------------------------------------- |
+| Parameter   | Description                                                                                                                                                                                                                                                                                                                    |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **command** | Defines a local command to be run.<br/>The command has access to the same [environment variables](/python/how-to/create#set-environment-variables) as your Python application.<br/>A single string is required. If you need to run multiple commands create a shell script or, use a multiline format as in the example below. |
 
 **Example:**
@@ -717,12 +768,10 @@ zerops:
   # hostname of your service
   - setup: app
     # ==== how to build your application ====
-    build:
-      ...
+    build: ...
 
     # ==== how to deploy your application ====
     deploy:
-
       # OPTIONAL. Define a readiness check with a HTTP GET request option.
       # Configures the check on http://127.0.0.1:80/status
       readinessCheck:
@@ -734,4 +783,3 @@ zerops:
 ```
 
 Read more about how the [readiness check works](/python/how-to/deploy-process#readiness-checks) in Zerops.
-

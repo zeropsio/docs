@@ -1,6 +1,6 @@
-import React from "react"
-import Logo from "@theme/Logo"
-import MobileLogo from "../../../components/MobileLogo"
+import React from 'react';
+import Logo from '@theme/Logo';
+import MobileLogo from '../../../components/MobileLogo';
 
 export default function NavbarLogo(): JSX.Element {
   return (
@@ -16,5 +16,5 @@ export default function NavbarLogo(): JSX.Element {
         titleClassName="navbar__title text--truncate"
       />
     </>
-  )
+  );
 }

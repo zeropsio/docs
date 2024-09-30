@@ -1,20 +1,20 @@
-import React from "react"
-import { Badge, LegacyLink, Tooltip } from "@/components"
+import React from 'react';
+import { Badge, LegacyLink, Tooltip } from '@/components';
 
 export type FeatureFlagNoticeProps = {
-  featureFlag: string
-  type?: "endpoint" | "type"
-  tooltipTextClassName?: string
-  badgeClassName?: string
-  badgeContent?: React.ReactNode
-}
+  featureFlag: string;
+  type?: 'endpoint' | 'type';
+  tooltipTextClassName?: string;
+  badgeClassName?: string;
+  badgeContent?: React.ReactNode;
+};
 
 export const FeatureFlagNotice = ({
   featureFlag,
-  type = "endpoint",
+  type = 'endpoint',
   tooltipTextClassName,
   badgeClassName,
-  badgeContent = "feature flag",
+  badgeContent = 'feature flag',
 }: FeatureFlagNoticeProps) => {
   return (
     <Tooltip
@@ -37,5 +37,5 @@ export const FeatureFlagNotice = ({
         {badgeContent}
       </Badge>
     </Tooltip>
-  )
-}
+  );
+};

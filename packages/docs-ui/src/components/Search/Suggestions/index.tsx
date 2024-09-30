@@ -1,30 +1,30 @@
-"use client"
+'use client';
 
-import React from "react"
-import { useInstantSearch } from "react-instantsearch"
-import { SearchHitGroupName } from "../Hits/GroupName"
-import { useSearch } from "@/providers"
-import { SearchSuggestionItem } from "./Item"
-import { Badge } from "@/components"
+import React from 'react';
+import { useInstantSearch } from 'react-instantsearch';
+import { SearchHitGroupName } from '../Hits/GroupName';
+import { useSearch } from '@/providers';
+import { SearchSuggestionItem } from './Item';
+import { Badge } from '@/components';
 
 export type SearchSuggestionType = {
-  title: string
-  items: string[]
-}
+  title: string;
+  items: string[];
+};
 
 export type SearchSuggestionsProps = {
-  suggestions: SearchSuggestionType[]
-}
+  suggestions: SearchSuggestionType[];
+};
 
 export const SearchSuggestions = ({ suggestions }: SearchSuggestionsProps) => {
-  const { setIndexUiState } = useInstantSearch()
-  const { commands, setCommand } = useSearch()
+  const { setIndexUiState } = useInstantSearch();
+  const { commands, setCommand } = useSearch();
 
   return (
     <div className="h-full overflow-auto">
       {commands.length > 0 && (
         <>
-          <SearchHitGroupName name={"Commands"} />
+          <SearchHitGroupName name={'Commands'} />
           {commands.map((command, index) => (
             <SearchSuggestionItem
               onClick={() => setCommand(command)}
@@ -60,5 +60,5 @@ export const SearchSuggestions = ({ suggestions }: SearchSuggestionsProps) => {
         </React.Fragment>
       ))}
     </div>
-  )
-}
+  );
+};

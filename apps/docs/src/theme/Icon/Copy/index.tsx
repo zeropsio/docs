@@ -1,9 +1,9 @@
-import React from "react"
-import { SquareTwoStackSolid } from "@medusajs/icons"
-import { IconProps } from "@medusajs/icons/dist/types"
+import React from 'react';
+import { SquareTwoStackSolid } from '@medusajs/icons';
+import { IconProps } from '@medusajs/icons/dist/types';
 
 const IconCopy = (props: IconProps) => {
-  return <SquareTwoStackSolid {...props} />
-}
+  return <SquareTwoStackSolid {...props} />;
+};
 
-export default IconCopy
+export default IconCopy;

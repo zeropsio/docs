@@ -1,6 +1,6 @@
-import { IconProps } from "@medusajs/icons/dist/types"
-import clsx from "clsx"
-import React from "react"
+import { IconProps } from '@medusajs/icons/dist/types';
+import clsx from 'clsx';
+import React from 'react';
 
 const IconPython = (props: IconProps) => {
   return (
@@ -11,7 +11,7 @@ const IconPython = (props: IconProps) => {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       {...props}
-      className={clsx("text-ui-fg-subtle", props.className)}
+      className={clsx('text-ui-fg-subtle', props.className)}
     >
       <path
         fill="#fed142"
@@ -22,7 +22,7 @@ const IconPython = (props: IconProps) => {
         d="M35.9 208.3c-7.6-1.4-15.2-6-20.5-12.6C5.4 183.2.3 162.4.9 136.2c.4-16.3 2.8-28.4 7.8-38.6 6.4-13.2 15.9-21.1 28.8-23.7 2.8-.6 3-.6 52.6-.6 27.4 0 50-.1 50.2-.2.4-.1.4-.8.4-4.8 0-2.5 0-4.6-.1-4.7 0 0-15.2-.1-33.8-.2l-33.7-.1-.1-17.5c-.1-19.2-.1-19 1.5-22.5C80.2 11.1 97 3.7 123.8 1.5c1.9-.2 7.2-.4 11.7-.4 29.8-.6 51.6 4.9 63.1 15.7 1.3 1.2 2.9 3 3.7 4 1.7 2.3 3.8 6.6 4.7 9.4l.6 2.2v36.1c0 33.7 0 36.3-.5 38.7-.6 3.1-2 7.5-3.2 9.8-4.1 8.1-11.7 14-21.7 16.8-6.5 1.8-3.6 1.7-46.6 1.9-42.8.2-40.2.1-46.2 1.8-11.6 3.3-20.2 12.4-23.7 25.1-1.6 5.7-1.5 5.2-1.7 26.2v19.7H51c-9.9.1-13.6 0-15.1-.2zm71.3-162.6c4.9-2.3 7.9-7.8 7-12.9-.8-4.7-4-8.4-8.4-9.8-7-2.2-14.3 2.3-15.6 9.5-1 5.9 2.3 11.6 8.1 13.6 1.3.5 2.1.5 4.3.5 2.4 0 3-.2 4.6-.9z"
       />
     </svg>
-  )
-}
+  );
+};
 
-export default IconPython
+export default IconPython;

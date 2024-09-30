@@ -15,7 +15,6 @@
 
 - /closes # <!-- Add an issue number  -->
 
-
 <!-- #### First-time contributor to Zerops Docs? -->
 
 <!-- Join our Discord Server  -->

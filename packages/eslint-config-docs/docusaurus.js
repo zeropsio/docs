@@ -1,14 +1,10 @@
 module.exports = {
-  extends: [
-    "plugin:@docusaurus/recommended",
-    "google",
-    "./base.js",
-  ],
+  extends: ['plugin:@docusaurus/recommended', 'google', './base.js'],
   ignorePatterns: [
-    "**/node_modules/**",
-    "**/.docusaurus/*",
-    "**/build/*",
-    ".eslintrc.js",
-    "babel.config.js"
-  ]
-}
+    '**/node_modules/**',
+    '**/.docusaurus/*',
+    '**/build/*',
+    '.eslintrc.js',
+    'babel.config.js',
+  ],
+};

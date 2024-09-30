@@ -2,14 +2,21 @@
 title: Node.js build process
 ---
 
-import data from "@site/static/data.json"
+import data from '@site/static/data.json';
 
 <p align="center">
-<img src="/img/screenshots/build_deploy_pipeline-step2.png" alt="image" width="100%" height="auto"/>
+  <img
+    src="/img/screenshots/build_deploy_pipeline-step2.png"
+    alt="image"
+    width="100%"
+    height="auto"
+  />
 </p>
 
 ## Description of the build process
+
 Zerops starts a temporary build container and performs following actions:
+
 1. Installs the build environment
 2. Downloads your application source code from [GitHub ↗](https://www.github.com), [GitLab ↗](https://www.gitlab.com) or via [Zerops CLI](/references/cli)
 3. Optionally [customises the build environment](/nodejs/how-to/build-process#customise-nodejs-build-environment)
@@ -21,10 +28,16 @@ Zerops starts a temporary build container and performs following actions:
 The build container is automatically deleted after the build has finished or failed.
 
 ## Cancel running build
+
 When you know that the running build is not correct and you want to cancel it, you can do it in Zerops GUI. Go to the service detail, open the list of running processes and click on the **Open pipeline detail** button. Then click on the **Cancel build** button.
 
 <p align="center">
-<img src="/img/screenshots/nodejs_cancel_running_build.png" alt="image" width="100%" height="auto"/>
+  <img
+    src="/img/screenshots/nodejs_cancel_running_build.png"
+    alt="image"
+    width="100%"
+    height="auto"
+  />
 </p>
 
 :::caution
@@ -32,11 +45,13 @@ The build cancellation is available before the build pipeline is finished. When 
 :::
 
 ## Customise Node.js build environment
+
 The default Node.js build environment contains:
-* <span>{data.alpineCurrentVersion}</span>
-* selected version of Node.js defined in `zerops.yml` [build.base](/nodejs/how-to/build-pipeline#base) parameter
-* [zCLI](/references/cli), Zerops command line tool
-* `npm`, `yarn`, `git` and `npx` tools
+
+- <span>{data.alpineCurrentVersion}</span>
+- selected version of Node.js defined in `zerops.yml` [build.base](/nodejs/how-to/build-pipeline#base) parameter
+- [zCLI](/references/cli), Zerops command line tool
+- `npm`, `yarn`, `git` and `npx` tools
 
 If you prefer the Ubuntu OS instead of Alpine, set the <code><a href="/nodejs/how-to/build-pipeline#os">build.os</a></code> attribute to `ubuntu`. To install additional packages or tools add one or more [build.prepareCommands](/nodejs/how-to/build-pipeline#preparecommands) commands to your `zerops.yml`.
 
@@ -44,27 +59,28 @@ If you prefer the Ubuntu OS instead of Alpine, set the <code><a href="/nodejs/ho
 The application code is available in the `/var/www` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
 :::
 
-## Node.js build hardware resources 
-Build of your Node.js application is run in a separate build container with following resource configuration: 
+## Node.js build hardware resources
 
-| HW resource     | Minimum | Maximum |
-| --------------- | ------- | ------- |
-| **CPU cores**        | 6       | 20      |
-| **RAM**         | 8 GB    | 8 GB    |
-| **Disk**        | 1 GB    | 100 GB  |
+Build of your Node.js application is run in a separate build container with following resource configuration:
 
+| HW resource   | Minimum | Maximum |
+| ------------- | ------- | ------- |
+| **CPU cores** | 6       | 20      |
+| **RAM**       | 8 GB    | 8 GB    |
+| **Disk**      | 1 GB    | 100 GB  |
 
 The build container is always started with the minimum hardware resources and scales vertically up to the maximum resources.
 
 :::info
 Hardware resources of the build containers are not charged. The build costs are covered by the standard Zerops [project fee](https://zerops.io/#pricing).
 :::
- 
+
 ## Build time limit
 
 The time limit for the whole build pipeline is **1 hour**. After 1 hour, Zerops will terminate the build pipeline and delete the build container.
 
 ## Troubleshooting build-related problems
+
 ### Failure of a build prepare command
 
 If any [prepare command](/nodejs/how-to/build-pipeline#preparecommands) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/nodejs/how-to/logs#build-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom build environment is ready for the build phase.
@@ -72,13 +88,19 @@ If any [prepare command](/nodejs/how-to/build-pipeline#preparecommands) fails, i
 ### Invalidate the build cache
 
 Some packages or tools can take a long time to install. Therefore, Zerops caches your custom build environment after each successful build where the `prepareCommands` commands were used. When the second or following build is triggered, Zerops will use the build cache from the previous build if both following conditions are met:
+
 1. Content of the [build.base](/nodejs/how-to/build-pipeline#base) and [build.prepareCommands](/nodejs/how-to/build-pipeline#preparecommands) attributes didn't change from the previous build
 2. The build cache wasn't invalidated in the Zerops GUI.
 
 To invalidate the Zerops build cache go to your service detail in Zerops GUI, choose **Pipelines & CI / CD settings** from the left menu. Then click on the **Clean build cache** button.
 
 <p align="center">
-<img src="/img/screenshots/runtime_clear_build_cache.png" alt="image" width="100%" height="auto"/>
+  <img
+    src="/img/screenshots/runtime_clear_build_cache.png"
+    alt="image"
+    width="100%"
+    height="auto"
+  />
 </p>
 
 When the build cache is used, Zerops doesn't run the prepare commands and the build of your application is faster.
@@ -89,12 +111,8 @@ If any [build command](/nodejs/how-to/build-pipeline#build) fails, it returns an
 
 ```yml
 buildCommands:
- - npm i --verbose
- - npm run build
+  - npm i --verbose
+  - npm run build
 ```
 
 If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `buildCommands` are finished, the application build is completed and ready for the [deploy](/nodejs/how-to/deploy-process) phase.
-
-
-
-

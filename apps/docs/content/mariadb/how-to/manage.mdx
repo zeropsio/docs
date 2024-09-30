@@ -1,115 +1,126 @@
 ---
 title: Manage MariaDB users and databases in Zerops
 ---
+
 ## Default database and user
+
 Zerops creates a default database and a default user automatically when a new MariaDB service is [created](/mariadb/how-to/create).
 
 #### Database
+
 The default database name is identical to the service hostname. The default encoding is set to `utf8mb4`.
 
 #### DB user
+
 Default user name is identical to the service hostname. Default user password is generated randomly. You will find the password in [Zerops GUI](#copy-access-details-from-zerops-gui) or you can use the [environment variable](/mariadb/how-to/connect#use-mariadb-environment-variables).
 
 :::info
-Zerops creates a second DB user: `zps` for maintenance reasons with full privileges. Do not delete, change the password or remove privileges from this user, it will disrupt Zerops ability to maintain the database cluster. 
+Zerops creates a second DB user: `zps` for maintenance reasons with full privileges. Do not delete, change the password or remove privileges from this user, it will disrupt Zerops ability to maintain the database cluster.
 :::
 
 ## How to install Adminer to Zerops
+
 [Adminer ↗](https://www.adminer.org) is a open source full-featured database management tool written in PHP.
 
-### Single-click installation 
+### Single-click installation
+
 To install Adminer into your project, open your project in Zerops GUI and select **import services** in the left menu.
 
 Copy the following yaml file into the text area and start the import:
 
 ```yml
 services:
- - 
-  # Service will be accessible through zCLI VPN under: http://adminer
-  hostname: adminer
-  # Type and version of service used.
-  type: php-apache@8.0+2.4
-  # Whether the service will be run on one or multiple containers.
-  # Since this is a utility service, using a single container is fine.
-  minContainers: 1
-  maxContainers: 1
-  # Folder name used as the root of the publicly accessible web server content.
-  documentRoot: public
-  # Link to Zerops repository that contains Adminer code with Zerops build and deploy instructions.
-  buildFromGit: https://github.com/zeropsio/recipe-adminer@main
-  ```
+  - # Service will be accessible through zCLI VPN under: http://adminer
+    hostname: adminer
+    # Type and version of service used.
+    type: php-apache@8.0+2.4
+    # Whether the service will be run on one or multiple containers.
+    # Since this is a utility service, using a single container is fine.
+    minContainers: 1
+    maxContainers: 1
+    # Folder name used as the root of the publicly accessible web server content.
+    documentRoot: public
+    # Link to Zerops repository that contains Adminer code with Zerops build and deploy instructions.
+    buildFromGit: https://github.com/zeropsio/recipe-adminer@main
+```
 
-  When the import is finished, Adminer will be running as a PHP service in your project. 
+When the import is finished, Adminer will be running as a PHP service in your project.
 
 ## How to access Adminer
+
 ### Use Zerops VPN
 
-By default Adminer service is private and is accessible from your local workstation over VPN. 
+By default Adminer service is private and is accessible from your local workstation over VPN.
 
 You can securely connect to MariaDB from your local workspace via Zerops VPN. Zerops VPN client is included into zCLI, the Zerops command-line tool. To start a VPN connection to the selected Zerops project, follow these steps:
 
 1. [Install & setup zCLI](/references/cli)
 2. [Start the Zerops VPN](/references/vpn)
-3. Type `http://adminer` into your browser 
+3. Type `http://adminer` into your browser
 
 :::caution
-Do not use https when connecting to Adminer via VPN. 
+Do not use https when connecting to Adminer via VPN.
 :::
 
 ### Enable public access
+
 You can enable the public access to the Adminer service via the [Zerops subdomain].
 
-Or you can configure the [Public routing] on the Adminer service to make it accessible on your own domain. 
+Or you can configure the [Public routing] on the Adminer service to make it accessible on your own domain.
 
 ## How to install phpMyAdmin to Zerops
-[phpMyAdmin ↗](https://www.phpmyadmin.net) is a free software tool written in PHP, intended to handle the administration of MariaDB over the Web. 
 
-### Single-click installation 
+[phpMyAdmin ↗](https://www.phpmyadmin.net) is a free software tool written in PHP, intended to handle the administration of MariaDB over the Web.
+
+### Single-click installation
+
 To install phpMyAdmin into your project, open your project in Zerops GUI and select **import services** in the left menu.
 
 Copy the following yaml file into the text area and start the import:
 
 ```yml
 services:
- - 
-  # Service will be accessible through zCLI VPN under: http://phpmyadmin
-  hostname: phpmyadmin
-  # Type and version of service used.
-  type: php-apache@8.1+2.4
-  # Whether the service will be run on one or multiple containers.
-  # Since this is a utility service, using a single container is fine.
-  minContainers: 1
-  maxContainers: 1
-  # Folder name used as the root of the publicly accessible web server content.
-  documentRoot: public
-  # Link to Zerops repository that contains Adminer code with Zerops build and deploy instructions.
-  buildFromGit: https://github.com/zeropsio/recipe-phpmyadmin@main
+  - # Service will be accessible through zCLI VPN under: http://phpmyadmin
+    hostname: phpmyadmin
+    # Type and version of service used.
+    type: php-apache@8.1+2.4
+    # Whether the service will be run on one or multiple containers.
+    # Since this is a utility service, using a single container is fine.
+    minContainers: 1
+    maxContainers: 1
+    # Folder name used as the root of the publicly accessible web server content.
+    documentRoot: public
+    # Link to Zerops repository that contains Adminer code with Zerops build and deploy instructions.
+    buildFromGit: https://github.com/zeropsio/recipe-phpmyadmin@main
 ```
 
 When the import is finished, phpMyAdmin will be running as a PHP service in your project.
 
 ## How to access phpMyAdmin
+
 ### Use Zerops VPN
 
-By default phpMyAdmin service is private and is accessible from your local workstation over VPN. 
+By default phpMyAdmin service is private and is accessible from your local workstation over VPN.
 
 You can securely connect to MariaDB from your local workspace via Zerops VPN. Zerops VPN client is included into zCLI, the Zerops command-line tool. To start a VPN connection to the selected Zerops project, follow these steps:
 
 1. [Install & setup zCLI](/references/cli)
 2. [Start the Zerops VPN](/references/vpn)
-3. Type `http://phpmyadmin` into your browser 
+3. Type `http://phpmyadmin` into your browser
 
 :::caution
-Do not use https when connecting to phpMyAdmin via VPN. 
+Do not use https when connecting to phpMyAdmin via VPN.
 :::
 
 ### Enable public access
-You can enable the public access to the phpMyAdmin service via  the [Zerops subdomain].
 
-Or you can configure the [Public routing] on the phpMyAdmin service to make it accessible on your own domain. 
+You can enable the public access to the phpMyAdmin service via the [Zerops subdomain].
+
+Or you can configure the [Public routing] on the phpMyAdmin service to make it accessible on your own domain.
 
 ## How to use a database management tool on your workstation
-Do you already use a database management tool that supports MariaDB on your workstation? Connect it securely to MariaDB from your local workspace via Zerops VPN. 
+
+Do you already use a database management tool that supports MariaDB on your workstation? Connect it securely to MariaDB from your local workspace via Zerops VPN.
 
 Zerops VPN client is included into zCLI, the Zerops command-line tool. To start the VPN connection, read [how to connect to MariaDB remotely](/mariadb/how-to/connect#connect-to-mariadb-in-zerops-remotely).
 
@@ -119,9 +130,9 @@ Do not use SSL/TLS protocols when connecting to MariaDB over VPN. Zerops MariaDB
 
 ## How to use mysql CLI on your workstation
 
-If you use the [mysql ↗](https://dev.mysql.com/doc/refman/8.1/en/mysql.html) command-line client to manage your MariaDB on your local workspace, you can connect it securely to MariaDB via Zerops VPN. 
+If you use the [mysql ↗](https://dev.mysql.com/doc/refman/8.1/en/mysql.html) command-line client to manage your MariaDB on your local workspace, you can connect it securely to MariaDB via Zerops VPN.
 
-Zerops VPN client is included into zCLI, the Zerops command-line tool. To start the VPN connection, read [how to connect to MariaDB remotely](/mariadb/how-to/connect#connect-to-mariadb-in-zerops-remotely). 
+Zerops VPN client is included into zCLI, the Zerops command-line tool. To start the VPN connection, read [how to connect to MariaDB remotely](/mariadb/how-to/connect#connect-to-mariadb-in-zerops-remotely).
 
 Once the VPN session is established, you have the secured connection to the project's private network in Zerops. You can access all project services locally by using their hostname. The only difference is that no [environment variables](/mariadb/how-to/connect#connect-to-mariadb-in-zerops-remotely) are available when connected through VPN. To connect to MariaDB in Zerops you have to copy the [access details](/mariadb/how-to/connect#connect-to-mariadb-in-zerops-remotely) manually from Zerops GUI.
 

@@ -1,6 +1,6 @@
 module.exports = {
   root: true,
-  parser: "@babel/eslint-parser",
+  parser: '@babel/eslint-parser',
   parserOptions: {
     requireConfigFile: false,
     ecmaFeatures: {
@@ -9,28 +9,28 @@ module.exports = {
     },
     project: true,
   },
-  plugins: ["prettier"],
+  plugins: ['prettier'],
   extends: [
-    "eslint:recommended",
-    "plugin:prettier/recommended",
-    "plugin:react/recommended",
-    "plugin:react/jsx-runtime",
+    'eslint:recommended',
+    'plugin:prettier/recommended',
+    'plugin:react/recommended',
+    'plugin:react/jsx-runtime',
   ],
   settings: {
     react: {
-      version: "detect",
+      version: 'detect',
     },
   },
   rules: {
-    curly: ["error", "all"],
-    "new-cap": "off",
-    "require-jsdoc": "off",
-    "no-unused-expressions": "off",
-    "no-unused-vars": "off",
-    camelcase: "off",
-    "no-invalid-this": "off",
-    "max-len": [
-      "error",
+    curly: ['error', 'all'],
+    'new-cap': 'off',
+    'require-jsdoc': 'off',
+    'no-unused-expressions': 'off',
+    'no-unused-vars': 'off',
+    camelcase: 'off',
+    'no-invalid-this': 'off',
+    'max-len': [
+      'error',
       {
         code: 80,
         ignoreStrings: true,
@@ -41,53 +41,50 @@ module.exports = {
         ignoreTemplateLiterals: true,
       },
     ],
-    semi: ["error", "never"],
+    semi: ['error', 'never'],
     quotes: [
-      "error",
-      "double",
+      'error',
+      'double',
       {
         allowTemplateLiterals: true,
       },
     ],
-    "comma-dangle": [
-      "error",
+    'comma-dangle': [
+      'error',
       {
-        arrays: "always-multiline",
-        objects: "always-multiline",
-        imports: "always-multiline",
-        exports: "always-multiline",
-        functions: "never",
+        arrays: 'always-multiline',
+        objects: 'always-multiline',
+        imports: 'always-multiline',
+        exports: 'always-multiline',
+        functions: 'never',
       },
     ],
-    "object-curly-spacing": ["error", "always"],
-    "arrow-parens": ["error", "always"],
-    "linebreak-style": 0,
-    "no-confusing-arrow": [
-      "error",
+    'object-curly-spacing': ['error', 'always'],
+    'arrow-parens': ['error', 'always'],
+    'linebreak-style': 0,
+    'no-confusing-arrow': [
+      'error',
       {
         allowParens: false,
       },
     ],
-    "space-before-function-paren": [
-      "error",
+    'space-before-function-paren': [
+      'error',
       {
-        anonymous: "always",
-        named: "never",
-        asyncArrow: "always",
+        anonymous: 'always',
+        named: 'never',
+        asyncArrow: 'always',
       },
     ],
-    "space-infix-ops": "error",
-    "eol-last": ["error", "always"],
-    "no-console": [
-      "error",
+    'space-infix-ops': 'error',
+    'eol-last': ['error', 'always'],
+    'no-console': [
+      'error',
       {
-        allow: ["error", "warn"],
+        allow: ['error', 'warn'],
       },
     ],
-    "react/prop-types": [
-      2,
-      { "ignore": ["className"] }
-    ],
+    'react/prop-types': [2, { ignore: ['className'] }],
   },
   env: {
     es6: true,
@@ -95,42 +92,38 @@ module.exports = {
     jest: true,
     browser: true,
   },
-  ignorePatterns: [
-    "eslint-config-docs",
-    ".eslintrc.js",
-    "dist"
-  ],
+  ignorePatterns: ['eslint-config-docs', '.eslintrc.js', 'dist'],
   overrides: [
     {
-      files: ["*.ts", "*.tsx", "*.js", "*.jsx"],
-      plugins: ["@typescript-eslint/eslint-plugin"],
+      files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+      plugins: ['@typescript-eslint/eslint-plugin'],
       extends: [
-        "plugin:@typescript-eslint/recommended",
-        "plugin:react/recommended",
+        'plugin:@typescript-eslint/recommended',
+        'plugin:react/recommended',
       ],
-      parser: "@typescript-eslint/parser",
+      parser: '@typescript-eslint/parser',
       parserOptions: {
-        project: "./tsconfig.json"
+        project: './tsconfig.json',
       },
       rules: {
-        "valid-jsdoc": "off",
-        "@typescript-eslint/no-non-null-assertion": "off",
-        "@typescript-eslint/no-floating-promises": "error",
-        "@typescript-eslint/await-thenable": "error",
-        "@typescript-eslint/promise-function-async": "error",
-        "@typescript-eslint/keyword-spacing": "error",
-        "@typescript-eslint/space-before-function-paren": [
-          "error",
+        'valid-jsdoc': 'off',
+        '@typescript-eslint/no-non-null-assertion': 'off',
+        '@typescript-eslint/no-floating-promises': 'error',
+        '@typescript-eslint/await-thenable': 'error',
+        '@typescript-eslint/promise-function-async': 'error',
+        '@typescript-eslint/keyword-spacing': 'error',
+        '@typescript-eslint/space-before-function-paren': [
+          'error',
           {
-            anonymous: "always",
-            named: "never",
-            asyncArrow: "always",
+            anonymous: 'always',
+            named: 'never',
+            asyncArrow: 'always',
           },
         ],
-        "@typescript-eslint/space-infix-ops": "error",
-        "@typescript-eslint/no-explicit-any": "warn",
-        "@typescript-eslint/no-unused-vars": "warn"
+        '@typescript-eslint/space-infix-ops': 'error',
+        '@typescript-eslint/no-explicit-any': 'warn',
+        '@typescript-eslint/no-unused-vars': 'warn',
       },
     },
   ],
-}
+};

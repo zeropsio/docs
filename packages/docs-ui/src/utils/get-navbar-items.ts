@@ -1,9 +1,9 @@
-import { NavbarLinkProps, navbarItems } from ".."
+import { NavbarLinkProps, navbarItems } from '..';
 
 type Options = {
-  basePath: string
-  activePath: string
-}
+  basePath: string;
+  activePath: string;
+};
 
 export function getNavbarItems({
   basePath,
@@ -13,5 +13,5 @@ export function getNavbarItems({
     ...item,
     isActive: activePath === item.href,
     href: `${basePath}${item.href}`,
-  }))
+  }));
 }

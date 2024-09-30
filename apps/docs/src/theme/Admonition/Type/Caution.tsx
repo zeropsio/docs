@@ -1,11 +1,11 @@
-import React from "react"
-import clsx from "clsx"
-import Translate from "@docusaurus/Translate"
-import type { Props } from "@theme/Admonition/Type/Caution"
-import AdmonitionLayout from "@theme/Admonition/Layout"
-import IconWarning from "@theme/Admonition/Icon/Warning"
+import React from 'react';
+import clsx from 'clsx';
+import Translate from '@docusaurus/Translate';
+import type { Props } from '@theme/Admonition/Type/Caution';
+import AdmonitionLayout from '@theme/Admonition/Layout';
+import IconWarning from '@theme/Admonition/Icon/Warning';
 
-const infimaClassName = "alert alert--warning"
+const infimaClassName = 'alert alert--warning';
 
 const defaultProps = {
   icon: <IconWarning />,
@@ -17,7 +17,7 @@ const defaultProps = {
       Caution
     </Translate>
   ),
-}
+};
 
 // TODO remove before v4: Caution replaced by Warning
 // see https://github.com/facebook/docusaurus/issues/7558
@@ -30,5 +30,5 @@ export default function AdmonitionTypeCaution(props: Props): JSX.Element {
     >
       {props.children}
     </AdmonitionLayout>
-  )
+  );
 }

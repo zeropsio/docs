@@ -1,15 +1,15 @@
-"use client"
+'use client';
 
-import React from "react"
-import { Card, CardList, MDXComponents, useSidebar } from "../.."
-import { SidebarItemType } from "types"
+import React from 'react';
+import { Card, CardList, MDXComponents, useSidebar } from '../..';
+import { SidebarItemType } from 'types';
 
 type ChildDocsProps = {
-  onlyTopLevel?: boolean
-}
+  onlyTopLevel?: boolean;
+};
 
 export const ChildDocs = ({ onlyTopLevel = false }: ChildDocsProps) => {
-  const { currentItems } = useSidebar()
+  const { currentItems } = useSidebar();
 
   const getTopLevelElms = (items?: SidebarItemType[]) => (
     <CardList
@@ -21,13 +21,13 @@ export const ChildDocs = ({ onlyTopLevel = false }: ChildDocsProps) => {
         })) || []
       }
     />
-  )
+  );
 
   const getAllLevelsElms = (items?: SidebarItemType[]) =>
     items?.map((item, key) => {
       const HeadingComponent = item.children?.length
-        ? MDXComponents["h2"]
-        : undefined
+        ? MDXComponents['h2']
+        : undefined;
 
       return (
         <React.Fragment key={key}>
@@ -49,17 +49,17 @@ export const ChildDocs = ({ onlyTopLevel = false }: ChildDocsProps) => {
             <Card title={item.title} href={item.path} showLinkIcon={false} />
           )}
         </React.Fragment>
-      )
-    })
+      );
+    });
 
   const getElms = (items?: SidebarItemType[]) => {
-    return onlyTopLevel ? getTopLevelElms(items) : getAllLevelsElms(items)
-  }
+    return onlyTopLevel ? getTopLevelElms(items) : getAllLevelsElms(items);
+  };
 
   return (
     <>
       {getElms(currentItems?.top)}
       {getElms(currentItems?.bottom)}
     </>
-  )
-}
+  );
+};

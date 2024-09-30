@@ -1,6 +1,7 @@
 ---
 title: How Zerops scales PostgreSQL
 ---
+
 Zerops performs an automated scaling of hardware resources required to run your database based on its usage. If the current use of your database does not require as much performance or disk space the auto scaling reduces the resources and thus reduces the costs. If your database is under heavy load or needs to store more data, then auto scaling increases the resources for the database to make sure it runs smoothly.
 
 ## Configure auto scaling
@@ -8,7 +9,12 @@ Zerops performs an automated scaling of hardware resources required to run your 
 To change the auto scaling settings go to the PostgreSQL service detail and choose **Automatic scaling configuration** in the left menu.
 
 <p align="center">
-<img src="/img/screenshots/scaling7.png" alt="image" width="100%" height="auto"/>
+  <img
+    src="/img/screenshots/scaling7.png"
+    alt="image"
+    width="100%"
+    height="auto"
+  />
 </p>
 
 ### CPU Mode
@@ -26,13 +32,14 @@ See the [pricing](https://zerops.io/#pricing) for the difference between CPU mod
 Choose the CPU mode when starting a new service or change it later. The CPU mode doesn't change automatically.
 
 ### Vertical auto scaling
+
 Vertical auto scaling has following default configuration:
 
-| &nbsp;              | Minimum resource | Maximum resource |
-| ------------------- | ---------------- | ---------------- |
-| **CPU cores**            | 1                | 5               |
-| **RAM**             | 0.25 GB             | 8 GB            |
-| **Disk**            | 1 GB             | 2.5 GB           |
+| &nbsp;        | Minimum resource | Maximum resource |
+| ------------- | ---------------- | ---------------- |
+| **CPU cores** | 1                | 5                |
+| **RAM**       | 0.25 GB          | 8 GB             |
+| **Disk**      | 1 GB             | 2.5 GB           |
 
 For most cases, the default parameters will work without issues. If you need to limit the cost of the PostgreSQL service, lower the maximal resources. Zerops will never scale above the selected maximums.
 
@@ -47,12 +54,18 @@ Learn more about how to [fine tune](/postgresql/how-to/scaling#fine-tune-the-aut
 :::
 
 ## Fine-tune the auto scaling
+
 ### Advanced CPU settings
 
 If you've experienced problems with not enough power when your database starts, increase the default Start CPU core count. Alternatively switch the [CPU mode](#shared-vs-dedicated-cpu) to dedicated to allocate the stable CPU power to your database.
 
 <p align="center">
-<img src="/img/screenshots/scaling5.png" alt="image" width="80%" height="auto"/>
+  <img
+    src="/img/screenshots/scaling5.png"
+    alt="image"
+    width="80%"
+    height="auto"
+  />
 </p>
 
 If your database doesn't need so much power after it is started, Zerops will scale down the allocated CPU cores to the defined minimum.
@@ -70,7 +83,12 @@ But if your database need a more memory faster or if you have experienced proble
 3. or setting the minimum free RAM in % of the RAM assigned to the container
 
 <p align="center">
-<img src="/img/screenshots/scaling6.png" alt="image" width="80%" height="auto"/>
+  <img
+    src="/img/screenshots/scaling6.png"
+    alt="image"
+    width="80%"
+    height="auto"
+  />
 </p>
 
 You can set the minimum free RAM both in GB and in percent, Zerops will apply the larger value based on the current RAM assigned to the container.
@@ -78,37 +96,43 @@ You can set the minimum free RAM both in GB and in percent, Zerops will apply th
 You can disable the RAM vertical auto scaling by setting the minimum and maximum to the same value. This setting doesn't affect the CPU core and Disk scaling. Zerops scales each hardware resource independently.
 
 ## Technical details
+
 ### Automatic scale up
+
 Zerops monitors CPU, RAM and Disk usage in all running containers each 10 seconds.
 The **scale up threshold** is derived from following **minimum free resources**:
-* 0.1 CPU core
-* 0.25 GB RAM (You can [fine tune](#fine-tune-the-auto-scaling) this setting)
-* 0.5 GB disk
+
+- 0.1 CPU core
+- 0.25 GB RAM (You can [fine tune](#fine-tune-the-auto-scaling) this setting)
+- 0.5 GB disk
 
 If the minimum free CPU, RAM or disk usage of a container is lower than the defined scale up threshold, Zerops scales the container up.
 
 The scale up of RAM or disk is immediate. The scale up of CPU is configured to be a little less aggressive. Two consecutive measurements of free CPU with values under the scale up threshold are required to trigger the scale up. This rule prevents excessive fluctuations of scaling up and down due to sudden changes in CPU usage.
 
 The **minimum step** for the vertical scaling is
-* 1 CPU core
-* 0.25 GB RAM
-* 0.5 GB disk
+
+- 1 CPU core
+- 0.25 GB RAM
+- 0.5 GB disk
 
 When the database is under a heavy load and needs to scale up faster, the scaling step will increase automatically.
 
 Maximal resources are defined for each PostgreSQL service. Zerops will never scale above the entered values. If your database is in [highly available mode], maximal resources are identical for all containers of the PostgreSQL service.
 
 ### Not enough resources to scale up
+
 Zerops moves a container between physical machines only if there are not enough resources on the current physical machine to scale the container up. When this happens the behaviour is different for [highly available](/postgresql/how-to/create#highly-available) and [single container](/postgresql/how-to/create#single-container) mode.
 
 ### Automatic scale down
+
 When the database no longer needs as much power or disk space, each container is gradually scaled down to the defined minimum. The automatic scale down is configured to be more cautious and defensive to prevent the database from scaling up and down rapidly.
 
 Consecutive measurements during:
 
-* 1 minute for CPU
-* 2 minutes for RAM
-* 5 minutes for disk
+- 1 minute for CPU
+- 2 minutes for RAM
+- 5 minutes for disk
 
 with free resources safely above the minimum threshold are required to scale down the appropriate resource.
 
@@ -123,7 +147,3 @@ Zerops doesn't scale PostgreSQL service horizontally, it means no containers are
 ## Monitor database resources
 
 Zerops provides information about how much hardware resources the PostgreSQL service is currently using. Go to PostgreSQL service detail in Zerops GUI and select **Service dashboard & database containers** in the left menu. Zerops also provides the history of resource usage.
-
-
-
-

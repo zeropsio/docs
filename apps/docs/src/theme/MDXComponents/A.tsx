@@ -1,28 +1,28 @@
-import React, { useMemo } from "react"
-import { getGlossaryByPath } from "../../utils/glossary"
-import useDocusaurusContext from "@docusaurus/useDocusaurusContext"
-import { MedusaDocusaurusContext } from "@medusajs/docs"
-import Link from "@docusaurus/Link"
-import type { Props } from "@docusaurus/Link"
-import clsx from "clsx"
-import { Tooltip } from "docs-ui"
+import React, { useMemo } from 'react';
+import { getGlossaryByPath } from '../../utils/glossary';
+import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
+import { MedusaDocusaurusContext } from '@medusajs/docs';
+import Link from '@docusaurus/Link';
+import type { Props } from '@docusaurus/Link';
+import clsx from 'clsx';
+import { Tooltip } from 'docs-ui';
 
-const MDXA = (props: Omit<Props, "key">) => {
-  const { href, children } = props
+const MDXA = (props: Omit<Props, 'key'>) => {
+  const { href, children } = props;
   const {
     siteConfig: { url },
-  } = useDocusaurusContext() as MedusaDocusaurusContext
+  } = useDocusaurusContext() as MedusaDocusaurusContext;
 
   // check if a glossary exists for href
   const glossary = useMemo(() => {
-    return (typeof children === "string" && href.startsWith("/")) ||
+    return (typeof children === 'string' && href.startsWith('/')) ||
       href.includes(url)
       ? getGlossaryByPath(children as string)
-      : null
-  }, [href, children])
+      : null;
+  }, [href, children]);
 
   if (!glossary) {
-    return <Link {...props} />
+    return <Link {...props} />;
   }
 
   return (
@@ -39,10 +39,10 @@ const MDXA = (props: Omit<Props, "key">) => {
     >
       <Link
         {...props}
-        className={clsx(props.className, "border-0 border-b border-dashed")}
+        className={clsx(props.className, 'border-0 border-b border-dashed')}
       />
     </Tooltip>
-  )
-}
+  );
+};
 
-export default MDXA
+export default MDXA;

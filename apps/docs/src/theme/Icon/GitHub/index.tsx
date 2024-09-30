@@ -1,6 +1,6 @@
-import { IconProps } from "@medusajs/icons/dist/types"
-import clsx from "clsx"
-import React from "react"
+import { IconProps } from '@medusajs/icons/dist/types';
+import clsx from 'clsx';
+import React from 'react';
 
 const IconGitHub = (props: IconProps) => {
   return (
@@ -11,7 +11,7 @@ const IconGitHub = (props: IconProps) => {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       {...props}
-      className={clsx("text-ui-fg-subtle", props.className)}
+      className={clsx('text-ui-fg-subtle', props.className)}
     >
       <path
         fillRule="evenodd"
@@ -20,7 +20,7 @@ const IconGitHub = (props: IconProps) => {
         fill="currentColor"
       />
     </svg>
-  )
-}
+  );
+};
 
-export default IconGitHub
+export default IconGitHub;

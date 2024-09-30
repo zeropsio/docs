@@ -1,10 +1,8 @@
 module.exports = {
   root: true,
-  extends: [
-    "docs"
-  ],
+  extends: ['docs'],
   parserOptions: {
     project: true,
     tsconfigRootDir: __dirname,
   },
-}
+};

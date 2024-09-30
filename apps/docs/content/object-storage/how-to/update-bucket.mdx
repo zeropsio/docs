@@ -11,13 +11,20 @@ Each Object storage service can only contain one bucket. If your application nee
 To change the bucket size or the access policy, go to the **Access & bucket details** in the Object service detail in Zerops GUI, scroll down and click on the **Configure bucket quota size and access policy** button.
 
 <p align="center">
-<img src="/img/screenshots/object_storage_bucket_quota.png" alt="image" width="80%" height="auto"/>
+  <img
+    src="/img/screenshots/object_storage_bucket_quota.png"
+    alt="image"
+    width="80%"
+    height="auto"
+  />
 </p>
 
 ### Quota
+
 Set the bucket quota size in GB. The quota must be set manually. It can be changed later in Zerops GUI. Zerops doesn't support Object storage autoscaling. You can set the bucket quota from 1 to 100 GB.
 
 ### Access policy
+
 Zerops creates one bucket automatically for each new Object storage service.
 
 :::note
@@ -25,56 +32,43 @@ Each Object storage service can only contain one bucket. If your application nee
 :::
 
 #### Name
+
 Bucket will be created with a name based on the given service name and a random prefix. The name of the bucket cannot be changed later.
 
 #### Access policy
+
 Select one of the basic policy templates:
 
-| Template | Description |
-| -------- | ----------- |
-| <b>Public read</b> | Allows anyone:<ul><li>to read the bucket's location <code>(s3:GetBucketLocation)</code></li><li>to list all bucket's objects <code>(s3:ListBucket)</code></li><li>to get any object of the bucket <code>(s3:GetObject)</code></li></ul> |
-| <b>Public objects read</b> | Allows anyone:<ul><li>to read the bucket's location <code>(s3:GetBucketLocation)</code></li><li>to get any object of the bucket <code>(s3:GetObject)</code></li></ul> |
-| <b>Public read write</b> | Allows anyone:<ul><li>to read the bucket's location <code>(s3:GetBucketLocation)</code></li><li>to list all bucket's objects <code>(s3:ListBucket)</code></li><li>to get any object of the bucket <code>(s3:GetObject)</code></li><li>to create a new object in the bucket <code>(s3:PutObject,s3:ListMultipartUploadParts, s3:AbortMultipartUpload, s3:ListBucketMultipartUploads)</code></li><li>to delete any object of the bucket <code>(s3:DeleteObject)</code></li></ul> |
-| <b>Public write</b> | Allows anyone to create objects in the bucket <code>(PutObject action)</code> |
-| <b>Private</b> | Denies the access to unauthenticated users. |
+| Template                   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| <b>Public read</b>         | Allows anyone:<ul><li>to read the bucket's location <code>(s3:GetBucketLocation)</code></li><li>to list all bucket's objects <code>(s3:ListBucket)</code></li><li>to get any object of the bucket <code>(s3:GetObject)</code></li></ul>                                                                                                                                                                                                                                        |
+| <b>Public objects read</b> | Allows anyone:<ul><li>to read the bucket's location <code>(s3:GetBucketLocation)</code></li><li>to get any object of the bucket <code>(s3:GetObject)</code></li></ul>                                                                                                                                                                                                                                                                                                          |
+| <b>Public read write</b>   | Allows anyone:<ul><li>to read the bucket's location <code>(s3:GetBucketLocation)</code></li><li>to list all bucket's objects <code>(s3:ListBucket)</code></li><li>to get any object of the bucket <code>(s3:GetObject)</code></li><li>to create a new object in the bucket <code>(s3:PutObject,s3:ListMultipartUploadParts, s3:AbortMultipartUpload, s3:ListBucketMultipartUploads)</code></li><li>to delete any object of the bucket <code>(s3:DeleteObject)</code></li></ul> |
+| <b>Public write</b>        | Allows anyone to create objects in the bucket <code>(PutObject action)</code>                                                                                                                                                                                                                                                                                                                                                                                                  |
+| <b>Private</b>             | Denies the access to unauthenticated users.                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 
 Or you can set your own access policy in the [IAM Policy JSON format](https://min.io/docs/minio/linux/administration/identity-access-management/policy-based-access-control.html#policy-document-structure).
 
 #### Example:
+
 ```yml
 {
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": [
-          "*"
-        ]
+  'Version': '2012-10-17',
+  'Statement':
+    [
+      {
+        'Effect': 'Allow',
+        'Principal': { 'AWS': ['*'] },
+        'Action': ['s3:GetBucketLocation', 's3:ListBucket'],
+        'Resource': ['arn:aws:s3:::{{.BucketName}}'],
       },
-      "Action": [
-        "s3:GetBucketLocation",
-        "s3:ListBucket"
-      ],
-      "Resource": [
-        "arn:aws:s3:::{{.BucketName}}"
-      ]
-    },
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": [
-          "*"
-        ]
+      {
+        'Effect': 'Allow',
+        'Principal': { 'AWS': ['*'] },
+        'Action': ['s3:GetObject'],
+        'Resource': ['arn:aws:s3:::{{.BucketName}}/*'],
       },
-      "Action": [
-        "s3:GetObject"
-      ],
-      "Resource": [
-        "arn:aws:s3:::{{.BucketName}}/*"
-      ]
-    }
-  ]
+    ],
 }
 ```
 

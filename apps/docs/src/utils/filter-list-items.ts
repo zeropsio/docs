@@ -1,19 +1,19 @@
 import {
   PropSidebarItem,
   PropSidebarItemLink,
-} from "@docusaurus/plugin-content-docs"
+} from '@docusaurus/plugin-content-docs';
 
 export default function filterListItems(
   items: PropSidebarItemLink[],
   pathPattern: string | RegExp
 ): PropSidebarItemLink[] {
   if (!items.length) {
-    return items
+    return items;
   }
 
-  const pattern = new RegExp(pathPattern)
+  const pattern = new RegExp(pathPattern);
 
-  return items.filter((item: PropSidebarItemLink) => pattern.test(item.href))
+  return items.filter((item: PropSidebarItemLink) => pattern.test(item.href));
 }
 
 /**
@@ -22,12 +22,12 @@ export default function filterListItems(
  */
 export function flattenList(items: PropSidebarItem[]): PropSidebarItem[] {
   const newItems = items.map((item: PropSidebarItem) => {
-    if (item.type !== "category") {
-      return item
+    if (item.type !== 'category') {
+      return item;
     }
 
-    return item.items
-  })
+    return item.items;
+  });
 
-  return newItems.flat()
+  return newItems.flat();
 }

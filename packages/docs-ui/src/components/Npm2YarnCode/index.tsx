@@ -1,18 +1,18 @@
-import React from "react"
-import { CodeBlockMetaFields, LegacyCodeTabs } from "../.."
-import convert from "npm-to-yarn"
+import React from 'react';
+import { CodeBlockMetaFields, LegacyCodeTabs } from '../..';
+import convert from 'npm-to-yarn';
 
 type Npm2YarnCodeProps = {
-  npmCode: string
-} & Omit<CodeBlockMetaFields, "npm2yarn">
+  npmCode: string;
+} & Omit<CodeBlockMetaFields, 'npm2yarn'>;
 
 export const Npm2YarnCode = ({ npmCode, ...rest }: Npm2YarnCodeProps) => {
   // convert npm code
-  const yarnCode = convert(npmCode, "yarn").replaceAll(/([^\s])&&/g, "$1 &&")
-  const pnpmCode = convert(npmCode, "pnpm").replaceAll(/([^\s])&&/g, "$1 &&")
-  const lang = "bash"
+  const yarnCode = convert(npmCode, 'yarn').replaceAll(/([^\s])&&/g, '$1 &&');
+  const pnpmCode = convert(npmCode, 'pnpm').replaceAll(/([^\s])&&/g, '$1 &&');
+  const lang = 'bash';
 
-  const { title = "", ...codeOptions } = rest
+  const { title = '', ...codeOptions } = rest;
 
   return (
     <LegacyCodeTabs
@@ -20,8 +20,8 @@ export const Npm2YarnCode = ({ npmCode, ...rest }: Npm2YarnCodeProps) => {
       title={title}
       tabs={[
         {
-          label: "npm",
-          value: "npm",
+          label: 'npm',
+          value: 'npm',
           code: {
             source: npmCode,
             lang,
@@ -29,8 +29,8 @@ export const Npm2YarnCode = ({ npmCode, ...rest }: Npm2YarnCodeProps) => {
           },
         },
         {
-          label: "yarn",
-          value: "yarn",
+          label: 'yarn',
+          value: 'yarn',
           code: {
             source: yarnCode,
             lang,
@@ -38,8 +38,8 @@ export const Npm2YarnCode = ({ npmCode, ...rest }: Npm2YarnCodeProps) => {
           },
         },
         {
-          label: "pnpm",
-          value: "pnpm",
+          label: 'pnpm',
+          value: 'pnpm',
           code: {
             source: pnpmCode,
             lang,
@@ -48,5 +48,5 @@ export const Npm2YarnCode = ({ npmCode, ...rest }: Npm2YarnCodeProps) => {
         },
       ]}
     />
-  )
-}
+  );
+};

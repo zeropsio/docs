@@ -7,23 +7,30 @@ MariaDB is the open source relational database loved by developers all over the 
 Zerops provides the MariaDB Community Server edition as a managed database service.
 
 ## Create MariaDB using Zerops GUI
+
 First, set up a project in Zerops GUI. Then go to the project dashboard page and choose **Add new service** in the left menu in the **Services** block. Then add a new MariaDB service:
 
 **// TODO screenshot (add a new service page)**
 
-| Parameter              | Description                                                                   | Limitations |
-| ---------------------- | ----------------------------------------------------------------------------- | ----------- |
-| **hostname**           | A unique service identifier like `mariadb`,`sql`, `db` etc.                   | - duplicate services with the same name in the same project are forbidden<br/>- maximum 25 characters<br/>- must contain only lowercase ASCII letters (a-z) or numbers (0-9)
+| Parameter    | Description                                                 | Limitations                                                                                                                                                                  |
+| ------------ | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **hostname** | A unique service identifier like `mariadb`,`sql`, `db` etc. | - duplicate services with the same name in the same project are forbidden<br/>- maximum 25 characters<br/>- must contain only lowercase ASCII letters (a-z) or numbers (0-9) |
 
 :::caution
 The hostname is fixed after the service is created. It can't be changed later.
 :::
 
 ### Choose MariaDB service mode
+
 Zerops provides MariaDB service in two modes: **Highly available** and **Single container**.
 
 <p align="center">
-<img src="/img/screenshots/scaling7.png" alt="image" width="100%" height="auto"/>
+  <img
+    src="/img/screenshots/scaling7.png"
+    alt="image"
+    width="100%"
+    height="auto"
+  />
 </p>
 
 #### Highly available
@@ -48,9 +55,11 @@ The MariaDB service mode is fixed after the service is created. It can't be chan
 :::
 
 ### Choose MariaDB version
+
 Currently only MariaDB **10.4** version is available.
 
 ### Set auto scaling configuration
+
 Zerops scales the MariaDB services automatically by raising or lowering the hardware resources of each database container.
 
 #### CPU Mode
@@ -68,13 +77,14 @@ See the [pricing](https://zerops.io/#pricing) for the difference between CPU mod
 Choose the CPU mode when starting a new service or change it later. The CPU mode doesn't change automatically.
 
 #### Vertical auto scaling
+
 Vertical auto scaling has following default configuration:
 
-| &nbsp;              | Minimum resource | Maximum resource |
-| ------------------- | ---------------- | ---------------- |
-| **CPU cores**            | 1                | 5               |
-| **RAM**             | 0.5 GB             | 32 GB            |
-| **Disk**            | 1 GB             | 100 GB           |
+| &nbsp;        | Minimum resource | Maximum resource |
+| ------------- | ---------------- | ---------------- |
+| **CPU cores** | 1                | 5                |
+| **RAM**       | 0.5 GB           | 32 GB            |
+| **Disk**      | 1 GB             | 100 GB           |
 
 For most cases, the default parameters will work without issues. If you need to limit the cost of the MariaDB service, lower the maximal resources. Zerops will never scale above the selected maximums.
 
@@ -93,16 +103,21 @@ You can change the auto scaling parameters later.
 :::
 
 ## Create MariaDB using zCLI
+
 zCLI is the Zerops command-line tool. To create a new MariaDB service via the command-line, follow these steps:
+
 1. [Install & setup zCLI](/references/cli)
 2. [Create a project description file](#create-a-project-description-file)
 3. Create a project and a MariaDB service
 
 ### Create a project description file
+
 Zerops uses a yaml format file to describe the project infrastructure.
 
 #### Basic example
+
 Create a directory `my-project`. Create a `description.yml` file inside the directory with the following content:
+
 ```yml
 # basic project data
 project:
@@ -110,18 +125,20 @@ project:
   name: my-project
 # array of project services
 services:
-  -
-    # service name
+  - # service name
     hostname: mariadb1
     # service type and version number in mariadb@{version} format
     type: mariadb@10.4
     # mode of operation "HA"/"NON_HA"
     mode: NON_HA
 ```
+
 The yaml file describes your future project infrastructure. The project will contain one MariaDB 10.4 service in the [single container](#single-container) mode with default [auto scaling](/mariadb/how-to/scale) configuration. Hostname will be set to `mariadb1`.
 
 #### Full example
+
 Create a directory `my-project`. Create a `description.yml` file inside the directory with the following content:
+
 ```yml
 # basic project data
 project:
@@ -131,12 +148,11 @@ project:
   description: A project with a MariaDB database
   # optional: project tags
   tags:
-  - DEMO
-  - ZEROPS
+    - DEMO
+    - ZEROPS
 # array of project services
 services:
-  -
-    # first service hostname
+  - # first service hostname
     hostname: mariadb1
     # service type and version number in mariadb@{version} format
     type: mariadb@10.4
@@ -154,8 +170,7 @@ services:
       startCpuCoreCount: 3
       minFreeRamGB: 0.5
       minFreeRamPercent: 20
-  -
-    # second service hostname
+  - # second service hostname
     hostname: mariadb2
     # service type and version number in mariadb@{version} format
     type: mariadb@10.4
@@ -170,70 +185,150 @@ The hostname of the first service will be set to `mariadb1`. The [high availabil
 The hostname of the second service will be set to `mariadb2`. The [single container](#single-container) mode will be chosen and the default [auto scaling configuration](/mariadb/how-to/scale) will be set.
 
 #### Description of description.yml parameters
+
 The `project:` section is required. Only one project can be defined.
 
-| Parameter              | Description                                                                   | Limitations             |
-| ---------------------- | ----------------------------------------------------------------------------- | -----------             |
-| **name**               | The name of the new project. Duplicates are allowed.                          |                         |
-| **description**        | **Optional.** Description of the new project.                                 | Maximum 255 characters. |
-| **tags**               | **Optional.** One or more string tags. Tags do not have a functional meaning, they only provide better orientation in projects.          |
+| Parameter       | Description                                                                                                                     | Limitations             |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| **name**        | The name of the new project. Duplicates are allowed.                                                                            |                         |
+| **description** | **Optional.** Description of the new project.                                                                                   | Maximum 255 characters. |
+| **tags**        | **Optional.** One or more string tags. Tags do not have a functional meaning, they only provide better orientation in projects. |
 
 At least one service in `services:` section is required. You can create a project with multiple services. The example above contains only MariaDB services but you can create a `description.yml` with [different types] of services.
 
 <table>
-<thead>
-	<tr>
-		<th>Parameter</th>
-		<th>Description</th>
-	</tr>
-</thead>
-<tbody>
-	<tr>
-		<td>
-      <b>hostname</b>
-    </td>
-		<td>
-      The unique service identifier.<br/><br/>The hostname of the new database will be set to the <code>hostname</code> value. <br/><br/><b>Limitations:</b><br/>- duplicate services with the same name in the same project are forbidden<br/>
-      - maximum 25 characters<br/>
-      - must contain only lowercase ASCII letters (a-z) or numbers (0-9)
-    </td>
-	</tr>
-	<tr>
-  <td><b>type</b></td>
-		<td>Specifies the service type <code>mariadb</code> and version.<br/>Set type: <code>mariadb<span>@</span>10.4</code><br/><br/><b>Limitations:</b><br/>Currently only MariaDB <i>10.4</i> is available.</td>
-	</tr>
-  <tr>
-    <td>
-      <b>mode</b>
-    </td>
-		<td>
-      Defines the operation mode of MariaDB service.<br/>
-      <br/><b>HA</b><br/>Zerops will create a MariaDB cluster with 3 database containers and 2 free database proxies. This mode is suited for production.<br/><br/>
-      Zerops always keep the 3 database containers on different physical machines. All your data is stored redundantly in 3 copies. In case of a failure of a container or the underlying physical machine, Zerops automatically disconnects the failed container from the cluster, creates a new container and syncs all data from the remaining 2 copies. Finally the broken container is automatically deleted.<br/><br/><b>Limitations:</b><br/>
-      <a href="/mariadb/tech-details/limitations">Learn more</a> about specific behaviour and technical limitations of the MariaDB cluster.<br/><br/>
-      <b>NON_HA</b><br/>
-      Zerops will create a MariaDB database installed in a single container. Useful for non-essential data or dev environments.<br/><br/>
-      Your data is stored only in a single container. If the container or the underlying physical machine fails, your data since the last backup are lost. Zerops doesn't provide any automatic repairs of single node MariaDB services.
-    </td>
-	</tr>
-  <tr>
-  <td><b>verticalAutoscaling</b></td>
-		<td><b>Optional.</b> Defines <a href="/mariadb/how-to/create#set-auto-scaling-configuration">custom vertical auto scaling parameters</a>.<br/>
-		All verticalAutoscaling attributes are optional. Not specified attributes will be set to their default values.</td>
-		</tr>
+  <thead>
     <tr>
-  <td><b> - cpuMode</b></td>
-         <td><b>Optional.</b> Accepts <code>SHARED</code>, <code>DEDICATED</code> values. Default is <code>SHARED</code></td>
-     </tr>
-  <tr>
-    <td><b> - minCpu/maxCpu</b></td>
-        <td><b>Optional.</b> Set the minCpu or maxCpu in CPU cores (integer).</td>
-        </tr>
-     <tr><td><b> - minRam/maxRam</b></td>
-     <td><b>Optional.</b> Set the minRam or maxRam in GB (float).</td></tr>
-       <tr><td><b> - minDisk/maxDisk</b></td>
-       <td><b>Optional.</b> Set the minDisk or maxDisk in GB (float).</td></tr>
-</tbody>
+      <th>Parameter</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>
+        <b>hostname</b>
+      </td>
+      <td>
+        The unique service identifier.
+        <br />
+        <br />
+        The hostname of the new database will be set to the{' '}
+        <code>hostname</code> value. <br />
+        <br />
+        <b>Limitations:</b>
+        <br />- duplicate services with the same name in the same project are
+        forbidden
+        <br />
+        - maximum 25 characters
+        <br />- must contain only lowercase ASCII letters (a-z) or numbers (0-9)
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <b>type</b>
+      </td>
+      <td>
+        Specifies the service type <code>mariadb</code> and version.
+        <br />
+        Set type:{' '}
+        <code>
+          mariadb<span>@</span>10.4
+        </code>
+        <br />
+        <br />
+        <b>Limitations:</b>
+        <br />
+        Currently only MariaDB <i>10.4</i> is available.
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <b>mode</b>
+      </td>
+      <td>
+        Defines the operation mode of MariaDB service.
+        <br />
+        <br />
+        <b>HA</b>
+        <br />
+        Zerops will create a MariaDB cluster with 3 database containers and 2
+        free database proxies. This mode is suited for production.
+        <br />
+        <br />
+        Zerops always keep the 3 database containers on different physical
+        machines. All your data is stored redundantly in 3 copies. In case of a
+        failure of a container or the underlying physical machine, Zerops
+        automatically disconnects the failed container from the cluster, creates
+        a new container and syncs all data from the remaining 2 copies. Finally
+        the broken container is automatically deleted.
+        <br />
+        <br />
+        <b>Limitations:</b>
+        <br />
+        <a href="/mariadb/tech-details/limitations">Learn more</a> about
+        specific behaviour and technical limitations of the MariaDB cluster.
+        <br />
+        <br />
+        <b>NON_HA</b>
+        <br />
+        Zerops will create a MariaDB database installed in a single container.
+        Useful for non-essential data or dev environments.
+        <br />
+        <br />
+        Your data is stored only in a single container. If the container or the
+        underlying physical machine fails, your data since the last backup are
+        lost. Zerops doesn't provide any automatic repairs of single node
+        MariaDB services.
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <b>verticalAutoscaling</b>
+      </td>
+      <td>
+        <b>Optional.</b> Defines{' '}
+        <a href="/mariadb/how-to/create#set-auto-scaling-configuration">
+          custom vertical auto scaling parameters
+        </a>
+        .<br />
+        All verticalAutoscaling attributes are optional. Not specified
+        attributes will be set to their default values.
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <b> - cpuMode</b>
+      </td>
+      <td>
+        <b>Optional.</b> Accepts <code>SHARED</code>, <code>DEDICATED</code>{' '}
+        values. Default is <code>SHARED</code>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <b> - minCpu/maxCpu</b>
+      </td>
+      <td>
+        <b>Optional.</b> Set the minCpu or maxCpu in CPU cores (integer).
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <b> - minRam/maxRam</b>
+      </td>
+      <td>
+        <b>Optional.</b> Set the minRam or maxRam in GB (float).
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <b> - minDisk/maxDisk</b>
+      </td>
+      <td>
+        <b>Optional.</b> Set the minDisk or maxDisk in GB (float).
+      </td>
+    </tr>
+  </tbody>
 </table>
 
 :::caution
@@ -264,7 +359,12 @@ You don't specify the project name in the `zcli project project-import` command,
 If you have access to more than one client, you must specify the client ID for which the project is to be created. The `clientID` is located in the Zerops GUI under the client name on the project dashboard page.
 
 <p align="center">
-<img src="/img/screenshots/client_id.png" alt="image" width="70%" height="auto"/>
+  <img
+    src="/img/screenshots/client_id.png"
+    alt="image"
+    width="70%"
+    height="auto"
+  />
 </p>
 
 ### Add MariaDB service to an existing project

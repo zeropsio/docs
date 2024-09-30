@@ -1,28 +1,28 @@
-import React, { useMemo } from "react"
-import Heading from "@theme/Heading"
-import { GlossaryType, getGlossary } from "../../utils/glossary"
-import Link from "@docusaurus/Link"
+import React, { useMemo } from 'react';
+import Heading from '@theme/Heading';
+import { GlossaryType, getGlossary } from '../../utils/glossary';
+import Link from '@docusaurus/Link';
 
-type GlossaryProps = React.HTMLAttributes<HTMLDivElement>
+type GlossaryProps = React.HTMLAttributes<HTMLDivElement>;
 
 type GroupedGlossary = {
-  [letter: string]: GlossaryType[]
-}
+  [letter: string]: GlossaryType[];
+};
 
 const Glossary: React.FC<GlossaryProps> = (props) => {
   const groupedGlossary: GroupedGlossary = useMemo(() => {
-    const glossary = getGlossary()
+    const glossary = getGlossary();
     glossary.sort((a, b) => {
-      return a.title.localeCompare(b.title)
-    })
-    const grouped: GroupedGlossary = {}
+      return a.title.localeCompare(b.title);
+    });
+    const grouped: GroupedGlossary = {};
     glossary.forEach((glossaryItem) => {
-      const firstChar = glossaryItem.title.charAt(0).toLowerCase()
-      grouped[firstChar] = [...(grouped[firstChar] || []), glossaryItem]
-    })
+      const firstChar = glossaryItem.title.charAt(0).toLowerCase();
+      grouped[firstChar] = [...(grouped[firstChar] || []), glossaryItem];
+    });
 
-    return grouped
-  }, [])
+    return grouped;
+  }, []);
 
   return (
     <div {...props}>
@@ -44,7 +44,7 @@ const Glossary: React.FC<GlossaryProps> = (props) => {
         </React.Fragment>
       ))}
     </div>
-  )
-}
+  );
+};
 
-export default Glossary
+export default Glossary;

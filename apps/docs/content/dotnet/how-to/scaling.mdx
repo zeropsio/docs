@@ -9,7 +9,12 @@ Zerops performs an automated scaling of hardware resources required to run your 
 Each application you deploy starts with the minimum hardware resources: **CPU** cores, **RAM** and **Disk**. Zerops monitors the usage of these 3 resources and if the usage exceeds a set threshold, more CPU cores, RAM or Disk is allocated to the service. This is called **vertical scaling**.
 
 <p align="center">
-<img src="/img/screenshots/scaling1.png" alt="image" width="80%" height="auto"/>
+  <img
+    src="/img/screenshots/scaling1.png"
+    alt="image"
+    width="80%"
+    height="auto"
+  />
 </p>
 
 **Horizontal scaling** adds or removes whole containers.
@@ -17,21 +22,30 @@ Each application you deploy starts with the minimum hardware resources: **CPU** 
 Zerops has a preference for vertical scaling because it's faster and more precise. If the vertical auto scaling hits the defined maximum a new container is started automatically. When your application doesn't need so much power and all containers are vertically scaled down, Zerops will gradually remove whole containers.
 
 <p align="center">
-<img src="/img/screenshots/scaling2.png" alt="image" width="100%" height="auto"/>
+  <img
+    src="/img/screenshots/scaling2.png"
+    alt="image"
+    width="100%"
+    height="auto"
+  />
 </p>
 
 ## Configure auto scaling
+
 To change the auto scaling settings go to the .NET service detail and choose **Automatic scaling configuration** in the left menu.
 
 <p align="center">
-<img src="/img/screenshots/create_nodejs_service_2.png" alt="image"/>
+  <img src="/img/screenshots/create_nodejs_service_2.png" alt="image" />
 </p>
 
 ### CPU mode
+
 #### Shared
+
 Your application gets a full physical CPU core, but it is shared with up to 10 other applications. In this mode the power your application gets is depended on other applications running on the same CPU core. At best case scenario your application gets 10/10 of CPU core power and 1/10 at worst case scenario.
 
 #### Dedicated
+
 The CPU core is dedicated to your application.
 
 :::info
@@ -44,11 +58,11 @@ The CPU mode doesn't change automatically.
 
 Vertical auto scaling has following default configuration:
 
-| &nbsp;              | Minimum resource | Maximum resource |
-| ------------------- | ---------------- | ---------------- |
-| **CPU cores**            | 1                | 5               |
-| **RAM**             | 0.25 GB          | 32 GB            |
-| **Disk**            | 1 GB             | 100 GB           |
+| &nbsp;        | Minimum resource | Maximum resource |
+| ------------- | ---------------- | ---------------- |
+| **CPU cores** | 1                | 5                |
+| **RAM**       | 0.25 GB          | 32 GB            |
+| **Disk**      | 1 GB             | 100 GB           |
 
 .NET service always starts with the minimal resources.
 
@@ -65,17 +79,22 @@ Learn more about how to [fine tune](#fine-tune-the-auto-scaling) the auto scalin
 When a container needs more CPU or RAM but already consumes maximal resources defined for the vertical auto scaling, Zerops will add a new container to your .NET service. When your .NET service doesn't need so much power and all containers are vertically scaled down in such a way their CPU allocation is near the minimal resources, Zerops will gradually remove whole containers.
 
 Horizontal auto scaling has following default configuration:
+
 <table>
-<tbody>
-	<tr>
-		<td><b>minimum containers</b></td>
-		<td>1</td>
-	</tr>
-	<tr>
-		<td><b>maximum containers</b></td>
-		<td>6</td>
-	</tr>
-</tbody>
+  <tbody>
+    <tr>
+      <td>
+        <b>minimum containers</b>
+      </td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>
+        <b>maximum containers</b>
+      </td>
+      <td>6</td>
+    </tr>
+  </tbody>
 </table>
 
 .NET service always starts with the minimum number of containers.
@@ -99,12 +118,18 @@ Check if your application is ready to be run in multiple containers.
 :::
 
 ## Fine-tune the auto scaling
+
 ### Advanced CPU settings
 
 If you've experienced problems with not enough power when your application starts, increase the default Start CPU core count. Alternatively switch the [CPU mode](#shared-vs-dedicated-cpu) to dedicated to allocate the stable CPU power to your application.
 
 <p align="center">
-<img src="/img/screenshots/scaling5.png" alt="image" width="80%" height="auto"/>
+  <img
+    src="/img/screenshots/scaling5.png"
+    alt="image"
+    width="80%"
+    height="auto"
+  />
 </p>
 
 If your application doesn't need so much power after it is started, Zerops will scale down the allocated CPU cores to the defined minimum.
@@ -122,7 +147,12 @@ But if your application need a more memory faster or if you have experienced pro
 3. or setting the minimum free RAM in % of the RAM assigned to the container
 
 <p align="center">
-<img src="/img/screenshots/scaling6.png" alt="image" width="80%" height="auto"/>
+  <img
+    src="/img/screenshots/scaling6.png"
+    alt="image"
+    width="80%"
+    height="auto"
+  />
 </p>
 
 You can set the minimum free RAM both in GB and in percent, Zerops will apply the larger value based on the current RAM assigned to the container.
@@ -130,43 +160,50 @@ You can set the minimum free RAM both in GB and in percent, Zerops will apply th
 You can disable the RAM vertical auto scaling by setting the minimum and maximum to the same value. This setting doesn't affect the CPU core and Disk scaling. Zerops scales each hardware resource independently.
 
 ## Technical details
+
 ### Automatic scale up
+
 Zerops monitors CPU, RAM and Disk usage in all running containers each 10 seconds.
 The **scale up threshold** is derived from following **minimum free resources**:
-* 0.1 CPU core
-* 0.125 GB RAM (You can [fine tune](#fine-tune-the-auto-scaling) this setting)
-* 0.5 GB disk
+
+- 0.1 CPU core
+- 0.125 GB RAM (You can [fine tune](#fine-tune-the-auto-scaling) this setting)
+- 0.5 GB disk
 
 If the minimum free CPU, RAM or disk usage of a container is lower than the defined scale up threshold, Zerops scales the container up.
 
 The scale up of RAM or disk is immediate. The scale up of CPU is configured to be a little less aggressive. Two consecutive measurements of free CPU with values under the scale up threshold are required to trigger the scale up. This rule prevents excessive fluctuations of scaling up and down due to sudden changes in CPU usage.
 
 The **minimum step** for the vertical scaling is
-* 1 CPU core
-* 0.25 GB RAM
-* 0.5 GB disk
+
+- 1 CPU core
+- 0.25 GB RAM
+- 0.5 GB disk
 
 When the application is under a heavy load and needs to scale up faster, the scaling step will increase automatically.
 
 Maximal resources are defined for each .NET service. Zerops will never scale above the entered values. If your application is in [highly available mode], maximal resources are identical for all containers of the .NET service.
 
 ### Not enough resources to scale up
+
 If one of the .NET containers needs more resources but there are not enough of them on the underlying machine, a new container with the required hardware resources will be started on another machine. When the new container is ready, it will be added to the service balancer. The old container will be removed from the balancer and deleted.
 
 ### Automatic scale down
+
 When the application no longer needs as much power or disk space, each container is gradually scaled down to the defined minimum. The automatic scale down is configured to be more cautious and defensive to prevent the application from scaling up and down rapidly.
 
 Consecutive measurements during:
 
-* 1 minute for CPU
-* 2 minutes for RAM
-* 5 minutes for disk
+- 1 minute for CPU
+- 2 minutes for RAM
+- 5 minutes for disk
 
 with free resources safely above the minimum threshold are required to scale down the appropriate resource.
 
 The minimum step for the scale down is identical to the minimum step for scale up. When several scale down events are triggered in a short period of time, the scaling step increases automatically.
 
 ### Horizontal autoscaling
+
 Zerops prefers vertical scaling over horizontal scaling because vertical scaling is faster and allows finer adjustment to the required performance. Horizontal scaling can be disabled by setting the same number for the minimum and maximum container count. Zerops will then scale the .NET service only vertically.
 
 Your application is created with the defined minimum number of containers. Zerops will add a new container when any of the service's containers reaches the maximum limit for vertical scaling for CPU cores or RAM. Zerops doesn't start a new container when the maximum disk space is reached. No more containers are added when the defined maximum container limit is reached.
@@ -180,4 +217,3 @@ If the application no longer needs as much power, Zerops will gradually remove c
 ## Monitor .NET resources
 
 Zerops provides information about how much hardware resources the .NET service is currently using. Go to the service detail in Zerops GUI and select **Service dashboard & runtime containers** in the left menu. Zerops also provides the history of resource usage.
-

@@ -1,18 +1,18 @@
-import React from "react"
-import clsx from "clsx"
-import { PlusMini } from "@medusajs/icons"
+import React from 'react';
+import clsx from 'clsx';
+import { PlusMini } from '@medusajs/icons';
 
 export type DetailsSummaryProps = {
-  title?: React.ReactNode
-  subtitle?: React.ReactNode
-  badge?: React.ReactNode
-  expandable?: boolean
-  open?: boolean
-  className?: string
-  titleClassName?: string
-  hideExpandableIcon?: boolean
-  summaryRef?: React.LegacyRef<HTMLDivElement>
-} & Omit<React.HTMLAttributes<HTMLElement>, "title">
+  title?: React.ReactNode;
+  subtitle?: React.ReactNode;
+  badge?: React.ReactNode;
+  expandable?: boolean;
+  open?: boolean;
+  className?: string;
+  titleClassName?: string;
+  hideExpandableIcon?: boolean;
+  summaryRef?: React.LegacyRef<HTMLDivElement>;
+} & Omit<React.HTMLAttributes<HTMLElement>, 'title'>;
 
 export const DetailsSummary = ({
   title,
@@ -30,12 +30,12 @@ export const DetailsSummary = ({
   return (
     <summary
       className={clsx(
-        "py-docs_0.75 flex items-center justify-between",
-        expandable && "cursor-pointer",
+        'py-docs_0.75 flex items-center justify-between',
+        expandable && 'cursor-pointer',
         !expandable &&
-          "border-medusa-border-base border-y border-solid border-x-0",
-        (expandable || badge) && "gap-0.5",
-        "no-marker",
+          'border-medusa-border-base border-y border-solid border-x-0',
+        (expandable || badge) && 'gap-0.5',
+        'no-marker',
         className
       )}
       ref={summaryRef}
@@ -44,7 +44,7 @@ export const DetailsSummary = ({
       <span className="gap-docs_0.25 flex flex-col">
         <span
           className={clsx(
-            "text-compact-medium-plus text-medusa-fg-base",
+            'text-compact-medium-plus text-medusa-fg-base',
             titleClassName
           )}
         >
@@ -61,11 +61,11 @@ export const DetailsSummary = ({
           {badge}
           {expandable && !hideExpandableIcon && (
             <PlusMini
-              className={clsx("transition-transform", open && "rotate-45")}
+              className={clsx('transition-transform', open && 'rotate-45')}
             />
           )}
         </span>
       )}
     </summary>
-  )
-}
+  );
+};

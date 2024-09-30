@@ -1,27 +1,27 @@
-"use client"
+'use client';
 
-import React, { useContext, useState } from "react"
-import { createContext } from "react"
-import { Modal, type ModalProps } from "@/components"
+import React, { useContext, useState } from 'react';
+import { createContext } from 'react';
+import { Modal, type ModalProps } from '@/components';
 
 export type ModalContextType = {
-  modalProps: ModalProps | null
-  setModalProps: (value: ModalProps | null) => void
-  closeModal: () => void
-}
+  modalProps: ModalProps | null;
+  setModalProps: (value: ModalProps | null) => void;
+  closeModal: () => void;
+};
 
-const ModalContext = createContext<ModalContextType | null>(null)
+const ModalContext = createContext<ModalContextType | null>(null);
 
 export type ModalProviderProps = {
-  children?: React.ReactNode
-}
+  children?: React.ReactNode;
+};
 
 export const ModalProvider = ({ children }: ModalProviderProps) => {
-  const [modalProps, setModalProps] = useState<ModalProps | null>(null)
+  const [modalProps, setModalProps] = useState<ModalProps | null>(null);
 
   const closeModal = () => {
-    setModalProps(null)
-  }
+    setModalProps(null);
+  };
 
   return (
     <ModalContext.Provider
@@ -39,15 +39,15 @@ export const ModalProvider = ({ children }: ModalProviderProps) => {
         </>
       )}
     </ModalContext.Provider>
-  )
-}
+  );
+};
 
 export const useModal = () => {
-  const context = useContext(ModalContext)
+  const context = useContext(ModalContext);
 
   if (!context) {
-    throw new Error("useModal must be used within a ModalProvider")
+    throw new Error('useModal must be used within a ModalProvider');
   }
 
-  return context
-}
+  return context;
+};

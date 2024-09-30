@@ -1,9 +1,9 @@
-import { RawSidebarItemType } from "types"
+import { RawSidebarItemType } from 'types';
 
 const commonOptions: Partial<RawSidebarItemType> = {
   loaded: true,
   isPathHref: true,
-}
+};
 
 export function sidebarAttachHrefCommonOptions(
   sidebar: RawSidebarItemType[]
@@ -12,5 +12,5 @@ export function sidebarAttachHrefCommonOptions(
     ...commonOptions,
     ...item,
     children: sidebarAttachHrefCommonOptions(item.children || []),
-  }))
+  }));
 }

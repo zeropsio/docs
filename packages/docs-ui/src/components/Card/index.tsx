@@ -1,19 +1,19 @@
-import React from "react"
-import { ArrowUpRightOnBox } from "@medusajs/icons"
-import clsx from "clsx"
-import { LegacyLink } from "@/components"
+import React from 'react';
+import { ArrowUpRightOnBox } from '@medusajs/icons';
+import clsx from 'clsx';
+import { LegacyLink } from '@/components';
 
 export type CardProps = {
-  startIcon?: React.ReactNode
-  endIcon?: React.ReactNode
-  title?: string
-  text?: string
-  href?: string
-  className?: string
-  contentClassName?: string
-  children?: React.ReactNode
-  showLinkIcon?: boolean
-}
+  startIcon?: React.ReactNode;
+  endIcon?: React.ReactNode;
+  title?: string;
+  text?: string;
+  href?: string;
+  className?: string;
+  contentClassName?: string;
+  children?: React.ReactNode;
+  showLinkIcon?: boolean;
+};
 
 export const Card = ({
   startIcon,
@@ -29,16 +29,16 @@ export const Card = ({
   return (
     <div
       className={clsx(
-        "bg-medusa-bg-subtle w-full rounded",
-        "shadow-card-rest dark:shadow-card-rest-dark py-docs_0.75 relative px-docs_1",
-        "flex items-start gap-docs_1 transition-shadow",
-        href && "hover:shadow-card-hover dark:hover:shadow-card-hover-dark",
+        'bg-medusa-bg-subtle w-full rounded',
+        'shadow-card-rest dark:shadow-card-rest-dark py-docs_0.75 relative px-docs_1',
+        'flex items-start gap-docs_1 transition-shadow',
+        href && 'hover:shadow-card-hover dark:hover:shadow-card-hover-dark',
         className
       )}
     >
       {startIcon}
       <div className="flex items-start gap-docs_1 justify-between flex-1">
-        <div className={clsx("flex flex-col", contentClassName)}>
+        <div className={clsx('flex flex-col', contentClassName)}>
           {title && (
             <span className="text-compact-medium-plus text-medusa-fg-base">
               {title}
@@ -67,5 +67,5 @@ export const Card = ({
       </div>
       {endIcon}
     </div>
-  )
-}
+  );
+};

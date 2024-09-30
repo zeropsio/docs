@@ -1,32 +1,32 @@
-"use client"
+'use client';
 
-import React, { MouseEvent, useMemo } from "react"
-import clsx from "clsx"
-import { useSearch } from "@/providers"
-import { Button, InputText, Kbd } from "@/components"
-import { MagnifyingGlass } from "@medusajs/icons"
-import { useKeyboardShortcut } from "@/hooks"
+import React, { MouseEvent, useMemo } from 'react';
+import clsx from 'clsx';
+import { useSearch } from '@/providers';
+import { Button, InputText, Kbd } from '@/components';
+import { MagnifyingGlass } from '@medusajs/icons';
+import { useKeyboardShortcut } from '@/hooks';
 
 export type SearchModalOpenerProps = {
-  isLoading?: boolean
-  isMobile?: boolean
-}
+  isLoading?: boolean;
+  isMobile?: boolean;
+};
 
 export const SearchModalOpener = ({
   isLoading = false,
   isMobile = false,
 }: SearchModalOpenerProps) => {
-  const { setIsOpen } = useSearch()
+  const { setIsOpen } = useSearch();
   const isApple = useMemo(() => {
-    return typeof navigator !== "undefined"
-      ? navigator.userAgent.toLowerCase().indexOf("mac") !== 0
-      : true
-  }, [])
+    return typeof navigator !== 'undefined'
+      ? navigator.userAgent.toLowerCase().indexOf('mac') !== 0
+      : true;
+  }, []);
   useKeyboardShortcut({
-    shortcutKeys: ["k"],
+    shortcutKeys: ['k'],
     action: () => setIsOpen((prev) => !prev),
     isLoading,
-  })
+  });
 
   const handleOpen = (
     e:
@@ -35,14 +35,14 @@ export const SearchModalOpener = ({
       | MouseEvent<HTMLButtonElement, globalThis.MouseEvent>
   ) => {
     if (isLoading) {
-      return
+      return;
     }
-    e.preventDefault()
-    if ("blur" in e.target && typeof e.target.blur === "function") {
-      e.target.blur()
+    e.preventDefault();
+    if ('blur' in e.target && typeof e.target.blur === 'function') {
+      e.target.blur();
     }
-    setIsOpen(true)
-  }
+    setIsOpen(true);
+  };
 
   return (
     <>
@@ -53,21 +53,21 @@ export const SearchModalOpener = ({
       )}
       {!isMobile && (
         <div
-          className={clsx("relative w-min hover:cursor-pointer group")}
+          className={clsx('relative w-min hover:cursor-pointer group')}
           onClick={handleOpen}
         >
           <MagnifyingGlass
             className={clsx(
-              "absolute left-docs_0.5 top-[5px]",
-              "text-medusa-fg-muted"
+              'absolute left-docs_0.5 top-[5px]',
+              'text-medusa-fg-muted'
             )}
           />
           <InputText
             type="search"
             className={clsx(
-              "placeholder:text-compact-small",
-              "!py-[5px] !pl-[36px] !pr-docs_0.5",
-              "cursor-pointer select-none"
+              'placeholder:text-compact-small',
+              '!py-[5px] !pl-[36px] !pr-docs_0.5',
+              'cursor-pointer select-none'
             )}
             placeholder="Find something"
             onClick={handleOpen}
@@ -77,15 +77,15 @@ export const SearchModalOpener = ({
           />
           <span
             className={clsx(
-              "gap-docs_0.25 flex",
-              "absolute right-docs_0.5 top-[5px]"
+              'gap-docs_0.25 flex',
+              'absolute right-docs_0.5 top-[5px]'
             )}
           >
-            <Kbd>{isApple ? "⌘" : "Ctrl"}</Kbd>
+            <Kbd>{isApple ? '⌘' : 'Ctrl'}</Kbd>
             <Kbd>K</Kbd>
           </span>
         </div>
       )}
     </>
-  )
-}
+  );
+};

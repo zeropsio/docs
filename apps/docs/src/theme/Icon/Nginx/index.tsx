@@ -1,6 +1,6 @@
-import { IconProps } from "@medusajs/icons/dist/types"
-import clsx from "clsx"
-import React from "react"
+import { IconProps } from '@medusajs/icons/dist/types';
+import clsx from 'clsx';
+import React from 'react';
 
 const IconNginx = (props: IconProps) => {
   return (
@@ -11,7 +11,7 @@ const IconNginx = (props: IconProps) => {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       {...props}
-      className={clsx("text-ui-fg-subtle", props.className)}
+      className={clsx('text-ui-fg-subtle', props.className)}
     >
       <path
         d="M4.1 44.9c.3.5.7.9 1.1 1.1l23.2 13.4c1 .6 2.1.6 3.1 0L54.7 46c1-.5 1.5-1.6 1.5-2.7V16.6c0-1.1-.6-2.1-1.5-2.7L31.5.5c-1-.6-2.1-.6-3.1 0L5.3 13.9c-1 .5-1.6 1.6-1.5 2.7v26.8c-.1.5 0 1.1.3 1.5"
@@ -22,7 +22,7 @@ const IconNginx = (props: IconProps) => {
         fill="#fff"
       />
     </svg>
-  )
-}
+  );
+};
 
-export default IconNginx
+export default IconNginx;

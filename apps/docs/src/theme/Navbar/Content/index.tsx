@@ -1,24 +1,24 @@
-import React, { type ReactNode } from "react"
-import { useThemeConfig } from "@docusaurus/theme-common"
+import React, { type ReactNode } from 'react';
+import { useThemeConfig } from '@docusaurus/theme-common';
 import {
   splitNavbarItems,
   useNavbarMobileSidebar,
-} from "@docusaurus/theme-common/internal"
-import NavbarItem, { type Props as NavbarItemConfig } from "@theme/NavbarItem"
-import NavbarColorModeToggle from "@theme/Navbar/ColorModeToggle"
-import NavbarMobileSidebarToggle from "@theme/Navbar/MobileSidebar/Toggle"
-import NavbarLogo from "@theme/Navbar/Logo"
-import clsx from "clsx"
-import { ThemeConfig } from "@medusajs/docs"
-import { useSidebar } from "../../../providers/Sidebar"
-import useIsBrowser from "@docusaurus/useIsBrowser"
-import { Tooltip } from "docs-ui"
-import NavbarActions from "../../../components/Navbar/Actions"
-import { ChevronDoubleLeftMiniSolid, SidebarLeft } from "@medusajs/icons"
+} from '@docusaurus/theme-common/internal';
+import NavbarItem, { type Props as NavbarItemConfig } from '@theme/NavbarItem';
+import NavbarColorModeToggle from '@theme/Navbar/ColorModeToggle';
+import NavbarMobileSidebarToggle from '@theme/Navbar/MobileSidebar/Toggle';
+import NavbarLogo from '@theme/Navbar/Logo';
+import clsx from 'clsx';
+import { ThemeConfig } from '@medusajs/docs';
+import { useSidebar } from '../../../providers/Sidebar';
+import useIsBrowser from '@docusaurus/useIsBrowser';
+import { Tooltip } from 'docs-ui';
+import NavbarActions from '../../../components/Navbar/Actions';
+import { ChevronDoubleLeftMiniSolid, SidebarLeft } from '@medusajs/icons';
 
 function useNavbarItems() {
   // TODO temporary casting until ThemeConfig type is improved
-  return useThemeConfig().navbar.items as NavbarItemConfig[]
+  return useThemeConfig().navbar.items as NavbarItemConfig[];
 }
 
 function NavbarItems({ items }: { items: NavbarItemConfig[] }): JSX.Element {
@@ -28,52 +28,52 @@ function NavbarItems({ items }: { items: NavbarItemConfig[] }): JSX.Element {
         <NavbarItem {...item} key={i} />
       ))}
     </>
-  )
+  );
 }
 
 function NavbarContentLayout({
   left,
   right,
 }: {
-  left: ReactNode
-  right: ReactNode
+  left: ReactNode;
+  right: ReactNode;
 }) {
   return (
     <div
       className={clsx(
-        "flex flex-wrap justify-between items-center w-full",
-        "lg:max-w-xl mx-auto py-0.5 px-1"
+        'flex flex-wrap justify-between items-center w-full',
+        'lg:max-w-xl mx-auto py-0.5 px-1'
       )}
     >
-      <div className={clsx("items-center flex flex-1 min-w-0 gap-1.5")}>
+      <div className={clsx('items-center flex flex-1 min-w-0 gap-1.5')}>
         {left}
       </div>
       <div
-        className={clsx("items-center flex lg:flex-1 min-w-0", "justify-end")}
+        className={clsx('items-center flex lg:flex-1 min-w-0', 'justify-end')}
       >
         {right}
       </div>
     </div>
-  )
+  );
 }
 
 export default function NavbarContent(): JSX.Element {
-  const mobileSidebar = useNavbarMobileSidebar()
+  const mobileSidebar = useNavbarMobileSidebar();
 
-  const items = useNavbarItems()
-  const [leftItems, rightItems] = splitNavbarItems(items)
+  const items = useNavbarItems();
+  const [leftItems, rightItems] = splitNavbarItems(items);
   const {
     navbarActions,
     docs: {
       sidebar: { hideable },
     },
-  } = useThemeConfig() as ThemeConfig
-  const sidebarContext = useSidebar()
-  const isBrowser = useIsBrowser()
+  } = useThemeConfig() as ThemeConfig;
+  const sidebarContext = useSidebar();
+  const isBrowser = useIsBrowser();
 
   const isApple = isBrowser
-    ? navigator.userAgent.toLowerCase().indexOf("mac") !== 0
-    : true
+    ? navigator.userAgent.toLowerCase().indexOf('mac') !== 0
+    : true;
 
   return (
     <NavbarContentLayout
@@ -94,51 +94,51 @@ export default function NavbarContent(): JSX.Element {
             <NavbarActions
               items={[
                 {
-                  type: "button",
+                  type: 'button',
                   html: !sidebarContext?.hiddenSidebarContainer
                     ? `<span class="text-compact-x-small-plus">Close sidebar <kbd class="${clsx(
-                        "bg-medusa-tag-neutral-bg",
-                        "border border-solid rounded border-medusa-tag-neutral-border",
-                        "text-medusa-fg-subtle font-base text-compact-x-small-plus",
-                        "inline-flex w-[22px] h-[22px] !p-0 justify-center items-center shadow-none ml-0.5"
-                      )}">${isApple ? "⌘" : "Ctrl"}</kbd>
+                        'bg-medusa-tag-neutral-bg',
+                        'border border-solid rounded border-medusa-tag-neutral-border',
+                        'text-medusa-fg-subtle font-base text-compact-x-small-plus',
+                        'inline-flex w-[22px] h-[22px] !p-0 justify-center items-center shadow-none ml-0.5'
+                      )}">${isApple ? '⌘' : 'Ctrl'}</kbd>
                       <kbd class="${clsx(
-                        "bg-medusa-tag-neutral-bg",
-                        "border border-solid rounded border-medusa-tag-neutral-border",
-                        "text-medusa-fg-subtle font-base text-compact-x-small-plus",
-                        "inline-flex w-[22px] h-[22px] !p-0 justify-center items-center shadow-none"
+                        'bg-medusa-tag-neutral-bg',
+                        'border border-solid rounded border-medusa-tag-neutral-border',
+                        'text-medusa-fg-subtle font-base text-compact-x-small-plus',
+                        'inline-flex w-[22px] h-[22px] !p-0 justify-center items-center shadow-none'
                       )}">I</kbd></span>`
                     : `<span class="text-compact-x-small-plus">Lock sidebar open <kbd class="${clsx(
-                        "bg-medusa-tag-neutral-bg",
-                        "border border-solid rounded border-medusa-tag-neutral-border",
-                        "text-medusa-fg-subtle font-base text-compact-x-small-plus",
-                        "inline-flex w-[22px] h-[22px] !p-0 justify-center items-center shadow-none ml-0.5"
-                      )}">${isApple ? "⌘" : "Ctrl"}</kbd>
+                        'bg-medusa-tag-neutral-bg',
+                        'border border-solid rounded border-medusa-tag-neutral-border',
+                        'text-medusa-fg-subtle font-base text-compact-x-small-plus',
+                        'inline-flex w-[22px] h-[22px] !p-0 justify-center items-center shadow-none ml-0.5'
+                      )}">${isApple ? '⌘' : 'Ctrl'}</kbd>
                     <kbd class="${clsx(
-                      "bg-medusa-tag-neutral-bg",
-                      "border border-solid rounded border-medusa-tag-neutral-border",
-                      "text-medusa-fg-subtle font-base text-compact-x-small-plus",
-                      "inline-flex w-[22px] h-[22px] !p-0 justify-center items-center shadow-none"
+                      'bg-medusa-tag-neutral-bg',
+                      'border border-solid rounded border-medusa-tag-neutral-border',
+                      'text-medusa-fg-subtle font-base text-compact-x-small-plus',
+                      'inline-flex w-[22px] h-[22px] !p-0 justify-center items-center shadow-none'
                     )}">I</kbd></span>`,
                   events: {
                     onClick: sidebarContext?.onCollapse,
                     onMouseEnter: () => {
                       if (!sidebarContext?.hiddenSidebarContainer) {
-                        sidebarContext?.setFloatingSidebar(false)
+                        sidebarContext?.setFloatingSidebar(false);
                       } else {
-                        sidebarContext?.setFloatingSidebar(true)
+                        sidebarContext?.setFloatingSidebar(true);
                       }
                     },
                     onMouseLeave: () => {
                       setTimeout(() => {
                         if (
                           !document.querySelector(
-                            ".theme-doc-sidebar-container:hover"
+                            '.theme-doc-sidebar-container:hover'
                           )
                         ) {
-                          sidebarContext?.setFloatingSidebar(false)
+                          sidebarContext?.setFloatingSidebar(false);
                         }
-                      }, 100)
+                      }, 100);
                     },
                   },
                   Icon: !sidebarContext?.hiddenSidebarContainer ? (
@@ -146,7 +146,7 @@ export default function NavbarContent(): JSX.Element {
                   ) : (
                     <ChevronDoubleLeftMiniSolid className="text-medusa-fg-muted" />
                   ),
-                  buttonType: "icon",
+                  buttonType: 'icon',
                 },
               ]}
               className="sidebar-toggler"
@@ -155,7 +155,7 @@ export default function NavbarContent(): JSX.Element {
           <Tooltip text="Switch theme">
             <NavbarColorModeToggle
               className={clsx(
-                "navbar-action-icon-item !w-2 !h-2 [&>button]:!rounded"
+                'navbar-action-icon-item !w-2 !h-2 [&>button]:!rounded'
               )}
             />
           </Tooltip>
@@ -163,5 +163,5 @@ export default function NavbarContent(): JSX.Element {
         </div>
       }
     />
-  )
+  );
 }
