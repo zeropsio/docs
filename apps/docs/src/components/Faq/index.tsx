@@ -1,14 +1,13 @@
 import { ChevronDownMini, ChevronUpMini } from "@medusajs/icons";
 import React, { ReactNode, useState, useRef, useEffect } from "react";
 
-interface FAQ {
+interface FAQItemProps {
   question: string;
-  answer: string | ReactNode;
+  children: ReactNode;
 }
 
-export function FAQItem({ children }: Readonly<{ children: ReactNode[] }>) {
+export function FAQItem({ question, children }: FAQItemProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [question, answer] = React.Children.toArray(children);
   const answerRef = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState<number | undefined>(0);
 
@@ -41,13 +40,13 @@ export function FAQItem({ children }: Readonly<{ children: ReactNode[] }>) {
           style={{ height: height }}
           role="region"
         >
-          <div className="px-[0.3rem] py-[0.8rem]">{answer}</div>
+          <p className="px-0.75 mt-1 -mb-1">{children}</p>
         </div>
       </div>
     </div>
   );
 }
 
-export function FAQ({ children }: Readonly<{ children: ReactNode }>) {
+export function FAQ({ children }: { children: ReactNode }) {
   return <div className="flex flex-col">{children}</div>;
 }
