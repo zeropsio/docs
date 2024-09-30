@@ -1,21 +1,21 @@
 import { ChevronDownMini, ChevronUpMini } from "@medusajs/icons";
 import React, { ReactNode, useState, useRef, useEffect } from "react";
 
-interface FAQItemProps {
-  question: string;
+interface DetailProps {
+  title: string;
   children: ReactNode;
 }
 
-export function FAQItem({ question, children }: FAQItemProps) {
+export function Detail({ title, children }: DetailProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const answerRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState<number | undefined>(0);
 
   useEffect(() => {
-    if (isOpen && answerRef.current) {
-      setHeight(answerRef.current.scrollHeight);
+    if (isOpen && contentRef.current) {
+      setHeight(contentRef.current.scrollHeight); // Set height to the full scroll height when open
     } else {
-      setHeight(0);
+      setHeight(0); // Reset height when closed
     }
   }, [isOpen]);
 
@@ -27,7 +27,7 @@ export function FAQItem({ question, children }: FAQItemProps) {
           onClick={() => setIsOpen(!isOpen)}
           aria-expanded={isOpen}
         >
-          <span className="text-lg font-medium cursor-pointer">{question}</span>
+          <span className="text-lg font-medium cursor-pointer">{title}</span>
           {isOpen ? (
             <ChevronUpMini className="text-gray-500" />
           ) : (
@@ -35,18 +35,16 @@ export function FAQItem({ question, children }: FAQItemProps) {
           )}
         </button>
         <div
-          ref={answerRef}
+          ref={contentRef}
           className={`overflow-hidden transition-all duration-300 ease-in-out`}
-          style={{ height: height }}
+          style={{ height }}
           role="region"
         >
-          <p className="px-0.75 mt-1 -mb-1">{children}</p>
+          <div className={`px-0.75 py-0.75`}>
+            {children}
+          </div>
         </div>
       </div>
     </div>
   );
-}
-
-export function FAQ({ children }: { children: ReactNode }) {
-  return <div className="flex flex-col">{children}</div>;
 }
