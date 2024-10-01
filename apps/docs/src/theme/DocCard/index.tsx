@@ -66,7 +66,7 @@ function CardLayout({
       className={clsx(
         containerClassName,
         !isSoon &&
-          'hover:bg-medusa-bg-subtle-hover dark:hover:bg-medusa-bg-base-hover',
+          'bg-[#F2F5F7] hover:bg-medusa-bg-subtle-hover dark:hover:bg-medusa-bg-base-hover',
         isSoon && 'pointer-events-none',
         isHighlighted &&
           "md:before:content-[''] md:before:absolute md:before:top-0 before:right-0 md:before:w-1/2 md:before:h-full md:before:bg-no-repeat md:before:bg-cover md:before:bg-card-highlighted dark:md:before:bg-card-highlighted-dark",
