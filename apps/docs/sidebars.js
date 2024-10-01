@@ -88,24 +88,24 @@ module.exports = {
       },
       className: 'homepage-sidebar-item',
     },
-    {
-      type: 'doc',
-      id: 'features/remote-dev',
-      label: 'Local & remote development',
-      customProps: {
-        sidebar_icon: 'computer-desktop-solid',
-      },
-      className: 'homepage-sidebar-item',
-    },
-    {
-      type: 'doc',
-      id: 'features/developer-first',
-      label: 'Developer first',
-      customProps: {
-        sidebar_icon: 'heart',
-      },
-      className: 'homepage-sidebar-item',
-    },
+    // {
+    //   type: 'doc',
+    //   id: 'features/remote-dev',
+    //   label: 'Local & remote development',
+    //   customProps: {
+    //     sidebar_icon: 'computer-desktop-solid',
+    //   },
+    //   className: 'homepage-sidebar-item',
+    // },
+    // {
+    //   type: 'doc',
+    //   id: 'features/developer-first',
+    //   label: 'Developer first',
+    //   customProps: {
+    //     sidebar_icon: 'heart',
+    //   },
+    //   className: 'homepage-sidebar-item',
+    // },
     // //    {
     // //      type: "html",
     // //      value: "Perfectly suited for",
