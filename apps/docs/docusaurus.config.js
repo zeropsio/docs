@@ -63,9 +63,9 @@ const config = {
       },
       options: {
         themeVariables: {
-          background: "#FFFFFF",
-          mainBkg: "#FFFFFF",
-          primaryColor: "#FFFFFF",
+          background: "#ECEFF3",
+          mainBkg: "#ECEFF3",
+          primaryColor: "#ECEFF3",
           primaryTextColor: "#030712",
           primaryBorderColor: "#D1D5DB",
           nodeBorder: "#D1D5DB",
