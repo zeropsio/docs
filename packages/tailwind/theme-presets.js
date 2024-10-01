@@ -3,7 +3,7 @@ const light = {
   '--docs-bg-base-hover': 'rgba(249, 250, 251, 1)',
   '--docs-bg-base-pressed': 'rgba(243, 244, 246, 1)',
   '--docs-bg-subtle': 'rgba(249, 250, 251, 1)',
-  '--docs-bg-subtle-hover': 'rgba(243, 244, 246, 1)',
+  '--docs-bg-subtle-hover': 'rgba(242, 245, 247, 1)',
   '--docs-bg-subtle-pressed': 'rgba(229, 231, 235, 1)',
   '--docs-bg-component': 'rgba(241, 243, 245, 1)',
   '--docs-bg-switch-off': 'rgba(229, 231, 235, 1)',

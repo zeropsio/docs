@@ -40,7 +40,7 @@ export const Tooltip = ({
         anchorId={elementId}
         // anchorSelect={elementId ? `#${elementId}` : undefined}
         className={clsx(
-          '!border-medusa-border-base !border !border-solid',
+          'border-[#DEE1E4] dark:border-[#323237] !border !border-solid',
           '!text-compact-x-small-plus !shadow-tooltip dark:!shadow-tooltip-dark !rounded-docs_DEFAULT',
           '!py-docs_0.4 !z-[399] hidden !px-docs_1 lg:block',
           '!bg-medusa-bg-base',
