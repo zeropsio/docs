@@ -77,7 +77,7 @@ export default function DocSidebarItemLink({
       </Link>
       {customProps?.sidebar_is_soon && (
         <Badge variant="purple" className={`sidebar-soon-badge`}>
-          Soon
+           🚧
         </Badge>
       )}
     </li>

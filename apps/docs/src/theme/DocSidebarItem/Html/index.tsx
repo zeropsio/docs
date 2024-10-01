@@ -53,7 +53,7 @@ export default function DocSidebarItemHtml({
       ></span>
       {customProps?.sidebar_is_soon && (
         <Badge variant="purple" className={`sidebar-soon-badge`}>
-          Soon
+          🚧
         </Badge>
       )}
       {customProps?.sidebar_badge && (
