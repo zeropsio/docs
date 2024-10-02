@@ -9,10 +9,6 @@
 
 Our <b>Documentation</b> for people who want help with interacting with <a href="https://zerops.io/" target="_blank">Zerops</a> platform. <a href="https://docs.zerops.io/" target="_blank">Read the docs →</a>
 
-### About
-
-This repository utilizes the powerful [MedusaJS Docs](http://docs.medusajs.com/) theme and components, combined with Docusaurus, to serve users a seamless documentation experience.
-
 ## Contributing Guide
 
 If you're planning to contribute to our documentation, please check out our [CONTRIBUTING.md](https://github.com/zeropsio/docs/blob/main/CONTRIBUTING.md) guide.
@@ -36,7 +32,7 @@ If you have any questions, please feel free to join [Zerops Discord Server](http
 <br/>
 <!---
 <p align="center">
-<b>Made with</b> ❤️ for <b>Documentation</b> lovers.
+Documentation software by Docusaurus. Theme & components by the amazing medusajs.com
 <br/>
 </p>
 
