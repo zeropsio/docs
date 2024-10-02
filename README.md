@@ -30,7 +30,15 @@ If you have any questions, please feel free to join [Zerops Discord Server](http
 </p>
 
 <br/>
-<!---
+<br/>
+
+<p style="font-size: 10px;" align="center">
+Documentation software by Docusaurus. Theme & components by the amazing medusajs.com
+</p>
+
+<br/>
+  
+<!--
 <p align="center">
 Documentation software by Docusaurus. Theme & components by the amazing medusajs.com
 <br/>
