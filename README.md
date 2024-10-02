@@ -17,7 +17,7 @@ If you have any questions, please feel free to join [Zerops Discord Server](http
 
 ## Links
 
-<p align="center">
+<div>
   <b>
   <a href="https://zerops.io">Website</a>
   •
@@ -27,12 +27,12 @@ If you have any questions, please feel free to join [Zerops Discord Server](http
   •
   <a href="http://linkedin.com/company/zerops/">LinkedIn</a>
   </b>
-</p>
+</div>
 
 <br/>
 <br/>
 
-<p style="font-size: 10px;" align="center">
+<p>
 Documentation software by Docusaurus. Theme & components by the amazing medusajs.com
 </p>
 
