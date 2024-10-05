@@ -1,55 +1,72 @@
----
-title: Integrate your GitLab repository
----
-
-## Connect your GitLab repository
+# Integrating Your GitLab Repository
 
 Integrate Zerops to your GitLab repository and configure the automatic builds and deploys.
 
-:::info
-Before you start the integration, create a runtime service in Zerops and add [zerops.yml](/references/zeropsyml) to your repository.
-:::
+---
 
-In Zerops GUI go to the service detail and select **Build, deploy, run pipeline settings** from the left menu.
+## Prerequisites
 
-Then follow these steps:
+Before you start the integration, create a new runtime service and ensure `zerops.yml` file in the root of your repository.
+For more information, refer to our [zerops.yml](/references/zeropsyml) documentation.
 
-1. Click on the **Connect with a GitLab repository** button.
-2. You will be prompted to grant Zerops access to your public and private repositories.
+---
 
-:::info
-Zerops needs full access to your repositories on GitLab to be able to configure GitLab webhooks and download your application code into the build container. When the build pipeline is finished, the build container is deleted. Zerops doesn't store your source code.
-:::
+## Integration Steps
 
-3. Select the repository you want to integrate with the runtime service.
-4. Choose the **New tag** option if you want to trigger the build & deploy pipeline each time you create a new tag.
-   Optionally, Add a regular expression without slashes. Every new tag you create will be checked against the specified regular expression. New build and deploy pipeline will be triggered only if the tag matches the regular expression.
-5. Or choose the **Push to branch** option and select the branch from the list. Every push to the selected branch will trigger a new build & deploy pipeline, unless you [skip the pipeline](#skip-the-automatic-pipeline-once) with a specific commit message.
+1. **Access Service Settings**
 
-**// TODO Screenshot: connect to a repository with a GitLab repository selected.**
+   - Log into the Zerops GUI
+   - Go to your service details
+   - Navigate to "Build, deploy, run pipeline settings" in the left menu
 
-### Skip the automatic pipeline once
+2. **Connect to GitLab**
 
-To ensure that a pipeline is not triggered by your next push, add `[ci skip]` or `[skip ci]` to the commit message. It is case insensitive.
+   - Click "Connect with a GitLab repository"
+   - Grant Zerops access to your repositories when prompted
 
 :::note
-You will still see a successful delivery of a webhook in your Github/Gitlab repository as a webhook is actually triggered, but with no action.
+Zerops requires full access to configure webhooks and download your code. Your source code is not stored after the build process.
 :::
 
-## Disconnect your GitLab repository
+3. **Select Repository and Trigger**
 
-Once the integration to your GitLab repository is established, Zerops creates a webhook in your GitLab repository.
+   - Choose the repository to integrate
+   - Select a trigger method:
+     - **New tag**: Builds trigger on new tags
+       - Optionally add a regex to filter tags
+     - **Push to branch**: Builds trigger on pushes to a specific branch
 
-When you want to stop the integration, go to the service detail and select **Build, deploy, run pipeline settings** from the left menu.
-Then click on the **Stop automatic build trigger** button.
+4. **Finalize Setup**
+   - Confirm your settings to complete the integration
+
+---
+
+## Managing Your Integration
+
+### Skipping a Build
+
+To skip a build for a specific commit, include `[ci skip]` or `[skip ci]` (case insensitive) in your commit message.
+
+:::note
+The webhook will still show as delivered in GitLab, but no action will be taken.
+:::
+
+### Disconnecting Your Repository
+
+To stop the integration:
+
+1. Go to your service details
+2. Select "Build, deploy, run pipeline settings"
+3. Click "Stop automatic build trigger"
+
+This action removes the GitLab webhook and deletes the integration configuration.
 
 <p align="center">
   <img
     src="/img/screenshots/nodejs_cancel_running_build.png"
     alt="image"
-    width="100%"
+    width="95%"
     height="auto"
+    style={{ borderRadius: 0.5 + 'rem', opacity: 0.8 }}
   />
 </p>
-
-Zerops removes the webhook in GitLab and deletes the integration configuration.

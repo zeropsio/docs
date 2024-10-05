@@ -1,14 +1,14 @@
----
-title: zerops.yml configuration file
----
+# Zerops YAML configuration
 
 import data from '@site/static/data.json';
 import UnorderedCodeList from '@site/src/components/UnorderedCodeList';
 
-The `zerops.yml` tells Zerops how to [build and deploy](/features/pipeline) your application. Add the `zerops.yml` file to the **root of your repository** and modify it to fit your application.
+The `zerops.yml` file is crucial for defining how Zerops should [build and deploy](/features/pipeline) your application.
+Add the `zerops.yml` file to the **root of your repository** and customize it to suit your application's needs.
 
-Some `zerops.yml` attributes can be applied only to specific technologies.
-Choose your runtime to read a detailed how-to article with examples:
+---
+
+## Quick Links to Runtime-Specific Guides
 
 - [Node.js](/nodejs/how-to/build-pipeline)
 - [PHP](/php/how-to/build-pipeline)
@@ -19,677 +19,247 @@ Choose your runtime to read a detailed how-to article with examples:
 - [Java](/java/how-to/build-pipeline)
 - [nginx static](/nginx/how-to/build-pipeline)
 
-## zerops.yml structure
+## Basic Structure
 
-The `zerops.yml` has following structure:
-
-```yml
+```yml title="zerops.yml"
 zerops:
-  # definition for app service
-  - setup: app
+  - setup: <service_name>
     build: ...
     run: ...
 ```
 
-The top-level element is always `zerops`.
-
-The first element `setup` contains the **hostname** of your service. A runtime service with the same hostname must exist in Zerops. Zerops supports the definition of multiple runtime services in a single `zerops.yml`. This is useful when you use a monorepo. Just add multiple setup elements in your `zerops.yml`:
+- The top-level element is always `zerops`.
+- `setup` contains the **hostname** of your service (must exist in Zerops).
+- Multiple services can be defined in a single `zerops.yml` (useful for monorepos):
 
 ```yml
 zerops:
-  # definition for app service
   - setup: app
     build: ...
     run: ...
 
-  # definition for api service
   - setup: api
     build: ...
     run: ...
 ```
 
-Each service configuration contains at least two sections: `build` and `run`. Both sections are required to build and deploy your application in Zerops. If you'd like to use a readiness check, add an optional `deploy` section.
+Each service configuration requires `build` and `run` sections. An optional `deploy` section can be added for readiness checks.
 
-## Build pipeline configuration
+## Build Configuration
 
-### base
+### base (Required)
 
-_REQUIRED._ Sets the base technology for the build environment.
-
-See the full list of [available options](/references/zeropsyml/base-list).
-
-:::info
-You can change the base environment when you need to. Just simply modify the `zerops.yml` in your repository.
-:::
-
-If you need to install more technologies to the build environment, set multiple values as a yaml array. For example:
+Sets the base technology for the build environment. [See available options](/references/zeropsyml/base-list).
 
 ```yml
-zerops:
-  # definition for app service
-  - setup: app
-    build: ...
-    run: ...
-
-  # definition for api service
-  - setup: api
-    build: ...
-    run: ...
+build:
+  base: nodejs@latest
 ```
 
-Choose the technology to read more about what tools are pre-installed in different Zerops base build environments:
+You can specify multiple technologies:
 
-- [Node.js](/nodejs/how-to/build-pipeline#base)
-- [PHP](/php/how-to/build-pipeline#base)
-- [Python](/python/how-to/build-pipeline#base)
-- [Go](/go/how-to/build-pipeline#base)
-- [.NET](/dotnet/how-to/build-pipeline#base)
-- [Rust](/rust/how-to/build-pipeline#base)
-- [Java](/java/how-to/build-pipeline#base)
-- [nginx static](/nginx/how-to/build-pipeline#base)
+```yml
+build:
+  base:
+    - nodejs@latest
+    - python@3.9
+```
 
-To customise your build environment use the <a href="#prepareCommands">`prepareCommands`</a> attribute.
+### os (Optional)
 
-### os
+Sets the operating system for the build environment. Options:
 
-_OPTIONAL._ Sets the operating system for the runtime environment.
-
-Following options are available:
-
-- `alpine`
+- `alpine` (default)
 - `ubuntu`
 
-Default value is `alpine`.
+Current versions:
 
-We are currently using following os version:
-
-- <span>{data.alpineCurrentVersion}</span>
-- <span>{data.ubuntuCurrentVersion}</span>
-
-:::caution
-The os version is fixed and cannot be customised.
-:::
-
-### prepareCommands
-
-_OPTIONAL._ Customises the build environment by installing additional dependencies or tools to the base build environment.
-
-Choose the technology to read more about what tools are pre-installed in different Zerops base build environments and how to customize them:
-
-- [Node.js](/nodejs/how-to/build-pipeline#base)
-- [PHP](/php/how-to/build-pipeline#base)
-- [Python](/python/how-to/build-pipeline#base)
-- [Go](/go/how-to/build-pipeline#base)
-- [.NET](/dotnet/how-to/build-pipeline#base)
-- [Rust](/rust/how-to/build-pipeline#base)
-- [Java](/java/how-to/build-pipeline#base)
-- [nginx static](/nginx/how-to/build-pipeline#base)
-
-### buildCommands
-
-_REQUIRED._ Defines build commands.
+- {data.alpineCurrentVersion}
+- {data.ubuntuCurrentVersion}
 
 ```yml
-zerops:
-  # hostname of your service
-  - setup: app
-    # ==== how to build your application ====
-    build:
-      # REQUIRED. Set the base technology for the build environment:
-      base: nodejs@latest
-
-      # REQUIRED. Build your application
-      buildCommands:
-        - npm i
-        - npm run build
-      ...
+build:
+  os: ubuntu
 ```
 
-At least one command is required. Zerops triggers each command in the defined order in a dedicated build container.
+### prepareCommands (Optional)
 
-Before the build commands are triggered the build container contains:
+Customizes the build environment by installing additional dependencies or tools.
 
-1. base environment defined by the [base](#base) attribute
-2. optional customisation of the base environment defined in the [prepareCommands](#preparecommands) attribute
-3. your application code
+```yml
+build:
+  prepareCommands:
+    - apt-get update
+    - apt-get install -y some-package
+```
 
-#### Run build commands as a single shell instance
+### buildCommands (Required)
 
-Use following syntax to run all commands in the same environment context. For example, if one command changes the current directory, the next command continues in that directory. When one command creates an environment variable, the next command can access it.
+Defines the commands to build your application.
+
+```yml
+build:
+  buildCommands:
+    - npm install
+    - npm run build
+```
+
+#### Running commands in a single shell instance:
 
 ```yml
 buildCommands:
   - |
-    npm i
+    npm install
     npm run build
 ```
 
-#### Run build commands as a separate shell instances
+### deployFiles (Required)
 
-When the following syntax is used, each command is triggered in a separate environment context. For example, each shell instance starts in the home directory again. When one command creates an environment variable, it won't be available for the next command.
-
-```yml
-buildCommands:
-  - npm i
-  - npm run build
-```
-
-#### Command exit code
-
-If any command fails, it returns an exit code other than 0 and the build is canceled. Read the build log to troubleshoot the error. If the error log doesn't contain any specific error message, try to run your build with the --verbose option.
+Specifies which files or folders to deploy after a successful build.
 
 ```yml
-buildCommands:
-  - npm i --verbose
-  - npm run build
+build:
+  deployFiles:
+    - dist
+    - package.json
+    - node_modules
 ```
 
-If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `buildCommands` are finished, the application build is completed and ready for the [deploy](/features/pipeline#deploy-phase) phase.
-
-### deployFiles
-
-_REQUIRED._ Selects which files or folders will be deployed after the build has successfully finished. To filter out specific files or folders, use <a href="#deployignore">`.deployignore`</a> file.
-
-```yml
-# REQUIRED. Select which files / folders to deploy after
-# the build has successfully finished
-deployFiles:
-  - dist
-  - package.json
-  - node_modules
-```
-
-Determines files or folders produced by your build, which should be deployed to your runtime service containers.
-
-The path starts from the **root directory** of your project (the location of `zerops.yml`). You must enclose the name in quotes if the folder or the file name contains a space.
-
-#### Examples
-
-Deploys a folder, and a file from the project root directory:
-
-```yml
-deployFiles:
-  - dist
-  - package.json
-```
-
-Deploys the whole content of the build container:
-
-```yml
-deployFiles: .
-```
-
-Deploys a folder, and a file in a defined path:
-
-```yml
-deployFiles:
-  - ./path/to/file.txt
-  - ./path/to/dir/
-```
-
-#### How to use a wildcard in the path
-
-Zerops supports the `~` character as a wildcard for one or more folders in the path.
-
-Deploys all `file.txt` files that are located in any path that begins with `/path/` and ends with `/to/`
+#### Using wildcards:
 
 ```yml
 deployFiles: ./path/~/to/file.txt
 ```
 
-Deploys all folders that are located in any path that begins with `/path/to/`
-
-```yml
-deployFiles: ./path/to/~/
-```
-
-Deploys all folders that are located in any path that begins with `/path/` and ends with `/to/`
-
-```yml
-deployFiles: ./path/~/to/
-```
-
 #### .deployignore
 
-Add a `.deployignore` file to the root of your project and specify which files and folders Zerops should ignore during deploy. The syntax is the same as of a <a href="https://git-scm.com/docs/gitignore#_pattern_format">`.gitignore`</a> file.
+Use a `.deployignore` file to exclude specific files or folders from deployment.
 
-Example to ignore `node_modules` folder in deploy:
+### cache (Optional)
 
-```jsx title="zerops.yml"
-zerops:
-  - setup: app
-    build:
-      deployFiles: ./
+Defines which files or folders to cache for subsequent builds.
+
+```yml
+build:
+  cache: node_modules
 ```
 
-```jsx title=".deployignore"
-node_modules;
+### envVariables (Optional)
+
+Sets environment variables for the build environment.
+
+```yml
+build:
+  envVariables:
+    DB_NAME: db
+    DB_HOST: db
+    DB_USER: db
+    DB_PASS: ${db_password}
+```
+
+## Runtime Configuration
+
+### base (Optional)
+
+Sets the base technology for the runtime environment. If not specified, the current version is maintained.
+
+```yml
+run:
+  base: nodejs@latest
+```
+
+### os (Optional)
+
+Sets the operating system for the runtime environment. Options and versions are the same as for the build environment.
+
+### ports (Optional)
+
+Specifies the internal ports on which your application will listen.
+
+```yml
+run:
+  ports:
+    - port: 8080
+      protocol: TCP
+      httpSupport: true
+```
+
+### prepareCommands (Optional)
+
+Customizes the runtime environment by installing additional dependencies or tools.
+
+### addToRunPrepare (Optional)
+
+Defines files or folders to be copied from the build container to the prepare runtime container.
+
+### initCommands (Optional)
+
+Defines commands to run each time a new runtime container starts or restarts.
+
+```yml
+run:
+  initCommands:
+    - rm -rf ./cache
+```
+
+### start (Required for some runtimes)
+
+Defines the start command for your application.
+
+```yml
+run:
+  start: npm start
+```
+
+### documentRoot (Optional)
+
+Customizes the root folder for publicly accessible web server content (available only for webserver runtimes).
+
+### siteConfigPath (Optional)
+
+Sets the custom webserver configuration (available only for webserver runtimes).
+
+### envVariables (Optional)
+
+Defines environment variables for the runtime environment.
+
+### healthCheck (Optional)
+
+Defines a health check for your application.
+
+```yml
+run:
+  healthCheck:
+    httpGet:
+      port: 80
+      path: /status
+```
+
+## Deploy Configuration
+
+### readinessCheck (Optional)
+
+Defines a readiness check for your application. (See [readiness checks](/features/pipeline#readiness-checks))
+
+```yml
+deploy:
+  readinessCheck:
+    httpGet:
+      port: 80
+      path: /status
+      host: 127.0.0.1
+      scheme: https
+
+    # Or use commands
+    exec:
+      command: |
+        touch grass
+        rm -rf life
+        mv /outside/user /home/user
 ```
 
 :::note
-`.deployignore` file also works with <a href="/references/cli/commands#deploy">`zcli service deploy`</a> command.
+For more detailed information on specific configurations, refer to the runtime-specific guides linked at the beginning of this document.
 :::
 
-### cache
-
-_OPTIONAL._ Defines which files or folders will be cached for the next build.
-
-```yml
-# OPTIONAL. Which files / folders you want to cache for the next build.
-# Next builds will be faster when the cache is used.
-cache: node_modules
-```
-
-By default, Zerops doesn't cache the files in the build container. When the build phase is finished, the files and folders defined in the [deploy](#deployfiles) attribute are saved and deployed to your runtime containers. Then, the build container is deleted.
-To speed the second and following build up, cache the files that can be used in the next build.
-
-The cache attribute supports the [~ wildcard character](#how-to-use-a-wildcard-in-the-path).
-
-Choose the technology to read more about what folders are recommended for build cache:
-
-- [Node.js](/nodejs/how-to/build-pipeline#cache)
-- [PHP](/php/how-to/build-pipeline#cache)
-- [Python](/python/how-to/build-pipeline#cache)
-- [Go](/go/how-to/build-pipeline#cache)
-- [.NET](/dotnet/how-to/build-pipeline#cache)
-- [Rust](/rust/how-to/build-pipeline#cache)
-- [Java](/java/how-to/build-pipeline#cache)
-- [nginx static](/nginx/how-to/build-pipeline#cache)
-
-### envVariables
-
-_OPTIONAL._ Defines the environment variables for the build environment.
-
-Enter one or more env variables in following format:
-
-```yml
-zerops:
-  # define hostname of your service
-  - setup: app
-    # ==== how to build your application ====
-    build:
-      base: nginx@latest
-        …
-
-      # OPTIONAL. Defines the env variables for the build environment:
-      envVariables:
-        DB_NAME: db
-        DB_HOST: db
-        DB_USER: db
-        DB_PASS: ${db_password}
-```
-
-Read more about [environment variables](/nginx/how-to/env-variables) in Zerops.
-
-## Runtime configuration
-
-### base
-
-_OPTIONAL._ Sets the base technology for the runtime environment. If you don't specify the `run.base` attribute, Zerops keeps the current version for your runtime.
-
-See the full list of [available options](/references/zeropsyml/base-list).
-
-:::info
-You can change the base environment when you need to. Just simply modify the `zerops.yml` in your repository.
-:::
-
-If you need to install more technologies to the runtime environment, set multiple values as a yaml array. For example:
-
-```yml
-zerops:
-  # hostname of your service
-  - setup: app
-    # ==== how to build your application ====
-    build:
-      # REQUIRED. Sets the base technology for the build environment:
-      base: nginx@latest
-      ...
-
-    # ==== how to run your application ====
-    run:
-      # OPTIONAL. Sets the base technology for the runtime environment:
-      base:
-        - nginx@latest
-        - golang@latest
-      ...
-```
-
-Choose the technology to read more about what tools are pre-installed in different Zerops base runtime environments:
-
-- [Node.js](/nodejs/how-to/build-pipeline#base-1)
-- [PHP](/php/how-to/build-pipeline#base-1)
-- [Python](/python/how-to/build-pipeline#base-1)
-- [Go](/go/how-to/build-pipeline#base-1)
-- [.NET](/dotnet/how-to/build-pipeline#base-1)
-- [Rust](/rust/how-to/build-pipeline#base-1)
-- [Java](/java/how-to/build-pipeline#base-1)
-- [nginx static](/nginx/how-to/build-pipeline#base-1)
-
-To customise your build environment use the `prepareCommands` attribute.
-
-### os
-
-_OPTIONAL._ Sets the operating system for the runtime environment.
-
-Following options are available:
-
-- `alpine`
-- `ubuntu`
-
-Default value is `alpine`.
-
-We are currently using following os version:
-
-- <span>{data.alpineCurrentVersion}</span>
-- <span>{data.ubuntuCurrentVersion}</span>
-
-:::caution
-The os version is fixed and cannot be customised.
-:::
-
-### ports
-
-_OPTIONAL._ Specifies one or more internal ports on which your application will listen.
-
-Projects in Zerops represent a group of one or more services. Services can be of different types (runtime services, databases, message brokers, object storage, etc.). All services of the same project share a dedicated private network. To connect to a service within the same project, just use the service hostname and its internal port.
-
-For example, to connect to a PHP service with hostname = `app` and port = `80` from another service of the same project, simply use `app:80`.
-
-Choose your runtime to read more about port configuration and the technology specifics:
-
-- [Node.js](/nodejs/how-to/build-pipeline#ports)
-- [PHP](/php/how-to/build-pipeline#ports)
-- [Python](/python/how-to/build-pipeline#ports)
-- [Go](/go/how-to/build-pipeline#ports)
-- [.NET](/dotnet/how-to/build-pipeline#ports)
-- [Rust](/rust/how-to/build-pipeline#ports)
-- [Java](/java/how-to/build-pipeline#ports)
-- [nginx static](/nginx/how-to/build-pipeline#ports)
-
-Each port has following attributes:
-
-| parameter   | description                                                                                                                                                                                                                                                                                                            |
-| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| port        | Defines the port number. You can set any port number between _10_ and _65435_. Ports outside this interval are reserved for internal Zerops systems.                                                                                                                                                                   |
-| protocol    | **Optional.** Defines the protocol. Allowed values are `TCP` or `UDP`. Default value is `TCP`.                                                                                                                                                                                                                         |
-| httpSupport | **Optional.** `httpSupport = true` is the default setting for TCP protocol. Set `httpSupport = false` if a web server isn't running on the port. Zerops uses this information for the configuration of [public access](/features/access). `httpSupport = true` is available only in combination with the TCP protocol. |
-
-### prepareCommands
-
-_OPTIONAL._ Customises the runtime environment by installing additional dependencies or tools to the base runtime environment.
-
-Choose the technology to read more about what tools are pre-installed in different Zerops base runtime environments and how to customize them:
-
-- [Node.js](/nodejs/how-to/build-pipeline#preparecommands-1)
-- [PHP](/php/how-to/build-pipeline#preparecommands-1)
-- [Python](/python/how-to/build-pipeline#preparecommands-1)
-- [Go](/go/how-to/build-pipeline#preparecommands-1)
-- [.NET](/dotnet/how-to/build-pipeline#preparecommands-1)
-- [Rust](/rust/how-to/build-pipeline#preparecommands-1)
-- [Java](/java/how-to/build-pipeline#preparecommands-1)
-- [nginx static](/nginx/how-to/build-pipeline#preparecommands-1)
-
-### addToRunPrepare
-
-_OPTIONAL._ Defines what files or folders will be copied from the build container to the prepare runtime container. The prepare runtime container is used to customize your runtime environment.
-
-Choose your runtime to read more about this command:
-
-- [Node.js](/nodejs/how-to/build-pipeline#copy-folders-or-files-from-your-build-container)
-- [PHP](/php/how-to/build-pipeline#copy-folders-or-files-from-your-build-container)
-- [Python](/python/how-to/build-pipeline#copy-folders-or-files-from-your-build-container)
-- [Go](/go/how-to/build-pipeline#copy-folders-or-files-from-your-build-container)
-- [.NET](/dotnet/how-to/build-pipeline#copy-folders-or-files-from-your-build-container)
-- [Rust](/rust/how-to/build-pipeline#copy-folders-or-files-from-your-build-container)
-- [Java](/java/how-to/build-pipeline#copy-folders-or-files-from-your-build-container)
-- [nginx static](/nginx/how-to/build-pipeline#copy-folders-or-files-from-your-build-container)
-
-### initCommands
-
-_OPTIONAL._ Defines one or more commands to be run each time a new runtime container is started or a container is restarted.
-
-```yml
-zerops:
-  # hostname of your service
-  - setup: app
-    # ==== how to build your application ====
-    build: ...
-
-    # ==== how to run your application ====
-    run:
-      # OPTIONAL. Run one or more commands each time a new runtime container
-      # is started or restarted. These commands are triggered before
-      # your PHP application is started.
-      initCommands:
-        - rm -rf ./cache
-```
-
-These commands are triggered in the runtime container before your application is started.
-
-Use init commands to clean or initialise your application cache or similar operations.
-
-:::caution
-The init commands will delay the start of your application each time a new runtime container is started (including the [horizontal scaling](/nginx/how-to/scaling#horizontal-scaling) or when a runtime container is restarted.
-
-Do not use the init commands for customising your runtime environment. Use the [run:prepareCommands](/nginx/how-to/build-pipeline#preparecommands-1) attribute instead.
-:::
-
-#### Command exit code
-
-If any of the `initCommands` fails, it returns an exit code other than 0, but deploy is **not** canceled. After all init commands are finished, regardless of the status code, the application is started. Read the runtime log to troubleshoot the error.
-
-#### Single or separated shell instances
-
-You can configure your `initCommands` to be run in a single shell instance or multiple shell instances. The format is identical to [build commands](#buildcommands).
-
-### start
-
-REQUIRED for selected runtimes. Defines the start command for your application.
-Choose your runtime to read more about this command:
-
-- [Node.js](/nodejs/how-to/build-pipeline#start)
-- [Python](/python/how-to/build-pipeline#start)
-- [Go](/go/how-to/build-pipeline#start)
-- [.NET](/dotnet/how-to/build-pipeline#start)
-- [Rust](/rust/how-to/build-pipeline#start)
-- [Java](/java/how-to/build-pipeline#start)
-
-:::info
-Runtime services with webservers (PHP, Nginx static) don't use this attribute.
-:::
-
-### documentRoot
-
-_OPTIONAL._ Customizes the folder that will be used as the root of the publicly accessible web server content.
-
-This attribute is available only for runtimes with webservers:
-
-- <a href="/php/how-to/build-pipeline#documentroot">PHP+Nginx</a>
-- <a href="/php/how-to/build-pipeline#documentroot">PHP+Apache</a>
-- <a href="/php/how-to/build-pipeline#documentroot">Nginx static</a>
-
-### siteConfigPath
-
-_OPTIONAL._ Sets the custom webserver configuration.
-
-This attribute is available only for runtimes with webservers:
-
-- <a href="/php/how-to/build-pipeline#siteconfigpath">PHP+Nginx</a>
-- <a href="/php/how-to/build-pipeline#siteconfigpath">PHP+Apache</a>
-- <a href="/php/how-to/build-pipeline#siteconfigpath">Nginx static</a>
-
-### envVariables
-
-_OPTIONAL._ Defines the environment variables for the runtime environment.
-
-Enter one or more env variables in following format:
-
-```yml
-zerops:
-  # define hostname of your service
-  - setup: app
-    # ==== how to run your application ====
-    run:
-      # OPTIONAL. Defines the env variables for the runtime environment:
-      envVariables:
-        DB_NAME: db
-        DB_HOST: db
-        DB_USER: db
-        DB_PASS: ${db_password}
-```
-
-Read more about [environment variables](/features/env-variables) in Zerops.
-
-### health check
-
-_OPTIONAL._ Defines a health check.
-
-`healthCheck` requires either one `httpGet` object or one `exec` object.
-
-#### httpGet
-
-Configures the health check to request a local URL using a HTTP GET method.
-
-Following attributes are available:
-
-| Parameter  | Description                                                                                                                                                                                                                |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **port**   | Defines the port of the HTTP GET request.<br/>The readiness check will trigger a GET request on `http://127.0.0.1:{port}/{path}`                                                                                           |
-| **path**   | Defines the URL path of the HTTP GET request.<br/>The readiness check will trigger a GET request on `http://127.0.0.1:{port}/{path}`                                                                                       |
-| **host**   | **Optional.** The readiness check is triggered from inside of your runtime container so it always uses the localhost (`127.0.0.1`). If you need to add a `host` to the request header, specify it in the `host` attribute. |
-| **scheme** | **Optional.** The readiness check is triggered from inside of your runtime container so no https is required.<br/>If your application requires a https request, set `scheme: https`                                        |
-
-**Example:**
-
-```yml
-zerops:
-  # hostname of your service
-  - setup: app
-    # ==== how to build your application ====
-    build: ...
-
-    # ==== how to run your application ====
-    run:
-      # REQUIRED. Your Node.js application start command
-      start: npm start
-
-      # OPTIONAL. Define a health check with a HTTP GET request option.
-      # Configures the check on http://127.0.0.1:80/status
-      healthCheck:
-        httpGet:
-          port: 80
-          path: /status
-```
-
-Read more about how the [health check works] in Zerops.
-
-#### exec
-
-Configures the health check to run a local command.
-Following attributes are available:
-
-| Parameter   | Description                                                                                                                                                                                                                                                                                                                     |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **command** | Defines a local command to be run.<br/>The command has access to the same [environment variables](/nodejs/how-to/create#set-environment-variables) as your Node.js application.<br/>A single string is required. If you need to run multiple commands create a shell script or, use a multiline format as in the example below. |
-
-**Example:**
-
-```yml
-zerops:
-  # hostname of your service
-  - setup: app
-    # ==== how to build your application ====
-    build: ...
-
-    # ==== how to run your application ====
-    run:
-      # REQUIRED. Your Node.js application start command
-      start: npm start
-
-      # OPTIONAL. Define a health check with a shell command.
-      healthCheck:
-        exec:
-          command: |
-            touch grass
-            rm -rf life
-            mv /outside/user /home/user
-```
-
-Read more about how the [health check works] in Zerops.
-
-## Deploy configuration
-
-### readiness check
-
-_OPTIONAL._ Defines a readiness check. Read more about how the [readiness check works](/features/pipeline#readiness-checks) in Zerops.
-
-`readinessCheck` requires either one `httpGet` object or one `exec` object.
-
-#### httpGet
-
-Configures the readiness check to request a local URL using a http GET method.
-
-Following attributes are available:
-
-| Parameter  | Description                                                                                                                                                                                                                |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **port**   | Defines the port of the HTTP GET request.<br/>The readiness check will trigger a GET request on `http://127.0.0.1:{port}/{path}`                                                                                           |
-| **path**   | Defines the URL path of the HTTP GET request.<br/>The readiness check will trigger a GET request on `http://127.0.0.1:{port}/{path}`                                                                                       |
-| **host**   | **Optional.** The readiness check is triggered from inside of your runtime container so it always uses the localhost (`127.0.0.1`). If you need to add a `host` to the request header, specify it in the `host` attribute. |
-| **scheme** | **Optional.** The readiness check is triggered from inside of your runtime container so no https is required.<br/>If your application requires a https request, set `scheme: https`                                        |
-
-**Example:**
-
-```yml
-zerops:
-  # hostname of your service
-  - setup: app
-    # ==== how to build your application ====
-    build: ...
-
-    # ==== how to deploy your application ====
-    deploy:
-      # OPTIONAL. Define a readiness check with a HTTP GET request option.
-      # Configures the check on http://127.0.0.1:80/status
-      readinessCheck:
-        httpGet:
-          port: 80
-          path: /status
-
-    # ==== how to run your application ====
-    run: ...
-```
-
-Read more about how the [readiness check works](/features/pipeline#readiness-checks) in Zerops.
-
-#### exec
-
-Configures the readiness check to run a local command.
-Following attributes are available:
-
-| Parameter   | Description                                                                                                                                                                                                                                                                 |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **command** | Defines a local command to be run.<br/>The command has access to the same [environment variables](/features/env-variables).<br/>A single string is required. If you need to run multiple commands create a shell script or, use a multiline format as in the example below. |
-
-**Example:**
-
-```yml
-zerops:
-  # hostname of your service
-  - setup: app
-    # ==== how to build your application ====
-    build: ...
-
-    # ==== how to deploy your application ====
-    deploy:
-      # OPTIONAL. Define a readiness check with a HTTP GET request option.
-      # Configures the check on http://127.0.0.1:80/status
-      readinessCheck:
-        exec:
-          command: |
-            touch grass
-            rm -rf life
-            mv /outside/user /home/user
-```
-
-Read more about how the [readiness check works](/features/pipeline#readiness-checks) in Zerops.
+---
