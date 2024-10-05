@@ -1,29 +1,44 @@
----
-title: Integrate your GitHub repository
----
-
-## Connect your GitHub repository
+# Integrating your GitHub repository
 
 Integrate Zerops to your GitHub repository and configure the automatic builds and deploys.
 
-:::info
-Before you start the integration, create a runtime service in Zerops and add [zerops.yml](/references/zeropsyml) to your repository.
+---
+
+## Prerequisites
+
+Before you start the integration, ensure you have `zerops.yml` file in the root of your repository.
+For more information, refer to our [zerops.yml](/references/zeropsyml) documentation.
+
+---
+
+## Integration Steps
+
+1. **Access Service Settings**
+
+   - Log into the [Zerops GUI](https://app.zerops.io/)
+   - Select your service
+   - Navigate to "Build, deploy, run pipeline settings" in the left menu
+
+2. **Connect to GitHub**
+
+   - Click "Connect with a GitHub repository"
+   - Grant Zerops access to your repositories when prompted
+
+:::note
+Zerops requires full access to configure webhooks and download your code. We don't store your source code unless explicitly specified.
 :::
 
-In Zerops GUI go to the service detail and select **Build, deploy, run pipeline settings** from the left menu.
+3. **Select Repository and Trigger**
 
-Then follow these steps:
+   - Choose the repository to integrate
+   - Select a trigger method
+     - New tag: Builds trigger on new tags **(Recommended)**
+       - Optionally add a regex to filter tags
+     - Push to branch: Builds trigger on pushes to specific branch
 
-1. Click on the **Connect with a GitHub repository** button.
-2. You will be prompted to grant Zerops access to your public and private repositories.
+4. **Finalize Setup**
 
-:::info
-Zerops needs full access to your repositories on GitHub to be able to configure GitHub webhooks and download your application code into the build container. When the build pipeline is finished, the build container is deleted. Zerops doesn't store your source code.
-:::
-
-3. Select the repository you want to integrate with the runtime service.
-4. Choose the **New tag** option if you want to trigger the build & deploy pipeline each time you create a new tag. Optionally, Add a regular expression without slashes. Every new tag you create will be checked against the specified regular expression. New build and deploy pipeline will be triggered only if the tag matches the regular expression.
-5. Or choose the **Push to branch** option and select the branch from the list. Every push to the selected branch will trigger a new build & deploy pipeline, unless you [skip the pipeline](#skip-the-automatic-pipeline-once) with a specific commit message.
+   - Confirm your settings to complete the integration
 
 <p align="center">
   <img
@@ -31,30 +46,38 @@ Zerops needs full access to your repositories on GitHub to be able to configure 
     alt="image"
     width="95%"
     height="auto"
+    style={{ borderRadius: 0.5 + 'rem', opacity: 0.8 }}
   />
 </p>
 
-### Skip the automatic pipeline once
+---
 
-To ensure that a pipeline is not triggered by your next push, add `[ci skip]` or `[skip ci]` to the commit message. It is case insensitive.
+## Managing Your Integration
+
+To skip a build for a specific commit, include `[ci skip]` or `[skip ci]` (case insensitive) in your commit message.
 
 :::note
-You will still see a successful delivery of a webhook in your Github/Gitlab repository as a webhook is actually triggered, but with no action.
+The webhook will still show as delivered in GitHub, but no action will be taken.
 :::
 
-## Disconnect your GitHub repository
+---
 
-Once the integration to your GitHub repository is established, Zerops creates a webhook in your GitHub repository.
+## Disconnecting Your Repository
 
-When you want to stop the integration, go to the service detail and select **Build, deploy, run pipeline settings** from the left menu.
-Then click on the **Stop automatic build trigger** button.
+### To stop the integration:
+
+1. Go to your service details
+1. Select "Build, deploy, run pipeline settings"
+1. Click "Stop automatic build trigger"
+
+**This action removes the GitHub webhook and deletes the integration configuration.**
 
 <p align="center">
   <img
     src="/img/screenshots/nodejs_cancel_running_build.png"
     alt="image"
-    width="100%"
+    width="95%"
     height="auto"
+    style={{ borderRadius: 0.5 + 'rem', opacity: 0.8 }}
   />
 </p>
-Zerops removes the webhook in GitHub and deletes the integration configuration.

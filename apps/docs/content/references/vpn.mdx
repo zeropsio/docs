@@ -1,14 +1,16 @@
----
-title: How to connect to Zerops VPN
----
+# Using Zerops VPN
 
-To start the VPN you need first [install & setup zCLI](/references/cli), the Zerops command-line tool.
+To begin, make sure you've [installed and set up zCLI](/references/cli).
 
 ## Start the VPN
 
-Use `zcli vpn up` command to start a VPN session to the selected project.
+Start a VPN session with:
 
 ```sh
+zcli vpn up
+```
+
+```sh title="bash"
 Usage:
   zcli vpn up [projectId] [flags]
 
@@ -19,23 +21,31 @@ Flags:
                            command is to be executed.
 ```
 
-You must enclose the project name in quotes if it contains a space. The project name is visible in Zerops GUI. If you have more projects with a duplicate name, use the project ID instead. You'll find the project ID in the URL of the project dashboard page in Zerops GUI. <br/>E.g. `https://app.zerops.io/project/<b>Evs8Je4NTvKeIkUqoUXp2w</b>/service-stacks`.
+Or connect to a specfic project by passing your project ID into the `projectId` parameter:
+
+```sh
+zcli vpn up Evs8Je4NTvKeIkUqoUXp2w
+```
+
+You may need enclose your project name with quotes if it contains contains spaces.
 
 :::info
-When you run the `zcli vpn up` command for the first time, you will be asked if you want to install the Zerops VPN daemon to your computer. Confirm the installation by entering `y`. Then zCLI prompts for your root/administrator password to your computer.
+When running `zcli vpn up` for the first time, you'll be prompted to install the Zerops VPN daemon. Enter `y` to confirm (you may need to provide your root/administrator password).
 :::
 
-The zCLI starts a VPN session in the selected Zerops project. You can't be connected to multiple projects at the same time. If an existing VPN connection to another project is active, it will be stopped automatically and a new VPN connection will be opened.
+Once connected, you’ll have secure access to the project’s private network.
 
-Once the VPN session is established, you have the secured connection to the project's private network in Zerops. You can access all project services locally by using their hostname. The only difference is that no [environment variables](/features/env-variables) are available when connected through VPN.
+You can reach all services locally using their hostnames. However, environment variables are not available when connected via VPN.
 
-Zerops VPN daemon keeps the VPN connection open during the whole VPN session until you stop it. If the connection is lost, the daemon tries to restore the connection automatically.
+You can only connect to one project at a time. If you’re already connected to another project, that connection will close automatically when you start a new one.
+
+The VPN daemon keeps the connection open until you manually stop it. If the connection drops, it will automatically try to reconnect.
 
 ## Stop the VPN
 
 Use `zcli vpn down` command to stop the existing VPN session.
 
-```sh
+```sh title="bash"
 Usage:
   zcli vpn down [flags]
 

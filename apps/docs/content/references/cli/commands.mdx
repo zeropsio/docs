@@ -1,213 +1,225 @@
----
-title: zCLI commands
----
+# Available Commands
 
-import { Detail } from '/src/components/Detail';
+## Usage
 
 ```sh
+zcli {command} [flags]
+```
+
+### Example output
+
+```sh title="bash"
+Welcome in Zerops!
+You are loged as <Name> <Email>
+and your VPN connection is not active.
+
+Usage:
+──────
+zcli [flags]
 zcli [command]
+
+Available Commands:
+───────────────────
+completion      Generate the autocompletion script for the specified shell
+env             Displays global environment variables, their paths and additional options
+help            Help about any command
+login           Login into Zerops with generated Zerops token
+logout          Disconnect from VPN and log out from your Zerops account
+project         Project commands group
+push            Builds your application in Zerops and deploys it
+scope           Scope commands group
+service         Zerops service commands group
+show-debug-logs Shows zCLI debug logs
+support         How to contact Zerops support for assistance
+version         Shows the current zCLI version
+vpn             VPN commands group
+
+Flags:
+──────
+  -h, --help   help for zcli
+
+Use "zcli [command] --help" for more information about a command.
 ```
 
-| Command                             | Description                                                                           |
-| ----------------------------------- | ------------------------------------------------------------------------------------- |
-| [completion](#completion)           | Generate the autocompletion script for the specified shell.                           |
-| [help](#help)                       | Help about any command.                                                               |
-| [login](#login)                     | Logs you into Zerops. Use a generated Zerops token or your login e-mail and password. |
-| [project](#project)                 | Project commands group.                                                               |
-| [push](#push)                       | Builds your application in Zerops and deploys it.                                     |
-| [scope](#scope)                     | Scope commands group.                                                                 |
-| [service](#service)                 | Zerops service commands group.                                                        |
-| [show-debug-logs](#show-debug-logs) | Shows zCLI debug logs.                                                                |
-| [version](#version)                 | Shows the current zCLI version.                                                       |
-| [vpn](#vpn)                         | VPN commands group.                                                                   |
+## Commands
 
-## completion
+---
 
-Generate the autocompletion script for the specified shell.
+### help
 
-```sh
-zcli completion [command]
-```
-
-<Detail title="Commands">
-### bash
-Generate the autocompletion script for bash.
-
-`zcli completion bash [flags]`
-
-_Flags_:
-
-- `--no-descriptions` - disables completion descriptions
-
-### fish
-
-Generate the autocompletion script for fish.
-
-`zcli completion fish [flags]`
-
-_Flags_:
-
-- `--no-descriptions` - disables completion descriptions
-
-### powershell
-
-Generate the autocompletion script for powershell.
-
-`zcli completion powershell [flags]`
-
-_Flags_:
-
-- `--no-descriptions` - disables completion descriptions
-
-### zsh
-
-Generate the autocompletion script for zsh.
-
-`zcli completion zsh [flags]`
-
-_Flags_:
-
-- `--no-descriptions` - disables completion descriptions
-
-</Detail>
-
-## help
-
-Help about any command
+Show the help
 
 ```sh
 zcli help
 ```
 
-## login
+---
+
+### completion
+
+Generate the autocompletion script for the specified shell.
+
+```sh
+zcli completion {bash|fish|powershell|zsh} [--no-descriptions]
+```
+
+---
+
+### login
 
 Logs you into Zerops. Use a generated Zerops token or your login e-mail and password.
 
 ```sh
-zcli login token
+zcli login <token>
 ```
 
-## project
+---
 
-Project commands group.
-
-```sh
-zcli project [command]
-```
-
-<Detail title="Commands">
-### delete
-Deletes a project and all of its services.
-
-`zcli project delete [projectId] [flags]`
-
-_Flags_:
-
-- `--confirm` - if set, zCLI will not ask for confirmation of destructive operations
-- `--projectId` _(string)_ - if you have access to more than one project, you must specify the project ID for which the command is to be executed
-
-### list
-
-Lists all projects.
-
-`zcli project list`
-
-### project-import
-
-Creates a new project with one or more services.
-
-`zcli project project-import importYamlPath [flags]`
-
-_Flags_:
-
-- `--orgId` _(string)_ - if you have access to more than one organization, you must specify the org ID for which the project is to be created
-- `--workingDie` _(string)_ - sets a custom working directory, default working directory is the current directory (default "./")
-
-### service-import
-
-Creates one or more Zerops services in an existing project.
-
-`zcli project service-import importYamlPath [flags]`
-
-_Flags_:
-
-- `--projectId` _(string)_ - if you have access to more than one project, you must specify the project ID for which the command is to be executed
-
-</Detail>
-
-## push
-
-```sh
-zcli push [flags]
-```
-
-_Flags_:
-
-- `--archiveFilePath` _(string)_ - if set, zCLI creates a tar.gz archive with the application code in the required path relative to the working directory. By default, no archive is created.
-- `--deployGitFolder` - If set, zCLI the .git folder is also uploaded. By default, the .git folder is ignored.
-- `--projectId` _(string)_ - If you have access to more than one project, you must specify the project ID for which the command is to be executed.
-- `--serviceId` _(string)_ - If you have access to more than one service, you must specify the service ID for which the command is to be executed.
-- `--versionName` _(string)_ - Adds a custom version name. Automatically filled if the VERSIONNAME environment variable exists.
-- `--workingDir` _(string)_ - Sets a custom working directory. Default working directory is the current directory. (default "./")
-- `--zeropsYamlPath` _(string)_ - Sets a custom path to the zerops.yml file relative to the working directory. By default zCLI looks for zerops.yml in the working directory.
-
-## scope
-
-```sh
-zcli scope [command]
-```
-
-<Detail title="Commands">
 ### project
-Sets the scope for project. All commands that require project ID will use the selected one.
 
-`zcli scope project [projectId]`
-
-### reset
-
-Resets the scope for project and service.
-
-`zcli scope reset`
-
-</Detail>
-
-## service
+Project related commands.
 
 ```sh
-zcli service [command]
+zcli project {sub-command} [arguments] [flags]
 ```
 
-<Detail title="Commands">
-### delete
-Deletes the Zerops service.
+#### Available sub-commands
 
-`zcli service delete [serviceIdOrName] [flags]`
+- `delete`
+- `list`
+- `project-import`
+- `service-import`
 
-_Flags_:
+#### Available arguments
 
-- `--confirm` - If set, zCLI will not ask for confirmation of destructive operations.
-- `--projectId` _(string)_ - If you have access to more than one project, you must specify the project ID for which the command is to be executed.
-- `--serviceId` _(string)_ - If you have access to more than one service, you must specify the service ID for which the command is to be executed.
+- `importYamlPath` - Required by `project-import` and `service-import`
 
-### deploy
+#### Available flags
 
-Deploys your application to Zerops.
+- `delete`
 
-`zcli service deploy pathToFileOrDir [flags]`
+  - `--projectId <id>`
+  - `--confirm` - confirm deletion without prompt
 
-_Flags_:
+- `project-import`
 
-- `--archiveFilePath` _(string)_ - If set, zCLI creates a tar.gz archive with the application code in the required path relative to the working directory. By default, no archive is created.
-- `--deployGitFolder` - Sets a custom path to the zerops.yml file relative to the working directory. By default zCLI looks for zerops.yml in the working directory.
-- `--projectId` _(string)_ - If you have access to more than one project, you must specify the project ID for which the command is to be executed.
-- `--serviceId` _(string)_ - If you have access to more than one service, you must specify the service ID for which the command is to be executed.
-- `--versionName` _(string)_ - Adds a custom version name. Automatically filled if the VERSIONNAME environment variable exists.
-- `--workingDir` _(string)_ - Sets a custom working directory. Default working directory is the current directory. (default "./")
-- `--zeropsYamlPath` _(string)_ - Sets a custom path to the zerops.yml file relative to the working directory. By default zCLI looks for zerops.yml in the working directory.
+  - `--orgId <id>`
+  - `--workingDir <path>` - sets a custom working directory, default working directory is the current directory (default: `./`)
+
+- `service-import`
+  - `--projectId <id>` - if you have access to more than one project, you must specify the project ID for which the command is to be executed
+
+---
+
+### push
+
+```sh
+zcli push {flags}
+```
+
+#### Available flags
+
+- `--archiveFilePath <path>` - Creates a tar.gz archive of the application code at the specified path relative to the working directory. If not set, no archive is created.
+- `--deployGitFolder` - Includes the `.git` folder in the upload. By default, the `.git` folder is excluded.
+- `--projectId <project-id>` - Required if you have access to multiple projects. Specifies the target project ID for command execution.
+- `--serviceId <service-id>` - Required if you have access to multiple services. Specifies the target service ID for command execution.
+- `--versionName <version-name>` - Sets a custom version name. If the `VERSIONNAME` environment variable exists, its value is used automatically.
+- `--workingDir <path>` - Sets a custom working directory. Defaults to the current directory (`./`).
+- `--zeropsYamlPath <path>` - Specifies a custom path to the `zerops.yml` file relative to the working directory. By default, zCLI looks for `zerops.yml` in the working directory.
+
+---
+
+### scope
+
+```sh
+zcli scope [sub-command] <project-id>
+```
+
+#### Available sub-commands
+
+- `project` - Sets the scope for project. All commands that require project ID will use the selected one.
+- `reset` - Resets the scope for project and service.
+
+#### Required parameters
+
+- `project-id`
+
+---
+
+### service
+
+Service related commands.
+
+```sh
+zcli service {sub-command} [arguments] [flags]
+```
+
+#### Available sub-commands
+
+- `delete` - Deletes the Zerops service
+- `deploy` - Deploys your application to Zerops
+- `enable-subdomain` - Enables access through Zerops subdomain
+- `list` - Lists all services in the project
+- `log` - Get service runtime or build log to stdout
+- `push` - Builds your application in Zerops and deploys it
+- `start` - Starts the Zerops service
+- `stop` - Stops the Zerops service
+
+#### Available flags
+
+- `delete`
+
+  - `--confirm` - If set, zCLI will not ask for confirmation of destructive operations
+  - `--projectId <id>` - Required if you have access to multiple projects
+  - `--serviceId <id>` - Required if you have access to multiple services
+
+- `deploy`
+
+  - `--archiveFilePath <path>` - Creates a tar.gz archive of the application code at the specified path
+  - `--deployGitFolder` - Includes the `.git` folder in the upload
+  - `--projectId <id>` - Required if you have access to multiple projects
+  - `--serviceId <id>` - Required if you have access to multiple services
+  - `--versionName <name>` - Sets a custom version name
+  - `--workingDir <path>` - Sets a custom working directory (default: `./`)
+  - `--zeropsYamlPath <path>` - Specifies a custom path to the `zerops.yml` file
+
+- `enable-subdomain`
+
+  - `--projectId <id>` - Required if you have access to multiple projects
+  - `--serviceId <id>` - Required if you have access to multiple services
+
+- `list`
+
+  - `--projectId <id>` - Required if you have access to multiple projects
+
+- `log`
+
+  - `--follow` - Continuously poll for new log messages
+  - `--format <format>` - The format of returned log messages (FULL, SHORT, JSON, JSONSTREAM)
+  - `--formatTemplate <template>` - Set a custom log format
+  - `--limit <number>` - Number of most recent log messages to return (1-1000, default: 100)
+  - `--messageType <type>` - Select APPLICATION or WEBSERVER log messages
+  - `--minimumSeverity <severity>` - Returns log messages with requested or higher severity
+  - `--projectId <id>` - Required if you have access to multiple projects
+  - `--serviceId <id>` - Required if you have access to multiple services
+  - `--showBuildLogs` - Return build log messages instead of runtime log messages
+
+- `push`
+
+  - Same flags as `deploy`
+
+- `start`
+
+  - `--projectId <id>` - Required if you have access to multiple projects
+  - `--serviceId <id>` - Required if you have access to multiple services
+
+- `stop`
+  - `--projectId <id>` - Required if you have access to multiple projects
+  - `--serviceId <id>` - Required if you have access to multiple services
 
 #### .deployignore
 
-Add a `.deployignore` file to the root of your project and specify which files and folders Zerops should ignore during deploy. The syntax is the same as of a <a href="https://git-scm.com/docs/gitignore#_pattern_format">`.gitignore`</a> file.
+Add a `.deployignore` file to the root of your project to specify which files and folders Zerops should ignore during deploy. The syntax is the same as a `.gitignore` file.
 
 Example to ignore `src/file.txt` file in deploy:
 
@@ -222,125 +234,40 @@ zerops:
 src / file.txt;
 ```
 
-### enable-subdomain
+---
 
-Enables access through Zerops subdomain.
+### show-debug-logs
 
-`zcli service enable-subdomain [serviceIdOrName] [flags]`
-
-_Flags_:
-
-- `--projectId` - If you have access to more than one project, you must specify the project ID for which the command is to be executed.
-- `--serviceId` - If you have access to more than one service, you must specify the service ID for which the command is to be executed.
-
-### list
-
-Lists all services in the project.
-
-`zcli service list [projectId] [flags]`
-
-_Flags_:
-
-- `--projectId` - If you have access to more than one project, you must specify the project ID for which the command is to be executed.
-
-### log
-
-Get service runtime or build log to stdout.
-
-`zcli service log [flags]`
-
-_Flags_:
-
-- `--follow` - If set, zCLI will continuously poll for new log messages. By default, the command will exit once there are no more logs to display. To exit from this mode, use Control-C.
-- `--format` _(string)_ - The format of returned log messages. Following formats are supported:
-  - `FULL`: This is the default format. Messages will be returned in the complete Syslog format.
-  - `SHORT`: Returns only timestamp and log message.
-  - `JSON`: Messages will be returned as one JSON object.
-  - `JSONSTREAM`: Messages will be returned as stream of JSON objects. (default "FULL")
-- `--formatTemplate` _(string)_ - Set a custom log format. Can be used only with `--format=FULL`.
-  - Example: `--formatTemplate="{{.timestamp}} {{.severity}} {{.facility}} {{.message}}"`
-  - Supports standard GoLang template format and functions.
-- `--limit` _(int)_ - How many of the most recent log messages will be returned. Allowed interval is \<1;1000\>. Default value = 100. (default 100)
-- `--messageType` _(string)_ - Select either `APPLICATION` or `WEBSERVER` log messages to be returned. (default "APPLICATION")
-- `--minimumSeverity` _(string)_ - Returns log messages with requested or higher severity. Set either severity number in the interval \<0;7\> or one of following severity codes:
-  - `EMERGENCY`, `ALERT`, `CRITICAL`, `ERROR`, `WARNING`, `NOTICE`, `INFORMATIONAL`, `DEBUG`
-- `--projectId` _(string)_ - If you have access to more than one project, you must specify the project ID for which the command is to be executed.
-- `--serviceId` _(string)_ - If you have access to more than one service, you must specify the service ID for which the command is to be executed.
-- `--showBuildLogs` - If set, zCLI will return build log messages instead of runtime log messages.
-
-### push
-
-Builds your application in Zerops and deploys it.
-
-`zcli service push [flags]`
-
-_Flags_:
-
-- `--archiveFilePath` _(string)_ - If set, zCLI creates a tar.gz archive with the application code in the required path relative to the working directory. By default, no archive is created.
-- `--deployGitFolder` - Sets a custom path to the zerops.yml file relative to the working directory. By default zCLI looks for zerops.yml in the working directory.
-- `--projectId` _(string)_ - If you have access to more than one project, you must specify the project ID for which the command is to be executed.
-- `--serviceId` _(string)_ - If you have access to more than one service, you must specify the service ID for which the command is to be executed.
-- `--versionName` _(string)_ - Adds a custom version name. Automatically filled if the VERSIONNAME environment variable exists.
-- `--workingDir` _(string)_ - Sets a custom working directory. Default working directory is the current directory. (default "./")
-- `--zeropsYamlPath` _(string)_ - Sets a custom path to the zerops.yml file relative to the working directory. By default zCLI looks for zerops.yml in the working directory.
-
-### start
-
-Starts the Zerops service.
-
-`zcli service start [{serviceName | serviceId}] [flags]`
-
-_Flags_:
-
-- `--projectId` - If you have access to more than one project, you must specify the project ID for which the command is to be executed.
-- `--serviceId` - If you have access to more than one service, you must specify the service ID for which the command is to be executed.
-
-### stop
-
-Starts the Zerops service.
-
-`zcli service stop [serviceIdOrName] [flags]`
-
-_Flags_:
-
-- `--projectId` - If you have access to more than one project, you must specify the project ID for which the command is to be executed.
-- `--serviceId` - If you have access to more than one service, you must specify the service ID for which the command is to be executed.
-
-</Detail>
-
-## show-debug-logs
+Log debug-logs
 
 ```sh
 zcli show-debug-logs
 ```
 
-## version
+---
+
+### version
+
+Shows zCLI's current version
 
 ```sh
 zcli version
 ```
 
-## vpn
+---
+
+### vpn
 
 ```sh
-zcli vpn [command]
+zcli vpn [up|down] <projectId> [flags]
 ```
 
-<Detail title="Commands">
-### up
-Connects to the Zerops VPN.
+#### Available sub-commands
 
-`zcli vpn up [projectId] [flags]`
+- `up` - Connects to the Zerops VPN.
+- `down` - Disconnects from the Zerops VPN.
 
-_Flags_:
+#### Available flags
 
 - `--auto-disconnect` - if set, zCLI will automatically disconnect from the VPN if it is already connected
-- `--projectId` _(string)_ - if you have access to more than one project, you must specify the project ID for which the command is to be executed
-
-### down
-
-Disconnects from the Zerops VPN.
-
-`zcli vpn down`
-
-</Detail>
+- `--projectId` - if you have access to more than one project, you must specify the project ID for which the command is to be executed
