@@ -16,14 +16,14 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          ref: spell
 
-      # Set up Node.js (if needed for spellcheck tools)
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '16'  # Adjust the version as needed
-
-      # Run a spellcheck tool (using cspell as an example)
+          node-version: "20"
+          
       - name: Install cspell
         run: npm install -g cspell
 
@@ -31,14 +31,12 @@ jobs:
         run: cspell "**/*.mdx" "**/*.md"
         continue-on-error: true
 
-      - name: Create new branch, commit and push changes
+      - name: Commit and push changes
         run: |
           git config --global user.name "zerops-gh"
           git config --global user.email "zerops.gh@gmail.com"
-          BRANCH_NAME="spell"
-          git checkout -b spell
           git add .
-          git commit -m "chore: Auto-correct spelling"
+          git commit -m "chore: Auto-correct spelling" || echo "No changes to commit"
           git push origin spell
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -53,3 +51,4 @@ jobs:
           body: |
             This PR includes automatic spelling corrections.
           labels: "spellcheck"
+          draft: false
