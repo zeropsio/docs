@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useLayoutEffect, useState } from 'react';
 
 export type ColorMode = 'light' | 'dark';
 
@@ -23,7 +23,7 @@ export const ColorModeProvider = ({ children }: ColorModeProviderProps) => {
   const toggleColorMode = () =>
     setColorMode(colorMode === 'light' ? 'dark' : 'light');
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (loaded) {
       return;
     }
@@ -31,8 +31,10 @@ export const ColorModeProvider = ({ children }: ColorModeProviderProps) => {
     const theme = localStorage.getItem('theme');
     if (theme && (theme === 'light' || theme === 'dark')) {
       setColorMode(theme);
-      setLoaded(true);
+    } else {
+      setColorMode("light") //if no value in localstorage present
     }
+    setLoaded(true);
   }, []);
 
   useEffect(() => {
