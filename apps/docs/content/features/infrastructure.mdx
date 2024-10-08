@@ -1,31 +1,57 @@
-# Project & Services Structure
+---
+title: Project & Services Structure
+description: Learn how our infrastructure works
+---
 
-Zerops structure has three levels - _projects_, _services_ and _containers_.
+Zerops provides a flexible and scalable infrastructure built around three key layers: **Projects**, **Services**, and **Containers**. A **Project** is the highest-level entity, serving as a container for all services.
+
+Each project is equipped with essential core functionalities like logging, statistics, HTTP routing with SSL certificates, and IP routing with a built-in firewall. Projects are interconnected via a private network, allowing seamless interaction between services and shared environment variables. Each project comes with a unique IPv6 address by default, with the option to add an IPv4 address for an additional fee.
+
+Within a project, you can deploy an unlimited number of **Services**, which can range from fully managed solutions (handling scaling, repairs, and routing) to partially managed setups. Each service is composed of one or more **Containers**, which utilize Zerops' predefined container images. Depending on the needs of the application, these images can either be fully managed (e.g., databases) or fully customizable (e.g., Ubuntu-based environments). Services can be made publicly accessible via Zerops subdomains or custom domains by configuring DNS records or public IP access.
+
+This structure is designed to provide maximum flexibility and ease of management, allowing you to create isolated environments for different stages of development (e.g., development, staging, production) or consolidate resources to optimize costs. Whether you're working on a simple application or a complex, distributed system, Zerops offers the scalability and control you need to manage your infrastructure efficiently.
+
+---
+
+## Infrastructure Levels
+
+Zerops has three main levels:
+
+- Projects
+- Services
+- Containers
 
 ## Project
 
-Project is the top-level entity, which consists of **services**. TODO max amount of projects
+The **project** is the top-level entity, encompassing various **services**. It requires a functioning **core**, which includes: <!-- TODO: max amount of projects -->
 
-To function properly, a project needs its **"core"** to be running - which contains a logger service, a statistics service, HTTP routing with SSL certificates, IP routing with built-in firewall etc. It is created when the first user service is deployed and is charged a fixed monthly cost.
+- Logger and statistics services
+- HTTP routing (with SSL certificates)
+- IP routing (with built-in firewall)
 
-All services within a project share a dedicated **private network** and can access environment variables of other services.
+The core activates when the first user service is deployed and incurs a fixed monthly fee.
 
-Each project is already created with a unique **IPv6 address**, and a unique **IPv4 address** can be assigned to the project for an extra cost.
+### Key Features
+
+- **Private Network**: All services in a project share a dedicated network and have access to each other's environment variables.
+- **IPv6/IPv4**: Each project automatically gets an IPv6 address. An IPv4 address can be added at an extra cost.
 
 :::tip
-You can create a separate project for any environment (development, stage, production) or even for each developer if you so wish. Alternatively, you can benefit from a single project shared among all developers reducing the overall cost.
+Create separate projects for different environments (e.g., development, staging, production) or use one project shared among developers to save costs.
 :::
 
 ## Services & Containers
 
-A project can contain an unlimited number of services. Depending on the type of service, there are either **fully managed** (scaling, repairing, routing), or **partially managed** services.
+A project can host unlimited **services**, which can be:
 
-Each service contains **one or more Linux containers**, either of identical type as a HA mode and/or of different types. E.g. a fully managed MariaDB service in HA mode consists of 5 containers - 3 database ones and 2 proxies.
+- **Fully managed**: Includes automatic scaling, routing, and repairs.
+- **Partially managed**: Some management aspects are handled manually.
 
-Each container image is based on one of **predefined Zerops images**. Depending on the technology these images range from **fully managed** (databases) to **fully customizable** (Ubuntu).
+### Containers
 
-Each runtime environment or static web server services can be made **publicly accessible** through Zerops subdomains or domains, pointing your DNS records to the IPv6 or IPv4 addresses assigned to the project, or by setting up direct access by opening public ports on the assigned IP addresses.
+Each service consists of one or more **containers**. Containers may vary by function or type, such as in **HA (High Availability) mode**, where a fully managed MariaDB service might have 5 containers (3 for databases, 2 for proxies).
 
-:::tip
-Check out the section of the technology you need to get more information.
-:::
+- **Predefined Images**: Containers use Zerops' predefined images, ranging from **fully managed** (e.g., databases) to **customizable** (e.g., Ubuntu).
+- **Public Accessibility**: Services can be exposed via Zerops subdomains, custom domains, or public ports on IPv6/IPv4 addresses.
+
+**Refer to the technology section for detailed setup instructions.**
