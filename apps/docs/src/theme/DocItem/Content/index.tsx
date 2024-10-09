@@ -41,6 +41,7 @@ export default function DocItemContent({ children }: Props): JSX.Element {
       <Head>
         <title>{metadata.title} - Zerops</title>
         {description && <meta name="description" content={description} />}
+        <meta property="og:image" content="/og.png" />
       </Head>
 
       <div className={clsx(ThemeClassNames.docs.docMarkdown, 'markdown')}>
