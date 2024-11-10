@@ -2088,60 +2088,15 @@ module.exports = {
         sidebar_icon: 'back-arrow',
       },
     },
-    {
-      type: 'doc',
-      id: 'mongodb/overview',
-      label: 'Zerops MongoDB Service',
-      customProps: {
-        sidebar_is_title: true,
-        sidebar_icon: 'mongodb',
-      },
-    },
-    {
-      type: 'category',
-      label: 'How-to',
-      collapsible: false,
-      customProps: {
-        sidebar_is_group_headline: true,
-      },
-      items: [
-        {
-          type: 'doc',
-          id: 'mongodb/how-to/create',
-          label: 'Create MongoDB service',
-        },
-        {
-          type: 'doc',
-          id: 'mongodb/how-to/connect',
-          label: 'Connect to MongoDB',
-        },
-        {
-          type: 'doc',
-          id: 'mongodb/how-to/manage',
-          label: 'Manage users and databases',
-        },
-        {
-          type: 'doc',
-          id: 'mongodb/how-to/export-import-data',
-          label: 'Export and import data',
-        },
-        {
-          type: 'doc',
-          id: 'mongodb/how-to/scale',
-          label: 'Scale MongoDB service',
-        },
-        {
-          type: 'doc',
-          id: 'mongodb/how-to/control',
-          label: 'Stop and start MongoDB service',
-        },
-        {
-          type: 'doc',
-          id: 'mongodb/how-to/delete',
-          label: 'Delete MongoDB service',
-        },
-      ],
-    },
+    // {
+    //   type: 'doc',
+    //   id: 'mongodb/overview',
+    //   label: 'Zerops MongoDB Service',
+    //   customProps: {
+    //     sidebar_is_title: true,
+    //     sidebar_icon: 'mongodb',
+    //   },
+    // },
   ],
   elasticsearch: [
     {
