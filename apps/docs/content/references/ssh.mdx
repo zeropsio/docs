@@ -1,37 +1,40 @@
 ---
 title: Connecting to Your Service via SSH
-description: Learn how you can connection to your services via SSH with VPN.
+description: Learn how to establish SSH connections to your services using VPN
 ---
 
 :::note
-SSH access is limited to runtime services and web servers.
-Databases, message brokers, and object storage are excluded from this feature.
+SSH access is available only for runtime services and web servers.
+Database services, message brokers, and object storage are not accessible via SSH.
 :::
 
-To establish a SSH connection to your runtime service you need to start the [Zerops VPN](/references/vpn) first.
+# Prerequisites
 
-## Starting VPN
+Before establishing an SSH connection to your runtime service, you must first connect to the [Zerops VPN](/references/vpn).
 
-The [zCLI](/references/cli) is included with [Zerops VPN](/references/vpn) client. To connect to your [Zerops project](/features/infrastructure#project), follow these steps:
+# Setting Up Your Connection
 
-1. [Install and setup zCLI](/references/cli)
-2. [Start the Zerops VPN](/references/vpn#start-the-vpn)
+## 1. Configure VPN Access
 
-## Establishing an SSH connection
+The [Zerops CLI (zCLI)](/references/cli) comes bundled with the [Zerops VPN](/references/vpn) client. To connect to your [Zerops project](/features/infrastructure#project):
 
-Once the VPN session is active, you can establish an SSH connection to your [service](/features/infrastructure#services--containers) by running SSH with your [service](/features/infrastructure#services--containers) hostname:
+1. [Install and configure zCLI](/references/cli)
+2. [Initialize the Zerops VPN connection](/references/vpn#start-the-vpn)
+
+## 2. Establish SSH Connection
+
+Once your VPN session is active, you can connect to any [service](/features/infrastructure#services--containers) using its hostname:
 
 ```sh
 ssh <service hostname>
 ```
 
-For example, if you have a service with a hostname `app`, you can ssh into it by running:
-
+Example:
 ```sh
 ssh app
 ```
 
-You may see the following SSH warning message:
+When connecting for the first time, you may receive this security prompt:
 
 ```sh title="bash"
 The authenticity of host 'app (x.x.x.x)' can't be established.
@@ -40,51 +43,56 @@ This key is not known by any other names
 Are you sure you want to continue connecting (yes/no/[fingerprint])?
 ```
 
-Enter `yes` to trust this host and avoid future prompts.
+Type `yes` to trust the host and prevent future prompts.
 
-## Connecting to a specific container
+# Advanced Connection Options
 
 <p align="center">
-  <img src="/img/screenshots/ssh.png" alt="image" width="100%" height="auto" style={{ borderRadius: 0.5 + 'rem' }} />
+ <img src="/img/screenshots/ssh.png" alt="image" width="100%" height="auto" style={{ borderRadius: 0.5 + 'rem' }} />
 </p>
 
-To connect to a specific container, replace the service hostname with the container hostname in the SSH parameter:
+## Connecting to Specific Containers
+
+To access a specific container instead of the service as a whole, use the container's hostname:
 
 ```sh
 ssh <container hostname>
 ```
 
-For example:
-
+Example:
 ```sh
 ssh node-id-1.runtime.app.zerops
 ```
 
 :::note
-In [HA mode](/features/scaling-ha), connecting to your service hostname connects you to a random container from your service.
+When using [HA mode](/features/scaling-ha), connecting to the service hostname will route you to a random container within that service.
 :::
 
-Each container in your project has a unique hostname like `node-id-1.runtime.app.zerops`.
+# Container Naming Conventions
 
-When your application [scales horizontally](https://docs.zerops.io/features/scaling-ha#vertical-and-horizontal-auto-scaling),
-new containers are created with incrementing numbers (e.g. `node-id-2.runtime.app.zerops`, `node-id-3.runtime.app.zerops`).
+Each container in your project has a unique hostname following these patterns:
 
-If containers are removed, their hostnames aren’t reused.
-For instance, you might see containers like `node-id-5.runtime.app.zerops` and `node-id-12.runtime.app.zerops` after scaling.
+- Format 1: `node-id-<number>.runtime.app.zerops`
+- Format 2: `node<number>.runtime.app.zerops`
 
-Alternatively, containers may have sequential names such as `node1.runtime.app.zerops`, `node2.runtime.app.zerops`, etc.
+When your application [scales horizontally](https://docs.zerops.io/features/scaling-ha#vertical-and-horizontal-auto-scaling):
+- New containers receive incremental hostnames
+- Decommissioned container hostnames are not recycled
+- You might see non-sequential container numbers (e.g., `node-id-5` and `node-id-12`)
+- Container hostnames may change as your service scales
 
-Hostnames update as your service scales and can refer to different containers over time.
-
-:::note
-Avoid connecting to a container using its local IP address, as it may change.
+:::warning
+Never connect to containers using their local IP addresses, as these addresses are dynamic and may change.
 :::
 
-## Changes are not persistent
+# Important Considerations
 
-Avoid using SSH to make changes that need to persist in your service.
+## Non-Persistent Changes
 
-In [HA mode](/features/scaling-ha), any changes made via SSH only affect the specific container you're connected to.
-When scaling or if a container is replaced, the current application version is redeployed to the new container.
+SSH connections should not be used for making persistent changes to your service:
 
-To make changes that affect all containers and persist during runtime, use the [run.prepareCommands](https://docs.zerops.io/references/zeropsyml#preparecommands-1) or [run.initCommands](https://docs.zerops.io/references/zeropsyml#initcommands) pipeline commands.
+- In [HA mode](/features/scaling-ha), changes via SSH affect only the current container
+- Container replacements or scaling events will deploy the original application version
+- For persistent changes across all containers, use:
+  - [`run.prepareCommands`](https://docs.zerops.io/references/zeropsyml#preparecommands-1)
+  - [`run.initCommands`](https://docs.zerops.io/references/zeropsyml#initcommands)
