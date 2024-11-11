@@ -18,6 +18,20 @@ const config = {
   projectName: "zerops/docs",
   plugins: [
     require.resolve("docusaurus-plugin-image-zoom"),
+    // Fix: Combine the plugin name and options in an array
+    ['@docusaurus/plugin-sitemap', {
+      id: 'custom-sitemap',
+      lastmod: 'date',
+      changefreq: 'weekly',
+      priority: 0.5,
+      ignorePatterns: ['/tags/**'],
+      filename: 'sitemap.xml',
+      createSitemapItems: async (params) => {
+        const {defaultCreateSitemapItems, ...rest} = params;
+        const items = await defaultCreateSitemapItems(rest);
+        return items.filter((item) => !item.url.includes('/page/'));
+      },
+    }],
     async function tailwindPlugin() {
       return {
         name: "docusaurus-tailwindcss",
