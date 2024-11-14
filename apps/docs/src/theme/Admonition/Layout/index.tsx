@@ -14,7 +14,7 @@ function AdmonitionContainer({
         'p-1 border border-solid rounded shadow-none',
         (type === 'note' || type === 'info' || type === 'tip') &&
           (type === 'tip'
-            ? 'bg-blue-50 border-blue-100 dark:bg-slate-900 dark:border-slate-800'
+          ? 'bg-blue-50 border-blue-100 dark:bg-[#1D1D20] dark:border-slate-800'
             : 'bg-medusa-tag-neutral-bg border-medusa-tag-neutral-border'),
         (type === 'danger' || type === 'warning' || type === 'caution') &&
           'bg-medusa-tag-red-bg border-medusa-tag-red-border',
