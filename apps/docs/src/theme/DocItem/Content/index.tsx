@@ -31,7 +31,7 @@ function useSyntheticTitle(): string | null {
 
 export default function DocItemContent({ children }: Props): JSX.Element {
   const {
-    frontMatter: { badge, description },
+    frontMatter: { badge, description, image },
     metadata,
   } = useDoc() as DocContextValue;
   const syntheticTitle = useSyntheticTitle();
@@ -39,8 +39,17 @@ export default function DocItemContent({ children }: Props): JSX.Element {
   return (
     <>
       <Head>
-        <title>{metadata.title} - Zerops</title>
+        <title>{metadata.title}</title>
         {description && <meta name="description" content={description} />}
+        <meta property="og:image" content={image} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://docs.zerops.io" />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={metadata.title} />
+        <meta name="twitter:description" content={description} />
+        <meta name="twitter:image" content={image} />
+        <meta name="twitter:url" content="https://docs.zerops.io" />
       </Head>
 
       <div className={clsx(ThemeClassNames.docs.docMarkdown, 'markdown')}>

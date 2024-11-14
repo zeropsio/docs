@@ -20,7 +20,7 @@ export default function DocRootLayoutMain({ children }: Props): JSX.Element {
     >
       <div
         className={clsx(
-          'container padding-top--md px-0',
+          'container padding-top--md px-1',
           sidebarContext?.hiddenSidebarContainer &&
             'lg:max-w-main-content-hidden-sidebar'
         )}
