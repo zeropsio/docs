@@ -1,11 +1,29 @@
 ---
 title: Using Zerops VPN
-description: Learn how to use zerops vpn as a newbie.
+description: Interacting with zerops network via zcli cli with wireguard vpn.
 ---
 
-To begin, make sure you've [installed and set up zCLI](/references/cli).
+At Zerops, We really care about your security so we tried our best to provide you
+the best resources and tools to interact with your project deployed on Zerops securely
+as everything is inside a private network and nothing is exposed to the internet.
 
-## Start the VPN
+## Prerequisites
+
+- [zCLI](/references/cli) (this will work as a wireguard client)
+- Zerops Project with a Service
+
+--------
+
+Zerops uses WireGuard VPN, but unlike typical consumer VPNs focused on changing
+your public IP address, our implementation is specifically designed to securely connect you
+to your project and interact with the services inside it.
+
+## Usage
+
+You can interact with the services inside your project or even SSH to your service after you're
+connected to the project using vpn.
+
+### Start VPN
 
 Start a VPN session with:
 
@@ -24,7 +42,8 @@ Flags:
                            command is to be executed.
 ```
 
-Or connect to a specfic project by passing your project ID into the `projectId` parameter:
+Or you can also connect to a specfic project by passing your project ID which you can get from your zerops
+dashboard gui and add it into the `projectId` parameter:
 
 ```sh
 zcli vpn up Evs8Je4NTvKeIkUqoUXp2w
@@ -33,18 +52,22 @@ zcli vpn up Evs8Je4NTvKeIkUqoUXp2w
 You may need enclose your project name with quotes if it contains contains spaces.
 
 :::info
-When running `zcli vpn up` for the first time, you'll be prompted to install the Zerops VPN daemon. Enter `y` to confirm (you may need to provide your root/administrator password).
+When running `zcli vpn up` for the first time, you'll be prompted to install the Zerops VPN daemon. 
+Enter `y` to confirm (you may need to provide your root/administrator password).
 :::
 
 Once connected, you’ll have secure access to the project’s private network.
 
-You can reach all services locally using their hostnames. However, environment variables are not available when connected via VPN.
+You can reach all services locally using their hostnames. However, environment variables are not available
+when connected via VPN.
 
-You can only connect to one project at a time. If you’re already connected to another project, that connection will close automatically when you start a new one.
+You can only connect to one project at a time. If you’re already connected to another project, that connection
+will close automatically when you start a new connection by running `zcli vpn up` and choosing another project.
 
-The VPN daemon keeps the connection open until you manually stop it. If the connection drops, it will automatically try to reconnect.
+The VPN daemon keeps the connection open until you manually stop it. If the connection drops, it will automatically
+try to reconnect.
 
-## Stop the VPN
+### Stop VPN
 
 Use `zcli vpn down` command to stop the existing VPN session.
 
@@ -55,3 +78,19 @@ Usage:
 Flags:
   -h, --help   the vpn down command.
 ```
+
+## How do we provide better security?
+
+We are using WireGuard under the hood for VPN to establish a secure tunnel
+connection to a private network of a Zerops project. This approach provides a safer connection
+compared to SSH.
+
+Additionally, you won't need to add any passwords or IP addresses for SSH access.
+WireGuard is a free, lightweight, open-source software—technically a communication protocol—that 
+utilizes cryptography.
+
+It helps us create a secure tunnel that uses UDP for transmitting traffic. We use public/private key pairs
+for authorization.
+
+Inside Zerops project runs a Wireguard server and zCLI(Zerops Command Line Interface) works as
+a Wireguard client which helps you to interact with your zerops project if you're authorized.
