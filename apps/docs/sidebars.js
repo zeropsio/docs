@@ -537,9 +537,19 @@ module.exports = {
       id: 'references/zsc',
       label: 'Zsc',
       customProps: {
-        sidebar_icon: 'command-line',
+        sidebar_icon: 'window',
       },
       className: 'homepage-sidebar-item',
+      items: [
+        {
+          type: 'doc',
+          id: 'references/vpn/zsc',
+          label: 'FAQ',
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        },
+      ],
     },
     {
       type: 'category',
