@@ -533,6 +533,15 @@ module.exports = {
       className: 'homepage-sidebar-item',
     },
     {
+      type: 'doc',
+      id: 'references/zsc',
+      label: 'Zsc',
+      customProps: {
+        sidebar_icon: 'command-line',
+      },
+      className: 'homepage-sidebar-item',
+    },
+    {
       type: 'category',
       label: 'VPN',
       link: {

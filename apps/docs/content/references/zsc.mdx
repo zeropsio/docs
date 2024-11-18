@@ -1,0 +1,86 @@
+---
+title: Using Zerops Setup Control(Zsc)
+description: Interacting with zerops network via zcli cli with wireguard vpn.
+---
+
+At Zerops, We really care about your security so we tried our best to provide you
+the best resources and tools to interact with your project deployed on Zerops securely
+as everything is inside a private network and nothing is exposed to the internet.
+
+## Prerequisites
+
+- [zCLI](/references/cli) (this will work as a wireguard client)
+- Zerops Project with a Service
+
+--------
+
+Zerops Setup Control(Zsc) is a cli tool / helper installed to all containers, runtime and build,
+which allows some direct modifications, like triggering scaling from inside the container,
+adding new technologies, making sure that commands (like migration) run only once (even when
+staring some high available setup with 3 containers)
+
+## Usage
+
+You can interact with zsc in your active services inside your zerops project with the help of SSH to your service after you're
+connected to the project using zerops vpn.
+
+### Start VPN
+
+:::info
+Make sure you have installed zCLI to your system before you can use zCLI commands.
+:::
+
+Start a VPN session with:
+
+```sh
+zcli vpn up
+```
+
+```sh title="bash"
+Usage:
+  zcli vpn up [projectId] [flags]
+
+Flags:
+      --auto-disconnect    If set, zCLI will automatically disconnect from the VPN if it is already connected.
+  -h, --help               the vpn up command.
+      --projectId string   If you have access to more than one project, you must specify the project ID for which the
+                           command is to be executed.
+```
+
+Or you can also connect to a specfic project by passing your project ID which you can get from your zerops
+dashboard gui and add it into the `projectId` parameter:
+
+```sh
+zcli vpn up Evs8Je4NTvKeIkUqoUXp2w
+```
+
+You may need enclose your project name with quotes if it contains contains spaces.
+
+:::info
+When running `zcli vpn up` for the first time, you'll be prompted to install the Zerops VPN daemon. 
+Enter `y` to confirm (you may need to provide your root/administrator password).
+:::
+
+Once connected, you’ll have secure access to the project’s private network.
+
+You can reach all services locally using their hostnames. However, environment variables are not available
+when connected via VPN.
+
+You can only connect to one project at a time. If you’re already connected to another project, that connection
+will close automatically when you start a new connection by running `zcli vpn up` and choosing another project.
+
+The VPN daemon keeps the connection open until you manually stop it. If the connection drops, it will automatically
+try to reconnect.
+
+### Stop VPN
+
+Use `zcli vpn down` command to stop the existing VPN session.
+
+```sh title="bash"
+Usage:
+  zcli vpn down [flags]
+
+Flags:
+  -h, --help   the vpn down command.
+```
+
