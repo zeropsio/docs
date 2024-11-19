@@ -700,7 +700,7 @@ module.exports = {
     {
       type: 'doc',
       id: 'nodejs/overview',
-      label: 'Node.js overview',
+      label: 'Getting Started',
       customProps: {
         sidebar_is_title: true,
         sidebar_icon: 'nodejs',
