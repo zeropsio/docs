@@ -2477,7 +2477,7 @@ module.exports = {
     {
       type: 'doc',
       id: 'deno/overview',
-      label: 'Zerops Deno Service',
+      label: 'Getting Started',
       customProps: {
         sidebar_is_title: true,
         sidebar_icon: 'deno',
@@ -2485,10 +2485,49 @@ module.exports = {
     },
     {
       type: 'category',
+      label: 'Getting started',
+      link: {
+        type: 'doc',
+        id: 'deno/getting-started',
+      },
+      customProps: {
+        sidebar_icon: 'rocket-launch',
+      },
+      className: 'homepage-sidebar-item',
+      items: [
+        {
+          type: 'doc',
+          id: 'deno/tutorial/quickstart',
+          label: 'Quickstart',
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        },
+        {
+          type: 'doc',
+          id: 'deno/tutorial/step-by-step',
+          label: 'Step-by-step tutorial',
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        },
+        {
+          type: 'doc',
+          id: 'deno/tutorial/runtime-sql',
+          label: 'Runtime + SQL',
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        },
+      ],
+    },
+    {
+      type: 'category',
       label: 'How-to',
       collapsible: false,
       customProps: {
         sidebar_is_group_headline: true,
+        sidebar_icon: 'academic-cap-solid',
       },
       items: [
         {
@@ -2591,11 +2630,49 @@ module.exports = {
     {
       type: 'doc',
       id: 'bun/overview',
-      label: 'Zerops Bun Service',
+      label: 'Getting Started',
       customProps: {
         sidebar_is_title: true,
         sidebar_icon: 'bun',
       },
+    },
+    {
+      type: 'category',
+      label: 'Getting started',
+      link: {
+        type: 'doc',
+        id: 'bun/getting-started',
+      },
+      customProps: {
+        sidebar_icon: 'rocket-launch',
+      },
+      className: 'homepage-sidebar-item',
+      items: [
+        {
+          type: 'doc',
+          id: 'bun/tutorial/quickstart',
+          label: 'Quickstart',
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        },
+        {
+          type: 'doc',
+          id: 'bun/tutorial/step-by-step',
+          label: 'Step-by-step tutorial',
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        },
+        {
+          type: 'doc',
+          id: 'bun/tutorial/runtime-sql',
+          label: 'Runtime + SQL',
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        },
+      ],
     },
     {
       type: 'category',
@@ -2705,11 +2782,49 @@ module.exports = {
     {
       type: 'doc',
       id: 'gleam/overview',
-      label: 'Zerops Gleam Service',
+      label: 'Getting Started',
       customProps: {
         sidebar_is_title: true,
         sidebar_icon: 'gleam',
       },
+    },
+    {
+      type: 'category',
+      label: 'Getting started',
+      link: {
+        type: 'doc',
+        id: 'gleam/getting-started',
+      },
+      customProps: {
+        sidebar_icon: 'rocket-launch',
+      },
+      className: 'homepage-sidebar-item',
+      items: [
+        {
+          type: 'doc',
+          id: 'gleam/tutorial/quickstart',
+          label: 'Quickstart',
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        },
+        {
+          type: 'doc',
+          id: 'gleam/tutorial/step-by-step',
+          label: 'Step-by-step tutorial',
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        },
+        {
+          type: 'doc',
+          id: 'gleam/tutorial/runtime-sql',
+          label: 'Runtime + SQL',
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        },
+      ],
     },
     {
       type: 'category',
