@@ -144,7 +144,7 @@ zerops:
 
 See the full list of supported [build base environments](/references/zeropsyml/base-list#Bun).
 
-To customise your build environment use the [prepareCommands](/Bun/how-to/build-pipeline#preparecommands) attribute.
+To customise your build environment use the [prepareCommands](/bun/how-to/build-pipeline#preparecommands) attribute.
 
 ### os
 
@@ -173,7 +173,7 @@ _OPTIONAL._ Customises the build environment by installing additional dependenci
 The base build environment contains:
 
 - <span>{data.alpineCurrentVersion}</span>
-- selected version of Bun defined in the [base](/Bun/how-to/build-pipeline#base) attribute
+- selected version of Bun defined in the [base](/bun/how-to/build-pipeline#base) attribute
 - [Zerops command line tool](/references/cli)
 - `npm`, `yarn`, `git` and `npx` tools
 
@@ -206,7 +206,7 @@ The application code is available in the `/var/www` folder in your build contain
 
 #### Command exit code
 
-If any command fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/Bun/how-to/logs#build-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all prepare commands are finished, your custom build environment is ready for the build phase.
+If any command fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/bun/how-to/logs#build-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all prepare commands are finished, your custom build environment is ready for the build phase.
 
 #### Single or separated shell instances
 
@@ -256,8 +256,8 @@ At least one command is required. Zerops triggers each command in the defined or
 
 Before the build commands are triggered the build container contains:
 
-1. base environment defined by the [base](/Bun/how-to/build-pipeline#base) attribute
-2. optional customisation of the base environment defined in the [prepareCommands](/Bun/how-to/build-pipeline#preparecommands) attribute
+1. base environment defined by the [base](/bun/how-to/build-pipeline#base) attribute
+2. optional customisation of the base environment defined in the [prepareCommands](/bun/how-to/build-pipeline#preparecommands) attribute
 3. your application code
 
 #### Run build commands as a single shell instance
@@ -283,7 +283,7 @@ buildCommands:
 
 #### Command exit code
 
-If any command fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/Bun/how-to/logs#build-log) to troubleshoot the error. If the error log doesn't contain any specific error message, try to run your build with the --verbose option.
+If any command fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/bun/how-to/logs#build-log) to troubleshoot the error. If the error log doesn't contain any specific error message, try to run your build with the --verbose option.
 
 ```yml
 buildCommands:
@@ -291,7 +291,7 @@ buildCommands:
   - npm run build
 ```
 
-If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `buildCommands` are finished, the application build is completed and ready for the [deploy](/Bun/how-to/build-pipeline#deploy) phase.
+If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `buildCommands` are finished, the application build is completed and ready for the [deploy](/bun/how-to/build-pipeline#deploy) phase.
 
 ### deployFiles
 
@@ -416,7 +416,7 @@ zerops:
         DB_PASS: ${db_password}
 ```
 
-Read more about [environment variables](/Bun/how-to/env-variables) in Zerops.
+Read more about [environment variables](/bun/how-to/env-variables) in Zerops.
 
 ## Runtime configuration
 
@@ -508,7 +508,7 @@ _OPTIONAL._ Specifies one or more internal ports on which your application will 
 
 Projects in Zerops represent a group of one or more services. Services can be of different types (runtime services, databases, message brokers, object storage, etc.). All services of the same project share a **dedicated private network**. To connect to a service within the same project, just use the service hostname and its internal port.
 
-For example, to connect to a Bun service with hostname = "app" and port = 3000 from another service of the same project, simply use `app:3000`. Read more about [how to access a Bun service](/Bun/how-to/access).
+For example, to connect to a Bun service with hostname = "app" and port = 3000 from another service of the same project, simply use `app:3000`. Read more about [how to access a Bun service](/bun/how-to/access).
 
 Each port has following attributes:
 
@@ -551,12 +551,12 @@ zerops:
 When the first deploy with a defined prepare attribute is triggered, Zerops will
 
 1. create a prepare runtime container
-2. optionally: [copy selected folders or files from your build container](/Bun/how-to/build-pipeline#copy-folders-or-files-from-your-build-container)
+2. optionally: [copy selected folders or files from your build container](/bun/how-to/build-pipeline#copy-folders-or-files-from-your-build-container)
 3. run the `prepareCommands` commands in the defined order
 
 #### Command exit code
 
-If any command fails, it returns an exit code other than 0 and the deploy is canceled. Read the [prepare runtime log](/Bun/how-to/logs#prepare-runtime-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom runtime environment is ready for the deploy phase.
+If any command fails, it returns an exit code other than 0 and the deploy is canceled. Read the [prepare runtime log](/bun/how-to/logs#prepare-runtime-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom runtime environment is ready for the deploy phase.
 
 #### Cache of your custom runtime environment
 
@@ -627,19 +627,19 @@ zerops:
         - rm -rf ./cache
 ```
 
-These commands are triggered in the runtime container before your Bun application is started via the [start command](/Bun/how-to/build-pipeline#start).
+These commands are triggered in the runtime container before your Bun application is started via the [start command](/bun/how-to/build-pipeline#start).
 
 Use init commands to clean or initialise your application cache or similar operations.
 
 :::caution
-The init commands will delay the start of your application each time a new runtime container is started (including the [horizontal scaling](/Bun/how-to/scaling#horizontal-scaling) or when a runtime container is restarted.
+The init commands will delay the start of your application each time a new runtime container is started (including the [horizontal scaling](/bun/how-to/scaling#horizontal-scaling) or when a runtime container is restarted.
 
-Do not use the init commands for customising your runtime environment. Use the [run:prepareCommands](/Bun/how-to/build-pipeline#preparecommands-1) attribute instead.
+Do not use the init commands for customising your runtime environment. Use the [run:prepareCommands](/bun/how-to/build-pipeline#preparecommands-1) attribute instead.
 :::
 
 #### Command exit code
 
-If any of the `initCommands` fails, it returns an exit code other than 0, but deploy is **not** canceled. After all init commands are finished, regardless of the status code, the application is started. Read the [runtime log](/Bun/how-to/logs#runtime-log) to troubleshoot the error.
+If any of the `initCommands` fails, it returns an exit code other than 0, but deploy is **not** canceled. After all init commands are finished, regardless of the status code, the application is started. Read the [runtime log](/bun/how-to/logs#runtime-log) to troubleshoot the error.
 
 #### Single or separated shell instances
 
@@ -666,7 +666,7 @@ zerops:
         DB_PASS: ${db_password}
 ```
 
-Read more about [environment variables](/Bun/how-to/env-variables) in Zerops.
+Read more about [environment variables](/bun/how-to/env-variables) in Zerops.
 
 ### start
 
@@ -737,7 +737,7 @@ Following attributes are available:
 
 | Parameter   | Description                                                                                                                                                                                                                                                                                                                     |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **command** | Defines a local command to be run.<br/>The command has access to the same [environment variables](/Bun/how-to/create#set-environment-variables) as your Bun application.<br/>A single string is required. If you need to run multiple commands create a shell script or, use a multiline format as in the example below. |
+| **command** | Defines a local command to be run.<br/>The command has access to the same [environment variables](/bun/how-to/create#set-environment-variables) as your Bun application.<br/>A single string is required. If you need to run multiple commands create a shell script or, use a multiline format as in the example below. |
 
 **Example:**
 
@@ -768,7 +768,7 @@ Read more about how the [health check works] in Zerops.
 
 ### readiness check
 
-_OPTIONAL._ Defines a readiness check. Read more about how the [readiness check works](/Bun/how-to/deploy-process#readiness-checks) in Zerops.
+_OPTIONAL._ Defines a readiness check. Read more about how the [readiness check works](/bun/how-to/deploy-process#readiness-checks) in Zerops.
 
 `readinessCheck` requires either one `httpGet` object or one `exec` object.
 
@@ -807,7 +807,7 @@ zerops:
     run: ...
 ```
 
-Read more about how the [readiness check works](/Bun/how-to/deploy-process#readiness-checks) in Zerops.
+Read more about how the [readiness check works](/bun/how-to/deploy-process#readiness-checks) in Zerops.
 
 #### exec
 
@@ -816,7 +816,7 @@ Following attributes are available:
 
 | Parameter   | Description                                                                                                                                                                                                                                                                                                                     |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **command** | Defines a local command to be run.<br/>The command has access to the same [environment variables](/Bun/how-to/create#set-environment-variables) as your Bun application.<br/>A single string is required. If you need to run multiple commands create a shell script or, use a multiline format as in the example below. |
+| **command** | Defines a local command to be run.<br/>The command has access to the same [environment variables](/bun/how-to/create#set-environment-variables) as your Bun application.<br/>A single string is required. If you need to run multiple commands create a shell script or, use a multiline format as in the example below. |
 
 **Example:**
 
@@ -839,4 +839,4 @@ zerops:
             mv /outside/user /home/user
 ```
 
-Read more about how the [readiness check works](/Bun/how-to/deploy-process#readiness-checks) in Zerops.
+Read more about how the [readiness check works](/bun/how-to/deploy-process#readiness-checks) in Zerops.

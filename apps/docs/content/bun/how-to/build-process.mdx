@@ -20,11 +20,11 @@ Zerops starts a temporary build container and performs following actions:
 
 1. Installs the build environment
 2. Downloads your application source code from [GitHub ↗](https://www.github.com), [GitLab ↗](https://www.gitlab.com) or via [Zerops CLI](/references/cli)
-3. Optionally [customises the build environment](/Bun/how-to/build-process#customise-Bun-build-environment)
+3. Optionally [customises the build environment](/bun/how-to/build-process#customise-bun-build-environment)
 4. Runs the build commands
 5. Uploads the application artefact to the internal Zerops storage
-6. Optionally [customizes the runtime environment](/Bun/how-to/customize-runtime)
-7. [Deploys your application](/Bun/how-to/deploy-process)
+6. Optionally [customizes the runtime environment](/bun/how-to/customize-runtime)
+7. [Deploys your application](/bun/how-to/deploy-process)
 
 The build container is automatically deleted after the build has finished or failed.
 
@@ -34,7 +34,7 @@ When you know that the running build is not correct and you want to cancel it, y
 
 <p align="center">
   <img
-    src="/img/screenshots/Bun_cancel_running_build.png"
+    src="/img/screenshots/bun_cancel_running_build.png"
     alt="image"
     width="100%"
     height="auto"
@@ -50,11 +50,11 @@ The build cancellation is available before the build pipeline is finished. When 
 The default Bun build environment contains:
 
 - <span>{data.alpineCurrentVersion}</span>
-- selected version of Bun defined in `zerops.yml` [build.base](/Bun/how-to/build-pipeline#base) parameter
+- selected version of Bun defined in `zerops.yml` [build.base](/bun/how-to/build-pipeline#base) parameter
 - [zCLI](/references/cli), Zerops command line tool
 - `npm`, `yarn`, `git` and `npx` tools
 
-If you prefer the Ubuntu OS instead of Alpine, set the `<a href="/Bun/how-to/build-pipeline#os">build.os</a>` attribute to `ubuntu`. To install additional packages or tools add one or more [build.prepareCommands](/Bun/how-to/build-pipeline#preparecommands) commands to your `zerops.yml`.
+If you prefer the Ubuntu OS instead of Alpine, set the `<a href="/bun/how-to/build-pipeline#os">build.os</a>` attribute to `ubuntu`. To install additional packages or tools add one or more [build.prepareCommands](/bun/how-to/build-pipeline#preparecommands) commands to your `zerops.yml`.
 
 :::info
 The application code is available in the `/var/www` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
@@ -84,13 +84,13 @@ The time limit for the whole build pipeline is **1 hour**. After 1 hour, Zerops 
 
 ### Failure of a build prepare command
 
-If any [prepare command](/Bun/how-to/build-pipeline#preparecommands) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/Bun/how-to/logs#build-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom build environment is ready for the build phase.
+If any [prepare command](/bun/how-to/build-pipeline#preparecommands) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/bun/how-to/logs#build-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom build environment is ready for the build phase.
 
 ### Invalidate the build cache
 
 Some packages or tools can take a long time to install. Therefore, Zerops caches your custom build environment after each successful build where the `prepareCommands` commands were used. When the second or following build is triggered, Zerops will use the build cache from the previous build if both following conditions are met:
 
-1. Content of the [build.base](/Bun/how-to/build-pipeline#base) and [build.prepareCommands](/Bun/how-to/build-pipeline#preparecommands) attributes didn't change from the previous build
+1. Content of the [build.base](/bun/how-to/build-pipeline#base) and [build.prepareCommands](/bun/how-to/build-pipeline#preparecommands) attributes didn't change from the previous build
 2. The build cache wasn't invalidated in the Zerops GUI.
 
 To invalidate the Zerops build cache go to your service detail in Zerops GUI, choose **Pipelines & CI / CD settings** from the left menu. Then click on the **Clean build cache** button.
@@ -108,7 +108,7 @@ When the build cache is used, Zerops doesn't run the prepare commands and the bu
 
 ### Failure of a build command
 
-If any [build command](/Bun/how-to/build-pipeline#build) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/Bun/how-to/logs#build-log) to troubleshoot the error. If the error log doesn't contain any specific error message, try to run your build with the `--verbose` option.
+If any [build command](/bun/how-to/build-pipeline#build) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/bun/how-to/logs#build-log) to troubleshoot the error. If the error log doesn't contain any specific error message, try to run your build with the `--verbose` option.
 
 ```yml
 buildCommands:
@@ -116,4 +116,4 @@ buildCommands:
   - npm run build
 ```
 
-If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `buildCommands` are finished, the application build is completed and ready for the [deploy](/Bun/how-to/deploy-process) phase.
+If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `buildCommands` are finished, the application build is completed and ready for the [deploy](/bun/how-to/deploy-process) phase.
