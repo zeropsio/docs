@@ -8,12 +8,12 @@ interface CustomCardProps {
 
 const CustomCard: React.FC<CustomCardProps> = ({ title, children, emoji }) => {
   return (
-    <div className="bg-medusa-tag-neutral-bg border-medusa-tag-neutral-border flex flex-row py-1 px-1 my-2  border border-solid rounded shadow-none">
+    <div className="bg-medusa-tag-neutral-bg border-medusa-tag-neutral-border flex flex-row py-1.5 px-1 my-2  border border-solid rounded shadow-none">
       <span className="mr-1">{emoji}</span>
-      <div>
+      <span>
         <span className="font-semibold text-md">{title}</span>
-        <div className="pb-0 pt-px -mb-1">{children}</div>
-      </div>
+        <div className="pb-0 pt-0.5">{children}</div>
+      </span>
     </div>
   );
 };
