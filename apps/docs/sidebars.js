@@ -651,6 +651,15 @@ module.exports = {
       className: 'homepage-sidebar-item',
     },
     {
+      type: 'doc',
+      id: 'help/branding',
+      label: 'Branding',
+      customProps: {
+        sidebar_icon: 'document-text',
+      },
+      className: 'homepage-sidebar-item',
+    },
+    {
       type: 'html',
       value: 'Additional resources',
       customProps: {
