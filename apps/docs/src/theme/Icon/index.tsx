@@ -130,6 +130,9 @@ import IconKeydb from './Keydb';
 import IconRabbitmq from './Rabbitmq';
 import IconNginx from './Nginx';
 import IconUbuntu from './Ubuntu';
+import IconDeno from './Deno';
+import IconBun from './Bun';
+import IconGleam from './Gleam';
 
 export default {
   'academic-cap-solid': AcademicCapSolid,
@@ -265,4 +268,7 @@ export default {
   rabbitmq: IconRabbitmq,
   nginx: IconNginx,
   ubuntu: IconUbuntu,
+  deno: IconDeno,
+  bun: IconBun,
+  gleam: IconGleam,
 };
