@@ -29,7 +29,7 @@ module.exports = {
     // {
     //   type: "doc",
     //   id: "getting-started",
-    //   label: "Getting started",
+    //   label: "Dive-in",
     //   customProps: {
     //     sidebar_icon: "rocket-launch",
     //   },
@@ -744,7 +744,8 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'Getting started',
+      label: 'Dive-in',
+collapsible: false,
       link: {
         type: 'doc',
         id: 'nodejs/getting-started',
@@ -897,7 +898,8 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'Getting started',
+      label: 'Dive-in',
+collapsible: false,
       link: {
         type: 'doc',
         id: 'php/getting-started',
@@ -1054,7 +1056,9 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'Getting started',
+      label: 'Dive-in',
+collapsible: false,
+      collapsible: false,
       link: {
         type: 'doc',
         id: 'python/getting-started',
@@ -1206,7 +1210,8 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'Getting started',
+      label: 'Dive-in',
+collapsible: false,
       link: {
         type: 'doc',
         id: 'go/getting-started',
@@ -1358,7 +1363,8 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'Getting started',
+      label: 'Dive-in',
+collapsible: false,
       link: {
         type: 'doc',
         id: 'rust/getting-started',
@@ -1510,7 +1516,8 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'Getting started',
+      label: 'Dive-in',
+collapsible: false,
       link: {
         type: 'doc',
         id: 'dotnet/getting-started',
@@ -1776,7 +1783,8 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'Getting started',
+      label: 'Dive-in',
+collapsible: false,
       link: {
         type: 'doc',
         id: 'nginx/getting-started',
@@ -2019,7 +2027,8 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'Getting started',
+      label: 'Dive-in',
+collapsible: false,
       link: {
         type: 'doc',
         id: 'postgresql/getting-started',
@@ -2228,7 +2237,8 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'Getting started',
+      label: 'Dive-in',
+collapsible: false,
       link: {
         type: 'doc',
         id: 'keydb/getting-started',
@@ -2485,7 +2495,8 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'Getting started',
+      label: 'Dive-in',
+collapsible: false,
       link: {
         type: 'doc',
         id: 'deno/getting-started',
@@ -2638,7 +2649,8 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'Getting started',
+      label: 'Dive-in',
+collapsible: false,
       link: {
         type: 'doc',
         id: 'bun/getting-started',
@@ -2790,7 +2802,8 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'Getting started',
+      label: 'Dive-in',
+collapsible: false,
       link: {
         type: 'doc',
         id: 'gleam/getting-started',
