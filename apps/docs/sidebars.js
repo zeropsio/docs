@@ -338,6 +338,15 @@ module.exports = {
         },
         {
           type: 'ref',
+          id: 'deno/overview',
+          label: 'Deno',
+          customProps: {
+            sidebar_icon: 'deno',
+          },
+          className: 'homepage-sidebar-item  service-sidebar-item',
+        },
+        {
+          type: 'ref',
           id: 'go/overview',
           label: 'Go',
           customProps: {
@@ -388,6 +397,24 @@ module.exports = {
           customProps: {
             sidebar_icon: 'ubuntu',
             sidebar_is_soon: true,
+          },
+          className: 'homepage-sidebar-item  service-sidebar-item',
+        },
+        {
+          type: 'ref',
+          id: 'bun/overview',
+          label: 'Bun',
+          customProps: {
+            sidebar_icon: 'bun',
+          },
+          className: 'homepage-sidebar-item  service-sidebar-item',
+        },
+        {
+          type: 'ref',
+          id: 'gleam/overview',
+          label: 'Gleam',
+          customProps: {
+            sidebar_icon: 'gleam',
           },
           className: 'homepage-sidebar-item  service-sidebar-item',
         },
@@ -2435,6 +2462,234 @@ module.exports = {
           label: 'Delete object storage service',
         },
       ],
+    },
+  ],
+  bun: [
+    {
+      type: 'ref',
+      id: 'homepage',
+      label: 'Back to home',
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: 'back-arrow',
+      },
+    },
+    {
+      type: 'doc',
+      id: 'bun/overview',
+      label: 'Zerops Bun Service',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'bun',
+      },
+    },
+    {
+      type: 'category',
+      label: 'How-to',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'bun/how-to/create',
+          label: 'Create Bun service',
+        },
+        {
+          type: 'doc',
+          id: 'bun/how-to/env-variables',
+          label: 'Manage environment variables',
+        },
+        {
+          type: 'doc',
+          id: 'bun/how-to/upgrade',
+          label: 'Upgrade Bun service',
+        },
+        {
+          type: 'doc',
+          id: 'bun/how-to/build-pipeline',
+          label: 'Configure build & deploy pipeline',
+        },
+        {
+          type: 'doc',
+          id: 'bun/how-to/trigger-pipeline',
+          label: 'Trigger build pipeline',
+        },
+        {
+          type: 'doc',
+          id: 'bun/how-to/build-process',
+          label: 'Build process',
+        },
+        {
+          type: 'doc',
+          id: 'bun/how-to/deploy-process',
+          label: 'Deploy process',
+        },
+        {
+          type: 'doc',
+          id: 'bun/how-to/customize-runtime',
+          label: 'Customize Bun runtime',
+        },
+        {
+          type: 'doc',
+          id: 'bun/how-to/logs',
+          label: 'Setup & access logs',
+        },
+        {
+          type: 'doc',
+          id: 'bun/how-to/filebrowser',
+          label: 'Browse container files',
+        },
+        {
+          type: 'doc',
+          id: 'bun/how-to/access',
+          label: 'Access Bun runtime service',
+        },
+        {
+          type: 'doc',
+          id: 'bun/how-to/scaling',
+          label: 'Scale Bun runtime service',
+        },
+        {
+          type: 'doc',
+          id: 'bun/how-to/controls',
+          label: 'Stop & start Bun runtime service',
+        },
+        {
+          type: 'doc',
+          id: 'bun/how-to/shared-storage',
+          label: 'Connect / disconnect shared storage',
+        },
+        {
+          type: 'doc',
+          id: 'bun/how-to/delete',
+          label: 'Delete Bun service',
+        },
+      ],
+    },
+    {
+      type: 'doc',
+      id: 'bun/faq',
+      label: 'FAQ',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'chat-bubble-left-right',
+      },
+    },
+  ],
+  gleam: [
+    {
+      type: 'ref',
+      id: 'homepage',
+      label: 'Back to home',
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: 'back-arrow',
+      },
+    },
+    {
+      type: 'doc',
+      id: 'gleam/overview',
+      label: 'Zerops Gleam Service',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'gleam',
+      },
+    },
+    {
+      type: 'category',
+      label: 'How-to',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'gleam/how-to/create',
+          label: 'Create Gleam service',
+        },
+        {
+          type: 'doc',
+          id: 'gleam/how-to/env-variables',
+          label: 'Manage environment variables',
+        },
+        {
+          type: 'doc',
+          id: 'gleam/how-to/upgrade',
+          label: 'Upgrade Gleam service',
+        },
+        {
+          type: 'doc',
+          id: 'gleam/how-to/build-pipeline',
+          label: 'Configure build & deploy pipeline',
+        },
+        {
+          type: 'doc',
+          id: 'gleam/how-to/trigger-pipeline',
+          label: 'Trigger build pipeline',
+        },
+        {
+          type: 'doc',
+          id: 'gleam/how-to/build-process',
+          label: 'Build process',
+        },
+        {
+          type: 'doc',
+          id: 'gleam/how-to/deploy-process',
+          label: 'Deploy process',
+        },
+        {
+          type: 'doc',
+          id: 'gleam/how-to/customize-runtime',
+          label: 'Customize Gleam runtime',
+        },
+        {
+          type: 'doc',
+          id: 'gleam/how-to/logs',
+          label: 'Setup & access logs',
+        },
+        {
+          type: 'doc',
+          id: 'gleam/how-to/filebrowser',
+          label: 'Browse container files',
+        },
+        {
+          type: 'doc',
+          id: 'gleam/how-to/access',
+          label: 'Access Gleam runtime service',
+        },
+        {
+          type: 'doc',
+          id: 'gleam/how-to/scaling',
+          label: 'Scale Gleam runtime service',
+        },
+        {
+          type: 'doc',
+          id: 'gleam/how-to/controls',
+          label: 'Stop & start Gleam runtime service',
+        },
+        {
+          type: 'doc',
+          id: 'gleam/how-to/shared-storage',
+          label: 'Connect / disconnect shared storage',
+        },
+        {
+          type: 'doc',
+          id: 'gleam/how-to/delete',
+          label: 'Delete Gleam service',
+        },
+      ],
+    },
+    {
+      type: 'doc',
+      id: 'gleam/faq',
+      label: 'FAQ',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'chat-bubble-left-right',
+      },
     },
   ],
 };
