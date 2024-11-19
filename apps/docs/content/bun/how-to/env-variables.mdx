@@ -1,6 +1,6 @@
 ---
-title: How to set and use environment variables in Node.js service
-description: Learn how you can setup and use environment variables in a nodejs service on Zerops.
+title: How to set and use environment variables in Bun service
+description: Learn how you can setup and use environment variables in a Bun service on Zerops.
 ---
 
 Environment variables help you run your application in different environments. They allow you to isolate all specific environment aspects from your application code and keep your app encapsulated. You can create several projects in Zerops that represent different environments (development, stage, production) or even each developer can have a project with its own environment.
@@ -13,15 +13,15 @@ There are 3 different sets of env variables in Zerops:
 
 | environment | type   | defined in                                                                        |
 | ----------- | ------ | --------------------------------------------------------------------------------- |
-| build       | basic  | [zerops.yml](/nodejs/how-to/build-pipeline#envvariables)                          |
-| runtime     | basic  | [zerops.yml](/nodejs/how-to/build-pipeline#envvariables-1)                        |
-| runtime     | secret | [Zerops GUI](/nodejs/how-to/env-variables#set-secret-env-variables-in-zerops-gui) |
+| build       | basic  | [zerops.yml](/Bun/how-to/build-pipeline#envvariables)                          |
+| runtime     | basic  | [zerops.yml](/Bun/how-to/build-pipeline#envvariables-1)                        |
+| runtime     | secret | [Zerops GUI](/Bun/how-to/env-variables#set-secret-env-variables-in-zerops-gui) |
 
-Use the [secret env variables](/nodejs/how-to/create#set-secret-env-variables) for all sensitive data you don't want to store in your application code. Secret env variables are also useful if you need for testing where you need to change the value of some env variables frequently. Secret variables are managed in Zerops GUI and you don't have to redeploy your application.
+Use the [secret env variables](/Bun/how-to/create#set-secret-env-variables) for all sensitive data you don't want to store in your application code. Secret env variables are also useful if you need for testing where you need to change the value of some env variables frequently. Secret variables are managed in Zerops GUI and you don't have to redeploy your application.
 
 The basic build and runtime env variables are listed in your [zerops.yml](/references/zeropsyml) and deployed together with your application code. When you need to update a value of an existing env variable or change the set of build or runtime env variables, update your zerops.yml and redeploy your application to Zerops.
 
-You can [reference](/nodejs/how-to/env-variables#reference-a-local-variable-in-another-variable-value) another variable of the same service or even a variable of [another service](/nodejs/how-to/env-variables#reference-a-variable-of-another-project-service) within the same project.
+You can [reference](/Bun/how-to/env-variables#reference-a-local-variable-in-another-variable-value) another variable of the same service or even a variable of [another service](/Bun/how-to/env-variables#reference-a-variable-of-another-project-service) within the same project.
 
 ## Set secret env variables in Zerops GUI
 
@@ -36,7 +36,7 @@ Use secret variables to store passwords, tokens and other sensitive information 
   />
 </p>
 
-You can set env variables when you [create](/nodejs/how-to/create) a new Node.js service or you can set them later.
+You can set env variables when you [create](/Bun/how-to/create) a new Bun service or you can set them later.
 
 To configure env variables for an existing service, go to the service detail and choose **Environment variables** in the left menu. Scroll to the **Secret variables** section and click on the **Add secret variable** button and set variable key and value.
 
@@ -45,7 +45,7 @@ You can edit or delete env variables that you've created by clicking on the menu
 The changes you've made in the list of env variables need to be committed. Click on the **Commit x changes** button and Zerops will update the env variables in all containers of your project's services.
 
 :::caution
-You need to **restart** the runtime service after you commit the changes in env variables. The Node.js process running in the container receives the list env variables only when it starts. Update of the env variables while the Node.js process is running does not affect your application.
+You need to **restart** the runtime service after you commit the changes in env variables. The Bun process running in the container receives the list env variables only when it starts. Update of the env variables while the Bun process is running does not affect your application.
 :::
 
 ## Set basic build env variables in zerops.yml
@@ -107,7 +107,7 @@ When you need to update a value of an existing env variable or change the set of
 - must contain only ASCII characters
 - the _End of Line_ character is forbidden
 
-These restrictions apply to all [types of env variables](/nodejs/how-to/env-variables#types-of-env-variables-in-zerops).
+These restrictions apply to all [types of env variables](/Bun/how-to/env-variables#types-of-env-variables-in-zerops).
 
 ## Referencing other env variables
 
@@ -123,34 +123,34 @@ You can reference another variable of the same service using `${key}` in your va
 
 ### Reference a variable of another project service
 
-Let's say your project contains two PostgreSQL services `dbtest` and `dbprod`. Both services have a `connectionString` variable. Then you can create a `dbConnectionString` env variable in your Node.js runtime and set `${dbtest_connectionString}` as the variable value. Zerops will fill in the value of the `connectionString` variable of the `dbtest` service.
+Let's say your project contains two PostgreSQL services `dbtest` and `dbprod`. Both services have a `connectionString` variable. Then you can create a `dbConnectionString` env variable in your Bun runtime and set `${dbtest_connectionString}` as the variable value. Zerops will fill in the value of the `connectionString` variable of the `dbtest` service.
 
 When you change the `dbConnectionString` value to `${dbprod_connectionString}`, Zerops will fill in the value of the `connectionString` variable of the `dbprod` service.
 
 :::caution
-When you change the value of the `connectionString` variable in the service `dbtest` and commit the changes you need to **restart** the Node.js service. The Node.js process running in the container receives the list env variables only when it starts. Update of the env variables while the Node.js process is running does not affect your application.
+When you change the value of the `connectionString` variable in the service `dbtest` and commit the changes you need to **restart** the Bun service. The Bun process running in the container receives the list env variables only when it starts. Update of the env variables while the Bun process is running does not affect your application.
 :::
 
 ## Generated env variables
 
-Zerops creates several helper variables when a Node.js service is created, e.g. `hostname`, `PATH`. Some helper variables are read-only (`hostname`), others are editable (`PATH`). Generated variables cannot be deleted.
+Zerops creates several helper variables when a Bun service is created, e.g. `hostname`, `PATH`. Some helper variables are read-only (`hostname`), others are editable (`PATH`). Generated variables cannot be deleted.
 
 Generated env variables are listed on the **Environment variables** page. Scroll to the **Generated variables** section.
 
 <p align="center">
   <img
-    src="/img/screenshots/nodejs_generated_variables.png"
+    src="/img/screenshots/Bun_generated_variables.png"
     alt="image"
     width="100%"
     height="auto"
   />
 </p>
 
-## How to read env variables from your Node.js app
+## How to read env variables from your Bun app
 
-Zerops passes all environment variables from all project services when your Node.js app is deployed and started.
+Zerops passes all environment variables from all project services when your Bun app is deployed and started.
 
-To access the local environment variable i.e. the variable set to this Node.js service in your app, use:
+To access the local environment variable i.e. the variable set to this Bun service in your app, use:
 
 ```sh
 process.env.YOUR_VARIABLE_KEY_HERE
