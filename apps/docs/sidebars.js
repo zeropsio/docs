@@ -2464,6 +2464,120 @@ module.exports = {
       ],
     },
   ],
+  deno: [
+    {
+      type: 'ref',
+      id: 'homepage',
+      label: 'Back to home',
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: 'back-arrow',
+      },
+    },
+    {
+      type: 'doc',
+      id: 'deno/overview',
+      label: 'Zerops Deno Service',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'deno',
+      },
+    },
+    {
+      type: 'category',
+      label: 'How-to',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'deno/how-to/create',
+          label: 'Create Deno service',
+        },
+        {
+          type: 'doc',
+          id: 'deno/how-to/env-variables',
+          label: 'Manage environment variables',
+        },
+        {
+          type: 'doc',
+          id: 'deno/how-to/upgrade',
+          label: 'Upgrade Deno service',
+        },
+        {
+          type: 'doc',
+          id: 'deno/how-to/build-pipeline',
+          label: 'Configure build & deploy pipeline',
+        },
+        {
+          type: 'doc',
+          id: 'deno/how-to/trigger-pipeline',
+          label: 'Trigger build pipeline',
+        },
+        {
+          type: 'doc',
+          id: 'deno/how-to/build-process',
+          label: 'Build process',
+        },
+        {
+          type: 'doc',
+          id: 'deno/how-to/deploy-process',
+          label: 'Deploy process',
+        },
+        {
+          type: 'doc',
+          id: 'deno/how-to/customize-runtime',
+          label: 'Customize Deno runtime',
+        },
+        {
+          type: 'doc',
+          id: 'deno/how-to/logs',
+          label: 'Setup & access logs',
+        },
+        {
+          type: 'doc',
+          id: 'deno/how-to/filebrowser',
+          label: 'Browse container files',
+        },
+        {
+          type: 'doc',
+          id: 'deno/how-to/access',
+          label: 'Access Bun runtime service',
+        },
+        {
+          type: 'doc',
+          id: 'deno/how-to/scaling',
+          label: 'Scale Deno runtime service',
+        },
+        {
+          type: 'doc',
+          id: 'deno/how-to/controls',
+          label: 'Stop & start Deno runtime service',
+        },
+        {
+          type: 'doc',
+          id: 'deno/how-to/shared-storage',
+          label: 'Connect / disconnect shared storage',
+        },
+        {
+          type: 'doc',
+          id: 'deno/how-to/delete',
+          label: 'Delete Deno service',
+        },
+      ],
+    },
+    {
+      type: 'doc',
+      id: 'deno/faq',
+      label: 'FAQ',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'chat-bubble-left-right',
+      },
+    },
+  ],
   bun: [
     {
       type: 'ref',
