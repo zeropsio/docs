@@ -338,15 +338,6 @@ module.exports = {
         },
         {
           type: 'ref',
-          id: 'deno/overview',
-          label: 'Deno',
-          customProps: {
-            sidebar_icon: 'deno',
-          },
-          className: 'homepage-sidebar-item  service-sidebar-item',
-        },
-        {
-          type: 'ref',
           id: 'go/overview',
           label: 'Go',
           customProps: {
@@ -383,20 +374,10 @@ module.exports = {
         },
         {
           type: 'ref',
-          id: 'nginx/overview',
-          label: 'Nginx static',
+          id: 'deno/overview',
+          label: 'Deno',
           customProps: {
-            sidebar_icon: 'nginx',
-          },
-          className: 'homepage-sidebar-item  service-sidebar-item',
-        },
-        {
-          type: 'ref',
-          id: 'ubuntu/overview',
-          label: 'Ubuntu',
-          customProps: {
-            sidebar_icon: 'ubuntu',
-            sidebar_is_soon: true,
+            sidebar_icon: 'deno',
           },
           className: 'homepage-sidebar-item  service-sidebar-item',
         },
@@ -415,6 +396,25 @@ module.exports = {
           label: 'Gleam',
           customProps: {
             sidebar_icon: 'gleam',
+          },
+          className: 'homepage-sidebar-item  service-sidebar-item',
+        },
+        {
+          type: 'ref',
+          id: 'nginx/overview',
+          label: 'Nginx static',
+          customProps: {
+            sidebar_icon: 'nginx',
+          },
+          className: 'homepage-sidebar-item  service-sidebar-item',
+        },
+        {
+          type: 'ref',
+          id: 'ubuntu/overview',
+          label: 'Ubuntu',
+          customProps: {
+            sidebar_icon: 'ubuntu',
+            sidebar_is_soon: true,
           },
           className: 'homepage-sidebar-item  service-sidebar-item',
         },
