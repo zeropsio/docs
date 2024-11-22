@@ -1,6 +1,6 @@
 ---
-title: Gleam Deploy process
-description: More about how Gleam deploy process works on Zerops.
+title: Elixir Deploy process
+description: More about how Elixir deploy process works on Zerops.
 ---
 
 <p align="center">
@@ -14,37 +14,37 @@ description: More about how Gleam deploy process works on Zerops.
 
 ## Application artefact
 
-When the [build phase](/gleam/how-to/build-process) is finished, the application artefact is stored in the internal Zerops storage and the build container is deleted.
+When the [build phase](/elixir/how-to/build-process) is finished, the application artefact is stored in the internal Zerops storage and the build container is deleted.
 
-If you triggered the deploy pipeline [manually](/gleam/how-to/trigger-pipeline#manual-deploy-using-zerops-cli) using Zerops CLI, the application artefact is also uploaded to the internal Zerops storage.
+If you triggered the deploy pipeline [manually](/elixir/how-to/trigger-pipeline#manual-deploy-using-zerops-cli) using Zerops CLI, the application artefact is also uploaded to the internal Zerops storage.
 
 Zerops uses the stored artefact to deploy the identical version of your application each time a new container is started:
 
 - when a new application version is deployed
-- when the application [scales horizontally](/gleam/how-to/create#horizontal-auto-scaling)
+- when the application [scales horizontally](/elixir/how-to/create#horizontal-auto-scaling)
 - when a runtime container fails and a new container is started automatically
 
 ## First deploy
 
-When your application is deployed for the first time, Zerops will start one or more runtime containers based on the service [auto scaling settings](/gleam/how-to/scaling).
+When your application is deployed for the first time, Zerops will start one or more runtime containers based on the service [auto scaling settings](/elixir/how-to/scaling).
 
 Zerops performs following actions for each new container:
 
 1. Installs the runtime environment
 2. Downloads the application artefact from the internal storage
-3. Optionally runs the [init commands](/gleam/how-to/build-pipeline#initcommands)
-4. Starts your application using the [start command](/gleam/how-to/build-pipeline#start)
-5. Optionally waits until the [readiness check](/gleam/how-to/build-pipeline#readiness-check) succeeds
+3. Optionally runs the [init commands](/elixir/how-to/build-pipeline#initcommands)
+4. Starts your application using the [start command](/elixir/how-to/build-pipeline#start)
+5. Optionally waits until the [readiness check](/elixir/how-to/build-pipeline#readiness-check) succeeds
 6. The container is now active and receives incoming requests.
 
 Services with multiple containers are deployed in parallel.
 
 :::info
-If your application needs to be initialized in each runtime container, add [init commands](/gleam/how-to/build-pipeline#initcommands) to `zerops.yml`.
+If your application needs to be initialized in each runtime container, add [init commands](/elixir/how-to/build-pipeline#initcommands) to `zerops.yml`.
 :::
 
 :::caution
-Do not use the `initCommands` for customising your runtime environment. See [how to customise the runtime environment](/gleam/how-to/build-pipeline#preparecommands-1).
+Do not use the `initCommands` for customising your runtime environment. See [how to customise the runtime environment](/elixir/how-to/build-pipeline#preparecommands-1).
 :::
 
 ## Further deploys
@@ -54,11 +54,11 @@ When a previous version of your application is already running, Zerops will star
 Zerops performs the identical actions for each new container as the first deployment.
 When all new containers are started your service contains both new and old versions for a short period of time.
 
-The old containers are then removed from the project balancer so they don't receive new requests. The Gleam process inside each of the old containers is terminated and all old containers are gradually deleted.
+The old containers are then removed from the project balancer so they don't receive new requests. The Elixir process inside each of the old containers is terminated and all old containers are gradually deleted.
 
 ## Readiness checks
 
-If your application isn't ready to handle requests right after it is started via the [start command](/gleam/how-to/build-pipeline#start), configure a [readiness check](/gleam/how-to/build-pipeline#readiness-check) in your `zerops.yml`.
+If your application isn't ready to handle requests right after it is started via the [start command](/elixir/how-to/build-pipeline#start), configure a [readiness check](/elixir/how-to/build-pipeline#readiness-check) in your `zerops.yml`.
 
 If the readiness check is defined, Zerops will:
 
@@ -67,15 +67,15 @@ If the readiness check is defined, Zerops will:
 3. If the readiness check fails, wait 5 seconds and repeat step 2.
 4. If the readiness check succeeds, set the container as active.
 
-Application in the runtime container with a pending readiness check won't receive any incoming requests. Only active containers receive incoming requests to your Gleam service.
+Application in the runtime container with a pending readiness check won't receive any incoming requests. Only active containers receive incoming requests to your Elixir service.
 
 If the readiness check is still failing after 5 minutes, the specific runtime container is marked as failed and Zerops will delete it, create a new runtime container and perform the deploy.
 
-The <a href="/gleam/how-to/build-pipeline#httpget">`httpGet`</a> readiness check is successful when the URL returns HTTP status code `2xx`. The timeout is 5 seconds. When the URL returns a `3xx` HTTP status, the readiness check HTTP client will follow the redirect.
+The <a href="/elixir/how-to/build-pipeline#httpget">`httpGet`</a> readiness check is successful when the URL returns HTTP status code `2xx`. The timeout is 5 seconds. When the URL returns a `3xx` HTTP status, the readiness check HTTP client will follow the redirect.
 
-The <a href="/gleam/how-to/build-pipeline#exec">`exec.command`</a> readiness check is successful when the command returns status code 0. The timeout is 5 seconds.
+The <a href="/elixir/how-to/build-pipeline#exec">`exec.command`</a> readiness check is successful when the command returns status code 0. The timeout is 5 seconds.
 
-Read the [runtime log](/gleam/how-to/logs#runtime-log) to troubleshoot failed readiness checks.
+Read the [runtime log](/elixir/how-to/logs#runtime-log) to troubleshoot failed readiness checks.
 
 ## Application versions
 
