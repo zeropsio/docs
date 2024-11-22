@@ -1,6 +1,6 @@
 ---
-title: How to set and use environment variables in Gleam service
-description: Learn how you can setup and use environment variables in a gleam service on Zerops.
+title: How to set and use environment variables in Elixir service
+description: Learn how you can setup and use environment variables in a elixir service on Zerops.
 ---
 
 Environment variables help you run your application in different environments. They allow you to isolate all specific environment aspects from your application code and keep your app encapsulated. You can create several projects in Zerops that represent different environments (development, stage, production) or even each developer can have a project with its own environment.
@@ -13,15 +13,15 @@ There are 3 different sets of env variables in Zerops:
 
 | environment | type   | defined in                                                                        |
 | ----------- | ------ | --------------------------------------------------------------------------------- |
-| build       | basic  | [zerops.yml](/gleam/how-to/build-pipeline#envvariables)                          |
-| runtime     | basic  | [zerops.yml](/gleam/how-to/build-pipeline#envvariables-1)                        |
-| runtime     | secret | [Zerops GUI](/gleam/how-to/env-variables#set-secret-env-variables-in-zerops-gui) |
+| build       | basic  | [zerops.yml](/elixir/how-to/build-pipeline#envvariables)                          |
+| runtime     | basic  | [zerops.yml](/elixir/how-to/build-pipeline#envvariables-1)                        |
+| runtime     | secret | [Zerops GUI](/elixir/how-to/env-variables#set-secret-env-variables-in-zerops-gui) |
 
-Use the [secret env variables](/gleam/how-to/create#set-secret-env-variables) for all sensitive data you don't want to store in your application code. Secret env variables are also useful if you need for testing where you need to change the value of some env variables frequently. Secret variables are managed in Zerops GUI and you don't have to redeploy your application.
+Use the [secret env variables](/elixir/how-to/create#set-secret-env-variables) for all sensitive data you don't want to store in your application code. Secret env variables are also useful if you need for testing where you need to change the value of some env variables frequently. Secret variables are managed in Zerops GUI and you don't have to redeploy your application.
 
 The basic build and runtime env variables are listed in your [zerops.yml](/references/zeropsyml) and deployed together with your application code. When you need to update a value of an existing env variable or change the set of build or runtime env variables, update your zerops.yml and redeploy your application to Zerops.
 
-You can [reference](/gleam/how-to/env-variables#reference-a-local-variable-in-another-variable-value) another variable of the same service or even a variable of [another service](/gleam/how-to/env-variables#reference-a-variable-of-another-project-service) within the same project.
+You can [reference](/elixir/how-to/env-variables#reference-a-local-variable-in-another-variable-value) another variable of the same service or even a variable of [another service](/elixir/how-to/env-variables#reference-a-variable-of-another-project-service) within the same project.
 
 ## Set secret env variables in Zerops GUI
 
@@ -36,7 +36,7 @@ Use secret variables to store passwords, tokens and other sensitive information 
   />
 </p>
 
-You can set env variables when you [create](/gleam/how-to/create) a new Gleam service or you can set them later.
+You can set env variables when you [create](/elixir/how-to/create) a new Elixir service or you can set them later.
 
 To configure env variables for an existing service, go to the service detail and choose **Environment variables** in the left menu. Scroll to the **Secret variables** section and click on the **Add secret variable** button and set variable key and value.
 
@@ -45,7 +45,7 @@ You can edit or delete env variables that you've created by clicking on the menu
 The changes you've made in the list of env variables need to be committed. Click on the **Commit x changes** button and Zerops will update the env variables in all containers of your project's services.
 
 :::caution
-You need to **restart** the runtime service after you commit the changes in env variables. The Gleam process running in the container receives the list env variables only when it starts. Update of the env variables while the Gleam process is running does not affect your application.
+You need to **restart** the runtime service after you commit the changes in env variables. The Elixir process running in the container receives the list env variables only when it starts. Update of the env variables while the Elixir process is running does not affect your application.
 :::
 
 ## Set basic build env variables in zerops.yml
@@ -107,7 +107,7 @@ When you need to update a value of an existing env variable or change the set of
 - must contain only ASCII characters
 - the _End of Line_ character is forbidden
 
-These restrictions apply to all [types of env variables](/gleam/how-to/env-variables#types-of-env-variables-in-zerops).
+These restrictions apply to all [types of env variables](/elixir/how-to/env-variables#types-of-env-variables-in-zerops).
 
 ## Referencing other env variables
 
@@ -123,34 +123,34 @@ You can reference another variable of the same service using `${key}` in your va
 
 ### Reference a variable of another project service
 
-Let's say your project contains two PostgreSQL services `dbtest` and `dbprod`. Both services have a `connectionString` variable. Then you can create a `dbConnectionString` env variable in your Gleam runtime and set `${dbtest_connectionString}` as the variable value. Zerops will fill in the value of the `connectionString` variable of the `dbtest` service.
+Let's say your project contains two PostgreSQL services `dbtest` and `dbprod`. Both services have a `connectionString` variable. Then you can create a `dbConnectionString` env variable in your Elixir runtime and set `${dbtest_connectionString}` as the variable value. Zerops will fill in the value of the `connectionString` variable of the `dbtest` service.
 
 When you change the `dbConnectionString` value to `${dbprod_connectionString}`, Zerops will fill in the value of the `connectionString` variable of the `dbprod` service.
 
 :::caution
-When you change the value of the `connectionString` variable in the service `dbtest` and commit the changes you need to **restart** the Gleam service. The Gleam process running in the container receives the list env variables only when it starts. Update of the env variables while the Gleam process is running does not affect your application.
+When you change the value of the `connectionString` variable in the service `dbtest` and commit the changes you need to **restart** the Elixir service. The Elixir process running in the container receives the list env variables only when it starts. Update of the env variables while the Elixir process is running does not affect your application.
 :::
 
 ## Generated env variables
 
-Zerops creates several helper variables when a Gleam service is created, e.g. `hostname`, `PATH`. Some helper variables are read-only (`hostname`), others are editable (`PATH`). Generated variables cannot be deleted.
+Zerops creates several helper variables when a Elixir service is created, e.g. `hostname`, `PATH`. Some helper variables are read-only (`hostname`), others are editable (`PATH`). Generated variables cannot be deleted.
 
 Generated env variables are listed on the **Environment variables** page. Scroll to the **Generated variables** section.
 
 <p align="center">
   <img
-    src="/img/screenshots/gleam_generated_variables.png"
+    src="/img/screenshots/elixir_generated_variables.png"
     alt="image"
     width="100%"
     height="auto"
   />
 </p>
 
-## How to read env variables from your Gleam app
+## How to read env variables from your Elixir app
 
-Zerops passes all environment variables from all project services when your Gleam app is deployed and started.
+Zerops passes all environment variables from all project services when your Elixir app is deployed and started.
 
-To access the local environment variable i.e. the variable set to this Gleam service in your app, use:
+To access the local environment variable i.e. the variable set to this Elixir service in your app, use:
 
 ```sh
 process.env.YOUR_VARIABLE_KEY_HERE
