@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button, InputText } from 'docs-ui';
+import './calculator.css';
 
 type ResourcesType = {
   cpu: number;
@@ -24,7 +25,7 @@ export default function PricingCalculator() {
 
   const price = {
     cpu: resources.cpuType === 'shared' ? 0.6 : 6,
-    ram: 0.75,
+    ram: 3,
     disk: 0.05,
     storage: 0.01,
     ipv4_addr: 3,
@@ -33,9 +34,8 @@ export default function PricingCalculator() {
 
   const handleAdjust = (name: string, amount: number) => {
     setResources((prev) => {
-      const newValue = Number(
-        ((prev[name as keyof typeof prev] as number) + amount).toFixed(2)
-      );
+      const currentValue = Number(prev[name as keyof typeof prev]);
+      const newValue = Number((currentValue + amount).toFixed(2));
       const minValue = name === 'cpu' ? 1 : 0;
       return {
         ...prev,
@@ -74,10 +74,10 @@ export default function PricingCalculator() {
   };
 
   return (
-    <div className="p-1.5 space-y-4 bg-ui-bg-base rounded-lg">
-      <form className="grid grid-cols-2 gap-2">
-        <div className="space-y-0.25">
-          <label htmlFor="cpu" className="font-semibold text-lg">
+    <div className="p-2.5 space-y-4 bg-[#F9FAFB] rounded-lg my-2 calculator">
+      <form className="grid grid-cols-1 xl:grid-cols-2 gap-2">
+        <div className="space-y-0.25 select-none">
+          <label htmlFor="cpu" className="font-semibold text-lg calculator-label">
             No. of CPUs
           </label>
           <div className="flex items-center space-x-0.5">
@@ -93,12 +93,19 @@ export default function PricingCalculator() {
             </Button>
             <InputText
               type="number"
-              min="1"
-              id="cpu"
-              name="cpu"
+              className="number-input"
               value={resources.cpu}
-              className="text-center"
-              readOnly
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value >= 0) {
+                  setResources((prev) => ({
+                    ...prev,
+                    cpu: value,
+                  }));
+                }
+              }}
+              min="1"
+              step="1"
             />
             <Button
               onClick={(e) => {
@@ -111,8 +118,8 @@ export default function PricingCalculator() {
             </Button>
           </div>
         </div>
-        <div className="space-y-0.25">
-          <label htmlFor="cpuType" className="font-semibold text-lg">
+        <div className="select-none">
+          <label htmlFor="cpuType" className="font-semibold text-lg calculator-label">
             CPU type
           </label>
           <select
@@ -120,14 +127,14 @@ export default function PricingCalculator() {
             id="cpuType"
             value={resources.cpuType}
             onChange={(e) => handleChange('cpuType', e.target.value)}
-            className="w-full rounded-sm border-ui-border-base p-0.5"
+            className="calculator-select"
           >
             <option value="shared">Shared CPU</option>
             <option value="dedicated">Dedicated CPU</option>
           </select>
         </div>
-        <div className="space-y-0.25">
-          <label htmlFor="ram" className="font-semibold text-lg">
+        <div className="select-none">
+          <label htmlFor="ram" className="font-semibold text-lg calculator-label">
             RAM (in GB)
           </label>
           <div className="flex items-center space-x-0.5">
@@ -143,12 +150,19 @@ export default function PricingCalculator() {
             </Button>
             <InputText
               type="number"
-              min="0.25"
-              id="ram"
-              name="ram"
+              className="number-input"
               value={resources.ram}
-              className="text-center"
-              readOnly
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value >= 0) {
+                  setResources((prev) => ({
+                    ...prev,
+                    ram: value,
+                  }));
+                }
+              }}
+              min="0.25"
+              step="0.25"
             />
             <Button
               onClick={(e) => {
@@ -161,8 +175,8 @@ export default function PricingCalculator() {
             </Button>
           </div>
         </div>
-        <div className="space-y-0.25">
-          <label htmlFor="disk" className="font-semibold text-lg">
+        <div className="select-none">
+          <label htmlFor="disk" className="font-semibold text-lg calculator-label">
             Disk space (in GB)
           </label>
           <div className="flex items-center space-x-0.5">
@@ -178,12 +192,19 @@ export default function PricingCalculator() {
             </Button>
             <InputText
               type="number"
-              min="0.5"
-              id="disk"
-              name="disk"
+              className="number-input"
               value={resources.disk}
-              className="text-center"
-              readOnly
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value >= 0) {
+                  setResources((prev) => ({
+                    ...prev,
+                    disk: value,
+                  }));
+                }
+              }}
+              min="0.5"
+              step="0.5"
             />
             <Button
               onClick={(e) => {
@@ -196,8 +217,8 @@ export default function PricingCalculator() {
             </Button>
           </div>
         </div>
-        <div className="space-y-0.25">
-          <label htmlFor="storage" className="font-semibold text-lg">
+        <div className="select-none">
+          <label htmlFor="storage" className="font-semibold text-lg calculator-label">
             Object storage (in GB)
           </label>
           <div className="flex items-center space-x-0.5">
@@ -213,12 +234,19 @@ export default function PricingCalculator() {
             </Button>
             <InputText
               type="number"
-              min="0"
-              id="storage"
-              name="storage"
+              className="number-input"
               value={resources.storage}
-              className="text-center"
-              readOnly
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value >= 0) {
+                  setResources((prev) => ({
+                    ...prev,
+                    storage: value,
+                  }));
+                }
+              }}
+              min="0"
+              step="1"
             />
             <Button
               onClick={(e) => {
@@ -232,8 +260,8 @@ export default function PricingCalculator() {
           </div>
         </div>
 
-        <div className="space-y-0.25">
-          <label htmlFor="core" className="font-semibold text-lg">
+        <div className="select-none">
+          <label htmlFor="core" className="font-semibold text-lg calculator-label">
             Project core package
           </label>
           <select
@@ -241,13 +269,13 @@ export default function PricingCalculator() {
             id="core"
             value={resources.core}
             onChange={(e) => handleChange('core', e.target.value)}
-            className="w-full rounded-sm border-ui-border-base p-0.5"
+            className="calculator-select"
           >
             <option value="lightweight">Lightweight</option>
             <option value="serious">Serious</option>
           </select>
         </div>
-        <div className="space-y-0.25 col-span-2 flex items-center">
+        <div className="select-none">
           <label
             htmlFor="ipv4_addr"
             className="font-semibold text-lg flex items-center gap-0.5"
@@ -269,10 +297,10 @@ export default function PricingCalculator() {
           </label>
         </div>
       </form>
-      <p className="text-2xl">
+      <div className="text-2xl">
         <span className="font-bold">Total price:</span> ${calculateTotal()} / 30
-        days (approx.)
-      </p>
+        days
+      </div>
     </div>
   );
 }

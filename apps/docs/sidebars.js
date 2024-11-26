@@ -91,7 +91,7 @@ module.exports = {
     {
       type: 'doc',
       id: 'features/pricing',
-      label: 'Pricing',
+      label: 'Pricing Plans & Usage',
       customProps: {
         sidebar_icon: 'currency-dollar',
       },
