@@ -543,7 +543,7 @@ module.exports = {
       items: [
         {
           type: 'doc',
-          id: 'references/vpn/zsc',
+          id: 'references/zsc/faq',
           label: 'FAQ',
           customProps: {
             exclude_from_doc_list: false,
