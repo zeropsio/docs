@@ -533,9 +533,12 @@ module.exports = {
       className: 'homepage-sidebar-item',
     },
     {
-      type: 'doc',
-      id: 'references/zsc',
+      type: 'category',
       label: 'Zsc',
+      link: {
+        type: 'doc',
+        id: 'references/zsc',
+      },
       customProps: {
         sidebar_icon: 'window',
       },
