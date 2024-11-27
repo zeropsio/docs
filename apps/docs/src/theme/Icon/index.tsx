@@ -133,6 +133,7 @@ import IconUbuntu from './Ubuntu';
 import IconDeno from './Deno';
 import IconBun from './Bun';
 import IconGleam from './Gleam';
+import IconElixir from './Elixir';
 
 export default {
   'academic-cap-solid': AcademicCapSolid,
@@ -271,4 +272,5 @@ export default {
   deno: IconDeno,
   bun: IconBun,
   gleam: IconGleam,
+  elixir: IconElixir,
 };
