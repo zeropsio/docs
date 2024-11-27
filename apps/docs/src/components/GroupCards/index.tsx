@@ -18,7 +18,7 @@ const GroupCards: React.FC<GroupCardsProps> = ({ items, heading, emoji }) => {
                 <span>{emoji}</span>
                 <span className="text-xl font-medium text-[#3B3D40] dark:text-gray-200">{heading}</span>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-6 gap-1 pt-1.5">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-1 pt-1.5">
                 {items.map((item, index) => (
                     <a
                         key={index}
