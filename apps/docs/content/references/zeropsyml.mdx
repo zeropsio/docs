@@ -1,4 +1,7 @@
-# Zerops YAML configuration
+---
+title: Zerops YAML Configuration
+description: Learn how you can configure your zerops yaml and use the available parameters. 
+---
 
 import data from '@site/static/data.json';
 import UnorderedCodeList from '@site/src/components/UnorderedCodeList';
@@ -62,7 +65,8 @@ You can specify multiple technologies:
 build:
   base:
     - nodejs@latest
-    - python@3.9
+  prepareCommands:
+        - zsc add python@3.9
 ```
 
 ### os (Optional)
@@ -210,6 +214,29 @@ Defines the start command for your application.
 run:
   start: npm start
 ```
+
+### startCommands (Optional)
+
+Defines start commands 
+
+Unlike `start`, you can define multiple commands that starts their own processes.
+
+```yml
+run:
+  startCommands:
+    # start the application
+    - command: npm run start:prod
+      name: server
+    # start the replication
+    
+    - command: litestream replicate -config=litestream.yml
+      name: replication
+      # restore the database on container init
+      initCommands:
+        - litestream restore -if-replica-exists -if-db-not-exists -config=litestream.yml $DB_NAME
+```
+
+See [start-commands-example](https://github.com/zeropsio/start-commands-example)
 
 ### documentRoot (Optional)
 

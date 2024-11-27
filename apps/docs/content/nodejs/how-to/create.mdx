@@ -1,16 +1,17 @@
 ---
 title: Create a Node.js service in Zerops
+description: Learn how you can create a node.js service in Zerops.
 ---
 
 import Image from '/src/components/Image';
 import data from '@site/static/data.json';
 import UnorderedList from '@site/src/components/UnorderedList';
 
-Zerops provides a Node.js runtime service with extensive build support. Node.js runtime is highly scalable and customisable to suit both development and production.
+Zerops provides a powerful Node.js runtime service with extensive build support. The Node.js runtime is highly scalable and customizable to suit your development and production needs. With just a few clicks or commands, you can have a production-ready Node.js environment up and running in no time.
 
-## Create Node.js service using Zerops GUI
+## Create a Node.js service using Zerops GUI
 
-First, set up a project in Zerops GUI. Then go to the project dashboard page and choose **Add new service** in the left menu in the **Services** block. Then add a new Node.js service:
+First, set up a project in the Zerops GUI. Then go to the project dashboard page and choose **Add new service** in the left menu under the **Services** section. From there, you can add a new Node.js service:
 
 <p>
   <video
@@ -24,40 +25,40 @@ First, set up a project in Zerops GUI. Then go to the project dashboard page and
   </video>
 </p>
 
-### Choose Node.js version
+### Choose a Node.js version
 
-Following Node.js major versions are currently supported:
+Zerops supports the following Node.js major versions:
 
 <UnorderedList data={data.nodejsMajorVersions} />
 
 :::info
-You can [change](/nodejs/how-to/upgrade) the major version at any time later.
+You can easily [upgrade](/nodejs/how-to/upgrade) the major version at any time later.
 :::
 
 ### Set a hostname
 
-Enter a unique service identifier like "app","cache", "gui" etc. Duplicate services with the same name in the same project are forbidden.
+Enter a unique service identifier like "app", "cache", "gui", etc. Duplicate services with the same name within the same project are not allowed.
 
 #### Limitations:
 
-- maximum 25 characters
-- must contain only lowercase ASCII letters (a-z) or numbers (0-9)
+- Maximum 25 characters
+- Must contain only lowercase ASCII letters (a-z) or numbers (0-9)
 
 :::caution
-The hostname is fixed after the service is created. It can't be changed later.
+The hostname is fixed after the service is created and cannot be changed later.
 :::
 
-### Set secret env variables
+### Set secret environment variables
 
-Add environment variables with sensitive data, such as password, tokens, salts, certificates etc. These will be securely saved inside Zerops and added to your runtime service upon start.
+Add environment variables with sensitive data, such as passwords, tokens, salts, certificates, etc. These will be securely saved inside Zerops and added to your runtime service upon start.
 
-Setting the secret environment variables is optional. You can set them later in Zerops GUI.
+Setting secret environment variables is optional. You can always set them later in the Zerops GUI.
 
-Read more about [different types of env variables](/nodejs/how-to/env-variables#types-of-env-variables-in-zerops) in Zerops.
+Read more about the [different types of environment variables](/nodejs/how-to/env-variables#types-of-env-variables-in-zerops) in Zerops.
 
-### Set auto scaling configuration
+### Configure auto scaling
 
-Zerops scales the Node.js services automatically both vertically and horizontally. Vertical scaling means increasing or decreasing the hardware resources (CPU, RAM and disk) of a Node.js container. Horizontal scaling adds or removes whole containers.
+Zerops automatically scales Node.js services both vertically and horizontally. Vertical scaling adjusts the hardware resources (CPU, RAM, and disk) of a Node.js container, while horizontal scaling adds or removes entire containers.
 
 <p align="center">
   <Image
@@ -71,89 +72,112 @@ Zerops scales the Node.js services automatically both vertically and horizontall
 #### CPU Mode
 
 **Shared**
-Your application gets a full physical CPU core, but it is shared with up to 10 other applications. In this mode the power your application gets is depended on other applications running on the same CPU core. At best case scenario your application gets 10/10 of CPU core power and 1/10 at worst case scenario.
+Your application gets a full physical CPU core, but it is shared with up to 10 other applications. The power your application receives depends on the other applications running on the same CPU core. In the best-case scenario, your application gets 10/10 of the CPU core power, and 1/10 in the worst-case scenario.
 
 **Dedicated**
-The CPU core is dedicated to your application.
+The CPU core is dedicated exclusively to your application.
 
 :::info
 See the [pricing](https://zerops.io/#pricing) for the difference between CPU modes.
 :::
 
-Choose the CPU mode when starting a new service or change it later. The CPU mode doesn't change automatically.
+You can choose the CPU mode when starting a new service or change it later. The CPU mode doesn't change automatically.
 
 #### Vertical auto scaling
 
-Vertical auto scaling has following default configuration:
+Vertical auto scaling has the following default configuration:
 
-| &nbsp;        | Minimum resource | Maximum resource |
-| ------------- | ---------------- | ---------------- |
-| **CPU cores** | 1                | 5                |
-| **RAM**       | 0.25 GB          | 32 GB            |
-| **Disk**      | 1 GB             | 100 GB           |
-
-Node.js service always starts with the minimal resources.
-
-For most cases, the default parameters will work without issues. If you need to limit the cost of the Node.js service, lower the maximal resources. Zerops will never scale above the selected maximums.
-
-When you are experiencing problems with insufficient Node.js performance or capacity, increase the minimal resources. Zerops will never scale below the selected minimums.
-
-:::tip
-Learn more about how to [fine tune](/nodejs/how-to/scaling#fine-tune-the-auto-scaling) the auto scaling to fit your application needs.
-:::
-
-:::info
-You can change the vertical auto scaling parameters later.
-:::
-
-#### Horizontal auto scaling
-
-When a container needs more CPU or RAM but already consumes maximal resources defined for the vertical auto scaling, Zerops will add a new container to your Node.js service. When your Node.js service doesn't need so much power and all containers are vertically scaled down in such a way their CPU allocation is near the minimal resources, Zerops will gradually remove whole containers.
-
-Horizontal auto scaling has following default configuration:
-
-<table>
+<table className="w-full rounded-lg my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit"><strong>Resources Type</strong></th>
+      <th className="w-fit"><strong>Minimum resource</strong></th>
+      <th className="w-fit"><strong>Maximum resource</strong></th>
+    </tr>
+  </thead>
   <tbody>
     <tr>
-      <td>
-        <b>minimum containers</b>
-      </td>
-      <td>1</td>
+      <td className="w-fit"><strong>CPU cores</strong></td>
+      <td className="w-fit">1</td>
+      <td className="w-fit">5</td>
     </tr>
     <tr>
-      <td>
-        <b>maximum containers</b>
-      </td>
-      <td>6</td>
+      <td className="w-fit"><strong>RAM</strong></td>
+      <td className="w-fit">0.25 GB</td>
+      <td className="w-fit">32 GB</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><strong>Disk</strong></td>
+      <td className="w-fit">1 GB</td>
+      <td className="w-fit">100 GB</td>
     </tr>
   </tbody>
 </table>
 
-Node.js service always starts with the minimum number of containers.
+Node.js services always start with the minimal resources.
+
+In most cases, the default parameters will work without issues. If you need to limit the cost of the Node.js service, you can lower the maximum resources. Zerops will never scale above the selected maximums.
+
+If you experience insufficient Node.js performance or capacity, you can increase the minimum resources. Zerops will never scale below the selected minimums.
+
+:::tip
+Learn more about how to [fine-tune](/nodejs/how-to/scaling#fine-tune-the-auto-scaling) the auto scaling to fit your application's needs.
+:::
+
+:::info
+You can change the vertical auto scaling parameters at any time.
+:::
+
+#### Horizontal auto scaling
+
+When a container needs more CPU or RAM but is already consuming the maximum resources defined for vertical auto scaling, Zerops will add a new container to your Node.js service. When your Node.js service doesn't need as much power and all containers are vertically scaled down such that their CPU allocation is near the minimum resources, Zerops will gradually remove entire containers.
+
+Horizontal auto scaling has the following default configuration:
+
+<table className="w-full rounded-lg my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit"><strong>Parameter</strong></th>
+      <th className="w-fit"><strong>Value</strong></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit"><strong>Minimum containers</strong></td>
+      <td className="w-fit">1</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><strong>Maximum containers</strong></td>
+      <td className="w-fit">6</td>
+    </tr>
+  </tbody>
+</table>
+
+Node.js services always start with the minimum number of containers.
 
 You can increase the minimum or decrease the maximum number of containers. The horizontal scaling parameters can be changed later.
 
-[Learn more](/nodejs/how-to/scaling) about Node.js auto scaling.
+[Learn more](/nodejs/how-to/scaling) about Node.js auto scaling in Zerops.
 
 #### Single container vs. High Availability
 
-When creating a new runtime service, you can choose the minimum and maximum number of containers. If you set the maximum limit to one, the service will be run in a **single container** and no horizontal scaling will occur.
-
-:::Caution
-If the single container fails, Zerops will start a new container and deploy your application automatically. The application won't be available for a short period. This mode is recommended for non-critical applications or dev environments.
-:::
-
-By increasing the maximum number of containers for your service, you enable horizontal auto scaling. Zerops will then add containers depending on your application’s load. Application running on two or more containers is in **High Availability** mode, which we highly recommend for production. When the load drops, containers will be gradually removed to the defined minimum.
-
-Each container of the same service is strictly installed on a **different server**. This prevents the temporary outage in case any of Zerops servers fail. If the connection to a container is broken, Zerops immediately redirects incoming traffic to other containers. A new container will be started automatically and the broken container will be deleted.
+When creating a new runtime service, you can choose the minimum and maximum number of containers. If you set the maximum limit to one, the service will run in a **single container** and no horizontal scaling will occur.
 
 :::caution
-Check if your application is ready to be run in multiple containers.
+If the single container fails, Zerops will automatically start a new container and deploy your application. However, the application will be unavailable for a short period. This mode is recommended for non-critical applications or development environments.
 :::
 
-## Create Node.js service using zCLI
+By increasing the maximum number of containers for your service, you enable horizontal auto scaling. Zerops will then add containers based on your application's load. An application running on two or more containers is in **High Availability** mode, which we highly recommend for production. When the load drops, containers will be gradually removed down to the defined minimum.
 
-zCLI is the Zerops command-line tool. To create a new Node.js service via the command-line, follow these steps:
+Each container of the same service is strictly installed on a **different server**. This prevents temporary outages in case any of the Zerops servers fail. If the connection to a container is broken, Zerops immediately redirects incoming traffic to other containers. A new container will be started automatically, and the broken container will be deleted.
+
+:::caution
+Make sure your application is designed to run in multiple containers.
+:::
+
+## Create a Node.js service using zCLI
+
+zCLI is the Zerops command-line tool. To create a new Node.js service via the command line, follow these steps:
 
 1. [Install & setup zCLI](/references/cli)
 2. [Create a project description file](/nodejs/how-to/create#create-a-project-description-file)
@@ -161,12 +185,11 @@ zCLI is the Zerops command-line tool. To create a new Node.js service via the co
 
 ### Create a project description file
 
-Zerops uses a yaml format to describe the project infrastructure.
+Zerops uses a YAML format to describe the project infrastructure.
 
 #### Basic example:
 
-Create a directory `my-project`. Create an `description.yml` file inside the `my-project` directory with following content:
-
+Create a directory called `my-project`. Inside the `my-project` directory, create a `description.yml` file with the following content:
 ```yaml
 # basic project data
 project:
@@ -259,155 +282,124 @@ The hostname of the PostgreSQL service will be set to "db". The [single containe
 
 The `project:` section is required. Only one project can be defined.
 
-| Parameter       | Description                                                                                                                     | Limitations             |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
-| **name**        | The name of the new project. Duplicates are allowed.                                                                            |                         |
-| **description** | **Optional.** Description of the new project.                                                                                   | Maximum 255 characters. |
-| **tags**        | **Optional.** One or more string tags. Tags do not have a functional meaning, they only provide better orientation in projects. |
-
-At least one service in `services:` section is required. You can create a project with multiple services. The example above contains Node.js and PostgreSQL services but you can create a `description.yml` with your own combination of [services](/features/infrastructure).
-
-<table>
+<table className="w-full rounded-lg my-1.5">
   <thead>
     <tr>
-      <th>Parameter</th>
-      <th>Description</th>
+      <th className="w-fit"><strong>Parameter</strong></th>
+      <th className="w-fit"><strong>Description</strong></th>
+      <th className="w-fit"><strong>Limitations</strong></th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>
-        <b>hostname</b>
-      </td>
-      <td>
+      <td className="w-fit"><strong>name</strong></td>
+      <td className="w-fit">The name of the new project. Duplicates are allowed.</td>
+      <td className="w-fit"></td>
+    </tr>
+    <tr>
+      <td className="w-fit"><strong>description</strong></td>
+      <td className="w-fit"><strong>Optional.</strong> Description of the new project.</td>
+      <td className="w-fit">Maximum 255 characters.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><strong>tags</strong></td>
+      <td className="w-fit"><strong>Optional.</strong> One or more string tags. Tags do not have a functional meaning, they only provide better orientation in projects.</td>
+      <td className="w-fit"></td>
+    </tr>
+  </tbody>
+</table>
+
+At least one service in `services:` section is required. You can create a project with multiple services. The example above contains Node.js and PostgreSQL services but you can create a `description.yml` with your own combination of [services](/features/infrastructure).
+
+<table className="w-full rounded-lg my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit"><strong>Parameter</strong></th>
+      <th className="w-fit"><strong>Description</strong></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit"><strong>hostname</strong></td>
+      <td className="w-fit">
         The unique service identifier.
-        <br />
-        <br />
-        The hostname of the new database will be set to the{' '}
-        `hostname` value. <br />
-        <br />
-        <b>Limitations:</b>
-        <br />- duplicate services with the same name in the same project are
-        forbidden
-        <br />
-        - maximum 25 characters
+         
+        The hostname of the new database will be set to the `hostname` value.
+         
+        <strong>Limitations:</strong>
+        <br />- duplicate services with the same name in the same project are forbidden
+        <br />- maximum 25 characters
         <br />- must contain only lowercase ASCII letters (a-z) or numbers (0-9)
       </td>
     </tr>
     <tr>
-      <td>
-        <b>type</b>
-      </td>
-      <td>
+      <td className="w-fit"><strong>type</strong></td>
+      <td className="w-fit">
         Specifies the service type `nodejs` and version.
         <br />
-        Set type:{' '}
-        `
-          nodejs<span>@</span>&lt;version&gt;
-        `{' '}
-        or{' '}
-        `
-          nodejs<span>@</span>latest
-        `
+        Set type: `nodejs@<version>` or `nodejs@latest`
+         
+        <strong>Limitations:</strong>
         <br />
+        Following Node.js major versions are currently supported: <i>20</i>, <i>18</i>, <i>16</i>
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit"><strong>verticalAutoscaling</strong></td>
+      <td className="w-fit">
+        <strong>Optional.</strong> Defines <a href="/nodejs/how-to/create#set-auto-scaling-configuration">custom vertical auto scaling parameters</a>.
         <br />
-        <b>Limitations:</b>
-        <br />
-        Following Node.js major versions are currently supported: <i>20</i>,
-        <i>18</i>,<i>16</i>
+        All verticalAutoscaling attributes are optional. Not specified attributes will be set to their default values.
       </td>
     </tr>
     <tr>
-      <td>
-        <b>verticalAutoscaling</b>
-      </td>
-      <td>
-        <b>Optional.</b> Defines{' '}
-        <a href="/nodejs/how-to/create#set-auto-scaling-configuration">
-          custom vertical auto scaling parameters
-        </a>
-        .<br />
-        All verticalAutoscaling attributes are optional. Not specified
-        attributes will be set to their default values.
+      <td className="w-fit"><strong>- cpuMode</strong></td>
+      <td className="w-fit">
+        <strong>Optional.</strong> Accepts `SHARED`, `DEDICATED` values. Default is `SHARED`
       </td>
     </tr>
     <tr>
-      <td>
-        <b> - cpuMode</b>
-      </td>
-      <td>
-        <b>Optional.</b> Accepts `SHARED`, `DEDICATED`{' '}
-        values. Default is `SHARED`
+      <td className="w-fit"><strong>- minCpu/maxCpu</strong></td>
+      <td className="w-fit">
+        <strong>Optional.</strong> Set the minCpu or maxCpu in CPU cores (integer).
       </td>
     </tr>
     <tr>
-      <td>
-        <b> - minCpu/maxCpu</b>
-      </td>
-      <td>
-        <b>Optional.</b> Set the minCpu or maxCpu in CPU cores (integer).
+      <td className="w-fit"><strong>- minRam/maxRam</strong></td>
+      <td className="w-fit">
+        <strong>Optional.</strong> Set the minRam or maxRam in GB (float).
       </td>
     </tr>
     <tr>
-      <td>
-        <b> - minRam/maxRam</b>
-      </td>
-      <td>
-        <b>Optional.</b> Set the minRam or maxRam in GB (float).
+      <td className="w-fit"><strong>- minDisk/maxDisk</strong></td>
+      <td className="w-fit">
+        <strong>Optional.</strong> Set the minDisk or maxDisk in GB (float).
       </td>
     </tr>
     <tr>
-      <td>
-        <b> - minDisk/maxDisk</b>
-      </td>
-      <td>
-        <b>Optional.</b> Set the minDisk or maxDisk in GB (float).
-      </td>
-    </tr>
-    <tr>
-      <td>
-        <b>minContainers</b>
-      </td>
-      <td>
-        <b>Optional.</b> Default = 1. Defines the minimum number of containers
-        for{' '}
-        <a href="/nodejs/how-to/create#horizontal-auto-scaling">
-          horizontal autoscaling
-        </a>
-        .<br />
-        <br />
-        <b>Limitations:</b>
+      <td className="w-fit"><strong>minContainers</strong></td>
+      <td className="w-fit">
+        <strong>Optional.</strong> Default = 1. Defines the minimum number of containers for <a href="/nodejs/how-to/create#horizontal-auto-scaling">horizontal autoscaling</a>.
+         
+        <strong>Limitations:</strong>
         <br />
         Current maximum value = 6.
       </td>
     </tr>
     <tr>
-      <td>
-        <b>maxContainers</b>
-      </td>
-      <td>
-        Defines the maximum number of containers for{' '}
-        <a href="/nodejs/how-to/create#horizontal-auto-scaling">
-          horizontal autoscaling
-        </a>
-        .<br />
-        <br />
-        <b>Limitations:</b>
+      <td className="w-fit"><strong>maxContainers</strong></td>
+      <td className="w-fit">
+        Defines the maximum number of containers for <a href="/nodejs/how-to/create#horizontal-auto-scaling">horizontal autoscaling</a>.
+         
+        <strong>Limitations:</strong>
         <br />
         Current maximum value = 6.
       </td>
     </tr>
     <tr>
-      <td>
-        <b>envSecrets</b>
-      </td>
-      <td>
-        <b>Optional.</b> Defines one or more secret env variables as a key value
-        map. See env variable{' '}
-        <a href="/nodejs/how-to/env-variables#env-variable-restrictions">
-          restrictions
-        </a>
-        .
+      <td className="w-fit"><strong>envSecrets</strong></td>
+      <td className="w-fit">
+        <strong>Optional.</strong> Defines one or more secret env variables as a key value map. See env variable <a href="/nodejs/how-to/env-variables#env-variable-restrictions">restrictions</a>.
       </td>
     </tr>
   </tbody>
