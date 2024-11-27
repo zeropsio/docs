@@ -2160,7 +2160,6 @@ collapsible: false,
     //   },
     // },
   ],
-  ],
   elasticsearch: [
     {
       type: 'ref',
@@ -2992,6 +2991,14 @@ collapsible: false,
             exclude_from_doc_list: false,
           },
         },
+        {
+          type: 'doc',
+          id: 'elixir/tutorial/runtime-sql',
+          label: 'Runtime + SQL',
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        },
       ],
     },
     {
@@ -3005,12 +3012,77 @@ collapsible: false,
         {
           type: 'doc',
           id: 'elixir/how-to/create',
-          label: 'Create Elixir service',
+          label: 'Create Gleam service',
+        },
+        {
+          type: 'doc',
+          id: 'elixir/how-to/env-variables',
+          label: 'Manage environment variables',
+        },
+        {
+          type: 'doc',
+          id: 'elixir/how-to/upgrade',
+          label: 'Upgrade Gleam service',
         },
         {
           type: 'doc',
           id: 'elixir/how-to/build-pipeline',
           label: 'Configure build & deploy pipeline',
+        },
+        {
+          type: 'doc',
+          id: 'elixir/how-to/trigger-pipeline',
+          label: 'Trigger build pipeline',
+        },
+        {
+          type: 'doc',
+          id: 'elixir/how-to/build-process',
+          label: 'Build process',
+        },
+        {
+          type: 'doc',
+          id: 'elixir/how-to/deploy-process',
+          label: 'Deploy process',
+        },
+        {
+          type: 'doc',
+          id: 'elixir/how-to/customize-runtime',
+          label: 'Customize Gleam runtime',
+        },
+        {
+          type: 'doc',
+          id: 'elixir/how-to/logs',
+          label: 'Setup & access logs',
+        },
+        {
+          type: 'doc',
+          id: 'elixir/how-to/filebrowser',
+          label: 'Browse container files',
+        },
+        {
+          type: 'doc',
+          id: 'elixir/how-to/access',
+          label: 'Access Gleam runtime service',
+        },
+        {
+          type: 'doc',
+          id: 'elixir/how-to/scaling',
+          label: 'Scale Gleam runtime service',
+        },
+        {
+          type: 'doc',
+          id: 'elixir/how-to/controls',
+          label: 'Stop & start Gleam runtime service',
+        },
+        {
+          type: 'doc',
+          id: 'elixir/how-to/shared-storage',
+          label: 'Connect / disconnect shared storage',
+        },
+        {
+          type: 'doc',
+          id: 'elixir/how-to/delete',
+          label: 'Delete Gleam service',
         },
       ],
     },
