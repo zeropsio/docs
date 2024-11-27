@@ -392,6 +392,15 @@ module.exports = {
         },
         {
           type: 'ref',
+          id: 'elixir/overview',
+          label: 'Elixir',
+          customProps: {
+            sidebar_icon: 'elixir',
+          },
+          className: 'homepage-sidebar-item  service-sidebar-item',
+        },
+        {
+          type: 'ref',
           id: 'gleam/overview',
           label: 'Gleam',
           customProps: {
@@ -2151,6 +2160,7 @@ collapsible: false,
     //   },
     // },
   ],
+  ],
   elasticsearch: [
     {
       type: 'ref',
@@ -2927,6 +2937,86 @@ collapsible: false,
     {
       type: 'doc',
       id: 'gleam/faq',
+      label: 'FAQ',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'chat-bubble-left-right',
+      },
+    },
+  ],
+  elixir: [
+    {
+      type: 'ref',
+      id: 'homepage',
+      label: 'Back to home',
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: 'back-arrow',
+      },
+    },
+    {
+      type: 'doc',
+      id: 'elixir/overview',
+      label: 'Getting Started',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'elixir',
+      },
+    },
+    {
+      type: 'category',
+      label: 'Dive-in',
+      collapsible: false,
+      link: {
+        type: 'doc',
+        id: 'elixir/getting-started',
+      },
+      customProps: {
+        sidebar_icon: 'rocket-launch',
+      },
+      className: 'homepage-sidebar-item',
+      items: [
+        {
+          type: 'doc',
+          id: 'elixir/tutorial/quickstart',
+          label: 'Quickstart',
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        },
+        {
+          type: 'doc',
+          id: 'elixir/tutorial/step-by-step',
+          label: 'Step-by-step tutorial',
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'How-to',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'elixir/how-to/create',
+          label: 'Create Elixir service',
+        },
+        {
+          type: 'doc',
+          id: 'elixir/how-to/build-pipeline',
+          label: 'Configure build & deploy pipeline',
+        },
+      ],
+    },
+    {
+      type: 'doc',
+      id: 'elixir/faq',
       label: 'FAQ',
       customProps: {
         sidebar_is_title: true,
