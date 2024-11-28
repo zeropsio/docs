@@ -1215,45 +1215,6 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'Dive-in',
-collapsible: false,
-      link: {
-        type: 'doc',
-        id: 'rust/getting-started',
-      },
-      customProps: {
-        sidebar_icon: 'rocket-launch',
-      },
-      className: 'homepage-sidebar-item',
-      items: [
-        {
-          type: 'doc',
-          id: 'rust/tutorial/quickstart',
-          label: 'Quickstart',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-        {
-          type: 'doc',
-          id: 'rust/tutorial/step-by-step',
-          label: 'Step-by-step tutorial',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-        {
-          type: 'doc',
-          id: 'rust/tutorial/runtime-sql',
-          label: 'Runtime + SQL',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-      ],
-    },
-    {
-      type: 'category',
       label: 'How-to',
       collapsible: false,
       customProps: {
