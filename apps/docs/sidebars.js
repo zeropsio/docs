@@ -2502,18 +2502,6 @@ collapsible: false,
         sidebar_icon: 'deno',
       },
     },
-    // {
-    //   type: 'doc',
-    //   label: 'Dive-in',
-    //   collapsible: false,
-    //   link: {
-    //     type: 'doc',
-    //     id: 'deno/getting-started',
-    //   },
-    //   customProps: {
-    //     sidebar_icon: 'rocket-launch',
-    //   },
-    // },
     {
       type: 'category',
       label: 'How-to',
@@ -2631,45 +2619,6 @@ collapsible: false,
     },
     {
       type: 'category',
-      label: 'Dive-in',
-collapsible: false,
-      link: {
-        type: 'doc',
-        id: 'bun/getting-started',
-      },
-      customProps: {
-        sidebar_icon: 'rocket-launch',
-      },
-      className: 'homepage-sidebar-item',
-      items: [
-        {
-          type: 'doc',
-          id: 'bun/tutorial/quickstart',
-          label: 'Quickstart',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-        {
-          type: 'doc',
-          id: 'bun/tutorial/step-by-step',
-          label: 'Step-by-step tutorial',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-        {
-          type: 'doc',
-          id: 'bun/tutorial/runtime-sql',
-          label: 'Runtime + SQL',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-      ],
-    },
-    {
-      type: 'category',
       label: 'How-to',
       collapsible: false,
       customProps: {
@@ -2784,45 +2733,6 @@ collapsible: false,
     },
     {
       type: 'category',
-      label: 'Dive-in',
-collapsible: false,
-      link: {
-        type: 'doc',
-        id: 'gleam/getting-started',
-      },
-      customProps: {
-        sidebar_icon: 'rocket-launch',
-      },
-      className: 'homepage-sidebar-item',
-      items: [
-        {
-          type: 'doc',
-          id: 'gleam/tutorial/quickstart',
-          label: 'Quickstart',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-        {
-          type: 'doc',
-          id: 'gleam/tutorial/step-by-step',
-          label: 'Step-by-step tutorial',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-        {
-          type: 'doc',
-          id: 'gleam/tutorial/runtime-sql',
-          label: 'Runtime + SQL',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-      ],
-    },
-    {
-      type: 'category',
       label: 'How-to',
       collapsible: false,
       customProps: {
@@ -2934,45 +2844,6 @@ collapsible: false,
         sidebar_is_title: true,
         sidebar_icon: 'elixir',
       },
-    },
-    {
-      type: 'category',
-      label: 'Dive-in',
-      collapsible: false,
-      link: {
-        type: 'doc',
-        id: 'elixir/getting-started',
-      },
-      customProps: {
-        sidebar_icon: 'rocket-launch',
-      },
-      className: 'homepage-sidebar-item',
-      items: [
-        {
-          type: 'doc',
-          id: 'elixir/tutorial/quickstart',
-          label: 'Quickstart',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-        {
-          type: 'doc',
-          id: 'elixir/tutorial/step-by-step',
-          label: 'Step-by-step tutorial',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-        {
-          type: 'doc',
-          id: 'elixir/tutorial/runtime-sql',
-          label: 'Runtime + SQL',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-      ],
     },
     {
       type: 'category',
