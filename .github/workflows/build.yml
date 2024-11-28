@@ -13,12 +13,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout the repository
       - uses: actions/checkout@v3
 
+      # Step 2: Get yarn cache directory path
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path
         run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
 
+      # Step 3: Cache yarn cache directory
       - uses: actions/cache@v4
         id: yarn-cache
         with:
@@ -27,6 +30,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-yarn-
 
+      # Step 4: Cache node_modules
       - uses: actions/cache@v4
         id: node-modules-cache
         with:
@@ -35,13 +39,38 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node_modules-
 
-      - name: Node.js 20
+      # Step 5: Cache apps/docs/build/~ directory
+      - uses: actions/cache@v4
+        id: build-cache
+        with:
+          path: apps/docs/build/~
+          key: ${{ runner.os }}-docs-build-${{ hashFiles('apps/docs/**/*') }}
+          restore-keys: |
+            ${{ runner.os }}-docs-build-
+
+      # Step 6: Cache .turbo directory
+      - uses: actions/cache@v4
+        id: turbo-cache
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-
+
+      # Step 7: Set up Node.js 18
+      - name: Node.js 18
         uses: actions/setup-node@v3
         with:
-          node-version: '20'
+          node-version: '18'
 
+      # Step 8: Install Dependencies
       - name: Install Dependencies
         run: yarn install --frozen-lockfile
 
+      # Step 9: Run Build
       - name: Run Build
         run: yarn build
+
+      # Optional Step: Run Lint
+      # - name: Run Lint
+      #   run: yarn lint
