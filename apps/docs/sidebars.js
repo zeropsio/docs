@@ -2502,45 +2502,18 @@ collapsible: false,
         sidebar_icon: 'deno',
       },
     },
-    {
-      type: 'category',
-      label: 'Dive-in',
-collapsible: false,
-      link: {
-        type: 'doc',
-        id: 'deno/getting-started',
-      },
-      customProps: {
-        sidebar_icon: 'rocket-launch',
-      },
-      className: 'homepage-sidebar-item',
-      items: [
-        {
-          type: 'doc',
-          id: 'deno/tutorial/quickstart',
-          label: 'Quickstart',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-        {
-          type: 'doc',
-          id: 'deno/tutorial/step-by-step',
-          label: 'Step-by-step tutorial',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-        {
-          type: 'doc',
-          id: 'deno/tutorial/runtime-sql',
-          label: 'Runtime + SQL',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-      ],
-    },
+    // {
+    //   type: 'doc',
+    //   label: 'Dive-in',
+    //   collapsible: false,
+    //   link: {
+    //     type: 'doc',
+    //     id: 'deno/getting-started',
+    //   },
+    //   customProps: {
+    //     sidebar_icon: 'rocket-launch',
+    //   },
+    // },
     {
       type: 'category',
       label: 'How-to',
