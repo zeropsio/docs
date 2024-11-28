@@ -53,13 +53,58 @@ Bucket will be created with a name based on the given service name and a random 
 
 Select one of the basic policy templates:
 
-| Template                   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| <b>Public read</b>         | Allows anyone:<ul><li>to read the bucket's location `(s3:GetBucketLocation)`</li><li>to list all bucket's objects `(s3:ListBucket)`</li><li>to get any object of the bucket `(s3:GetObject)`</li></ul>                                                                                                                                                                                                                                        |
-| <b>Public objects read</b> | Allows anyone:<ul><li>to read the bucket's location `(s3:GetBucketLocation)`</li><li>to get any object of the bucket `(s3:GetObject)`</li></ul>                                                                                                                                                                                                                                                                                                          |
-| <b>Public read write</b>   | Allows anyone:<ul><li>to read the bucket's location `(s3:GetBucketLocation)`</li><li>to list all bucket's objects `(s3:ListBucket)`</li><li>to get any object of the bucket `(s3:GetObject)`</li><li>to create a new object in the bucket `(s3:PutObject,s3:ListMultipartUploadParts, s3:AbortMultipartUpload, s3:ListBucketMultipartUploads)`</li><li>to delete any object of the bucket `(s3:DeleteObject)`</li></ul> |
-| <b>Public write</b>        | Allows anyone to create objects in the bucket `(PutObject action)`                                                                                                                                                                                                                                                                                                                                                                                                  |
-| <b>Private</b>             | Denies the access to unauthenticated users.                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+<table className="w-full rounded-lg my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit"><strong>Template</strong></th>
+      <th className="w-fit"><strong>Description</strong></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit"><strong>Public read</strong></td>
+      <td className="w-fit">
+        Allows anyone:
+        <ul>
+          <li>to read the bucket's location `(s3:GetBucketLocation)`</li>
+          <li>to list all bucket's objects `(s3:ListBucket)`</li>
+          <li>to get any object of the bucket `(s3:GetObject)`</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit"><strong>Public objects read</strong></td>
+      <td className="w-fit">
+        Allows anyone:
+        <ul>
+          <li>to read the bucket's location `(s3:GetBucketLocation)`</li>
+          <li>to get any object of the bucket `(s3:GetObject)`</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit"><strong>Public read write</strong></td>
+      <td className="w-fit">
+        Allows anyone:
+        <ul>
+          <li>to read the bucket's location `(s3:GetBucketLocation)`</li>
+          <li>to list all bucket's objects `(s3:ListBucket)`</li>
+          <li>to get any object of the bucket `(s3:GetObject)`</li>
+          <li>to create a new object in the bucket `(s3:PutObject,s3:ListMultipartUploadParts, s3:AbortMultipartUpload, s3:ListBucketMultipartUploads)`</li>
+          <li>to delete any object of the bucket `(s3:DeleteObject)`</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit"><strong>Public write</strong></td>
+      <td className="w-fit">Allows anyone to create objects in the bucket `(PutObject action)`</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><strong>Private</strong></td>
+      <td className="w-fit">Denies the access to unauthenticated users.</td>
+    </tr>
+  </tbody>
+</table>
 
 Or you can set your own access policy in the [IAM Policy JSON format](https://min.io/docs/minio/linux/administration/identity-access-management/policy-based-access-control.html#policy-document-structure).
 
@@ -159,21 +204,106 @@ The yaml file describes your future project infrastructure. The project will con
 
 The `project:` section is required. Only one project can be defined.
 
-| Parameter       | Description                                                                                                                     | Limitations            |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
-| **name**        | The name of the new project. Duplicates are allowed.                                                                            | Maximum 255 characters |
-| **description** | **Optional.** Description of the new project.                                                                                   |                        |
-| **tags**        | **Optional.** One or more string tags. Tags do not have a functional meaning, they only provide better orientation in projects. |                        |
+<table className="w-full rounded-lg my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit"><strong>Parameter</strong></th>
+      <th className="w-fit"><strong>Description</strong></th>
+      <th className="w-fit"><strong>Limitations</strong></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit"><strong>name</strong></td>
+      <td className="w-fit">The name of the new project. Duplicates are allowed.</td>
+      <td className="w-fit">Maximum 255 characters</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><strong>description</strong></td>
+      <td className="w-fit"><strong>Optional.</strong> Description of the new project.</td>
+      <td className="w-fit"></td>
+    </tr>
+    <tr>
+      <td className="w-fit"><strong>tags</strong></td>
+      <td className="w-fit"><strong>Optional.</strong> One or more string tags. Tags do not have a functional meaning, they only provide better orientation in projects.</td>
+      <td className="w-fit"></td>
+    </tr>
+  </tbody>
+</table>
 
 At least one service in `services:` section is required. You can create a project with multiple services. The example above contains only Object storage service but you can create a description.yml with different types of services.
 
-| Parameter                  | Description                                                                                                                                                                                                                                                                                                                                               |
-| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **hostname**               | The unique service identifier.<br/>The name of the new Object storage will be set to the hostname value.<br/>**Limitations:**<br/><ul><li>duplicate services with the same name in the same project are forbidden</li><li>maximum 25 characters</li><li>must contain only lowercase ASCII letters (a-z) or numbers (0-9)</li></ul>                        |
-| **type**                   | Specifies the Object storage type objectstorage and version.<br/>Set type: `objectstorage`<br/>**Limitations:** Currently `objectstorage` or `object-storage` is available.                                                                                                                                                                               |
-| **objectStorageSize**      | The size of the bucket quota in GB.<br/>**Limitations:** Set a whole number between 1 and 100.                                                                                                                                                                                                                                                            |
-| **objectStoragePolicy**    | **Optional.** Either `objectStoragePolicy` or `objectStorageRawPolicy` is required.<br/>Set one of allowed values:<ul><li>`public-read`</li><li>`public-objects-read`</li><li>`public-read-write`</li><li>`public-write`</li><li>`private`</li></ul> Read more about [the basic policy templates]. |
-| **objectStorageRawPolicy** | **Optional.** Either `objectStoragePolicy` or `objectStorageRawPolicy` is required.<br/>Set your own access policy in the [IAM Policy JSON format].<br/>The `{{ .BucketName }}` variable will be replaced by the bucket name.                                                                                                                             |
+<table className="w-full rounded-lg my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit"><strong>Parameter</strong></th>
+      <th className="w-fit"><strong>Description</strong></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit"><strong>hostname</strong></td>
+      <td className="w-fit">
+        The unique service identifier.
+         
+        The name of the new Object storage will be set to the hostname value.
+         
+        <strong>Limitations:</strong>
+        <br />- duplicate services with the same name in the same project are forbidden
+        <br />- maximum 25 characters
+        <br />- must contain only lowercase ASCII letters (a-z) or numbers (0-9)
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit"><strong>type</strong></td>
+      <td className="w-fit">
+        Specifies the Object storage type objectstorage and version.
+        <br />
+        Set type: `objectstorage`
+         
+        <strong>Limitations:</strong>
+        <br />
+        Currently `objectstorage` or `object-storage` is available.
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit"><strong>objectStorageSize</strong></td>
+      <td className="w-fit">
+        The size of the bucket quota in GB.
+         
+        <strong>Limitations:</strong>
+        <br />
+        Set a whole number between 1 and 100.
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit"><strong>objectStoragePolicy</strong></td>
+      <td className="w-fit">
+        <strong>Optional.</strong> Either `objectStoragePolicy` or `objectStorageRawPolicy` is required.
+         
+        Set one of allowed values:
+        <ul>
+          <li>`public-read`</li>
+          <li>`public-objects-read`</li>
+          <li>`public-read-write`</li>
+          <li>`public-write`</li>
+          <li>`private`</li>
+        </ul>
+        Read more about <a href="#access-policy">the basic policy templates</a>.
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit"><strong>objectStorageRawPolicy</strong></td>
+      <td className="w-fit">
+        <strong>Optional.</strong> Either `objectStoragePolicy` or `objectStorageRawPolicy` is required.
+         
+        Set your own access policy in the <a href="https://min.io/docs/minio/linux/administration/identity-access-management/policy-based-access-control.html#policy-document-structure">IAM Policy JSON format</a>.
+         
+        The `{{ .BucketName }}` variable will be replaced by the bucket name.
+      </td>
+    </tr>
+  </tbody>
+</table>
 
 Zerops creates one bucket automatically for each new Object storage service.
 
