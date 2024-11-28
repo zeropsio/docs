@@ -753,45 +753,6 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'Dive-in',
-collapsible: false,
-      link: {
-        type: 'doc',
-        id: 'nodejs/getting-started',
-      },
-      customProps: {
-        sidebar_icon: 'rocket-launch',
-      },
-      className: 'homepage-sidebar-item',
-      items: [
-        {
-          type: 'doc',
-          id: 'nodejs/tutorial/quickstart',
-          label: 'Quickstart',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-        {
-          type: 'doc',
-          id: 'nodejs/tutorial/step-by-step',
-          label: 'Step-by-step tutorial',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-        {
-          type: 'doc',
-          id: 'nodejs/tutorial/runtime-sql',
-          label: 'Runtime + SQL',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-      ],
-    },
-    {
-      type: 'category',
       label: 'How-to',
       collapsible: false,
       customProps: {
@@ -904,45 +865,6 @@ collapsible: false,
         sidebar_is_title: true,
         sidebar_icon: 'php',
       },
-    },
-    {
-      type: 'category',
-      label: 'Dive-in',
-collapsible: false,
-      link: {
-        type: 'doc',
-        id: 'php/getting-started',
-      },
-      customProps: {
-        sidebar_icon: 'rocket-launch',
-      },
-      className: 'homepage-sidebar-item',
-      items: [
-        {
-          type: 'doc',
-          id: 'php/tutorial/quickstart',
-          label: 'Quickstart',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-        {
-          type: 'doc',
-          id: 'php/tutorial/step-by-step',
-          label: 'Step-by-step tutorial',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-        {
-          type: 'doc',
-          id: 'php/tutorial/runtime-sql',
-          label: 'Runtime + SQL',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-      ],
     },
     {
       type: 'category',
