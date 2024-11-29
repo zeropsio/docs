@@ -21,9 +21,9 @@ export function DropdownItem({ question, children }: DropdownItemProps) {
 
     return (
         <div className="py-0.5">
-            <div className="card bg-[#F2F5F7] dark:bg-medusa-bg-base shadow-card-rest dark:shadow-card-rest-dark w-full py-1 px-0.5 rounded-md">
+            <div className="card bg-[#F2F5F7] dark:bg-medusa-bg-base shadow-card-rest dark:shadow-card-rest-dark w-full p-[5px] rounded-md">
                 <button
-                    className="flex w-full justify-between items-center text-left bg-transparent border-none cursor-pointer"
+                    className="flex w-full p-[10px] justify-between items-center text-left bg-transparent border-none cursor-pointer"
                     onClick={() => setIsOpen(!isOpen)}
                     aria-expanded={isOpen}
                 >
