@@ -68,7 +68,7 @@ export default function CodeBlock({
   };
 
   return (
-    <div className="code-wrapper">
+    <div className="code-wrapper selection:bg-primary-500 selection:text-green-500">
       {(title || badge.label) && (
         <div className="code-header">
           {title}
