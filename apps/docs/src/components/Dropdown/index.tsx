@@ -27,9 +27,9 @@ export function DropdownItem({ question, children }: DropdownItemProps) {
                     onClick={() => setIsOpen(!isOpen)}
                     aria-expanded={isOpen}
                 >
-                    <span className="text-lg font-medium cursor-pointer">{question}</span>
+                    <span className="text-[13px] ml-0.5 font-medium cursor-pointer">{question}</span>
                     {isOpen ? (
-                        <ChevronUpMini className="text-gray-500" />
+                        <ChevronUpMini className="text-gray-400" />
                     ) : (
                         <ChevronDownMini className="text-gray-500" />
                     )}
