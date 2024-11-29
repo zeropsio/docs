@@ -215,6 +215,19 @@ Environment variable reference might need to be used as a part of string express
 The **string** is the only data type of all input parameters. Those input parameters that logically represent numbers, as in the case of the [generateRandomString](#generaterandomstring) function, are internally converted to numbers.
 :::
 
+:::info Example Usage for Environment Variables
+- For Multiline Generation use:
+```yaml
+APP_PUBLIC_KEY: |
+      <@getVar(KeyPublic)>
+```
+
+- For Single Value Generation use:
+```yaml
+APP_PUBLIC_KEY_SSH: <@getVar(KeyPublicSsh)>
+```
+:::
+
 ### generateRandomString
 
 <table className="w-full rounded-lg my-1.5 text-center">
@@ -628,7 +641,7 @@ The **string** is the only data type of all input parameters. Those input parame
     <tr>
       <td className="w-fit">Description:</td>
       <td className="w-fit">
-        Generates public and private <a href="https://en.wikipedia.org/wiki/EdDSA">ED25519</a> key pairs (including SSH) and stores them for later use as internal variables with names using the base name and suffixes.
+        Generates public and private <a href="https://en.wikipedia.org/wiki/EdDSA">ED25519</a> key pairs (including SSH) and stores them for later use as internal variables with names using the base name and variants.
       </td>
     </tr>
     <tr>
@@ -642,7 +655,7 @@ The **string** is the only data type of all input parameters. Those input parame
     <tr>
       <td className="w-fit"><code>{'<basename>'}</code>:</td>
       <td className="w-fit">
-        The required parameter is the base name under which all generated key versions will be stored as internal variables in combination with a <a href="#available-set-of-suffixes-for-generateed25519key">set of suffixes</a>.
+        The required parameter is the base name under which all generated key versions will be stored as internal variables in combination with a <a href="#available-set-of-variants-for-generateed25519key">set of variants</a>.
       </td>
     </tr>
     <tr>
@@ -660,12 +673,12 @@ The **string** is the only data type of all input parameters. Those input parame
   </tbody>
 </table>
 
-### Available set of suffixes for generateED25519Key
+### Available Variants for generateED25519Key
 
 <table className="w-full rounded-lg my-1.5 text-center">
   <thead>
     <tr>
-      <th className="w-fit">Suffix</th>
+      <th className="w-fit">Variant</th>
       <th className="w-fit">Description</th>
       <th className="w-fit">How to use with: <code>{'<@generateED25519Key(<Key>)>'}</code></th>
     </tr>
@@ -714,20 +727,6 @@ services:
     APP_PRIVATE_KEY_SSH: |
       <@getVar(KeyPrivateSsh)>
 ```
-
-:::info
-- For Multiline Generation use:
-```yaml
-APP_PUBLIC_KEY: |
-      <@getVar(KeyPublic)>
-```
-
-- For Single Value Generation use:
-```yaml
-APP_PUBLIC_KEY_SSH: <@getVar(KeyPublicSsh)>
-```
-:::
-
 
 
 ### Output of the import YAML script
@@ -793,7 +792,7 @@ APP_PUBLIC_KEY_SSH: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILtP4BCKTVG1XagNtJVZfmQ/
     <tr>
       <td className="w-fit">Description:</td>
       <td className="w-fit">
-        Generates public and private <a href="https://en.wikipedia.org/wiki/RSA_(cryptosystem)">RSA 2048bit</a> key pairs (including SSH) and stores them for later use as internal variables with names using the base name and suffixes.
+        Generates public and private <a href="https://en.wikipedia.org/wiki/RSA_(cryptosystem)">RSA 2048bit</a> key pairs (including SSH) and stores them for later use as internal variables with names using the base name and variants.
       </td>
     </tr>
     <tr>
@@ -807,7 +806,7 @@ APP_PUBLIC_KEY_SSH: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILtP4BCKTVG1XagNtJVZfmQ/
     <tr>
       <td className="w-fit"><code>{'<basename>'}</code>:</td>
       <td className="w-fit">
-        The required parameter is the base name under which all generated key versions will be stored as internal variables in combination with a <a href="#available-set-of-suffixes-for-generatersa2048key">set of suffixes</a>.
+        The required parameter is the base name under which all generated key versions will be stored as internal variables in combination with a <a href="#available-set-of-variants-for-generatersa2048key">set of variants</a>.
       </td>
     </tr>
     <tr>
@@ -826,12 +825,12 @@ APP_PUBLIC_KEY_SSH: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILtP4BCKTVG1XagNtJVZfmQ/
 </table>
 
 
-#### Available set of suffixes for generateRSA2048Key
+#### Available Variants for generateRSA2048Key
 
 <table className="w-full rounded-lg my-1.5 text-center">
   <thead>
     <tr>
-      <th className="w-fit">Suffix</th>
+      <th className="w-fit">Variant</th>
       <th className="w-fit">Description</th>
       <th className="w-fit">How to use with: <code>{'<@generateRSA2048Key(<Key>)>'}</code></th>
     </tr>
@@ -881,19 +880,12 @@ services:
       <@getVar(KeyPrivate)>
 ```
 
-#### Output of generateRSA2048Key in the Zerops import YAML script
+### Output of the import YAML script
+
+- Generated as a multiline value
+- The same value as in APP_PUBLIC_KEY.
 
 ```yaml
-services:
-- hostname: app
-  type: nodejs@16
-  minContainers: 1
-  ports:
-  - port: 3000
-    httpSupport: true
-  envVariables:
-    # Generated as a multiline value
-    # The same value as in APP_PUBLIC_KEY.
     GENERATED_PUBLIC_KEY: |
       -----BEGIN PUBLIC KEY-----
       MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyWMKx+vdEb/Ww19trV9D
@@ -904,8 +896,12 @@ services:
       KCP60AMaT2PewB51AtuvFR8nP05WskMgd887KHXZjk9NhDU5E06vz4nf7a3t+it0
       UwIDAQAB
       -----END PUBLIC KEY-----
-    # Generated as a multiline value.
-    # The same value as in GENERATED_PUBLIC_KEY.
+```
+
+- Generated as a multiline value.
+- The same value as in GENERATED_PUBLIC_KEY.
+
+```yaml
     APP_PUBLIC_KEY: |
       -----BEGIN PUBLIC KEY-----
       MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyWMKx+vdEb/Ww19trV9D
@@ -916,9 +912,16 @@ services:
       KCP60AMaT2PewB51AtuvFR8nP05WskMgd887KHXZjk9NhDU5E06vz4nf7a3t+it0
       UwIDAQAB
       -----END PUBLIC KEY-----
-    # Generated as a single value
+```
+
+- Generated as a single value
+
+```yaml
     APP_PUBLIC_KEY_SSH: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDJYwrH690Rv9bDX22tX0OiDvHp3gwIvi7nvp9V0OMEWFeNdisrRjSai+9g17vaq2mCBbwWcCIpsU1YwuvuZXXa7QkR0/NqpI5f9cpEpararvDJmMZTS5UsndF3ZjjIXKODrNu8DQeHkdGBufvGhExRtPea3WUE/4N4ciL17FO+2I1+k7RnVuJ2Ysu/MudqSDV6LxhacQAUmLzf8y5EyEhY4DfaHXhZVu+DhIDv75JMcXe4cv6Qcns/8p6oAIME9uBxz1LPtaxJMA7o92vLeysoI/rQAxpPY97AHnUC268VHyc/TlayQyB3zzsoddmOT02ENTkTTq/Pid/tre36K3RT
-    # Generated as a multiline value
+```
+
+- Generated as a multiline value
+```yaml
     APP_PRIVATE_KEY: |
       -----BEGIN PRIVATE KEY-----
       MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDJYwrH690Rv9bD
@@ -950,6 +953,7 @@ services:
       -----END PRIVATE KEY-----
 ```
 
+
 ### generateRSA4096Key
 
 <table className="w-full rounded-lg my-1.5 text-center">
@@ -963,7 +967,7 @@ services:
     <tr>
       <td className="w-fit">Description:</td>
       <td className="w-fit">
-        Generates public and private <a href="https://en.wikipedia.org/wiki/RSA_(cryptosystem)">RSA 4096bit</a> key pairs (including SSH) and stores them for later use as internal variables with names using the base name and suffixes.
+        Generates public and private <a href="https://en.wikipedia.org/wiki/RSA_(cryptosystem)">RSA 4096bit</a> key pairs (including SSH) and stores them for later use as internal variables with names using the base name and variants.
       </td>
     </tr>
     <tr>
@@ -977,7 +981,7 @@ services:
     <tr>
       <td className="w-fit"><code>{'<basename>'}</code>:</td>
       <td className="w-fit">
-        The required parameter is the base name under which all generated key versions will be stored as internal variables in combination with a <a href="#available-set-of-suffixes-for-generatersa4096key">set of suffixes</a>.
+        The required parameter is the base name under which all generated key versions will be stored as internal variables in combination with a <a href="#available-set-of-variants-for-generatersa4096key">set of variants</a>.
       </td>
     </tr>
     <tr>
@@ -995,12 +999,12 @@ services:
   </tbody>
 </table>
 
-#### Available set of suffixes for generateRSA4096Key
+#### Available Variants for generateRSA4096Key
 
 <table className="w-full rounded-lg my-1.5 text-center">
   <thead>
     <tr>
-      <th className="w-fit">Suffix</th>
+      <th className="w-fit">Variant</th>
       <th className="w-fit">Description</th>
       <th className="w-fit">How to use with: <code>{'<@generateRSA4096Key(<Key>)>'}</code></th>
     </tr>
