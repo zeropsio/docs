@@ -291,6 +291,7 @@ module.exports = {
       },
       minWidth: {
         xl: "1419px",
+        xxl: "1440px",
       },
       fontSize: {
         h1: [
