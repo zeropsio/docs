@@ -102,6 +102,10 @@ The second turn handles standard processing, where the system creates the import
 
 Functions generally support 2 types of parameters.
 
+:::tip Internal processing of function parameters
+The **string** is the only data type of all input parameters. Those input parameters that logically represent numbers, as in the case of the [generateRandomString](#generaterandomstring) function, are internally converted to numbers.
+:::
+
 ### String expressions
 
 * Value is enclosed in `<` and `>` characters.
@@ -135,7 +139,7 @@ services:
   ports:
   - port: 3000
     httpSupport: true
-  envVariables:
+  envSecrets:
     NESTED_STRINGS: <Base and <Nested> content>
     NESTED_FUNCTIONS: <@generateRandomString(<@generateRandomInt(<20>, <50>)>)>
     EVEN_MORE_NESTING: <@setVar(<refVarName>, <@generateRandomString(<@generateRandomInt(<20>, <30>)>)>)>
@@ -151,7 +155,7 @@ services:
   ports:
   - port: 3000
     httpSupport: true
-  envVariables:
+  envSecrets:
     NESTED_STRINGS: "Base and Nested content"
     NESTED_FUNCTIONS: "58580f0ad377a8e4c0dccc1622e2d3812b90"
     EVEN_MORE_NESTING: "73bcd2b647293dd04674cdecc"
@@ -212,9 +216,8 @@ Environment variable reference might need to be used as a part of string express
 
 ## List of import functions
 
-
-:::tip Internal processing of function parameters
-The **string** is the only data type of all input parameters. Those input parameters that logically represent numbers, as in the case of the [generateRandomString](#generaterandomstring) function, are internally converted to numbers.
+:::caution Just a gentle reminder
+If you don't use the `yamlPreprocessor=on` line at the beginning of your import YAML script, the preprocessor will not be enabled and the functions will not work.
 :::
 
 :::info Example Usage for Environment Variables
@@ -718,7 +721,7 @@ services:
   ports:
   - port: 3000
     httpSupport: true
-  envVariables:
+  envSecrets:
     GENERATED_PUBLIC_KEY: |
       <@generateED25519Key(<Key>)>
     APP_PUBLIC_KEY: |
@@ -876,7 +879,7 @@ services:
   ports:
   - port: 3000
     httpSupport: true
-  envVariables:
+  envSecrets:
     # Generated as a multiline value
     # The same value as in APP_PUBLIC_KEY.
     GENERATED_PUBLIC_KEY: |
@@ -1059,7 +1062,7 @@ services:
   ports:
   - port: 3000
     httpSupport: true
-  envVariables:
+  envSecrets:
     # Generated as a multiline value
     # The same value as in APP_PUBLIC_KEY.
     GENERATED_PUBLIC_KEY: |
