@@ -15,7 +15,7 @@ const IconRust = (props: IconProps) => {
     >
       <g transform="translate(53 53)">
         <path
-          className={clsx('fill-black dark:fill-[#ADB1B8]')}
+          className={clsx('fill-[#CE422B]')}
           strokeLinejoin="round"
           d="M-8.5-14.5h13c8 0 8 8 0 8h-13Zm-31 37h40v-11h-9v-8h10c11 0 5 19 14 19h25v-19h-6v2c0 8-9 7-10 2s-5-9-6-9c15-8 6-24-6-24h-47v11h10v26h-15Z"
         />
@@ -24,13 +24,13 @@ const IconRust = (props: IconProps) => {
             r="43"
             fill="none"
             stroke="currentColor"
-            className="dark:stroke-[#ADB1B8]"
+            className="stroke-[#CE422B]"
             strokeWidth="9"
           />
           <path
             id="b"
             stroke="currentColor"
-            className="dark:stroke-[#ADB1B8]"
+            className="stroke-[#CE422B] "
             strokeWidth="3"
             strokeLinejoin="round"
             d="m46 3 5-3-5-3z"
@@ -69,7 +69,7 @@ const IconRust = (props: IconProps) => {
           <path
             id="c"
             stroke="currentColor"
-            className="dark:stroke-[#ADB1B8]"
+            className="stroke-[#CE422B]"
             strokeWidth="6"
             strokeLinejoin="round"
             d="m-7-42 7 7 7-7z"
