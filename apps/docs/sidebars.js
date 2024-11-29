@@ -590,6 +590,14 @@ module.exports = {
       items: [
         {
           type: 'doc',
+          id: 'references/importyml/pre-processor',
+          label: 'yamlPreprocessor',
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        },
+        {
+          type: 'doc',
           id: 'references/importyml/type-list',
           label: 'Service types',
           customProps: {
