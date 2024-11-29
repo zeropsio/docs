@@ -2,7 +2,7 @@ import { ChevronDownMini, ChevronUpMini } from '@medusajs/icons';
 import React, { ReactNode, useState, useRef, useEffect } from 'react';
 
 interface DropdownItemProps {
-    question: string;
+    question: ReactNode;
     children: ReactNode;
 }
 
@@ -23,11 +23,11 @@ export function DropdownItem({ question, children }: DropdownItemProps) {
         <div className="py-0.5">
             <div className="card bg-[#F2F5F7] dark:bg-medusa-bg-base shadow-card-rest dark:shadow-card-rest-dark w-full p-[5px] rounded-md">
                 <button
-                    className="flex w-full p-[10px] justify-between items-center text-left bg-transparent border-none cursor-pointer"
+                    className="flex w-full p-[9px] justify-between items-center text-left bg-transparent border-none cursor-pointer"
                     onClick={() => setIsOpen(!isOpen)}
                     aria-expanded={isOpen}
                 >
-                    <span className="text-[13px] ml-0.5 font-medium cursor-pointer">{question}</span>
+                    <span className="text-[14px] font-medium cursor-pointer">{question}</span>
                     {isOpen ? (
                         <ChevronUpMini className="text-gray-400" />
                     ) : (
@@ -40,7 +40,7 @@ export function DropdownItem({ question, children }: DropdownItemProps) {
                     style={{ height: height }}
                     role="region"
                 >
-                    <p className="px-0.75 mt-1 -mb-1">{children}</p>
+                    <p className="px-0.75 m-[11px] mt-1 -mb-1">{children}</p>
                 </div>
             </div>
         </div>
