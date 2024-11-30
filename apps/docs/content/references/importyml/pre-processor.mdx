@@ -135,11 +135,7 @@ Function and string expressions may be nested even multiple layers deep.
 #yamlPreprocessor=on
 services:
 - hostname: app
-  type: nodejs@16
-  minContainers: 1
-  ports:
-  - port: 3000
-    httpSupport: true
+  type: nodejs@20
   envSecrets:
     NESTED_STRINGS: <Base and <Nested> content>
     NESTED_FUNCTIONS: <@generateRandomString(<@generateRandomInt(<20>, <50>)>)>
@@ -152,11 +148,7 @@ services:
 #yamlPreprocessor=on
 services:
 - hostname: app
-  type: nodejs@16
-  minContainers: 1
-  ports:
-  - port: 3000
-    httpSupport: true
+  type: nodejs@20
   envSecrets:
     NESTED_STRINGS: "Base and Nested content"
     NESTED_FUNCTIONS: "58580f0ad377a8e4c0dccc1622e2d3812b90"
@@ -270,6 +262,24 @@ APP_PUBLIC_KEY_SSH: <@getVar(KeyPublicSsh)>
   </tbody>
 </table>
 
+
+#### Usage in import YAML
+
+```yaml
+#yamlPreprocessor=on
+services:
+- hostname: app
+  type: nodejs@20
+  envSecrets:
+    RANDOM_STRING: <@generateRandomString(<10>)>
+```
+
+#### Output of import YAML
+
+```yaml
+RANDOM_STRING: 58580f0ad377a8e4c0dccc1622e2d3812b90
+```
+
 ### generateRandomInt
 <table className="w-full rounded-lg my-1.5 text-center">
   <thead>
@@ -306,6 +316,23 @@ APP_PUBLIC_KEY_SSH: <@getVar(KeyPublicSsh)>
   </tbody>
 </table>
 
+#### Usage in import YAML
+
+```yaml
+#yamlPreprocessor=on
+services:
+- hostname: app
+  type: nodejs@20
+  envSecrets:
+    RANDOM_INT: <@generateRandomInt(<200>, <1000>)>
+```
+
+#### Output of import YAML
+
+```yaml
+RANDOM_INT: 823
+```
+
 ### pickRandom
 
 <table className="w-full rounded-lg my-1.5 text-center">
@@ -338,6 +365,23 @@ APP_PUBLIC_KEY_SSH: <@getVar(KeyPublicSsh)>
     </tr>
   </tbody>
 </table>
+
+#### Usage in import YAML
+
+```yaml
+#yamlPreprocessor=on
+services:
+- hostname: app
+  type: nodejs@20
+  envSecrets:
+    PICK_RANDOM: <@pickRandom(<640>, <800>, <1024>, <1280>, <1440>, <1920>)>
+```
+
+#### Output of import YAML
+
+```yaml
+PICK_RANDOM: 1024
+```
 
 ### setVar
 
@@ -376,6 +420,23 @@ APP_PUBLIC_KEY_SSH: <@getVar(KeyPublicSsh)>
   </tbody>
 </table>
 
+#### Usage in import YAML
+
+```yaml
+#yamlPreprocessor=on
+services:
+- hostname: app
+  type: nodejs@20
+  envSecrets:
+    SET_VAR: <@setVar(<plainPassword>, <@generateRandomString(<16>)>)>
+```
+
+#### Output of import YAML
+
+```yaml
+SET_VAR: N4KdtM41WskS74wx
+```
+
 ### getVar
 
 <table className="w-full rounded-lg my-1.5 text-center">
@@ -409,6 +470,22 @@ APP_PUBLIC_KEY_SSH: <@getVar(KeyPublicSsh)>
   </tbody>
 </table>
 
+#### Usage in import YAML
+
+```yaml
+#yamlPreprocessor=on
+services:
+- hostname: app
+  type: nodejs@20
+  envSecrets:
+    GET_VAR: <@getVar(plainPassword)>
+```
+
+#### Output of import YAML
+
+```yaml
+GET_VAR: N4KdtM41WskS74wx
+```
 
 ### generateRandomStringVar
 
@@ -450,7 +527,22 @@ APP_PUBLIC_KEY_SSH: <@getVar(KeyPublicSsh)>
   </tbody>
 </table>
 
-### getDateTime
+#### Usage in import YAML
+
+```yaml
+#yamlPreprocessor=on
+services:
+- hostname: app
+  type: nodejs@20
+  envSecrets:
+    GENERATE_RANDOM_STRING_VAR: <@generateRandomStringVar(<plainPassword>, <10>)>
+```
+
+#### Output of import YAML
+
+```yaml
+GENERATE_RANDOM_STRING_VAR: hR5hS79H4p
+```
 
 <table className="w-full rounded-lg my-1.5 text-center">
   <thead>
@@ -501,7 +593,22 @@ APP_PUBLIC_KEY_SSH: <@getVar(KeyPublicSsh)>
   </tbody>
 </table>
 
-#### Possible mask patterns to date and time formatting
+#### Usage in import YAML
+
+```yaml
+#yamlPreprocessor=on
+services:
+- hostname: app
+  type: nodejs@20
+  envSecrets:
+    GET_DATETIME: <@getDatetime(<DD.MM.YYYY HH:mm:ss>, <CET>)>
+```
+
+#### Output of import YAML
+
+```yaml
+GET_DATETIME: 11.12.2022 18:06:13
+```
 
 <table className="w-full rounded-lg my-1.5 text-center">
   <thead>
@@ -635,6 +742,23 @@ APP_PUBLIC_KEY_SSH: <@getVar(KeyPublicSsh)>
   </tbody>
 </table>
 
+#### Usage in import YAML
+
+```yaml
+#yamlPreprocessor=on
+services:
+- hostname: app
+  type: nodejs@20
+  envSecrets:
+    GET_DATETIME: <@getDatetime(<DD.MM.YYYY HH:mm:ss>, <CET>)>
+```
+
+#### Output of import YAML
+
+```yaml
+GET_DATETIME: 11.12.2022 18:06:13
+```
+
 ### generateED25519Key
 
 <table className="w-full rounded-lg my-1.5 text-center">
@@ -714,16 +838,13 @@ APP_PUBLIC_KEY_SSH: <@getVar(KeyPublicSsh)>
   </tbody>
 </table>
 
-#### Usage in the Zerops import YAML script
+#### Usage in import YAML
 
 ```yaml
 #yamlPreprocessor=on
 services:
 - hostname: app
   type: nodejs@20
-  ports:
-  - port: 3000
-    httpSupport: true
   envSecrets:
     GENERATED_PUBLIC_KEY: |
       <@generateED25519Key(<Key>)>
@@ -736,7 +857,7 @@ services:
       <@getVar(KeyPrivateSsh)>
 ```
 
-#### Output of the import YAML script
+#### Output of import YAML
 
 
 <Dropdown>
@@ -872,7 +993,7 @@ services:
   </tbody>
 </table>
 
-#### Usage in the Zerops import YAML script
+#### Usage in import YAML
 
 ```yaml
 #yamlPreprocessor=on
@@ -880,9 +1001,6 @@ services:
 - hostname: app
   type: nodejs@16
   minContainers: 1
-  ports:
-  - port: 3000
-    httpSupport: true
   envSecrets:
     # Generated as a multiline value
     # The same value as in APP_PUBLIC_KEY.
@@ -899,7 +1017,7 @@ services:
       <@getVar(KeyPrivate)>
 ```
 
-#### Output of the import YAML script
+#### Output of import YAML
 
 
 <Dropdown>
@@ -1063,10 +1181,6 @@ services:
 services:
 - hostname: app
   type: nodejs@16
-  minContainers: 1
-  ports:
-  - port: 3000
-    httpSupport: true
   envSecrets:
     # Generated as a multiline value
     # The same value as in APP_PUBLIC_KEY.
