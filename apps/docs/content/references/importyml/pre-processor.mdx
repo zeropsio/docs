@@ -90,21 +90,14 @@ The second turn handles standard processing, where the system creates the import
   </tbody>
 </table>
 
+:::note
+All functions in the preprocessor return values as strings, regardless of the operation performed. This includes numeric operations, random generation, and variable manipulation.
+:::
 
 
-
-
-
-
-
-
-## Data types of function parameters
+## Parameter Data Types
 
 Functions generally support 2 types of parameters.
-
-:::tip Internal processing of function parameters
-The **string** is the only data type of all input parameters. Those input parameters that logically represent numbers, as in the case of the [generateRandomString](#generaterandomstring) function, are internally converted to numbers.
-:::
 
 ### String expressions
 
@@ -121,15 +114,19 @@ The **string** is the only data type of all input parameters. Those input parame
 * Stored value under an internal variable name is looked up and passed into the function as a string.
 * If no value is found, an error is returned.
 
-## Data types of function output values
+:::tip Internal processing of function parameters
+The **string** is the only data type of all input parameters. Those input parameters that logically represent numbers, as in the case of the [generateRandomString](#generaterandomstring) function, are internally converted to numbers.
+:::
 
-The **string** is the only data type of all function output values.
+## Nested Expressions
 
-## Nesting of string and function expressions
+The preprocessor supports nested function and string expressions, allowing you to:
+- Combine multiple functions
+- Use function outputs as inputs for other functions
+- Nest string expressions within other strings
+- Create complex, multi-level expressions
 
-Function and string expressions may be nested even multiple layers deep.
-
-### Examples of nesting used with imported environment variables
+### Examples of Nesting with Environment Variables
 
 ```yaml
 #yamlPreprocessor=on
@@ -142,7 +139,7 @@ services:
     EVEN_MORE_NESTING: <@setVar(<refVarName>, <@generateRandomString(<@generateRandomInt(<20>, <30>)>)>)>
 ```
 
-### Outputs of nesting used with imported environment variables
+### Outputs of Nesting with Environment Variables
 
 ```yaml
 #yamlPreprocessor=on
@@ -155,16 +152,29 @@ services:
     EVEN_MORE_NESTING: "73bcd2b647293dd04674cdecc"
 ```
 
-### Escaping to print out reserved characters
+### Escaping to Print Reserved Characters
 
 Reserved characters `\<>|` have to be escaped using the `\` backslash to print them out. It's mandatory to escape the `\` character itself.
+
 :::caution
-There is one caveat with our pre-processing step of the YAML import script because we are parsing the script twice. The first time when evaluating import function expressions, string expressions, and applied modificators, and the second time, when parsing the final YAML composed structure. In each phase, one escaping level of the backslash is done, meaning that each removes one `\`. That's why the `\` character has to be escaped twice (`\\\\` instead of `\\`) to print out `\` on the output finally.
+The YAML processing happens in two sequential phases:
+1. **Preprocessing Phase**: Evaluates functions, modifiers, and replaces them with results
+2. **YAML Processing Phase**: Creates project, services, and handles environment variables
+
+Each phase processes escape characters, so backslashes need to be escaped twice:
+
+- If you want to output a single backslash `\`, you need to use four backslashes `\\\\`
+- Example:
+
+Input: `FILE_PATH: value\\\\with\\\\backslashes`
+
+Output: `FILE_PATH: value\with\backslashes`
+
+It means that if `DIR: <\\\\>` is used, the final value stored in the environment variable will be just `\`. The same is true for any value with backslashes, like `SERVER: True\\\\False`, where the stored result will be `True\False`.
 :::
 
-It means that if `ESCAPED_VALUE: <\\\\>` is used, the final value stored in the environment variable will be just `\`. The same is true for any value with backslashes, like `ESCAPED_VALUE: True\\\\False`, where the stored result will be `True\False`.
 
-### Examples of correct function expressions
+### Examples of Correct Function Expressions
 
 ```yaml
 # Function will receive one parameter as the string constant value of: 30
