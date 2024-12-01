@@ -24,45 +24,28 @@ project:
   name: recipe-laravel-minimal
   tags:
     - zerops-recipe
-    - development
 
 services:
-  # PHP application service
   - hostname: app
     type: php-nginx@8.4
-    # Clones a git repository
     buildFromGit: https://github.com/zeropsio/recipe-laravel-minimal
-    # Enables public access via zerops.app subdomain
     enableSubdomainAccess: true
-    # Environment variables inside service
     envSecrets:
-      # yamlPreprocessor feature
-      # Generates a random 32 char string for Laravel APP_KEY
       APP_KEY: <@generateRandomString(<32>)>
       APP_DEBUG: true
       APP_ENV: development
 
-  # PostgreSQL database service
   - hostname: db
     type: postgresql@16
-    # Non High-Availability mode (single instance)
     mode: NON_HA
-    # Higher priority means this service is created before others
     priority: 10
 
-  # Adminer database management tool
   - hostname: adminer
     type: php-apache@8.3
-    # Clones a git repository
     buildFromGit: https://github.com/zeropsio/recipe-adminer@main
-    # Enables public access via zerops.app subdomain
     enableSubdomainAccess: true
 ```
-
 :::
-
-
-This section provides a comprehensive example of an import YAML configuration file, allowing you to define and import a project and its services.
 
 :::note
 - `REQUIRED.` If a parent object is defined, the key-value pair is required to be filled. All other key-value pairs are optional.
@@ -70,6 +53,9 @@ This section provides a comprehensive example of an import YAML configuration fi
 
 <Dropdown>
 <DropdownItem title="Comprehensive example of an import YAML configuration">
+
+This section provides a comprehensive example of an import YAML configuration file, allowing you to define and import a project and its services with environment variables.
+
   ```yml
 # ==== Define a project to import ====
 project:
@@ -91,6 +77,7 @@ services:
     mode: HA
     # Map of secret environment variables
     envSecrets:
+      SECRET_KEY: <@generateRandomString(<32>)>
       DATABASE_HOST: ${db_hostname}
       DATABASE_NAME: ${db_hostname}
     # Object storage size in GB
@@ -123,7 +110,7 @@ services:
     # Minimum number of containers
     minContainers: 2
     # Maximum number of containers
-    maxContainers: 3
+    maxContainers: 6
     # List of shared storage services to connect to
     mount:
       - teststorage1
@@ -169,6 +156,12 @@ services:
 </Dropdown>
 
 ## Project Configuration
+
+description
+### Usage
+
+description
+
 
 <Dropdown>
   <DropdownItem title="Project Structure">
@@ -216,8 +209,6 @@ services:
   </DropdownItem>
 </Dropdown>
 
-### Usage
-
 ```yml
 # ==== Define a project to import ====
 project:
@@ -233,6 +224,13 @@ project:
 This will create a project with the name `project0` and the description `This project is an example only`. The project will have two tags: `test` and `dev`.
 
 ## Service Configuration
+
+description
+
+### Usage
+
+description
+
 
 <Dropdown>
   <DropdownItem title="Service Structure">
@@ -335,8 +333,6 @@ This will create a project with the name `project0` and the description `This pr
   </DropdownItem>
 </Dropdown>
 
-### Usage
-
 ```yml
 #yamlPreprocessor=on
 services:
@@ -344,7 +340,7 @@ services:
 - hostname: service1
   # REQUIRED: Choose from list of supported technologies and their versions
   type: nodejs@latest
-  # HA or NON_HA mode
+  # High-Availability or Non-High-Availability mode
   mode: HA
   # Map of secret environment variables
   envSecrets:
@@ -358,44 +354,24 @@ services:
   objectStorageRawPolicy:
   # One time build git repository
   buildFromGit: https://github.com/zeropsio/recipe-nodejs-hello-world@main
-  # true or false
+  # Enables public access via zerops.app subdomain
   enableSubdomainAccess: true
   # The higher the sooner the service is created
   priority: 1
 ```
 
-
-### Usage
-
-```yml
-    # Zerops.yml service name or full config file
-    zeropsSetup:
-      build:
-        base: nodejs@latest
-        buildCommands:
-          - echo zerops.yml from import
-          - yarn
-          - yarn run build
-        deployFiles: ./
-        cache: node_modules
-      run:
-        initCommands:
-          - |
-            if ! zcli bucket s3 create $STORAGE_HOSTNAME $STORAGE_BUCKET_NAME --x-amz-acl=private; then
-            echo "The bucket was not created, you have to do it manually!"
-            fi
-        start: yarn start
-  # REQUIRED. Name of your other service
-  - hostname: teststorage1
-    type: shared-storage
-    ...
-```
-
-:::info
-The `yamlPreprocessor` option in your project & service import YAML allows you to generate random secret values, passwords, and public/private key pairs. For more information, see the [yamlPreprocessor](/references/importyml/pre-processor) page.
+:::caution
+The `yamlPreprocessor` option in your project & service import YAML is required to generate random secret values, passwords, and public/private key pairs. For more information, see the [yamlPreprocessor](/references/importyml/pre-processor) page.
 :::
 
 ## Vertical Autoscaling Configuration
+
+description
+
+### Usage
+
+description
+
 
 <Dropdown>
   <DropdownItem title="Vertical Autoscaling Structure">
@@ -492,26 +468,45 @@ The `yamlPreprocessor` option in your project & service import YAML allows you t
   </DropdownItem>
 </Dropdown>
 
-### Usage
-
 ```yml
+services:
+  - hostname: app
+    type: php-nginx@8.4
+    buildFromGit: https://github.com/example/app
+    enableSubdomainAccess: true
     verticalAutoscaling:
-      ...
+      minVCpu: 1
+      maxVCpu: 5
+      # Choose SHARED or DEDICATED
+      cpuMode: DEDICATED
+      minRam: 1
+      maxRam: 32
+      minDisk: 1
+      maxDisk: 100
+      startCpuCoreCount:
+      minFreeCpuCores:
+      minFreeCpuPercent:
+      minFreeRamGB:
+      minFreeRamPercent:
 ```
 
-## Additional Configuration
+## Horizontal Autoscaling Configuration
 
-<Dropdown>
-  <DropdownItem title="Additional Structure">
-<table className="w-full rounded-lg my-1.5">
-  <thead>
-    <tr>
-      <th className="w-fit">Field</th>
-      <th className="w-fit">Type</th>
-      <th className="w-fit">Description</th>
-    </tr>
-  </thead>
-  <tbody>
+description
+
+### Usage
+
+description
+
+    <table className="w-full rounded-lg my-1.5">
+      <thead>
+        <tr>
+          <th className="w-fit">Field</th>
+          <th className="w-fit">Type</th>
+          <th className="w-fit">Description</th>
+        </tr>
+      </thead>
+      <tbody>
     <tr>
       <td className="w-fit">minContainers</td>
       <td className="w-fit">integer</td>
@@ -528,20 +523,127 @@ The `yamlPreprocessor` option in your project & service import YAML allows you t
         Maximum number of containers of the service.
       </td>
     </tr>
+    </tbody>
+    </table>
+
+    
+```yml
+services:
+  - hostname: app
+    type: php-nginx@8.4
+    buildFromGit: https://github.com/example/app
+    enableSubdomainAccess: true
+    # Minimum number of containers
+    minContainers: 2
+    # Maximum number of containers
+    maxContainers: 6
+```
+
+## Mount Shared Storage
+
+description
+
+### Usage
+
+
+<table className="w-full rounded-lg my-1.5">
+  <thead>
     <tr>
-      <td className="w-fit">mount</td>
-      <td className="w-fit">list of strings</td>
-      <td className="w-fit">
-        Mount shared storage to the service. `buildFromGit` must be filled.
-      </td>
+      <th className="w-fit">Field</th>
+      <th className="w-fit">Type</th>
+      <th className="w-fit">Description</th>
     </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <td className="w-fit">mount</td>
+    <td className="w-fit">list of strings</td>
+    <td className="w-fit">
+      Mount shared storage to the service. `buildFromGit` must be filled.
+    </td>
+    </tr>
+  </tbody>
+</table>
+
+```yml
+services:
+  - hostname: app
+    type: php-nginx@8.4
+    buildFromGit: https://github.com/example/app
+    enableSubdomainAccess: true
+    mount:
+      - teststorage1
+```
+
+
+## Using Nginx Configuration
+
+description
+
+### Usage
+
+
+
+<table className="w-full rounded-lg my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Field</th>
+      <th className="w-fit">Type</th>
+      <th className="w-fit">Description</th>
+    </tr>
+  </thead>
+  <tbody>
     <tr>
       <td className="w-fit">nginxConfig</td>
       <td className="w-fit">string (multiline)</td>
-      <td className="w-fit">
+      <td className="w-full">
         Insert full nginx config.
       </td>
     </tr>
+   </tbody>
+</table>
+
+```yml
+#yamlPreprocessor=on
+services:
+  - hostname: app
+    type: php-nginx@8.4
+    buildFromGit: https://github.com/example/app
+    enableSubdomainAccess: true
+    envSecrets:
+      APP_KEY: <@generateRandomString(<32>)>
+    nginxConfig: |-
+      server {
+          listen 80 default_server;
+          listen [::]:80 default_server;
+
+          server_name _;
+          root /var/www;
+
+          location / {
+              try_files $uri $uri/ /index.html;
+          }
+
+          access_log syslog:server=unix:/dev/log,facility=local1 default_short;
+          error_log syslog:server=unix:/dev/log,facility=local1;
+      }
+```
+
+## Using Zerops.yml Configuration
+
+This shows you how you can use the `zeropsSetup` parameter as a way to insert a full [zerops.yml configuration file](/references/zeropsyml) into your service using import yaml.
+
+### Usage
+
+<table className="w-full rounded-lg my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Field</th>
+      <th className="w-fit">Type</th>
+      <th className="w-fit">Description</th>
+    </tr>
+  </thead>
+  <tbody>
     <tr>
       <td className="w-fit">zeropsSetup</td>
       <td className="w-fit">string or object</td>
@@ -551,12 +653,31 @@ The `yamlPreprocessor` option in your project & service import YAML allows you t
     </tr>
   </tbody>
 </table>
-  </DropdownItem>
-</Dropdown>
-
-### Usage
 
 ```yml
-    ...
+#yamlPreprocessor=on
+services:
+  - hostname: app
+    type: php-nginx@8.4
+    buildFromGit: https://github.com/example/app
+    enableSubdomainAccess: true
+    envSecrets:
+      APP_KEY: <@generateRandomString(<32>)>
+    zeropsSetup:
+      build:
+        base: php-nginx@8.4
+        buildCommands:
+          - composer install
+        deployFiles: ./
+        cache: vendor
+    run:
+      initCommands:
+        - |
+          if ! zcli bucket s3 create $STORAGE_HOSTNAME $STORAGE_BUCKET_NAME --x-amz-acl=private; then
+          echo "The bucket was not created, you have to do it manually!"
+          fi
+      start: yarn start
 ```
 
+
+You can use different runtimes as well like `nodejs`, `python`, `elixir`, `gleam`, `ruby`, `rust`, `go`, `java`, `php-apache`, `php-nginx-apache`, etc.
