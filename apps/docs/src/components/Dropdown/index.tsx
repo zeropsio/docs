@@ -2,11 +2,11 @@ import { ChevronDownMini, ChevronUpMini } from '@medusajs/icons';
 import React, { ReactNode, useState, useRef, useEffect } from 'react';
 
 interface DropdownItemProps {
-    question: ReactNode;
+    title: ReactNode;
     children: ReactNode;
 }
 
-export function DropdownItem({ question, children }: DropdownItemProps) {
+export function DropdownItem({ title, children }: DropdownItemProps) {
     const [isOpen, setIsOpen] = useState(false);
     const answerRef = useRef<HTMLDivElement>(null);
     const [height, setHeight] = useState<number | undefined>(0);
@@ -27,7 +27,7 @@ export function DropdownItem({ question, children }: DropdownItemProps) {
                     onClick={() => setIsOpen(!isOpen)}
                     aria-expanded={isOpen}
                 >
-                    <span className="text-[14px] font-medium cursor-pointer">{question}</span>
+                    <span className="text-[14px] font-medium cursor-pointer">{title}</span>
                     {isOpen ? (
                         <ChevronUpMini className="text-gray-400" />
                     ) : (

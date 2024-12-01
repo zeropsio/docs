@@ -3,6 +3,8 @@ title: Project Import YAML Configuration
 description: Learn how to define and import a project using a YAML configuration file
 ---
 
+import { Dropdown, DropdownItem } from '/src/components/Dropdown';
+
 The Zerops YAML import scripts provide an intuitive way to manage your projects. You can create and instantiate entire Zerops projects or specific services
 with a single click in the Zerops GUI.
 
@@ -12,16 +14,63 @@ You can also use the `zcli import` command. This configuration is a simple way t
 This is a general guideline; not all keys are valid for every service type. For technology-specific details, refer to the **Create service** page in the **How To** section of the Zerops documentation.
 :::
 
+---
+
+:::info Laravel project's import yaml example with yamlPreprocessor
+<br/>
+```yml
+#yamlPreprocessor=on
+project:
+  name: recipe-laravel-minimal
+  tags:
+    - zerops-recipe
+    - development
+
+services:
+  # PHP application service
+  - hostname: app
+    type: php-nginx@8.4
+    # Clones a git repository
+    buildFromGit: https://github.com/zeropsio/recipe-laravel-minimal
+    # Enables public access via zerops.app subdomain
+    enableSubdomainAccess: true
+    # Environment variables inside service
+    envSecrets:
+      # yamlPreprocessor feature
+      # Generates a random 32 char string for Laravel APP_KEY
+      APP_KEY: <@generateRandomString(<32>)>
+      APP_DEBUG: true
+      APP_ENV: development
+
+  # PostgreSQL database service
+  - hostname: db
+    type: postgresql@16
+    # Non High-Availability mode (single instance)
+    mode: NON_HA
+    # Higher priority means this service is created before others
+    priority: 10
+
+  # Adminer database management tool
+  - hostname: adminer
+    type: php-apache@8.3
+    # Clones a git repository
+    buildFromGit: https://github.com/zeropsio/recipe-adminer@main
+    # Enables public access via zerops.app subdomain
+    enableSubdomainAccess: true
+```
+
+:::
+
 
 This section provides a comprehensive example of an import YAML configuration file, allowing you to define and import a project and its services.
 
 :::note
-
 - `REQUIRED.` If a parent object is defined, the key-value pair is required to be filled. All other key-value pairs are optional.
+:::
 
-  :::
-
-```yml
+<Dropdown>
+<DropdownItem title="Comprehensive example of an import YAML configuration">
+  ```yml
 # ==== Define a project to import ====
 project:
   # REQUIRED. Name of your project
@@ -115,206 +164,399 @@ services:
   - hostname: teststorage1
     type: shared-storage
     ...
+  ```
+</DropdownItem>
+</Dropdown>
+
+## Project Configuration
+
+<Dropdown>
+  <DropdownItem title="Project Structure">
+
+    <table className="w-full rounded-lg my-1.5">
+      <thead>
+        <tr>
+          <th className="w-fit">Field</th>
+          <th className="w-fit">Type</th>
+          <th className="w-fit">Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td className="w-fit">project</td>
+          <td className="w-fit">object</td>
+          <td className="w-fit">
+            _REQUIRED, if a whole project is imported_
+            Only one project can be defined.
+          </td>
+        </tr>
+        <tr>
+          <td className="w-fit">name</td>
+          <td className="w-fit">string, REQUIRED</td>
+          <td className="w-fit">
+            The name of the new project. Duplicates are allowed.
+          </td>
+        </tr>
+        <tr>
+      <td className="w-fit">description</td>
+      <td className="w-fit">string</td>
+      <td className="w-fit">
+        Description of the new project.
+          </td>
+        </tr>
+        <tr>
+          <td className="w-fit">tags</td>
+          <td className="w-fit">list of strings</td>
+          <td className="w-fit">
+            One or more string tags. Tags do not have a functional meaning, they only provide better orientation in projects.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </DropdownItem>
+</Dropdown>
+
+### Usage
+
+```yml
+# ==== Define a project to import ====
+project:
+  # REQUIRED. Name of your project
+  name: project0
+  # Project description
+  description: "This project is an example only"
+  # List of project tags for filtering
+  tags:
+    - test
+    - dev
+```
+This will create a project with the name `project0` and the description `This project is an example only`. The project will have two tags: `test` and `dev`.
+
+## Service Configuration
+
+<Dropdown>
+  <DropdownItem title="Service Structure">
+
+    <table className="w-full rounded-lg my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Field</th>
+      <th className="w-fit">Type</th>
+      <th className="w-fit">Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit">services</td>
+      <td className="w-fit">list of objects, REQUIRED</td>
+      <td className="w-fit">
+        At least one service is required.
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit">hostname</td>
+      <td className="w-fit">string, REQUIRED</td>
+      <td className="w-fit">
+        The unique service identifier.
+        Limitations:
+        - duplicates in the same project forbidden
+        - maximum 25 characters, lowercase ASCII letters (a-z) or numbers (0-9) only
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit">type</td>
+      <td className="w-fit">enum, REQUIRED</td>
+      <td className="w-fit">
+        Specifies the service type and version. See [supported types](/references/importyml/type-list).
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit">mode</td>
+      <td className="w-fit">enum</td>
+      <td className="w-fit">
+        Values: **HA / NON_HA** (default NON_HA)
+        Defines the operation mode of the service.
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit">envSecrets</td>
+      <td className="w-fit">map[string]string</td>
+      <td className="w-fit">
+        Environment variables that are blurred by default in Zerops GUI. Can be edited or deleted in Zerops GUI.
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit">objectStorageSize</td>
+      <td className="w-fit">integer</td>
+      <td className="w-fit">
+        Object storage size in GB.
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit">objectStoragePolicy</td>
+      <td className="w-fit">enum</td>
+      <td className="w-fit">
+        Values: **private / public-read / public-objects-read / public-write / public-read-write / custom**
+        Select a predefined AWS S3 bucket access policy.
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit">objectStorageRawPolicy</td>
+      <td className="w-fit">json</td>
+      <td className="w-fit">
+        Define your own AWS S3 bucket access policy. See [AWS docs](https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-policy-language-overview.html) for details.
+        Use `{{ .BucketName }}` placeholder if you need to use bucket name in your custom policy rules.
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit">buildFromGit</td>
+      <td className="w-fit">string (URL)</td>
+      <td className="w-fit">
+        A URL of a Github or Gitlab repository used for a one-time build of your service.
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit">enableSubdomainAccess</td>
+      <td className="w-fit">boolean</td>
+      <td className="w-fit">
+        Default: false
+        Set `true`, if you want to enable a public access to your service via a Zerops subdomain. Not suitable for production.
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit">priority</td>
+      <td className="w-fit">integer</td>
+      <td className="w-fit">
+        Services are sorted before creation by priority in descending order, i.e. the higher the priority the sooner the service is created.
+      </td>
+    </tr>
+  </tbody>
+    </table>
+  </DropdownItem>
+</Dropdown>
+
+### Usage
+
+```yml
+#yamlPreprocessor=on
+services:
+# REQUIRED: Name of your service
+- hostname: service1
+  # REQUIRED: Choose from list of supported technologies and their versions
+  type: nodejs@latest
+  # HA or NON_HA mode
+  mode: HA
+  # Map of secret environment variables
+  envSecrets:
+    DATABASE_HOST: ${db_hostname}
+    DATABASE_NAME: ${db_hostname}
+  # Object storage size in GB
+  objectStorageSize: 2
+  # Choose object storage policy from a predefined list
+  objectStoragePolicy: public-read-write
+  # Define additional policy
+  objectStorageRawPolicy:
+  # One time build git repository
+  buildFromGit: https://github.com/zeropsio/recipe-nodejs-hello-world@main
+  # true or false
+  enableSubdomainAccess: true
+  # The higher the sooner the service is created
+  priority: 1
+```
+
+
+### Usage
+
+```yml
+    # Zerops.yml service name or full config file
+    zeropsSetup:
+      build:
+        base: nodejs@latest
+        buildCommands:
+          - echo zerops.yml from import
+          - yarn
+          - yarn run build
+        deployFiles: ./
+        cache: node_modules
+      run:
+        initCommands:
+          - |
+            if ! zcli bucket s3 create $STORAGE_HOSTNAME $STORAGE_BUCKET_NAME --x-amz-acl=private; then
+            echo "The bucket was not created, you have to do it manually!"
+            fi
+        start: yarn start
+  # REQUIRED. Name of your other service
+  - hostname: teststorage1
+    type: shared-storage
+    ...
 ```
 
 :::info
 The `yamlPreprocessor` option in your project & service import YAML allows you to generate random secret values, passwords, and public/private key pairs. For more information, see the [yamlPreprocessor](/references/importyml/pre-processor) page.
 :::
 
-## project
+## Vertical Autoscaling Configuration
+
+<Dropdown>
+  <DropdownItem title="Vertical Autoscaling Structure">
+
+<table className="w-full rounded-lg my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Field</th>
+      <th className="w-fit">Type</th>
+      <th className="w-fit">Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit">minVCpu</td>
+      <td className="w-fit">integer</td>
+      <td className="w-fit">Minimum number of virtual CPUs</td>
+    </tr>
+    <tr>
+      <td className="w-fit">maxVCpu</td>
+      <td className="w-fit">integer</td>
+      <td className="w-fit">Maximum number of virtual CPUs</td>
+    </tr>
+    <tr>
+      <td className="w-fit">cpuMode</td>
+      <td className="w-fit">enum</td>
+      <td className="w-fit">Values: **SHARED / DEDICATED**</td>
+    </tr>
+    <tr>
+      <td className="w-fit">minRam</td>
+      <td className="w-fit">float</td>
+      <td className="w-fit">
+        Minimum RAM in GB that each container of the service can scale down to.
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit">maxRam</td>
+      <td className="w-fit">float</td>
+      <td className="w-fit">
+        Maximum RAM in GB that each container of the service can scale up to.
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit">minDisk</td>
+      <td className="w-fit">float</td>
+      <td className="w-fit">
+        Minimum disk space in GB that each container of the service can scale down to.
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit">maxDisk</td>
+      <td className="w-fit">float</td>
+      <td className="w-fit">
+        Maximum disk space in GB that each container of the service can scale up to.
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit">startCpuCoreCount</td>
+      <td className="w-fit">integer</td>
+      <td className="w-fit">
+        Number of CPU cores with which each container starts.
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit">minFreeCpuCores</td>
+      <td className="w-fit">float</td>
+      <td className="w-fit">
+        Minimum number of unused CPU cores before a container starts scaling.
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit">minFreeCpuPercent</td>
+      <td className="w-fit">float</td>
+      <td className="w-fit">
+        Minimum percentage of unused CPU cores before a container starts scaling.
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit">minFreeRamGB</td>
+      <td className="w-fit">float</td>
+      <td className="w-fit">
+        Minimum unused memory in GB before a container starts scaling.
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit">minFreeRamPercent</td>
+      <td className="w-fit">float</td>
+      <td className="w-fit">
+        Minimum percentage of unused memory before a container starts scaling.
+      </td>
+    </tr>
+  </tbody>
+</table>
+  </DropdownItem>
+</Dropdown>
+
+### Usage
+
+```yml
+    verticalAutoscaling:
+      ...
+```
+
+## Additional Configuration
+
+<Dropdown>
+  <DropdownItem title="Additional Structure">
+<table className="w-full rounded-lg my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Field</th>
+      <th className="w-fit">Type</th>
+      <th className="w-fit">Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit">minContainers</td>
+      <td className="w-fit">integer</td>
+      <td className="w-fit">
+        Default: 1, maximum value: 6
+        Minimum number of containers of the service.
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit">maxContainers</td>
+      <td className="w-fit">integer</td>
+      <td className="w-fit">
+        Maximum value: 6
+        Maximum number of containers of the service.
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit">mount</td>
+      <td className="w-fit">list of strings</td>
+      <td className="w-fit">
+        Mount shared storage to the service. `buildFromGit` must be filled.
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit">nginxConfig</td>
+      <td className="w-fit">string (multiline)</td>
+      <td className="w-fit">
+        Insert full nginx config.
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit">zeropsSetup</td>
+      <td className="w-fit">string or object</td>
+      <td className="w-fit">
+        Provide the name of the service from your zerops.yml (find it under `-setup: {name}`) or insert full [zerops.yml configuration file](/references/zeropsyml).
+      </td>
+    </tr>
+  </tbody>
+</table>
+  </DropdownItem>
+</Dropdown>
+
+### Usage
+
+```yml
+    ...
+```
 
-_REQUIRED, if a whole project is imported_
-
-Only one project can be defined.
-
-### name
-
-_string, REQUIRED_
-
-The name of the new project. Duplicates are allowed.
-
-### description
-
-_string_
-
-Description of the new project.
-
-### tags
-
-_list of strings_
-
-One or more string tags. Tags do not have a functional meaning, they only provide better orientation in projects.
-
-## services
-
-_REQUIRED section_
-
-At least one service is required.
-
-### hostname
-
-_string, REQUIRED_
-
-The unique service identifier.
-Limitations:
-
-- duplicates in the same project forbidden
-- maximum 25 characters, lowercase ASCII letters (a-z) or numbers (0-9) only
-
-### type
-
-_choose a [value](/references/importyml/type-list), REQUIRED_
-
-Specifies the service type and version.
-
-### mode
-
-_choose a value_
-
-- **HA / NON_HA** (default NON_HA)
-
-Defines the operation mode of the service.
-
-### envSecrets
-
-_list of key-value pairs_
-
-Environment variables that are blurred by default in Zerops GUI. Can be edited or deleted in Zerops GUI.
-
-### objectStorageSize
-
-_int_
-
-Object storage size in GB.
-
-### objectStoragePolicy
-
-_choose a value_
-
-- **private / public-read / public-objects-read / public-write / public-read-write / custom**
-
-Select a predefined AWS S3 bucket access policy.
-
-### objectStorageRawPolicy
-
-_json_
-
-Define your own AWS S3 bucket access policy. See [AWS docs](https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-policy-language-overview.html) for details.
-
-Use `{{ .BucketName }}` placeholder if you need to use bucket name in your custom policy rules.
-
-### buildFromGit
-
-_url string_
-
-A URL of a Github or Gitlab repository used for a one-time build of your service.
-
-### enableSubdomainAccess
-
-_boolean_ (default false)
-
-Set `true`, if you want to enable a public access to your service via a Zerops subdomain. Not suitable for production.
-
-### priority
-
-_int_
-
-Services are sorted before creation by priority in descending order, i.e. the higher the priority the sooner the service is created.
-
-### verticalAutoscaling
-
-_nested object_
-
-#### minVCpu
-
-#### maxVCpu
-
-#### cpuMode
-
-_choose a value_
-
-- **SHARED / DEDICATED**
-
-#### minRam
-
-_float_
-
-Minimum RAM in GB that each container of the service can scale down to.
-
-#### maxRam
-
-_float_
-
-Minimum RAM in GB that each container of the service can scale up to.
-
-#### minDisk
-
-_float_
-
-Minimum disk space in GB that each container of the service can scale down to.
-
-#### maxDisk
-
-_float_
-
-Minimum disk space in GB that each container of the service can scale up to.
-
-#### startCpuCoreCount
-
-_int_
-
-Number of CPU cores with which each container starts.
-
-#### minFreeCpuCores
-
-_float_
-
-Minimum number of unused CPU cores before a container starts scaling.
-
-#### minFreeCpuPercent
-
-_float_
-
-Minimum percentage of unused CPU cores before a container starts scaling.
-
-#### minFreeRamGB
-
-_float_
-
-Minimum unused memory in GB before a container starts scaling.
-
-#### minFreeRamPercent
-
-_float_
-
-Minimum percentage of unused memory before a container starts scaling.
-
-### minContainers
-
-_int_ (default 1, maximum value 6)
-
-Minimum number of containers of the service.
-
-### maxContainers
-
-_int_ (maximum value 6)
-
-Maximum number of containers of the service.
-
-### mount
-
-_list of shared storage service hostnames_
-
-Mount shared storage to the service. `buildFromGit` must be filled.
-
-### nginxConfig
-
-_nginx config_
-
-Insert full nginx config.
-
-### zeropsSetup
-
-_string / yaml format_
-
-Provide the name of the service from your zerops.yml (find it under `-setup: {name}`) or insert full [zerops.yml configuration file](/references/zeropsyml).
