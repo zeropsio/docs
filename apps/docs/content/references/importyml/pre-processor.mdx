@@ -106,21 +106,34 @@ Functions generally support 2 types of parameters.
 - Spaces between `<` and `>` are NOT trimmed.
 - When the value is passed as a function parameter, it's always a string.
 
-Used in [generateRandomString](#generaterandomstring), [generateRandomInt](#generaterandomint), and [pickRandom](#pickrandom) functions: eg. `<10>`, `512`, `<1024>`, etc.
+**Simple examples:**
+```yaml
+SECRET_KEY: <@generateRandomString(<16>)>           # String expression: <16>
+RANDOM_RANGE: <@generateRandomInt(<1>, <100>)>      # String expressions: <1> and <100>
+PICK_VALUE: <@pickRandom(<red>, <green>, <blue>)>   # String expressions: <red>, <green>, <blue>
+```
 
-### Variable reference names (previously stored as internal variables)
+### Variable reference names
 
-- Internal variables can be stored using [setVar](#setvar), [generateRandomStringVar](#generaterandomstringvar), [generateED25519Key](#generateed25519key), [generateRSA2048Key](#generatersa2048key), and [generateRSA4096Key](#generatersa4096key) functions.
-- Variable reference name is a string constant NOT enclosed in `<` and `>` characters.
-- Variable reference names are case-sensitive.
-- Spaces before and after the reference name are trimmed.
-- Stored value under an internal variable name is looked up and passed into the function as a string.
-- If no value is found, an error is returned.
+Variables are used to store and reuse values across your configuration. They can be created using functions like `setVar` and retrieved using `getVar`.
 
-Used in [setVar](#setvar), [getVar](#getvar), [generateRandomStringVar](#generaterandomstringvar), [generateED25519Key](#generateed25519key), [generateRSA2048Key](#generatersa2048key), and [generateRSA4096Key](#generatersa4096key) functions: eg. `<varName>`, `<plainPassword>`, etc.
+- Variable references are NOT enclosed in `<` and `>` when used with `getVar`
+- Variable names are case-sensitive
+- Spaces before and after the reference name are trimmed
+- Returns an error if the variable doesn't exist
+
+**Simple examples:**
+```yaml
+# Store a value in a variable
+PASSWORD: <@setVar(<myPassword>, <@generateRandomString(<30>)>)>
+
+# Use the stored value
+HASHED_PASSWORD: <@getVar(myPassword)|sha256>              # Note: no <> around myPassword
+SAME_PASSWORD_AGAIN: <@getVar(myPassword)>                 # Reuse the same value
+```
 
 :::tip Internal processing of function parameters
-The **string** is the only data type of all input parameters. Those input parameters that logically represent numbers, as in the case of the [generateRandomString](#generaterandomstring) function, are internally converted to numbers.
+All parameters are handled as strings internally. For functions that expect numbers (like `generateRandomString`), the string values are automatically converted to numbers during processing.
 :::
 
 ---
