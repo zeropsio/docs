@@ -157,11 +157,9 @@ services:
 
 ## Project Configuration
 
-description
+The project configuration is used to define the project you want to import.
+
 ### Usage
-
-description
-
 
 <Dropdown>
   <DropdownItem title="Project Structure">
@@ -221,16 +219,16 @@ project:
     - test
     - dev
 ```
+
 This will create a project with the name `project0` and the description `This project is an example only`. The project will have two tags: `test` and `dev`.
+
+The `project` object requires only the `name` parameter - both `description` and `tags` are optional.
 
 ## Service Configuration
 
-description
+The service configuration is used to define the services, environment variables, and other settings you want to import into the project(You require at least one service and you need to have a project to import into or define the project in the yaml).
 
 ### Usage
-
-description
-
 
 <Dropdown>
   <DropdownItem title="Service Structure">
@@ -344,6 +342,7 @@ services:
   mode: HA
   # Map of secret environment variables
   envSecrets:
+    SECRET_KEY: <@generateRandomString(<32>)>
     DATABASE_HOST: ${db_hostname}
     DATABASE_NAME: ${db_hostname}
   # Object storage size in GB
@@ -360,18 +359,24 @@ services:
   priority: 1
 ```
 
+This yaml will create a `nodejs@latest` service named `service1` in `HA` (High-Availability) mode with the following configurations:
+- Environment variables: `SECRET_KEY`(requires yamlPreprocessor), `DATABASE_HOST` and `DATABASE_NAME`(requires you to have a db service in the same project)
+- Object storage: 2GB with `public-read-write` policy
+- Git repository: `https://github.com/zeropsio/recipe-nodejs-hello-world@main`
+- Public access enabled via Zerops subdomain
+- Priority: 1
+
+The `services` object allows you to define one or more services in the same yaml file and you can define the same parameters like `hostname`, `type`, `mode`, `envSecrets`, `objectStorageSize`, `objectStoragePolicy`, `objectStorageRawPolicy`, `buildFromGit`, `enableSubdomainAccess`, `priority` for each service no matter if it's runtime, database, etc.
+
 :::caution
 The `yamlPreprocessor` option in your project & service import YAML is required to generate random secret values, passwords, and public/private key pairs. For more information, see the [yamlPreprocessor](/references/importyml/pre-processor) page.
 :::
 
 ## Vertical Autoscaling Configuration
 
-description
+The vertical autoscaling configuration is used to define the vertical autoscaling settings for the service.
 
 ### Usage
-
-description
-
 
 <Dropdown>
   <DropdownItem title="Vertical Autoscaling Structure">
@@ -490,14 +495,22 @@ services:
       minFreeRamPercent:
 ```
 
+This yaml will create a service with the hostname `app` with `php-nginx@8.4` runtime with `HA` High-Availability mode for vertical autoscaling:
+
+- CPU: `1-5` virtual CPUs in `DEDICATED` mode
+- RAM: `1-32 GB`
+- Disk Space: `1-100 GB`
+
+The `VerticalAutoscaling` map allows you to define the vertical autoscaling settings for the service with parameters like `minVCpu`, `maxVCpu`, `cpuMode`, `minRam`, `maxRam`, `minDisk`, `maxDisk`, `startCpuCoreCount`, `minFreeCpuCores`, `minFreeCpuPercent`, `minFreeRamGB`, `minFreeRamPercent`.
+
 ## Horizontal Autoscaling Configuration
 
-description
+The horizontal autoscaling configuration is used to define the horizontal autoscaling settings for the service.
 
 ### Usage
 
-description
-
+<Dropdown>
+  <DropdownItem title="Horizontal Autoscaling Structure">
     <table className="w-full rounded-lg my-1.5">
       <thead>
         <tr>
@@ -525,8 +538,9 @@ description
     </tr>
     </tbody>
     </table>
+  </DropdownItem>
+</Dropdown>
 
-    
 ```yml
 services:
   - hostname: app
@@ -539,9 +553,11 @@ services:
     maxContainers: 6
 ```
 
+The `minContainers` and `maxContainers` parameters allow you to define the minimum and maximum number of containers(It automatically scales the service between the minimum and maximum number of containers) for the service.
+
 ## Mount Shared Storage
 
-description
+The mount shared storage configuration is used to define the shared storage to mount to the service.
 
 ### Usage
 
@@ -575,14 +591,17 @@ services:
       - teststorage1
 ```
 
+The `mount: |-` parameter allows you to mount a shared storage(should be created inside the project) to the service.
+
 
 ## Using Nginx Configuration
 
-description
+The nginx configuration is used to define the nginx settings for the service.
 
 ### Usage
 
-
+<Dropdown>
+  <DropdownItem title="Nginx Configuration Structure">
 
 <table className="w-full rounded-lg my-1.5">
   <thead>
@@ -602,6 +621,8 @@ description
     </tr>
    </tbody>
 </table>
+  </DropdownItem>
+</Dropdown>
 
 ```yml
 #yamlPreprocessor=on
@@ -628,6 +649,8 @@ services:
           error_log syslog:server=unix:/dev/log,facility=local1;
       }
 ```
+
+The `nginxConfig: |-` parameter allows you to use a custom nginx configuration for the service.
 
 ## Using Zerops.yml Configuration
 
@@ -679,5 +702,5 @@ services:
       start: yarn start
 ```
 
+The `zeropsSetup: |-` parameter allows you to use a custom [zerops.yml](/references/zeropsyml) configuration for the service.
 
-You can use different runtimes as well like `nodejs`, `python`, `elixir`, `gleam`, `ruby`, `rust`, `go`, `java`, `php-apache`, `php-nginx-apache`, etc.
