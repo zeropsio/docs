@@ -248,9 +248,9 @@ The `type: nodejs@latest` is just an example. The functions are available for al
 
 ---
 
-### generateRandomString
+### generateRandomString (length)
 
-This function generates a random string of specified length using alphanumeric characters and some special characters (`_`, `-`, `.`). It's useful for creating random passwords, API keys, or any other secret values that need to be unique and unpredictable.
+This function generates a random string of specified length using alphanumeric characters and some special characters (`_`, `-`, `.`). It's useful for creating random passwords, API keys, or any other secret values that needs to be unique and unpredictable.
 
 <table className="w-full my-1.5">
   <thead>
@@ -266,7 +266,7 @@ This function generates a random string of specified length using alphanumeric c
     </tr>
     <tr>
       <td className="w-fit font-semibold">Limitation:</td>
-      <td className="w-fit">Length of the string should be between `1` and `1024` characters. eg. `<10>`, `512`, `<1024>`, etc.</td>
+      <td className="w-fit">Length of the string should be an *integer* between `1` and `1024` characters. eg. `<10>`, `<512>`, `<1024>`.</td>
     </tr>
     <tr>
       <td className="w-fit font-semibold">Output:</td>
@@ -294,7 +294,53 @@ RANDOM_STRING: 58580f0ad377a8e4c0dccc1622e2d3812b90
 
 ---
 
-### generateRandomInt
+### generateRandomBytes (length)
+
+This function generates requested amount of cryptographically random bytes. It is useful for creating random passwords, API keys, or any other secret values that needs to be unique and unpredictable.
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Field</th>
+      <th className="w-fit">Details</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit font-semibold">Syntax:</td>
+      <td className="w-fit">`<@generateRandomBytes(<10>)>`</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">Limitation:</td>
+      <td className="w-fit">Length of the string should be an *integer* between `1` and `1024` characters. eg. `<10>`, `<512>`, `<1024>`.</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">Output:</td>
+      <td className="w-fit">hR5hS79H4p</td>
+    </tr>
+  </tbody>
+</table>
+
+#### Usage in import YAML
+
+```yaml
+#yamlPreprocessor=on
+services:
+- hostname: app
+  type: nodejs@20
+  envSecrets:
+    RANDOM_STRING: <@generateRandomString(<10>)>
+```
+
+#### Output of import YAML
+
+```yaml
+RANDOM_STRING: 58580f0ad377a8e4c0dccc1622e2d3812b90
+```
+
+---
+
+### generateRandomInt (min, max)
 
 This function generates a random integer within a specified range (inclusive). It's particularly useful when you need random numeric values, like ports, timeouts, or any other configuration that requires random numbers within specific bounds.
 
@@ -344,7 +390,7 @@ RANDOM_INT: 823
 
 ---
 
-### pickRandom
+### pickRandom (...param)
 
 <table className="w-full my-1.5 ">
   <thead>
@@ -390,7 +436,7 @@ PICK_RANDOM: 1024
 
 ---
 
-### setVar
+### setVar (name, content)
 
 This function stores a value in memory for later use and returns the stored value. It's particularly useful when you need to reuse the same generated value multiple times in your configuration, ensuring consistency across different environment variables.
 
@@ -441,7 +487,7 @@ SET_VAR: N4KdtM41WskS74wx
 
 ---
 
-### getVar
+### getVar (name)
 
 This function retrieves a previously stored value from memory. It works in conjunction with setVar and other storage functions to access values that were generated or stored earlier in the configuration process. eg. `plainPassword`
 
@@ -487,7 +533,7 @@ GET_VAR: N4KdtM41WskS74wx
 
 ---
 
-### generateRandomStringVar
+### generateRandomStringVar (name, length)
 
 This function combines the functionality of `generateRandomString` and `setVar`. It generates a random string and automatically stores it under a specified variable name for later use.
 
@@ -540,7 +586,79 @@ GENERATE_RANDOM_STRING_VAR: hR5hS79H4p
 
 ---
 
-### getDateTime
+### generateJWT (tokenSecret, jsonPayload)
+
+This function generates a JWT (JSON Web Token) signed by HS256 algorithm using provided secret and payload. The payload MUST be a valid JSON value. Default values for `iss` and `iat` are set to `zerops` and current timestamp respectively.
+
+
+<table className="w-full my-1.5 ">
+  <thead>
+    <tr>
+      <th className="w-fit">Field</th>
+      <th className="w-fit">Details</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit font-semibold">Syntax:</td>
+      <td className="w-fit">`<@generateJWT(<tokenSecret>, <jsonPayload>)>`</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">Token Secret:</td>
+      <td className="w-fit">The required secret (`string`) used to sign your JWT.</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">JSON Payload:</td>
+      <td className="w-fit">The required payload part of the JWT (`string`) in JSON format.</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">Output:</td>
+      <td className="w-fit">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3Mjkw
+      Njk4NTcsImlzcyI6Inplcm9wcyJ9.xPrqHDtGhK5c7WMJliguwBeKI29qzAoD7KXrtACb
+      jio</td>
+    </tr>
+  </tbody>
+</table>
+
+#### Usage in import YAML
+
+```yaml
+#yamlPreprocessor=on
+services:
+- hostname: app
+  type: nodejs@20
+  envSecrets:
+    # Using a fixed secret string
+    JWT_FIXED: <@generateJWT(<fixedSecretString>, <{"role":"admin","exp":1798761600}>)>
+    
+    # Using an empty payload
+    JWT_EMPTY: <@generateJWT(<fixedSecretString>, <{}>)>
+    
+    # Generate and store a random secret, then use it
+    JWT_RANDOM: <@generateJWT(<@generateRandomStringVar(<jwtSecretKey>, <32>)>, <{"role":"admin","exp":1798761600}>)>
+    
+    # Use a previously stored secret
+    JWT_STORED: <@generateJWT(<@getVar(jwtSecretKeyVar)>, <{"role":"admin","exp":1798761600}>)>
+```
+
+#### Output of import YAML
+
+```yaml
+JWT_FIXED: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYWRtaW4iLCJleHAiOjE3OTg3NjE2MDAsImlhdCI6MTcyOTA2OTYzMiwiaXNzIjoiemVyb3BzIn0.xPrqHDtGhK5c7WMJliguwBeKI29qzAoD7KXrtACbjio
+
+JWT_EMPTY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MjkwNjk4NTcsImlzcyI6Inplcm9wcyJ9.xPrqHDtGhK5c7WMJliguwBeKI29qzAoD7KXrtACbjio
+
+JWT_RANDOM: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYWRtaW4iLCJleHAiOjE3OTg3NjE2MDAsImlhdCI6MTcyOTA2OTYzMiwiaXNzIjoiemVyb3BzIn0.ksbck_HQv44YXbqJk6lDrGFYTq3nmLydFIe0Xlejk5Q
+
+JWT_STORED: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYWRtaW4iLCJleHAiOjE3OTg3NjE2MDAsImlhdCI6MTcyOTA2OTYzMiwiaXNzIjoiemVyb3BzIn0.O0RaXzGFwj2t8P2kc4nU4PfuI43-dAuAl2d0T1uUlEE
+```
+
+---
+
+
+
+
+### getDateTime (format, [timezone])
 
 This function returns the current date and time formatted according to your specifications. It's useful for timestamps, logging, and any scenario where you need the current time in a specific format and timezone.
 
