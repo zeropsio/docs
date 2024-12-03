@@ -1,0 +1,1446 @@
+---
+title: Yaml preprocessing
+description: The list of functions that can be used in your project & service import YAML with the yamlPreprocessor option.
+---
+
+import { Dropdown, DropdownItem } from '/src/components/Dropdown';
+
+The `yamlPreprocessor` option in your project & service import YAML allows you to generate random secret values, passwords, and public/private key pairs for your secret environment variables.
+
+---
+
+## How does it work?
+
+The `yamlPreprocessor=on` is required as the first line in your import YAML to enable the preprocessor.
+
+```yml
+#yamlPreprocessor=on
+project:
+  name: project
+services:
+  - hostname: app
+    type: nodejs@latest
+    buildFromGit: https://github.com/example/app
+    enableSubdomainAccess: true
+    envSecrets:
+      # yamlPreprocessor feat: generates a random 64 char and stores it
+      SECRET_KEY: <@generateRandomString(<64>)>
+    
+  - hostname: db
+    type: postgresql@16
+    mode: HA
+```
+
+After you've added the `yamlPreprocessor=on` line, the preprocessor will be enabled and you can now utilize the functions.
+
+---
+
+### How Preprocessing Works
+
+The YAML script processing happens in two sequential steps. During the first turn (preprocessing), the system scans for Zerops import functions and modifiers, evaluates them, and replaces function calls with their results. All this data is stored in memory.
+
+The second turn handles standard processing, where the system creates the imported project, instantiates all required services, and handles environment variables, including setting up any new ones as needed.
+
+### Syntax Reference
+
+<table className="w-full my-1.5 ">
+  <thead>
+    <tr className="">
+      <th className="w-fit">Sequence</th>
+      <th className="w-fit">Description</th>
+    </tr>
+  </thead>
+  <tbody className="">
+    <tr>
+      <td className="w-fit">`&lt;@`</td>
+      <td className="w-fit ">The identifier of the beginning of a function expression syntax.</td>
+    </tr>
+    <tr>
+      <td className="w-fit">`(`</td>
+      <td className="w-fit">The identifier of the beginning of the function parameters.</td>
+    </tr>
+    <tr>
+      <td className="w-fit">`)`</td>
+      <td className="w-fit">The identifier of the end of the function parameters.</td>
+    </tr>
+    <tr>
+      <td className="w-fit">`,`</td>
+      <td className="w-fit">A function parameters delimiter.</td>
+    </tr>
+    <tr>
+      <td className="w-fit">`&lt;`</td>
+      <td className="w-fit">Identifier of the beginning of a string expression (without @).</td>
+    </tr>
+    <tr>
+      <td className="w-fit">`&gt;`</td>
+      <td className="w-fit">The identifier of the end of a string expression or a function expression syntax.</td>
+    </tr>
+    <tr>
+      <td className="w-fit">`|`</td>
+      <td className="w-fit">The separator between a string or a function expression content and a modifier name.</td>
+    </tr>
+    <tr>
+      <td className="w-fit">`\`</td>
+      <td className="w-fit">Escaping character.</td>
+    </tr>
+    <tr>
+      <td className="w-fit">`\&lt;&gt;|`</td>
+      <td className="w-fit">Characters that need to be escaped to print them out.</td>
+    </tr>
+  </tbody>
+</table>
+
+:::note
+All functions in the preprocessor return values as strings, regardless of the operation performed. This includes numeric operations, random generation, and variable manipulation.
+:::
+
+---
+
+## Parameter Data Types
+
+Functions generally support 2 types of parameters.
+
+### String expressions
+
+- Value is enclosed in `<` and `>` characters.
+- Spaces between `<` and `>` are NOT trimmed.
+- When the value is passed as a function parameter, it's always a string.
+
+```yaml
+# String expression: <16>
+SECRET_KEY: <@generateRandomString(<16>)>
+# String expressions: <1> and <100>
+RANDOM_RANGE: <@generateRandomInt(<1>, <100>)>
+# String expressions: <red>, <green>, <blue>
+PICK_VALUE: <@pickRandom(<red>, <green>, <blue>)>
+```
+
+### Variable reference names
+
+Variables are used to store and reuse values across your configuration. They can be created using functions like `setVar` and retrieved using `getVar`.
+
+- Variable references are NOT enclosed in `<` and `>` when used with `getVar`
+- Variable names are case-sensitive
+- Spaces before and after the reference name are trimmed
+- Returns an error if the variable doesn't exist
+
+```yaml
+# Stores a value in myPassword variable
+PASSWORD: <@setVar(<myPassword>, <@generateRandomString(<30>)>)>
+
+# Retrieves the stored value (myPassword)
+HASHED_PASSWORD: <@getVar(myPassword)|sha256>
+# Reuses the stored value (myPassword)
+SAME_PASSWORD_AGAIN: <@getVar(myPassword)>
+```
+
+:::tip Internal processing of function parameters
+All parameters are handled as strings internally. For functions that expect numbers (like `generateRandomString`), the string values are automatically converted to numbers during processing.
+:::
+
+---
+
+## Nested Expressions
+
+The preprocessor supports nested function and string expressions, allowing you to:
+- Combine multiple functions
+- Use function outputs as inputs for other functions
+- Nest string expressions within other strings
+- Create complex, multi-level expressions
+
+### Examples of Nesting with Environment Variables
+
+```yaml
+#yamlPreprocessor=on
+services:
+- hostname: app
+  type: nodejs@20
+  envSecrets:
+    NESTED_STRINGS: <Base and <Nested> content>
+    NESTED_FUNCTIONS: <@generateRandomString(<@generateRandomInt(<20>, <50>)>)>
+    EVEN_MORE_NESTING: <@setVar(<refVarName>, <@generateRandomString(<@generateRandomInt(<20>, <30>)>)>)>
+```
+
+### Outputs of Nesting with Environment Variables
+
+```yaml
+#yamlPreprocessor=on
+services:
+- hostname: app
+  type: nodejs@20
+  envSecrets:
+    NESTED_STRINGS: "Base and Nested content"
+    NESTED_FUNCTIONS: "58580f0ad377a8e4c0dccc1622e2d3812b90"
+    EVEN_MORE_NESTING: "73bcd2b647293dd04674cdecc"
+```
+
+### Escaping to Print Reserved Characters
+
+Reserved characters `\<>|` have to be escaped using the `\` backslash to print them out. It's mandatory to escape the `\` character itself.
+
+:::caution
+The YAML processing happens in two sequential phases:
+1. **Preprocessing Phase**: Evaluates functions, modifiers, and replaces them with results
+2. **YAML Processing Phase**: Creates project, services, and handles environment variables
+
+Each phase processes escape characters, so backslashes need to be escaped twice:
+
+- If you want to output a single backslash `\`, you need to use four backslashes `\\\\`
+- Example:
+
+Input: `FILE_PATH: value\\\\with\\\\backslashes`
+
+Output: `FILE_PATH: value\with\backslashes`
+
+It means that if `DIR: <\\\\>` is used, the final value stored in the environment variable will be just `\`. The same is true for any value with backslashes, like `SERVER: True\\\\False`, where the stored result will be `True\False`.
+:::
+
+
+### Examples of Correct Function Expressions
+
+```yaml
+# Function will receive one parameter as the string constant value of: 30
+<@generateRandomString(<30>)>
+# Function will receive two parameters as the string constant values of: 200 and 1000
+<@generateRandomInt(<200>, <1000>)>
+# It's possible to nest functions one into the other.
+<@generateRandomString(<@generateRandomInt(<200>, <1000>)>)>
+# Using commas inside a string constant passed as the parameter is possible.
+# The passed value is stored as internal variable under the name: commentValue
+<@setVar(<commentValue>, <By the way, this is the text passed over as a value.>)>
+# Function will receive one parameter as the internal variable reference: commentValue
+# Its value is returned as a string if such an internal variable exists. If not, an error returns.
+<@getVar(commentValue)>
+# Examples of function expressions with escaped characters:
+\<@generateRandomString(30)\>               # Output: <@generateRandomString(30)>
+\<@generateRandomString(\<30\>)\>           # Output: <@generateRandomString(<30>)>
+\<@generateRandomInt(\<30\>, \<80\>)\>      # Output: <@generateRandomInt(<30>, <80>)>
+\<@generateRandomInt(\<30\>\, \<80\>)\>     # Output: <@generateRandomInt(<30>, <80>)>
+\<@generateRandomInt(<30>, <80>)\>          # Output: <@generateRandomInt(30, 80)>
+```
+
+---
+
+
+:::tip What happens with environment variable references
+Environment variable reference might need to be used as a part of string expressions. From the parsing point of view on the pre-processing level, they have not been recognized as something special but just a regular string, and they will be transparently passed without any modification. The second standard parsing turn only evaluates them.
+:::
+
+```yaml
+
+# The part ` {ITEM_VALUE` is taken as a regular text when storing a string value as an internal variable.
+<@setVar(<commentValue>, <By the way, this ${ITEM_VALUE} is text passed over as a value.>)>
+# The returned value will be exactly the same when retrieving the previously stored value.
+<@getVar(<commentValue>)>
+# The returned value will be: By the way, this  {ITEM_VALUE} is text passed over as a value.
+
+```
+
+---
+
+## List of import functions
+
+:::caution Important reminder
+If you don't use the `yamlPreprocessor=on` line at the beginning of your import YAML script, the preprocessor will not be enabled and the functions will not work.
+
+The `type: nodejs@latest` is just an example. The functions are available for all runtime types.
+:::
+
+---
+
+### generateRandomString (length)
+
+This function generates a random string of specified length using alphanumeric characters and some special characters (`_`, `-`, `.`). It's useful for creating random passwords, API keys, or any other secret values that needs to be unique and unpredictable.
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Field</th>
+      <th className="w-fit">Details</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit font-semibold">Syntax:</td>
+      <td className="w-fit">`<@generateRandomString(<10>)>`</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">Limitation:</td>
+      <td className="w-fit">Length of the string should be an *integer* between `1` and `1024` characters. eg. `<10>`, `<512>`, `<1024>`.</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">Output:</td>
+      <td className="w-fit">hR5hS79H4p</td>
+    </tr>
+  </tbody>
+</table>
+
+#### Usage in import YAML
+
+```yaml
+#yamlPreprocessor=on
+services:
+- hostname: app
+  type: nodejs@20
+  envSecrets:
+    RANDOM_STRING: <@generateRandomString(<10>)>
+```
+
+#### Output of import YAML
+
+```yaml
+RANDOM_STRING: 58580f0ad377a8e4c0dccc1622e2d3812b90
+```
+
+---
+
+### generateRandomBytes (length)
+
+This function generates requested amount of cryptographically random bytes. It is useful for creating random passwords, API keys, or any other secret values that needs to be unique and unpredictable.
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Field</th>
+      <th className="w-fit">Details</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit font-semibold">Syntax:</td>
+      <td className="w-fit">`<@generateRandomBytes(<10>)>`</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">Limitation:</td>
+      <td className="w-fit">Length of the string should be an *integer* between `1` and `1024` characters. eg. `<10>`, `<512>`, `<1024>`.</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">Output:</td>
+      <td className="w-fit">hR5hS79H4p</td>
+    </tr>
+  </tbody>
+</table>
+
+#### Usage in import YAML
+
+```yaml
+#yamlPreprocessor=on
+services:
+- hostname: app
+  type: nodejs@20
+  envSecrets:
+    RANDOM_STRING: <@generateRandomString(<10>)>
+```
+
+#### Output of import YAML
+
+```yaml
+RANDOM_STRING: 58580f0ad377a8e4c0dccc1622e2d3812b90
+```
+
+---
+
+### generateRandomInt (min, max)
+
+This function generates a random integer within a specified range (inclusive). It's particularly useful when you need random numeric values, like ports, timeouts, or any other configuration that requires random numbers within specific bounds.
+
+<table className="w-full my-1.5 ">
+  <thead>
+    <tr>
+      <th className="w-fit">Field</th>
+      <th className="w-fit">Details</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit font-semibold">Syntax:</td>
+      <td className="w-fit">`<@generateRandomInt(<200>, <1000>)>`</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">Minimum:</td>
+      <td className="w-fit">Required minimum (inclusive) as a signed integer (from -4,611,686,018,427,387,903 to 4,611,686,018,427,387,903).</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">Maximum:</td>
+      <td className="w-fit">Required maximum (inclusive) as a signed integer (from -4,611,686,018,427,387,903 to 4,611,686,018,427,387,903).</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">Output:</td>
+      <td className="w-fit">823</td>
+    </tr>
+  </tbody>
+</table>
+
+#### Usage in import YAML
+
+```yaml
+#yamlPreprocessor=on
+services:
+- hostname: app
+  type: nodejs@20
+  envSecrets:
+    RANDOM_INT: <@generateRandomInt(<200>, <1000>)>
+```
+
+#### Output of import YAML
+
+```yaml
+RANDOM_INT: 823
+```
+
+---
+
+### pickRandom (...param)
+
+<table className="w-full my-1.5 ">
+  <thead>
+    <tr>
+      <th className="w-fit">Field</th>
+      <th className="w-full">Details</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit font-semibold">Syntax:</td>
+      <td className="w-fit">`<@pickRandom(<640>, <800>, <1024>, <1280>, <1440>, <1920>)>`</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">Parameters:</td>
+      <td className="w-fit">The required parameters from which the selection will be made. eg. `<1101>`, `<800>`, `<1920>`, etc.</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">Output:</td>
+      <td className="w-fit">1024</td>
+    </tr>
+  </tbody>
+</table>
+
+This function randomly selects one value from a list of provided options. It's helpful when you want to randomly assign values from a predefined set, such as screen resolutions, configuration options, or any other scenario where you need random selection from specific choices.
+
+#### Usage in import YAML
+
+```yaml
+#yamlPreprocessor=on
+services:
+- hostname: app
+  type: nodejs@20
+  envSecrets:
+    PICK_RANDOM: <@pickRandom(<640>, <800>, <1024>, <1280>, <1440>, <1920>)>
+```
+
+#### Output of import YAML
+
+```yaml
+PICK_RANDOM: 1024
+```
+
+---
+
+### setVar (name, content)
+
+This function stores a value in memory for later use and returns the stored value. It's particularly useful when you need to reuse the same generated value multiple times in your configuration, ensuring consistency across different environment variables.
+
+<table className="w-full my-1.5 ">
+  <thead>
+    <tr>
+      <th className="w-fit">Field</th>
+      <th className="w-fit">Details</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit font-semibold">Syntax:</td>
+      <td className="w-fit">`<@setVar(<plainPassword>, <@generateRandomString(<16>)>)>`</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">Variable:</td>
+      <td className="w-fit">The required parameter of the internal variable name under which the provided content can be retrieved later using <a href="#getvar">getVar</a> function. The chosen name is case-sensitive. eg. `<varName>`, `<plainPassword>`, etc</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">Content:</td>
+      <td className="w-fit">Any text you want to be stored, including composition using functions. Already existing variable with the same name is overwritten.</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">Output:</td>
+      <td className="w-fit">N4KdtM41WskS74wx</td>
+    </tr>
+  </tbody>
+</table>
+
+
+#### Usage in import YAML
+
+```yaml
+#yamlPreprocessor=on
+services:
+- hostname: app
+  type: nodejs@20
+  envSecrets:
+    SET_VAR: <@setVar(<plainPassword>, <@generateRandomString(<16>)>)>
+```
+
+#### Output of import YAML
+
+```yaml
+SET_VAR: N4KdtM41WskS74wx
+```
+
+---
+
+### getVar (name)
+
+This function retrieves a previously stored value from memory. It works in conjunction with setVar and other storage functions to access values that were generated or stored earlier in the configuration process. eg. `plainPassword`
+
+<table className="w-full my-1.5 ">
+  <thead>
+    <tr>
+      <th className="w-fit">Field</th>
+      <th className="w-fit">Details</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit font-semibold">Syntax:</td>
+      <td className="w-fit">`<@getVar(plainPassword)>`</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">Variable:</td>
+      <td className="w-fit">The required parameter of the internal variable name that is case-sensitive. The parameter is used as a reference, so it MUST NOT be enclosed in &lt; and &gt;. eg. `(plainPassword)`, `(varName)`, etc</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">Output:</td>
+      <td className="w-fit">N4KdtM41WskS74wx</td>
+    </tr>
+  </tbody>
+</table>
+
+#### Usage in import YAML
+
+```yaml
+#yamlPreprocessor=on
+services:
+- hostname: app
+  type: nodejs@20
+  envSecrets:
+    GET_VAR: <@getVar(plainPassword)>
+```
+
+#### Output of import YAML
+
+```yaml
+GET_VAR: N4KdtM41WskS74wx
+```
+
+---
+
+### generateRandomStringVar (name, length)
+
+This function combines the functionality of `generateRandomString` and `setVar`. It generates a random string and automatically stores it under a specified variable name for later use.
+
+The output contains only a random combination of alphanumeric characters (`a-zA-Z0-9`) and select special characters (`_`, `-`, `.`).
+
+
+<table className="w-full my-1.5 ">
+  <thead>
+    <tr>
+      <th className="w-fit">Field</th>
+      <th className="w-fit">Details</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit font-semibold">Syntax:</td>
+      <td className="w-fit">`<@generateRandomStringVar(<plainPassword>, <10>)>`</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">Variable:</td>
+      <td className="w-fit">The required parameter of the internal variable name under which the provided content can be retrieved later using <a href="#getvar">getVar</a> function. The chosen name is case-sensitive. eg. `<plainPassword>`, `<varName>`, etc</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">Limitation:</td>
+      <td className="w-fit">Required length of the string to be generated in characters (maximum allowed value is 1024).</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">Output:</td>
+      <td className="w-fit">hR5hS79H4p</td>
+    </tr>
+  </tbody>
+</table>
+
+#### Usage in import YAML
+
+```yaml
+#yamlPreprocessor=on
+services:
+- hostname: app
+  type: nodejs@20
+  envSecrets:
+    GENERATE_RANDOM_STRING_VAR: <@generateRandomStringVar(<plainPassword>, <10>)>
+```
+
+#### Output of import YAML
+
+```yaml
+GENERATE_RANDOM_STRING_VAR: hR5hS79H4p
+```
+
+---
+
+### generateJWT (tokenSecret, jsonPayload)
+
+This function generates a JWT (JSON Web Token) signed by HS256 algorithm using provided secret and payload. The payload MUST be a valid JSON value. Default values for `iss` and `iat` are set to `zerops` and current timestamp respectively.
+
+
+<table className="w-full my-1.5 ">
+  <thead>
+    <tr>
+      <th className="w-fit">Field</th>
+      <th className="w-fit">Details</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit font-semibold">Syntax:</td>
+      <td className="w-fit">`<@generateJWT(<tokenSecret>, <jsonPayload>)>`</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">Token Secret:</td>
+      <td className="w-fit">The required secret (`string`) used to sign your JWT.</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">JSON Payload:</td>
+      <td className="w-fit">The required payload part of the JWT (`string`) in JSON format.</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">Output:</td>
+      <td className="w-fit">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3Mjkw
+      Njk4NTcsImlzcyI6Inplcm9wcyJ9.xPrqHDtGhK5c7WMJliguwBeKI29qzAoD7KXrtACb
+      jio</td>
+    </tr>
+  </tbody>
+</table>
+
+#### Usage in import YAML
+
+```yaml
+#yamlPreprocessor=on
+services:
+- hostname: app
+  type: nodejs@20
+  envSecrets:
+    # Using a fixed secret string
+    JWT_FIXED: <@generateJWT(<fixedSecretString>, <{"role":"admin","exp":1798761600}>)>
+    
+    # Using an empty payload
+    JWT_EMPTY: <@generateJWT(<fixedSecretString>, <{}>)>
+    
+    # Generate and store a random secret, then use it
+    JWT_RANDOM: <@generateJWT(<@generateRandomStringVar(<jwtSecretKey>, <32>)>, <{"role":"admin","exp":1798761600}>)>
+    
+    # Use a previously stored secret
+    JWT_STORED: <@generateJWT(<@getVar(jwtSecretKeyVar)>, <{"role":"admin","exp":1798761600}>)>
+```
+
+#### Output of import YAML
+
+```yaml
+JWT_FIXED: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYWRtaW4iLCJleHAiOjE3OTg3NjE2MDAsImlhdCI6MTcyOTA2OTYzMiwiaXNzIjoiemVyb3BzIn0.xPrqHDtGhK5c7WMJliguwBeKI29qzAoD7KXrtACbjio
+
+JWT_EMPTY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MjkwNjk4NTcsImlzcyI6Inplcm9wcyJ9.xPrqHDtGhK5c7WMJliguwBeKI29qzAoD7KXrtACbjio
+
+JWT_RANDOM: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYWRtaW4iLCJleHAiOjE3OTg3NjE2MDAsImlhdCI6MTcyOTA2OTYzMiwiaXNzIjoiemVyb3BzIn0.ksbck_HQv44YXbqJk6lDrGFYTq3nmLydFIe0Xlejk5Q
+
+JWT_STORED: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYWRtaW4iLCJleHAiOjE3OTg3NjE2MDAsImlhdCI6MTcyOTA2OTYzMiwiaXNzIjoiemVyb3BzIn0.O0RaXzGFwj2t8P2kc4nU4PfuI43-dAuAl2d0T1uUlEE
+```
+
+---
+
+
+
+
+### getDateTime (format, [timezone])
+
+This function returns the current date and time formatted according to your specifications. It's useful for timestamps, logging, and any scenario where you need the current time in a specific format and timezone.
+
+Returns the current date and time in a <a href="#masking">specified mask pattern</a> and a chosen timezone.
+
+<table className="w-full my-1.5 ">
+  <thead>
+    <tr>
+      <th className="w-fit">Field</th>
+      <th className="w-fit">Details</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit font-semibold">Syntax:</td>
+      <td className="w-fit">`<@getDatetime(<DD.MM.YYYY HH:mm:ss>, <CET>)>`</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">Mask:</td>
+      <td className="w-fit">The required parameter of the chosen timezone.
+      eg. `<DD.MM.YYYY HH:mm:ss>`</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">Timezone:</td>
+      <td className="w-fit">
+        The optional parameter of the chosen timezone. It's possible to select from three different formats: Abbreviation, Location, and POSIX. If not specified, the GMT timezone is set by default.
+
+        You can see the complete listing of <a href="https://nodatime.org/TimeZones">all possible values</a>. POSIX format uses the opposite sign. Times to the west are positive, to the east negative.
+
+        For Central European Time, you can use `CET`, `Europe/Prague`, `Etc/GMT-2` (summer), `Etc/GMT-1` (winter). Abbreviated and location formats return values with the currently valid DST.
+
+        eg. `<CET>`, `<Europe/Prague>`, `<Etc/GMT-2>`
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">Output:</td>
+      <td className="w-fit">11.12.2022 18:06:13</td>
+    </tr>
+  </tbody>
+</table>
+
+
+#### Usage in import YAML
+
+```yaml
+#yamlPreprocessor=on
+services:
+- hostname: app
+  type: nodejs@20
+  envSecrets:
+    GET_DATETIME: <@getDatetime(<DD.MM.YYYY HH:mm:ss>, <CET>)>
+```
+
+#### Output of import YAML
+
+```yaml
+GET_DATETIME: 11.12.2022 18:06:13
+```
+
+#### Masking
+
+<Dropdown>
+  <DropdownItem title="Date and Time Format">
+
+    When using the `getDateTime` function, you can customize the output format using various masks. Here's a comprehensive list of available format patterns:
+
+    #### Year
+    - `YYYY` - Full year (e.g., 2024)
+    - `YY` - Two-digit year (e.g., 24)
+
+    #### Month
+    - `MMMM` - Full month name (e.g., January)
+    - `MMM` - Short month name (e.g., Jan)
+    - `MM` - Two-digit month (e.g., 01)
+    - `M` - Single-digit month (e.g., 1)
+
+    #### Day
+    - `DDDD` - Day of year with leading zeros (e.g., 001, 002, ..., 365)
+    - `DD` - Day of month with leading zeros (e.g., 01, 02, ..., 31)
+    - `D` - Day of month without leading zeros (e.g., 1, 2, ..., 31)
+    - `dddd` - Full weekday name (e.g., Monday)
+    - `ddd` - Short weekday name (e.g., Mon)
+
+    #### Time
+    - `HH` - 24-hour format with leading zeros (e.g., 00, 01, ..., 23)
+    - `hh` - 12-hour format with leading zeros (e.g., 01, 02, ..., 12)
+    - `h` - 12-hour format without leading zeros (e.g., 1, 2, ..., 12)
+    - `mm` - Minutes with leading zeros (e.g., 00, 01, ..., 59)
+    - `m` - Minutes without leading zeros (e.g., 0, 1, ..., 59)
+    - `ss` - Seconds with leading zeros (e.g., 00, 01, ..., 59)
+    - `s` - Seconds without leading zeros (e.g., 0, 1, ..., 59)
+    - `S` - Microseconds (e.g., 000000...999999)
+
+    #### Period
+    - `A` - Uppercase meridiem (AM, PM)
+    - `a` - Lowercase meridiem (am, pm)
+
+    #### Timezone
+    - `ZZZ` - Timezone abbreviation (e.g., UTC, CET)
+    - `zz` - Timezone offset with colon (e.g., +00:00, +01:00)
+    - `Z` - Timezone offset without colon (e.g., +0000, +0100)
+
+    #### Usage of different masks
+
+    ```yaml
+    #yamlPreprocessor=on
+    services:
+      - hostname: app
+        type: nodejs@20
+        envSecrets:
+          TIMESTAMP: <@getDateTime(<YYYY-MM-DD HH:mm:ss>, <UTC>)>
+          FRIENDLY_DATE: <@getDateTime(<dddd, MMM D, YYYY 'at' h:mma>, <UTC>)>
+    ```
+  </DropdownItem>
+</Dropdown>
+
+---
+
+:::tip Example Usage for Environment Variables
+- For Multiline Generation use:
+```yaml
+APP_PUBLIC_KEY: |
+      <@getVar(KeyPublic)>
+```
+
+- For Single Value Generation use:
+```yaml
+APP_PUBLIC_KEY_SSH: <@getVar(KeyPublicSsh)>
+```
+:::
+
+---
+
+### generateED25519Key (name)
+
+Generates public and private <a href="https://en.wikipedia.org/wiki/EdDSA">ED25519</a> key pairs (including SSH) and stores them for later use as internal variables with names using the base name and variants.
+
+<table className="w-full my-1.5 ">
+  <thead>
+    <tr>
+      <th className="w-fit">Field</th>
+      <th className="w-fit">Details</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit font-semibold">Syntax:</td>
+      <td className="w-fit">`<@generateED25519Key(<Key>)>`</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">Variants:</td>
+      <td className="w-fit">The base name parameter stores all generated key versions as internal variables, combined with the <a href="#available-variants">Available Variants</a>.</td>
+    </tr>
+  </tbody>
+</table>
+
+#### Available Variants
+
+<table className="w-full my-1.5 ">
+  <thead>
+    <tr>
+      <th className="w-fit">Variant</th>
+      <th className="w-fit">Description</th>
+      <th className="w-fit">Retrieving the value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit">Public</td>
+      <td className="w-fit">Public key version. This value is also returned by the called function.</td>
+      <td className="w-fit">`<@getVar(KeyPublic)>`</td>
+    </tr>
+    <tr>
+      <td className="w-fit">PublicSsh</td>
+      <td className="w-fit">SSH formatted public key version. For use as the authorized key file.</td>
+      <td className="w-fit">`<@getVar(KeyPublicSsh)>`</td>
+    </tr>
+    <tr>
+      <td className="w-fit">Private</td>
+      <td className="w-fit">Private key version in the standard format. Not usable for OpenSSH.</td>
+      <td className="w-fit">`<@getVar(KeyPrivate)>`</td>
+    </tr>
+    <tr>
+      <td className="w-fit">PrivateSsh</td>
+      <td className="w-fit">Private key version in the OpenSSH format.</td>
+      <td className="w-fit">`<@getVar(KeyPrivateSsh)>`</td>
+    </tr>
+  </tbody>
+</table>
+
+#### Usage in import YAML
+
+:::caution
+  These Generated keys are formatted as multiline strings. That means using the `|` syntax is necessary in import YAML.
+:::
+
+```yaml
+#yamlPreprocessor=on
+services:
+- hostname: app
+  type: nodejs@20
+  envSecrets:
+    GENERATED_PUBLIC_KEY: |
+      <@generateED25519Key(<Key>)>
+    APP_PUBLIC_KEY: |
+      <@getVar(KeyPublic)>
+    APP_PUBLIC_KEY_SSH: <@getVar(KeyPublicSsh)>
+    APP_PRIVATE_KEY: |
+      <@getVar(KeyPrivate)>
+    APP_PRIVATE_KEY_SSH: |
+      <@getVar(KeyPrivateSsh)>
+```
+
+#### Output of import YAML
+
+:::info
+  You can clearly see the multiline strings and the `|` syntax in Output.
+:::
+
+<Dropdown>
+  <DropdownItem title="GENERATED_PUBLIC_KEY">
+    - Generated as a multiline value
+    - The same value as in APP_PUBLIC_KEY.
+
+    ```yaml
+    GENERATED_PUBLIC_KEY: |
+      -----BEGIN PUBLIC KEY-----
+      MCowBQYDK2VwAyEAu0/gEIpNUbVdqA20lVl+ZD+5/zzfVK4exrgGLxgQQRU=
+      -----END PUBLIC KEY-----
+    ```
+  </DropdownItem>
+  <DropdownItem title="APP_PUBLIC_KEY">
+    - Generated as a multiline value.
+    - The same value as in GENERATED_PUBLIC_KEY.
+
+    ```yaml
+    APP_PUBLIC_KEY: |
+      -----BEGIN PUBLIC KEY-----
+      MCowBQYDK2VwAyEAu0/gEIpNUbVdqA20lVl+ZD+5/zzfVK4exrgGLxgQQRU=
+      -----END PUBLIC KEY-----
+    ```
+  </DropdownItem>
+  <DropdownItem title="APP_PUBLIC_KEY_SSH">
+    - Generated as a single value
+
+    ```yaml
+    APP_PUBLIC_KEY_SSH: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILtP4BCKTVG1XagNtJVZfmQ/uf8831SuHsa4Bi8YEEEV
+    ```
+  </DropdownItem>
+  <DropdownItem title="APP_PRIVATE_KEY">
+    - Generated as a multiline value
+
+    ```yaml
+    APP_PRIVATE_KEY: |
+      -----BEGIN PRIVATE KEY-----
+      MC4CAQAwBQYDK2VwBCIEIFzW6uPLlMnse2Hqg4hlyTwtlWaPKHjyoaaBi/FfVxBQ
+      -----END PRIVATE KEY-----
+    ```
+  </DropdownItem>
+  <DropdownItem title="APP_PRIVATE_KEY_SSH">
+    - Generated as a multiline value
+
+    ```yaml
+    APP_PRIVATE_KEY_SSH: |
+      -----BEGIN OPENSSH PRIVATE KEY-----
+      b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtz
+      c2gtZWQyNTUxOQAAACC7T+AQik1RtV2oDbSVWX5kP7n/PN9Urh7GuAYvGBBBFQAA
+      AIiaywRCmssEQgAAAAtzc2gtZWQyNTUxOQAAACC7T+AQik1RtV2oDbSVWX5kP7n/
+      PN9Urh7GuAYvGBBBFQAAAEBc1urjy5TJ7Hth6oOIZck8LZVmjyh48qGmgYvxX1cQ
+      ULtP4BCKTVG1XagNtJVZfmQ/uf8831SuHsa4Bi8YEEEVAAAAAAECAwQF
+      -----END OPENSSH PRIVATE KEY-----
+    ```
+  </DropdownItem>
+</Dropdown>
+
+---
+
+### generateRSA2048Key (name)
+
+This Generates public and private <a href="https://en.wikipedia.org/wiki/RSA_(cryptosystem)">RSA 2048bit</a> key pairs (including SSH) and stores them for later use as internal variables with names using the base name and variants.
+
+<table className="w-full my-1.5 ">
+  <thead>
+    <tr>
+      <th className="w-fit">Field</th>
+      <th className="w-fit">Details</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit font-semibold">Syntax:</td>
+      <td className="w-fit">`<@generateRSA2048Key(<Key>)>`</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">Variants:</td>
+      <td className="w-fit">The base name parameter stores all generated key versions as internal variables, combined with the <a href="#available-variants">Available Variants</a>.</td>
+    </tr>
+  </tbody>
+</table>
+
+
+#### Available Variants
+
+<table className="w-full my-1.5 ">
+  <thead>
+    <tr>
+      <th className="w-fit">Variant</th>
+      <th className="w-fit">Description</th>
+      <th className="w-fit">How to use with: `<@generateRSA2048Key(<Key>)>`</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit">Public</td>
+      <td className="w-fit">Public key version. This value is also returned by the called function.</td>
+      <td className="w-fit">`<@getVar(KeyPublic)>`</td>
+    </tr>
+    <tr>
+      <td className="w-fit">PublicSsh</td>
+      <td className="w-fit">SSH formatted public key version. For use as the authorized key file.</td>
+      <td className="w-fit">`<@getVar(KeyPublicSsh)>`</td>
+    </tr>
+    <tr>
+      <td className="w-fit">Private</td>
+      <td className="w-fit">Private key version in the standard format.</td>
+      <td className="w-fit">`<@getVar(KeyPrivate)>`</td>
+    </tr>
+  </tbody>
+</table>
+
+#### Usage in import YAML
+
+:::caution
+  These Generated keys are formatted as multiline strings. That means using the `|` syntax is necessary in import YAML.
+:::
+
+```yaml
+#yamlPreprocessor=on
+services:
+- hostname: app
+  type: nodejs@16
+  minContainers: 1
+  envSecrets:
+    GENERATED_PUBLIC_KEY: |
+      <@generateRSA2048Key(<Key>)>
+    APP_PUBLIC_KEY: |
+      <@getVar(KeyPublic)>
+    APP_PUBLIC_KEY_SSH: <@getVar(KeyPublicSsh)>
+    APP_PRIVATE_KEY: |
+      <@getVar(KeyPrivate)>
+```
+
+#### Output of import YAML
+
+:::info
+  You can clearly see the multiline strings and the `|` syntax in Output.
+:::
+
+<Dropdown>
+  <DropdownItem title="GENERATED_PUBLIC_KEY">
+    - Generated as a multiline value
+    - The same value as in APP_PUBLIC_KEY.
+
+    ```yaml
+    GENERATED_PUBLIC_KEY: |
+      -----BEGIN PUBLIC KEY-----
+      MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyWMKx+vdEb/Ww19trV9D
+      og7x6d4MCL4u576fVdDjBFhXjXYrK0Y0movvYNe72qtpggW8FnAiKbFNWMLr7mV1
+      2u0JEdPzaqSOX/XKRKWq2q7wyZjGU0uVLJ3Rd2Y4yFyjg6zbvA0Hh5HRgbn7xoRM
+      UbT3mt1lBP+DeHIi9exTvtiNfpO0Z1bidmLLvzLnakg1ei8YWnEAFJi83/MuRMhI
+      WOA32h14WVbvg4SA7++STHF3uHL+kHJ7P/KeqACDBPbgcc9Sz7WsSTAO6Pdry3sr
+      KCP60AMaT2PewB51AtuvFR8nP05WskMgd887KHXZjk9NhDU5E06vz4nf7a3t+it0
+      UwIDAQAB
+      -----END PUBLIC KEY-----
+    ```
+  </DropdownItem>
+  <DropdownItem title="APP_PUBLIC_KEY">
+    - Generated as a multiline value.
+    - The same value as in GENERATED_PUBLIC_KEY.
+
+    ```yaml
+    APP_PUBLIC_KEY: |
+      -----BEGIN PUBLIC KEY-----
+      MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyWMKx+vdEb/Ww19trV9D
+      og7x6d4MCL4u576fVdDjBFhXjXYrK0Y0movvYNe72qtpggW8FnAiKbFNWMLr7mV1
+      2u0JEdPzaqSOX/XKRKWq2q7wyZjGU0uVLJ3Rd2Y4yFyjg6zbvA0Hh5HRgbn7xoRM
+      UbT3mt1lBP+DeHIi9exTvtiNfpO0Z1bidmLLvzLnakg1ei8YWnEAFJi83/MuRMhI
+      WOA32h14WVbvg4SA7++STHF3uHL+kHJ7P/KeqACDBPbgcc9Sz7WsSTAO6Pdry3sr
+      KCP60AMaT2PewB51AtuvFR8nP05WskMgd887KHXZjk9NhDU5E06vz4nf7a3t+it0
+      UwIDAQAB
+      -----END PUBLIC KEY-----
+    ```
+  </DropdownItem>
+  <DropdownItem title="APP_PUBLIC_KEY_SSH">
+    - Generated as a single value
+
+    ```yaml
+    APP_PUBLIC_KEY_SSH: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDJYwrH690Rv9bDX22tX0OiDvHp3gwIvi7nvp9V0OMEWFeNdisrRjSai+9g17vaq2mCBbwWcCIpsU1YwuvuZXXa7QkR0/NqpI5f9cpEpararvDJmMZTS5UsndF3ZjjIXKODrNu8DQeHkdGBufvGhExRtPea3WUE/4N4ciL17FO+2I1+k7RnVuJ2Ysu/MudqSDV6LxhacQAUmLzf8y5EyEhY4DfaHXhZVu+DhIDv75JMcXe4cv6Qcns/8p6oAIME9uBxz1LPtaxJMA7o92vLeysoI/rQAxpPY97AHnUC268VHyc/TlayQyB3zzsoddmOT02ENTkTTq/Pid/tre36K3RT
+    ```
+  </DropdownItem>
+  <DropdownItem title="APP_PRIVATE_KEY">
+    - Generated as a multiline value
+
+    ```yaml
+    APP_PRIVATE_KEY: |
+      -----BEGIN PRIVATE KEY-----
+      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
+      A0bX/JM8kHjLlJNrtioxcT+dX4lL6/zT
+      -----END PRIVATE KEY-----
+    ```
+  </DropdownItem>
+</Dropdown>
+
+---
+
+### generateRSA4096Key (name)
+
+This Function Generates public and private <a href="https://en.wikipedia.org/wiki/RSA_(cryptosystem)">RSA 4096bit</a> key pairs (including SSH) and stores them for later use as internal variables with names using the base name and variants.
+
+<table className="w-full my-1.5 ">
+  <thead>
+    <tr>
+      <th className="w-fit">Field</th>
+      <th className="w-fit">Details</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit font-semibold">Syntax:</td>
+      <td className="w-fit">`<@generateRSA4096Key(<Key>)>`</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">Variants:</td>
+      <td className="w-fit">The base name parameter stores all generated key versions as internal variables, combined with the <a href="#available-variants">Available Variants</a>.</td>
+    </tr>
+  </tbody>
+</table>
+
+#### Available Variants
+
+<table className="w-full my-1.5 ">
+  <thead>
+    <tr>
+      <th className="w-fit">Variant</th>
+      <th className="w-fit">Description</th>
+      <th className="w-fit">How to use with: `<@generateRSA4096Key(<Key>)>`</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit">Public</td>
+      <td className="w-fit">Public key version. This value is also returned by the called function.</td>
+      <td className="w-fit">`<@getVar(KeyPublic)>`</td>
+    </tr>
+    <tr>
+      <td className="w-fit">PublicSsh</td>
+      <td className="w-fit">SSH formatted public key version. For use as the authorized key file.</td>
+      <td className="w-fit">`<@getVar(KeyPublicSsh)>`</td>
+    </tr>
+    <tr>
+      <td className="w-fit">Private</td>
+      <td className="w-fit">Private key version in the standard format.</td>
+      <td className="w-fit">`<@getVar(KeyPrivate)>`</td>
+    </tr>
+  </tbody>
+</table>
+
+#### Usage in import YAML
+
+:::caution
+  These Generated keys are formatted as multiline strings. That means using the `|` syntax is necessary in import YAML.
+:::
+
+```yaml
+#yamlPreprocessor=on
+services:
+- hostname: app
+  type: nodejs@16
+  envSecrets:
+    GENERATED_PUBLIC_KEY: |
+      <@generateRSA4096Key(<Key>)>
+    APP_PUBLIC_KEY: |
+      <@getVar(KeyPublic)>
+    APP_PUBLIC_KEY_SSH: <@getVar(KeyPublicSsh)>
+    APP_PRIVATE_KEY: |
+      <@getVar(KeyPrivate)>
+```
+
+#### Output of import YAML
+
+:::info
+  You can clearly see the multiline strings and the `|` syntax in Output.
+:::
+
+<Dropdown>
+  <DropdownItem title="GENERATED_PUBLIC_KEY">
+    - Generated as a multiline value
+    - The same value as in APP_PUBLIC_KEY.
+
+    ```yml
+    GENERATED_PUBLIC_KEY: |
+      -----BEGIN PUBLIC KEY-----
+      MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEA1kYEJ7bjBiXzBMI/cC6w
+      ajclHdd5NZ0bsx2d8eVSaHUaz419fTPYBV7mPec0ybYulThvqWX7c7k5H/jJVvTc
+      BRHv4NDqJmOlMHynz4+P4m9zD4gEoNqOCMartJr9yKyzrBplNuSd/IAFUCN6KIVu
+      Pge1aftvkZy0AsdRbMHlqWvMEdH30MJdC7FkhFsrrX0sYvuaW2MFjkQTishEphha
+      hgYTH5dCrrQajQBi7fSGEutW2CKp738x6hNbiB9//lYjczAK+esbfC6+WvmPODJn
+      q9YdcJ4ejh5zhOstrMPvO+kTvDozE5x6ur9Rw5yh0MgjR8Q76aoocu4ZckbQqQvX
+      7giQveJQdBn+ucYCQueSce4BkUm3S1ITdl2XUHgBj7XYnc+SqgvEtNn4YgyntAu/
+      IaVBg/DGVOBqr6pcoh6KLgYSroJG2uxdDXkji1QvRjy3SjY7eQMgou9qUM/L12gZ
+      PEyG+xflnkNzbS8PLIGY9F410bcf0ukkqEyDpCCgeoSrD1dJPme1WlSfhaVz7K9g
+      m8HB9IsgiQugOoS0Fpw57bNujy3BXJO4ROlIxOAbAYV0IXMjE3uWGot8uFeTVqB4
+      p5CzvTV9jdoQXKUFkkgm69MEoN98QB0Ts3BtcOf59X6uOu9twm1ltxnLH52i/4Ty
+      LdzErIs9vEaox5Qe6l4lhAUCAwEAAQ==
+      -----END PUBLIC KEY-----
+      ```
+  </DropdownItem>
+  <DropdownItem title="APP_PUBLIC_KEY">
+    - Generated as a multiline value.
+    - The same value as in GENERATED_PUBLIC_KEY.
+
+    ```yaml
+    APP_PUBLIC_KEY: |
+      -----BEGIN PUBLIC KEY-----
+      MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEA1kYEJ7bjBiXzBMI/cC6w
+      ajclHdd5NZ0bsx2d8eVSaHUaz419fTPYBV7mPec0ybYulThvqWX7c7k5H/jJVvTc
+      BRHv4NDqJmOlMHynz4+P4m9zD4gEoNqOCMartJr9yKyzrBplNuSd/IAFUCN6KIVu
+      Pge1aftvkZy0AsdRbMHlqWvMEdH30MJdC7FkhFsrrX0sYvuaW2MFjkQTishEphha
+      hgYTH5dCrrQajQBi7fSGEutW2CKp738x6hNbiB9//lYjczAK+esbfC6+WvmPODJn
+      q9YdcJ4ejh5zhOstrMPvO+kTvDozE5x6ur9Rw5yh0MgjR8Q76aoocu4ZckbQqQvX
+      7giQveJQdBn+ucYCQueSce4BkUm3S1ITdl2XUHgBj7XYnc+SqgvEtNn4YgyntAu/
+      IaVBg/DGVOBqr6pcoh6KLgYSroJG2uxdDXkji1QvRjy3SjY7eQMgou9qUM/L12gZ
+      PEyG+xflnkNzbS8PLIGY9F410bcf0ukkqEyDpCCgeoSrD1dJPme1WlSfhaVz7K9g
+      m8HB9IsgiQugOoS0Fpw57bNujy3BXJO4ROlIxOAbAYV0IXMjE3uWGot8uFeTVqB4
+      p5CzvTV9jdoQXKUFkkgm69MEoN98QB0Ts3BtcOf59X6uOu9twm1ltxnLH52i/4Ty
+      LdzErIs9vEaox5Qe6l4lhAUCAwEAAQ==
+      -----END PUBLIC KEY-----
+    ```
+  </DropdownItem>
+  <DropdownItem title="APP_PUBLIC_KEY_SSH">
+    - Generated as a single value
+
+    ```yaml
+    APP_PUBLIC_KEY_SSH: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDWRgQntuMGJfMEwj9wLrBqNyUd13k1nRuzHZ3x5VJodRrPjX19M9gFXuY95zTJti6VOG+pZftzuTkf+MlW9NwFEe/g0OomY6UwfKfPj4/ib3MPiASg2o4Ixqu0mv3IrLOsGmU25J38gAVQI3oohW4+B7Vp+2+RnLQCx1FsweWpa8wR0ffQwl0LsWSEWyutfSxi+5pbYwWORBOKyESmGFqGBhMfl0KutBqNAGLt9IYS61bYIqnvfzHqE1uIH3/+ViNzMAr56xt8Lr5a+Y84Mmer1h1wnh6OHnOE6y2sw+876RO8OjMTnHq6v1HDnKHQyCNHxDvpqihy7hlyRtCpC9fuCJC94lB0Gf65xgJC55Jx7gGRSbdLUhN2XZdQeAGPtdidz5KqC8S02fhiDKe0C78hpUGD8MZU4GqvqlyiHoouBhKugkba7F0NeSOLVC9GPLdKNjt5AyCi72pQz8vXaBk8TIb7F+WeQ3NtLw8sgZj0XjXRtx/S6SSoTIOkIKB6hKsPV0k+Z7VaVJ+FpXPsr2CbwcH0iyCJC6A6hLQWnDnts26PLcFck7hE6UjE4BsBhXQhcyMTe5Yai3y4V5NWoHinkLO9NX2N2hBcpQWSSCbr0wSg33xAHROzcG1w5/n1fq46723CbWW3GcsfnaL/hPIt3MSsiz28RqjHlB7qXiWEBQ==
+    ```
+  </DropdownItem>
+  <DropdownItem title="APP_PRIVATE_KEY">
+    - Generated as a multiline value
+
+    ```yaml
+    APP_PRIVATE_KEY: |
+      -----BEGIN PRIVATE KEY-----
+      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
+      A0bX/JM8kHjLlJNrtioxcT+dX4lL6/zT
+      -----END PRIVATE KEY-----
+    ```
+  </DropdownItem>
+</Dropdown>
+
+## Import modifiers
+
+Modifiers provide a simpler way to transform values compared to using functions alone. You can chain multiple modifiers together using the `|` symbol, making it easy to apply several transformations in sequence. They work with both string and function expressions - just add them between the `<` and `>` markers, right before the closing `>`.
+
+---
+
+### List of import modifiers
+
+
+<table className="w-full my-1.5 ">
+  <thead>
+    <tr>
+      <th className="w-fit">Name</th>
+      <th className="w-fit">Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit font-semibold">sha256</td>
+      <td className="w-fit">Generate a hash of the incoming string using <a href="https://en.wikipedia.org/wiki/SHA-2">sha256</a> algorithm.</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">sha512</td>
+      <td className="w-fit">Generate a hash of the incoming string using <a href="https://en.wikipedia.org/wiki/SHA-2">sha512</a> algorithm.</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">bcrypt</td>
+      <td className="w-fit">
+        Generate a hash of the incoming string using <a href="https://en.wikipedia.org/wiki/Bcrypt">bcrypt</a> algorithm.<br/>
+        Fixed configuration: Number of cycles = 11
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">argon2id</td>
+      <td className="w-fit">
+        Generate a hash of the incoming string using <a href="https://en.wikipedia.org/wiki/Argon2">argon2id</a> algorithm.<br/>
+        Fixed configuration: Memory = 64MiB, Iterations = 4, Parallelism = 4, SaltLen = 16B, KeyLength = 32B
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit">upper</td>
+      <td className="w-fit">Converts all Unicode string letters to their upper-case variants.</td>
+    </tr>
+    <tr>
+      <td className="w-fit">lower</td>
+      <td className="w-fit">Converts all Unicode string letters to their lower-case variants.</td>
+    </tr>
+    <tr>
+      <td className="w-fit">title</td>
+      <td className="w-fit">Converts all existing words to the title-case convention (the first letter to upper-case, rest to lower-case).</td>
+    </tr>
+  </tbody>
+</table>
+
+---
+
+### Examples of correctly using import modifiers
+
+
+<Dropdown>
+    <DropdownItem title="Generating a plain password and related hashes">
+
+    - `<@generateRandomStringVar(<myPassword>, <30>)>` will output a random string of 30 characters:
+    ```yaml
+    7a14c8e74bc98a0d74253b1d1a4ef6
+    ```
+
+    - `<@getVar(<myPassword>)| sha256>` will output the sha256 hash of the `<myPassword>` variable:
+    ```yaml
+    081b91d6dff5036229a92e2442fb65d7c8124571d4e70a2ac4729aeb86957407
+    ```
+
+    - `<@getVar(<myPassword>)| sha512>` will output the sha512 hash of the `<myPassword>` variable:
+    ```yaml
+    89c05547de0aa4926512a958f95ab8bf4096ceec63ad5aad4266890bfa059e0cc98917c54276ba4cd61f1dde4c8efda948fc967885c9dd50558ed939722ca10c
+    ```
+
+    - `<@getVar(<myPassword>)| bcrypt>` will output the bcrypt hash of the `<myPassword>` variable:
+    ```yaml
+    $2a$10$CxKZX0yIxdc7ts6eI5aBu.g.heAsFcePdMDEpnlViTlo3vGc//PXe
+    ```
+
+    - `<@getVar(<myPassword>)| argon2id>` will output the argon2id hash of the `<myPassword>` variable:
+    ```yaml
+    $argon2id$v=19$m=98304,t=1,p=3$uWBpmoUT3sfckXHyRF9hlg$8bGtNffuHxaRIgN99zCmJeGEYJF5BY2J9TwzqmezP28
+    ```
+  </DropdownItem>
+<DropdownItem title="String Case Modification Examples">
+    - Using upper case modifier:
+    ```yaml
+    Input:  <sTATic StrINg wiTH a mOdifIER| upper>
+    Output: STATIC STRING WITH A MODIFIER
+    ```
+
+    - Using lower case modifier:
+    ```yaml
+    Input:  <sTATic StrINg wiTH a mOdifIER| lower>
+    Output: static string with a modifier
+    ```
+
+    - Using title case modifier:
+    ```yaml
+    Input:  <sTATic StrINg wiTH a mOdifIER| title>
+    Output: Static String With A Modifier
+    ```
+
+    - Chaining multiple modifiers:
+    ```yaml
+    Input:  <sTATic StrINg wiTH a mOdifIER| upper | lower>
+    Output: static string with a modifier
+    ```
+
+    - Using modifiers with functions:
+    ```yaml
+    Input:  <@generateRandomString(<30>) | upper>
+    Output: 7A14C8E74BC98A0D74253B1D1A4EF6
+    
+    Input:  <@setVar(<bucketName>, <@generateRandomString(<10>) | lower>)>
+    Output: h73ep149sd
+    ```
+</DropdownItem>
+</Dropdown>
+
+<br />
+
+:::tip Using a space before the pipe separator
+As you can see above, unlike the case of the string expression, using a space before the `|` separator in a function expression doesn't add an additional space character to the result.
+:::
+
+
