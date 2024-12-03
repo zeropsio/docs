@@ -82,7 +82,7 @@ module.exports = {
     {
       type: 'doc',
       id: 'features/env-variables',
-      label: 'Environment variables',
+      label: 'Environment Variables',
       customProps: {
         sidebar_icon: 'tools',
       },
@@ -468,7 +468,7 @@ module.exports = {
         {
           type: 'ref',
           id: 'object-storage/overview',
-          label: 'Object storage',
+          label: 'Object Storage',
           customProps: {
             sidebar_icon: 'cube-solid',
           },
@@ -477,7 +477,7 @@ module.exports = {
         {
           type: 'ref',
           id: 'shared-storage/overview',
-          label: 'Shared storage',
+          label: 'Shared Storage',
           customProps: {
             sidebar_icon: 'server',
           },
@@ -556,7 +556,7 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'zerops.yml',
+      label: 'Zerops.yml',
       link: {
         type: 'doc',
         id: 'references/zeropsyml',
@@ -591,7 +591,7 @@ module.exports = {
         {
           type: 'doc',
           id: 'references/importyml/pre-processor',
-          label: 'yamlPreprocessor',
+          label: 'Yaml Preprocessing',
           customProps: {
             exclude_from_doc_list: false,
           },
@@ -609,7 +609,7 @@ module.exports = {
     {
       type: 'doc',
       id: 'references/github-integration',
-      label: 'Github integration',
+      label: 'Github Integration',
       customProps: {
         sidebar_icon: 'github',
       },
@@ -618,7 +618,7 @@ module.exports = {
     {
       type: 'doc',
       id: 'references/gitlab-integration',
-      label: 'Gitlab integration',
+      label: 'Gitlab Integration',
       customProps: {
         sidebar_icon: 'cloud-arrow-up',
       },
@@ -2390,7 +2390,7 @@ module.exports = {
     {
       type: 'doc',
       id: 'object-storage/overview',
-      label: 'Object storage overview',
+      label: 'Object Storage Overview',
       customProps: {
         sidebar_is_title: true,
         sidebar_icon: 'server',
