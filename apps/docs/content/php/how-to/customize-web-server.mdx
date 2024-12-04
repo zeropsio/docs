@@ -134,7 +134,9 @@ The default PHP+Apache service has following Apache configuration:
     </Directory>
 
     <FilesMatch ".php$">
-        SetHandler "proxy:unix:{{.PhpSocket}}|fcgi://localhost/"
+        <If "-f %{REQUEST_FILENAME}">
+            SetHandler "proxy:unix:{{.PhpSocket}}|fcgi://localhost/"
+        </If>
     </FilesMatch>
 
     ErrorLog  "| /usr/bin/logger -tapache -plocal1.err"
