@@ -5,7 +5,7 @@ function Wip() {
   return (
     <div className="fixed z-40 bottom-2 right-4">
       <Tooltip
-        text="😭 Confused? Click to contact us."
+        text="Confused? Click to contact us."
         positionStrategy="absolute"
         place="top"
       >
