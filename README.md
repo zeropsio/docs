@@ -1,6 +1,6 @@
 ![Docs cover](https://github.com/zeropsio/recipe-shared-assets/blob/main/covers/svg/cover-docs.svg)
 
-<h2>Zerops Documentation</h2>
+<h2>📝 Zerops Documentation</h2>
 
 [![CI](https://img.shields.io/github/actions/workflow/status/zeropsio/docs/build.yml?labelColor=EDEFF3&color=8F9DA8)](https://github.com/zeropsio/docs/actions/workflows/build.yml)
 ![GitHub contributors](https://img.shields.io/github/contributors/zeropsio/docs?labelColor=EDEFF3&color=8F9DA8)
@@ -9,13 +9,21 @@
 
 Our <b>Documentation</b> for people who want help with interacting with <a href="https://zerops.io/" target="_blank">Zerops</a> platform. <a href="https://docs.zerops.io/" target="_blank">Read the docs →</a>
 
-## Contributing Guide
+## 📒 Contributing Guide
+
+```bash
+# Installs dependencies
+yarn
+
+# Starts the development server at localhost:3001
+yarn dev
+```
 
 If you're planning to contribute to our documentation, please check out our [CONTRIBUTING.md](https://github.com/zeropsio/docs/blob/main/CONTRIBUTING.md) guide.
 
 If you have any questions, please feel free to join [Zerops Discord Server](https://discord.gg/xxzmJSDKPT).
 
-## Links
+## 🧩 Links
 
 <div>
   <b>
@@ -37,12 +45,3 @@ Documentation software by Docusaurus. Theme & components by the amazing medusajs
 </p>
 
 <br/>
-  
-<!--
-<p align="center">
-Documentation software by Docusaurus. Theme & components by the amazing medusajs.com
-<br/>
-</p>
-
-<p align="end"><img height="36" src="https://github.com/zeropsio/recipe-shared-assets/blob/main/logos/zerops-green.svg" ></p>
- -->
