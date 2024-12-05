@@ -556,7 +556,7 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'Zerops.yml',
+      label: 'zerops.yml',
       link: {
         type: 'doc',
         id: 'references/zeropsyml',
