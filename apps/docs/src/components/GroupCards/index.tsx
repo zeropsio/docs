@@ -23,7 +23,7 @@ const GroupCards: React.FC<GroupCardsProps> = ({ items, heading, emoji }) => {
                     <a
                         key={index}
                         href={item.link}
-                        className="flex items-center justify-center py-0.5 px-2.5 rounded-lg border border-solid border-medusa-border-base bg-medusa-bg-subtle hover:bg-medusa-bg-base active:bg-[#EEF0F2] duration-300"
+                        className="flex items-center justify-center py-0.5 px-2.5 rounded-lg border border-solid border-medusa-border-base bg-medusa-bg-subtle hover:bg-medusa-bg-base active:bg-[#EEF0F2] dark:active:bg-[#2A2C30] duration-300"
                     >
                         <span className="text-md font-medium text-center text-[#3B3D40] dark:text-gray-300">{item.name}</span>
                     </a>

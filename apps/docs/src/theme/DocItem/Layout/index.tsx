@@ -14,6 +14,8 @@ import Unlisted from '@theme/Unlisted';
 import type { Props } from '@theme/DocItem/Layout';
 import { useSidebar } from '../../../providers/Sidebar';
 import Footer from '@theme/Footer';
+import { NavigationButtons } from "../../../components/NavigationButons";
+
 
 /**
  * Decide if the toc should be rendered, on mobile or desktop viewports
@@ -42,7 +44,7 @@ function useDocTOC() {
 export default function DocItemLayout({ children }: Props): JSX.Element {
   const docTOC = useDocTOC();
   const {
-    metadata: { unlisted },
+    metadata: { unlisted, previous, next },
   } = useDoc();
   const sidebarContext = useSidebar();
   return (
@@ -63,6 +65,16 @@ export default function DocItemLayout({ children }: Props): JSX.Element {
             <DocVersionBadge />
             {docTOC.mobile}
             <DocItemContent>{children}</DocItemContent>
+            <NavigationButtons
+              prevPage={previous && {
+                href: previous.permalink,
+                title: previous.title
+              }}
+              nextPage={next && {
+                href: next.permalink,
+                title: next.title
+              }}
+            />
             <DocItemFooter />
           </article>
           <DocItemPaginator />
