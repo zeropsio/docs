@@ -42,7 +42,7 @@ export const Tooltip = ({
         className={clsx(
           'border-[#DEE1E4] dark:border-[#323237] !border !border-solid',
           '!text-compact-x-small-plus !shadow-tooltip dark:!shadow-tooltip-dark !rounded-docs_DEFAULT',
-          '!py-docs_0.4 !z-[399] hidden !px-docs_1 lg:block',
+          '!py-docs_0.4 !z-[399] hidden !max-w-md !px-docs_1 lg:block',
           '!bg-medusa-bg-base',
           '!text-medusa-fg-subtle',
           tooltipClassName
