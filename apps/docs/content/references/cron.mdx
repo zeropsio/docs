@@ -1,0 +1,67 @@
+---
+title: Cron Jobs & Tasks
+description: Learn how to set up automated tasks and scheduled jobs in Zerops
+---
+
+## Overview
+Cron jobs are scheduled commands that execute automatically based on defined timing rules. In Zerops, these jobs are configured in the `zerops.yml` file under the `run` section.
+
+### Example Configuration
+Here’s a basic example of how to set up a cron job in your service's `zerops.yml`:
+
+```yaml
+run: 
+  crontab:
+    - command: "date >> /var/log/cron.log"
+      timing: "0 * * * *"
+```
+This configuration logs the current date to `/var/log/cron.log` every hour.
+
+### Running on Multiple Containers
+By default, cron jobs run on a single container, even if multiple containers exist for the service. To execute a command across all containers, you can use the `allContainers` parameter:
+
+```yaml
+run: 
+  crontab:
+    - command: "rm -rf /tmp/*"
+      timing: "0 0 * * *"
+      allContainers: true
+```
+This example removes temporary files from all containers every day at midnight.
+
+### Custom Working Directory
+You can also specify a custom working directory for your commands using the `workingDir` parameter:
+
+```yaml
+run: 
+  crontab:
+    - command: "php artisan schedule:run"
+      timing: "* * * * *"
+      workingDir: /var/www/html
+```
+In this case, the command runs every minute in the `/var/www/html` directory.
+
+## Parameter Descriptions
+
+- **command** (string, required): The shell command to execute at the scheduled time. This can be any valid command.  
+  **Example:** `"echo hello"`
+
+- **timing** (string, required): The schedule for when the task should run, specified in standard cron format using five space-separated fields:
+  - Minute (0–59)
+  - Hour (0–23)
+  - Day of the month (1–31)
+  - Month (1–12)
+  - Day of the week (0–7; both 0 and 7 represent Sunday)  
+  **Examples:**
+  - `"0 5 * * *"` – Runs daily at 5:00 AM.
+  - `"*/10 * * * *"` – Runs every 10 minutes.
+
+- **allContainers** (boolean, optional): Determines whether the command runs on all containers (`true`) or just one (`false`, default).  
+  **Options:**  
+  - `true` – Command runs on all containers.
+  - `false` – Command runs on only one container.
+
+- **workingDir** (string, optional): Specifies the directory where the command will be executed. If not set, it defaults to `/var/www`.  
+  **Example:** `/var/www/html`
+
+
