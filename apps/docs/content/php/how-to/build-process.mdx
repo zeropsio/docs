@@ -14,41 +14,35 @@ import data from '@site/static/data.json';
   />
 </p>
 
-## Description of the build process
-
-Zerops starts a temporary build container and performs following actions:
-
-1. Installs the build environment
-2. Downloads your application source code from [GitHub ↗](https://www.github.com), [GitLab ↗](https://www.gitlab.com) or via [Zerops CLI](/references/cli)
-3. Optionally [customises the build environment](/php/how-to/build-process#customise-php-build-environment)
-4. Runs the build commands
-5. Uploads the application artefact to the internal Zerops storage
-6. Optionally [customizes the runtime environment](/php/how-to/customize-runtime)
-7. [Deploys your application](/php/how-to/deploy-process)
-
 The build container is automatically deleted after the build has finished or failed.
-
-## Cancel running build
-
-When you know that the running build is not correct and you want to cancel it, you can do it in Zerops GUI. Go to the service detail, select **Service dashboard & runtime containers** from the left menu and click on the **Open pipeline detail** button. Then click on the **Cancel build** button.
-
-**// TODO screenshot of a running build pipeline**
-
-The build cancellation is available before the build pipeline is finished. When the build is finished, the deployment cannot be cancelled.
-
-## Customise PHP build environment
-
-The default PHP build environment contains:
-
-- <span>{data.alpineCurrentVersion}</span>
-- selected version of PHP defined in `zerops.yml` [build.base](/php/how-to/build-pipeline#base) parameter
-- [zCLI](/references/cli), Zerops command line tool
-- `composer`, `git` and `wget`.
-
-If you prefer the Ubuntu OS instead of Alpine, set the `<a href="/php/how-to/build-pipeline#os">build.os</a>` attribute to `ubuntu`. To install additional packages or tools add one or more [build.prepareCommands](/php/how-to/build-pipeline#preparecommands) commands to your `zerops.yml`.
 
 :::info
 The application code is available in the `/var/www` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
+:::
+
+## Cancel running build
+To cancel an ongoing build:
+1. Go to service detail
+2. Select "Service dashboard & runtime containers"
+3. Click "Open pipeline detail"
+4. Click "Cancel build"
+
+{/* TODO screenshot of a running build pipeline */}
+
+The build cancellation is available before the build pipeline is finished. When the build is finished, the deployment cannot be cancelled.
+
+## Customising PHP runtime environment
+
+The default PHP build environment contains:
+- <span>{data.alpineCurrentVersion}</span>
+- Selected version of PHP when the runtime service was created
+- Git and Composer
+- [zCLI](/references/cli)
+
+:::note
+To use Ubuntu instead of the default Alpine, set the [build.os](/references/zeropsyml#os-optional) attribute.
+
+Additional packages and tools can be installed using [build.prepareCommands](/references/zeropsyml#preparecommands-optional).
 :::
 
 ## PHP build hardware resources
