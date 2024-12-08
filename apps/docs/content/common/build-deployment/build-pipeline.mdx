@@ -1,78 +1,24 @@
 ---
-title: Configure Your Gleam build & deploy pipeline
-description: Learn more about how you can configure your Gleam service for build & deploy pipeline.
+title: Configure Your build & deploy pipeline
+description: Learn more about how you can configure your service for build & deploy pipeline.
 ---
 
 import data from '@site/static/data.json';
 import UnorderedCodeList from 'docs/src/components/UnorderedCodeList';
 
-Zerops provides a customizable build and runtime environment for your Gleam application.
+Zerops provides a customizable build and runtime environment for your application.
 
 ## Add zerops.yml to your repository
 
-Start by adding `zerops.yml` file to the **root of your repository** and modify it to fit your application:
+Start by adding `zerops.yml` file to the **root of your repository** and modify it to fit your application.
 
-```yml
-zerops:
-  # define hostname of your service
-  - setup: app
-    # ==== how to build your application ====
-    build:
-      # REQUIRED. Set the base technology for the build environment:
-      base: gleam@latest
+:::tip
+Refer to technology-specific pages to get customized `zerops.yml` examples.
 
-      # OPTIONAL. Set the operating system for the build environment.
-      # os: ubuntu
+See full `zerops.yml` [specification](/zerops-yml/specification).
+:::
 
-      # OPTIONAL. Customise the build environment by installing additional packages
-      # or tools to the base build environment.
-      # prepareCommands:
-      #   - apt-get something
-      #   - curl something else
-
-      # REQUIRED. Build your application
-      buildCommands:
-        - npm i
-        - npm run build
-
-      # REQUIRED. Select which files / folders to deploy after
-      # the build has successfully finished
-      deployFiles:
-        - dist
-        - package.json
-        - node_modules
-
-      # OPTIONAL. Which files / folders you want to cache for the next build.
-      # Next builds will be faster when the cache is used.
-      cache: node_modules
-
-    # ==== how to run your application ====
-    run:
-      # OPTIONAL. Sets the base technology for the runtime environment:
-      base: gleam@latest
-
-      # OPTIONAL. Sets the internal port(s) your app listens on:
-      ports:
-        # port number
-        - port: 3000
-
-      # OPTIONAL. Customise the runtime Gleam environment by installing additional
-      # dependencies to the base Gleam runtime environment.
-      # prepareCommands:
-      #   - apt-get something
-      #   - curl something else
-
-      # OPTIONAL. Run one or more commands each time a new runtime container
-      # is started or restarted. These commands are triggered before
-      # your Gleam application is started.
-      # initCommands:
-      #  - rm -rf ./cache
-
-      # REQUIRED. Your Gleam application start command
-      start: npm start
-```
-
-The top-level element is always `zerops`.
+The top-level element in `zerops.yml` is always `zerops`.
 
 ### Setup
 
@@ -92,7 +38,7 @@ zerops:
     run: ...
 ```
 
-Each service configuration contains at least two sections: **build** and **run**. Both sections are required to build and deploy your Gleam application in Zerops. If you'd like to use a readiness check, add an optional **deploy** section.
+Each service configuration contains at least two sections: **build** and **run**. Both sections are required to build and deploy your application in Zerops. If you'd like to use a readiness check, add an optional **deploy** section.
 
 ## Build pipeline configuration
 
@@ -100,9 +46,7 @@ Each service configuration contains at least two sections: **build** and **run**
 
 _REQUIRED._ Sets the base technology for the build environment.
 
-Following options are available for Gleam builds:
-
-<UnorderedCodeList data={data.gleam.base} />
+See the [full list](/zerops-yml/base-list#runtime-services) of supported base technologies.
 
 ```yml
 zerops:
@@ -110,14 +54,14 @@ zerops:
   - setup: app
     # ==== how to build your application ====
     build:
-      # REQUIRED. Sets the base technology for the build environment:
-      base: gleam@latest
+      # REQUIRED. Sets the base technology for the build environment (Node.js example)
+      base: nodejs@latest
       ...
 ```
 
 <p>
-  The base build environment contains {data.alpine.default}, the selected
-  major version of Gleam, <a href="/references/cli">Zerops command line tool</a>, `npm`, `yarn`, `git` and `npx` tools.
+  The base build environment contains a chosen OS (defined in <a href="#os"><code>build.os</code></a>), the selected
+  major version of your technology, <a href="/references/cli">Zerops command line tool</a> and other technology-specific tools.
 </p>
 
 :::info
@@ -132,21 +76,15 @@ zerops:
   - setup: app
     # ==== how to build your application ====
     build:
-      # REQUIRED. Sets the base technology for the build environment:
+      # REQUIRED. Sets the base technology for the build environment (Node.js example)
       base:
-        - gleam@latest
+        - nodejs@latest
       prepareCommands:
         - zsc add go@latest
       ...
 ```
 
-See the full list of supported [build base environments](/zerops-yml/base-list#runtime-services).
-
-To customise your build environment use the [prepareCommands](/gleam/how-to/build-pipeline#preparecommands) attribute.
-
-:::note
-Modifying the base technology will invalidate your build cache. See our [Build Cache Documentation](/features/build-cache) for more details about cache invalidation.
-:::
+To customize your build environment use the [prepareCommands](/common/build-deployment/build-pipeline#preparecommands) attribute.
 
 ### os
 
@@ -165,23 +103,12 @@ We are currently using following os version:
 - <span>{data.ubuntu.default}</span>
 
 :::caution
-The os version is fixed and cannot be customised.
-:::
-
-:::note
-Changing the OS setting will invalidate your build cache. See our [Build Cache Documentation](/features/build-cache) for details about cache behavior.
+The os version is fixed and cannot be customized.
 :::
 
 ### prepareCommands
 
-_OPTIONAL._ Customises the build environment by installing additional dependencies or tools to the base build environment.
-
-The base build environment contains:
-
-- <span>{data.alpine.default}</span>
-- selected version of Gleam defined in the [base](/gleam/how-to/build-pipeline#base) attribute
-- [Zerops command line tool](/references/cli)
-- `npm`, `yarn`, `git` and `npx` tools
+_OPTIONAL._ Customizes the build environment by installing additional dependencies or tools to the base build environment.
 
 To install additional packages or tools add one or more prepare commands:
 
@@ -191,10 +118,10 @@ zerops:
   - setup: app
     # ==== how to build your application ====
     build:
-      # REQUIRED. Set the base technology for the build environment:
-      base: gleam@latest
+      # REQUIRED. Set the base technology for the build environment (Node.js example)
+      base: nodejs@latest
 
-      # OPTIONAL. Customise the build environment by installing additional packages
+      # OPTIONAL. Customize the build environment by installing additional packages
       # or tools to the base build environment.
       prepareCommands:
         - apt-get something
@@ -210,17 +137,33 @@ When the first build is triggered, Zerops will
 
 The application code is available in the `/var/www` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
 
-:::note
-These commands are skipped when using cached environment. Modifying `prepareCommands` will invalidate your build cache. See our [Build Cache Documentation](/features/build-cache) for details about cache invalidation.
-:::
-
 #### Command exit code
 
-If any command fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/gleam/how-to/logs#build-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all prepare commands are finished, your custom build environment is ready for the build phase.
+If any command fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/common/maintenance/logs#build-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all prepare commands are finished, your custom build environment is ready for the build phase.
 
 #### Single or separated shell instances
 
 You can configure your prepare commands to be run in a single shell instance or multiple shell instances. The format is identical to [build commands](#buildcommands).
+
+#### Cache of your custom build environment
+
+Some packages or tools can take a long time to install. Therefore, Zerops caches your custom build environment after each successful build where the prepare commands were used. When the second or following build is triggered, Zerops will use the build cache from the previous build if both following conditions are met:
+
+1. Content of the base and prepare attributes didn't change from the previous build
+2. The build cache wasn't invalidated in the Zerops GUI.
+
+To invalidate the Zerops custom runtime cache go to your service detail in Zerops GUI, choose **Pipelines & CI / CD settings** from the left menu. Then click on the **Clear build cache button**.
+
+<p align="center">
+  <img
+    src="/img/screenshots/runtime_clear_build_cache.png"
+    alt="image"
+    width="100%"
+    height="auto"
+  />
+</p>
+
+When the build cache is used, Zerops doesn't run the `prepareCommands` commands and the build of your application is faster.
 
 ### buildCommands
 
@@ -232,8 +175,8 @@ zerops:
   - setup: app
     # ==== how to build your application ====
     build:
-      # REQUIRED. Set the base technology for the build environment:
-      base: gleam@latest
+      # REQUIRED. Set the base technology for the build environment (Node.js example)
+      base: nodejs@latest
 
       # REQUIRED. Build your application
       buildCommands:
@@ -246,8 +189,8 @@ At least one command is required. Zerops triggers each command in the defined or
 
 Before the build commands are triggered the build container contains:
 
-1. base environment defined by the [base](/gleam/how-to/build-pipeline#base) attribute
-2. optional customisation of the base environment defined in the [prepareCommands](/gleam/how-to/build-pipeline#preparecommands) attribute
+1. base environment defined by the [base](#base) attribute
+2. optional customisation of the base environment defined in the [prepareCommands](#preparecommands) attribute
 3. your application code
 
 #### Run build commands as a single shell instance
@@ -273,7 +216,7 @@ buildCommands:
 
 #### Command exit code
 
-If any command fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/gleam/how-to/logs#build-log) to troubleshoot the error. If the error log doesn't contain any specific error message, try to run your build with the --verbose option.
+If any command fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/common/maintenance/logs#build-log) to troubleshoot the error. If the error log doesn't contain any specific error message, try to run your build with the `--verbose` option.
 
 ```yml
 buildCommands:
@@ -374,14 +317,13 @@ _OPTIONAL._ Defines which files or folders will be cached for the next build.
 ```yml
 # OPTIONAL. Which files / folders you want to cache for the next build.
 # Next builds will be faster when the cache is used.
-cache: file.txt
+cache: node_modules
 ```
 
-The cache attribute helps optimize build times by preserving specified files between builds.
+By default, Zerops doesn't cache the files in the build container. When the build phase is finished, the files and folders defined in the [deployFiles](#deployfiles) attribute are saved and deployed to your runtime containers. Then, the build container is deleted.
+To speed the second and following build up, cache the files that can be used in the next build. We recommend caching the `node_modules` directory.
 
 The cache attribute supports the [~ wildcard character](#how-to-use-a-wildcard-in-the-path).
-
-Learn more about the [build cache system](/features/build-cache) in Zerops.
 
 ### envVariables
 
@@ -395,7 +337,7 @@ zerops:
   - setup: app
     # ==== how to build your application ====
     build:
-      base: gleam@latest
+      base: nodejs@latest
         …
 
       # OPTIONAL. Defines the env variables for the build environment:
@@ -407,18 +349,14 @@ zerops:
         DB_PASS: ${db_password}
 ```
 
-Read more about [environment variables](/gleam/how-to/env-variables) in Zerops.
+Read more about [environment variables](/common/configuration/env-variables) in Zerops.
 
 ## Runtime configuration
 
 ### base
 
-_OPTIONAL._ Sets the base technology for the runtime environment.
-If you don't specify the `run.base` attribute, Zerops keeps the current Gleam version for your runtime.
-
-Following options are available for Gleam runtimes:
-
-<UnorderedCodeList data={data.gleam.base} />
+_OPTIONAL._ Sets the base technology for the runtime environment. See all [supported base technologies](/zerops-yml/base-list#runtime-services).
+If you don't specify the `run.base` attribute, Zerops keeps the current version for your runtime.
 
 ```yml
 zerops:
@@ -426,20 +364,19 @@ zerops:
   - setup: app
     # ==== how to build your application ====
     build:
-      # REQUIRED. Sets the base technology for the build environment:
-      base: gleam@latest
+      # REQUIRED. Sets the base technology for the build environment (Node.js example)
+      base: nodejs@latest
       ...
 
     # ==== how to run your application ====
     run:
-      # OPTIONAL. Sets the base technology for the runtime environment:
-        base: gleam@latest
+      # OPTIONAL. Sets the base technology for the runtime environment (Node.js example)
+        base: nodejs@latest
       ...
 ```
 
 <p>
-  The base runtime environment contains {data.alpine.default}, the
-  selected major version of Gleam, Zerops command line tool, `npm`, `yarn`, `git` and `npx` tools.
+  The base runtime environment contains {data.alpine.default}, the selected version of your technology, Zerops command line tool, `git` and other technology-specific tools.
 </p>
 
 :::info
@@ -454,15 +391,15 @@ zerops:
   - setup: app
     # ==== how to build your application ====
     build:
-      # REQUIRED. Sets the base technology for the build environment:
-      base: gleam@latest
+      # REQUIRED. Sets the base technology for the build environment (Node.js example)
+      base: nodejs@latest
       ...
 
     # ==== how to run your application ====
     run:
-      # OPTIONAL. Sets the base technology for the runtime environment:
+      # OPTIONAL. Sets the base technology for the runtime environment (Node.js example)
       base:
-        - gleam@latest
+        - nodejs@latest
       prepareCommands:
         - zsc add go@latest
       ...
@@ -470,7 +407,7 @@ zerops:
 
 See the full list of supported [run base environments](/zerops-yml/base-list).
 
-To customise your build environment use the `prepareCommands` attribute.
+To customize your build environment use the `prepareCommands` attribute.
 
 ### os
 
@@ -489,7 +426,7 @@ We are currently using following os version:
 - <span>{data.ubuntu.default}</span>
 
 :::caution
-The os version is fixed and cannot be customised.
+The os version is fixed and cannot be customized.
 :::
 
 ### ports
@@ -498,23 +435,40 @@ _OPTIONAL._ Specifies one or more internal ports on which your application will 
 
 Projects in Zerops represent a group of one or more services. Services can be of different types (runtime services, databases, message brokers, object storage, etc.). All services of the same project share a **dedicated private network**. To connect to a service within the same project, just use the service hostname and its internal port.
 
-For example, to connect to a Gleam service with hostname = "app" and port = 3000 from another service of the same project, simply use `app:3000`. Read more about [how to access a Gleam service](/gleam/how-to/access).
+For example, to connect to a Node.js service with hostname = "app" and port = 3000 from another service of the same project, simply use `app:3000`. Read more about [how to access a service](/common/maintenance/access).
 
 Each port has following attributes:
 
-| parameter   | description                                                                                                                                                                                                                                                                                                            |
-| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| port        | Defines the port number. You can set any port number between _10_ and _65435_. Ports outside this interval are reserved for internal Zerops systems.                                                                                                                                                                   |
-| protocol    | **Optional.** Defines the protocol. Allowed values are `TCP` or `UDP`. Default value is `TCP`.                                                                                                                                                                                                                         |
-| httpSupport | **Optional.** `httpSupport = true` is the default setting for TCP protocol. Set `httpSupport = false` if a web server isn't running on the port. Zerops uses this information for the configuration of [public access](/features/access). `httpSupport = true` is available only in combination with the TCP protocol. |
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit"><strong>Parameter</strong></th>
+      <th className="w-fit"><strong>Description</strong></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit">port</td>
+      <td className="w-fit">Defines the port number. You can set any port number between <em>10</em> and <em>65435</em>. Ports outside this interval are reserved for internal Zerops systems.</td>
+    </tr>
+    <tr>
+      <td className="w-fit">protocol</td>
+      <td className="w-fit"><strong>Optional.</strong> Defines the protocol. Allowed values are <code>TCP</code> or <code>UDP</code>. Default value is <code>TCP</code>.</td>
+    </tr>
+    <tr>
+      <td className="w-fit">httpSupport</td>
+      <td className="w-fit"><strong>Optional.</strong> <code>httpSupport = true</code> is the default setting for TCP protocol. Set <code>httpSupport = false</code> if a web server isn't running on the port. Zerops uses this information for the configuration of <a href="/features/access">public access</a>. <code>httpSupport = true</code> is available only in combination with the TCP protocol.</td>
+    </tr>
+  </tbody>
+</table>
 
 ### prepareCommands
 
-_OPTIONAL._ Customises the Gleam runtime environment by installing additional dependencies or tools to the runtime base environment.
+_OPTIONAL._ Customizes the runtime environment by installing additional dependencies or tools to the runtime base environment.
 
 <p>
-  The base Gleam environment contains {data.alpine.default} the selected
-  major version of Gleam, <a href="/references/cli">Zerops command line tool</a> and `npm`, `yarn`, `git` and `npx` tools. To install
+  The base environment contains {data.alpine.current}, the selected
+  major version of your technology, <a href="/references/cli">Zerops command line tool</a> and `git` and other technology-specific tools. To install
   additional packages or tools add one or more prepare commands:
 </p>
 
@@ -528,8 +482,8 @@ zerops:
 
     # ==== how to run your application ====
     run:
-      # OPTIONAL. Customise the runtime environment by installing additional packages
-      # or tools to the base Gleam runtime environment.
+      # OPTIONAL. Customize the runtime environment by installing additional packages
+      # or tools to the base runtime environment.
       prepareCommands:
         - apt-get something
         - curl something else
@@ -539,12 +493,12 @@ zerops:
 When the first deploy with a defined prepare attribute is triggered, Zerops will
 
 1. create a prepare runtime container
-2. optionally: [copy selected folders or files from your build container](/gleam/how-to/build-pipeline#copy-folders-or-files-from-your-build-container)
+2. optionally: [copy selected folders or files from your build container](/common/build-deployment/build-pipeline#copy-folders-or-files-from-your-build-container)
 3. run the `prepareCommands` commands in the defined order
 
 #### Command exit code
 
-If any command fails, it returns an exit code other than 0 and the deploy is canceled. Read the [prepare runtime log](/gleam/how-to/logs#prepare-runtime-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom runtime environment is ready for the deploy phase.
+If any command fails, it returns an exit code other than 0 and the deploy is canceled. Read the [prepare runtime log](/common/build-deployment/logs#prepare-runtime-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom runtime environment is ready for the deploy phase.
 
 #### Cache of your custom runtime environment
 
@@ -553,9 +507,9 @@ Some packages or tools can take a long time to install. Therefore, Zerops caches
 1. Content of the [build.addToRunPrepare](#copy-folders-or-files-from-your-build-container) and `run.prepareCommands` attributes didn't change from the previous deploy
 2. The custom runtime cache wasn't invalidated in the Zerops GUI.
 
-To invalidate the custom runtime cache go to `yyy`
+To invalidate the Zerops runtime cache go to your service detail in Zerops GUI, choose **Service dashboard & runtime containers** from the left menu and click on the **Open pipeline detail** button. Then click on the **Clear runtime prepare cache** button.
 
-{/* TODO screenshot */}
+{/* TODO screenshot** */}
 
 When the custom runtime cache is used, Zerops doesn't create a prepare runtime container and executes the deployment of your application directly.
 
@@ -566,8 +520,8 @@ You can configure your prepare commands to be run in a single shell instance or 
 ### Copy folders or files from your build container
 
 <p>
-  The prepare runtime container contains {data.alpine.default}, the
-  selected major version of Gleam, <a href="/references/cli">Zerops command line tool</a> and `npm`, `yarn`, `git` and `npx` tools.
+  The prepare runtime container contains {data.alpine.current}, the
+  selected major version of your technology, <a href="/references/cli">Zerops command line tool</a> and `git` and other technology-specific tools.
 </p>
 
 The prepare runtime container does not contain your application code nor the built application. If you need to copy some folders or files from the build container to the runtime container (e.g. a configuration file) use the `addToRunPrepare` attribute in the [build section](#build-pipeline-configuration).
@@ -583,8 +537,8 @@ zerops:
 
     # ==== how to run your application ====
     run:
-      # OPTIONAL. Customise the runtime environment by installing additional packages
-      # or tools to the base Gleam runtime environment.
+      # OPTIONAL. Customize the runtime environment by installing additional packages
+      # or tools to the base runtime environment.
       prepareCommands:
         - apt-get something
         - curl something else
@@ -608,24 +562,24 @@ zerops:
     run:
       # OPTIONAL. Run one or more commands each time a new runtime container
       # is started or restarted. These commands are triggered before
-      # your Gleam application is started.
+      # your application is started.
       initCommands:
         - rm -rf ./cache
 ```
 
-These commands are triggered in the runtime container before your Gleam application is started via the [start command](/gleam/how-to/build-pipeline#start).
+These commands are triggered in the runtime container before your application is started via the [start command](/common/build-deployment/build-pipeline#start) ().
 
 Use init commands to clean or initialise your application cache or similar operations.
 
 :::caution
-The init commands will delay the start of your application each time a new runtime container is started (including the [horizontal scaling](/gleam/how-to/scaling#horizontal-auto-scaling) or when a runtime container is restarted).
+The init commands will delay the start of your application each time a new runtime container is started (including the [horizontal scaling](/common/maintenance/scaling#horizontal-auto-scaling) or when a runtime container is restarted).
 
-Do not use the init commands for customising your runtime environment. Use the [run:prepareCommands](/gleam/how-to/build-pipeline#preparecommands-1) attribute instead.
+Do not use the init commands for customising your runtime environment. Use the [run:prepareCommands](/common/build-deployment/build-pipeline#preparecommands-1) attribute instead.
 :::
 
 #### Command exit code
 
-If any of the `initCommands` fails, it returns an exit code other than 0, but deploy is **not** canceled. After all init commands are finished, regardless of the status code, the application is started. Read the [runtime log](/gleam/how-to/logs#runtime-log) to troubleshoot the error.
+If any of the `initCommands` fails, it returns an exit code other than 0, but deploy is **not** canceled. After all init commands are finished, regardless of the status code, the application is started. Read the [runtime log](/common/maintenance/logs#runtime-log) to troubleshoot the error.
 
 #### Single or separated shell instances
 
@@ -652,11 +606,11 @@ zerops:
         DB_PASS: ${db_password}
 ```
 
-Read more about [environment variables](/gleam/how-to/env-variables) in Zerops.
+Read more about [environment variables](/common/configuration/env-variables) in Zerops.
 
 ### start
 
-_REQUIRED._ Defines the start command for your Gleam application.
+_REQUIRED._ Defines the start command for your application.
 
 ```yml
 zerops:
@@ -667,11 +621,9 @@ zerops:
 
     # ==== how to run your application ====
     run:
-      # REQUIRED. Your Gleam application start command
+      # REQUIRED. Your application start command (Node.js example)
       start: npm start
 ```
-
-We recommend starting your Gleam application using `npm start`.
 
 ### health check
 
@@ -703,7 +655,7 @@ zerops:
 
     # ==== how to run your application ====
     run:
-      # REQUIRED. Your Gleam application start command
+      # REQUIRED. Your application start command (Node.js example)
       start: npm start
 
       # OPTIONAL. Define a health check with a HTTP GET request option.
@@ -721,9 +673,24 @@ Read more about how the [health check works] in Zerops.
 Configures the health check to run a local command.
 Following attributes are available:
 
-| Parameter   | Description                                                                                                                                                                                                                                                                                                                     |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **command** | Defines a local command to be run.<br/>The command has access to the same [environment variables](/gleam/how-to/create#set-secret-environment-variables) as your Gleam application.<br/>A single string is required. If you need to run multiple commands create a shell script or, use a multiline format as in the example below. |
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit"><strong>Parameter</strong></th>
+      <th className="w-fit"><strong>Description</strong></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit"><strong>command</strong></td>
+      <td className="w-fit">
+        Defines a local command to be run.<br/>
+        The command has access to the same <a href="/common/management/create#set-secret-environment-variables">environment variables</a> as your application.<br/>
+        A single string is required. If you need to run multiple commands create a shell script or, use a multiline format as in the example below.
+      </td>
+    </tr>
+  </tbody>
+</table>
 
 **Example:**
 
@@ -736,7 +703,7 @@ zerops:
 
     # ==== how to run your application ====
     run:
-      # REQUIRED. Your Gleam application start command
+      # REQUIRED. Your application start command (Node.js example)
       start: npm start
 
       # OPTIONAL. Define a health check with a shell command.
@@ -776,7 +743,7 @@ Read more about setting up [cron](/references/cron) in Zerops.
 
 ### readiness check
 
-_OPTIONAL._ Defines a readiness check. Read more about how the [readiness check works](/gleam/how-to/deploy-process#readiness-checks) in Zerops.
+_OPTIONAL._ Defines a readiness check. Read more about how the [readiness check works](/common/build-deployment/deploy-process#readiness-checks) in Zerops.
 
 `readinessCheck` requires either one `httpGet` object or one `exec` object.
 
@@ -815,16 +782,31 @@ zerops:
     run: ...
 ```
 
-Read more about how the [readiness check works](/gleam/how-to/deploy-process#readiness-checks) in Zerops.
+Read more about how the [readiness check works](/common/build-deployment/deploy-process#readiness-checks) in Zerops.
 
 #### exec
 
 Configures the readiness check to run a local command.
 Following attributes are available:
 
-| Parameter   | Description                                                                                                                                                                                                                                                                                                                     |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **command** | Defines a local command to be run.<br/>The command has access to the same [environment variables](/gleam/how-to/create#set-secret-environment-variables) as your Gleam application.<br/>A single string is required. If you need to run multiple commands create a shell script or, use a multiline format as in the example below. |
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit"><strong>Parameter</strong></th>
+      <th className="w-fit"><strong>Description</strong></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit"><strong>command</strong></td>
+      <td className="w-fit">
+        Defines a local command to be run.<br/>
+        The command has access to the same <a href="/common/management/create#set-secret-environment-variables">environment variables</a> as your application.<br/>
+        A single string is required. If you need to run multiple commands create a shell script or, use a multiline format as in the example below.
+      </td>
+    </tr>
+  </tbody>
+</table>
 
 **Example:**
 
@@ -847,4 +829,4 @@ zerops:
             mv /outside/user /home/user
 ```
 
-Read more about how the [readiness check works](/gleam/how-to/deploy-process#readiness-checks) in Zerops.
+Read more about how the [readiness check works](/common/build-deployment/deploy-process#readiness-checks) in Zerops.

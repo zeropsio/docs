@@ -1,54 +1,62 @@
 ---
-title: Create a .NET service in Zerops
-description: Learn how you can create a dotnet service in Zerops.
+title: Create a service in Zerops
+description: Learn how you can create a service in Zerops.
 ---
 
 import Image from '/src/components/Image';
 import data from '@site/static/data.json';
 import UnorderedList from '@site/src/components/UnorderedList';
 
-Zerops provides a .NET runtime service with extensive build support. .NET runtime is highly scalable and customisable to suit both development and production.
+## Create a service using Zerops GUI
 
-## Create .NET service using Zerops GUI
+First, set up a project in the Zerops GUI. Then go to the project dashboard page and choose **Add new service** in the left menu under the **Services** section. From there, you can add a new service:
 
-First, set up a project in Zerops GUI. Then go to the project dashboard page and choose **Add new service** in the left menu in the **Services** block. Then add a new .NET service:
+<p>
+  <video
+    width="100%"
+    autoplay="true"
+    loop="loop"
+    muted="muted"
+    plays-inline="true"
+  >
+    <source src="/img/screenshots/create_nodejs_cast.mp4" type="video/mp4" />
+  </video>
+</p>
 
-{/* TODOscreenshot (add a new service page) */}
+### Choose a version
 
-### Choose .NET version
+Zerops supports the following major versions:
 
-Following .NET major versions are currently supported:
-
-<UnorderedList data={data.dotnet.readable} />
+{/* TODOlink to version page */}
 
 :::info
-You can [change](/dotnet/how-to/upgrade) the major version at any time later.
+You can easily [upgrade](/common/management/upgrade) the major version at any time later.
 :::
 
 ### Set a hostname
 
-Enter a unique service identifier like "app","cache", "gui" etc. Duplicate services with the same name in the same project are forbidden.
+Enter a unique service identifier like "app", "cache", "gui", "db" etc. Duplicate services with the same name within the same project are not allowed.
 
 #### Limitations:
 
-- maximum 25 characters
-- must contain only lowercase ASCII letters (a-z) or numbers (0-9)
+- Maximum 25 characters
+- Must contain only lowercase ASCII letters (a-z) or numbers (0-9)
 
 :::caution
-The hostname is fixed after the service is created. It can't be changed later.
+The hostname is fixed after the service is created and cannot be changed later.
 :::
 
-### Set secret environment variables
+### Set secret environment variables *(runtimes only)*
 
-Add environment variables with sensitive data, such as password, tokens, salts, certificates etc. These will be securely saved inside Zerops and added to your runtime service upon start.
+Add environment variables with sensitive data, such as passwords, tokens, salts, certificates, etc. These will be securely saved inside Zerops and added to your runtime service upon start.
 
-Setting the secret environment variables is optional. You can set them later in Zerops GUI.
+Setting secret environment variables is optional. You can always set them later in the Zerops GUI.
 
-Read more about [different types of env variables](/dotnet/how-to/env-variables#types-of-env-variables-in-zerops) in Zerops.
+Read more about the [different types of environment variables](/common/management/env-variables#types-of-env-variables-in-zerops) in Zerops.
 
-### Set auto scaling configuration
+### Configure auto scaling
 
-Zerops scales the .NET services automatically both vertically and horizontally. Vertical scaling means increasing or decreasing the hardware resources (CPU, RAM and disk) of a .NET container. Horizontal scaling adds or removes whole containers.
+Zerops automatically scales services both vertically and horizontally. Vertical scaling adjusts the hardware resources (CPU, RAM, and disk) of a container, while horizontal scaling adds or removes entire containers.
 
 <p align="center">
   <Image
@@ -62,122 +70,124 @@ Zerops scales the .NET services automatically both vertically and horizontally. 
 #### CPU Mode
 
 **Shared**
-Your application gets a full physical CPU core, but it is shared with up to 10 other applications. In this mode the power your application gets is depended on other applications running on the same CPU core. At best case scenario your application gets 10/10 of CPU core power and 1/10 at worst case scenario.
+Your application gets a full physical CPU core, but it is shared with up to 10 other applications. The power your application receives depends on the other applications running on the same CPU core. In the best-case scenario, your application gets 10/10 of the CPU core power, and 1/10 in the worst-case scenario.
 
 **Dedicated**
-The CPU core is dedicated to your application.
+The CPU core is dedicated exclusively to your application.
 
 :::info
 See the [pricing](https://zerops.io/#pricing) for the difference between CPU modes.
 :::
 
-Choose the CPU mode when starting a new service or change it later. The CPU mode doesn't change automatically.
+You can choose the CPU mode when starting a new service or change it later. The CPU mode doesn't change automatically.
 
 #### Vertical auto scaling
 
-Vertical auto scaling has following default configuration:
+Vertical auto scaling has the following default configuration:
 
 <table className="w-full my-1.5">
-   <thead>
-     <tr>
-       <th className="w-fit"><strong>Resources Type</strong></th>
-       <th className="w-fit"><strong>Minimum resource</strong></th>
-       <th className="w-fit"><strong>Maximum resource</strong></th>
-     </tr>
-   </thead>
-   <tbody>
-     <tr>
-       <td className="w-fit"><strong>CPU cores</strong></td>
-       <td className="w-fit">1</td>
-       <td className="w-fit">5</td>
-     </tr>
-     <tr>
-       <td className="w-fit"><strong>RAM</strong></td>
-       <td className="w-fit">0.25 GB</td>
-       <td className="w-fit">32 GB</td>
-     </tr>
-     <tr>
-       <td className="w-fit"><strong>Disk</strong></td>
-       <td className="w-fit">1 GB</td>
-       <td className="w-fit">100 GB</td>
-     </tr>
-   </tbody>
- </table>
+  <thead>
+    <tr>
+      <th className="w-fit"><strong>Resources Type</strong></th>
+      <th className="w-fit"><strong>Minimum resource</strong></th>
+      <th className="w-fit"><strong>Maximum resource</strong></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit"><strong>CPU cores</strong></td>
+      <td className="w-fit">1</td>
+      <td className="w-fit">5</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><strong>RAM</strong></td>
+      <td className="w-fit">0.25 GB</td>
+      <td className="w-fit">32 GB</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><strong>Disk</strong></td>
+      <td className="w-fit">1 GB</td>
+      <td className="w-fit">100 GB</td>
+    </tr>
+  </tbody>
+</table>
 
-.NET service always starts with the minimal resources.
+Services always start with the minimal resources.
 
-For most cases, the default parameters will work without issues. If you need to limit the cost of the .NET service, lower the maximal resources. Zerops will never scale above the selected maximums.
+In most cases, the default parameters will work without issues. If you need to limit the cost of the service, you can lower the maximum resources. Zerops will never scale above the selected maximums.
 
-When you are experiencing problems with insufficient .NET performance or capacity, increase the minimal resources. Zerops will never scale below the selected minimums.
+If you experience insufficient performance or capacity, you can increase the minimum resources. Zerops will never scale below the selected minimums.
 
 :::tip
-Learn more about how to [fine tune](/dotnet/how-to/scaling#fine-tune-the-auto-scaling) the auto scaling to fit your application needs.
+Learn more about how to [fine-tune](/common/maintenance/scaling#fine-tune-the-auto-scaling) the auto scaling to fit your application's needs.
 :::
 
 :::info
-You can change the vertical auto scaling parameters later.
+You can change the vertical auto scaling parameters at any time.
 :::
 
 #### Horizontal auto scaling
 
-When a container needs more CPU or RAM but already consumes maximal resources defined for the vertical auto scaling, Zerops will add a new container to your .NET service. When your .NET service doesn't need so much power and all containers are vertically scaled down in such a way their CPU allocation is near the minimal resources, Zerops will gradually remove whole containers.
+When a container needs more CPU or RAM but is already consuming the maximum resources defined for vertical auto scaling, Zerops will add a new container to your service. When your service doesn't need as much power and all containers are vertically scaled down such that their CPU allocation is near the minimum resources, Zerops will gradually remove entire containers.
 
-Horizontal auto scaling has following default configuration:
+Horizontal auto scaling has the following default configuration:
 
 <table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit"><strong>Parameter</strong></th>
+      <th className="w-fit"><strong>Value</strong></th>
+    </tr>
+  </thead>
   <tbody>
     <tr>
-      <td className="w-fit">
-        <b>minimum containers</b>
-      </td>
+      <td className="w-fit"><strong>Minimum containers</strong></td>
       <td className="w-fit">1</td>
     </tr>
     <tr>
-      <td className="w-fit">
-        <b>maximum containers</b>
-      </td>
+      <td className="w-fit"><strong>Maximum containers</strong></td>
       <td className="w-fit">6</td>
     </tr>
   </tbody>
 </table>
 
-.NET service always starts with the minimum number of containers.
+Services always start with the minimum number of containers.
 
 You can increase the minimum or decrease the maximum number of containers. The horizontal scaling parameters can be changed later.
 
-[Learn more](/dotnet/how-to/scaling) about .NET auto scaling.
+[Learn more](/common/maintenance/scaling) about auto scaling in Zerops.
 
 #### Single container vs. High Availability
 
-When creating a new runtime service, you can choose the minimum and maximum number of containers. If you set the maximum limit to one, the service will be run in a **single container** and no horizontal scaling will occur.
+When creating a new runtime service, you can choose the minimum and maximum number of containers. If you set the maximum limit to one, the service will run in a **single container** and no horizontal scaling will occur.
 
 :::caution
-If the single container fails, Zerops will start a new container and deploy your application automatically. The application won't be available for a short period. This mode is recommended for non-critical applications or dev environments.
+If the single container fails, Zerops will automatically start a new container and deploy your application. However, the application will be unavailable for a short period. This mode is recommended for non-critical applications or development environments.
 :::
 
-By increasing the maximum number of containers for your service, you enable horizontal auto scaling. Zerops will then add containers depending on your application’s load. Application running on two or more containers is in **High Availability** mode, which we highly recommend for production. When the load drops, containers will be gradually removed to the defined minimum.
+By increasing the maximum number of containers for your service, you enable horizontal auto scaling. Zerops will then add containers based on your application's load. An application running on two or more containers is in **High Availability** mode, which we highly recommend for production. When the load drops, containers will be gradually removed down to the defined minimum.
 
-Each container of the same service is strictly installed on a **different server**. This prevents the temporary outage in case any of Zerops servers fail. If the connection to a container is broken, Zerops immediately redirects incoming traffic to other containers. A new container will be started automatically and the broken container will be deleted.
+Each container of the same service is strictly installed on a **different server**. This prevents temporary outages in case any of the Zerops servers fail. If the connection to a container is broken, Zerops immediately redirects incoming traffic to other containers. A new container will be started automatically, and the broken container will be deleted.
 
 :::caution
-Check if your application is ready to be run in multiple containers.
+Make sure your application is designed to run in multiple containers.
 :::
 
-## Create .NET service using zCLI
+## Create a service using zCLI
 
-zCLI is the Zerops command-line tool. To create a new .NET service via the command-line, follow these steps:
+zCLI is the Zerops command-line tool. To create a new service via the command line, follow these steps:
 
 1. [Install & setup zCLI](/references/cli)
-2. [Create a project description file](/dotnet/how-to/create#create-a-project-description-file)
-3. [Create a project with a .NET and PostgreSQL service](#full-example)
+2. [Create a project description file](#create-a-project-description-file)
+3. [Create a project with a runtime service and PostgreSQL service](#full-example)
 
 ### Create a project description file
 
-Zerops uses a yaml format to describe the project infrastructure.
+Zerops uses a YAML format to describe the project infrastructure.
 
 #### Basic example:
 
-Create a directory `my-project`. Create an `description.yml` file inside the `my-project` directory with following content:
+Create a directory called `my-project`. Inside the `my-project` directory, create a `description.yml` file with the following content:
 
 ```yaml
 # basic project data
@@ -188,8 +198,8 @@ project:
 services:
   - # service name
     hostname: app
-    # service type and version number in dotnet@6 format
-    type: dotnet@6
+    # service type and version number in nodejs@{version} format
+    type: nodejs@latest
     # defines the minimum number of containers for horizontal autoscaling
     minContainers: 1
     # defines the maximum number of containers for horizontal autoscaling. Max value = 6.
@@ -200,7 +210,7 @@ services:
       S3_ACCESS_SECRET: 'ogFthuiLYki8XoL73opSCQ'
 ```
 
-The yaml file describes your future project infrastructure. The project will contain one .NET version 6 service with default [auto scaling](/dotnet/how-to/scaling) configuration. Hostname will be set to "app", the internal port(s) the service listens on will be defined later in the [zerops.yml](/dotnet/how-to/build-pipeline#ports). Following secret env variables will be configured:
+The yaml file describes your future project infrastructure. The project will contain one Node.js version 20 service with default [auto scaling](/common/maintenance/scaling) configuration. Hostname will be set to "app", the internal port(s) the service listens on will be defined later in the [zerops.yml](/common/build-deployment/build-pipeline#ports). Following secret env variables will be configured:
 
 ```env
 S3_ACCESS_KEY_ID="P8cX1vVVb"
@@ -209,7 +219,7 @@ S3_ACCESS_SECRET="ogFthuiLYki8XoL73opSCQ"
 
 #### Full example:
 
-Create a directory my-project. Create an description.yml file inside the my-project directory with following content:
+Create a directory `my-project`. Create a `description.yml` file inside the `my-project` directory with following content:
 
 ```yaml
 # basic project data
@@ -217,7 +227,7 @@ project:
   # project name
   name: my-project
   # optional: project description
-  description: A project with a .NET and PostgreSQL database
+  description: A project with a Node.js and PostgreSQL database
   # optional: project tags
   tags:
     - DEMO
@@ -226,8 +236,8 @@ project:
 services:
   - # service name
     hostname: app
-    # service type and version number in dotnet@6 format
-    type: dotnet@6
+    # service type and version number in nodejs@{version} format
+    type: nodejs@latest
     # optional: vertical auto scaling customization
     verticalAutoscaling:
       cpuMode: DEDICATED
@@ -244,7 +254,7 @@ services:
     minContainers: 2
     # defines the maximum number of containers for horizontal autoscaling. Max value = 6.
     maxContainers: 4
-    # optional: create secret env variables
+    # optional: create env variables
     envSecrets:
       S3_ACCESS_KEY_ID: 'P8cX1vVVb'
       S3_ACCESS_SECRET: 'ogFthuiLYki8XoL73opSCQ'
@@ -256,9 +266,7 @@ services:
     mode: NON_HA
 ```
 
-The yaml file describes your future project infrastructure. The project will contain a .NET service and a [PostgreSQL](/postgresql/overview) service.
-
-.NET service with "app" hostname, the internal port(s) the service listens on will be defined later in the [zerops.yml](/dotnet/how-to/build-pipeline#ports). .NET service will run on version 6 with a custom vertical and horizontal scaling. Following secret env variables will be configured:
+The yaml file describes your future project infrastructure. The project will contain a Node.js service `app` and a [PostgreSQL](/postgresql/overview) service. The internal port(s) the runtime service listens on will be defined later in the [zerops.yml](/common/build-deployment/build-pipeline#ports). Node.js service will run on version 20 with a custom vertical and horizontal scaling. Following secret env variables will be configured:
 
 ```env
 S3_ACCESS_KEY_ID="P8cX1vVVb"
@@ -298,8 +306,7 @@ The `project:` section is required. Only one project can be defined.
   </tbody>
 </table>
 
-
-At least one service in `services:` section is required. You can create a project with multiple services. The example above contains .NET and PostgreSQL services but you can create a `description.yml` with your own combination of [services](/features/infrastructure).
+At least one service in `services:` section is required. You can create a project with multiple services. The example above contains Node.js and PostgreSQL services but you can create a `description.yml` with your own combination of [services](/features/infrastructure).
 
 <table className="w-full my-1.5">
   <thead>
@@ -327,16 +334,16 @@ At least one service in `services:` section is required. You can create a projec
     <tr>
       <td className="w-fit"><strong>type</strong></td>
       <td className="w-fit">
-        Specifies the service type and version.
-
-        See what [.NET service types](/references/importyml/type-list#runtime-services) are currently supported.
+        Specifies the service type and a version.
+        <br />
+        See all [supported service types](/zerops-yml/base-list#runtime-services) for each technology.
       </td>
     </tr>
     <tr>
       <td className="w-fit"><strong>verticalAutoscaling</strong></td>
       <td className="w-fit">
-        <strong>Optional.</strong> Defines <a href="/dotnet/how-to/create#set-auto-scaling-configuration">custom vertical auto scaling parameters</a>.
-        
+        <strong>Optional.</strong> Defines <a href="#set-auto-scaling-configuration">custom vertical auto scaling parameters</a>.
+        <br />
         All verticalAutoscaling attributes are optional. Not specified attributes will be set to their default values.
       </td>
     </tr>
@@ -367,7 +374,7 @@ At least one service in `services:` section is required. You can create a projec
     <tr>
       <td className="w-fit"><strong>minContainers</strong></td>
       <td className="w-fit">
-        <strong>Optional.</strong> Default = 1. Defines the minimum number of containers for <a href="/dotnet/how-to/create#horizontal-auto-scaling">horizontal autoscaling</a>.
+        <strong>Optional.</strong> Default = 1. Defines the minimum number of containers for <a href="#horizontal-auto-scaling">horizontal autoscaling</a>.
          
         <strong>Limitations:</strong>
         <br />
@@ -377,7 +384,7 @@ At least one service in `services:` section is required. You can create a projec
     <tr>
       <td className="w-fit"><strong>maxContainers</strong></td>
       <td className="w-fit">
-        Defines the maximum number of containers for <a href="/dotnet/how-to/create#horizontal-auto-scaling">horizontal autoscaling</a>.
+        Defines the maximum number of containers for <a href="#horizontal-auto-scaling">horizontal autoscaling</a>.
          
         <strong>Limitations:</strong>
         <br />
@@ -387,7 +394,7 @@ At least one service in `services:` section is required. You can create a projec
     <tr>
       <td className="w-fit"><strong>envSecrets</strong></td>
       <td className="w-fit">
-        <strong>Optional.</strong> Defines one or more secret env variables as a key value map. See env variable <a href="/dotnet/how-to/env-variables#env-variable-restrictions">restrictions</a>.
+        <strong>Optional.</strong> Defines one or more secret env variables as a key value map. See env variable <a href="/common/configuration/env-variables#env-variable-restrictions">restrictions</a>.
       </td>
     </tr>
   </tbody>
@@ -424,7 +431,7 @@ If you have access to more than one client, you must specify the client ID for w
     height="auto"
   />
 </p>
-### Add .NET service to an existing project
+### Add a service to an existing project
 
 #### Example:
 
@@ -439,8 +446,8 @@ project:
 services:
   - # service name
     hostname: app
-    # service type and version number in dotnet@6 format
-    type: dotnet@6
+    # service type and version number in nodejs@{version} format
+    type: nodejs@latest
     # defines the minimum number of containers for horizontal autoscaling
     minContainers: 1
     # defines the maximum number of containers for horizontal autoscaling. Max value = 6.
@@ -451,7 +458,7 @@ services:
       S3_ACCESS_SECRET: 'ogFthuiLYki8XoL73opSCQ'
 ```
 
-The yaml file describes the list of one or more services that you want to add to your existing project. In the example above, one .NET service version 6 with default [auto scaling](/dotnet/how-to/scaling) configuration will be added to your project. Hostname of the new service will be set to `app`. Following secret env variables will be configured:
+The yaml file describes the list of one or more services that you want to add to your existing project. In the example above, one service version 20 with default [auto scaling](/common/maintenance/scaling) configuration will be added to your project. Hostname of the new service will be set to `app`. Following secret env variables will be configured:
 
 ```env
 S3_ACCESS_KEY_ID="P8cX1vVVb"

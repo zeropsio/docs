@@ -1,0 +1,143 @@
+---
+title: Customize Runtime Environment
+description: Learn how to customize your application's runtime environment in Zerops.
+---
+
+# Customizing Your Runtime Environment
+
+## Deployment Pipeline Overview
+
+The runtime environment customization happens as part of Zerops' deployment pipeline, which consists of three main phases:
+
+1. **Build Phase**: Creates a build container and processes your application
+2. **Prepare Runtime Phase**: Customizes the runtime environment
+3. **Deploy Phase**: Deploys your application to production
+
+<p align="center">
+  <img
+    src="/img/screenshots/build_deploy_pipeline_custom_runtime.png"
+    alt="image"
+    width="80%"
+    height="auto"
+  />
+</p>
+
+Every Zerops runtime environment starts with a default configuration determined by your `zerops.yml` settings. This includes:
+
+- Operating system (Alpine or Ubuntu) specified by <a href="/zerops-yml/specification#os-optional"><code>run.os</code></a>
+- Runtime technology version defined in <a href="/zerops-yml/specification#base-optional-1"><code>run.base</code></a>
+- Essential development tools:
+  - [Zerops CLI (zCLI)](/references/cli)
+  - Git
+  - Technology-specific utilities
+
+```yaml
+# Example zerops.yml configuration
+run:
+  os: ubuntu
+  base: go@latest
+```
+
+This guide explains how to extend this base environment with your own packages, tools, and configurations.
+
+## Adding Custom Packages
+
+### Using prepareCommands
+
+To extend your runtime environment, use the <a href="/zerops-yml/specification#base-required"><code>run.prepareCommands</code></a> section in your `zerops.yml`:
+
+```yaml
+build:
+  prepareCommands:
+    - apt-get update
+    - apt-get install -y some-package
+```
+
+When you include `prepareCommands`, Zerops will:
+
+1. Create a dedicated prepare runtime container
+2. [Copy specified files](/common/build-deployment/build-pipeline#copy-folders-or-files-from-your-build-container) from your build container (optional)
+3. Execute your commands sequentially
+
+#### Command Execution Rules
+
+- Each command must exit with code `0` to be considered successful
+- Commands run in the order specified
+- Failed commands (non-zero exit) abort the deployment
+- Access logs via the [prepare runtime log](/common/configuration/logs#prepare-runtime-log)
+
+## Environment Caching
+
+To optimize deployment speed, Zerops caches your customized environment. This cache is used when:
+
+1. The <a href="/zerops-yml/specification#base-required"><code>build.addToRunPrepare</code></a> content remains unchanged
+2. The <a href="/zerops-yml/specification#base-required"><code>run.prepareCommands</code></a> sequences haven't been modified
+3. The cache hasn't been manually invalidated
+
+### Cache Invalidation
+
+You can invalidate the environment cache through:
+
+1. The Zerops GUI (Settings → Runtime Cache)
+2. Modifying your `prepareCommands` or `addToRunPrepare` configurations
+
+## Best Practices
+
+1. **Command Idempotency**
+   - Write commands that can safely run multiple times
+   - Use conditional checks when appropriate
+
+2. **Performance Optimization**
+   - Group related package installations
+   - Clean up temporary files and package caches
+   - Use multi-stage builds when possible
+
+3. **Error Handling**
+   - Include error checking in scripts
+   - Provide meaningful error messages
+   - Set appropriate timeouts
+
+## Examples
+
+### Basic Package Installation
+```yaml
+build:
+  prepareCommands:
+    - apt-get update
+    - apt-get install -y curl wget
+```
+
+### Complex Environment Setup
+```yaml
+build:
+  prepareCommands:
+    - apt-get update
+    - apt-get install -y python3-pip
+    - pip3 install awscli
+    - aws --version
+```
+
+## Troubleshooting
+
+Common issues and their solutions:
+
+1. **Failed Commands**
+   - Check the prepare runtime log
+   - Verify package availability
+   - Ensure proper permissions
+
+2. **Cache Issues**
+   - Invalidate cache if environment becomes inconsistent
+   - Verify command idempotency
+   - Check for environment-specific dependencies
+
+## Related Resources
+
+- [Build Pipeline Configuration](/common/build-deployment/build-pipeline)
+- [Runtime Logs](/common/configuration/logs)
+- [Environment Variables](/common/configuration/environment-variables)
+
+## Next Steps
+
+- Learn about [advanced deployment strategies](/)
+- Explore [service integration](/)
