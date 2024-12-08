@@ -534,6 +534,28 @@ module.exports = {
     },
     {
       type: 'category',
+      label: 'Zsc',
+      link: {
+        type: 'doc',
+        id: 'references/zsc',
+      },
+      customProps: {
+        sidebar_icon: 'window',
+      },
+      className: 'homepage-sidebar-item',
+      items: [
+        {
+          type: 'doc',
+          id: 'references/zsc/faq',
+          label: 'FAQ',
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        },
+      ],
+    },
+    {
+      type: 'category',
       label: 'VPN',
       link: {
         type: 'doc',
