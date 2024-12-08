@@ -22,9 +22,9 @@ const Image: React.FC<ImageProps> = ({
   const imageUrl = colorMode === 'dark' ? darkImage : lightImage;
 
   return (
-    <div className="py-0.5 text-center text-sm flex flex-col ">
+    <div className="py-0.5 text-center text-sm flex flex-col">
       <img
-        className="mx-auto"
+        className="mx-auto rounded-sm"
         src={useBaseUrl(imageUrl)}
         alt={alt}
         {...props}
