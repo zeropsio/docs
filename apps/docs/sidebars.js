@@ -436,6 +436,24 @@ module.exports = {
 //          },
 //          className: 'homepage-sidebar-item  service-sidebar-item',
 //        },
+        {
+          type: 'category',
+          label: 'Common features',
+          collapsible: false,
+          customProps: {
+            sidebar_is_group_headline: true,
+          },
+          items: [
+            {
+              type: 'doc',
+              id: 'runtime-common/delete',
+              label: 'Delete service',
+              customProps: {
+                exclude_from_doc_list: true,
+              },
+            }
+          ],
+        },
       ],
     },
     {
@@ -736,15 +754,6 @@ module.exports = {
       className: 'homepage-sidebar-item',
     },
     {
-      type: 'doc',
-      id: 'help/branding',
-      label: 'Branding',
-      customProps: {
-        sidebar_icon: 'document-text',
-      },
-      className: 'homepage-sidebar-item',
-    },
-    {
       type: 'html',
       value: 'Additional resources',
       customProps: {
@@ -794,7 +803,7 @@ module.exports = {
     {
       type: 'doc',
       id: 'nodejs/overview',
-      label: 'Getting Started',
+      label: 'Node.js overview',
       customProps: {
         sidebar_is_title: true,
         sidebar_icon: 'nodejs',
@@ -847,7 +856,7 @@ module.exports = {
         {
           type: 'doc',
           id: 'nodejs/how-to/customize-runtime',
-          label: 'Customize NodeJS runtime',
+          label: 'Customize runtime',
         },
         {
           type: 'doc',
@@ -1607,7 +1616,7 @@ module.exports = {
     {
       type: 'category',
       label: 'Dive-in',
-collapsible: false,
+      collapsible: false,
       link: {
         type: 'doc',
         id: 'nginx/getting-started',
@@ -1851,7 +1860,7 @@ collapsible: false,
     {
       type: 'category',
       label: 'Dive-in',
-collapsible: false,
+      collapsible: false,
       link: {
         type: 'doc',
         id: 'postgresql/getting-started',
@@ -2061,7 +2070,7 @@ collapsible: false,
     {
       type: 'category',
       label: 'Dive-in',
-collapsible: false,
+      collapsible: false,
       link: {
         type: 'doc',
         id: 'keydb/getting-started',

@@ -1,0 +1,66 @@
+---
+title: How to access your Node.js application
+description: Learn more about how you can access your node.js application on Zerops.
+---
+
+## Private internal access
+
+Projects in Zerops represent a group of one or more services.
+Services can be of different types (runtime services, databases, message brokers, object storage, etc.). All services of the same project share a **dedicated private network**. To connect to a service within the same project, just use the service hostname and its [internal port](/nodejs/how-to/build-pipeline#ports).
+
+To connect to your application with `app` hostname running on [internal port](/nodejs/how-to/build-pipeline#ports) `3000`, simply use `http://app:3000`
+
+:::info
+Do not use `https://` when communicating with Node.js from other runtime services in the same project. The internal communication is done over a private network and is isolated from other projects.
+:::
+
+### Use Node.js environment variables
+
+Zerops creates default environment variables for each Node.js service to help you with connection within the same project. To avoid the need to copy the access parameters manually, use [generated environment variables](/nodejs/how-to/env-variables#generated-env-variables) of the Node.js service.
+
+#### Prefix the environment variable key
+
+All services of the same project can reference environment variables from other services. To use an environment variable from one service in another service in the same project, you must prefix the environment variable key with the service hostname and underscore.
+
+#### Example:
+
+To access the `API_TOKEN` env variable of the `app` service, use `app_API_TOKEN` as the env variable key.
+
+Read more about [env variables](/nodejs/how-to/env-variables).
+
+## Private access via VPN
+
+### Start VPN connection
+
+You can securely connect to your Node.js application from your local workspace via Zerops VPN. Zerops VPN client is included into zCLI, the Zerops command-line tool. To start a VPN connection to the selected Zerops project, follow these steps:
+
+1. [Install & setup zCLI](/references/cli)
+2. [Start the Zerops VPN](/references/vpn#start-the-vpn)
+
+### Access Node.js application through VPN
+
+Once the VPN session is established, you have the secured connection to the project's private network in Zerops. You can access all project services locally by using their hostname. The only difference is that no [environment variables](/nodejs/how-to/env-variables) are available when connected through VPN. To connect to your Node.js application in Zerops set the hostname and [internal port](/nodejs/how-to/build-pipeline#ports) e.g. http://app:3000
+
+:::info
+Do not use `https://` when communicating with Node.js over the VPN. The security is assured by the VPN. The internal communication is done over a private network and is isolated from other projects.
+:::
+
+### Connect via SSH
+
+Use the <a href="/references/ssh">`ssh` command</a> to connect to your service via SSH.
+
+### Stop VPN connection
+
+[Stop the Zerops VPN](/references/vpn#stop-the-vpn) in zCLI.
+
+## Public access through zerops.io subdomain
+
+By default, your Node.js service is not publicly accessible. To test your application, enable the [public access through zerops.io subdomain](/features/access#public-access-through-zeropsio-subdomain).
+
+## Public access through your domain
+
+By default, your Node.js service is not publicly accessible. When your application is ready for production or if you want to test it on the production domain, [configure the public access through your domain](/features/access#public-access-through-your-domain).
+
+## Public access from another Zerops project
+
+All services of the same project share a dedicated private network. To connect to a service within the same project, just use the service hostname and its [internal port](/nodejs/how-to/build-pipeline#ports). Different projects are not connected inside Zerops. To connect to a runtime service from another Zerops project, you need to use public access either [through zerops.io subdomain](/features/access#public-access-through-zeropsio-subdomain) or [through your domain](/features/access#public-access-through-your-domain).
