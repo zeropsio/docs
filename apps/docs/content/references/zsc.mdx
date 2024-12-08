@@ -1,101 +1,23 @@
 ---
 title: Using Zerops Setup Control(Zsc)
-description: Interacting with zerops network via zcli cli with wireguard vpn.
+description: Interacting with zerops containers by connecting to the project network via zcli vpn with wireguard.
 ---
 
 import Image from '/src/components/Image';
-
 
 Zerops Setup Control(Zsc) is a cli tool / helper installed to all containers, runtime and build,
 which allows some direct modifications, like triggering scaling from inside the container,
 adding new technologies, making sure that commands (like migration) run only once (even when
 staring some high available setup with 3 containers)
 
-It allows you to interact with your zerops project and services in a secure and private way with the help of VPN or the remote web terminal.
-
-<p align="center">
-  <Image
-    lightImage="/img/gui/zsc-web-terminal.webp"
-    darkImage="/img/gui/zsc-web-terminal.webp"
-    alt="Zerops Setup Control Web Terminal"
-    caption="Web Terminal"
-    style={{ width: '100%', height: 'auto' }}
-  />
-</p>
-
-## Usage
-
-You can interact with zsc in your active services inside your zerops project with the help of SSH to your service after you're
-connected to the project using zerops vpn.
-
-### Start VPN
-
 :::info
-Make sure you have installed [zCLI](/references/zcli) to your system as we need to use [zCLI commands](/references/zcli#vpn-commands) to start the [VPN](/references/vpn).
+Zsc is automatically installed in all containers and is available both in runtime and build environments.
 :::
 
-Start a VPN session with:
+## Command Overview
 
 ```sh
-zcli vpn up
-```
-
-```sh title="bash"
-Usage:
-  zcli vpn up [projectId] [flags]
-
-Flags:
-      --auto-disconnect    If set, zCLI will automatically disconnect from the VPN if it is already connected.
-  -h, --help               the vpn up command.
-      --projectId string   If you have access to more than one project, you must specify the project ID for which the
-                           command is to be executed.
-```
-
-Or you can also connect to a specfic project by passing your project ID which you can get from your zerops
-dashboard gui and add it into the `projectId` parameter:
-
-```sh
-zcli vpn up Evs8Je4NTvKeIkUqoUXp2w
-```
-
-You may need enclose your project name with quotes if it contains contains spaces.
-
-:::info
-When running `zcli vpn up` for the first time, you'll be prompted to install the Zerops VPN daemon. 
-Enter `y` to confirm (you may need to provide your root/administrator password).
-:::
-
-Once connected, you’ll have secure access to the project’s private network.
-
-You can reach all services locally using their hostnames. However, environment variables are not available
-when connected via VPN.
-
-You can only connect to one project at a time. If you’re already connected to another project, that connection
-will close automatically when you start a new connection by running `zcli vpn up` and choosing another project.
-
-The VPN daemon keeps the connection open until you manually stop it. If the connection drops, it will automatically
-try to reconnect.
-
-### Stop VPN
-
-Use `zcli vpn down` command to stop the existing VPN session.
-
-```sh title="bash"
-Usage:
-  zcli vpn down [flags]
-
-Flags:
-  -h, --help   the vpn down command.
-```
-
-## ZSC Commands
-
-:::info
-ZSC is automatically installed in all containers and is available both in runtime and build environments.
-:::
-
-```sh
-$ zsc --help
+zsc --help
 Zerops SetupControl CLI
 
 Usage:
@@ -115,6 +37,7 @@ Available Commands:
   noop                 Infinitely blocking command that does nothing
   scale                Scale container CPU or memory instantly*
   setSecretEnv         Set an secret environment variable in the current stack context
+  test                 Run various tests
   version              application version
 
 Flags:
@@ -123,65 +46,111 @@ Flags:
 Use "zsc [command] --help" for more information about a command.
 ```
 
+## Where to use ZSC
 
-### Basic Usage
+Before using these commands, you need to establish a VPN connection to your Zerops project network.
 
-```sh
-zsc [command]
+### Inside zerops.yml
+
+You can use ZSC commands in your `zerops.yml` file.
+
+```yaml
+prepareCommands:
+  - zcli vpn up
 ```
 
-To get help for any command:
-```sh
-zsc [command] --help
+```yaml
+buildCommands:
+  - zcli vpn up
+  - zcli vpn status
 ```
 
-### Available Commands
+### VPN Connection
 
-#### backup-create and backup-current
-Create backups of specified or current stack:
+You can connect to your project network with `zcli` command line tool and interact with your containers inside the project.
+
 ```sh
+zcli vpn up
+```
+
+### Web Terminal
+
+Web Terminal allows you to interact with your service via remote web terminal.
+
+<p align="center">
+  <Image
+    lightImage="/img/gui/zsc-web-terminal.webp"
+    darkImage="/img/gui/zsc-web-terminal.webp"
+    alt="Zerops Setup Control Web Terminal"
+    caption="Web Terminal"
+    style={{ width: '100%', height: 'auto' }}
+  />
+</p>
+
+:::info
+The VPN connection is required to interact with your containers using ZSC commands.
+:::
+
+## Available Commands
+
+### backup-create and backup-current
+
+The `backup-create` command lets you create a backup of any specified stack in your project, while `backup-current` command creates a backup of the stack you're currently working in.
+
+```sh
+# Create backup of a specified stack
 zsc backup-create
+
+# Create backup of the current stack you're working in
 zsc backup-current
 ```
 
-#### connectSharedStorage
-Connect shared storage to the container:
+:::info
+Backups include all the data and configurations of the stack at the time of backup creation. These can be used for recovery or creating duplicate environments.
+:::
+
+### connectSharedStorage
+
+This command lets you connect a shared storage volume to your service for persistent data storage.
+
 ```sh
 zsc connectSharedStorage
 ```
 
-#### crontab
-Manage crontab actions defined in zerops.yml:
+### crontab
+This command lets you manage scheduled tasks that are defined in your zerops.yml configuration.
+
 ```sh
 zsc crontab
 ```
 
-#### execOnce
-Execute a command once for a provided key.
+### execOnce
 
 :::info
-This command is particularly useful in high-availability setups to ensure commands (like migrations) run only once, even when starting multiple containers.
+This command is particularly useful in high-availability setups to ensure commands (like database migrations) run only once, even when starting multiple containers.
 :::
 
+This command lets you execute a command exactly once across all containers in a service. Useful for database migrations in high-availability setups.
+
 ```sh
-zsc execOnce
+zsc execOnce "db-migration" "php artisan migrate"
 ```
 
-#### fail-me
-Deliberately fail the current container (useful for testing):
+### fail-me
+This command lets you deliberately fail the current container for testing purposes.
+
 ```sh
 zsc fail-me
 ```
 
-#### install
-Install additional base technologies in your runtime container.
+### install
+You can install additional base technologies in your runtime container that weren't specified in the initial configuration.
 
 :::info
 The `install` command allows you to add technologies that weren't specified in the initial base configuration.
 :::
 
 Example usage in `zerops.yml`:
-
 ```yaml
 zerops:
   - setup: nodejsapp
@@ -197,8 +166,8 @@ zerops:
         - zsc install python@3.7
 ```
 
-#### noop
-An infinitely blocking command that does nothing.
+### noop
+An infinitely blocking command that does nothing and keeps the container alive so that it doesn't end because of an error.
 
 :::info
 The `noop` command is particularly useful for debugging build failures by keeping the container alive for investigation.
@@ -208,8 +177,8 @@ The `noop` command is particularly useful for debugging build failures by keepin
 zsc noop
 ```
 
-#### scale
-Instantly scale CPU or memory resources for the current container:
+### scale
+This command dynamically adjusts CPU or memory resources for the current container.
 
 :::caution
 If there aren't enough resources available on the current node, using `scale` may trigger a container move to another node. This will reset the scale duration.
@@ -236,40 +205,44 @@ zsc scale memory +2.5GB 600s # Add 2.5GB RAM for 600 seconds
 - Use "+" prefix for relative scaling
 :::
 
-:::caution
-Containers cannot be scaled beyond their min/max limits set in vertical autoscaling. For example, if you try to scale to 10GB RAM but the max is 5GB, it will only scale to 5GB.
-:::
-
-#### test tcp
-Test TCP connectivity to specified hosts:
-
-:::info
-The test command retries the connection every 2 seconds until the timeout is reached.
-:::
+### test tcp
+This command verifies TCP connectivity to a specified host and port.
 
 ```sh
-zsc test tcp hostname:port [flags]
+zsc test tcp <host>:<port> [--timeout <duration>] [--dialTimeout <duration>] [-4] [-6]
 ```
 
-Flags:
-- `--timeout <duration>` - Total test duration (default: 30s)
-- `--dialTimeout <duration>` - Single attempt timeout (default: 2s)
-- `-4` - Force IPv4
-- `-6` - Force IPv6
+- **`<host>`**: Server address to connect to
+- **`<port>`**: Port number to connect to
+- **`--timeout <duration>`**: Maximum test duration (default: 30s)
+- **`--dialTimeout <duration>`**: Single attempt timeout (default: 2s)
+- **`-4`**: Force IPv4
+- **`-6`**: Force IPv6
 
 Example:
 ```sh
 zsc test tcp database:5432 --timeout 1m
 ```
 
-#### setSecretEnv
-Set a secret environment variable in the current stack context:
+### setSecretEnv
+This command sets a secret environment variable in the current stack context.
+
 ```sh
-zsc setSecretEnv
+zsc setSecretEnv [key] [content] [flags]
 ```
 
-#### version
-Display the ZSC version:
+Examples:
+```sh
+# Direct value
+zsc setSecretEnv SECRET_KEY "new_value"
+
+# From stdin
+echo "new_value" | zsc setSecretEnv SECRET_KEY -
+```
+
+### version
+This command displays the current version of Zsc CLI.
+
 ```sh
 zsc version
 ```

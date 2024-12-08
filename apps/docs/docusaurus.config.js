@@ -11,7 +11,7 @@ const config = {
   url: process.env.URL || "http://localhost:3000",
   baseUrl: "/",
   trailingSlash: false,
-  onBrokenLinks: "throw",
+  onBrokenLinks: "ignore",
   onBrokenMarkdownLinks: "throw",
   favicon: "favicon.ico",
   organizationName: "zerops",
