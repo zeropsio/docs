@@ -18,6 +18,7 @@ It allows you to interact with your zerops project and services in a secure and 
     lightImage="/img/gui/zsc-web-terminal.webp"
     darkImage="/img/gui/zsc-web-terminal.webp"
     alt="Zerops Setup Control Web Terminal"
+    caption="Web Terminal"
     style={{ width: '100%', height: 'auto' }}
   />
 </p>
@@ -30,7 +31,7 @@ connected to the project using zerops vpn.
 ### Start VPN
 
 :::info
-Make sure you have installed zCLI to your system before you can use zCLI commands.
+Make sure you have installed [zCLI](/references/zcli) to your system as we need to use [zCLI commands](/references/zcli#vpn-commands) to start the [VPN](/references/vpn).
 :::
 
 Start a VPN session with:
@@ -85,5 +86,191 @@ Usage:
 
 Flags:
   -h, --help   the vpn down command.
+```
+
+## ZSC Commands
+
+:::info
+ZSC is automatically installed in all containers and is available both in runtime and build environments.
+:::
+
+```sh
+$ zsc --help
+Zerops SetupControl CLI
+
+Usage:
+  zsc [command]
+
+Available Commands:
+  action               Perform specific predefined actions within the container
+  backup-create        creates a new backup of the specified stack
+  backup-current       Create a new backup of the current stack
+  completion           Generate the autocompletion script for the specified shell
+  connectSharedStorage Connect shared storage to the container
+  crontab              Perform crontab actions defined in zerops.yml
+  execOnce             Execute a command once for the provided key
+  fail-me              Fail current container
+  help                 Help about any command
+  install              Run install commands for the specified base
+  noop                 Infinitely blocking command that does nothing
+  scale                Scale container CPU or memory instantly*
+  setSecretEnv         Set an secret environment variable in the current stack context
+  version              application version
+
+Flags:
+  -h, --help   help for zsc
+
+Use "zsc [command] --help" for more information about a command.
+```
+
+
+### Basic Usage
+
+```sh
+zsc [command]
+```
+
+To get help for any command:
+```sh
+zsc [command] --help
+```
+
+### Available Commands
+
+#### backup-create and backup-current
+Create backups of specified or current stack:
+```sh
+zsc backup-create
+zsc backup-current
+```
+
+#### connectSharedStorage
+Connect shared storage to the container:
+```sh
+zsc connectSharedStorage
+```
+
+#### crontab
+Manage crontab actions defined in zerops.yml:
+```sh
+zsc crontab
+```
+
+#### execOnce
+Execute a command once for a provided key.
+
+:::info
+This command is particularly useful in high-availability setups to ensure commands (like migrations) run only once, even when starting multiple containers.
+:::
+
+```sh
+zsc execOnce
+```
+
+#### fail-me
+Deliberately fail the current container (useful for testing):
+```sh
+zsc fail-me
+```
+
+#### install
+Install additional base technologies in your runtime container.
+
+:::info
+The `install` command allows you to add technologies that weren't specified in the initial base configuration.
+:::
+
+Example usage in `zerops.yml`:
+
+```yaml
+zerops:
+  - setup: nodejsapp
+    build:
+      os: ubuntu
+      base: 
+        - nodejs@22
+        - python@3.7
+    run:      
+      os: ubuntu
+      base: nodejs@22
+      prepareCommands:
+        - zsc install python@3.7
+```
+
+#### noop
+An infinitely blocking command that does nothing.
+
+:::info
+The `noop` command is particularly useful for debugging build failures by keeping the container alive for investigation.
+:::
+
+```sh
+zsc noop
+```
+
+#### scale
+Instantly scale CPU or memory resources for the current container:
+
+:::caution
+If there aren't enough resources available on the current node, using `scale` may trigger a container move to another node. This will reset the scale duration.
+:::
+
+```sh
+# Scale CPU
+zsc scale cpu auto           # Reset to automatic scaling
+zsc scale cpu 5 1h          # Scale to 5 CPU cores for 1 hour
+zsc scale cpu +2 30m        # Add 2 CPU cores for 30 minutes
+
+# Scale Memory
+zsc scale memory auto       # Reset to automatic scaling
+zsc scale memory 5GB 1h     # Scale to 5GB RAM for 1 hour
+zsc scale memory +2.5GB 600s # Add 2.5GB RAM for 600 seconds
+```
+
+:::info
+- Scaling takes effect within ~10 seconds
+- Duration must be at least 10 minutes
+- Supported values: "auto", "min", "max", or numeric values
+- RAM values require units (KiB, MiB, GiB)
+- CPU values must be integers without units
+- Use "+" prefix for relative scaling
+:::
+
+:::caution
+Containers cannot be scaled beyond their min/max limits set in vertical autoscaling. For example, if you try to scale to 10GB RAM but the max is 5GB, it will only scale to 5GB.
+:::
+
+#### test tcp
+Test TCP connectivity to specified hosts:
+
+:::info
+The test command retries the connection every 2 seconds until the timeout is reached.
+:::
+
+```sh
+zsc test tcp hostname:port [flags]
+```
+
+Flags:
+- `--timeout <duration>` - Total test duration (default: 30s)
+- `--dialTimeout <duration>` - Single attempt timeout (default: 2s)
+- `-4` - Force IPv4
+- `-6` - Force IPv6
+
+Example:
+```sh
+zsc test tcp database:5432 --timeout 1m
+```
+
+#### setSecretEnv
+Set a secret environment variable in the current stack context:
+```sh
+zsc setSecretEnv
+```
+
+#### version
+Display the ZSC version:
+```sh
+zsc version
 ```
 
