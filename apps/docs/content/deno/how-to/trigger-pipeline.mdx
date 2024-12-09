@@ -1,0 +1,143 @@
+---
+title: Trigger Deno build & deploy pipeline
+description: Learn how to trigger build & deploy pipeline in deno service on Zerops.
+---
+
+import Image from '/src/components/Image';
+
+<p align="center">
+  <Image
+    lightImage="/img/mind-maps/build-deploy/step-1.webp"
+    darkImage="/img/mind-maps/build-deploy/step-1-dark.webp"
+    alt="build deploy pipeline"
+    style={{ width: '95%', height: 'auto' }}
+  />
+</p>
+
+## Automatic builds and deploys from GitHub or GitLab
+
+Integrate Zerops to your GitHub or GitLab repository and configure the automatic builds and deploys.
+
+Follow these steps:
+
+1. Add [zerops.yml](/deno/how-to/build-pipeline#add-zeropsyml-to-your-repository) to your repository.
+2. Connect your GitHub repository or connect your GitLab repository
+
+Then each time you create a new tag or push to a specific branch, depending on the configuration, GitHub or GitLab will initiate a new build & deploy pipeline.
+
+<p align="center">
+  <Image
+    lightImage="/img/gui/github-integration.webp"
+    darkImage="/img/gui/github-integration.webp"
+    alt="github integration"
+    style={{ width: '95%', height: 'auto' }}
+  />
+</p>
+
+:::info
+You can change the build and deploy pipeline when you need to. Just simply modify the `zerops.yml` in your repository.
+:::
+
+### Skip the automatic pipeline once
+
+To ensure that a pipeline is not triggered by your next push, add `[ci skip]` or `[skip ci]` to the commit message. It is case insensitive.
+
+:::note
+You will still see a successful delivery of a webhook in your Github/Gitlab repository as a webhook is actually triggered, but with no action.
+:::
+
+## Manual builds and deploys using Zerops CLI
+
+<p align="center">
+  <Image
+    lightImage="/img/mind-maps/build-deploy/manual-deploy.webp"
+    darkImage="/img/mind-maps/build-deploy/manual-deploy.webp"
+    alt="Manual Deploy Pipeline"
+    style={{ width: '95%', height: 'auto' }}
+  />
+</p>
+
+To start a new build & deploy pipeline manually, use the Zerops CLI.
+
+Follow these steps:
+
+1. Add <a href="/deno/how-to/build-pipeline#add-zeropsyml-to-your-repository">`zerops.yml`</a> to your repository.
+2. [Install & setup zCLI](/references/cli) the Zerops command line tool.
+3. Run `zcli push` command.
+
+The `zcli push` command uploads your application code, builds and deploys your application in Zerops.
+
+The command triggers the [build pipeline](/deno/how-to/trigger-pipeline) defined in `zerops.yml`. `zerops.yml` must be in the working directory. The working directory is by default the current directory and can be changed using the <br/>`--workingDir` flag.
+
+zCLI uploads all files and subdirectories of the working directory to Zerops and starts the build pipeline. If the `.gitignore` file is found, it is interpreted and the defined files and folders will be ignored.
+
+If you just want to deploy your application to Zerops, use the [zcli deploy](#manual-deploy-using-zerops-cli) command instead.
+
+#### Push command parameters
+
+```sh
+Usage:
+  zcli push [flags]
+
+Flags:
+      --archiveFilePath string   If set, zCLI creates a tar.gz archive with the application code in the required path relative
+                                 to the working directory. By default, no archive is created.
+      --deployGitFolder          If set, zCLI the .git folder is also uploaded. By default, the .git folder is ignored.
+  -h, --help                     the service push command.
+      --projectId string         If you have access to more than one project, you must specify the project ID for which the
+                                 command is to be executed.
+      --serviceId string         If you have access to more than one service, you must specify the service ID for which the
+                                 command is to be executed.
+      --versionName string       Adds a custom version name. Automatically filled if the VERSIONNAME environment variable exists.
+      --workingDir string        Sets a custom working directory. Default working directory is the current directory. (default "./")
+      --zeropsYamlPath string    Sets a custom path to the zerops.yml file relative to the working directory. By default zCLI
+                                 looks for zerops.yml in the working directory.
+```
+
+zCLI commands are interactive, when you press enter after `zcli push`, you will be given a list of your projects to choose from.
+
+:::info
+You can change the build and deploy pipeline when you need to. Just simply modify the `zerops.yml` in your repository.
+:::
+
+## Manual deploy using Zerops CLI
+
+To start only a deploy pipeline, use the Zerops CLI.
+
+Follow these steps:
+
+1. Add [zerops.yml](/deno/how-to/build-pipeline#add-zeropsyml-to-your-repository) to your repository. Omit the build section.
+2. [Install & setup zCLI](/references/cli) the Zerops command line tool.
+3. Run `zcli service deploy` command.
+
+The `zcli service deploy` command uploads your application and deploys it in Zerops. Use this tool if you have your own build process. If you want to build your application in Zerops, use an [automatic](#automatic-builds-and-deploys-from-github-or-gitlab) or [manual](#manual-builds-and-deploys-using-zerops-cli) build process.
+
+#### Deploy command parameters
+
+```sh
+Usage:
+  zcli service deploy pathToFileOrDir [flags]
+
+Flags:
+      --archiveFilePath string   If set, zCLI creates a tar.gz archive with the application code in the required path relative
+                                 to the working directory. By default, no archive is created.
+      --deployGitFolder          Sets a custom path to the zerops.yml file relative to the working directory. By default zCLI
+                                 looks for zerops.yml in the working directory.
+  -h, --help                     the service deploy command.
+      --projectId string         If you have access to more than one project, you must specify the project ID for which the
+                                 command is to be executed.
+      --serviceId string         If you have access to more than one service, you must specify the service ID for which the
+                                 command is to be executed.
+      --versionName string       Adds a custom version name. Automatically filled if the VERSIONNAME environment variable exists.
+      --workingDir string        Sets a custom working directory. Default working directory is the current directory. (default "./")
+      --zeropsYamlPath string    Sets a custom path to the zerops.yml file relative to the working directory. By default zCLI
+                                 looks for zerops.yml in the working directory.
+```
+
+`pathToFileOrDir` defines a path to one or more directories and/or files relative to the working directory. The working directory is by default the current directory and can be changed using the <br/>`--workingDir` flag.
+
+`zerops.yml` must be placed in the working directory.
+
+:::info
+You can change the deploy pipeline when you need to. Just simply modify the `zerops.yml` in your working directory.
+:::
