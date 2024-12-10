@@ -74,7 +74,7 @@ export default function PricingCalculator() {
   };
 
   return (
-    <div className="p-2.5 space-y-4 bg-[#F9FAFB] rounded-lg my-2 calculator">
+    <div className="p-2.5 space-y-4 bg-[#F9FAFB] dark:bg-[#1E1E1E] rounded-lg my-2 calculator">
       <form className="grid grid-cols-1 xl:grid-cols-2 gap-2">
         <div className="space-y-0.25 select-none">
           <label htmlFor="cpu" className="font-semibold text-lg calculator-label">
