@@ -29,7 +29,7 @@ module.exports = {
     // {
     //   type: "doc",
     //   id: "getting-started",
-    //   label: "Getting started",
+    //   label: "Dive-in",
     //   customProps: {
     //     sidebar_icon: "rocket-launch",
     //   },
@@ -115,193 +115,193 @@ module.exports = {
     //   },
     //   className: 'homepage-sidebar-item',
     // },
-    // //    {
-    // //      type: "html",
-    // //      value: "Perfectly suited for",
-    // //      customProps: {
-    // //        sidebar_is_group_divider: true,
-    // //      },
-    // //      className: "homepage-sidebar-item",
-    // //    },
-    // //    {
-    // //      type: "category",
-    // //      label: "Nest.js",
-    // //      link: {
-    // //        type: "doc",
-    // //        id: "frameworks/nestjs/index",
-    // //      },
-    // //      customProps: {
-    // //        sidebar_icon: "nestjs",
-    // //      },
-    // //      className: "homepage-sidebar-item",
-    // //      items: [
-    // //        {
-    // //          type: "doc",
-    // //          id: "frameworks/nestjs/index",
-    // //          label: "Overview & quickstart",
-    // //        },
-    // //        {
-    // //          type: "doc",
-    // //          id: "frameworks/nestjs/log",
-    // //          label: "Setup & access logs",
-    // //        },
-    // //        {
-    // //          type: "doc",
-    // //          id: "frameworks/nestjs/template",
-    // //          label: "Create templates with import & seed",
-    // //        },
-    // //        {
-    // //          type: "doc",
-    // //          id: "frameworks/nestjs/env-variables",
-    // //          label: "Utilize environment variables",
-    // //        },
-    // //        {
-    // //          type: "doc",
-    // //          id: "frameworks/nestjs/migration",
-    // //          label: "Migration & upgrades",
-    // //        },
-    // //        {
-    // //          type: "doc",
-    // //          id: "frameworks/nestjs/backups",
-    // //          label: "Backups",
-    // //        },
-    // //        {
-    // //          type: "doc",
-    // //          id: "frameworks/nestjs/scaling",
-    // //          label: "Optimize scaling",
-    // //        },
-    // //        {
-    // //          type: "doc",
-    // //          id: "frameworks/nestjs/scaling",
-    // //          label: "High availability, when, how, why",
-    // //        },
-    // //        {
-    // //          type: "doc",
-    // //          id: "frameworks/nestjs/cron",
-    // //          label: "CRON / Scheduled jobs",
-    // //        },
-    // //        {
-    // //          type: "doc",
-    // //          id: "frameworks/nestjs/mails",
-    // //          label: "SMPT & sending emails",
-    // //        },
-    // //        {
-    // //          type: "doc",
-    // //          id: "frameworks/nestjs/routing",
-    // //          label: "Public access from domain, IP, subdomain",
-    // //        },
-    // //      ],
-    // //    },
-    // //    {
-    // //      type: "category",
-    // //      label: "Laravel",
-    // //      link: {
-    // //        type: "doc",
-    // //        id: "frameworks/laravel/index",
-    // //      },
-    // //      customProps: {
-    // //        sidebar_icon: "laravel",
-    // //      },
-    // //      className: "homepage-sidebar-item",
-    // //      items: [
-    // //        {
-    // //          type: "doc",
-    // //          id: "frameworks/laravel/examples",
-    // //          label: "Examples",
-    // //          customProps: {
-    // //            exclude_from_doc_list: false,
-    // //          },
-    // //        },
-    // //      ],
-    // //    },
-    // //    {
-    // //      type: "category",
-    // //      label: "Gingonic",
-    // //      link: {
-    // //        type: "doc",
-    // //        id: "frameworks/gingonic/index",
-    // //      },
-    // //      customProps: {
-    // //        sidebar_icon: "gingonic",
-    // //      },
-    // //      className: "homepage-sidebar-item",
-    // //      items: [
-    // //        {
-    // //          type: "doc",
-    // //          id: "frameworks/gingonic/examples",
-    // //          label: "Examples",
-    // //          customProps: {
-    // //            exclude_from_doc_list: false,
-    // //          },
-    // //        },
-    // //      ],
-    // //    },
-    // //    {
-    // //      type: "category",
-    // //      label: "Nette",
-    // //      link: {
-    // //        type: "doc",
-    // //        id: "frameworks/nette/index",
-    // //      },
-    // //      customProps: {
-    // //        sidebar_icon: "nette",
-    // //      },
-    // //      className: "homepage-sidebar-item",
-    // //      items: [
-    // //        {
-    // //          type: "doc",
-    // //          id: "frameworks/nette/examples",
-    // //          label: "Examples",
-    // //          customProps: {
-    // //            exclude_from_doc_list: false,
-    // //          },
-    // //        },
-    // //      ],
-    // //    },
-    // //    {
-    // //      type: "category",
-    // //      label: "Strapi",
-    // //      link: {
-    // //        type: "doc",
-    // //        id: "frameworks/strapi/index",
-    // //      },
-    // //      customProps: {
-    // //        sidebar_icon: "strapi",
-    // //      },
-    // //      className: "homepage-sidebar-item",
-    // //      items: [
-    // //        {
-    // //          type: "doc",
-    // //          id: "frameworks/strapi/examples",
-    // //          label: "Examples",
-    // //          customProps: {
-    // //            exclude_from_doc_list: false,
-    // //          },
-    // //        },
-    // //      ],
-    // //    },
-    // //    {
-    // //      type: "category",
-    // //      label: "Medusa",
-    // //      link: {
-    // //        type: "doc",
-    // //        id: "frameworks/medusa/index",
-    // //      },
-    // //      customProps: {
-    // //        sidebar_icon: "medusa",
-    // //      },
-    // //      className: "homepage-sidebar-item",
-    // //      items: [
-    // //        {
-    // //          type: "doc",
-    // //          id: "frameworks/medusa/examples",
-    // //          label: "Examples",
-    // //          customProps: {
-    // //            exclude_from_doc_list: false,
-    // //          },
-    // //        },
-    // //      ],
-    // //    },
+      //  {
+      //    type: "html",
+      //    value: "Perfectly suited for",
+      //    customProps: {
+      //      sidebar_is_group_divider: true,
+      //    },
+      //    className: "homepage-sidebar-item",
+      //  },
+      //  {
+      //    type: "category",
+      //    label: "Nest.js",
+      //    link: {
+      //      type: "doc",
+      //      id: "frameworks/nestjs/index",
+      //    },
+      //    customProps: {
+      //      sidebar_icon: "nestjs",
+      //    },
+      //    className: "homepage-sidebar-item",
+      //    items: [
+      //      {
+      //        type: "doc",
+      //        id: "frameworks/nestjs/index",
+      //        label: "Overview & quickstart",
+      //      },
+      //      {
+      //        type: "doc",
+      //        id: "frameworks/nestjs/log",
+      //        label: "Setup & access logs",
+      //      },
+      //      {
+      //        type: "doc",
+      //        id: "frameworks/nestjs/template",
+      //        label: "Create templates with import & seed",
+      //      },
+      //      {
+      //        type: "doc",
+      //        id: "frameworks/nestjs/env-variables",
+      //        label: "Utilize environment variables",
+      //      },
+      //      {
+      //        type: "doc",
+      //        id: "frameworks/nestjs/migration",
+      //        label: "Migration & upgrades",
+      //      },
+      //      {
+      //        type: "doc",
+      //        id: "frameworks/nestjs/backups",
+      //        label: "Backups",
+      //      },
+      //      {
+      //        type: "doc",
+      //        id: "frameworks/nestjs/scaling",
+      //        label: "Optimize scaling",
+      //      },
+      //      {
+      //        type: "doc",
+      //        id: "frameworks/nestjs/scaling",
+      //        label: "High availability, when, how, why",
+      //      },
+      //      {
+      //        type: "doc",
+      //        id: "frameworks/nestjs/cron",
+      //        label: "CRON / Scheduled jobs",
+      //      },
+      //      {
+      //        type: "doc",
+      //        id: "frameworks/nestjs/mails",
+      //        label: "SMPT & sending emails",
+      //      },
+      //      {
+      //        type: "doc",
+      //        id: "frameworks/nestjs/routing",
+      //        label: "Public access from domain, IP, subdomain",
+      //      },
+      //    ],
+      //  },
+      //  {
+      //    type: "category",
+      //    label: "Laravel",
+      //    link: {
+      //      type: "doc",
+      //      id: "frameworks/laravel/index",
+      //    },
+      //    customProps: {
+      //      sidebar_icon: "laravel",
+      //    },
+      //    className: "homepage-sidebar-item",
+      //    items: [
+      //      {
+      //        type: "doc",
+      //        id: "frameworks/laravel/examples",
+      //        label: "Examples",
+      //        customProps: {
+      //          exclude_from_doc_list: false,
+      //        },
+      //      },
+      //    ],
+      //  },
+      //  {
+      //    type: "category",
+      //    label: "Gingonic",
+      //    link: {
+      //      type: "doc",
+      //      id: "frameworks/gingonic/index",
+      //    },
+      //    customProps: {
+      //      sidebar_icon: "gingonic",
+      //    },
+      //    className: "homepage-sidebar-item",
+      //    items: [
+      //      {
+      //        type: "doc",
+      //        id: "frameworks/gingonic/examples",
+      //        label: "Examples",
+      //        customProps: {
+      //          exclude_from_doc_list: false,
+      //        },
+      //      },
+      //    ],
+      //  },
+      //  {
+      //    type: "category",
+      //    label: "Nette",
+      //    link: {
+      //      type: "doc",
+      //      id: "frameworks/nette/index",
+      //    },
+      //    customProps: {
+      //      sidebar_icon: "nette",
+      //    },
+      //    className: "homepage-sidebar-item",
+      //    items: [
+      //      {
+      //        type: "doc",
+      //        id: "frameworks/nette/examples",
+      //        label: "Examples",
+      //        customProps: {
+      //          exclude_from_doc_list: false,
+      //        },
+      //      },
+      //    ],
+      //  },
+      //  {
+      //    type: "category",
+      //    label: "Strapi",
+      //    link: {
+      //      type: "doc",
+      //      id: "frameworks/strapi/index",
+      //    },
+      //    customProps: {
+      //      sidebar_icon: "strapi",
+      //    },
+      //    className: "homepage-sidebar-item",
+      //    items: [
+      //      {
+      //        type: "doc",
+      //        id: "frameworks/strapi/examples",
+      //        label: "Examples",
+      //        customProps: {
+      //          exclude_from_doc_list: false,
+      //        },
+      //      },
+      //    ],
+      //  },
+      //  {
+      //    type: "category",
+      //    label: "Medusa",
+      //    link: {
+      //      type: "doc",
+      //      id: "frameworks/medusa/index",
+      //    },
+      //    customProps: {
+      //      sidebar_icon: "medusa",
+      //    },
+      //    className: "homepage-sidebar-item",
+      //    items: [
+      //      {
+      //        type: "doc",
+      //        id: "frameworks/medusa/examples",
+      //        label: "Examples",
+      //        customProps: {
+      //          exclude_from_doc_list: false,
+      //        },
+      //      },
+      //    ],
+      //  },
     {
       type: 'html',
       value: 'All Supported Services',
@@ -378,6 +378,42 @@ module.exports = {
           label: 'Java',
           customProps: {
             sidebar_icon: 'java',
+          },
+          className: 'homepage-sidebar-item  service-sidebar-item',
+        },
+        {
+          type: 'ref',
+          id: 'deno/overview',
+          label: 'Deno',
+          customProps: {
+            sidebar_icon: 'deno',
+          },
+          className: 'homepage-sidebar-item  service-sidebar-item',
+        },
+        {
+          type: 'ref',
+          id: 'bun/overview',
+          label: 'Bun',
+          customProps: {
+            sidebar_icon: 'bun',
+          },
+          className: 'homepage-sidebar-item  service-sidebar-item',
+        },
+        {
+          type: 'ref',
+          id: 'elixir/overview',
+          label: 'Elixir',
+          customProps: {
+            sidebar_icon: 'elixir',
+          },
+          className: 'homepage-sidebar-item  service-sidebar-item',
+        },
+        {
+          type: 'ref',
+          id: 'gleam/overview',
+          label: 'Gleam',
+          customProps: {
+            sidebar_icon: 'gleam',
           },
           className: 'homepage-sidebar-item  service-sidebar-item',
         },
@@ -660,6 +696,15 @@ module.exports = {
       className: 'homepage-sidebar-item',
     },
     {
+      type: 'doc',
+      id: 'help/branding',
+      label: 'Branding',
+      customProps: {
+        sidebar_icon: 'document-text',
+      },
+      className: 'homepage-sidebar-item',
+    },
+    {
       type: 'html',
       value: 'Additional resources',
       customProps: {
@@ -709,49 +754,11 @@ module.exports = {
     {
       type: 'doc',
       id: 'nodejs/overview',
-      label: 'Node.js overview',
+      label: 'Getting Started',
       customProps: {
         sidebar_is_title: true,
         sidebar_icon: 'nodejs',
       },
-    },
-    {
-      type: 'category',
-      label: 'Getting started',
-      link: {
-        type: 'doc',
-        id: 'nodejs/getting-started',
-      },
-      customProps: {
-        sidebar_icon: 'rocket-launch',
-      },
-      className: 'homepage-sidebar-item',
-      items: [
-        {
-          type: 'doc',
-          id: 'nodejs/tutorial/quickstart',
-          label: 'Quickstart',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-        {
-          type: 'doc',
-          id: 'nodejs/tutorial/step-by-step',
-          label: 'Step-by-step tutorial',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-        {
-          type: 'doc',
-          id: 'nodejs/tutorial/runtime-sql',
-          label: 'Runtime + SQL',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-      ],
     },
     {
       type: 'category',
@@ -867,44 +874,6 @@ module.exports = {
         sidebar_is_title: true,
         sidebar_icon: 'php',
       },
-    },
-    {
-      type: 'category',
-      label: 'Getting started',
-      link: {
-        type: 'doc',
-        id: 'php/getting-started',
-      },
-      customProps: {
-        sidebar_icon: 'rocket-launch',
-      },
-      className: 'homepage-sidebar-item',
-      items: [
-        {
-          type: 'doc',
-          id: 'php/tutorial/quickstart',
-          label: 'Quickstart',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-        {
-          type: 'doc',
-          id: 'php/tutorial/step-by-step',
-          label: 'Step-by-step tutorial',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-        {
-          type: 'doc',
-          id: 'php/tutorial/runtime-sql',
-          label: 'Runtime + SQL',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-      ],
     },
     {
       type: 'category',
@@ -1027,44 +996,6 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'Getting started',
-      link: {
-        type: 'doc',
-        id: 'python/getting-started',
-      },
-      customProps: {
-        sidebar_icon: 'rocket-launch',
-      },
-      className: 'homepage-sidebar-item',
-      items: [
-        {
-          type: 'doc',
-          id: 'python/tutorial/quickstart',
-          label: 'Quickstart',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-        {
-          type: 'doc',
-          id: 'python/tutorial/step-by-step',
-          label: 'Step-by-step tutorial',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-        {
-          type: 'doc',
-          id: 'python/tutorial/runtime-sql',
-          label: 'Runtime + SQL',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-      ],
-    },
-    {
-      type: 'category',
       label: 'How-to',
       collapsible: false,
       customProps: {
@@ -1176,44 +1107,6 @@ module.exports = {
         sidebar_is_title: true,
         sidebar_icon: 'go',
       },
-    },
-    {
-      type: 'category',
-      label: 'Getting started',
-      link: {
-        type: 'doc',
-        id: 'go/getting-started',
-      },
-      customProps: {
-        sidebar_icon: 'rocket-launch',
-      },
-      className: 'homepage-sidebar-item',
-      items: [
-        {
-          type: 'doc',
-          id: 'go/tutorial/quickstart',
-          label: 'Quickstart',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-        {
-          type: 'doc',
-          id: 'go/tutorial/step-by-step',
-          label: 'Step-by-step tutorial',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-        {
-          type: 'doc',
-          id: 'go/tutorial/runtime-sql',
-          label: 'Runtime + SQL',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-      ],
     },
     {
       type: 'category',
@@ -1331,44 +1224,6 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'Getting started',
-      link: {
-        type: 'doc',
-        id: 'rust/getting-started',
-      },
-      customProps: {
-        sidebar_icon: 'rocket-launch',
-      },
-      className: 'homepage-sidebar-item',
-      items: [
-        {
-          type: 'doc',
-          id: 'rust/tutorial/quickstart',
-          label: 'Quickstart',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-        {
-          type: 'doc',
-          id: 'rust/tutorial/step-by-step',
-          label: 'Step-by-step tutorial',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-        {
-          type: 'doc',
-          id: 'rust/tutorial/runtime-sql',
-          label: 'Runtime + SQL',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-      ],
-    },
-    {
-      type: 'category',
       label: 'How-to',
       collapsible: false,
       customProps: {
@@ -1480,44 +1335,6 @@ module.exports = {
         sidebar_is_title: true,
         sidebar_icon: 'dotnet',
       },
-    },
-    {
-      type: 'category',
-      label: 'Getting started',
-      link: {
-        type: 'doc',
-        id: 'dotnet/getting-started',
-      },
-      customProps: {
-        sidebar_icon: 'rocket-launch',
-      },
-      className: 'homepage-sidebar-item',
-      items: [
-        {
-          type: 'doc',
-          id: 'dotnet/tutorial/quickstart',
-          label: 'Quickstart',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-        {
-          type: 'doc',
-          id: 'dotnet/tutorial/step-by-step',
-          label: 'Step-by-step tutorial',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-        {
-          type: 'doc',
-          id: 'dotnet/tutorial/runtime-sql',
-          label: 'Runtime + SQL',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-      ],
     },
     {
       type: 'category',
@@ -1749,7 +1566,8 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'Getting started',
+      label: 'Dive-in',
+collapsible: false,
       link: {
         type: 'doc',
         id: 'nginx/getting-started',
@@ -1992,7 +1810,8 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'Getting started',
+      label: 'Dive-in',
+collapsible: false,
       link: {
         type: 'doc',
         id: 'postgresql/getting-started',
@@ -2201,7 +2020,8 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'Getting started',
+      label: 'Dive-in',
+collapsible: false,
       link: {
         type: 'doc',
         id: 'keydb/getting-started',
@@ -2435,6 +2255,463 @@ module.exports = {
           label: 'Delete object storage service',
         },
       ],
+    },
+  ],
+  deno: [
+    {
+      type: 'ref',
+      id: 'homepage',
+      label: 'Back to home',
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: 'back-arrow',
+      },
+    },
+    {
+      type: 'doc',
+      id: 'deno/overview',
+      label: 'Getting Started',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'deno',
+      },
+    },
+    {
+      type: 'category',
+      label: 'How-to',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+        sidebar_icon: 'academic-cap-solid',
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'deno/how-to/create',
+          label: 'Create Deno service',
+        },
+        {
+          type: 'doc',
+          id: 'deno/how-to/env-variables',
+          label: 'Manage environment variables',
+        },
+        {
+          type: 'doc',
+          id: 'deno/how-to/upgrade',
+          label: 'Upgrade Deno service',
+        },
+        {
+          type: 'doc',
+          id: 'deno/how-to/build-pipeline',
+          label: 'Configure build & deploy pipeline',
+        },
+        {
+          type: 'doc',
+          id: 'deno/how-to/trigger-pipeline',
+          label: 'Trigger build pipeline',
+        },
+        {
+          type: 'doc',
+          id: 'deno/how-to/build-process',
+          label: 'Build process',
+        },
+        {
+          type: 'doc',
+          id: 'deno/how-to/deploy-process',
+          label: 'Deploy process',
+        },
+        {
+          type: 'doc',
+          id: 'deno/how-to/customize-runtime',
+          label: 'Customize Deno runtime',
+        },
+        {
+          type: 'doc',
+          id: 'deno/how-to/logs',
+          label: 'Setup & access logs',
+        },
+        {
+          type: 'doc',
+          id: 'deno/how-to/filebrowser',
+          label: 'Browse container files',
+        },
+        {
+          type: 'doc',
+          id: 'deno/how-to/access',
+          label: 'Access Bun runtime service',
+        },
+        {
+          type: 'doc',
+          id: 'deno/how-to/scaling',
+          label: 'Scale Deno runtime service',
+        },
+        {
+          type: 'doc',
+          id: 'deno/how-to/controls',
+          label: 'Stop & start Deno runtime service',
+        },
+        {
+          type: 'doc',
+          id: 'deno/how-to/shared-storage',
+          label: 'Connect / disconnect shared storage',
+        },
+        {
+          type: 'doc',
+          id: 'deno/how-to/delete',
+          label: 'Delete Deno service',
+        },
+      ],
+    },
+    {
+      type: 'doc',
+      id: 'deno/faq',
+      label: 'FAQ',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'chat-bubble-left-right',
+      },
+    },
+  ],
+  bun: [
+    {
+      type: 'ref',
+      id: 'homepage',
+      label: 'Back to home',
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: 'back-arrow',
+      },
+    },
+    {
+      type: 'doc',
+      id: 'bun/overview',
+      label: 'Getting Started',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'bun',
+      },
+    },
+    {
+      type: 'category',
+      label: 'How-to',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'bun/how-to/create',
+          label: 'Create Bun service',
+        },
+        {
+          type: 'doc',
+          id: 'bun/how-to/env-variables',
+          label: 'Manage environment variables',
+        },
+        {
+          type: 'doc',
+          id: 'bun/how-to/upgrade',
+          label: 'Upgrade Bun service',
+        },
+        {
+          type: 'doc',
+          id: 'bun/how-to/build-pipeline',
+          label: 'Configure build & deploy pipeline',
+        },
+        {
+          type: 'doc',
+          id: 'bun/how-to/trigger-pipeline',
+          label: 'Trigger build pipeline',
+        },
+        {
+          type: 'doc',
+          id: 'bun/how-to/build-process',
+          label: 'Build process',
+        },
+        {
+          type: 'doc',
+          id: 'bun/how-to/deploy-process',
+          label: 'Deploy process',
+        },
+        {
+          type: 'doc',
+          id: 'bun/how-to/customize-runtime',
+          label: 'Customize Bun runtime',
+        },
+        {
+          type: 'doc',
+          id: 'bun/how-to/logs',
+          label: 'Setup & access logs',
+        },
+        {
+          type: 'doc',
+          id: 'bun/how-to/filebrowser',
+          label: 'Browse container files',
+        },
+        {
+          type: 'doc',
+          id: 'bun/how-to/access',
+          label: 'Access Bun runtime service',
+        },
+        {
+          type: 'doc',
+          id: 'bun/how-to/scaling',
+          label: 'Scale Bun runtime service',
+        },
+        {
+          type: 'doc',
+          id: 'bun/how-to/controls',
+          label: 'Stop & start Bun runtime service',
+        },
+        {
+          type: 'doc',
+          id: 'bun/how-to/shared-storage',
+          label: 'Connect / disconnect shared storage',
+        },
+        {
+          type: 'doc',
+          id: 'bun/how-to/delete',
+          label: 'Delete Bun service',
+        },
+      ],
+    },
+    {
+      type: 'doc',
+      id: 'bun/faq',
+      label: 'FAQ',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'chat-bubble-left-right',
+      },
+    },
+  ],
+  gleam: [
+    {
+      type: 'ref',
+      id: 'homepage',
+      label: 'Back to home',
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: 'back-arrow',
+      },
+    },
+    {
+      type: 'doc',
+      id: 'gleam/overview',
+      label: 'Getting Started',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'gleam',
+      },
+    },
+    {
+      type: 'category',
+      label: 'How-to',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'gleam/how-to/create',
+          label: 'Create Gleam service',
+        },
+        {
+          type: 'doc',
+          id: 'gleam/how-to/env-variables',
+          label: 'Manage environment variables',
+        },
+        {
+          type: 'doc',
+          id: 'gleam/how-to/upgrade',
+          label: 'Upgrade Gleam service',
+        },
+        {
+          type: 'doc',
+          id: 'gleam/how-to/build-pipeline',
+          label: 'Configure build & deploy pipeline',
+        },
+        {
+          type: 'doc',
+          id: 'gleam/how-to/trigger-pipeline',
+          label: 'Trigger build pipeline',
+        },
+        {
+          type: 'doc',
+          id: 'gleam/how-to/build-process',
+          label: 'Build process',
+        },
+        {
+          type: 'doc',
+          id: 'gleam/how-to/deploy-process',
+          label: 'Deploy process',
+        },
+        {
+          type: 'doc',
+          id: 'gleam/how-to/customize-runtime',
+          label: 'Customize Gleam runtime',
+        },
+        {
+          type: 'doc',
+          id: 'gleam/how-to/logs',
+          label: 'Setup & access logs',
+        },
+        {
+          type: 'doc',
+          id: 'gleam/how-to/filebrowser',
+          label: 'Browse container files',
+        },
+        {
+          type: 'doc',
+          id: 'gleam/how-to/access',
+          label: 'Access Gleam runtime service',
+        },
+        {
+          type: 'doc',
+          id: 'gleam/how-to/scaling',
+          label: 'Scale Gleam runtime service',
+        },
+        {
+          type: 'doc',
+          id: 'gleam/how-to/controls',
+          label: 'Stop & start Gleam runtime service',
+        },
+        {
+          type: 'doc',
+          id: 'gleam/how-to/shared-storage',
+          label: 'Connect / disconnect shared storage',
+        },
+        {
+          type: 'doc',
+          id: 'gleam/how-to/delete',
+          label: 'Delete Gleam service',
+        },
+      ],
+    },
+    {
+      type: 'doc',
+      id: 'gleam/faq',
+      label: 'FAQ',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'chat-bubble-left-right',
+      },
+    },
+  ],
+  elixir: [
+    {
+      type: 'ref',
+      id: 'homepage',
+      label: 'Back to home',
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: 'back-arrow',
+      },
+    },
+    {
+      type: 'doc',
+      id: 'elixir/overview',
+      label: 'Getting Started',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'elixir',
+      },
+    },
+    {
+      type: 'category',
+      label: 'How-to',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'elixir/how-to/create',
+          label: 'Create Gleam service',
+        },
+        {
+          type: 'doc',
+          id: 'elixir/how-to/env-variables',
+          label: 'Manage environment variables',
+        },
+        {
+          type: 'doc',
+          id: 'elixir/how-to/upgrade',
+          label: 'Upgrade Gleam service',
+        },
+        {
+          type: 'doc',
+          id: 'elixir/how-to/build-pipeline',
+          label: 'Configure build & deploy pipeline',
+        },
+        {
+          type: 'doc',
+          id: 'elixir/how-to/trigger-pipeline',
+          label: 'Trigger build pipeline',
+        },
+        {
+          type: 'doc',
+          id: 'elixir/how-to/build-process',
+          label: 'Build process',
+        },
+        {
+          type: 'doc',
+          id: 'elixir/how-to/deploy-process',
+          label: 'Deploy process',
+        },
+        {
+          type: 'doc',
+          id: 'elixir/how-to/customize-runtime',
+          label: 'Customize Gleam runtime',
+        },
+        {
+          type: 'doc',
+          id: 'elixir/how-to/logs',
+          label: 'Setup & access logs',
+        },
+        {
+          type: 'doc',
+          id: 'elixir/how-to/filebrowser',
+          label: 'Browse container files',
+        },
+        {
+          type: 'doc',
+          id: 'elixir/how-to/access',
+          label: 'Access Gleam runtime service',
+        },
+        {
+          type: 'doc',
+          id: 'elixir/how-to/scaling',
+          label: 'Scale Gleam runtime service',
+        },
+        {
+          type: 'doc',
+          id: 'elixir/how-to/controls',
+          label: 'Stop & start Gleam runtime service',
+        },
+        {
+          type: 'doc',
+          id: 'elixir/how-to/shared-storage',
+          label: 'Connect / disconnect shared storage',
+        },
+        {
+          type: 'doc',
+          id: 'elixir/how-to/delete',
+          label: 'Delete Gleam service',
+        },
+      ],
+    },
+    {
+      type: 'doc',
+      id: 'elixir/faq',
+      label: 'FAQ',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'chat-bubble-left-right',
+      },
     },
   ],
 };
