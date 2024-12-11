@@ -106,24 +106,93 @@ module.exports = {
       className: 'homepage-sidebar-item',
     },
     {
-      type: 'category',
-      label: 'Frameworks',
-      collapsible: false,
-      customProps: {
-        sidebar_is_group_headline: true,
+      type: "category",
+      label: "Laravel",
+      link: {
+        type: "doc",
+        id: "frameworks/laravel/overview",
       },
+      customProps: {
+        sidebar_icon: "laravel",
+      },
+      className: 'homepage-sidebar-item service-sidebar-item',
       items: [
         {
-          type: 'ref',
-          id: 'frameworks/laravel/overview',
-          label: 'Laravel',
-          customProps: {
-            sidebar_icon: 'laravel',
-          },
-          className: 'homepage-sidebar-item service-sidebar-item',
+          type: "doc",
+          id: "frameworks/laravel/overview",
+          label: "Overview & quickstart",
+        },
+        {
+          type: "doc",
+          id: "frameworks/laravel/logs",
+          label: "Setup & access logs",
+        },
+        {
+          type: "doc",
+          id: "frameworks/laravel/recipes",
+          label: "Create templates with import & seed",
+        },
+        {
+          type: "doc",
+          id: "frameworks/laravel/env-variables",
+          label: "Utilize environment variables",
+        },
+        {
+          type: "doc",
+          id: "frameworks/laravel/migrations",
+          label: "Migration & upgrades",
+        },
+        {
+          type: "doc",
+          id: "frameworks/laravel/backups",
+          label: "Backups",
+        },
+        {
+          type: "doc",
+          id: "frameworks/laravel/scaling",
+          label: "Optimize scaling",
+        },
+        {
+          type: "doc",
+          id: "frameworks/laravel/high-availability",
+          label: "High availability, when, how, why",
+        },
+        {
+          type: "doc",
+          id: "frameworks/laravel/cron",
+          label: "CRON / Scheduled jobs",
+        },
+        {
+          type: "doc",
+          id: "frameworks/laravel/smtp",
+          label: "SMPT & sending emails",
+        },
+        {
+          type: "doc",
+          id: "frameworks/laravel/public-access",
+          label: "Public access from domain, IP, subdomain",
         },
       ],
     },
+    // {
+    //   type: 'category',
+    //   label: 'Perfectly suited for',
+    //   collapsible: false,
+    //   customProps: {
+    //     sidebar_is_group_headline: true,
+    //   },
+    //   items: [
+    //     {
+    //       type: 'ref',
+    //       id: 'frameworks/laravel/index',
+    //       label: 'Laravel',
+    //       customProps: {
+    //         sidebar_icon: 'laravel',
+    //       },
+    //       className: 'homepage-sidebar-item service-sidebar-item',
+    //     },
+    //   ],
+    // },
     {
       type: 'html',
       value: 'All Supported Services',
@@ -1389,7 +1458,7 @@ module.exports = {
     {
       type: 'category',
       label: 'Dive-in',
-collapsible: false,
+      collapsible: false,
       link: {
         type: 'doc',
         id: 'nginx/getting-started',
@@ -1633,7 +1702,7 @@ collapsible: false,
     {
       type: 'category',
       label: 'Dive-in',
-collapsible: false,
+      collapsible: false,
       link: {
         type: 'doc',
         id: 'postgresql/getting-started',
@@ -1843,7 +1912,7 @@ collapsible: false,
     {
       type: 'category',
       label: 'Dive-in',
-collapsible: false,
+      collapsible: false,
       link: {
         type: 'doc',
         id: 'keydb/getting-started',
@@ -2566,78 +2635,58 @@ collapsible: false,
       items: [
         {
           type: 'doc',
-          id: 'nodejs/how-to/create',
-          label: 'Create Node.js service',
+          id: 'frameworks/laravel/create',
+          label: 'Create Laravel service',
         },
         {
           type: 'doc',
-          id: 'nodejs/how-to/env-variables',
+          id: 'frameworks/laravel/env-variables',
           label: 'Manage environment variables',
         },
         {
           type: 'doc',
-          id: 'nodejs/how-to/upgrade',
-          label: 'Upgrade Node.js service',
-        },
-        {
-          type: 'doc',
-          id: 'nodejs/how-to/build-pipeline',
-          label: 'Configure build & deploy pipeline',
-        },
-        {
-          type: 'doc',
-          id: 'nodejs/how-to/trigger-pipeline',
-          label: 'Trigger build pipeline',
-        },
-        {
-          type: 'doc',
-          id: 'nodejs/how-to/build-process',
-          label: 'Build process',
-        },
-        {
-          type: 'doc',
-          id: 'nodejs/how-to/deploy-process',
-          label: 'Deploy process',
-        },
-        {
-          type: 'doc',
-          id: 'nodejs/how-to/customize-runtime',
-          label: 'Customize NodeJS runtime',
-        },
-        {
-          type: 'doc',
-          id: 'nodejs/how-to/logs',
+          id: 'frameworks/laravel/logs',
           label: 'Setup & access logs',
         },
         {
           type: 'doc',
-          id: 'nodejs/how-to/filebrowser',
-          label: 'Browse container files',
+          id: 'frameworks/laravel/scaling',
+          label: 'Scale Laravel service',
         },
         {
           type: 'doc',
-          id: 'nodejs/how-to/access',
-          label: 'Access Node.js runtime service',
+          id: 'frameworks/laravel/high-availability',
+          label: 'High availability',
         },
         {
           type: 'doc',
-          id: 'nodejs/how-to/scaling',
-          label: 'Scale Node.js runtime service',
+          id: 'frameworks/laravel/backups',
+          label: 'Backups',
         },
         {
           type: 'doc',
-          id: 'nodejs/how-to/controls',
-          label: 'Stop & start Node.js runtime service',
+          id: 'frameworks/laravel/cron',
+          label: 'CRON / Scheduled jobs',
         },
         {
           type: 'doc',
-          id: 'nodejs/how-to/shared-storage',
-          label: 'Connect / disconnect shared storage',
+          id: 'frameworks/laravel/smtp',
+          label: 'SMPT & sending emails',
         },
         {
           type: 'doc',
-          id: 'nodejs/how-to/delete',
-          label: 'Delete Node.js service',
+          id: 'frameworks/laravel/public-access',
+          label: 'Public access from domain, IP, subdomain',
+        },
+        {
+          type: 'doc',
+          id: 'frameworks/laravel/migrations',
+          label: 'Migrations',
+        },
+        {
+          type: 'doc',
+          id: 'frameworks/laravel/recipes',
+          label: 'Recipes',
         },
       ],
     },
@@ -2676,182 +2725,182 @@ collapsible: false,
 
 
 
-      //  {
-      //    type: "category",
-      //    label: "Nest.js",
-      //    link: {
-      //      type: "doc",
-      //      id: "frameworks/nestjs/index",
-      //    },
-      //    customProps: {
-      //      sidebar_icon: "nestjs",
-      //    },
-      //    className: "homepage-sidebar-item",
-      //    items: [
-      //      {
-      //        type: "doc",
-      //        id: "frameworks/nestjs/index",
-      //        label: "Overview & quickstart",
-      //      },
-      //      {
-      //        type: "doc",
-      //        id: "frameworks/nestjs/log",
-      //        label: "Setup & access logs",
-      //      },
-      //      {
-      //        type: "doc",
-      //        id: "frameworks/nestjs/template",
-      //        label: "Create templates with import & seed",
-      //      },
-      //      {
-      //        type: "doc",
-      //        id: "frameworks/nestjs/env-variables",
-      //        label: "Utilize environment variables",
-      //      },
-      //      {
-      //        type: "doc",
-      //        id: "frameworks/nestjs/migration",
-      //        label: "Migration & upgrades",
-      //      },
-      //      {
-      //        type: "doc",
-      //        id: "frameworks/nestjs/backups",
-      //        label: "Backups",
-      //      },
-      //      {
-      //        type: "doc",
-      //        id: "frameworks/nestjs/scaling",
-      //        label: "Optimize scaling",
-      //      },
-      //      {
-      //        type: "doc",
-      //        id: "frameworks/nestjs/scaling",
-      //        label: "High availability, when, how, why",
-      //      },
-      //      {
-      //        type: "doc",
-      //        id: "frameworks/nestjs/cron",
-      //        label: "CRON / Scheduled jobs",
-      //      },
-      //      {
-      //        type: "doc",
-      //        id: "frameworks/nestjs/mails",
-      //        label: "SMPT & sending emails",
-      //      },
-      //      {
-      //        type: "doc",
-      //        id: "frameworks/nestjs/routing",
-      //        label: "Public access from domain, IP, subdomain",
-      //      },
-      //    ],
-      //  },
-      //  {
-      //    type: "category",
-      //    label: "Laravel",
-      //    link: {
-      //      type: "doc",
-      //      id: "frameworks/laravel/index",
-      //    },
-      //    customProps: {
-      //      sidebar_icon: "laravel",
-      //    },
-      //    className: "homepage-sidebar-item",
-      //    items: [
-      //      {
-      //        type: "doc",
-      //        id: "frameworks/laravel/examples",
-      //        label: "Examples",
-      //        customProps: {
-      //          exclude_from_doc_list: false,
-      //        },
-      //      },
-      //    ],
-      //  },
-      //  {
-      //    type: "category",
-      //    label: "Gingonic",
-      //    link: {
-      //      type: "doc",
-      //      id: "frameworks/gingonic/index",
-      //    },
-      //    customProps: {
-      //      sidebar_icon: "gingonic",
-      //    },
-      //    className: "homepage-sidebar-item",
-      //    items: [
-      //      {
-      //        type: "doc",
-      //        id: "frameworks/gingonic/examples",
-      //        label: "Examples",
-      //        customProps: {
-      //          exclude_from_doc_list: false,
-      //        },
-      //      },
-      //    ],
-      //  },
-      //  {
-      //    type: "category",
-      //    label: "Nette",
-      //    link: {
-      //      type: "doc",
-      //      id: "frameworks/nette/index",
-      //    },
-      //    customProps: {
-      //      sidebar_icon: "nette",
-      //    },
-      //    className: "homepage-sidebar-item",
-      //    items: [
-      //      {
-      //        type: "doc",
-      //        id: "frameworks/nette/examples",
-      //        label: "Examples",
-      //        customProps: {
-      //          exclude_from_doc_list: false,
-      //        },
-      //      },
-      //    ],
-      //  },
-      //  {
-      //    type: "category",
-      //    label: "Strapi",
-      //    link: {
-      //      type: "doc",
-      //      id: "frameworks/strapi/index",
-      //    },
-      //    customProps: {
-      //      sidebar_icon: "strapi",
-      //    },
-      //    className: "homepage-sidebar-item",
-      //    items: [
-      //      {
-      //        type: "doc",
-      //        id: "frameworks/strapi/examples",
-      //        label: "Examples",
-      //        customProps: {
-      //          exclude_from_doc_list: false,
-      //        },
-      //      },
-      //    ],
-      //  },
-      //  {
-      //    type: "category",
-      //    label: "Medusa",
-      //    link: {
-      //      type: "doc",
-      //      id: "frameworks/medusa/index",
-      //    },
-      //    customProps: {
-      //      sidebar_icon: "medusa",
-      //    },
-      //    className: "homepage-sidebar-item",
-      //    items: [
-      //      {
-      //        type: "doc",
-      //        id: "frameworks/medusa/examples",
-      //        label: "Examples",
-      //        customProps: {
-      //          exclude_from_doc_list: false,
-      //        },
-      //      },
-      //    ],
-      //  },
+//  {
+//    type: "category",
+//    label: "Nest.js",
+//    link: {
+//      type: "doc",
+//      id: "frameworks/nestjs/index",
+//    },
+//    customProps: {
+//      sidebar_icon: "nestjs",
+//    },
+//    className: "homepage-sidebar-item",
+//    items: [
+//      {
+//        type: "doc",
+//        id: "frameworks/nestjs/index",
+//        label: "Overview & quickstart",
+//      },
+//      {
+//        type: "doc",
+//        id: "frameworks/nestjs/log",
+//        label: "Setup & access logs",
+//      },
+//      {
+//        type: "doc",
+//        id: "frameworks/nestjs/template",
+//        label: "Create templates with import & seed",
+//      },
+//      {
+//        type: "doc",
+//        id: "frameworks/nestjs/env-variables",
+//        label: "Utilize environment variables",
+//      },
+//      {
+//        type: "doc",
+//        id: "frameworks/nestjs/migration",
+//        label: "Migration & upgrades",
+//      },
+//      {
+//        type: "doc",
+//        id: "frameworks/nestjs/backups",
+//        label: "Backups",
+//      },
+//      {
+//        type: "doc",
+//        id: "frameworks/nestjs/scaling",
+//        label: "Optimize scaling",
+//      },
+//      {
+//        type: "doc",
+//        id: "frameworks/nestjs/scaling",
+//        label: "High availability, when, how, why",
+//      },
+//      {
+//        type: "doc",
+//        id: "frameworks/nestjs/cron",
+//        label: "CRON / Scheduled jobs",
+//      },
+//      {
+//        type: "doc",
+//        id: "frameworks/nestjs/mails",
+//        label: "SMPT & sending emails",
+//      },
+//      {
+//        type: "doc",
+//        id: "frameworks/nestjs/routing",
+//        label: "Public access from domain, IP, subdomain",
+//      },
+//    ],
+//  },
+//  {
+//    type: "category",
+//    label: "Laravel",
+//    link: {
+//      type: "doc",
+//      id: "frameworks/laravel/index",
+//    },
+//    customProps: {
+//      sidebar_icon: "laravel",
+//    },
+//    className: "homepage-sidebar-item",
+//    items: [
+//      {
+//        type: "doc",
+//        id: "frameworks/laravel/examples",
+//        label: "Examples",
+//        customProps: {
+//          exclude_from_doc_list: false,
+//        },
+//      },
+//    ],
+//  },
+//  {
+//    type: "category",
+//    label: "Gingonic",
+//    link: {
+//      type: "doc",
+//      id: "frameworks/gingonic/index",
+//    },
+//    customProps: {
+//      sidebar_icon: "gingonic",
+//    },
+//    className: "homepage-sidebar-item",
+//    items: [
+//      {
+//        type: "doc",
+//        id: "frameworks/gingonic/examples",
+//        label: "Examples",
+//        customProps: {
+//          exclude_from_doc_list: false,
+//        },
+//      },
+//    ],
+//  },
+//  {
+//    type: "category",
+//    label: "Nette",
+//    link: {
+//      type: "doc",
+//      id: "frameworks/nette/index",
+//    },
+//    customProps: {
+//      sidebar_icon: "nette",
+//    },
+//    className: "homepage-sidebar-item",
+//    items: [
+//      {
+//        type: "doc",
+//        id: "frameworks/nette/examples",
+//        label: "Examples",
+//        customProps: {
+//          exclude_from_doc_list: false,
+//        },
+//      },
+//    ],
+//  },
+//  {
+//    type: "category",
+//    label: "Strapi",
+//    link: {
+//      type: "doc",
+//      id: "frameworks/strapi/index",
+//    },
+//    customProps: {
+//      sidebar_icon: "strapi",
+//    },
+//    className: "homepage-sidebar-item",
+//    items: [
+//      {
+//        type: "doc",
+//        id: "frameworks/strapi/examples",
+//        label: "Examples",
+//        customProps: {
+//          exclude_from_doc_list: false,
+//        },
+//      },
+//    ],
+//  },
+//  {
+//    type: "category",
+//    label: "Medusa",
+//    link: {
+//      type: "doc",
+//      id: "frameworks/medusa/index",
+//    },
+//    customProps: {
+//      sidebar_icon: "medusa",
+//    },
+//    className: "homepage-sidebar-item",
+//    items: [
+//      {
+//        type: "doc",
+//        id: "frameworks/medusa/examples",
+//        label: "Examples",
+//        customProps: {
+//          exclude_from_doc_list: false,
+//        },
+//      },
+//    ],
+//  },
