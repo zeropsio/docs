@@ -106,73 +106,13 @@ module.exports = {
       className: 'homepage-sidebar-item',
     },
     {
-      type: "category",
-      label: "Laravel",
-      link: {
-        type: "doc",
-        id: "frameworks/laravel/overview",
-      },
+      type: 'ref',
+      id: 'frameworks/laravel/overview',
+      label: 'Laravel',
       customProps: {
-        sidebar_icon: "laravel",
+        sidebar_icon: 'laravel',
       },
-      className: 'homepage-sidebar-item service-sidebar-item',
-      items: [
-        {
-          type: "doc",
-          id: "frameworks/laravel/overview",
-          label: "Overview & quickstart",
-        },
-        {
-          type: "doc",
-          id: "frameworks/laravel/logs",
-          label: "Setup & access logs",
-        },
-        {
-          type: "doc",
-          id: "frameworks/laravel/recipes",
-          label: "Create templates with import & seed",
-        },
-        {
-          type: "doc",
-          id: "frameworks/laravel/env-variables",
-          label: "Utilize environment variables",
-        },
-        {
-          type: "doc",
-          id: "frameworks/laravel/migrations",
-          label: "Migration & upgrades",
-        },
-        {
-          type: "doc",
-          id: "frameworks/laravel/backups",
-          label: "Backups",
-        },
-        {
-          type: "doc",
-          id: "frameworks/laravel/scaling",
-          label: "Optimize scaling",
-        },
-        {
-          type: "doc",
-          id: "frameworks/laravel/high-availability",
-          label: "High availability, when, how, why",
-        },
-        {
-          type: "doc",
-          id: "frameworks/laravel/cron",
-          label: "CRON / Scheduled jobs",
-        },
-        {
-          type: "doc",
-          id: "frameworks/laravel/smtp",
-          label: "SMPT & sending emails",
-        },
-        {
-          type: "doc",
-          id: "frameworks/laravel/public-access",
-          label: "Public access from domain, IP, subdomain",
-        },
-      ],
+      className: 'homepage-sidebar-item  service-sidebar-item',
     },
     // {
     //   type: 'category',
