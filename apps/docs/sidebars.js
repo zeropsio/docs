@@ -115,7 +115,7 @@ module.exports = {
       items: [
         {
           type: 'ref',
-          id: 'frameworks/laravel/index',
+          id: 'frameworks/laravel/overview',
           label: 'Laravel',
           customProps: {
             sidebar_icon: 'laravel',
