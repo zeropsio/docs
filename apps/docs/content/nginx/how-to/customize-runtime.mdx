@@ -1,5 +1,5 @@
 ---
-title: Customise Nginx Static runtime environment
+title: Customize Nginx Static runtime environment
 description: Learn how you can customise your nginx static runtime environment on Zerops.
 ---
 
@@ -17,20 +17,23 @@ import data from '@site/static/data.json';
 The default Nginx runtime environment contains:
 
 - <span>{data.alpineCurrentVersion}</span>
-- selected version of Nginx selected when the runtime service was created.
-- <a href="/references/cli">
-    `zCLI`
-  </a>
-  , Zerops command line tool
-- `composer`, `git` and `wget`.
+- Selected version of Nginx when the runtime service was created.
+- [zCLI](/references/cli)
+- Git and Composer
 
-If you prefer the Ubuntu OS instead of Alpine, set the `<a href="/nginx/how-to/build-pipeline#os">build.os</a>` attribute to `ubuntu`. To install additional packages or tools add one or more <a href="/nginx/how-to/build-pipeline#preparecommands-1">`run.prepareCommands`</a> commands to your `zerops.yml`.
+:::note
+To use Ubuntu instead of the default Alpine, set the [run.os](/references/zeropsyml#os-optional-1) attribute.
+
+Additional packages and tools can be installed using [run.prepareCommands](/references/zeropsyml#preparecommands-optional-1).
+:::
+
+### Runtime Flow 
 
 When the first deploy with a defined `prepareCommands` attribute is triggered, Zerops will
 
 1. create a prepare runtime container
 2. optionally: [copy selected folders or files from your build container](/nginx/how-to/build-pipeline#copy-folders-or-files-from-your-build-container)
-3. run the `run.prepareCommands` commands in the defined order
+3. run the run.prepareCommands commands in the defined order
 
 ### Command exit code
 
@@ -42,11 +45,11 @@ The prepare runtime container is automatically deleted after the prepare runtime
 
 Some packages or tools can take a long time to install. Therefore, Zerops caches your custom runtime environment after the installation of your custom packages or tools is completed. When the second or following deploy is triggered, Zerops will use the custom runtime cache from the previous deploy if following conditions are met:
 
-1. Content of the <a href="/nginx/how-to/build-pipeline#copy-folders-or-files-from-your-build-container">`build.addToRunPrepare`</a> and <a href="/nginx/how-to/build-pipeline#preparecommands-1">`run.prepareCommands`</a> attributes didn't change from the previous deploy
+1. Content of the <a href="/nginx/how-to/build-pipeline#copy-folders-or-files-from-your-build-container">build.addToRunPrepare</a> and <a href="/nginx/how-to/build-pipeline#preparecommands-1">run.prepareCommands</a> attributes didn't change from the previous deploy
 2. The custom runtime cache wasn't invalidated in the Zerops GUI.
 
-To invalidate the custom runtime cache go to `yyy`
+To invalidate the Zerops runtime cache go to your service detail in Zerops GUI, choose **Service dashboard & runtime containers** from the left menu and click on the **Open pipeline detail** button. Then click on the **Clear runtime prepare cache** button.
 
-**// TODO screenshot**
+{/* ** TODO screenshot** */}
 
 When the custom runtime cache is used, Zerops doesn't create a prepare runtime container and executes the deployment of your application directly.

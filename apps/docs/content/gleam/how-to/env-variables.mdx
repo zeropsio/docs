@@ -1,0 +1,178 @@
+---
+title: How to set and use environment variables in Gleam service
+description: Learn how you can setup and use environment variables in a gleam service on Zerops.
+---
+
+Environment variables help you run your application in different environments. They allow you to isolate all specific environment aspects from your application code and keep your app encapsulated. You can create several projects in Zerops that represent different environments (development, stage, production) or even each developer can have a project with its own environment.
+
+In Zerops you do not have to create a `.env` file manually. Zerops handles the environment variables for you.
+
+## Types of env variables in Zerops
+
+There are 3 different sets of env variables in Zerops:
+
+| environment | type   | defined in                                                                        |
+| ----------- | ------ | --------------------------------------------------------------------------------- |
+| build       | basic  | [zerops.yml](/gleam/how-to/build-pipeline#envvariables)                          |
+| runtime     | basic  | [zerops.yml](/gleam/how-to/build-pipeline#envvariables-1)                        |
+| runtime     | secret | [Zerops GUI](/gleam/how-to/env-variables#set-secret-env-variables-in-zerops-gui) |
+
+Use the [secret env variables](/gleam/how-to/create#set-secret-env-variables) for all sensitive data you don't want to store in your application code. Secret env variables are also useful if you need for testing where you need to change the value of some env variables frequently. Secret variables are managed in Zerops GUI and you don't have to redeploy your application.
+
+The basic build and runtime env variables are listed in your [zerops.yml](/references/zeropsyml) and deployed together with your application code. When you need to update a value of an existing env variable or change the set of build or runtime env variables, update your zerops.yml and redeploy your application to Zerops.
+
+You can [reference](/gleam/how-to/env-variables#reference-a-local-variable-in-another-variable-value) another variable of the same service or even a variable of [another service](/gleam/how-to/env-variables#reference-a-variable-of-another-project-service) within the same project.
+
+## Set secret env variables in Zerops GUI
+
+Use secret variables to store passwords, tokens and other sensitive information that shouldn't be part of your repository and listed in zerops.yml.
+
+<p align="center">
+  <img
+    src="/img/screenshots/runtime_secret_variables.png"
+    alt="image"
+    width="100%"
+    height="auto"
+  />
+</p>
+
+You can set env variables when you [create](/gleam/how-to/create) a new Gleam service or you can set them later.
+
+To configure env variables for an existing service, go to the service detail and choose **Environment variables** in the left menu. Scroll to the **Secret variables** section and click on the **Add secret variable** button and set variable key and value.
+
+You can edit or delete env variables that you've created by clicking on the menu on the right side of each row.
+
+The changes you've made in the list of env variables need to be committed. Click on the **Commit x changes** button and Zerops will update the env variables in all containers of your project's services.
+
+:::caution
+You need to **restart** the runtime service after you commit the changes in env variables. The Gleam process running in the container receives the list env variables only when it starts. Update of the env variables while the Gleam process is running does not affect your application.
+:::
+
+## Set basic build env variables in zerops.yml
+
+To set basic env variables for the build environment, add the `envVariables` attribute to the build section in your `zerops.yml`
+
+```yml
+zerops:
+  # define hostname of your service
+  - setup: app
+    # ==== how to build your application ====
+    build:
+       …
+
+      # OPTIONAL. Defines the env variables for the build environment:
+      envVariables:
+        NODE_ENV: production
+        DB_NAME: db
+        DB_HOST: db
+        DB_USER: db
+        DB_PASS: ${db_password}
+```
+
+When you need to update a value of an existing env variable or change the set of build or runtime env variables, update your `zerops.yml` and redeploy your application to Zerops.
+
+## Set basic runtime env variables in zerops.yml
+
+To set basic env variables for the runtime environment, add the `envVariables` attribute to the runtime section in your `zerops.yml`
+
+```yml
+zerops:
+  # define hostname of your service
+  - setup: app
+    # ==== how to build your application ====
+    run:
+       …
+
+      # OPTIONAL. Defines the env variables for the runtime environment:
+      envVariables:
+        NODE_ENV: production
+        DB_NAME: db
+        DB_HOST: db
+        DB_USER: db
+        DB_PASS: ${db_password}
+```
+
+When you need to update a value of an existing env variable or change the set of build or runtime env variables, update your `zerops.yml` and redeploy your application to Zerops.
+
+## Env variable restrictions
+
+**key**
+
+- must satisfy the following regular expression: `[a-zA-Z_]+[a-zA-Z0-9_]*`
+- all variable keys in the same service must be unique regardless of case
+- keys are case sensitive
+
+**value**
+
+- must contain only ASCII characters
+- the _End of Line_ character is forbidden
+
+These restrictions apply to all [types of env variables](/gleam/how-to/env-variables#types-of-env-variables-in-zerops).
+
+## Referencing other env variables
+
+You can reference another variable of the same service using `${key}` in your variable value. You can even reference a variable from a different service using `${hostname_key}`. The referenced variable doesn't need to exist when you are entering your variable.
+
+### Reference a local variable in another variable value
+
+| Variable key | Variable value      | Computed variable value |
+| ------------ | ------------------- | ----------------------- |
+| id           | 12345               | 12345                   |
+| hostname     | app                 | app                     |
+| name         | `${id}-${hostname}` | 12345-app               |
+
+### Reference a variable of another project service
+
+Let's say your project contains two PostgreSQL services `dbtest` and `dbprod`. Both services have a `connectionString` variable. Then you can create a `dbConnectionString` env variable in your Gleam runtime and set `${dbtest_connectionString}` as the variable value. Zerops will fill in the value of the `connectionString` variable of the `dbtest` service.
+
+When you change the `dbConnectionString` value to `${dbprod_connectionString}`, Zerops will fill in the value of the `connectionString` variable of the `dbprod` service.
+
+:::caution
+When you change the value of the `connectionString` variable in the service `dbtest` and commit the changes you need to **restart** the Gleam service. The Gleam process running in the container receives the list env variables only when it starts. Update of the env variables while the Gleam process is running does not affect your application.
+:::
+
+## Generated env variables
+
+Zerops creates several helper variables when a Gleam service is created, e.g. `hostname`, `PATH`. Some helper variables are read-only (`hostname`), others are editable (`PATH`). Generated variables cannot be deleted.
+
+Generated env variables are listed on the **Environment variables** page. Scroll to the **Generated variables** section.
+
+{/* TODO screenshot of the generated env variables of the respective runtime*/}
+
+<p align="center">
+  <img
+    src="/img/screenshots/nodejs_generated_variables.png"
+    alt="image"
+    width="100%"
+    height="auto"
+  />
+</p>
+
+## How to read env variables from your Gleam app
+
+Zerops passes all environment variables from all project services when your Gleam app is deployed and started.
+
+To access the local environment variable i.e. the variable set to this Gleam service in your app, use:
+
+```sh
+process.env.YOUR_VARIABLE_KEY_HERE
+```
+
+## How to read env variables of another service
+
+All services of the same project can reference environment variables from other services. To use an environment variable from one service in another service in the same project, you must prefix the environment variable key with the service hostname and underscore.
+
+#### Examples:
+
+To access the `connectionString` env variable of the `mariadb1` service, use `mariadb1_connectionString` as the env variable key.
+To access the `password` env variable of the `mariadb2` service, use `mariadb2_password` as the env variable key.
+
+## How to read runtime env variables in the build environment
+
+You can use runtime env variables in the build environment using the `RUNTIME_` prefix. For example if you have a runtime variable with the `connectionString` key, use the `RUNTIME_connectionString` to read the variable in the build environment. This rule applies both for basic and secret runtime variables.
+
+## Basic and secret env variable with the same key
+
+If you create a secret env variable and a basic runtime env variable with the same key, Zerops saves the basic runtime env variable from your zerops.yml and ignores the secret env variable.
+
+If you create a basic build env variable and a runtime env variable with the same key, Zerops saves both because the build and runtime environments have separate sets of env variables.
