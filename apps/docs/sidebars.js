@@ -800,7 +800,7 @@ module.exports = {
         {
           type: 'doc',
           id: 'nodejs/how-to/customize-runtime',
-          label: 'Customize runtime',
+          label: 'Customize NodeJS runtime',
         },
         {
           type: 'doc',
@@ -1679,7 +1679,7 @@ module.exports = {
         {
           type: 'doc',
           id: 'java/how-to/customize-runtime',
-          label: 'Customize .NET runtime',
+          label: 'Customize Java runtime',
         },
         {
           type: 'doc',
