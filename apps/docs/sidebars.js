@@ -2548,8 +2548,8 @@ collapsible: false,
     },
     {
       type: 'doc',
-      id: 'frameworks/laravel/index',
-      label: 'Laravel overview',
+      id: 'frameworks/laravel/overview',
+      label: 'Laravel',
       customProps: {
         sidebar_is_title: true,
         sidebar_icon: 'laravel',
@@ -2557,31 +2557,87 @@ collapsible: false,
     },
     {
       type: 'category',
-      label: 'Getting started',
-      link: {
-        type: 'doc',
-        id: 'frameworks/laravel/getting-started',
-      },
+      label: 'How-to',
+      collapsible: false,
       customProps: {
-        sidebar_icon: 'rocket-launch',
+        sidebar_is_group_headline: true,
+        sidebar_icon: 'academic-cap-solid',
       },
-      className: 'homepage-sidebar-item',
       items: [
         {
           type: 'doc',
-          id: 'frameworks/laravel/tutorial/quickstart',
-          label: 'Quickstart',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
+          id: 'nodejs/how-to/create',
+          label: 'Create Node.js service',
         },
         {
           type: 'doc',
-          id: 'frameworks/laravel/tutorial/step-by-step',
-          label: 'Step-by-step tutorial',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
+          id: 'nodejs/how-to/env-variables',
+          label: 'Manage environment variables',
+        },
+        {
+          type: 'doc',
+          id: 'nodejs/how-to/upgrade',
+          label: 'Upgrade Node.js service',
+        },
+        {
+          type: 'doc',
+          id: 'nodejs/how-to/build-pipeline',
+          label: 'Configure build & deploy pipeline',
+        },
+        {
+          type: 'doc',
+          id: 'nodejs/how-to/trigger-pipeline',
+          label: 'Trigger build pipeline',
+        },
+        {
+          type: 'doc',
+          id: 'nodejs/how-to/build-process',
+          label: 'Build process',
+        },
+        {
+          type: 'doc',
+          id: 'nodejs/how-to/deploy-process',
+          label: 'Deploy process',
+        },
+        {
+          type: 'doc',
+          id: 'nodejs/how-to/customize-runtime',
+          label: 'Customize NodeJS runtime',
+        },
+        {
+          type: 'doc',
+          id: 'nodejs/how-to/logs',
+          label: 'Setup & access logs',
+        },
+        {
+          type: 'doc',
+          id: 'nodejs/how-to/filebrowser',
+          label: 'Browse container files',
+        },
+        {
+          type: 'doc',
+          id: 'nodejs/how-to/access',
+          label: 'Access Node.js runtime service',
+        },
+        {
+          type: 'doc',
+          id: 'nodejs/how-to/scaling',
+          label: 'Scale Node.js runtime service',
+        },
+        {
+          type: 'doc',
+          id: 'nodejs/how-to/controls',
+          label: 'Stop & start Node.js runtime service',
+        },
+        {
+          type: 'doc',
+          id: 'nodejs/how-to/shared-storage',
+          label: 'Connect / disconnect shared storage',
+        },
+        {
+          type: 'doc',
+          id: 'nodejs/how-to/delete',
+          label: 'Delete Node.js service',
         },
       ],
     },
