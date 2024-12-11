@@ -2105,6 +2105,71 @@ collapsible: false,
       },
     },
   ],
+  //  rabbitmq: [
+  //    {
+  //      type: "ref",
+  //      id: "homepage",
+  //      label: "Back to home",
+  //      customProps: {
+  //        sidebar_is_back_link: true,
+  //        sidebar_icon: "back-arrow",
+  //      },
+  //    },
+  //    {
+  //      type: "doc",
+  //      id: "rabbitmq/overview",
+  //      label: "Zerops RabbitMQ Service",
+  //      customProps: {
+  //        sidebar_is_title: true,
+  //        sidebar_icon: "rabbitmq",
+  //      },
+  //    },
+  //    {
+  //      type: "category",
+  //      label: "How-to",
+  //      collapsible: false,
+  //      customProps: {
+  //        sidebar_is_group_headline: true,
+  //      },
+  //      items: [
+  //        {
+  //          type: "doc",
+  //          id: "rabbitmq/how-to/create",
+  //          label: "Create RabbitMQ service",
+  //        },
+  //        {
+  //          type: "doc",
+  //          id: "rabbitmq/how-to/connect",
+  //          label: "Connect to RabbitMQ",
+  //        },
+  //        {
+  //          type: "doc",
+  //          id: "rabbitmq/how-to/manage",
+  //          label: "Manage users and databases",
+  //        },
+  //        {
+  //          type: "doc",
+  //          id: "rabbitmq/how-to/export-import-data",
+  //          label: "Export and import data",
+  //        },
+  //        {
+  //          type: "doc",
+  //          id: "rabbitmq/how-to/scale",
+  //          label: "Scale RabbitMQ service",
+  //        },
+  //        {
+  //          type: "doc",
+  //          id: "rabbitmq/how-to/control",
+  //          label: "Stop and start RabbitMQ service",
+  //        },
+  //        {
+  //          type: "doc",
+  //          id: "rabbitmq/how-to/delete",
+  //          label: "Delete RabbitMQ service",
+  //        },
+  //      ],
+  //    },
+  //  ],
   sharedstorage: [
     {
       type: 'ref',
