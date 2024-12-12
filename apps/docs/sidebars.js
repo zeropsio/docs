@@ -2487,13 +2487,8 @@ module.exports = {
         },
         {
           type: 'doc',
-          id: 'frameworks/laravel/scaling',
-          label: 'Scale Laravel service',
-        },
-        {
-          type: 'doc',
           id: 'frameworks/laravel/high-availability',
-          label: 'High availability',
+          label: 'Automatic scaling & High Availability',
         },
         {
           type: 'doc',
