@@ -2482,13 +2482,13 @@ module.exports = {
         },
         {
           type: 'doc',
-          id: 'frameworks/laravel/logs',
-          label: 'Setup & access logs',
+          id: 'frameworks/laravel/smtp',
+          label: 'SMTP & sending emails',
         },
         {
           type: 'doc',
-          id: 'frameworks/laravel/high-availability',
-          label: 'Automatic scaling & High Availability',
+          id: 'frameworks/laravel/logs',
+          label: 'Setup & access logs',
         },
         {
           type: 'doc',
@@ -2502,23 +2502,23 @@ module.exports = {
         },
         {
           type: 'doc',
+          id: 'frameworks/laravel/automatic-scaling',
+          label: 'Automatic scaling & High Availability',
+        },
+        {
+          type: 'doc',
           id: 'frameworks/laravel/cron',
           label: 'CRON / Scheduled jobs',
         },
         {
           type: 'doc',
-          id: 'frameworks/laravel/smtp',
-          label: 'SMPT & sending emails',
+          id: 'frameworks/laravel/migrations',
+          label: 'Migrations',
         },
         {
           type: 'doc',
           id: 'frameworks/laravel/public-access',
-          label: 'Public access from domain, IP, subdomain',
-        },
-        {
-          type: 'doc',
-          id: 'frameworks/laravel/migrations',
-          label: 'Migrations',
+          label: 'Public Access',
         },
         // {
         //   type: 'doc',
@@ -2622,7 +2622,7 @@ module.exports = {
 //      {
 //        type: "doc",
 //        id: "frameworks/nestjs/mails",
-//        label: "SMPT & sending emails",
+//        label: "SMTP & sending emails",
 //      },
 //      {
 //        type: "doc",
