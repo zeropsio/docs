@@ -23,11 +23,11 @@ You do not have to create an `.env` file. Zerops handles the environment variabl
 
 ## Types of environment variables
 
-### Build & Runtime Variables
+### Build & runtime variables
 
 These are variables defined in your `zerops.yml` file and are accessible within the build or runtime containers.
 
-### Secret Variables
+### Secret variables
 
 **Secret variables** are used to store all the sensitive data you don't want to store in your source repository, they are also useful for testing, where you need to frequently change the environment values.
 
@@ -63,25 +63,55 @@ It is always necessary to redeploy your application when updating or creating en
 
 ## Setting secret variables
 
-Use secret variables to store passwords, tokens and other sensitive information that shouldn't be part of your repository and listed in zerops.yml.
+There are several ways to set secret variables to your services:
+
+### Using Import Features
+
+When importing services/project using yaml config via Zerops, you can assign secret variables to your services in your yaml using the `envSecrets` parameter:
+
+```yaml
+services:
+  - hostname: app
+    type: nodejs@latest
+    envSecrets:
+      SECRET_KEY: <@generateRandomString(<32>)>
+      S3_ACCESS_KEY_ID: 'P8cX1vVVb'
+      S3_ACCESS_SECRET: 'ogFthuiLYki8XoL73opSCQ'
+```
+
+### In service detail
+You can assign secret variables to your services from the **Project > Service > Environment variables** page.
+Use secret variables to store tokens and other sensitive information that shouldn't be public and assigned in `zerops.yml`.
 
 <p align="center">
     <Image
-    lightImage="/img/screenshots/runtime_secret_variables.png"
-    darkImage="/img/screenshots/runtime_secret_variables.png"
-    alt="Runtime Secret Variables"
+    lightImage="/img/gui/secrets.webp"
+    darkImage="/img/gui/secrets.webp"
+    alt="Secret variables"
   />
 </p>
 
-To configure environment variables for an existing service, go to the service detail and find **Environment variables** in the left menu. Click on the **Add secret variable** button and set values for `Key` and `Value`.
+You can add or manage secret variables in your service in two ways:
 
-To edit an environment variable, click on the menu <svg xmlns="http://www.w3.org/2000/svg" style={{ marginBottom: -5 + 'px' }} height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed"><path d="M480-160q-33 0-56.5-23.5T400-240q0-33 23.5-56.5T480-320q33 0 56.5 23.5T560-240q0 33-23.5 56.5T480-160Zm0-240q-33 0-56.5-23.5T400-480q0-33 23.5-56.5T480-560q33 0 56.5 23.5T560-480q0 33-23.5 56.5T480-400Zm0-240q-33 0-56.5-23.5T400-720q0-33 23.5-56.5T480-800q33 0 56.5 23.5T560-720q0 33-23.5 56.5T480-640Z"/></svg> on the right side of its row.
+1. To add a single individual variable, click the **Add secret variable** button and set values for **Key** and **Value**. 
+2. Click **Edit multiple secret variables in .env format** to manage/add multiple variables at once using the editor.
 
-After making changes, click the **Commit x changes** button to apply your updates. Zerops will automatically propagate these changes to the environment variables across all containers in your project's services.
+After you make the changes, Zerops will automatically propagate/commit these changes to the environment variables in your service.
 
 :::note
 It is necessary to restart the service whenever you commit changes in environment variables.
 :::
+
+### Individual editing
+<p align="center">
+    <Image
+    lightImage="/img/gui/env-editing.png"
+    darkImage="/img/gui/env-editing.png"
+    alt="Secret Variables"
+  />
+</p>
+
+To edit an existing variable, click on <svg xmlns="http://www.w3.org/2000/svg" style={{ marginBottom: -5 + 'px' }} height="24px" viewBox="0 -960 960 960" width="24px" className="fill-[#212121] dark:fill-[#e8eaed]"><path d="M480-160q-33 0-56.5-23.5T400-240q0-33 23.5-56.5T480-320q33 0 56.5 23.5T560-240q0 33-23.5 56.5T480-160Zm0-240q-33 0-56.5-23.5T400-480q0-33 23.5-56.5T480-560q33 0 56.5 23.5T560-480q0 33-23.5 56.5T480-400Zm0-240q-33 0-56.5-23.5T400-720q0-33 23.5-56.5T480-800q33 0 56.5 23.5T560-720q0 33-23.5 56.5T480-640Z"/></svg> to open the edit dialog and save your preferred changes.
 
 ## Restrictions
 
@@ -91,10 +121,14 @@ It is necessary to restart the service whenever you commit changes in environmen
 - Keys in the same service must be unique
 - Keys are case-sensitive
 
+eg. `DATABASE_URL`, `NODE_ENV`, etc
+
 ### Value
 
 - Must contain only ASCII characters
 - Any EOL character is forbidden
+
+eg. `postgresql://username:password@host:port/database`, `3000`, etc
 
 These restrictions apply to all [types of environment variables](#types-of-environment-variables).
 
@@ -151,7 +185,9 @@ run:
 
 ## Generated environment variables
 
-Zerops automatically generates several variables when a runtime service is created, such as `hostname` and `PATH`. Some of these variables (like `hostname`) are read-only, while others (like `PATH`) can be edited. These variables cannot be deleted and are always listed at the bottom of the **Environment Variables** page.
+Zerops automatically generates several variables when a runtime service is created, such as `hostname` and `PATH`. Some of these variables (like `hostname`) are read-only, while others (like `PATH`) can be edited.
+
+These variables cannot be deleted and are always listed at the bottom of the **Environment Variables** page.
 
 <GroupCards emoji="🙌" heading="Quick Links to Runtime-Specific Guides" items={languages} />
 
