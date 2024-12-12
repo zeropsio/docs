@@ -2502,6 +2502,11 @@ module.exports = {
         },
         {
           type: 'doc',
+          id: 'frameworks/laravel/redis',
+          label: 'Redis',
+        },
+        {
+          type: 'doc',
           id: 'frameworks/laravel/cron',
           label: 'CRON / Scheduled jobs',
         },
