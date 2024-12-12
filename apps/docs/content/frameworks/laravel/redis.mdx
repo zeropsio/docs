@@ -3,3 +3,56 @@ title: Redis
 description: Redis
 ---
 
+
+
+```yaml
+services:
+  - hostname: redis
+    type: valkey@7.2
+    mode: NON_HA
+    priority: 10
+```
+
+
+in zerops.yml
+```yml
+zerops:
+  - setup: app
+    build:
+      base:
+        - php@8.4
+        - nodejs@18
+      os: ubuntu
+      buildCommands:
+        - composer install --optimize-autoloader --no-dev
+        - npm install
+        - npm run build
+      deployFiles: ./
+      cache:
+        - vendor
+        - composer.lock
+        - node_modules
+        - package-lock.json
+    deploy:
+      readinessCheck:
+        httpGet:
+          port: 80
+          path: /up
+    run:
+      base: php-nginx@8.4
+      os: ubuntu
+      siteConfigPath: site.conf.tmpl
+      envVariables:
+        BROADCAST_CONNECTION: redis
+        CACHE_PREFIX: cache
+        CACHE_STORE: redis
+        QUEUE_CONNECTION: redis
+        REDIS_CLIENT: phpredis
+        REDIS_HOST: redis
+        REDIS_PORT: 6379
+        SESSION_DRIVER: redis
+        SESSION_ENCRYPT: false
+        SESSION_LIFETIME: 120
+        SESSION_PATH: /
+
+```
