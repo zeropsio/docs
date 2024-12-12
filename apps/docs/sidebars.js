@@ -98,7 +98,7 @@ module.exports = {
     },
     {
       type: 'ref',
-      id: 'frameworks/laravel/overview',
+      id: 'frameworks/laravel',
       label: 'Laravel',
       customProps: {
         sidebar_icon: 'laravel',
@@ -2454,7 +2454,7 @@ module.exports = {
     },
     {
       type: 'doc',
-      id: 'frameworks/laravel/overview',
+      id: 'frameworks/laravel',
       label: 'Laravel',
       customProps: {
         sidebar_is_title: true,
