@@ -2473,7 +2473,7 @@ module.exports = {
         {
           type: 'doc',
           id: 'frameworks/laravel/create',
-          label: 'Create Laravel service',
+          label: 'Create PHP Nginx service',
         },
         {
           type: 'doc',
