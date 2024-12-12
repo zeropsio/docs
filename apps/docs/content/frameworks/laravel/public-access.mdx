@@ -3,3 +3,47 @@ title: Public access
 description: Public access
 ---
 
+
+### Enabling Public Access while importing project
+
+The `enableSubdomainAccess: true` option automatically enables public access to the project after it's successfully imported and deployed.
+
+```yaml
+project:
+  name: laravel-minimal-devel
+
+services:
+  - hostname: app
+    type: php-nginx@8.4
+    enableSubdomainAccess: true
+```
+
+
+### Public access from Zerops Subdomain
+
+Project subdomain is available for public access.
+
+```yaml
+zerops:
+  - setup: app
+    build:
+      base:
+        - php@8.4
+      os: alpine
+    deploy:
+      readinessCheck:
+        httpGet:
+          port: 80
+          path: /up
+    run:
+      base: php-nginx@8.4
+      os: alpine
+      healthCheck:
+        httpGet:
+          port: 80
+          path: /up
+```
+
+
+### Public access from Domain
+

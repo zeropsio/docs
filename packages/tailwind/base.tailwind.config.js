@@ -421,15 +421,15 @@ module.exports = {
           },
         ],
         "code-label": [
-          "13px",
+          "13.75px",
           {
-            lineHeight: "20px",
+            lineHeight: "22px",
             fontWeight: "400",
           },
         ],
         "code-body": [
-          "13px",
-          {
+          "14.75px",
+          { 
             lineHeight: "24px",
             fontWeight: "400",
           },
