@@ -26,15 +26,6 @@ module.exports = {
       },
       className: 'homepage-sidebar-item',
     },
-    // {
-    //   type: "doc",
-    //   id: "getting-started",
-    //   label: "Dive-in",
-    //   customProps: {
-    //     sidebar_icon: "rocket-launch",
-    //   },
-    //   className: "homepage-sidebar-item",
-    // },
     {
       type: 'html',
       value: 'Features',
@@ -585,7 +576,7 @@ module.exports = {
     {
       type: 'doc',
       id: 'nodejs/overview',
-      label: 'Getting Started',
+      label: 'Node.js',
       customProps: {
         sidebar_is_title: true,
         sidebar_icon: 'nodejs',
@@ -700,7 +691,7 @@ module.exports = {
     {
       type: 'doc',
       id: 'php/overview',
-      label: 'Zerops PHP Service',
+      label: 'PHP',
       customProps: {
         sidebar_is_title: true,
         sidebar_icon: 'php',
@@ -819,7 +810,7 @@ module.exports = {
     {
       type: 'doc',
       id: 'python/overview',
-      label: 'Zerops Python Service',
+      label: 'Python',
       customProps: {
         sidebar_is_title: true,
         sidebar_icon: 'python',
@@ -933,7 +924,7 @@ module.exports = {
     {
       type: 'doc',
       id: 'go/overview',
-      label: 'Zerops Go Service',
+      label: 'Go',
       customProps: {
         sidebar_is_title: true,
         sidebar_icon: 'go',
@@ -1047,7 +1038,7 @@ module.exports = {
     {
       type: 'doc',
       id: 'rust/overview',
-      label: 'Zerops Rust Service',
+      label: 'Rust',
       customProps: {
         sidebar_is_title: true,
         sidebar_icon: 'rust',
@@ -1161,7 +1152,7 @@ module.exports = {
     {
       type: 'doc',
       id: 'dotnet/overview',
-      label: 'Zerops .NET Service',
+      label: '.NET',
       customProps: {
         sidebar_is_title: true,
         sidebar_icon: 'dotnet',
@@ -1275,7 +1266,7 @@ module.exports = {
     {
       type: 'doc',
       id: 'java/overview',
-      label: 'Zerops Java Service',
+      label: 'Java',
       customProps: {
         sidebar_is_title: true,
         sidebar_icon: 'java',
@@ -1389,42 +1380,11 @@ module.exports = {
     {
       type: 'doc',
       id: 'nginx/overview',
-      label: 'Zerops Nginx static Service',
+      label: 'Nginx Static',
       customProps: {
         sidebar_is_title: true,
         sidebar_icon: 'nginx',
       },
-    },
-    {
-      type: 'category',
-      label: 'Dive-in',
-      collapsible: false,
-      link: {
-        type: 'doc',
-        id: 'nginx/getting-started',
-      },
-      customProps: {
-        sidebar_icon: 'rocket-launch',
-      },
-      className: 'homepage-sidebar-item',
-      items: [
-        {
-          type: 'doc',
-          id: 'nginx/tutorial/quickstart',
-          label: 'Quickstart',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-        {
-          type: 'doc',
-          id: 'nginx/tutorial/step-by-step',
-          label: 'Step-by-step tutorial',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-      ],
     },
     {
       type: 'category',
@@ -1641,37 +1601,6 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'Dive-in',
-      collapsible: false,
-      link: {
-        type: 'doc',
-        id: 'postgresql/getting-started',
-      },
-      customProps: {
-        sidebar_icon: 'rocket-launch',
-      },
-      className: 'homepage-sidebar-item',
-      items: [
-        {
-          type: 'doc',
-          id: 'postgresql/tutorial/quickstart',
-          label: 'Quickstart',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-        {
-          type: 'doc',
-          id: 'postgresql/tutorial/step-by-step',
-          label: 'Step-by-step tutorial',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-      ],
-    },
-    {
-      type: 'category',
       label: 'How-to',
       collapsible: false,
       customProps: {
@@ -1848,38 +1777,6 @@ module.exports = {
         sidebar_is_title: true,
         sidebar_icon: 'keydb',
       },
-    },
-    {
-      type: 'category',
-      label: 'Dive-in',
-      collapsible: false,
-      link: {
-        type: 'doc',
-        id: 'keydb/getting-started',
-      },
-      customProps: {
-        sidebar_icon: 'rocket-launch',
-        sidebar_is_soon: true,
-      },
-      className: 'homepage-sidebar-item',
-      items: [
-        {
-          type: 'doc',
-          id: 'keydb/tutorial/quickstart',
-          label: 'Quickstart',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-        {
-          type: 'doc',
-          id: 'keydb/tutorial/step-by-step',
-          label: 'Step-by-step tutorial',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-      ],
     },
     {
       type: 'category',
