@@ -197,8 +197,13 @@ Zerops uses a yaml format to describe the project infrastructure.
 
 Create a directory `my-project`. Create an `description.yml` file inside the `my-project` directory with following content:
 
+
+:::caution
+If you don't use the `#yamlPreprocessor=on` line at the beginning of your import YAML script, the preprocessor will not be enabled and the `<@generateRandomString(<32>)>` function will not work.
+:::
+
 ```yaml
-# basic project data
+#yamlPreprocessor=on
 project:
   # project name
   name: my-project
@@ -214,15 +219,17 @@ services:
     maxContainers: 6
     # optional: create env variables
     envSecrets:
-      S3_ACCESS_KEY_ID: 'P8cX1vVVb'
-      S3_ACCESS_SECRET: 'ogFthuiLYki8XoL73opSCQ'
+      APP_KEY: <@generateRandomString(<32>)>
+      APP_DEBUG: true
+      APP_ENV: development
 ```
 
 The yaml file describes your future project infrastructure. The project will contain one Nginx version 8.1 service with default [auto scaling](/nginx/how-to/scaling) configuration. Hostname will be set to "app", the internal port(s) the service listens on will be defined later in the [zerops.yml](/nginx/how-to/build-pipeline#ports). Following secret env variables will be configured:
 
 ```env
-S3_ACCESS_KEY_ID="P8cX1vVVb"
-S3_ACCESS_SECRET="ogFthuiLYki8XoL73opSCQ"
+APP_KEY: kjpeoakduknnysdilujlrrvgsnmkrvnq
+APP_DEBUG: true
+APP_ENV: development
 ```
 
 #### Full example:
