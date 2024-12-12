@@ -2525,11 +2525,11 @@ module.exports = {
           id: 'frameworks/laravel/migrations',
           label: 'Migrations',
         },
-        {
-          type: 'doc',
-          id: 'frameworks/laravel/recipes',
-          label: 'Recipes',
-        },
+        // {
+        //   type: 'doc',
+        //   id: 'frameworks/laravel/recipes',
+        //   label: 'Recipes',
+        // },
       ],
     },
     {
