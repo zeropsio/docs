@@ -2478,17 +2478,17 @@ module.exports = {
         {
           type: 'doc',
           id: 'frameworks/laravel/env-variables',
-          label: 'Manage environment variables',
-        },
-        {
-          type: 'doc',
-          id: 'frameworks/laravel/smtp',
-          label: 'SMTP & sending emails',
+          label: 'Manage Environment Variables',
         },
         {
           type: 'doc',
           id: 'frameworks/laravel/logs',
           label: 'Access logs',
+        },
+        {
+          type: 'doc',
+          id: 'frameworks/laravel/smtp',
+          label: 'Manage SMTP',
         },
         {
           type: 'doc',
