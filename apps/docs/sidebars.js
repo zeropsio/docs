@@ -2493,7 +2493,7 @@ module.exports = {
         {
           type: 'doc',
           id: 'frameworks/laravel/smtp',
-          label: 'Manage SMTP',
+          label: 'SMTP Configuration',
         },
         {
           type: 'doc',

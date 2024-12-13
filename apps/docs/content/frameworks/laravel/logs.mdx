@@ -87,58 +87,91 @@ Read more about the [zcli service log](/references/cli/access-logs) command.
 
 ## Laravel Logging Configuration
 
-Zerops logs all messages sent to:
-- Standard error (`stderr`)
-- Standard output (`stdout`) 
-- Laravel's logging system
-
-### Configure Laravel Logging
-
-To configure Laravel to use syslog for Zerops:
+Your Laravel application's `config/logging.php` defines how logs are handled:
 
 ```php:config/logging.php
-'channels' => [
-    'stack' => [
-        'driver' => 'stack',
-        'channels' => ['syslog'],
+<?php
+
+use Monolog\Handler\NullHandler;
+use Monolog\Handler\StreamHandler;
+use Monolog\Handler\SyslogUdpHandler;
+use Monolog\Processor\PsrLogMessageProcessor;
+
+return [
+    'default' => env('LOG_CHANNEL', 'stack'),
+
+    'deprecations' => [
+        'channel' => env('LOG_DEPRECATIONS_CHANNEL', 'null'),
+        'trace' => env('LOG_DEPRECATIONS_TRACE', false),
     ],
-    
-    'syslog' => [
-        'driver' => 'syslog',
-        'level' => env('LOG_LEVEL', 'debug'),
+
+    'channels' => [
+        'stack' => [
+            'driver' => 'stack',
+            'channels' => explode(',', env('LOG_STACK', 'single')),
+            'ignore_exceptions' => false,
+        ],
+
+        'single' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/laravel.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'replace_placeholders' => true,
+        ],
+
+        'syslog' => [
+            'driver' => 'syslog',
+            'level' => env('LOG_LEVEL', 'debug'),
+            'facility' => env('LOG_SYSLOG_FACILITY', LOG_USER),
+            'replace_placeholders' => true,
+        ],
+
+        'daily' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/laravel.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => env('LOG_DAILY_DAYS', 14),
+            'replace_placeholders' => true,
+        ],
     ],
-],
+];
 ```
 
-### Severity Levels
+:::tip Available Log Channels
+Your Laravel application supports multiple logging channels:
+- **stack**: Combines multiple channels
+- **single**: Single file logger
+- **daily**: Daily rotating files
+- **syslog**: System logger (recommended for Zerops)
+- **slack**: Slack notifications
+- **stderr**: Standard error output
+- **errorlog**: PHP error_log
+:::
 
-Laravel log levels are automatically mapped to syslog severity levels:
+### Zerops Environment Configuration
 
-```php
-// Emergency (0) - System is unusable
-Log::emergency('System is down');
+For optimal logging in Zerops, use these environment variables in your `zerops.yml`:
 
-// Alert (1) - Action must be taken immediately  
-Log::alert('Database connection lost');
-
-// Critical (2) - Critical conditions
-Log::critical('Application component unavailable');
-
-// Error (3) - Error conditions
-Log::error('Unable to process request');
-
-// Warning (4) - Warning conditions
-Log::warning('Invalid input received');
-
-// Notice (5) - Normal but significant condition
-Log::notice('User logged in');
-
-// Info (6) - Informational messages
-Log::info('Request processed successfully');
-
-// Debug (7) - Debug-level messages
-Log::debug('Query executed in 50ms');
+```yml
+zerops:
+  - setup: app
+    run:
+      envVariables:
+        LOG_CHANNEL: syslog
+        LOG_LEVEL: debug
+        LOG_STACK: single
 ```
+
+### Using Multiple Channels
+
+To use multiple logging channels, configure the stack channel:
+
+```yml
+LOG_CHANNEL: stack
+LOG_STACK: syslog,daily
+```
+
+This will log to both syslog (for Zerops) and daily files (for local access).
 
 :::tip
 Use appropriate log levels to make it easier to filter and find relevant log messages in Zerops GUI.
