@@ -2488,7 +2488,7 @@ module.exports = {
         {
           type: 'doc',
           id: 'frameworks/laravel/logs',
-          label: 'Setup & access logs',
+          label: 'Access logs',
         },
         {
           type: 'doc',
@@ -2498,12 +2498,12 @@ module.exports = {
         {
           type: 'doc',
           id: 'frameworks/laravel/backups',
-          label: 'Backups',
+          label: 'Database Backups',
         },
         {
           type: 'doc',
           id: 'frameworks/laravel/redis',
-          label: 'Redis',
+          label: 'Manage Redis',
         },
         {
           type: 'doc',
@@ -2513,23 +2513,18 @@ module.exports = {
         {
           type: 'doc',
           id: 'frameworks/laravel/cron',
-          label: 'CRON / Scheduled jobs',
+          label: 'Scheduled Jobs & CRON',
         },
         {
           type: 'doc',
           id: 'frameworks/laravel/migrations',
-          label: 'Migrations',
+          label: 'Database Migrations',
         },
         {
           type: 'doc',
           id: 'frameworks/laravel/public-access',
-          label: 'Public Access',
+          label: 'Manage Public Access',
         },
-        // {
-        //   type: 'doc',
-        //   id: 'frameworks/laravel/recipes',
-        //   label: 'Recipes',
-        // },
       ],
     },
     {
