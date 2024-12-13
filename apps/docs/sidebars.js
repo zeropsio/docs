@@ -2492,6 +2492,11 @@ module.exports = {
         },
         {
           type: 'doc',
+          id: 'frameworks/laravel/dev-to-prod',
+          label: 'Development to Production',
+        },
+        {
+          type: 'doc',
           id: 'frameworks/laravel/backups',
           label: 'Backups',
         },
@@ -2503,7 +2508,7 @@ module.exports = {
         {
           type: 'doc',
           id: 'frameworks/laravel/automatic-scaling',
-          label: 'Automatic scaling & High Availability',
+          label: 'Automatic Scaling',
         },
         {
           type: 'doc',
