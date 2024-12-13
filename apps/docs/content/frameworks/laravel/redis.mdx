@@ -1,58 +1,200 @@
 ---
-title: Redis
-description: Redis
+title: Using Redis with Laravel
+description: Learn how to configure and use Redis for caching, queues, and sessions in your Laravel application on Zerops
 ---
 
+import Image from '/src/components/Image';
 
+## Adding Redis Service
+
+Add Redis (ValKey) service to your Zerops project by including it in your import configuration:
 
 ```yaml
 services:
   - hostname: redis
     type: valkey@7.2
-    mode: NON_HA
+    mode: NON_HA  # or HA for high availability
     priority: 10
 ```
 
+:::tip
+Use `HA` mode for production environments to ensure high availability and automatic failover.
+:::
 
-in zerops.yml
+## Laravel Configuration
+
+### Environment Variables
+
+Configure your Laravel service to use Redis by adding these environment variables in your `zerops.yml`:
+
 ```yml
 zerops:
   - setup: app
-    build:
-      base:
-        - php@8.4
-        - nodejs@18
-      os: ubuntu
-      buildCommands:
-        - composer install --optimize-autoloader --no-dev
-        - npm install
-        - npm run build
-      deployFiles: ./
-      cache:
-        - vendor
-        - composer.lock
-        - node_modules
-        - package-lock.json
-    deploy:
-      readinessCheck:
-        httpGet:
-          port: 80
-          path: /up
     run:
       base: php-nginx@8.4
       os: ubuntu
       siteConfigPath: site.conf.tmpl
       envVariables:
-        BROADCAST_CONNECTION: redis
-        CACHE_PREFIX: cache
-        CACHE_STORE: redis
-        QUEUE_CONNECTION: redis
-        REDIS_CLIENT: phpredis
+        # Redis Connection
         REDIS_HOST: redis
         REDIS_PORT: 6379
+        REDIS_CLIENT: phpredis
+
+        # Cache Configuration
+        CACHE_DRIVER: redis
+        CACHE_PREFIX: cache
+        CACHE_STORE: redis
+
+        # Session Configuration
         SESSION_DRIVER: redis
-        SESSION_ENCRYPT: false
         SESSION_LIFETIME: 120
+        SESSION_ENCRYPT: "false"
         SESSION_PATH: /
 
+        # Queue Configuration
+        QUEUE_CONNECTION: redis
+
+        # Broadcasting Configuration
+        BROADCAST_CONNECTION: redis
 ```
+
+### Redis Configuration File
+
+Update your `config/database.php` to configure Redis connections:
+
+```php
+<?php
+
+use Illuminate\Support\Str;
+
+return [
+    'redis' => [
+
+        'client' => env('REDIS_CLIENT', 'phpredis'),
+
+        'options' => [
+            'cluster' => env('REDIS_CLUSTER', 'redis'),
+            'prefix' => env('REDIS_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_').'_database_'),
+        ],
+
+        'default' => [
+            'url' => env('REDIS_URL'),
+            'host' => env('REDIS_HOST', '127.0.0.1'),
+            'username' => env('REDIS_USERNAME'),
+            'password' => env('REDIS_PASSWORD'),
+            'port' => env('REDIS_PORT', '6379'),
+            'database' => env('REDIS_DB', '0'),
+        ],
+
+        'cache' => [
+            'url' => env('REDIS_URL'),
+            'host' => env('REDIS_HOST', '127.0.0.1'),
+            'username' => env('REDIS_USERNAME'),
+            'password' => env('REDIS_PASSWORD'),
+            'port' => env('REDIS_PORT', '6379'),
+            'database' => env('REDIS_CACHE_DB', '1'),
+        ],
+
+    ],
+];
+```
+
+## Features Configuration
+
+### Caching
+
+Configure Redis as your cache driver in `config/cache.php`:
+
+```php:config/cache.php
+'default' => env('CACHE_DRIVER', 'redis'),
+
+'stores' => [
+    'redis' => [
+        'driver' => 'redis',
+        'connection' => 'cache',
+        'lock_connection' => 'default',
+    ],
+],
+```
+
+### Queue System
+
+Set up Redis for your Laravel queues in `config/queue.php`:
+
+```php:config/queue.php
+'default' => env('QUEUE_CONNECTION', 'redis'),
+
+'connections' => [
+    'redis' => [
+        'driver' => 'redis',
+        'connection' => 'default',
+        'queue' => env('REDIS_QUEUE', 'default'),
+        'retry_after' => 90,
+        'block_for' => null,
+    ],
+],
+```
+
+### Session Storage
+
+Configure Redis sessions in `config/session.php`:
+
+```php:config/session.php
+'driver' => env('SESSION_DRIVER', 'redis'),
+
+'connection' => 'default',
+```
+
+### Broadcasting
+
+For real-time events, configure broadcasting in `config/broadcasting.php`:
+
+```php:config/broadcasting.php
+'connections' => [
+    'redis' => [
+        'driver' => 'redis',
+        'connection' => 'default',
+    ],
+],
+```
+
+## Usage Examples
+
+### Basic Cache Operations
+
+```php
+// Store an item in cache
+Cache::put('key', 'value', now()->addMinutes(10));
+
+// Retrieve from cache
+$value = Cache::get('key');
+
+// Store forever
+Cache::forever('key', 'value');
+
+// Remove from cache
+Cache::forget('key');
+```
+
+### Queue Processing
+
+```php
+// Dispatch a job
+ProcessPodcast::dispatch($podcast)->onQueue('podcasts');
+
+// Process queues (in your worker)
+php artisan queue:work redis --queue=high,default
+```
+
+:::tip Best Practices
+- Use different Redis databases for different purposes (cache, sessions, queues)
+- Implement proper exception handling for Redis operations
+- Monitor Redis memory usage through Zerops dashboard
+- Consider using the Redis facade for direct Redis operations:
+```php
+use Illuminate\Support\Facades\Redis;
+
+Redis::set('key', 'value');
+$value = Redis::get('key');
+```
+:::
