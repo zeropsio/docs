@@ -1,0 +1,356 @@
+---
+title: Laravel Application Examples
+description: Learn how to deploy Laravel applications on Zerops with examples
+---
+
+import Image from '/src/components/Image';
+import { Dropdown, DropdownItem } from '/src/components/Dropdown';
+
+
+
+## Minimal Laravel
+
+It's a minimal setup for a Laravel application that includes a single service for the application and a PostgreSQL database. This basic configuration provides essential features like database migrations, environment variable configuration, and health check implementations, making it suitable for simple applications that need a solid foundation without additional complexity.
+
+:::info Recipe
+You can find the laravel minimal recipe at [zeropsio/recipe-laravel-minimal](https://github.com/zeropsio/recipe-laravel-minimal) on GitHub.
+:::
+
+### Project Import Yaml
+
+No Horizontal Scaling
+<Dropdown>
+<DropdownItem title="Development / Small Scale Configuration">
+```yml
+#yamlPreprocessor=on
+project:
+  name: laravel-minimal-devel
+  tags:
+    - zerops-recipe
+    - development
+
+services:
+  - hostname: app
+    type: php-nginx@8.4
+    buildFromGit: https://github.com/zeropsio/recipe-laravel-minimal
+    enableSubdomainAccess: true
+    envSecrets:
+      APP_KEY: <@generateRandomString(<32>)>
+      APP_DEBUG: true
+      APP_ENV: development
+
+  - hostname: db
+    type: postgresql@16
+    mode: NON_HA
+    priority: 10
+```
+</DropdownItem>
+</Dropdown>
+
+Auto Scaling with Horizontal Scaling and High Availability
+
+<Dropdown>
+<DropdownItem title="Production">
+```yml
+#yamlPreprocessor=on
+project:
+  name: laravel-minimal-prod
+  corePackage: SERIOUS
+  tags:
+    - zerops-recipe
+    - development
+
+services:
+  - hostname: app
+    type: php-nginx@8.4
+    buildFromGit: https://github.com/zeropsio/recipe-laravel-minimal
+    enableSubdomainAccess: true
+    envSecrets:
+      APP_KEY: <@generateRandomString(<32>)>
+      APP_DEBUG: true
+      APP_ENV: development
+
+  - hostname: db
+    type: postgresql@16
+    mode: NON_HA
+    priority: 10
+```
+</DropdownItem>
+</Dropdown>
+
+
+### Zerops Yaml Configuration
+
+The zerops.yml configuration for a minimal Laravel application.
+
+```yml
+zerops:
+  - setup: app
+    build:
+      base:
+        - php@8.4
+      os: alpine
+      buildCommands:
+        - composer install --ignore-platform-reqs
+      deployFiles: ./
+      cache:
+        - vendor
+        - composer.lock
+    deploy:
+      readinessCheck:
+        httpGet:
+          port: 80
+          path: /up
+    run:
+      base: php-nginx@8.4
+      os: alpine
+      siteConfigPath: site.conf.tmpl
+      envVariables:
+        APP_NAME: "Laravel Minimal X Zerops"
+        APP_LOCALE: en
+        APP_FAKER_LOCALE: en_US
+        APP_FALLBACK_LOCALE: en
+        APP_MAINTENANCE_DRIVER: file
+        APP_MAINTENANCE_STORE: database
+        APP_TIMEZONE: UTC
+        APP_URL: ${zeropsSubdomain}
+
+        DB_CONNECTION: pgsql
+        DB_DATABASE: db
+        DB_HOST: db
+        DB_USERNAME: ${db_user}
+        DB_PASSWORD: ${db_password}
+        DB_PORT: 5432
+
+        LOG_CHANNEL: syslog
+        LOG_LEVEL: debug
+        LOG_STACK: single
+
+        MAIL_MAILER: log
+        MAIL_HOST: 127.0.0.1
+        MAIL_PORT: 2525
+        MAIL_USERNAME: null
+        MAIL_PASSWORD: null
+        MAIL_ENCRYPTION: null
+        MAIL_FROM_ADDRESS: "hello@zerops.io"
+        MAIL_FROM_NAME: "${APP_NAME}"
+
+        SESSION_DRIVER: database
+        SESSION_LIFETIME: 120
+        SESSION_ENCRYPT: false
+        SESSION_PATH: /
+        SESSION_DOMAIN: null
+
+        BROADCAST_CONNECTION: log
+        FILESYSTEM_DISK: local
+        QUEUE_CONNECTION: database
+
+        CACHE_STORE: database
+
+      initCommands:
+        - php artisan view:cache
+        - php artisan config:cache
+        - php artisan route:cache
+        - sudo -E -u zerops -- zsc execOnce ${appVersionId} -- php artisan migrate --force
+        - php artisan optimize
+      healthCheck:
+        httpGet:
+          port: 80
+          path: /up
+```
+
+
+## Laravel Jetstream
+
+It's a full-featured Laravel application that includes Jetstream authentication, Redis for cache, queue, and session, Object Storage integration, Team management features, Local email testing with Mailpit, and Asset compilation with Vite.
+
+:::info Recipe
+You can find the laravel jetstream recipe at [zeropsio/recipe-laravel-jetstream](https://github.com/zeropsio/recipe-laravel-jetstream) on GitHub.
+:::
+
+
+### Project Import Yaml
+
+No Horizontal Scaling
+<Dropdown>
+<DropdownItem title="Development / Small Scale Configuration">
+```yml
+#yamlPreprocessor=on
+project:
+  name: laravel-jetstream-devel
+  tags:
+    - zerops-recipe
+    - development
+
+services:
+  - hostname: app
+    type: php-nginx@8.4
+    buildFromGit: https://github.com/zeropsio/recipe-laravel-jetstream
+    enableSubdomainAccess: true
+    envSecrets:
+      APP_NAME: ZeropsLaravelJetstreamDev
+      APP_DEBUG: true
+      APP_ENV: development
+      APP_KEY: <@generateRandomString(<32>)>
+
+  - hostname: db
+    type: postgresql@16
+    mode: NON_HA
+    priority: 10
+
+  - hostname: redis
+    type: valkey@7.2
+    mode: NON_HA
+    priority: 10
+
+  - hostname: storage
+    type: object-storage
+    objectStorageSize: 2
+    objectStoragePolicy: public-read
+    priority: 10
+
+  - hostname: mailpit
+    type: go@1
+    buildFromGit: https://github.com/zeropsio/recipe-mailpit
+    enableSubdomainAccess: true
+```
+</DropdownItem>
+</Dropdown>
+
+Auto Scaling with Horizontal Scaling and High Availability
+
+<Dropdown>
+<DropdownItem title="Production">
+```yml
+#yamlPreprocessor=on
+project:
+  name: laravel-jetstream-prod
+  corePackage: SERIOUS
+  tags:
+    - zerops-recipe
+    - production
+
+services:
+  - hostname: app
+    type: php-nginx@8.4
+    buildFromGit: https://github.com/zeropsio/recipe-laravel-jetstream
+    enableSubdomainAccess: true
+    minContainers: 2
+    envSecrets:
+      APP_NAME: ZeropsLaravelJetstreamProd
+      APP_DEBUG: false
+      APP_ENV: production
+      APP_KEY: <@generateRandomString(<32>)>
+
+  - hostname: db
+    type: postgresql@16
+    mode: HA
+    priority: 10
+
+  - hostname: redis
+    type: valkey@7.2
+    mode: HA
+    priority: 10
+
+  - hostname: storage
+    type: object-storage
+    objectStorageSize: 2
+    objectStoragePolicy: public-read
+    priority: 10
+```
+</DropdownItem>
+</Dropdown>
+
+### Zerops Yaml Configuration
+
+The zerops.yml configuration for a minimal Laravel application.
+
+```yml
+zerops:
+  - setup: app
+    build:
+      base:
+        - php@8.4
+        - nodejs@18
+      os: ubuntu
+      buildCommands:
+        - composer install --optimize-autoloader --no-dev
+        - npm install
+        - npm run build
+      deployFiles: ./
+      cache:
+        - vendor
+        - composer.lock
+        - node_modules
+        - package-lock.json
+    deploy:
+      readinessCheck:
+        httpGet:
+          port: 80
+          path: /up
+    run:
+      base: php-nginx@8.4
+      os: ubuntu
+      siteConfigPath: site.conf.tmpl
+      envVariables:
+        APP_LOCALE: en
+        APP_FAKER_LOCALE: en_US
+        APP_FALLBACK_LOCALE: en
+        APP_MAINTENANCE_DRIVER: file
+        APP_MAINTENANCE_STORE: database
+        APP_TIMEZONE: UTC
+        APP_URL: ${zeropsSubdomain}
+        ASSET_URL: ${APP_URL}
+        VITE_APP_NAME: ${APP_NAME}
+
+        DB_CONNECTION: pgsql
+        DB_DATABASE: db
+        DB_HOST: db
+        DB_PASSWORD: ${db_password}
+        DB_PORT: 5432
+        DB_USERNAME: ${db_user}
+
+        AWS_ACCESS_KEY_ID: ${storage_accessKeyId}
+        AWS_REGION: us-east-1
+        AWS_BUCKET: ${storage_bucketName}
+        AWS_ENDPOINT: ${storage_apiUrl}
+        AWS_SECRET_ACCESS_KEY: ${storage_secretAccessKey}
+        AWS_URL: ${storage_apiUrl}/${storage_bucketName}
+        AWS_USE_PATH_STYLE_ENDPOINT: true
+
+        LOG_CHANNEL: syslog
+        LOG_LEVEL: debug
+        LOG_STACK: single
+
+        MAIL_FROM_ADDRESS: hello@example.com
+        MAIL_FROM_NAME: ZeropsLaravel
+        MAIL_HOST: mailpit
+        MAIL_MAILER: smtp
+        MAIL_PORT: 1025
+
+        BROADCAST_CONNECTION: redis
+        CACHE_PREFIX: cache
+        CACHE_STORE: redis
+        QUEUE_CONNECTION: redis
+        REDIS_CLIENT: phpredis
+        REDIS_HOST: redis
+        REDIS_PORT: 6379
+        SESSION_DRIVER: redis
+        SESSION_ENCRYPT: false
+        SESSION_LIFETIME: 120
+        SESSION_PATH: /
+
+        BCRYPT_ROUNDS: 12
+        TRUSTED_PROXIES: "*"
+        FILESYSTEM_DISK: s3
+      initCommands:
+        - php artisan view:cache
+        - php artisan config:cache
+        - php artisan route:cache
+        - php artisan migrate --isolated --force
+        - php artisan optimize
+      healthCheck:
+        httpGet:
+          port: 80
+          path: /up
+```

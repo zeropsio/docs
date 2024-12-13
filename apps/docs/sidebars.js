@@ -2472,6 +2472,11 @@ module.exports = {
       items: [
         {
           type: 'doc',
+          id: 'frameworks/laravel/examples',
+          label: 'Yaml Examples',
+        },
+        {
+          type: 'doc',
           id: 'frameworks/laravel/create',
           label: 'Create PHP Nginx service',
         },
