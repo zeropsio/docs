@@ -1,5 +1,142 @@
 ---
-title: Setup & access logs
-description: Setup & access logs
+title: Access logs in your Laravel Project
+description: Learn how to configure and access logs for your Laravel application on Zerops
 ---
 
+Zerops provides comprehensive logging capabilities for your Laravel application through three different log types:
+
+- [build log](#build-log)
+- [prepare runtime log](#prepare-runtime-log)
+- [runtime log](#runtime-log)
+
+## How to access logs
+
+### Build log
+
+#### Zerops GUI
+
+To access a build log in Zerops GUI:
+1. Go to the service detail
+2. Choose **Service dashboard & runtime containers** in the left menu
+3. Open the pipeline detail of an application version 
+4. Click on **Build log**
+
+The build log button is available only if the [build pipeline](/frameworks/laravel/deployment) was triggered for the selected deploy.
+
+#### zCLI
+
+To access a build log in Zerops CLI use:
+
+```sh
+zcli service log --showBuildLogs
+```
+
+Read more about the [zcli service log](/references/cli/access-logs) command.
+
+### Prepare runtime log
+
+#### Zerops GUI
+
+To access a prepare runtime log in Zerops GUI:
+1. Go to the service detail 
+2. Choose **Service dashboard & runtime containers** in the left menu
+3. Open the pipeline detail of an application version
+4. Click on **Prepare runtime log**
+
+The prepare runtime log button is available only if the [prepare runtime pipeline](/frameworks/laravel/deployment#prepare-runtime) was triggered for the selected deploy.
+
+#### zCLI
+
+_Prepare runtime log is currently not supported in zCLI._
+
+### Runtime log
+
+#### Zerops GUI
+
+To access a runtime log in Zerops GUI:
+1. Go to the service detail
+2. Choose **Runtime log** in the left menu
+
+<p align="center">
+  <img
+    src="/img/screenshots/laravel_runtime_log.png"
+    alt="Laravel Runtime Logs"
+    width="100%"
+    height="auto"
+  />
+</p>
+
+Each runtime container has its own log. If your service has multiple containers, select the container in the log header.
+
+You can filter log records by:
+- Minimum severity level
+- Time period
+
+#### zCLI
+
+To access the log of the runtime containers in Zerops CLI use:
+
+```sh
+zcli service log
+```
+
+Read more about the [zcli service log](/references/cli/access-logs) command.
+
+## Laravel Logging Configuration
+
+Zerops logs all messages sent to:
+- Standard error (`stderr`)
+- Standard output (`stdout`) 
+- Laravel's logging system
+
+### Configure Laravel Logging
+
+To configure Laravel to use syslog for Zerops:
+
+```php:config/logging.php
+'channels' => [
+    'stack' => [
+        'driver' => 'stack',
+        'channels' => ['syslog'],
+    ],
+    
+    'syslog' => [
+        'driver' => 'syslog',
+        'level' => env('LOG_LEVEL', 'debug'),
+    ],
+],
+```
+
+### Severity Levels
+
+Laravel log levels are automatically mapped to syslog severity levels:
+
+```php
+// Emergency (0) - System is unusable
+Log::emergency('System is down');
+
+// Alert (1) - Action must be taken immediately  
+Log::alert('Database connection lost');
+
+// Critical (2) - Critical conditions
+Log::critical('Application component unavailable');
+
+// Error (3) - Error conditions
+Log::error('Unable to process request');
+
+// Warning (4) - Warning conditions
+Log::warning('Invalid input received');
+
+// Notice (5) - Normal but significant condition
+Log::notice('User logged in');
+
+// Info (6) - Informational messages
+Log::info('Request processed successfully');
+
+// Debug (7) - Debug-level messages
+Log::debug('Query executed in 50ms');
+```
+
+:::tip
+Use appropriate log levels to make it easier to filter and find relevant log messages in Zerops GUI.
+:::
