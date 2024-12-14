@@ -8,6 +8,7 @@ description: Create a Php Nginx service for Laravel frontend
 import Image from '/src/components/Image';
 import data from '@site/static/data.json';
 import UnorderedList from '@site/src/components/UnorderedList';
+import CustomCard from '@site/src/components/CustomCard';
 
 The Nginx static service contains the Nginx web server optimized for your static content. Nginx static service is highly scalable and customisable to suit both development and production.
 
@@ -61,7 +62,7 @@ Add environment variables with sensitive data, such as password, tokens, salts, 
 
 Setting the secret environment variables is optional. You can set them later in Zerops GUI.
 
-Read more about [different types of env variables](/nginx/how-to/env-variables#types-of-env-variables-in-zerops) in Zerops.
+Read more about [different types of env variables](/frameworks/laravel/env-variables) in Zerops.
 
 ### Set auto scaling configuration
 
@@ -207,15 +208,18 @@ If you don't use the `#yamlPreprocessor=on` line at the beginning of your import
 project:
   # project name
   name: my-project
-# array of project services
+  # optional: production project core package
+  corePackage: SERIOUS
+  # array of project services
 services:
-  - # service name
-    hostname: app
+  # service name
+  - hostname: app
     # service type and version number in nginx@{version} format
     type: nginx@latest
-    # defines the minimum number of containers for horizontal autoscaling
+    # Horizontal autoscaling
+    # Minimum number of containers. Min value = 1.
     minContainers: 1
-    # defines the maximum number of containers for horizontal autoscaling. Max value = 6.
+    # Maximum number of containers. Max value = 6.
     maxContainers: 6
     # optional: create env variables
     envSecrets:
@@ -224,7 +228,14 @@ services:
       APP_ENV: development
 ```
 
-The yaml file describes your future project infrastructure. The project will contain one Nginx version 8.1 service with default [auto scaling](/nginx/how-to/scaling) configuration. Hostname will be set to "app", the internal port(s) the service listens on will be defined later in the [zerops.yml](/nginx/how-to/build-pipeline#ports). Following secret env variables will be configured:
+The yaml file describes your future project infrastructure. The project will contain one Nginx version 8.1 service with default [auto scaling](/nginx/how-to/scaling) configuration. Hostname will be set to "app", the internal port(s) the service listens on will be defined later in the [zerops.yml](/nginx/how-to/build-pipeline#ports).
+
+<CustomCard title="Confused about Project Core Package?" emoji="🤔">
+If you use `corePackage: SERIOUS`, your project will cost more.
+Learn more about [core packages](/frameworks/laravel/dev-to-prod) in Zerops.
+</CustomCard>
+
+Following secret env variables will be configured:
 
 ```env
 APP_KEY: kjpeoakduknnysdilujlrrvgsnmkrvnq
@@ -232,7 +243,7 @@ APP_DEBUG: true
 APP_ENV: development
 ```
 
-#### Full Import Yml
+#### Full Import Yaml
 
 Create a directory my-project. Create an description.yml file inside the my-project directory with following content:
 
@@ -243,14 +254,14 @@ project:
   name: my-project
   # optional: project description
   description: A project with a Nginx static service
+  # optional: production project core package
+  corePackage: SERIOUS
   # optional: project tags
   tags:
-    - DEMO
-    - ZEROPS
+    - Laravel
 # array of project services
 services:
-  - # service name
-    hostname: app
+  - hostname: app
     # service type and version number in nginx@{version} format
     type: nginx@latest
     # optional: vertical auto scaling customization
@@ -265,9 +276,10 @@ services:
       startCpuCoreCount: 3
       minFreeRamGB: 0.5
       minFreeRamPercent: 20
-    # defines the minimum number of containers for horizontal autoscaling. Max value = 6.
+    # Horizontal autoscaling
+    # Minimum number of containers. Min value = 1.
     minContainers: 2
-    # defines the maximum number of containers for horizontal autoscaling. Max value = 6.
+    # Maximum number of containers. Max value = 6.
     maxContainers: 4
     # optional: create secret env variables
     envSecrets:
@@ -453,26 +465,30 @@ If you have access to more than one client, you must specify the client ID for w
 Create a directory `my-project` if it doesn't exist. Create an `import.yml` file inside the `my-project` directory with following content:
 
 ```yaml
+#yamlPreprocessor=on
 services:
   - # service name
     hostname: app
     # service type and version number in nginx@{version} format
     type: nginx@latest
-    # defines the minimum number of containers for horizontal autoscaling
+    # Horizontal autoscaling
+    # Minimum number of containers. Min value = 1.
     minContainers: 1
-    # defines the maximum number of containers for horizontal autoscaling. Max value = 6.
+    # Maximum number of containers. Max value = 6.
     maxContainers: 6
     # optional: create env variables
     envSecrets:
-      S3_ACCESS_KEY_ID: 'P8cX1vVVb'
-      S3_ACCESS_SECRET: 'ogFthuiLYki8XoL73opSCQ'
+      APP_KEY: <@generateRandomString(<32>)>
+      APP_DEBUG: true
+      APP_ENV: development
 ```
 
 The yaml file describes the list of one or more services that you want to add to your existing project. In the example above, one Nginx static service version 1.22 with default [auto scaling](/nginx/how-to/scaling) configuration will be added to your project. Hostname of the new service will be set to `app`. Following secret env variables will be configured:
 
 ```env
-S3_ACCESS_KEY_ID="P8cX1vVVb"
-S3_ACCESS_SECRET="ogFthuiLYki8XoL73opSCQ"
+APP_KEY=kjpeoakduknnysdilujlrrvgsnmkrvnq
+APP_DEBUG=true
+APP_ENV=development
 ```
 
 The content of the `services:` section of `import.yml` is identical to the project description file. The `import.yml` never contains the `project:` section because the project already exists.
