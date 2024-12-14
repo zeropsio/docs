@@ -22,7 +22,7 @@ Zerops provides a customizable build and runtime environment for your static con
 
 Zerops supports different build environments:
 
-<GroupCards emoji="🚀" heading="Know more about build environments for your Runtime" items={languages} />
+<GroupCards id="build-sections" emoji="🚀" heading="Know more about build environments for your Runtime" items={languages} />
 
 If you just need to deploy your static content, use the [manual deploy](/nginx/how-to/trigger-pipeline#manual-deploy-using-zerops-cli) via Zerops CLI.
 
@@ -42,7 +42,7 @@ zerops:
       # OPTIONAL. Set the operating system for the build environment.
       # os: ubuntu
 
-      # OPTIONAL. Customise the build environment by installing additional packages
+      # OPTIONAL. Customize the build environment by installing additional packages
       # or tools to the base build environment.
       # prepareCommands:
       #   - apt-get something
@@ -69,7 +69,7 @@ zerops:
       # OPTIONAL. Sets the base technology for the runtime environment:
       base: nginx@latest
 
-      # OPTIONAL. Customise the runtime Nginx environment by installing additional
+      # OPTIONAL. Customize the runtime Nginx environment by installing additional
       # dependencies to the base Nginx runtime environment.
       # prepareCommands:
       #   - apt-get something
@@ -81,7 +81,7 @@ zerops:
       # initCommands:
       #  - rm -rf ./cache
 
-      # OPTIONAL. Customise the folder that will be used as the root of the publicly
+      # OPTIONAL. Customize the folder that will be used as the root of the publicly
       # accessible web server content. Enter the path relative to the /var/www folder.
       documentRoot: public
 
@@ -173,7 +173,7 @@ zerops:
 
 See the full list of supported [run base environments](/references/zeropsyml/base-list).
 
-To customise your build environment use the `prepareCommands` attribute.
+To customize your build environment use the `prepareCommands` attribute.
 
 ### os
 
@@ -192,7 +192,7 @@ We are currently using following os version:
 - <span>{data.ubuntu.default}</span>
 
 :::caution
-The os version is fixed and cannot be customised.
+The os version is fixed and cannot be customized.
 :::
 
 ### ports
@@ -204,7 +204,7 @@ If no ports are specified, Zerops adds the port TCP 80 automatically.
 :::
 
 :::caution
-If you want the web server to listen on other port(s) than `:80`, you must [customize](/nginx/how-to/build-pipeline#customize-web-server) your web server configuration as well.
+If you want the web server to listen on other port(s) than `:80`, you must [customize](/nginx/how-to/customize-web-server) your web server configuration as well.
 :::
 
 Projects in Zerops represent a group of one or more services. Services can be of different types (runtime services, databases, message brokers, object storage, etc.). All services of the same project share a **dedicated private network**. To connect to a service within the same project, just use the service hostname and its internal port.
@@ -242,7 +242,7 @@ Each port has following attributes:
 
 ### prepareCommands
 
-_OPTIONAL._ Customises the Nginx runtime environment by installing additional dependencies or tools to the runtime base environment.
+_OPTIONAL._ Customizes the Nginx runtime environment by installing additional dependencies or tools to the runtime base environment.
 
 <p>
   The base Nginx environment contains {data.alpine.default}, the selected
@@ -300,7 +300,7 @@ When the prepare cache is used, Zerops doesn't create a prepare runtime containe
 
 #### Single or separated shell instances
 
-You can configure your prepare commands to be run in a single shell instance or multiple shell instances. The format is identical to [build commands](#buildcommands).
+You can configure your prepare commands to be run in a single shell instance or multiple shell instances.
 
 ### Copy folders or files from your build container
 
@@ -309,7 +309,7 @@ You can configure your prepare commands to be run in a single shell instance or 
   selected major version of Nginx, <a href="/references/cli">Zerops command line tool</a> and `composer`, `git` and `wget`.
 </p>
 
-The prepare runtime container does not contain your application code nor the built application. If you need to copy some folders or files from the build container to the runtime container (e.g. a configuration file) use the `addToRunPrepare` attribute in the [build section](#build-pipeline-configuration).
+The prepare runtime container does not contain your application code nor the built application. If you need to copy some folders or files from the build container to the runtime container (e.g. a configuration file) use the `addToRunPrepare` attribute in the build section of your chosen technology.
 
 ```yml
 zerops:
@@ -352,14 +352,14 @@ zerops:
         - rm -rf ./cache
 ```
 
-These commands are triggered in the runtime container before your Nginx application is started via the [start command](/nginx/how-to/build-pipeline#start).
+These commands are triggered in the runtime container before your Nginx application is started.
 
 Use init commands to clean or initialise your application cache or similar operations.
 
 :::caution
-The init commands will delay the start of your application each time a new runtime container is started (including the [horizontal scaling](/nginx/how-to/scaling#horizontal-scaling) or when a runtime container is restarted.
+The init commands will delay the start of your application each time a new runtime container is started (including the [horizontal scaling](/nginx/how-to/scaling#horizontal-auto-scaling) or when a runtime container is restarted).
 
-Do not use the init commands for customising your runtime environment. Use the [run:prepareCommands](/nginx/how-to/build-pipeline#preparecommands-1) attribute instead.
+Do not use the init commands for customising your runtime environment. Use the [run:prepareCommands](/nginx/how-to/build-pipeline#preparecommands) attribute instead.
 :::
 
 #### Command exit code
@@ -368,7 +368,7 @@ If any of the `initCommands` fails, it returns an exit code other than 0, but de
 
 #### Single or separated shell instances
 
-You can configure your `initCommands` to be run in a single shell instance or multiple shell instances. The format is identical to [build commands](#buildcommands).
+You can configure your `initCommands` to be run in a single shell instance or multiple shell instances.
 
 ### documentRoot
 
@@ -489,7 +489,7 @@ Following attributes are available:
       <td className="w-fit"><strong>command</strong></td>
       <td className="w-fit">
         Defines a local command to be run.<br/>
-        The command has access to the same <a href="/nginx/how-to/create#set-environment-variables">environment variables</a> as your Nginx application.<br/>
+        The command has access to the same <a href="/nginx/how-to/create#set-secret-environment-variables">environment variables</a> as your Nginx application.<br/>
         A single string is required. If you need to run multiple commands create a shell script or, use a multiline format as in the example below.
       </td>
     </tr>
@@ -584,7 +584,7 @@ Following attributes are available:
       <td className="w-fit"><strong>command</strong></td>
       <td className="w-fit">
         Defines a local command to be run.<br/>
-        The command has access to the same <a href="/nginx/how-to/create#set-environment-variables">environment variables</a> as your Nginx application.<br/>
+        The command has access to the same <a href="/nginx/how-to/create#set-secret-environment-variables">environment variables</a> as your Nginx application.<br/>
         A single string is required. If you need to run multiple commands create a shell script or, use a multiline format as in the example below.
       </td>
     </tr>
