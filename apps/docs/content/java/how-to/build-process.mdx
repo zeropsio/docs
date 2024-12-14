@@ -14,11 +14,11 @@ import data from '@site/static/data.json';
   />
 </p>
 
-## Customise Java build environment
+## Customize Java build environment
 
 The default Java build environment contains:
 
-- <span>{data.alpineCurrentVersion}</span>
+- <span>{data.alpine.default}</span>
 - Selected version of Java when the runtime service was created.
 - [zCLI](/references/cli)
 - Git
@@ -35,7 +35,7 @@ Zerops starts a temporary build container and performs following actions:
 
 1. Installs the build environment
 2. Downloads your application source code from [GitHub ↗](https://www.github.com), [GitLab ↗](https://www.gitlab.com) or via [Zerops CLI](/references/cli)
-3. Optionally [customises the build environment](/java/how-to/build-process#customise-java-build-environment)
+3. Optionally [customizes the build environment](#customize-java-build-environment)
 4. Runs the build commands
 5. Uploads the application artefact to the internal Zerops storage
 6. Optionally [customizes the runtime environment](/java/how-to/customize-runtime)
@@ -50,6 +50,17 @@ When you know that the running build is not correct and you want to cancel it, y
 {/* ** TODO screenshot of a running build pipeline** */}
 
 The build cancellation is available before the build pipeline is finished. When the build is finished, the deployment cannot be cancelled.
+
+## Customize Java build environment
+
+The default Java build environment contains:
+
+- <span>{data.alpine.default}</span>
+- selected version of Java defined in `zerops.yml` [build.base](/java/how-to/build-pipeline#base) parameter
+- [zCLI](/references/cli), Zerops command line tool
+- `git` and `wget`
+
+If you prefer the Ubuntu OS instead of Alpine, set the [build.os](/java/how-to/build-pipeline#os) attribute to `ubuntu`. To install additional packages or tools add one or more [build.prepareCommands](/java/how-to/build-pipeline#preparecommands) commands to your `zerops.yml`.
 
 :::info
 The application code is available in the `/var/www` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
@@ -96,7 +107,7 @@ When the build cache is used, Zerops doesn't run the prepare commands and the bu
 
 ### Failure of a build command
 
-If any [build command](/java/how-to/build-pipeline#build) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/java/how-to/logs#build-log) to troubleshoot the error. If the error log doesn't contain any specific error message, try to run your build with the verbose `-X` debug option.
+If any [build command](/java/how-to/build-pipeline#buildcommands) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/java/how-to/logs#build-log) to troubleshoot the error. If the error log doesn't contain any specific error message, try to run your build with the verbose `-X` debug option.
 
 ```yml
 build:

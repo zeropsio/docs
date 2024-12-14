@@ -25,7 +25,7 @@ zerops:
       # OPTIONAL. Set the operating system for the build environment.
       # os: ubuntu
 
-      # OPTIONAL. Customise the build environment by installing additional packages
+      # OPTIONAL. Customize the build environment by installing additional packages
       # or tools to the base build environment.
       # prepareCommands:
       #   - apt-get something
@@ -50,7 +50,7 @@ zerops:
       # OPTIONAL. Sets the base technology for the runtime environment:
       base: php-apache@latest
 
-      # OPTIONAL. Customise the runtime PHP environment by installing additional
+      # OPTIONAL. Customize the runtime PHP environment by installing additional
       # dependencies to the base PHP runtime environment.
       # prepareCommands:
       #   - apt-get something
@@ -62,7 +62,7 @@ zerops:
       # initCommands:
       #  - rm -rf ./cache
 
-      # OPTIONAL. Customise the folder that will be used as the root of the publicly
+      # OPTIONAL. Customize the folder that will be used as the root of the publicly
       # accessible web server content. Enter the path relative to the /var/www folder.
       documentRoot: public
 
@@ -101,7 +101,7 @@ _REQUIRED._ Sets the base technology for the build environment.
 
 Following options are available for PHP builds:
 
-<UnorderedCodeList data={data.phpVersions} />
+<UnorderedCodeList data={data.php.base.build} />
 
 ```yml
 zerops:
@@ -115,9 +115,8 @@ zerops:
 ```
 
 <p>
-  The base build environment contains {data.alpineCurrentVersion}, the selected
-  major version of PHP, <a href="/references/cli">Zerops command line tool</a>,{' '}
-  `composer`, `git` and `wget`.
+  The base build environment contains {data.alpine.default}, the selected
+  major version of PHP, <a href="/references/cli">Zerops command line tool</a>, `composer`, `git` and `wget`.
 </p>
 
 :::info
@@ -140,7 +139,7 @@ zerops:
       ...
 ```
 
-See the full list of supported [build base environments](/references/zeropsyml/base-list#php).
+See the full list of supported [build base environments](/references/zeropsyml/base-list#runtime-services).
 
 To customise your build environment use the [prepareCommands](/php/how-to/build-pipeline#preparecommands) attribute.
 
@@ -157,8 +156,8 @@ Default value is `alpine`.
 
 We are currently using following os version:
 
-- <span>{data.alpineCurrentVersion}</span>
-- <span>{data.ubuntuCurrentVersion}</span>
+- <span>{data.alpine.default}</span>
+- <span>{data.ubuntu.default}</span>
 
 :::caution
 The os version is fixed and cannot be customised.
@@ -170,7 +169,7 @@ _OPTIONAL._ Customises the build environment by installing additional dependenci
 
 The base build environment contains:
 
-- <span>{data.alpineCurrentVersion}</span>
+- <span>{data.alpine.default}</span>
 - selected version of PHP defined in the [base](/php/how-to/build-pipeline#base) attribute
 - [Zerops command line tool](/references/cli)
 - `composer`, `git` and `wget`
@@ -287,7 +286,7 @@ buildCommands:
   - composer install -v
 ```
 
-If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `buildCommands` are finished, the application build is completed and ready for the [deploy](/php/how-to/build-pipeline#deployFiles) phase.
+If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `buildCommands` are finished, the application build is completed and ready for the deploy phase.
 
 ### deployFiles
 
@@ -422,7 +421,8 @@ If you don't specify the `run.base` attribute, Zerops keeps the current PHP vers
 
 Following options are available for PHP builds:
 
-<UnorderedCodeList data={data.phpVersions} />
+<UnorderedCodeList data={data.php.base.runtime.apache} />
+<UnorderedCodeList data={data.php.base.runtime.nginx} />
 
 ```yml
 zerops:
@@ -442,10 +442,8 @@ zerops:
 ```
 
 <p>
-  The base runtime environment contains {data.alpineCurrentVersion}, the
-  selected major version of PHP,{' '}
-  <a href="/references/cli">Zerops command line tool</a> and{' '}
-  `composer`, `git` and `wget`.
+  The base runtime environment contains {data.alpine.default}, the
+  selected major version of PHP, <a href="/references/cli">Zerops command line tool</a> and `composer`, `git` and `wget`.
 </p>
 
 :::info
@@ -491,8 +489,8 @@ Default value is `alpine`.
 
 We are currently using following os version:
 
-- <span>{data.alpineCurrentVersion}</span>
-- <span>{data.ubuntuCurrentVersion}</span>
+- <span>{data.alpine.default}</span>
+- <span>{data.ubuntu.default}</span>
 
 :::caution
 The os version is fixed and cannot be customised.
@@ -507,7 +505,7 @@ If no ports are specified, Zerops adds the port TCP 80 automatically.
 :::
 
 :::caution
-If you want the web server to listen on other port(s) than `:80`, you must [customize](/php/how-to/build-pipeline#customize-web-server) your web server configuration as well.
+If you want the web server to listen on other port(s) than `:80`, you must [customize](/php/how-to/customize-web-server) your web server configuration as well.
 :::
 
 Projects in Zerops represent a group of one or more services. Services can be of different types (runtime services, databases, message brokers, object storage, etc.). All services of the same project share a **dedicated private network**. To connect to a service within the same project, just use the service hostname and its internal port.
@@ -548,9 +546,8 @@ Each port has following attributes:
 _OPTIONAL._ Customises the PHP runtime environment by installing additional dependencies or tools to the runtime base environment.
 
 <p>
-  The base PHP environment contains {data.alpineCurrentVersion}, the selected
-  major version of PHP, <a href="/references/cli">Zerops command line tool</a>{' '}
-  and `composer`, `git` and `wget`. To install
+  The base PHP environment contains {data.alpine.default}, the selected
+  major version of PHP, <a href="/references/cli">Zerops command line tool</a> and `composer`, `git` and `wget`. To install
   additional packages or tools add one or more prepare commands:
 </p>
 
@@ -609,10 +606,8 @@ You can configure your prepare commands to be run in a single shell instance or 
 ### Copy folders or files from your build container
 
 <p>
-  The prepare runtime container contains {data.alpineCurrentVersion}, the
-  selected major version of PHP,{' '}
-  <a href="/references/cli">Zerops command line tool</a> and{' '}
-  `composer`, `git` and `wget`.
+  The prepare runtime container contains {data.alpine.default}, the
+  selected major version of PHP, <a href="/references/cli">Zerops command line tool</a> and `composer`, `git` and `wget`.
 </p>
 
 The prepare runtime container does not contain your application code nor the built application. If you need to copy some folders or files from the build container to the runtime container (e.g. a configuration file) use the `addToRunPrepare` attribute in the [build section](#build-pipeline-configuration).
@@ -663,7 +658,7 @@ These commands are triggered in the runtime container before your PHP applicatio
 Use init commands to clean or initialise your application cache or similar operations.
 
 :::caution
-The init commands will delay the start of your application each time a new runtime container is started (including the [horizontal scaling](/php/how-to/scaling#horizontal-scaling) or when a runtime container is restarted.
+The init commands will delay the start of your application each time a new runtime container is started (including the [horizontal scaling](/php/how-to/scaling#horizontal-auto-scaling) or when a runtime container is restarted).
 
 Do not use the init commands for customising your runtime environment. Use the [run:prepareCommands](/php/how-to/build-pipeline#preparecommands-1) attribute instead.
 :::
@@ -796,7 +791,7 @@ Following attributes are available:
       <td className="w-fit"><strong>command</strong></td>
       <td className="w-fit">
         Defines a local command to be run.<br/>
-        The command has access to the same <a href="/php/how-to/create#set-environment-variables">environment variables</a> as your PHP application.<br/>
+        The command has access to the same <a href="/php/how-to/create#set-secret-environment-variables">environment variables</a> as your PHP application.<br/>
         A single string is required. If you need to run multiple commands create a shell script or, use a multiline format as in the example below.
       </td>
     </tr>
@@ -891,7 +886,7 @@ Following attributes are available:
       <td className="w-fit"><strong>command</strong></td>
       <td className="w-fit">
         Defines a local command to be run.<br/>
-        The command has access to the same <a href="/php/how-to/create#set-environment-variables">environment variables</a> as your PHP application.<br/>
+        The command has access to the same <a href="/php/how-to/create#set-secret-environment-variables">environment variables</a> as your PHP application.<br/>
         A single string is required. If you need to run multiple commands create a shell script or, use a multiline format as in the example below.
       </td>
     </tr>
