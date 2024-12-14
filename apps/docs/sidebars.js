@@ -2527,11 +2527,6 @@ module.exports = {
         },
         {
           type: 'doc',
-          id: 'frameworks/laravel/automatic-scaling',
-          label: 'Automatic Scaling',
-        },
-        {
-          type: 'doc',
           id: 'frameworks/laravel/backups',
           label: 'Database Backups',
         },
