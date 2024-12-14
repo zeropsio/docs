@@ -5,9 +5,13 @@ description: Learn how to configure and use Redis for caching, queues, and sessi
 
 import Image from '/src/components/Image';
 
+# Redis Integration with Laravel
+
+Redis is a powerful in-memory data structure store that can be used as a database, cache, message broker, and queue. This guide will help you integrate Redis with your Laravel application on Zerops, enabling high-performance caching, session management, and queue processing.
+
 ## Adding Redis Service
 
-Add Redis (ValKey) service to your Zerops project by including it in your import configuration:
+Redis needs to be added as a service to your Zerops project before you can use it with Laravel. The service configuration defines the Redis version, availability mode, and other essential settings.
 
 ```yml
 services:
@@ -17,44 +21,53 @@ services:
     priority: 10
 ```
 
-:::tip
-Use `HA` mode for production environments to ensure high availability and automatic failover.
+:::tip High Availability Mode
+For production environments, it's recommended to use `HA` mode. This ensures automatic failover in case of node failure and provides data replication across multiple nodes. High availability mode significantly improves reliability and uptime while offering better handling of network partitions.
 :::
 
-## Environment Variables
+## Environment Configuration
 
-Configure your Laravel service to use Redis by adding these environment variables in your `zerops.yml`:
+### Basic Redis Settings
+
+The environment variables configure how your Laravel application connects to and utilizes Redis. These settings control various aspects of Redis integration, from basic connectivity to specific feature configurations.
 
 ```yml
 zerops:
   - setup: app
+    build:
+      base:
+        - php@8.4
+      os: alpine
     run:
+      base: php-nginx@8.4
+      os: alpine
+      siteConfigPath: site.conf.tmpl
       envVariables:
-        # Redis Connection
-        REDIS_CLIENT: phpredis
-        REDIS_HOST: redis
-        REDIS_PORT: 6379
+        # Redis Connection Settings
+        REDIS_CLIENT: phpredis    # PHP Redis client for better performance
+        REDIS_HOST: redis        # Internal hostname of Redis service
+        REDIS_PORT: 6379         # Standard Redis port number
 
         # Cache Configuration
-        CACHE_PREFIX: cache
-        CACHE_STORE: redis
+        CACHE_PREFIX: cache      # Namespace for cache keys
+        CACHE_STORE: redis       # Use Redis as primary cache
 
         # Session Configuration
-        SESSION_DRIVER: redis
-        SESSION_ENCRYPT: false
-        SESSION_LIFETIME: 120
-        SESSION_PATH: /
+        SESSION_DRIVER: redis    # Store sessions in Redis
+        SESSION_ENCRYPT: false   # Disable session encryption
+        SESSION_LIFETIME: 120    # Session timeout in minutes
+        SESSION_PATH: /          # Cookie path setting
 
         # Queue Configuration
-        QUEUE_CONNECTION: redis
-        BROADCAST_CONNECTION: redis
+        QUEUE_CONNECTION: redis  # Use Redis for job queues
+        BROADCAST_CONNECTION: redis  # Redis for event broadcasting
 ```
 
-## Features Configuration
+## Feature-Specific Configuration
 
-### Caching
+### Redis Caching
 
-Configure Redis as your cache driver in `config/cache.php`:
+Laravel's cache system provides a unified API across various cache backends. This configuration sets up Redis as your application's primary cache store, enabling fast and reliable data caching.
 
 ```php:config/cache.php
 'default' => env('CACHE_STORE', 'database'),
@@ -70,9 +83,9 @@ Configure Redis as your cache driver in `config/cache.php`:
 'prefix' => env('CACHE_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_').'_cache_'),
 ```
 
-### Session Management
+### Session Management with Redis
 
-Redis can handle your session storage. Configure in `config/session.php`:
+Using Redis for session storage provides better performance than file-based sessions and enables seamless session sharing across multiple application servers.
 
 ```php:config/session.php
 'driver' => env('SESSION_DRIVER', 'redis'),
@@ -80,9 +93,9 @@ Redis can handle your session storage. Configure in `config/session.php`:
 'encrypt' => env('SESSION_ENCRYPT', false),
 ```
 
-### Queue System
+### Queue System Configuration
 
-Set up Redis for Laravel queues in `config/queue.php`:
+Redis queues offer a robust solution for handling background jobs in Laravel. This configuration sets up Redis as your queue backend with retry policies and connection settings.
 
 ```php:config/queue.php
 'default' => env('QUEUE_CONNECTION', 'redis'),
@@ -92,49 +105,40 @@ Set up Redis for Laravel queues in `config/queue.php`:
         'driver' => 'redis',
         'connection' => 'default',
         'queue' => 'default',
-        'retry_after' => 90,
-        'block_for' => null,
+        'retry_after' => 90,     // Retry failed jobs after 90 seconds
+        'block_for' => null,     // Don't block when no jobs available
     ],
 ],
 ```
 
-## Usage Examples
+## Working with Redis Features
 
-### Cache Operations
+### Cache Operations Examples
 ```php
-// Store an item in cache
+// Store items in cache with expiration time
 Cache::put('key', 'value', $seconds);
 
-// Retrieve an item
+// Retrieve cached items with optional default value
 $value = Cache::get('key');
 
-// Store permanently
+// Store items indefinitely until manually removed
 Cache::forever('key', 'value');
 ```
 
-### Queue Processing
+### Queue Processing Examples
 ```php
-// Dispatch a job
+// Dispatch a job to the Redis queue with specific connection
 ProcessPodcast::dispatch($podcast)->onConnection('redis');
 
-// Process queues
+// Start the queue worker process for Redis
 php artisan queue:work redis
 ```
 
-### Session Handling
+### Session Handling Examples
 ```php
-// Store in session
+// Store data in the Redis session
 session(['key' => 'value']);
 
-// Get from session
+// Retrieve data from the session with optional default
 $value = session('key');
 ```
-
-:::tip Best Practices
-- Use Redis for all caching in production
-- Enable persistence for important data
-- Monitor Redis memory usage
-- Configure proper timeouts
-- Use prefix to avoid key collisions
-- Set up queue monitoring
-:::

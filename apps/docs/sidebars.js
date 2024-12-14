@@ -2498,7 +2498,7 @@ module.exports = {
         {
           type: 'doc',
           id: 'frameworks/laravel/cron',
-          label: 'Scheduled Jobs & CRON',
+          label: 'Schedule Jobs & CRON',
         },
         {
           type: 'doc',
