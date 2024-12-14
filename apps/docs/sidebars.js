@@ -2482,6 +2482,11 @@ module.exports = {
         },
         {
           type: 'doc',
+          id: 'frameworks/laravel/dev-to-prod',
+          label: 'Development to Production',
+        },
+        {
+          type: 'doc',
           id: 'frameworks/laravel/build-runtime',
           label: 'Build & Runtime',
         },
@@ -2492,23 +2497,8 @@ module.exports = {
         },
         {
           type: 'doc',
-          id: 'frameworks/laravel/logs',
-          label: 'Access logs',
-        },
-        {
-          type: 'doc',
-          id: 'frameworks/laravel/smtp',
-          label: 'SMTP Configuration',
-        },
-        {
-          type: 'doc',
-          id: 'frameworks/laravel/dev-to-prod',
-          label: 'Development to Production',
-        },
-        {
-          type: 'doc',
-          id: 'frameworks/laravel/backups',
-          label: 'Database Backups',
+          id: 'frameworks/laravel/cron',
+          label: 'Scheduled Jobs & CRON',
         },
         {
           type: 'doc',
@@ -2517,13 +2507,8 @@ module.exports = {
         },
         {
           type: 'doc',
-          id: 'frameworks/laravel/automatic-scaling',
-          label: 'Automatic Scaling',
-        },
-        {
-          type: 'doc',
-          id: 'frameworks/laravel/cron',
-          label: 'Scheduled Jobs & CRON',
+          id: 'frameworks/laravel/smtp',
+          label: 'SMTP Configuration',
         },
         {
           type: 'doc',
@@ -2534,6 +2519,21 @@ module.exports = {
           type: 'doc',
           id: 'frameworks/laravel/public-access',
           label: 'Manage Public Access',
+        },
+        {
+          type: 'doc',
+          id: 'frameworks/laravel/logs',
+          label: 'Access logs',
+        },
+        {
+          type: 'doc',
+          id: 'frameworks/laravel/automatic-scaling',
+          label: 'Automatic Scaling',
+        },
+        {
+          type: 'doc',
+          id: 'frameworks/laravel/backups',
+          label: 'Database Backups',
         },
       ],
     },
