@@ -2477,18 +2477,18 @@ module.exports = {
         },
         {
           type: 'doc',
-          id: 'frameworks/laravel/create',
-          label: 'Create PHP Nginx service',
-        },
-        {
-          type: 'doc',
           id: 'frameworks/laravel/dev-to-prod',
           label: 'Development to Production',
         },
         {
           type: 'doc',
-          id: 'frameworks/laravel/build-runtime',
-          label: 'Build & Runtime',
+          id: 'frameworks/laravel/create',
+          label: 'Create PHP Nginx service',
+        },
+        {
+          type: 'doc',
+          id: 'frameworks/laravel/build-deployments',
+          label: 'Build & Deployments',
         },
         {
           type: 'doc',
