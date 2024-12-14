@@ -2482,8 +2482,13 @@ module.exports = {
         },
         {
           type: 'doc',
+          id: 'frameworks/laravel/build-runtime',
+          label: 'Build & Runtime',
+        },
+        {
+          type: 'doc',
           id: 'frameworks/laravel/env-variables',
-          label: 'Manage Environment Variables',
+          label: 'Environment Variables',
         },
         {
           type: 'doc',
