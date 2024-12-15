@@ -426,16 +426,16 @@ module.exports = {
           },
           className: 'homepage-sidebar-item  service-sidebar-item',
         },
-        {
-          type: 'ref',
-          id: 'ubuntu/overview',
-          label: 'Ubuntu',
-          customProps: {
-            sidebar_icon: 'ubuntu',
-            sidebar_is_soon: true,
-          },
-          className: 'homepage-sidebar-item  service-sidebar-item',
-        },
+//        {
+//          type: 'ref',
+//          id: 'ubuntu/overview',
+//          label: 'Ubuntu',
+//          customProps: {
+//            sidebar_icon: 'ubuntu',
+//            sidebar_is_soon: true,
+//          },
+//          className: 'homepage-sidebar-item  service-sidebar-item',
+//        },
       ],
     },
     {
@@ -464,24 +464,6 @@ module.exports = {
           },
           className: 'homepage-sidebar-item  service-sidebar-item',
         },
-        //        {
-        //          type: "ref",
-        //          id: "mongodb/overview",
-        //          label: "MongoDB",
-        //          customProps: {
-        //            sidebar_icon: "mongodb",
-        //          },
-        //          className: "homepage-sidebar-item  service-sidebar-item",
-        //        },
-        //        {
-        //          type: "ref",
-        //          id: "elasticsearch/overview",
-        //          label: "Elasticsearch",
-        //          customProps: {
-        //            sidebar_icon: "elasticsearch",
-        //          },
-        //          className: "homepage-sidebar-item  service-sidebar-item",
-        //        },
         {
           type: 'ref',
           id: 'keydb/overview',
@@ -491,15 +473,60 @@ module.exports = {
           },
           className: 'homepage-sidebar-item  service-sidebar-item',
         },
-        //        {
-        //          type: "ref",
-        //          id: "rabbitmq/overview",
-        //          label: "RabbitMQ",
-        //          customProps: {
-        //            sidebar_icon: "rabbitmq",
-        //          },
-        //          className: "homepage-sidebar-item  service-sidebar-item",
-        //        },
+//        {
+//          type: "ref",
+//          id: "elasticsearch/overview",
+//          label: "Elasticsearch",
+//          customProps: {
+//            sidebar_icon: "elasticsearch",
+//          },
+//          className: "homepage-sidebar-item  service-sidebar-item",
+//        },
+//        {
+//          type: "ref",
+//          id: "meilisearch/overview",
+//          label: "Meilisearch",
+//          customProps: {
+//            sidebar_icon: "meilisearch",
+//          },
+//          className: "homepage-sidebar-item  service-sidebar-item",
+//        },
+//        {
+//          type: "ref",
+//          id: "qdrant/overview",
+//          label: "Qdrant",
+//          customProps: {
+//            sidebar_icon: "qdrant",
+//          },
+//          className: "homepage-sidebar-item  service-sidebar-item",
+//        },
+//        {
+//          type: "ref",
+//          id: "valkey/overview",
+//          label: "Valkey",
+//          customProps: {
+//            sidebar_icon: "valkey",
+//          },
+//          className: "homepage-sidebar-item  service-sidebar-item",
+//        },
+//        {
+//          type: "ref",
+//          id: "kafka/overview",
+//          label: "Kafka",
+//          customProps: {
+//            sidebar_icon: "kafka",
+//          },
+//          className: "homepage-sidebar-item  service-sidebar-item",
+//        },
+//        {
+//          type: "ref",
+//          id: "nats/overview",
+//          label: "NATS",
+//          customProps: {
+//            sidebar_icon: "nats",
+//          },
+//          className: "homepage-sidebar-item  service-sidebar-item",
+//        },
       ],
     },
     {
@@ -519,15 +546,15 @@ module.exports = {
           },
           className: 'homepage-sidebar-item  service-sidebar-item',
         },
-        {
-          type: 'ref',
-          id: 'shared-storage/overview',
-          label: 'Shared Storage',
-          customProps: {
-            sidebar_icon: 'server',
-          },
-          className: 'homepage-sidebar-item  service-sidebar-item',
-        },
+//        {
+//          type: 'ref',
+//          id: 'shared-storage/overview',
+//          label: 'Shared Storage',
+//          customProps: {
+//            sidebar_icon: 'server',
+//          },
+//          className: 'homepage-sidebar-item  service-sidebar-item',
+//        },
       ],
     },
     {
@@ -1914,16 +1941,16 @@ collapsible: false,
       },
     },
   ],
-  mongodb: [
-    {
-      type: 'ref',
-      id: 'homepage',
-      label: 'Back to home',
-      customProps: {
-        sidebar_is_back_link: true,
-        sidebar_icon: 'back-arrow',
-      },
-    },
+//  mongodb: [
+//    {
+//      type: 'ref',
+//      id: 'homepage',
+//      label: 'Back to home',
+//      customProps: {
+//        sidebar_is_back_link: true,
+//        sidebar_icon: 'back-arrow',
+//      },
+//    },
     // {
     //   type: 'doc',
     //   id: 'mongodb/overview',
@@ -1933,7 +1960,7 @@ collapsible: false,
     //     sidebar_icon: 'mongodb',
     //   },
     // },
-  ],
+//  ],
   elasticsearch: [
     {
       type: 'ref',

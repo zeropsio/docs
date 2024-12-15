@@ -124,6 +124,7 @@ import IconRust from './Rust';
 import IconJava from './Java';
 import IconPostgresql from './Postgresql';
 import IconMariadb from './Mariadb';
+import IconMeilisearch from './Meilisearch';
 import IconMongodb from './Mongodb';
 import IconElasticsearch from './Elasticsearch';
 import IconKeydb from './Keydb';
@@ -134,6 +135,11 @@ import IconDeno from './Deno';
 import IconBun from './Bun';
 import IconGleam from './Gleam';
 import IconElixir from './Elixir';
+import IconQdrant from './Qdrant';
+import IconNats from './Nats';
+import IconKafka from './Kafka';
+import IconValkey from './Valkey';
+import IconAlpine from './Alpine';
 
 export default {
   'academic-cap-solid': AcademicCapSolid,
@@ -263,6 +269,7 @@ export default {
   java: IconJava,
   postgresql: IconPostgresql,
   mariadb: IconMariadb,
+  meilisearch: IconMeilisearch,
   mongodb: IconMongodb,
   elasticsearch: IconElasticsearch,
   keydb: IconKeydb,
@@ -273,4 +280,9 @@ export default {
   bun: IconBun,
   gleam: IconGleam,
   elixir: IconElixir,
+  qdrant: IconQdrant,
+  nats: IconNats,
+  kafka: IconKafka,
+  valkey: IconValkey,
+  alpine: IconAlpine,
 };
