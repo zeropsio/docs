@@ -25,17 +25,17 @@ export const builds = [
     { name: "Java", link: "/java/how-to/build-process#java-build-hardware-resources" },
 ]
 
-export const customiseBuild = [
-    { name: "Node.js", link: "/nodejs/how-to/build-process#customise-nodejs-build-environment" },
-    { name: "PHP", link: "/php/how-to/build-process#customise-php-build-environment" },
-    { name: "Python", link: "/python/how-to/build-process#customise-python-build-environment" },
-    { name: "Go", link: "/go/how-to/build-process#customise-go-build-environment" },
-    { name: ".NET", link: "/dotnet/how-to/build-process#customise-dotnet-build-environment" },
-    { name: "Rust", link: "/rust/how-to/build-process#customise-rust-build-environment" },
-    { name: "Java", link: "/java/how-to/build-process#customise-java-build-environment" },
+export const customizeBuild = [
+    { name: "Node.js", link: "/nodejs/how-to/build-process#customize-nodejs-build-environment" },
+    { name: "PHP", link: "/php/how-to/build-process#customize-php-build-environment" },
+    { name: "Python", link: "/python/how-to/build-process#customize-python-build-environment" },
+    { name: "Go", link: "/go/how-to/build-process#customize-go-build-environment" },
+    { name: ".NET", link: "/dotnet/how-to/build-process#customize-net-build-environment" },
+    { name: "Rust", link: "/rust/how-to/build-process#customize-rust-build-environment" },
+    { name: "Java", link: "/java/how-to/build-process#customize-java-build-environment" },
 ]
 
-export const customiseRuntime = [
+export const customizeRuntime = [
     { name: "Node.js", link: "/nodejs/how-to/customize-runtime" },
     { name: "PHP", link: "/php/how-to/customize-runtime" },
     { name: "Python", link: "/python/how-to/customize-runtime" },
@@ -138,7 +138,7 @@ Flags:
                                  looks for zerops.yml in the working directory.
 ```
 
-If you just want to [deploy](#deploy-phase) your already built application to Zerops, use the [zcli deploy](/references/cli/commands#deploy) command instead.
+If you just want to [deploy](#deploy-phase) your already built application to Zerops, use the <a href="/references/cli/commands#service"><code>zcli service deploy</code></a> command instead.
 
 ## Build phase
 
@@ -155,7 +155,7 @@ Zerops starts a temporary build container and performs following actions:
 
 1. Installs the build environment.
 2. Downloads your application source code from [GitHub ↗](https://www.github.com), [GitLab ↗](https://www.gitlab.com) or via [Zerops CLI].
-3. Optionally customises the build environment.
+3. Optionally customizes the build environment.
 4. Runs the build commands.
 5. Uploads the application artefact to the internal Zerops storage and prepares it for the deploy.
 6. Optionally caches the selected files for the next build.
@@ -179,14 +179,14 @@ Hardware resources of the build containers are not charged. The build costs are 
 
 The time limit for the whole build pipeline is **1 hour**. After 1 hour, Zerops terminates the build pipeline and deletes the build container.
 
-### Customise the build environment
+### Customize the build environment
 
-Each runtime service in Zerops has a default build environment with a major version based on the [build.base](/references/zeropsyml#base) attribute in `zerops.yml`.
-To install additional packages or tools add one or more [build.prepareCommands](/references/zeropsyml#preparecommands) commands to your `zerops.yml`.
+Each runtime service in Zerops has a default build environment with a major version based on the [build.base](/references/zeropsyml#base-required) attribute in `zerops.yml`.
+To install additional packages or tools add one or more [build.prepareCommands](/references/zeropsyml#preparecommands-optional) commands to your `zerops.yml`.
 
 Learn more about what is included in the default build environment:
 
-<GroupCards emoji="🚀" heading="Customise your build environment of your Runtime" items={customiseBuild} />
+<GroupCards emoji="🚀" heading="Customize your build environment of your Runtime" items={customizeBuild} />
 
 ## Deploy phase
 
@@ -231,7 +231,7 @@ If your application needs to be initialized in each runtime container, add [init
 :::
 
 :::caution
-Do not use the `initCommands` for customising your runtime environment. See [how to customise the runtime environment](/go/how-to/deploy-process#customise-go-runtime-environment).
+Do not use the `initCommands` for customising your runtime environment. See [how to customize the runtime environment](/go/how-to/customize-runtime).
 :::
 
 ### Further deploys
@@ -264,14 +264,14 @@ The <a href="/nodejs/how-to/build-pipeline#exec">`exec.command`</a> readiness ch
 
 Read the [runtime log](/nodejs/how-to/logs#runtime-log) to troubleshoot failed readiness checks.
 
-## Customise the runtime environment
+## Customize the runtime environment
 
-Each runtime service in Zerops has a default runtime environment with a major version based on the [run.base](/references/zeropsyml#base-1) attribute in `zerops.yml`.
-To install additional packages or tools add one or more [run.prepareCommands](/references/zeropsyml#preparecommands-1) commands to your `zerops.yml`.
+Each runtime service in Zerops has a default runtime environment with a major version based on the [run.base](/references/zeropsyml#base-optional) attribute in `zerops.yml`.
+To install additional packages or tools add one or more [run.prepareCommands](/references/zeropsyml#preparecommands-optional-1) commands to your `zerops.yml`.
 
 Learn more about what is included in the default runtime environment:
 
-<GroupCards emoji="🚀" heading="Customise your runtime environment with zerops.yml" items={customiseRuntime} />
+<GroupCards emoji="🚀" heading="Customize your runtime environment with zerops.yml" items={customizeRuntime} />
 
 <p align="center">
   <Image
@@ -282,15 +282,15 @@ Learn more about what is included in the default runtime environment:
   />
 </p>
 
-When the first deploy with a defined [prepareCommands](/references/zeropsyml#preparecommands-1) attribute is triggered, Zerops will
+When the first deploy with a defined [prepareCommands](/references/zeropsyml#preparecommands-optional-1) attribute is triggered, Zerops will
 
 1. create a prepare runtime container
 2. optionally: [copy selected folders or files from your build container]
-3. run the [run.prepareCommands](/references/zeropsyml#preparecommands-1) commands in the defined order
+3. run the [run.prepareCommands](/references/zeropsyml#preparecommands-optional-1) commands in the defined order
 
 Some packages or tools can take a long time to install. Therefore, Zerops caches your custom runtime environment after the installation of your custom packages or tools is completed. When the second or following deploy is triggered, Zerops will use the custom runtime cache from the previous deploy if following conditions are met:
 
-1. Content of the [build.addToRunPrepare](/references/zeropsyml#addtorunprepare) and [run.prepareCommands](/references/zeropsyml#preparecommands-1) attributes didn't change from the previous deploy
+1. Content of the [build.addToRunPrepare](/references/zeropsyml#addtorunprepare-optional) and [run.prepareCommands](/references/zeropsyml#preparecommands-optional-1) attributes didn't change from the previous deploy
 2. The custom runtime cache wasn't invalidated in the Zerops GUI.
 
 When the custom runtime cache is used, Zerops doesn't create a prepare runtime container and executes the deployment of your application directly.
@@ -346,8 +346,8 @@ When you know that the running build is not correct and you want to cancel it, y
 
 <p align="center">
   <Image
-    lightImage="/img/screenshots/nodejs_cancel_running_build.png"
-    darkImage="/img/screenshots/nodejs_cancel_running_build.png"
+    lightImage="/img/screenshots/cancel_running_build.png"
+    darkImage="/img/screenshots/cancel_running_build.png"
     alt="Running build"
     style={{ width: '95%', height: 'auto' }}
   />
