@@ -5,6 +5,10 @@ description: Learn how to manage and run database migrations for your Laravel ap
 
 import Image from '/src/components/Image';
 
+:::note
+This guide assumes you're using PostgreSQL, which is the recommended database system on Zerops. While Laravel supports multiple database systems, the examples in this guide are specifically for PostgreSQL.
+:::
+
 ## Running Migrations
 
 ### Automatic Migrations
@@ -144,14 +148,14 @@ public function up()
 
 Configure your database connection in your environment variables:
 
-```yaml:zerops.yml
+```yaml
 zerops:
   - setup: app
     run:
       envVariables:
-        DB_CONNECTION: mysql
+        DB_CONNECTION: pgsql
         DB_HOST: ${db_hostname}
-        DB_PORT: 3306
+        DB_PORT: 5432
         DB_DATABASE: myapp
         DB_USERNAME: ${db_user}
         DB_PASSWORD: ${db_password}
@@ -161,19 +165,23 @@ zerops:
 
 ### Create Test Database
 
-```php:config/database.php
+Add a testing connection to your `config/database.php`:
+
+```php
 'testing' => [
-    'driver' => 'mysql',
+    'driver' => 'pgsql',
     'host' => env('DB_TEST_HOST', '127.0.0.1'),
     'database' => env('DB_TEST_DATABASE', 'testing'),
-    'username' => env('DB_TEST_USERNAME', 'root'),
+    'username' => env('DB_TEST_USERNAME', 'postgres'),
     'password' => env('DB_TEST_PASSWORD', ''),
 ],
 ```
 
 ### Migration Testing Example
 
-```php:tests/Unit/MigrationTest.php
+Add a migration test file at `tests/Unit/MigrationTest.php`:
+
+```php
 public function test_migrations_can_be_run()
 {
     // Run migrations
@@ -201,8 +209,8 @@ public function test_migrations_can_be_run()
 
 Common migration issues and solutions:
 
-1. **Migration Timeout**
-```yaml:zerops.yml
+1. **Migration Timeout** while running migrations in [zerops.yml](/references/zeropsyml):
+```yaml
 zerops:
   - setup: app
     run:
@@ -210,9 +218,9 @@ zerops:
         - php artisan migrate --force --timeout=1000
 ```
 
-2. **Lock Timeout**
-```php:config/database.php
-'mysql' => [
+2. **Lock Timeout** in `config/database.php`:
+```php
+'pgsql' => [
     // ...
     'options' => [
         PDO::ATTR_LOCK_TIMEOUT => 1000
@@ -220,7 +228,7 @@ zerops:
 ],
 ```
 
-3. **Reset Migration State**
+3. **Reset Migration State** Commands:
 ```bash
 php artisan migrate:reset
 php artisan migrate

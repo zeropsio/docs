@@ -89,7 +89,7 @@ Read more about the [zcli service log](/references/cli/access-logs) command.
 
 Your Laravel application's `config/logging.php` defines how logs are handled:
 
-```php:config/logging.php
+```php
 <?php
 
 use Monolog\Handler\NullHandler;
@@ -119,13 +119,6 @@ return [
             'replace_placeholders' => true,
         ],
 
-        'syslog' => [
-            'driver' => 'syslog',
-            'level' => env('LOG_LEVEL', 'debug'),
-            'facility' => env('LOG_SYSLOG_FACILITY', LOG_USER),
-            'replace_placeholders' => true,
-        ],
-
         'daily' => [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),
@@ -133,20 +126,66 @@ return [
             'days' => env('LOG_DAILY_DAYS', 14),
             'replace_placeholders' => true,
         ],
+
+        'stderr' => [
+            'driver' => 'monolog',
+            'handler' => StreamHandler::class,
+            'with' => [
+                'stream' => 'php://stderr',
+            ],
+            'level' => env('LOG_LEVEL', 'debug'),
+        ],
+
+        'syslog' => [
+            'driver' => 'syslog',
+            'level' => env('LOG_LEVEL', 'debug'),
+        ],
+
+        'errorlog' => [
+            'driver' => 'errorlog',
+            'level' => env('LOG_LEVEL', 'debug'),
+        ],
     ],
 ];
 ```
 
 :::tip Available Log Channels
-Your Laravel application supports multiple logging channels:
-- **stack**: Combines multiple channels
-- **single**: Single file logger
-- **daily**: Daily rotating files
-- **syslog**: System logger (recommended for Zerops)
-- **slack**: Slack notifications
-- **stderr**: Standard error output
-- **errorlog**: PHP error_log
+Laravel supports several logging channels out of the box:
+- **stack**: Aggregates multiple logging channels into a single channel
+- **single**: Writes logs to a single file (storage/logs/laravel.log)
+- **daily**: Creates daily rotating log files
+- **syslog**: Writes to system log (recommended for Zerops)
+- **stderr**: Writes to PHP's standard error output stream
+- **errorlog**: Uses PHP's error_log function
+- **slack**: Sends log messages to Slack
+- **papertrail**: Sends logs to Papertrail
+- **mongodb**: Stores logs in MongoDB (requires additional package)
 :::
+
+### Using Logs in Your Code
+
+Laravel provides several ways to write log messages:
+
+```php
+// Using facade
+use Illuminate\Support\Facades\Log;
+
+Log::emergency($message);
+Log::alert($message);
+Log::critical($message);
+Log::error($message);
+Log::warning($message);
+Log::notice($message);
+Log::info($message);
+Log::debug($message);
+
+// Using helper function
+logger()->info($message);
+logger($message); // defaults to info level
+
+// With context data
+Log::info('User failed to login.', ['id' => $user->id]);
+```
 
 ### Zerops Environment Configuration
 
@@ -168,7 +207,7 @@ To use multiple logging channels, configure the stack channel:
 
 ```yml
 LOG_CHANNEL: stack
-LOG_STACK: syslog,daily
+LOG_STACK: syslog
 ```
 
 This will log to both syslog (for Zerops) and daily files (for local access).
