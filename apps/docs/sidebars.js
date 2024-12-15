@@ -546,15 +546,15 @@ module.exports = {
           },
           className: 'homepage-sidebar-item  service-sidebar-item',
         },
-        {
-          type: 'ref',
-          id: 'shared-storage/overview',
-          label: 'Shared Storage',
-          customProps: {
-            sidebar_icon: 'server',
-          },
-          className: 'homepage-sidebar-item  service-sidebar-item',
-        },
+//        {
+//          type: 'ref',
+//          id: 'shared-storage/overview',
+//          label: 'Shared Storage',
+//          customProps: {
+//            sidebar_icon: 'server',
+//          },
+//          className: 'homepage-sidebar-item  service-sidebar-item',
+//        },
       ],
     },
     {
