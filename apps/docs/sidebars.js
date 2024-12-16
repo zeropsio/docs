@@ -2490,11 +2490,10 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'How-to',
+      label: 'Initial Setup',
       collapsible: false,
       customProps: {
         sidebar_is_group_headline: true,
-        sidebar_icon: 'academic-cap-solid',
       },
       items: [
         {
@@ -2517,6 +2516,16 @@ module.exports = {
           id: 'frameworks/laravel/env-variables',
           label: 'Environment Variables',
         },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Advanced',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
         {
           type: 'doc',
           id: 'frameworks/laravel/cron',
@@ -2537,6 +2546,16 @@ module.exports = {
           id: 'frameworks/laravel/migrations',
           label: 'Database Migrations',
         },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Good to know',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
         {
           type: 'doc',
           id: 'frameworks/laravel/public-access',
@@ -2551,7 +2570,7 @@ module.exports = {
           type: 'doc',
           id: 'frameworks/laravel/backups',
           label: 'Database Backups',
-        },
+        },    
       ],
     },
     {
