@@ -12,25 +12,6 @@ Zerops manages environment variables without requiring manual `.env` files. This
   <DropdownItem title="Types of Environment Variables in Zerops">
 
 #### basic build & runtime variables
-
-Basic build and runtime variables are defined in your [zerops.yml file](/references/zeropsyml). Use these for build-time configurations, runtime settings that should be version controlled, and default values that remain consistent across environments. These variables require a redeployment when modified.
-
-When you need to update build or runtime variables, modify your [zerops.yml file](/references/zeropsyml) and redeploy your application to Zerops.
-
-#### secret variables
-
-Secret variables, managed through the Zerops GUI, are ideal for sensitive data like API keys and passwords, values that need frequent changes, and environment-specific configurations. These can be modified without redeploying your application.
-
-</DropdownItem>
-</Dropdown>
-
-## Environment Variables for Laravel
-
-### Build & Runtime Variables
-
-You can set basic build & runtime variables in your [zerops.yml file](/references/zeropsyml) and make sure they're not secrets.
-
-#### Build Variables
 ```yml
 zerops:
   - setup: app
@@ -43,7 +24,9 @@ zerops:
         DB_CONNECTION: ${RUNTIME_DB_CONNECTION}
 ```
 
-#### Runtime Variables
+Basic build and runtime variables are defined in your [zerops.yml file](/references/zeropsyml). Use these for build-time configurations, runtime settings that should be version controlled, and default values that remain consistent across environments. These variables require a redeployment when modified.
+
+When you need to update build or runtime variables, modify your [zerops.yml file](/references/zeropsyml) and redeploy your application to Zerops.
 
 ```yml
 zerops:
@@ -55,7 +38,19 @@ zerops:
         DB_CONNECTION: pgsql
 ```
 
-### Secret Variables
+#### secret variables
+
+Secret variables, managed through the Zerops GUI, are ideal for sensitive data like API keys and passwords. These can be modified without redeploying your application. Learn more about [Adding Environment Variables using Zerops GUI](#using-zerops-gui).
+
+</DropdownItem>
+</Dropdown>
+
+## Environment Variables for Laravel
+
+### Build & Runtime Variables
+
+You can set basic build & runtime variables in your [zerops.yml file](/references/zeropsyml) and make sure they're not secrets.
+
 
 #### Database
 
@@ -80,34 +75,9 @@ zerops:
         DB_PORT: 5432
 ```
 
-#### Redis
-
-You can just add the `redis` environment variables which you can get from the `valkey` service and later you can add it in `zerops.yml`.
-
-
-```yml
-zerops:
-  - setup: app
-    run:
-      base: php-nginx@8.4
-      os: alpine
-      siteConfigPath: site.conf.tmpl
-      envVariables:
-        REDIS_CLIENT: phpredis
-        REDIS_HOST: redis
-        REDIS_PORT: 6379
-
-        CACHE_PREFIX: cache
-        CACHE_STORE: redis
-
-        SESSION_DRIVER: redis
-        SESSION_ENCRYPT: false
-        SESSION_LIFETIME: 120
-        SESSION_PATH: /
-
-        QUEUE_CONNECTION: redis
-        BROADCAST_CONNECTION: redis
-```
+:::info
+If you want to use redis, you can just add the `redis` environment variables which you can get from the `valkey` service and later you can add it in `zerops.yml`. Read more at [Redis](/frameworks/laravel/redis).
+:::
 
 
 ## Generate Environment Variables
@@ -128,7 +98,7 @@ services:
 ```
 
 :::caution
-You can only generate environment variables for your zerops service using the `#yamlPreprocessor=on` with `<@generateRandomString(<32>)>`.
+You can only generate environment variables for your zerops service using the `#yamlPreprocessor=on` with `<@generateRandomString(<32>)>`. Learn more about [yamlPreprocessor](/references/importyml/pre-processor).
 :::
 
 
