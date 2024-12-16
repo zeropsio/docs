@@ -2499,11 +2499,6 @@ module.exports = {
       items: [
         {
           type: 'doc',
-          id: 'frameworks/laravel/examples',
-          label: 'Yaml Examples',
-        },
-        {
-          type: 'doc',
           id: 'frameworks/laravel/dev-to-prod',
           label: 'Development to Production',
         },
