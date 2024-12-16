@@ -2499,12 +2499,12 @@ module.exports = {
       items: [
         {
           type: 'doc',
-          id: 'frameworks/laravel/dev-to-prod',
-          label: 'Development to Production',
+          id: 'frameworks/laravel/create-project',
+          label: 'Create Project',
         },
         {
           type: 'doc',
-          id: 'frameworks/laravel/create',
+          id: 'frameworks/laravel/create-service',
           label: 'Create PHP Nginx service',
         },
         {
