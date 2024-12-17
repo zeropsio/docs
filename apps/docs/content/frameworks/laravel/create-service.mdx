@@ -54,7 +54,7 @@ Read more about [Automatic scaling and High Availability](/features/scaling-ha).
   />
 </p>
 
-## Service using Yaml from Zerops GUI
+### Add Service using Yaml
 
 If you want to import a service to an existing project, you can use Zerops GUI or [zCLI](/references/cli/commands#service).
 
@@ -62,9 +62,19 @@ If you want to import a service to an existing project, you can use Zerops GUI o
 - Then add a new Php Nginx service:
 
 ```yml
+#yamlPreprocessor=on
+project:
+  name: laravel-minimal-devel
+
 services:
   - hostname: app
     type: php-nginx@8.4
+    buildFromGit: https://github.com/zeropsio/recipe-laravel-minimal
+    enableSubdomainAccess: true
+    envSecrets:
+      APP_KEY: <@generateRandomString(<32>)>
+      APP_DEBUG: true
+      APP_ENV: development
 ```
 
-If you want to generate a random strings, secrets, etc. you can use the `#yamlPreprocessor=on` line at the beginning of your import YAML script and read more about how to setup [env variables](/frameworks/laravel/env-variables).
+If you want to generate a random strings, secrets, etc. you need to use `#yamlPreprocessor=on` line at the beginning of your import YAML script and read more about how to setup [env variables](/frameworks/laravel/env-variables).
