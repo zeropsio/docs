@@ -63,9 +63,6 @@ If you want to import a service to an existing project, you can use Zerops GUI o
 
 ```yml
 #yamlPreprocessor=on
-project:
-  name: laravel-minimal-devel
-
 services:
   - hostname: app
     type: php-nginx@8.4
@@ -77,4 +74,47 @@ services:
       APP_ENV: development
 ```
 
+<Dropdown>
+
+<DropdownItem title="Full Example of Project Import YAML">
+
+```yml
+#yamlPreprocessor=on
+project:
+  name: laravel-minimal-devel
+  tags:
+    - zerops-recipe
+    - development
+
+services:
+  - hostname: app
+    type: php-nginx@8.4
+    buildFromGit: https://github.com/zeropsio/recipe-laravel-minimal
+    enableSubdomainAccess: true
+    envSecrets:
+      APP_KEY: <@generateRandomString(<32>)>
+      APP_DEBUG: true
+      APP_ENV: development
+  - hostname: db
+    type: postgresql@16
+    mode: NON_HA
+    priority: 10
+```
+
+</DropdownItem>
+
+</Dropdown>
+
 If you want to generate a random strings, secrets, etc. you need to use `#yamlPreprocessor=on` line at the beginning of your import YAML script and read more about how to setup [env variables](/frameworks/laravel/env-variables).
+
+:::info
+If you want to add a database service to your project, you can use the following YAML:
+
+```yml
+services:
+  - hostname: db
+    type: postgresql@16
+    mode: NON_HA
+    priority: 10
+```
+:::
