@@ -25,6 +25,7 @@ const Image: React.FC<ImageProps> = ({
     <div className="py-0.5 text-center text-sm flex flex-col ">
       <img
         className="mx-auto"
+        loading="lazy"
         src={useBaseUrl(imageUrl)}
         alt={alt}
         {...props}
