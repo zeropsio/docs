@@ -559,6 +559,41 @@ module.exports = {
     },
     {
       type: 'html',
+      value: 'Zerops.yml',
+      customProps: {
+        sidebar_is_group_divider: true,
+      },
+      className: 'homepage-sidebar-item',
+    },
+    {
+      type: 'doc',
+      id: 'zerops-yml/specification',
+      label: 'Specification',
+      customProps: {
+        sidebar_icon: 'document-text',
+      },
+      className: 'homepage-sidebar-item',
+    },
+    {
+      type: 'doc',
+      id: 'zerops-yml/base-list',
+      label: 'Base list',
+      customProps: {
+        sidebar_icon: 'swatch',
+      },
+      className: 'homepage-sidebar-item',
+    },
+    {
+      type: 'doc',
+      id: 'zerops-yml/cron',
+      label: 'Cron',
+      customProps: {
+        sidebar_icon: 'arrow-path',
+      },
+      className: 'homepage-sidebar-item',
+    },
+    {
+      type: 'html',
       value: 'References',
       customProps: {
         sidebar_is_group_divider: true,
@@ -620,28 +655,6 @@ module.exports = {
           type: 'doc',
           id: 'references/vpn/faq',
           label: 'FAQ',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-      ],
-    },
-    {
-      type: 'category',
-      label: 'zerops.yml',
-      link: {
-        type: 'doc',
-        id: 'references/zeropsyml',
-      },
-      customProps: {
-        sidebar_icon: 'document-text',
-      },
-      className: 'homepage-sidebar-item',
-      items: [
-        {
-          type: 'doc',
-          id: 'references/zeropsyml/base-list',
-          label: 'Base technologies',
           customProps: {
             exclude_from_doc_list: false,
           },
