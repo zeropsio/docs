@@ -1,6 +1,7 @@
 import {
   AcademicCapSolid,
   Adjustments,
+  ArchiveBox,
   ArrowDownLeftMini,
   ArrowDownTray,
   ArrowPath,
@@ -146,6 +147,7 @@ export default {
   'academic-cap-solid': AcademicCapSolid,
   adjustments: Adjustments,
   alert: ExclamationCircleSolid,
+  'archive-box': ArchiveBox,
   'arrow-down-left-mini': ArrowDownLeftMini,
   'arrow-down-tray': ArrowDownTray,
   'arrow-path': ArrowPath,
