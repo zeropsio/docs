@@ -546,15 +546,15 @@ module.exports = {
           },
           className: 'homepage-sidebar-item  service-sidebar-item',
         },
-//        {
-//          type: 'ref',
-//          id: 'shared-storage/overview',
-//          label: 'Shared Storage',
-//          customProps: {
-//            sidebar_icon: 'server',
-//          },
-//          className: 'homepage-sidebar-item  service-sidebar-item',
-//        },
+        {
+          type: 'ref',
+          id: 'shared-storage/overview',
+          label: 'Shared Storage',
+          customProps: {
+            sidebar_icon: 'server',
+          },
+          className: 'homepage-sidebar-item  service-sidebar-item',
+        },
       ],
     },
     {
@@ -2241,7 +2241,27 @@ collapsible: false,
         {
           type: 'doc',
           id: 'shared-storage/how-to/create',
-          label: 'Create shared storage service',
+          label: 'Create shared storage',
+        },
+        {
+          type: 'doc',
+          id: 'shared-storage/how-to/connect',
+          label: 'Connect shared storage',
+        },
+        {
+          type: 'doc',
+          id: 'shared-storage/how-to/access',
+          label: 'Use shared storage',
+        },
+        {
+          type: 'doc',
+          id: 'shared-storage/how-to/backup',
+          label: 'Backup shared storage',
+        },
+        {
+          type: 'doc',
+          id: 'shared-storage/how-to/delete',
+          label: 'Delete shared storage service',
         },
       ],
     },
