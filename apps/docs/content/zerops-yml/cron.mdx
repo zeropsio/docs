@@ -1,0 +1,91 @@
+---
+title: Cron Jobs & Tasks
+description: Learn how to set up automated tasks and scheduled jobs in Zerops
+---
+
+Cron jobs are scheduled commands that execute automatically inside a service's containers based on defined timing rules.
+
+In Zerops, these jobs are configured in the `run` section of `zerops.yml` file under the `crontab` key.
+
+## Parameters
+
+### command
+*string, REQUIRED*
+
+The shell command to execute at the scheduled time. This can be any valid command.
+
+### timing
+*string, REQUIRED*
+
+The schedule for when the task should run, specified in standard cron format using five space-separated fields:
+  - Minute (0–59)
+  - Hour (0–23)
+  - Day of the month (1–31)
+  - Month (1–12)
+  - Day of the week (0–7; both 0 and 7 represent Sunday)
+
+#### Examples
+  - `"0 5 * * *"` – Runs daily at 5:00 AM.
+  - `"*/10 * * * *"` – Runs every 10 minutes.
+
+### allContainers
+*boolean, REQUIRED*
+
+**Options:**
+- `true` – Command runs on all containers.
+- `false` – Command runs on only one container.
+
+### workingDir
+*string, REQUIRED*
+
+Specifies the directory where the command will be executed. If not set, it defaults to `/var/www`.
+
+## Example Configurations
+Here’s a basic example of how to set up a cron job in your service's `zerops.yml`:
+
+```yaml
+run: 
+  crontab:
+    - command: "date >> /var/log/cron.log"
+      timing: "0 * * * *"
+```
+This configuration logs the current date to `/var/log/cron.log` every hour.
+
+### Running on Multiple Containers
+By default, cron jobs run on a single container, even if multiple containers exist for the service. To execute a command across all containers, you can use the `allContainers` parameter:
+
+```yaml
+run: 
+  crontab:
+    - command: "rm -rf /tmp/*"
+      timing: "0 0 * * *"
+      allContainers: true
+```
+This example removes temporary files from all containers every day at midnight.
+
+### Custom Working Directory
+You can also specify a custom working directory for your commands using the `workingDir` parameter:
+
+```yaml
+run: 
+  crontab:
+    - command: "php artisan schedule:run"
+      timing: "* * * * *"
+      workingDir: /var/www/html
+```
+In this case, the command runs every minute in the `/var/www/html` directory.
+
+### Multiple Cronjobs
+It is possible to define multiple cron jobs as a YAML object list under the `crontab` key.
+
+```yaml
+run:
+  crontab:
+    - command: ...
+      ...
+    - command: ...
+      ...
+```
+
+
+
