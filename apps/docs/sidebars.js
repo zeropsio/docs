@@ -2013,38 +2013,6 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'Dive-in',
-      collapsible: false,
-      link: {
-        type: 'doc',
-        id: 'keydb/getting-started',
-      },
-      customProps: {
-        sidebar_icon: 'rocket-launch',
-        sidebar_is_soon: true,
-      },
-      className: 'homepage-sidebar-item',
-      items: [
-        {
-          type: 'doc',
-          id: 'keydb/tutorial/quickstart',
-          label: 'Quickstart',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-        {
-          type: 'doc',
-          id: 'keydb/tutorial/step-by-step',
-          label: 'Step-by-step tutorial',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-      ],
-    },
-    {
-      type: 'category',
       label: 'How-to',
       collapsible: false,
       customProps: {
