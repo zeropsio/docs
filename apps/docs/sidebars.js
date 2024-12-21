@@ -2269,6 +2269,11 @@ module.exports = {
           id: 'object-storage/how-to/delete',
           label: 'Delete object storage service',
         },
+        {
+          type: 'doc',
+          id: 'object-storage/how-to/curl-file',
+          label: 'How to Download File from a Private Object Storage Bucket with cURL',
+        },
       ],
     },
   ],
