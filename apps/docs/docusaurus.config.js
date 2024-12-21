@@ -13,7 +13,7 @@ const config = {
   trailingSlash: false,
   onBrokenLinks: "ignore",
   onBrokenMarkdownLinks: "throw",
-  favicon: "img/favicon.ico",
+  favicon: "favicon.ico",
   organizationName: "zerops",
   projectName: "zerops/docs",
   plugins: [

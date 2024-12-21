@@ -640,6 +640,15 @@ module.exports = {
       className: 'homepage-sidebar-item',
     },
     {
+      type: 'doc',
+      label: 'Zsc',
+      id: 'references/zsc',
+      customProps: {
+        sidebar_icon: 'window',
+      },
+      className: 'homepage-sidebar-item',
+    },
+    {
       type: 'category',
       label: 'VPN',
       link: {
