@@ -142,6 +142,7 @@ import IconNats from './Nats';
 import IconKafka from './Kafka';
 import IconValkey from './Valkey';
 import IconAlpine from './Alpine';
+import IconZerops from './Zerops';
 
 export default {
   'academic-cap-solid': AcademicCapSolid,
@@ -289,4 +290,5 @@ export default {
   kafka: IconKafka,
   valkey: IconValkey,
   alpine: IconAlpine,
+  zerops: IconZerops,
 };
