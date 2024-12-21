@@ -302,6 +302,342 @@ module.exports = {
       //      },
       //    ],
       //  },
+      {
+        type: 'html',
+        value: 'Service actions',
+        customProps: {
+          sidebar_is_group_divider: true,
+        },
+        className: 'homepage-sidebar-item',
+      },
+      {
+        type: 'category',
+        label: 'Management',
+        link: {
+          type: 'doc',
+          id: 'common/service-management',
+        },
+        customProps: {
+          sidebar_icon: 'cog-six-tooth',
+        },
+        className: 'homepage-sidebar-item',
+        items: [
+          {
+            type: 'doc',
+            id: 'common/management/create',
+            label: 'Create service',
+            customProps: {
+              exclude_from_doc_list: false,
+            },
+          },
+          {
+            type: 'doc',
+            id: 'common/management/upgrade',
+            label: 'Upgrade service',
+            customProps: {
+              exclude_from_doc_list: false,
+            },
+          },
+          {
+            type: 'doc',
+            id: 'common/management/delete',
+            label: 'Delete service',
+            customProps: {
+              exclude_from_doc_list: false,
+            },
+          },
+          {
+            type: 'doc',
+            id: 'common/management/controls',
+            label: 'Stop & start service',
+            customProps: {
+              exclude_from_doc_list: false,
+            },
+          },
+        ],
+      },
+      {
+        type: 'category',
+        label: 'Configuration & Environment',
+        link: {
+          type: 'doc',
+          id: 'common/configuration',
+        },
+        customProps: {
+          sidebar_icon: 'adjustments',
+        },
+        className: 'homepage-sidebar-item',
+        items: [
+          {
+            type: 'doc',
+            id: 'common/configuration/env-variables',
+            label: 'Manage environmental variables',
+            customProps: {
+              exclude_from_doc_list: false,
+            },
+          },
+          {
+            type: 'doc',
+            id: 'common/configuration/customize-runtime',
+            label: 'Customize runtime',
+            customProps: {
+              exclude_from_doc_list: false,
+            },
+          },
+        ],
+      },
+      {
+        type: 'category',
+        label: 'Build & Deployment',
+        link: {
+          type: 'doc',
+          id: 'common/build-deployment',
+        },
+        customProps: {
+          sidebar_icon: 'rocket-launch',
+        },
+        className: 'homepage-sidebar-item',
+        items: [
+          {
+            type: 'doc',
+            id: 'common/build-deployment/build-pipeline',
+            label: 'Configure build & deploy pipeline',
+            customProps: {
+              exclude_from_doc_list: false,
+            },
+          },
+          {
+            type: 'doc',
+            id: 'common/build-deployment/trigger-pipeline',
+            label: 'Trigger build pipeline',
+            customProps: {
+              exclude_from_doc_list: false,
+            },
+          },
+          {
+            type: 'doc',
+            id: 'common/build-deployment/build-process',
+            label: 'Build process',
+            customProps: {
+              exclude_from_doc_list: false,
+            },
+          },
+          {
+            type: 'doc',
+            id: 'common/build-deployment/deploy-process',
+            label: 'Deploy process',
+            customProps: {
+              exclude_from_doc_list: false,
+            },
+          },
+        ],
+      },
+      {
+        type: 'category',
+        label: 'Monitoring & Maintenance',
+        link: {
+          type: 'doc',
+          id: 'common/maintenance',
+        },
+        customProps: {
+          sidebar_icon: 'tools',
+        },
+        className: 'homepage-sidebar-item',
+        items: [
+          {
+            type: 'doc',
+            id: 'common/maintenance/logs',
+            label: 'Set up & access logs',
+            customProps: {
+              exclude_from_doc_list: false,
+            },
+          },
+          {
+            type: 'doc',
+            id: 'common/maintenance/filebrowser',
+            label: 'Browse container files',
+            customProps: {
+              exclude_from_doc_list: false,
+            },
+          },
+          {
+            type: 'doc',
+            id: 'common/maintenance/access',
+            label: 'Access service',
+            customProps: {
+              exclude_from_doc_list: false,
+            },
+          },
+          {
+            type: 'doc',
+            id: 'common/maintenance/scaling',
+            label: 'Scale service',
+            customProps: {
+              exclude_from_doc_list: false,
+            },
+          },
+          {
+            type: 'doc',
+            id: 'common/maintenance/shared-storage',
+            label: 'Connect/disconnect shared storage',
+            customProps: {
+              exclude_from_doc_list: false,
+            },
+          },
+        ],
+      },
+      {
+        type: 'html',
+        value: 'Zerops.yml',
+        customProps: {
+          sidebar_is_group_divider: true,
+        },
+        className: 'homepage-sidebar-item',
+      },
+      {
+        type: 'doc',
+        id: 'zerops-yml/specification',
+        label: 'Specification',
+        customProps: {
+          sidebar_icon: 'document-text',
+        },
+        className: 'homepage-sidebar-item',
+      },
+      {
+        type: 'doc',
+        id: 'zerops-yml/base-list',
+        label: 'Base list',
+        customProps: {
+          sidebar_icon: 'swatch',
+        },
+        className: 'homepage-sidebar-item',
+      },
+      {
+        type: 'doc',
+        id: 'zerops-yml/cron',
+        label: 'Cron',
+        customProps: {
+          sidebar_icon: 'arrow-path',
+        },
+        className: 'homepage-sidebar-item',
+      },
+      {
+        type: 'html',
+        value: 'References',
+        customProps: {
+          sidebar_is_group_divider: true,
+        },
+        className: 'homepage-sidebar-item',
+      },
+      {
+        type: 'category',
+        label: 'zCLI',
+        link: {
+          type: 'doc',
+          id: 'references/cli',
+        },
+        customProps: {
+          sidebar_icon: 'window',
+        },
+        className: 'homepage-sidebar-item',
+        items: [
+          {
+            type: 'doc',
+            id: 'references/cli/commands',
+            label: 'Available commands',
+            customProps: {
+              exclude_from_doc_list: false,
+            },
+          },
+          {
+            type: 'doc',
+            id: 'references/cli/access-logs',
+            label: 'Access logs',
+            customProps: {
+              exclude_from_doc_list: false,
+            },
+          },
+        ],
+      },
+      {
+        type: 'doc',
+        id: 'references/ssh',
+        label: 'SSH',
+        customProps: {
+          sidebar_icon: 'command-line',
+        },
+        className: 'homepage-sidebar-item',
+      },
+      {
+        type: 'category',
+        label: 'VPN',
+        link: {
+          type: 'doc',
+          id: 'references/vpn',
+        },
+        customProps: {
+          sidebar_icon: 'globe-europe',
+        },
+        className: 'homepage-sidebar-item',
+        items: [
+          {
+            type: 'doc',
+            id: 'references/vpn/faq',
+            label: 'FAQ',
+            customProps: {
+              exclude_from_doc_list: false,
+            },
+          },
+        ],
+      },
+      {
+        type: 'category',
+        label: 'Import file',
+        link: {
+          type: 'doc',
+          id: 'references/import',
+        },
+        customProps: {
+          sidebar_icon: 'cloud-arrow-up',
+        },
+        className: 'homepage-sidebar-item',
+        items: [
+          {
+            type: 'doc',
+            id: 'references/importyml/pre-processor',
+            label: 'Yaml Preprocessing',
+            customProps: {
+              exclude_from_doc_list: false,
+            },
+          },
+          {
+            type: 'doc',
+            id: 'references/importyml/type-list',
+            label: 'Service types',
+            customProps: {
+              exclude_from_doc_list: false,
+            },
+          },
+        ],
+      },
+      {
+        type: 'doc',
+        id: 'references/github-integration',
+        label: 'Github Integration',
+        customProps: {
+          sidebar_icon: 'github',
+        },
+        className: 'homepage-sidebar-item',
+      },
+      {
+        type: 'doc',
+        id: 'references/gitlab-integration',
+        label: 'Gitlab Integration',
+        customProps: {
+          sidebar_icon: 'cloud-arrow-up',
+        },
+        className: 'homepage-sidebar-item',
+      },
     {
       type: 'html',
       value: 'All Supported Services',
@@ -559,175 +895,6 @@ module.exports = {
     },
     {
       type: 'html',
-      value: 'Service actions',
-      customProps: {
-        sidebar_is_group_divider: true,
-      },
-      className: 'homepage-sidebar-item',
-    },
-    {
-      type: 'doc',
-      id: 'runtime-common/build-pipeline',
-      label: 'Build pipeline',
-      customProps: {
-        sidebar_icon: 'document-text',
-      },
-      className: 'homepage-sidebar-item',
-    },
-    {
-      type: 'html',
-      value: 'Zerops.yml',
-      customProps: {
-        sidebar_is_group_divider: true,
-      },
-      className: 'homepage-sidebar-item',
-    },
-    {
-      type: 'doc',
-      id: 'zerops-yml/specification',
-      label: 'Specification',
-      customProps: {
-        sidebar_icon: 'document-text',
-      },
-      className: 'homepage-sidebar-item',
-    },
-    {
-      type: 'doc',
-      id: 'zerops-yml/base-list',
-      label: 'Base list',
-      customProps: {
-        sidebar_icon: 'swatch',
-      },
-      className: 'homepage-sidebar-item',
-    },
-    {
-      type: 'doc',
-      id: 'zerops-yml/cron',
-      label: 'Cron',
-      customProps: {
-        sidebar_icon: 'arrow-path',
-      },
-      className: 'homepage-sidebar-item',
-    },
-    {
-      type: 'html',
-      value: 'References',
-      customProps: {
-        sidebar_is_group_divider: true,
-      },
-      className: 'homepage-sidebar-item',
-    },
-    {
-      type: 'category',
-      label: 'zCLI',
-      link: {
-        type: 'doc',
-        id: 'references/cli',
-      },
-      customProps: {
-        sidebar_icon: 'window',
-      },
-      className: 'homepage-sidebar-item',
-      items: [
-        {
-          type: 'doc',
-          id: 'references/cli/commands',
-          label: 'Available commands',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-        {
-          type: 'doc',
-          id: 'references/cli/access-logs',
-          label: 'Access logs',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-      ],
-    },
-    {
-      type: 'doc',
-      id: 'references/ssh',
-      label: 'SSH',
-      customProps: {
-        sidebar_icon: 'command-line',
-      },
-      className: 'homepage-sidebar-item',
-    },
-    {
-      type: 'category',
-      label: 'VPN',
-      link: {
-        type: 'doc',
-        id: 'references/vpn',
-      },
-      customProps: {
-        sidebar_icon: 'globe-europe',
-      },
-      className: 'homepage-sidebar-item',
-      items: [
-        {
-          type: 'doc',
-          id: 'references/vpn/faq',
-          label: 'FAQ',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Import file',
-      link: {
-        type: 'doc',
-        id: 'references/import',
-      },
-      customProps: {
-        sidebar_icon: 'cloud-arrow-up',
-      },
-      className: 'homepage-sidebar-item',
-      items: [
-        {
-          type: 'doc',
-          id: 'references/importyml/pre-processor',
-          label: 'Yaml Preprocessing',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-        {
-          type: 'doc',
-          id: 'references/importyml/type-list',
-          label: 'Service types',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-      ],
-    },
-    {
-      type: 'doc',
-      id: 'references/github-integration',
-      label: 'Github Integration',
-      customProps: {
-        sidebar_icon: 'github',
-      },
-      className: 'homepage-sidebar-item',
-    },
-    {
-      type: 'doc',
-      id: 'references/gitlab-integration',
-      label: 'Gitlab Integration',
-      customProps: {
-        sidebar_icon: 'cloud-arrow-up',
-      },
-      className: 'homepage-sidebar-item',
-    },
-    {
-      type: 'html',
       value: 'Help',
       customProps: {
         sidebar_is_group_divider: true,
@@ -801,151 +968,6 @@ module.exports = {
   gleam: createRuntimeCategory('gleam', 'gleam', 'Gleam'),
   elixir: createRuntimeCategory('elixir', 'elixir', 'Elixir'),
   nginx: createWebserverCategory('nginx', 'nginx', 'Nginx'),
-//  nginx: [
-//    {
-//      type: 'ref',
-//      id: 'homepage',
-//      label: 'Back to home',
-//      customProps: {
-//        sidebar_is_back_link: true,
-//        sidebar_icon: 'back-arrow',
-//      },
-//    },
-//    {
-//      type: 'doc',
-//      id: 'nginx/overview',
-//      label: 'Zerops Nginx static Service',
-//      customProps: {
-//        sidebar_is_title: true,
-//        sidebar_icon: 'nginx',
-//      },
-//    },
-//    {
-//      type: 'category',
-//      label: 'Dive-in',
-//      collapsible: false,
-//      link: {
-//        type: 'doc',
-//        id: 'nginx/getting-started',
-//      },
-//      customProps: {
-//        sidebar_icon: 'rocket-launch',
-//      },
-//      className: 'homepage-sidebar-item',
-//      items: [
-//        {
-//          type: 'doc',
-//          id: 'nginx/tutorial/quickstart',
-//          label: 'Quickstart',
-//          customProps: {
-//            exclude_from_doc_list: false,
-//          },
-//        },
-//        {
-//          type: 'doc',
-//          id: 'nginx/tutorial/step-by-step',
-//          label: 'Step-by-step tutorial',
-//          customProps: {
-//            exclude_from_doc_list: false,
-//          },
-//        },
-//      ],
-//    },
-//    {
-//      type: 'category',
-//      label: 'How-to',
-//      collapsible: false,
-//      customProps: {
-//        sidebar_is_group_headline: true,
-//      },
-//      items: [
-//        {
-//          type: 'doc',
-//          id: 'nginx/how-to/create',
-//          label: 'Create Nginx static service',
-//        },
-//        {
-//          type: 'doc',
-//          id: 'nginx/how-to/env-variables',
-//          label: 'Manage environment variables',
-//        },
-//        {
-//          type: 'doc',
-//          id: 'nginx/how-to/upgrade',
-//          label: 'Upgrade Nginx service',
-//        },
-//        {
-//          type: 'doc',
-//          id: 'nginx/how-to/build-pipeline',
-//          label: 'Configure build & deploy pipeline',
-//        },
-//        {
-//          type: 'doc',
-//          id: 'nginx/how-to/trigger-pipeline',
-//          label: 'Trigger build pipeline',
-//        },
-//        {
-//          type: 'doc',
-//          id: 'nginx/how-to/deploy-process',
-//          label: 'Deploy process',
-//        },
-//        {
-//          type: 'doc',
-//          id: 'nginx/how-to/customize-runtime',
-//          label: 'Customize Nginx static runtime',
-//        },
-//        {
-//          type: 'doc',
-//          id: 'nginx/how-to/customize-web-server',
-//          label: 'Customize web server',
-//        },
-//        {
-//          type: 'doc',
-//          id: 'nginx/how-to/logs',
-//          label: 'Setup & access logs',
-//        },
-//        {
-//          type: 'doc',
-//          id: 'nginx/how-to/filebrowser',
-//          label: 'Browse container files',
-//        },
-//        {
-//          type: 'doc',
-//          id: 'nginx/how-to/access',
-//          label: 'Access Nginx runtime service',
-//        },
-//        {
-//          type: 'doc',
-//          id: 'nginx/how-to/scaling',
-//          label: 'Scale Nginx static service',
-//        },
-//        {
-//          type: 'doc',
-//          id: 'nginx/how-to/controls',
-//          label: 'Stop & start Nginx static service',
-//        },
-//        {
-//          type: 'doc',
-//          id: 'nginx/how-to/shared-storage',
-//          label: 'Connect / disconnect shared storage',
-//        },
-//        {
-//          type: 'doc',
-//          id: 'nginx/how-to/delete',
-//          label: 'Delete Nginx static service',
-//        },
-//      ],
-//    },
-//    {
-//      type: 'doc',
-//      id: 'nginx/faq',
-//      label: 'FAQ',
-//      customProps: {
-//        sidebar_is_title: true,
-//        sidebar_icon: 'chat-bubble-left-right',
-//      },
-//    },
-//  ],
   mariadb: [
     {
       type: 'ref',
@@ -1481,22 +1503,7 @@ function createRuntimeCategory(icon, categoryName, prettyName) {
         {
           type: 'doc',
           id: categoryName + '/how-to/create',
-          label: 'Create Node.js service',
-        },
-        {
-          type: 'doc',
-          id: categoryName + '/how-to/upgrade',
-          label: 'Upgrade ' + prettyName + ' service',
-        },
-        {
-          type: 'doc',
-          id: categoryName + '/how-to/delete',
-          label: 'Delete ' + prettyName + ' service',
-        },
-        {
-          type: 'doc',
-          id: categoryName + '/how-to/controls',
-          label: 'Stop & start ' + prettyName + ' runtime service',
+          label: 'Create ' + prettyName + ' service',
         },
       ],
     },
@@ -1565,23 +1572,8 @@ function createRuntimeCategory(icon, categoryName, prettyName) {
         },
         {
           type: 'doc',
-          id: categoryName + '/how-to/filebrowser',
-          label: 'Browse container files',
-        },
-        {
-          type: 'doc',
-          id: categoryName + '/how-to/access',
-          label: 'Access ' + prettyName + ' runtime service',
-        },
-        {
-          type: 'doc',
           id: categoryName + '/how-to/scaling',
           label: 'Scale ' + prettyName + ' runtime service',
-        },
-        {
-          type: 'doc',
-          id: categoryName + '/how-to/shared-storage',
-          label: 'Connect / disconnect shared storage',
         },
       ],
     },
@@ -1664,22 +1656,7 @@ function createWebserverCategory(icon, categoryName, prettyName) {
         {
           type: 'doc',
           id: categoryName + '/how-to/create',
-          label: 'Create Node.js service',
-        },
-        {
-          type: 'doc',
-          id: categoryName + '/how-to/upgrade',
-          label: 'Upgrade ' + prettyName + ' service',
-        },
-        {
-          type: 'doc',
-          id: categoryName + '/how-to/delete',
-          label: 'Delete ' + prettyName + ' service',
-        },
-        {
-          type: 'doc',
-          id: categoryName + '/how-to/controls',
-          label: 'Stop & start ' + prettyName + ' runtime service',
+          label: 'Create ' + prettyName + ' service',
         },
       ],
     },
@@ -1755,23 +1732,8 @@ function createWebserverCategory(icon, categoryName, prettyName) {
         },
         {
           type: 'doc',
-          id: categoryName + '/how-to/filebrowser',
-          label: 'Browse container files',
-        },
-        {
-          type: 'doc',
-          id: categoryName + '/how-to/access',
-          label: 'Access ' + prettyName + ' runtime service',
-        },
-        {
-          type: 'doc',
           id: categoryName + '/how-to/scaling',
           label: 'Scale ' + prettyName + ' runtime service',
-        },
-        {
-          type: 'doc',
-          id: categoryName + '/how-to/shared-storage',
-          label: 'Connect / disconnect shared storage',
         },
       ],
     },
