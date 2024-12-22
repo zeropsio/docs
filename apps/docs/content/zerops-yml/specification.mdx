@@ -145,11 +145,42 @@ Deploys all `file.txt` files that are located in any path that begins with `/pat
 deployFiles: ./path/~/to/file.txt
 ```
 
-E.g. `./src/assets/~fonts` would result in  `/var/www/fonts` in runtime.
+By default, `./src/assets/fonts` deploys to `/var/www/src/assets/fonts`, keeping the full path. Adding `~`, like `./src/assets/~fonts`, shortens it to `/var/www/fonts`
 
 #### .deployignore
 
-Use a `.deployignore` file to exclude specific files or folders from deployment.
+Add a `.deployignore` file to the root of your project to specify which files and folders Zerops should ignore during deploy. The syntax follows the same pattern format as <a href="https://git-scm.com/docs/gitignore#_pattern_format">`.gitignore`</a>.
+
+To ignore a specific file or directory path, start the pattern with a forward slash (`/`). Without the leading slash, the pattern will match files with that name in any directory.
+
+:::tip
+For consistency, it's recommended to configure both your `.gitignore` and `.deployignore` files with the same patterns.
+:::
+
+Examples:
+
+```yml title="zerops.yml"
+zerops:
+  - setup: app
+    build:
+      deployFiles: ./
+```
+
+```text title=".deployignore"
+/src/file.txt
+```
+The example above ignores `file.txt` only in the root src directory.
+```text title=".deployignore"
+src/file.txt
+```
+This example above ignores `file.txt` in ANY directory named `src`, such as:
+- `/src/file.txt`
+- `/folder2/folder3/src/file.txt`
+- `/src/src/file.txt`
+
+:::note
+`.deployignore` file also works with <a href="/references/cli/commands#deploy">`zcli service deploy`</a> command.
+:::
 
 ### cache <Badge text="Optional" color="blue" />
 

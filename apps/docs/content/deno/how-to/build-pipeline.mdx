@@ -296,6 +296,8 @@ Determines files or folders produced by your build, which should be deployed to 
 
 The path starts from the **root directory** of your project (the location of `zerops.yml`). You must enclose the name in quotes if the folder or the file name contains a space.
 
+The files/folders will be placed into `/var/www` folder in runtime, e.g. `./src/assets/fonts` would result in `/var/www/src/assets/fonts`.
+
 #### Examples
 
 Deploys a folder, and a file from the project root directory:
@@ -342,22 +344,39 @@ Deploys all folders that are located in any path that begins with `/path/` and e
 deployFiles: ./path/~/to/
 ```
 
+:::note Example
+By default, `./src/assets/fonts` deploys to `/var/www/src/assets/fonts`, keeping the full path. Adding `~`, like `./src/assets/~fonts`, shortens it to `/var/www/fonts`
+:::
 #### .deployignore
 
-Add a `.deployignore` file to the root of your project and specify which files and folders Zerops should ignore during deploy. The syntax is the same as of a <a href="https://git-scm.com/docs/gitignore#_pattern_format">`.gitignore`</a> file.
+Add a `.deployignore` file to the root of your project to specify which files and folders Zerops should ignore during deploy. The syntax follows the same pattern format as <a href="https://git-scm.com/docs/gitignore#_pattern_format">`.gitignore`</a>.
 
-Example to ignore `node_modules` folder in deploy:
+To ignore a specific file or directory path, start the pattern with a forward slash (`/`). Without the leading slash, the pattern will match files with that name in any directory.
 
-```jsx title="zerops.yml"
+:::tip
+For consistency, it's recommended to configure both your `.gitignore` and `.deployignore` files with the same patterns.
+:::
+
+Examples:
+
+```yml title="zerops.yml"
 zerops:
   - setup: app
     build:
       deployFiles: ./
 ```
 
-```jsx title=".deployignore"
-node_modules;
+```text title=".deployignore"
+/src/file.txt
 ```
+The example above ignores `file.txt` only in the root src directory.
+```text title=".deployignore"
+src/file.txt
+```
+This example above ignores `file.txt` in ANY directory named `src`, such as:
+- `/src/file.txt`
+- `/folder2/folder3/src/file.txt`
+- `/src/src/file.txt`
 
 :::note
 `.deployignore` file also works with <a href="/references/cli/commands#deploy">`zcli service deploy`</a> command.
