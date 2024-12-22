@@ -9,6 +9,7 @@ import LargeCardList from '@site/src/components/LargeCardList';
 import LargeCard from '@site/src/components/LargeCard';
 import CustomCard from '@site/src/components/CustomCard';
 import DeployButton from '@site/src/components/DeployButton';
+import { Dropdown, DropdownItem } from '/src/components/Dropdown';
 
 [Laravel ↗](https://laravel.com) is a PHP framework for building robust, full-stack web applications. Whether you prefer pure PHP with Livewire or want to use Laravel with React/Vue using Inertia, Laravel provides a complete toolkit for production-ready applications for every developer.
 
@@ -100,6 +101,174 @@ import DeployButton from '@site/src/components/DeployButton';
 />
 
 -----
+
+## Laravel Recipes
+
+We have created some [Laravel recipes](https://github.com/orgs/zeropsio/repositories?q=Laravel) for you to import and get started fast with Laravel on Zerops.
+
+### Minimal Laravel Recipe
+
+A minimal setup for a Laravel application that includes a single service for the application and a PostgreSQL database. This basic configuration provides essential features like database migrations, environment variable configuration, and health check implementations, making it suitable for simple applications that need a solid foundation without additional complexity.
+
+<Dropdown>
+<DropdownItem title="Development / Small Scale Configuration">
+```yml
+#yamlPreprocessor=on
+project:
+  name: laravel-minimal-devel
+  tags:
+    - zerops-recipe
+    - development
+
+services:
+  - hostname: app
+    type: php-nginx@8.4
+    buildFromGit: https://github.com/zeropsio/recipe-laravel-minimal
+    enableSubdomainAccess: true
+    envSecrets:
+      APP_KEY: <@generateRandomString(<32>)>
+      APP_DEBUG: true
+      APP_ENV: development
+
+  - hostname: db
+    type: postgresql@16
+    mode: NON_HA
+    priority: 10
+```
+</DropdownItem>
+</Dropdown>
+
+
+<Dropdown>
+<DropdownItem title="Production Configuration">
+```yml
+#yamlPreprocessor=on
+project:
+  name: laravel-minimal-prod
+  corePackage: SERIOUS
+  tags:
+    - zerops-recipe
+    - development
+
+services:
+  - hostname: app
+    type: php-nginx@8.4
+    buildFromGit: https://github.com/zeropsio/recipe-laravel-minimal
+    enableSubdomainAccess: true
+    envSecrets:
+      APP_KEY: <@generateRandomString(<32>)>
+      APP_DEBUG: true
+      APP_ENV: development
+
+  - hostname: db
+    type: postgresql@16
+    mode: NON_HA
+    priority: 10
+```
+</DropdownItem>
+</Dropdown>
+
+:::info
+You can find the laravel minimal recipe at [zeropsio/recipe-laravel-minimal](https://github.com/zeropsio/recipe-laravel-minimal) on GitHub with the full [zerops.yml configuration](https://github.com/zeropsio/recipe-laravel-minimal/blob/main/zerops.yml).
+:::
+
+
+### Laravel Jetstream Recipe
+
+An Advanced Laravel application that includes Jetstream authentication, Redis for cache, queue, and session, Object Storage integration, Team management features, Local email testing with Mailpit, and Asset compilation with Vite. This makes it perfectly suitable for production of any size.
+
+<Dropdown>
+<DropdownItem title="Development / Small Scale Configuration">
+```yml
+#yamlPreprocessor=on
+project:
+  name: laravel-jetstream-devel
+  tags:
+    - zerops-recipe
+    - development
+
+services:
+  - hostname: app
+    type: php-nginx@8.4
+    buildFromGit: https://github.com/zeropsio/recipe-laravel-jetstream
+    enableSubdomainAccess: true
+    envSecrets:
+      APP_NAME: ZeropsLaravelJetstreamDev
+      APP_DEBUG: true
+      APP_ENV: development
+      APP_KEY: <@generateRandomString(<32>)>
+
+  - hostname: db
+    type: postgresql@16
+    mode: NON_HA
+    priority: 10
+
+  - hostname: redis
+    type: valkey@7.2
+    mode: NON_HA
+    priority: 10
+
+  - hostname: storage
+    type: object-storage
+    objectStorageSize: 2
+    objectStoragePolicy: public-read
+    priority: 10
+
+  - hostname: mailpit
+    type: go@1
+    buildFromGit: https://github.com/zeropsio/recipe-mailpit
+    enableSubdomainAccess: true
+```
+</DropdownItem>
+</Dropdown>
+
+<Dropdown>
+<DropdownItem title="Production Configuration">
+```yml
+#yamlPreprocessor=on
+project:
+  name: laravel-jetstream-prod
+  corePackage: SERIOUS
+  tags:
+    - zerops-recipe
+    - production
+
+services:
+  - hostname: app
+    type: php-nginx@8.4
+    buildFromGit: https://github.com/zeropsio/recipe-laravel-jetstream
+    enableSubdomainAccess: true
+    minContainers: 2
+    envSecrets:
+      APP_NAME: ZeropsLaravelJetstreamProd
+      APP_DEBUG: false
+      APP_ENV: production
+      APP_KEY: <@generateRandomString(<32>)>
+
+  - hostname: db
+    type: postgresql@16
+    mode: HA
+    priority: 10
+
+  - hostname: redis
+    type: valkey@7.2
+    mode: HA
+    priority: 10
+
+  - hostname: storage
+    type: object-storage
+    objectStorageSize: 2
+    objectStoragePolicy: public-read
+    priority: 10
+```
+</DropdownItem>
+</Dropdown>
+
+:::info
+You can find the laravel jetstream recipe at [zeropsio/recipe-laravel-jetstream](https://github.com/zeropsio/recipe-laravel-jetstream) on GitHub with the full [zerops.yml configuration](https://github.com/zeropsio/recipe-laravel-jetstream/blob/main/zerops.yml).
+:::
+
+---
 
 <DocCardList
   colSize={6}
