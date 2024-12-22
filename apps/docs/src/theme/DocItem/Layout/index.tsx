@@ -54,7 +54,7 @@ export default function DocItemLayout({ children }: Props): JSX.Element {
           'col',
           'my-0 mx-auto max-w-main-content w-full ml-auto lg:py-0 py-0 px-1',
           !docTOC.hidden && 'w-9/12',
-          !sidebarContext?.hiddenSidebarContainer && '!max-w-[720px]'
+          !sidebarContext?.hiddenSidebarContainer && 'max-w-[720px]'
         )}
       >
         {unlisted && <Unlisted />}
