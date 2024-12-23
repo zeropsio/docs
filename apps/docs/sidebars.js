@@ -97,6 +97,15 @@ module.exports = {
       },
       className: 'homepage-sidebar-item',
     },
+    {
+      type: 'doc',
+      id: 'features/backup',
+      label: 'Backup',
+      customProps: {
+        sidebar_icon: 'currency-dollar',
+      },
+      className: 'homepage-sidebar-item',
+    },
     // {
     //   type: 'doc',
     //   id: 'features/remote-dev',
