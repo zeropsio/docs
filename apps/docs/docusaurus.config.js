@@ -136,7 +136,7 @@ const config = {
     socialLinks: [
       {
         type: "discord",
-        href: "https://discord.gg/invite/WDvCZ54",
+        href: "https://docs.zerops.io/discord",
       },
       {
         type: "twitter",
