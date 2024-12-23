@@ -1,0 +1,428 @@
+---
+title: Environment Variables
+description: Learn How to Manage Environment Variables in Your Laravel Application on Zerops
+---
+
+import Image from '/src/components/Image';
+import { Dropdown, DropdownItem } from '/src/components/Dropdown';
+
+Zerops manages environment variables without requiring manual `.env` files. This enables running applications across different environments (development, staging, production) while keeping environment-specific configurations isolated from your code.
+
+<Dropdown>
+  <DropdownItem title="Types of Environment Variables in Zerops">
+
+#### basic build & runtime variables
+```yml
+zerops:
+  - setup: app
+    build:
+      base: php@8.4
+      os: alpine
+      envVariables:
+        APP_DEBUG: true
+        APP_ENV: development
+        DB_CONNECTION: ${RUNTIME_DB_CONNECTION}
+```
+
+Basic build and runtime variables are defined in your [zerops.yml file](/zerops-yml/specification). Use these for build-time configurations, runtime settings that should be version controlled, and default values that remain consistent across environments. These variables require a redeployment when modified.
+
+When you need to update build or runtime variables, modify your [zerops.yml file](/zerops-yml/specification) and redeploy your application to Zerops.
+
+```yml
+zerops:
+  - setup: app
+    run:
+      base: php-nginx@8.4
+      os: alpine
+      envVariables:
+        DB_CONNECTION: pgsql
+```
+
+#### secret variables
+
+Secret variables, managed through the Zerops GUI, are ideal for sensitive data like API keys and passwords. These can be modified without redeploying your application. Learn more about [Adding Environment Variables using Zerops GUI](#using-zerops-gui).
+
+</DropdownItem>
+</Dropdown>
+
+## Environment Variables for Laravel
+
+### Build & Runtime Variables
+
+You can set basic build & runtime variables in your [zerops.yml file](/zerops-yml/specification) and make sure they're not secrets.
+
+
+#### Database
+
+You can use use reference environment variables from other services.
+
+example:  `db_password`, `db_user`, `db_host`, `db_database`, `db_port` (from `db` service). 
+
+
+```yml
+zerops:
+  - setup: app
+    run:
+      base: php-nginx@8.4
+      os: alpine
+      siteConfigPath: site.conf.tmpl
+      envVariables:
+        DB_CONNECTION: pgsql
+        DB_DATABASE: db
+        DB_HOST: db
+        DB_USERNAME: ${db_user}
+        DB_PASSWORD: ${db_password}
+        DB_PORT: 5432
+```
+
+:::info
+If you want to use Redis, read more at [laravel/redis](/frameworks/laravel/redis).
+:::
+
+
+## Generate Environment Variables
+
+Generate environment variables for your zerops service using the `envSecrets` while importing to your Zerops project.
+
+```yml
+#yamlPreprocessor=on
+services:
+  - hostname: app
+    type: php-nginx@8.4
+    buildFromGit: https://github.com/zeropsio/recipe-laravel-minimal
+    enableSubdomainAccess: true
+    envSecrets:
+      APP_KEY: <@generateRandomString(<32>)>
+      APP_DEBUG: true
+      APP_ENV: development
+```
+
+:::caution
+You can only generate environment variables for your zerops service using the `#yamlPreprocessor=on` with `<@generateRandomString(<32>)>`. Learn more about [yamlPreprocessor](/references/importyml/pre-processor).
+:::
+
+
+## Adding Environment Variables
+
+### Using Zerops GUI
+
+In your Zerops service you can set secret variables at environment variables page:
+
+- Scroll to the **Secret variables** section.
+- Click on the **Add secret variable** button.
+- Set variable key and value.
+
+You can edit or delete env variables that you've created by hovering over the row and clicking on the menu on the right side of each row.
+
+<p align="center">
+  <Image 
+    lightImage="/img/gui/secrets.webp"
+    darkImage="/img/gui/secrets.webp"
+    alt="Environment Variables Secrets"
+    style={{ width: '95%', height: 'auto' }}
+  />
+</p>
+
+The changes you've made to environment variables will be automatically applied to all containers of your project's services.
+
+:::caution
+You need to **restart** the runtime service after you save the changes in env variables. The PHP process running in the container receives the list env variables only when it starts. Update of the env variables while the PHP process is running does not affect your application.
+:::
+
+### Build Environment Variables using zerops.yml
+
+To set basic env variables for the build environment, add the `envVariables` attribute to the build section in your `zerops.yml`.
+
+```yml
+zerops:
+  # define hostname of your service
+  - setup: app
+    build:
+      base: php@8.4
+      os: alpine
+      # OPTIONAL. Defines the env variables for the build environment:
+      envVariables:
+        APP_DEBUG: true
+        APP_ENV: development
+    # ==== how to build your application ====
+    run:
+      base: php-nginx@8.4
+      os: alpine
+      siteConfigPath: site.conf.tmpl
+```
+
+When you need to update a value of an existing env variable or change the set of build or runtime env variables, update your `zerops.yml` and redeploy your application to Zerops.
+
+### Runtime Environment Variables using zerops.yml
+
+To set basic env variables for the runtime environment, add the `envVariables` attribute to the runtime section in your `zerops.yml`.
+
+```yml
+zerops:
+  # define hostname of your service
+  - setup: app
+    build:
+      base: php@8.4
+      os: alpine
+    # ==== how to build your application ====
+    run:
+      base: php-nginx@8.4
+      os: alpine
+      siteConfigPath: site.conf.tmpl
+      # OPTIONAL. Defines the env variables for the runtime environment:
+      envVariables:
+        DB_CONNECTION: pgsql
+        DB_DATABASE: db
+        DB_HOST: db
+        DB_USERNAME: ${db_user}
+        DB_PASSWORD: ${db_password}
+        DB_PORT: 5432
+```
+
+When you need to update a value of an existing env variable or change the set of build or runtime env variables, update your `zerops.yml` and redeploy your application to Zerops.
+
+<Dropdown>
+  <DropdownItem title="Environment Variable Restrictions">
+  Environment variable names must start with a letter or underscore, followed by any combination of letters, numbers, or underscores (matching the pattern `[a-zA-Z_]+[a-zA-Z0-9_]*`).
+
+While keys are case-sensitive, each variable name must be unique within a service, regardless of its case.
+
+For variable values, Zerops only accepts ASCII characters, and end-of-line characters are not permitted.
+
+These restrictions apply uniformly across all environment variable types in Zerops, whether they're secret, build, or runtime variables.
+
+```yml
+APP_NAME
+database_url
+API_KEY_123
+_INTERNAL_VALUE
+```
+  </DropdownItem>
+</Dropdown>
+## Generated Environment Variables
+
+Zerops creates several helper variables when a PHP service is created, e.g. `hostname`, `PATH`. Some helper variables are read-only (`hostname`), others are editable (`PATH`). Generated variables cannot be deleted.
+
+Generated env variables are listed on the **Environment variables** page. Scroll to the **Generated variables** section.
+
+<p align="center">
+  <img
+    src="/img/screenshots/nodejs_generated_variables.png"
+    alt="image"
+    width="100%"
+    height="auto"
+  />
+</p>
+
+## How to read Environment Variables from your PHP app
+
+To access the local environment variable i.e. the variable set to this PHP service in your app, use:
+
+```sh
+getenv('YOUR_VARIABLE_KEY_HERE');
+```
+
+## How to read Environment Variables of another service
+
+All services of the same project can reference environment variables from other services. To use an environment variable from one service in another service in the same project, you must prefix the environment variable key with the service hostname and underscore.
+
+<table>
+  <thead>
+    <tr>
+      <th>Service</th>
+      <th>Variable</th>
+      <th>Reference Key</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>mariadb1</td>
+      <td>username</td>
+      <td>`${mariadb1_user}`</td>
+    </tr>
+    <tr>
+      <td>mariadb2</td>
+      <td>password</td>
+      <td>`${mariadb2_password}`</td>
+    </tr>
+  </tbody>
+</table>
+
+### Usage
+
+```yaml
+zerops:
+  - setup: app
+    build:
+      base: php@8.4
+      envVariables:
+        DB_USERNAME: ${mariadb2_user}
+        DB_PASSWORD: ${mariadb2_password}
+```
+
+## How to read Runtime Environment Variables in the Build Environment
+
+You can use runtime env variables in the build environment using the `RUNTIME_` prefix. This rule applies both for basic and secret runtime variables.
+
+```yml
+zerops:
+  - setup: app
+    build:
+      base: php@8.4
+      os: alpine
+      envVariables:
+        APP_DEBUG: true
+        APP_ENV: development
+        DB_CONNECTION: ${RUNTIME_DB_CONNECTION}
+zerops:
+  - setup: app
+    build:
+      base:
+        - php@8.4
+      os: alpine
+      envVariables:
+        APP_DEBUG: true
+        APP_ENV: development
+        DB_PASSWORD: ${RUNTIME_DB_PASSWORD}
+      buildCommands:
+        - composer install --ignore-platform-reqs
+      deployFiles: ./
+      cache:
+        - vendor
+        - composer.lock
+    deploy:
+      readinessCheck:
+        httpGet:
+          port: 80
+          path: /up
+    run:
+      base: php-nginx@8.4
+      os: alpine
+      siteConfigPath: site.conf.tmpl
+      envVariables:
+
+        DB_PASSWORD: ${RUNTIME_DB_PASSWORD}
+
+      initCommands:
+        - php artisan view:cache
+        - php artisan config:cache
+        - php artisan route:cache
+        - sudo -E -u zerops -- zsc execOnce ${appVersionId} -- php artisan migrate --force
+        - php artisan optimize
+      healthCheck:
+        httpGet:
+          port: 80
+          path: /up
+```
+
+### Runtime Environment Variables
+
+<table>
+  <thead>
+    <tr>
+      <th>Variable Name</th>
+      <th>Example Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>`APP_URL`</td>
+      <td>https://myapp.zerops.io</td>
+    </tr>
+    <tr>
+      <td>`DB_CONNECTION`</td>
+      <td>pgsql</td>
+    </tr>
+    <tr>
+      <td>`REDIS_HOST`</td>
+      <td>redis.internal</td>
+    </tr>
+    <tr>
+      <td>`API_KEY`</td>
+      <td>secret_key_123</td>
+    </tr>
+  </tbody>
+</table>
+
+### Build Environment References
+
+<table>
+  <thead>
+    <tr>
+      <th>Variable Name</th>
+      <th>Example Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>`RUNTIME_APP_URL`</td>
+      <td>https://myapp.zerops.io</td>
+    </tr>
+    <tr>
+      <td>`RUNTIME_DB_CONNECTION`</td>
+      <td>pgsql</td>
+    </tr>
+    <tr>
+      <td>`RUNTIME_REDIS_HOST`</td>
+      <td>redis.internal</td>
+    </tr>
+    <tr>
+      <td>`RUNTIME_API_KEY`</td>
+      <td>secret_key_123</td>
+    </tr>
+  </tbody>
+</table>
+
+:::tip
+This prefix system allows you to access runtime configuration values during the build process, which is useful for tasks like asset compilation or configuration file generation.
+:::
+
+## Basic and Secret Environment Variables with the Same Key
+
+If you create a secret env variable and a basic runtime env variable with the same key, Zerops saves the basic runtime env variable from your zerops.yml and ignores the secret env variable.
+
+If you create a basic build env variable and a runtime env variable with the same key, Zerops saves both because the build and runtime environments have separate sets of env variables.
+
+
+## Referencing other env variables
+
+You can reference another variable of the same service using `${key}` in your variable value. You can even reference a variable from a different service using `${hostname_key}`. The referenced variable doesn't need to exist when you are entering your variable.
+
+### Reference a local variable in another variable value
+
+<table>
+  <thead>
+    <tr>
+      <th className="w-fit text-start">Variable key</th>
+      <th className="w-full text-start">Variable value</th>
+      <th className="w-full text-nowrap text-start">Computed variable value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>id</td>
+      <td>12345</td>
+      <td>12345</td>
+    </tr>
+    <tr>
+      <td>hostname</td>
+      <td>app</td>
+      <td>app</td>
+    </tr>
+    <tr>
+      <td>name</td>
+      <td>`${id}-${hostname}`</td>
+      <td>12345-app</td>
+    </tr>
+  </tbody>
+</table>
+
+### Reference a variable of another project service
+
+Let's say your project contains two PostgreSQL services `dbtest` and `dbprod`. Both services have a `connectionString` variable. Then you can create a `dbConnectionString` env variable in your PHP runtime and set `${dbtest_connectionString}` as the variable value. Zerops will fill in the value of the `connectionString` variable of the `dbtest` service.
+
+When you change the `dbConnectionString` value to `${dbprod_connectionString}`, Zerops will fill in the value of the `connectionString` variable of the `dbprod` service.
+
+:::caution
+When you change the value of the `connectionString` variable in the service `dbtest` and commit the changes you need to **restart** the PHP service. The PHP process running in the container receives the list env variables only when it starts. Update of the env variables while the PHP process is running does not affect your application.
+:::
