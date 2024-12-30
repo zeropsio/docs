@@ -1,0 +1,154 @@
+---
+title: FAQ
+description: Frequently Asked Questions about Laravel on Zerops
+---
+
+import { FAQ, FAQItem } from '/src/components/Faq';
+
+<FAQ>
+  <FAQItem question="How Do I Configure Environment Variables?">
+    You can set environment variables through the Zerops dashboard or in your `zerops.yml` file under the `run.envVariables` section:
+
+    ```yaml
+    zerops:
+      - setup: app
+        run:
+          envVariables:
+            APP_KEY: "base64:your-key-here"
+            DB_CONNECTION: "pgsql"
+            DB_HOST: ${db_host}
+    ```
+  </FAQItem>
+
+  <FAQItem question="How Do I Run Database Migrations?">
+    You can run migrations during initialization by adding the command to your `zerops.yml`:
+
+    ```yaml
+    zerops:
+      - setup: app
+        run:
+          initCommands:
+            - php artisan migrate --isolated --force
+    ```
+  </FAQItem>
+
+  <FAQItem question="Can I Use Laravel Queue with Zerops?">
+    Yes, Laravel Queue is fully supported. Configure Redis as your queue driver:
+
+    ```yaml
+    zerops:
+      - setup: app
+        run:
+          envVariables:
+            QUEUE_CONNECTION: redis
+            REDIS_HOST: redis
+            REDIS_PORT: 6379
+    ```
+  </FAQItem>
+
+  <FAQItem question="How Do I Handle File Storage?">
+    Zerops supports S3-compatible storage. Configure it using these environment variables:
+
+    ```yaml
+    zerops:
+      - setup: app
+        run:
+          envVariables:
+            FILESYSTEM_DISK: s3
+            AWS_ACCESS_KEY_ID: ${storage_accessKeyId}
+            AWS_SECRET_ACCESS_KEY: ${storage_secretAccessKey}
+            AWS_BUCKET: ${storage_bucketName}
+            AWS_ENDPOINT: ${storage_apiUrl}
+            AWS_URL: ${storage_apiUrl}/${storage_bucketName}
+            AWS_USE_PATH_STYLE_ENDPOINT: true
+    ```
+  </FAQItem>
+
+  <FAQItem question="How Do I Enable HTTPS?">
+    HTTPS is automatically enabled when you use either a Zerops subdomain or configure your custom domain. No additional configuration is required.
+  </FAQItem>
+
+  <FAQItem question="Can I Run Scheduled Tasks?">
+    Yes, you can configure cron jobs in your `zerops.yml`:
+
+    ```yaml
+    zerops:
+      - setup: app
+        run:
+          crontab:
+            - command: "php artisan schedule:run"
+              timing: "* * * * *"
+              workingDir: /var/www/html
+    ```
+  </FAQItem>
+
+  <FAQItem question="How Do I Configure Redis for Caching?">
+    Configure Redis for caching, sessions, and queues:
+
+    ```yaml
+    zerops:
+      - setup: app
+        run:
+          envVariables:
+            CACHE_STORE: redis
+            SESSION_DRIVER: redis
+            REDIS_HOST: redis
+            REDIS_PORT: 6379
+            REDIS_CLIENT: phpredis
+    ```
+  </FAQItem>
+
+  <FAQItem question="How Do I Optimize My Laravel Application?">
+    Add these optimization commands to your initialization:
+
+    ```yaml
+    zerops:
+      - setup: app
+        run:
+          initCommands:
+            - php artisan view:cache
+            - php artisan config:cache
+            - php artisan route:cache
+            - php artisan optimize
+    ```
+  </FAQItem>
+
+  <FAQItem question="How Do I Handle Asset Compilation?">
+    Configure asset compilation in your build phase:
+
+    ```yaml
+    zerops:
+      - setup: app
+        build:
+          base:
+            - php@8.4
+            - nodejs@18
+          buildCommands:
+            - composer install --optimize-autoloader --no-dev
+            - npm install
+            - npm run build
+          cache:
+            - vendor
+            - node_modules
+    ```
+  </FAQItem>
+
+  <FAQItem question="How Do I Implement Health Checks?">
+    Add health checks to ensure your application is running properly:
+
+    ```yaml
+    zerops:
+      - setup: app
+        deploy:
+          readinessCheck:
+            httpGet:
+              port: 80
+              path: /up
+        run:
+          healthCheck:
+            httpGet:
+              port: 80
+              path: /up
+    ```
+  </FAQItem>
+</FAQ>
