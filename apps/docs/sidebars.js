@@ -2290,7 +2290,7 @@ module.exports = {
         {
           type: 'doc',
           id: 'object-storage/how-to/curl-file',
-          label: 'How to Download File from a Private Object Storage Bucket with cURL',
+          label: 'Download file from a private bucket',
         },
       ],
     },
