@@ -1,0 +1,62 @@
+---
+title: Backup data
+description: Learn how you can work with backups in Zerops works.
+---
+Zerops provides data backup for certain services.
+
+Whether a service supports backups is specified on the documentation page of each service. Technical details about backup implementation for each service are also described on their respective service pages.
+
+## Frequency and volume
+
+By default, your data is backed up automatically **every day** between 00:00:00 UTC and 01:00:00 UTC, unless you update your settings:
+
+### In GUI
+
+Following changes are available in Zerops GUI. Go to the service detail and choose **Backups List & Configuration** section in the left menu.
+
+- do a one-time backup of your data
+- change time of your automatic backup
+- turn off backing up your data completely
+- view all of your backups
+- download a backup
+- delete a backup
+
+### Limits
+
+- Each backup is stored for a maximum period of **1 month**
+- For each **service** a maximum of **100 backups** is stored
+- For each **project** a maximum of **25 GiB** of backup volume is stored. Only full backups are stored, the backup that exceeds the limit by its part is not stored
+
+If you need more backup storage space, contact our support team.
+
+#### Examples
+
+1. If you backup your data every day, and the total volume is less than 25 GiB, the maximum number of backups is ~30 for the last month. A new backup is stored every day (with the oldest one being deleted), unless you exceed the 25 GiB limit.
+
+2. If you backup your data every hour, and the total volume is less than 25 GiB, the total number of backups is 100 for the last 100 hours. A new backup is stored every hour (with the oldest one being deleted), unless you exceed the 25 GiB limit.
+
+3. If you backup your data every hour, and your backups exceed 25 GiB after 50 hours, the total number of backups is 50, unless you delete some of your backups or wait the oldest one is older than 1 month.
+
+## Persistence
+
+Let's say you have a project `my-project`, which contains a PostgreSQL service `db` with backups.
+
+If you delete `db` service, but not `my-project` project, the service backups are kept untouched. The backups will be deleted only after you also delete a project `my-project`. After you delete the project, all project backups are deleted after 7 days.
+
+## High Availability Setup
+
+For services running in HA mode, the backup is created on one of the nodes at random. Other nodes report that the backup is running on another node.
+
+## Encryption and Security
+
+Backups are encrypted as soon as they are created. Here is the process:
+
+* **Key Generation:** We use asymmetric cryptography (X25519) to generate a private key, which is then encrypted using our secret key (RSA-OAEP) and securely stored in our database.
+* **Public Key Usage:** The public key is sent to the application, which uses it to encrypt the backup.
+* **Decryption:** When a user downloads a backup, it is decrypted using the private key stored safely in our database.
+
+This ensures your data remains secure during both storage and transmission.
+
+All backups are stored in a separate ObjectStorage instance, isolated from the instance accessible by users.
+
+After a project is deleted and the 7-day retention period expires, the project's encryption key is permanently deleted. Once this happens, there is no way to decrypt or restore the backup data.
