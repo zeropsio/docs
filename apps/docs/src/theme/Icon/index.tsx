@@ -143,6 +143,10 @@ import IconKafka from './Kafka';
 import IconValkey from './Valkey';
 import IconAlpine from './Alpine';
 import IconFirewall from './Firewall';
+import IconZerops from './Zerops';
+import IconDatabase from './Database';
+import IconCloudOk from './CloudOk';
+
 
 export default {
   'academic-cap-solid': AcademicCapSolid,
@@ -291,4 +295,7 @@ export default {
   kafka: IconKafka,
   valkey: IconValkey,
   alpine: IconAlpine,
+  zerops: IconZerops,
+  database: IconDatabase,
+  cloudok: IconCloudOk,
 };

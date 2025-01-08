@@ -18,4 +18,4 @@
 <!-- #### First-time contributor to Zerops Docs? -->
 
 <!-- Join our Discord Server  -->
-<!-- https://discord.gg/xxzmJSDKPT -->
+<!-- https://docs.zerops.io/discord -->

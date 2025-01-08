@@ -5,20 +5,22 @@ description: Learn how to integrate your GitHub repositories with Zerops
 
 Discover how to seamlessly integrate your GitHub repository with Zerops for automated builds and deployments.
 
-This guide walks you through the step-by-step process to link your repository, configure triggers, and manage your integrations efficiently.
+You can choose between two powerful integration approaches: direct integration through the Zerops GUI for straightforward setup, or GitHub Actions for more customized deployment workflows.
+
+This guide walks you through both integration methods, helping you choose and implement the approach that best fits your team's needs.
 
 ---
 
 ## Prerequisites
 
 Before starting the integration process, ensure your repository contains a valid `zerops.yml` configuration file located in the root directory. This file is essential for defining the build, deploy, and run processes.
-For detailed information on how to create or modify this file, refer to the [Zerops YAML configuration](/references/zeropsyml) guide.
+For detailed information on how to create or modify this file, refer to the [Zerops YAML configuration](/zerops-yml/specification) guide.
 
 ---
 
-## Integration Steps
+## Integration via Zerops GUI
 
-Follow these steps to connect your GitHub repository with Zerops:
+Follow these steps to connect your GitHub repository directly with Zerops:
 
 1. **Access Service Settings**
 
@@ -60,7 +62,7 @@ Zerops requires full access to your repository in order to configure webhooks an
 
 ---
 
-## Managing Your GitHub Integration
+### Managing Your GitHub Integration
 
 To skip triggering a build for a specific commit, you can include `ci skip` or `skip ci` in your commit message (case insensitive). This tells Zerops to ignore that particular commit during the build process.
 
@@ -70,7 +72,7 @@ Although the webhook will still be delivered to GitHub, no action will be taken 
 
 ---
 
-## Disconnecting Your Repository
+### Disconnecting Your Repository
 
 To disconnect your GitHub repository from Zerops:
 
@@ -88,3 +90,61 @@ To disconnect your GitHub repository from Zerops:
     height="auto"
   />
 </p>
+
+---
+
+## GitHub Workflow Integration
+
+As an alternative to direct integration, you can use GitHub Actions to manage your deployments. This approach gives you more control over your deployment workflow and allows integration with other CI/CD processes.
+
+### GitHub Workflow using Zerops Actions
+
+1. **Create Workflow Configuration**
+
+   Create a new file at `.github/workflows/deploy.yml` in your repository:
+
+   ```yaml
+   name: Deploy to Zerops
+   
+   on:
+     push:
+       branches:
+         - main
+   
+   jobs:
+     deploy:
+       runs-on: ubuntu-latest
+   
+       steps:
+         - name: Checkout code
+           uses: actions/checkout@v3
+   
+         - name: Deploy with Zerops
+           uses: zeropsio/actions@main
+           with:
+             access-token: ${{ secrets.ZEROPS_TOKEN }}
+             service-id: your-service-id
+   ```
+
+2. **Generate Access Token**
+
+   - Navigate to [**Settings > Access Token Management**](https://app.zerops.io/settings/token-management) in your Zerops dashboard
+   - Generate a new access token with appropriate permissions
+   - Copy this token for use in GitHub secrets
+
+3. **Locate Service ID**
+
+   - Go to your service dashboard and click the three dots menu → **Copy Service ID**
+   - Alternatively, find it in your service URL: `https://app.zerops.io/service-stack/<your-service-id>/dashboard`
+
+4. **Configure GitHub Secrets**
+
+   - Go to your GitHub repository settings
+   - Navigate to **Settings** > **Secrets and variables** > **Actions** > **Repository secrets**
+   - Add a new secret named `ZEROPS_TOKEN` with your access token value
+
+:::note
+Keep your access token secure and never commit it directly to your repository. The token provides administrative access to your Zerops resources.
+:::
+
+For more information about GitHub Actions, refer to the [official GitHub Actions documentation](https://docs.github.com/en/actions).

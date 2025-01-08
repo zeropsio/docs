@@ -1,3 +1,66 @@
 ---
-title: Elasticsearch overview
+title: Elasticsearch
 ---
+
+Zerops provides Elasticsearch as a service, supporting both standalone and high-availability deployments.
+
+## Connection
+
+- **Port**: 9200
+- **Protocol**: HTTP only
+- **Internal Access**: `http://hostname:9200`
+- **Note**: When accessing from another service within the same project, use the service hostname <!-- fixme (js) add link to generic DNS page -->
+
+## Configuration
+
+### How to install/uninstall plugins
+
+Configure Elasticsearch plugins using a comma-separated list:
+
+```yaml
+envSecrets:
+  PLUGINS: "analysis-icu,ingest-attachment"
+```
+
+- **Description**: Defines plugins to install at startup
+- **Format**: `plugin1,plugin2,...`
+- **Note**: Removing a plugin from this list triggers uninstallation on service restart
+
+### How to adjust JVM heap allocation
+
+Control JVM heap size as a percentage of container memory:
+
+```yaml
+envSecrets:
+  HEAP_PERCENT: "75"
+```
+
+- **Description**: Percentage of container memory allocated to JVM heap
+- **Default**: 50
+- **Range**: 1-100
+- **Note**: To increase available memory, adjust the service's RAM allocation in scaling configuration <!-- fixme (js) add link to generic scaling page -->
+- **Important**: Changes to HEAP_PERCENT require a service restart to take effect
+
+## Backup
+
+- **Format:** .gz
+- **Implementation:** Created using elasticdump and compressed using gzip
+
+For detailed information about backup configuration and management, see [Backup Management](/features/backup)
+
+## Example Configuration
+
+```yaml
+services:
+  - hostname: elasticsearch
+    type: elasticsearch@8.16
+    mode: HA
+    envSecrets:
+      PLUGINS: "analysis-icu,ingest-attachment"
+      HEAP_PERCENT: "75"
+```
+
+## Related Resources
+
+- [Elasticsearch Official Documentation](https://www.elastic.co/guide/index.html)
+- [Available Elasticsearch Plugins](https://www.elastic.co/guide/en/elasticsearch/plugins/current/index.html)

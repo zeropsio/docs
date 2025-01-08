@@ -1,0 +1,414 @@
+---
+title: Laravel
+description: Laravel
+---
+
+import DocCardList from '@theme/DocCardList';
+import Icons from '@theme/Icon';
+import LargeCardList from '@site/src/components/LargeCardList';
+import LargeCard from '@site/src/components/LargeCard';
+import CustomCard from '@site/src/components/CustomCard';
+import DeployButton from '@site/src/components/DeployButton';
+import { Dropdown, DropdownItem } from '/src/components/Dropdown';
+
+[Laravel ↗](https://laravel.com) is a PHP framework for building robust, full-stack web applications. Whether you prefer pure PHP with Livewire or want to use Laravel with React/Vue using Inertia, Laravel provides a complete toolkit for production-ready applications for every developer.
+
+<CustomCard title="Deploy a Production-Ready Laravel Jetstream Application" emoji="🚀">
+  This is a full-stack Laravel Jetstream application — an advanced starter kit — preconfigured with everything you need: mailpit for email testing, Valkey (Redis) for session management, object storage for files, and PostgreSQL as your database.
+  <DeployButton link="laravel" badgeWidth="200" />
+</CustomCard>
+
+
+
+## How to Start
+
+<DocCardList
+  colSize={4}
+  items={[
+    {
+      type: 'link',
+      href: '/frameworks/laravel/create-project',
+      label: 'Create Zerops Project',
+      customProps: {
+        icon: Icons['zerops'],
+        description: 'Start with creating a Zerops Project for Laravel.',
+      },
+    },
+    {
+      type: 'link',
+      href: '/frameworks/laravel/create-service',
+      label: 'Create PHP Nginx service',
+      customProps: {
+        icon: Icons['php'],
+        description: 'Start with creating a PHP Nginx service for Laravel.',
+      },
+    },
+    {
+      type: 'link',
+      href: '/frameworks/laravel/build-deployments',
+      label: 'Build & Deployments',
+      customProps: {
+        icon: Icons['folder'],
+        description: 'Start with creating a Build & Deployments for Laravel.',
+      },
+    },
+    {
+      type: 'link',
+      href: '/frameworks/laravel/env-variables',
+      label: 'Manage Environment Variables',
+      customProps: {
+        icon: Icons['puzzle'],
+        description:
+          'Manage environment variables for your Laravel application.',
+      },
+    },
+    {
+      type: 'link',
+      href: '/frameworks/laravel/cron',
+      label: 'Scheduled Jobs & CRON',
+      customProps: {
+        icon: Icons['server'],
+        description:
+          'Set up Scheduled Jobs & CRON for your Laravel application.',
+      },
+    },
+    {
+      type: 'link',
+      href: '/frameworks/laravel/logs',
+      label: 'Access Logs',
+      customProps: {
+        icon: Icons['sparkles'],
+        description: 'Access logs for your Laravel application.',
+      },
+    },
+  ]}
+/>
+
+
+<DocCardList
+  colSize={1}
+  items={[
+    {
+      type: 'link',
+      href: '/frameworks/laravel/dev-to-prod',
+      label: 'Development to Production',
+      customProps: {
+        icon: Icons['sparkles-solid'],
+        description: 'Deploy your Laravel application from development to production.',
+      },
+    },
+  ]}
+/>
+
+-----
+
+## Laravel Recipes
+
+We have created some [Laravel recipes](https://github.com/orgs/zeropsio/repositories?q=Laravel) for you to import and get started fast with Laravel on Zerops.
+
+### Minimal Laravel Recipe
+
+A minimal setup for a Laravel application that includes a single service for the application and a PostgreSQL database. This basic configuration provides essential features like database migrations, environment variable configuration, and health check implementations, making it suitable for simple applications that need a solid foundation without additional complexity.
+
+<Dropdown>
+<DropdownItem title="Development / Small Scale Configuration">
+```yml
+#yamlPreprocessor=on
+project:
+  name: laravel-minimal-devel
+  tags:
+    - zerops-recipe
+    - development
+
+services:
+  - hostname: app
+    type: php-nginx@8.4
+    buildFromGit: https://github.com/zeropsio/recipe-laravel-minimal
+    enableSubdomainAccess: true
+    envSecrets:
+      APP_KEY: <@generateRandomString(<32>)>
+      APP_DEBUG: true
+      APP_ENV: development
+
+  - hostname: db
+    type: postgresql@16
+    mode: NON_HA
+    priority: 10
+```
+</DropdownItem>
+</Dropdown>
+
+
+<Dropdown>
+<DropdownItem title="Production Configuration">
+```yml
+#yamlPreprocessor=on
+project:
+  name: laravel-minimal-prod
+  corePackage: SERIOUS
+  tags:
+    - zerops-recipe
+    - development
+
+services:
+  - hostname: app
+    type: php-nginx@8.4
+    buildFromGit: https://github.com/zeropsio/recipe-laravel-minimal
+    enableSubdomainAccess: true
+    envSecrets:
+      APP_KEY: <@generateRandomString(<32>)>
+      APP_DEBUG: true
+      APP_ENV: development
+
+  - hostname: db
+    type: postgresql@16
+    mode: NON_HA
+    priority: 10
+```
+</DropdownItem>
+</Dropdown>
+
+:::info
+You can find the laravel minimal recipe at [zeropsio/recipe-laravel-minimal](https://github.com/zeropsio/recipe-laravel-minimal) on GitHub with the full [zerops.yml configuration](https://github.com/zeropsio/recipe-laravel-minimal/blob/main/zerops.yml).
+:::
+
+
+### Laravel Jetstream Recipe
+
+An Advanced Laravel application that includes Jetstream authentication, Redis for cache, queue, and session, Object Storage integration, Team management features, Local email testing with Mailpit, and Asset compilation with Vite. This makes it perfectly suitable for production of any size.
+
+<Dropdown>
+<DropdownItem title="Development / Small Scale Configuration">
+```yml
+#yamlPreprocessor=on
+project:
+  name: laravel-jetstream-devel
+  tags:
+    - zerops-recipe
+    - development
+
+services:
+  - hostname: app
+    type: php-nginx@8.4
+    buildFromGit: https://github.com/zeropsio/recipe-laravel-jetstream
+    enableSubdomainAccess: true
+    envSecrets:
+      APP_NAME: ZeropsLaravelJetstreamDev
+      APP_DEBUG: true
+      APP_ENV: development
+      APP_KEY: <@generateRandomString(<32>)>
+
+  - hostname: db
+    type: postgresql@16
+    mode: NON_HA
+    priority: 10
+
+  - hostname: redis
+    type: valkey@7.2
+    mode: NON_HA
+    priority: 10
+
+  - hostname: storage
+    type: object-storage
+    objectStorageSize: 2
+    objectStoragePolicy: public-read
+    priority: 10
+
+  - hostname: mailpit
+    type: go@1
+    buildFromGit: https://github.com/zeropsio/recipe-mailpit
+    enableSubdomainAccess: true
+```
+</DropdownItem>
+</Dropdown>
+
+<Dropdown>
+<DropdownItem title="Production Configuration">
+```yml
+#yamlPreprocessor=on
+project:
+  name: laravel-jetstream-prod
+  corePackage: SERIOUS
+  tags:
+    - zerops-recipe
+    - production
+
+services:
+  - hostname: app
+    type: php-nginx@8.4
+    buildFromGit: https://github.com/zeropsio/recipe-laravel-jetstream
+    enableSubdomainAccess: true
+    minContainers: 2
+    envSecrets:
+      APP_NAME: ZeropsLaravelJetstreamProd
+      APP_DEBUG: false
+      APP_ENV: production
+      APP_KEY: <@generateRandomString(<32>)>
+
+  - hostname: db
+    type: postgresql@16
+    mode: HA
+    priority: 10
+
+  - hostname: redis
+    type: valkey@7.2
+    mode: HA
+    priority: 10
+
+  - hostname: storage
+    type: object-storage
+    objectStorageSize: 2
+    objectStoragePolicy: public-read
+    priority: 10
+```
+</DropdownItem>
+</Dropdown>
+
+:::info
+You can find the laravel jetstream recipe at [zeropsio/recipe-laravel-jetstream](https://github.com/zeropsio/recipe-laravel-jetstream) on GitHub with the full [zerops.yml configuration](https://github.com/zeropsio/recipe-laravel-jetstream/blob/main/zerops.yml).
+:::
+
+---
+
+<DocCardList
+  colSize={6}
+  items={[
+    {
+      type: 'link',
+      href: '/zerops-yml/specification',
+      label: 'zerops.yml',
+      customProps: {
+        icon: Icons['puzzle'],
+        description:
+          'See a full example of zerops.yml file to create your own app.',
+      },
+    },
+    {
+      type: 'link',
+      href: '/frameworks/laravel/automatic-scaling',
+      label: 'Database Backups',
+      customProps: {
+        icon: Icons['cloudok'],
+        description:
+          'Set up scaling of your Laravel application so that it runs smoothly while using only necessary resources.',
+      },
+    },
+        {
+      type: 'link',
+      href: '/frameworks/laravel/redis',
+      label: 'Manage Redis',
+      customProps: {
+        icon: Icons['adjustments'],
+        description:
+          'Set up scaling of your Laravel application so that it runs smoothly while using only necessary resources.',
+      },
+    },
+    {
+      type: 'link',
+      href: '/frameworks/laravel/cron',
+      label: 'Scheduled Jobs & CRON',
+      customProps: {
+        icon: Icons['adjustments'],
+        description:
+          'Set up Scheduled Jobs & CRON for your Laravel application.',
+      },
+    },
+  ]}
+/>
+
+{" "}
+
+<DocCardList
+  colSize={3}
+  items={[
+    {
+      type: 'link',
+      href: '/frameworks/laravel/database-migrations',
+      label: 'Database Migrations',
+      customProps: {
+        icon: Icons['database'],
+        description:
+          'Set up Database Migrations for your Laravel application.',
+      },
+    },
+        {
+      type: 'link',
+      href: '/frameworks/laravel/public-access',
+      label: 'Manage Public Access',
+      customProps: {
+        icon: Icons['globe-europe'],
+        description:
+          'Manage public access of your Laravel application.',
+      },
+    },
+  ]}
+/>
+
+## When in Doubt, Reach Out
+
+Don't know how to start or got stuck during the process? You might not be the first one, visit the FAQ section to find out.
+
+In case you haven't found an answer (and also if you have), we and our community are looking forward to hearing from you on Discord.
+
+Have you build something that others might find useful? Don't hesitate to share your knowledge!
+
+<DocCardList
+  colSize={6}
+  items={[
+    {
+      type: 'link',
+      href: '/frameworks/laravel/faq',
+      label: 'FAQ',
+      customProps: {
+        icon: Icons['chat-bubble-left-right'],
+        description: 'Most common questions in one place.',
+      },
+    },
+    {
+      type: 'link',
+      href: 'https://discord.com/invite/WDvCZ54',
+      label: 'Discord',
+      customProps: {
+        icon: Icons['discord'],
+        description:
+          'Join our core team and Zerops community on Discord. Ask questions and share your tips with other members.',
+      },
+    },
+  ]}
+/>
+
+## Popular Guides
+
+<DocCardList
+  colSize={4}
+  items={[
+    {
+      type: 'link',
+      href: '/references/cli',
+      label: 'zCLI',
+      customProps: {
+        icon: Icons['command-line'],
+        description:
+          'Get even more out of Zerops with the zCLI command line tool.',
+      },
+    },
+    {
+      type: 'link',
+      href: '/references/vpn',
+      label: 'Zerops VPN',
+      customProps: {
+        icon: Icons['globe-europe'],
+        description: 'Connect to your services easily with Zerops VPN.',
+      },
+    },
+    {
+      type: 'link',
+      href: '/references/ssh',
+      label: 'SSH',
+      customProps: {
+        icon: Icons['command-line'],
+        description: 'Connect to your services using SSH with Zerops VPN.',
+      },
+    },
+  ]}
+/>

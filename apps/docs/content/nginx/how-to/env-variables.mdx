@@ -41,7 +41,7 @@ There are 3 different sets of env variables in Zerops:
 
 Use the [secret env variables](/nginx/how-to/create#set-secret-environment-variables) for all sensitive data you don't want to store in your application code. Secret env variables are also useful if you need for testing where you need to change the value of some env variables frequently. Secret variables are managed in Zerops GUI and you don't have to redeploy your application.
 
-The basic build and runtime env variables are listed in your [zerops.yml](/references/zeropsyml) and deployed together with your application code. When you need to update a value of an existing env variable or change the set of build or runtime env variables, update your zerops.yml and redeploy your application to Zerops.
+The basic build and runtime env variables are listed in your [zerops.yml](/zerops-yml/specification) and deployed together with your application code. When you need to update a value of an existing env variable or change the set of build or runtime env variables, update your zerops.yml and redeploy your application to Zerops.
 
 You can [reference](/nginx/how-to/env-variables#reference-a-local-variable-in-another-variable-value) another variable of the same service or even a variable of [another service](/nginx/how-to/env-variables#reference-a-variable-of-another-project-service) within the same project.
 
@@ -64,7 +64,7 @@ To configure env variables for an existing service, go to the service detail and
 
 You can edit or delete env variables that you've created by clicking on the menu on the right side of each row.
 
-The changes you've made in the list of env variables need to be committed. Click on the **Commit x changes** button and Zerops will update the env variables in all containers of your project's services.
+The changes you've made to environment variables will be automatically applied to all containers of your project's services.
 
 :::caution
 You need to **restart** the runtime service after you commit the changes in env variables. The Nginx process running in the container receives the list env variables only when it starts. Update of the env variables while the Nginx process is running does not affect your application.
@@ -94,7 +94,7 @@ When you need to update a value of an existing env variable or change the set of
 
 ## Set basic runtime env variables in zerops.yml
 
-To set basic env variables for the runtime environment, add the `envVariables` attribute to the runtime section in your `zerops.yml`
+To set basic env variables for the runtime environment, add the `envVariables` attribute to the runtime section in your `zerops.yml`.
 
 ```yml
 zerops:
@@ -194,3 +194,45 @@ You can use runtime env variables in the build environment using the `RUNTIME_` 
 If you create a secret env variable and a basic runtime env variable with the same key, Zerops saves the basic runtime env variable from your zerops.yml and ignores the secret env variable.
 
 If you create a basic build env variable and a runtime env variable with the same key, Zerops saves both because the build and runtime environments have separate sets of env variables.
+
+## Prerender.io Support
+
+Zerops provides built-in prerender.io support for SEO optimization. Configure it using these environment variables:
+
+<table className="w-fit my-1.5">
+  <thead>
+    <tr className="text-center rounded-lg">
+      <th className="w-fit"><strong>Variable</strong></th>
+      <th className="w-fit"><strong>Required</strong></th>
+      <th className="w-fit"><strong>Description</strong></th>
+      <th className="w-fit"><strong>Default</strong></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr className="text-center">
+      <td className="w-fit">PRERENDER_TOKEN</td>
+      <td className="w-fit">Yes</td>
+      <td className="w-fit">Your prerender.io service token</td>
+      <td className="w-fit">-</td>
+    </tr>
+    <tr className="text-center">
+      <td className="w-fit">PRERENDER_HOST</td>
+      <td className="w-fit">No</td>
+      <td className="w-fit">Prerender service host</td>
+      <td className="w-fit">service.prerender.io</td>
+    </tr>
+  </tbody>
+</table>
+
+:::tip
+Set `PRERENDER_TOKEN` as a secret environment variable in Zerops GUI for security.
+:::
+
+Example in zerops.yml:
+```yml
+zerops:
+  - setup: app
+    run:
+      envVariables:
+        PRERENDER_HOST: "custom.prerender.host"
+```
