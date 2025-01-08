@@ -1,0 +1,200 @@
+---
+title: SMTP Configuration
+description: Learn How to Configure SMTP for Sending Emails in Your Laravel Application on Zerops
+---
+
+import Image from '/src/components/Image';
+
+## Development Setup with Mailpit
+
+For development environments, Zerops provides Mailpit for testing emails. Add this to your project import configuration:
+
+```yml
+services:
+  - hostname: mailpit
+    type: go@1
+    buildFromGit: https://github.com/zeropsio/recipe-mailpit
+    enableSubdomainAccess: true
+```
+
+Configure your Laravel service to use Mailpit:
+
+```yml
+zerops:
+  - setup: app
+    run:
+      envVariables:
+        MAIL_MAILER: smtp
+        MAIL_HOST: mailpit
+        MAIL_PORT: 1025
+        MAIL_FROM_ADDRESS: hello@example.com
+        MAIL_FROM_NAME: ZeropsLaravel
+```
+
+:::tip
+Enable `enableSubdomainAccess` to access the Mailpit web interface for viewing sent emails.
+:::
+
+## Laravel Application Setup
+
+### Mail Configuration File
+
+Laravel's default `config/mail.php` provides multiple mailer configurations:
+
+```php:config/mail.php
+return [
+    'default' => env('MAIL_MAILER', 'log'),
+
+    'mailers' => [
+        'smtp' => [
+            'transport' => 'smtp',
+            'url' => env('MAIL_URL'),
+            'host' => env('MAIL_HOST', '127.0.0.1'),
+            'port' => env('MAIL_PORT', 2525),
+            'encryption' => env('MAIL_ENCRYPTION', 'tls'),
+            'username' => env('MAIL_USERNAME'),
+            'password' => env('MAIL_PASSWORD'),
+            'timeout' => null,
+            'local_domain' => env('MAIL_EHLO_DOMAIN'),
+        ],
+
+        'ses' => [
+            'transport' => 'ses',
+        ],
+
+        'postmark' => [
+            'transport' => 'postmark',
+        ],
+
+        'log' => [
+            'transport' => 'log',
+            'channel' => env('MAIL_LOG_CHANNEL'),
+        ],
+
+        'failover' => [
+            'transport' => 'failover',
+            'mailers' => [
+                'smtp',
+                'log',
+            ],
+        ],
+    ],
+
+    'from' => [
+        'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
+        'name' => env('MAIL_FROM_NAME', 'Example'),
+    ],
+];
+```
+
+:::tip Available Transports
+Laravel supports multiple mail transports:
+- "smtp" - Standard SMTP server
+- "sendmail" - Server's sendmail
+- "mailgun" - Mailgun API
+- "ses" - Amazon SES
+- "postmark" - Postmark
+- "log" - Log messages for testing
+- "array" - Store in array for testing
+- "failover" - Fallback to next mailer if one fails
+- "roundrobin" - Rotate between multiple mailers
+:::
+
+### Sending Emails
+
+Basic example of sending an email:
+
+```php
+use Illuminate\Support\Facades\Mail;
+use App\Mail\WelcomeEmail;
+
+// Send immediately
+Mail::to($user->email)->send(new WelcomeEmail($user));
+
+// Send using queue
+Mail::to($user->email)->queue(new WelcomeEmail($user));
+```
+
+### Creating Mail Classes
+
+Generate a new mail class:
+
+```bash
+php artisan make:mail WelcomeEmail
+```
+
+Example mail class:
+
+```php:app/Mail/WelcomeEmail.php
+<?php
+
+namespace App\Mail;
+
+use Illuminate\Mail\Mailable;
+use Illuminate\Queue\SerializesModels;
+
+class WelcomeEmail extends Mailable
+{
+    use SerializesModels;
+
+    public function __construct(
+        public $user
+    ) {}
+
+    public function build()
+    {
+        return $this->view('emails.welcome')
+                    ->subject('Welcome to ' . config('app.name'));
+    }
+}
+```
+
+### Email Template
+
+Create a blade template for your email:
+
+```php:resources/views/emails/welcome.blade.php
+<x-mail::message>
+# Welcome {{ $user->name }}
+
+Thanks for joining our application!
+
+<x-mail::button :url="config('app.url')">
+Visit Dashboard
+</x-mail::button>
+
+Thanks,<br>
+{{ config('app.name') }}
+</x-mail::message>
+```
+
+## Queue Configuration for Emails
+
+When using Redis for queues, your email configuration will work automatically with the following settings:
+
+```yml
+zerops:
+  - setup: app
+    run:
+      envVariables:
+        # Queue Configuration
+        QUEUE_CONNECTION: redis
+        REDIS_HOST: redis
+        REDIS_PORT: 6379
+        REDIS_CLIENT: phpredis
+
+        # Mail Configuration
+        MAIL_MAILER: smtp
+        MAIL_HOST: mailpit
+        MAIL_PORT: 1025
+        MAIL_FROM_ADDRESS: hello@example.com
+        MAIL_FROM_NAME: ZeropsLaravel
+```
+
+:::tip Best Practices
+- Use Mailpit for development email testing
+- Configure Redis for queued email sending
+- Set proper environment variables for each environment
+- Monitor email delivery through Mailpit interface
+:::
+

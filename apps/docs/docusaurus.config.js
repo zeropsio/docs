@@ -71,7 +71,7 @@ const config = {
           nodeBorder: "#D1D5DB",
           lineColor: "#11181C",
           fontFamily: "Inter",
-          fontSize: "13px",
+          fontSize: "14.75px",
           tertiaryColor: "#F3F4F6",
           tertiaryBorderColor: "#D1D5DB",
           tertiaryTextColor: "#030712",

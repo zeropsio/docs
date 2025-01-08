@@ -1,0 +1,151 @@
+---
+title: Public Access for Laravel Applications
+description: Learn How to Configure Public Access for Your Laravel Application Using Zerops Subdomains or Custom Domains
+---
+
+import Image from '/src/components/Image';
+
+Firstly, make sure your zerops.yml is configured correctly with a readiness check and health check.
+
+```yaml
+zerops:
+  - setup: app
+    build:
+      base:
+        - php@8.4
+      os: alpine
+    deploy:
+      readinessCheck:
+        httpGet:
+          port: 80
+          path: /up
+    run:
+      base: php-nginx@8.4
+      os: alpine
+      healthCheck:
+        httpGet:
+          port: 80
+          path: /up
+```
+
+After your zerops.yml is configured correctly, you can enable public access for your application.
+
+
+## Public Access Options
+
+There are two ways to make your Laravel application publicly accessible on Zerops:
+1. Using a Zerops subdomain
+2. Using your own custom domain
+
+## Zerops Subdomain Access
+
+### Enable During Project Import
+
+You can enable the Zerops subdomain while importing your project by adding the `enableSubdomainAccess` flag:
+
+```yaml
+project:
+  name: laravel-minimal-devel
+
+services:
+  - hostname: app
+    type: php-nginx@8.4
+    enableSubdomainAccess: true
+```
+
+### Enable via Zerops GUI
+
+You can enable public access at any time through the Zerops dashboard:
+
+<p align="center">
+  <Image
+    lightImage="/img/gui/public-access.webp"
+    darkImage="/img/gui/public-access.webp"
+    alt="Enabling public access through Zerops GUI"
+    style={{ width: '95%', height: 'auto' }}
+  />
+</p>
+
+## Custom Domain Setup
+
+### 1. Add Domain in Zerops GUI
+
+Add your custom domain through the service's public access & internal ports page and you'll receive a DNS records to configure in your domain registrar:
+
+<p align="center">
+  <Image
+    className="pt-2 mx-auto"
+    lightImage="/img/gui/public-access-domain.webp"
+    darkImage="/img/gui/public-access-domain.webp"
+    alt="Adding custom domain in Zerops GUI"
+    style={{ width: '40%', height: 'auto' }}
+  />
+</p>
+
+
+
+### 2. Configure your DNS
+
+Choose one of the following configurations based on your needs:
+
+#### Root Domain (example.com)
+<table className="w-full">
+<thead>
+<tr>
+<th>Record Type</th>
+<th>Host</th>
+<th>Value/Target</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A</td>
+<td>@</td>
+<td>34.120.10.15</td>
+</tr>
+<tr>
+<td>AAAA</td>
+<td>@</td>
+<td>2600:1900:4150:68f::1</td>
+</tr>
+<tr>
+<td>CNAME(enables www subdomain)</td>
+<td>www</td>
+<td class="text-nowrap">@</td>
+</tr>
+</tbody>
+</table>
+
+#### Subdomain (docs.example.com)
+<table className="w-full">
+<thead>
+<tr>
+<th>Record Type</th>
+<th>Host</th>
+<th>Value/Target</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A</td>
+<td>docs</td>
+<td>34.120.10.15</td>
+</tr>
+<tr>
+<td>AAAA</td>
+<td>docs</td>
+<td>2600:1900:4150:68f::1</td>
+</tr>
+</tbody>
+</table>
+
+:::info
+You can choose to use only IPv4 (A record) by requesting a unique IPv4 address in Zerops.
+:::
+
+### 3. DNS Propagation
+
+After configuring your DNS records, you'll need to wait for the changes to propagate globally. This typically takes 15-60 minutes, but can take up to 48 hours in some cases.
+
+You can monitor the propagation status using [whatsmydns.net](https://www.whatsmydns.net/).
+

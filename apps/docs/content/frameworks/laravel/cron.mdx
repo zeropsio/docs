@@ -1,0 +1,89 @@
+---
+title: Schedule Jobs & CRON
+description: Learn How to Configure and Manage CRON Jobs in Your Zerops Laravel Application
+---
+
+Zerops provides a convenient way to configure cron jobs directly in your `zerops.yml` file. These scheduled tasks can be configured to run on single or multiple containers with flexible timing options.
+
+## Basic Configuration
+
+Cron jobs are defined in the `run.crontab` section of your `zerops.yml`. Each job requires at least a `command` and `timing` parameter.
+
+```yaml
+run: 
+  crontab:
+    - command: "date >> /var/log/cron.log"
+      timing: "0 * * * *"
+```
+
+This basic example writes the current date to a log file every hour.
+
+:::info
+If you want to see the full list of parameters and configuration examples for cron jobs, you can read at [zerops-yml/cron](/zerops-yml/cron).
+:::
+
+## Common Use Cases
+
+### Laravel Scheduler
+To run Laravel's scheduler, configure it to execute every minute:
+
+```yaml
+run: 
+  crontab:
+    - command: "php artisan schedule:run"
+      timing: "* * * * *"
+      workingDir: /var/www/html
+```
+
+### Cleanup Tasks
+Run maintenance tasks on all containers:
+
+```yaml
+run: 
+  crontab:
+    - command: "rm -rf /tmp/*"
+      timing: "0 0 * * *"
+      allContainers: true
+```
+
+### Multiple Jobs
+You can define multiple cron jobs in the same configuration:
+
+```yaml
+run:
+  crontab:
+    - command: "php artisan schedule:run"
+      timing: "* * * * *"
+      workingDir: /var/www/html
+    
+    - command: "php artisan cache:clear"
+      timing: "0 0 * * *"
+      workingDir: /var/www/html
+      
+    - command: "php artisan queue:restart"
+      timing: "0 */6 * * *"
+      workingDir: /var/www/html
+```
+
+## Best Practices
+
+1. **Log Output**: Consider logging the output of your cron jobs for debugging:
+   ```yaml
+   command: "php artisan schedule:run >> /var/log/scheduler.log 2>&1"
+   ```
+
+2. **Working Directory**: Always specify `workingDir` for Laravel commands to ensure they run from the correct location.
+
+3. **Container Selection**: Use `allContainers: true` carefully, as it might cause duplicate operations in a multi-container setup.
+
+4. **Timing Considerations**: Avoid running resource-intensive tasks during peak hours.
+
+## Monitoring
+
+You can monitor your cron jobs through Laravel's built-in logging system for artisan commands. Might be a good idea to use [Supervisor](https://laravel.com/docs/5.1/queues#supervisor-configuration) for Laravel queues.
+
+For detailed logs of Laravel scheduled tasks, consider enabling scheduler logging in your `.env`:
+```
+LOG_CHANNEL=daily
+```
+

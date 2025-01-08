@@ -1,0 +1,121 @@
+---
+title: Create PHP Nginx Service
+description: Create a PHP Nginx Service for Laravel Frontend
+---
+
+import Image from '/src/components/Image';
+import data from '@site/static/data.json';
+import UnorderedList from '@site/src/components/UnorderedList';
+import CustomCard from '@site/src/components/CustomCard';
+import { Dropdown, DropdownItem } from '/src/components/Dropdown';
+
+The Php Nginx service contains the Nginx web server optimized for your static content. Php Nginx service is highly scalable and customisable to suit both development and production.
+
+## Add Service Using GUI
+
+- Go to the project's page and choose **Add new service** in the left menu of the **Services** Page.
+- Choose PHP Nginx service, set your preferred hostname (your service name), environment variables and auto scaling configuration.
+
+<Image
+  lightImage="/img/gui/php-nginx/service.png"
+  darkImage="/img/gui/php-nginx/service.png"
+  alt="Add a new service"
+  style={{ width: '95%', height: 'auto' }}
+/>
+
+- Set your preferred hostname(your service name) - Enter a unique service hostname like "app","cache", "gui" etc
+:::caution
+The hostname is fixed after the service is created. It can't be changed later.
+:::
+
+### Set Secret Env Variables
+
+Add environment variables with sensitive data, such as password, tokens, salts, certificates etc. These will be securely saved inside Zerops and added to your runtime service upon start.
+
+Setting the secret environment variables is optional. You can set them later in Zerops GUI.
+
+:::info
+Read more about [Different Types of Environment Variables](/frameworks/laravel/env-variables).
+:::
+
+### Set Auto Scaling Configuration
+
+Zerops allows you to configure automatic vertical and horizontal scaling for PHP Nginx services. Vertical scaling means increasing or decreasing the hardware resources (CPU, RAM and disk) of a PHP Nginx container based on your defined thresholds. Horizontal scaling adds or removes whole containers according to your configuration.
+
+:::info
+Read more about [Automatic scaling and High Availability](/features/scaling-ha).
+:::
+
+<p align="center">
+  <Image
+    lightImage="/img/gui/automatic-scaling.webp"
+    darkImage="/img/gui/automatic-scaling.webp"
+    alt="Automatic Scaling"
+    style={{ width: '95%', height: 'auto' }}
+  />
+</p>
+
+## Add Service Using YAML
+
+If you want to import a service to an existing project, you can use Zerops GUI or [zCLI](/references/cli/commands#service).
+
+- Go to the project's page and choose **Import services** in the left menu on the **Services** page.
+- Then add a new Php Nginx service:
+
+```yml
+#yamlPreprocessor=on
+services:
+  - hostname: app
+    type: php-nginx@8.4
+    buildFromGit: https://github.com/zeropsio/recipe-laravel-minimal
+    enableSubdomainAccess: true
+    envSecrets:
+      APP_KEY: <@generateRandomString(<32>)>
+      APP_DEBUG: true
+      APP_ENV: development
+```
+
+<Dropdown>
+
+<DropdownItem title="Full Example of Project Import YAML">
+
+```yml
+#yamlPreprocessor=on
+project:
+  name: laravel-minimal-devel
+  tags:
+    - zerops-recipe
+    - development
+
+services:
+  - hostname: app
+    type: php-nginx@8.4
+    buildFromGit: https://github.com/zeropsio/recipe-laravel-minimal
+    enableSubdomainAccess: true
+    envSecrets:
+      APP_KEY: <@generateRandomString(<32>)>
+      APP_DEBUG: true
+      APP_ENV: development
+
+  - hostname: db
+    type: postgresql@16
+    mode: NON_HA
+    priority: 10
+```
+
+</DropdownItem>
+
+</Dropdown>
+
+If you want to generate a random strings, secrets, etc. you need to use `#yamlPreprocessor=on` line at the beginning of your import YAML script and read more about how to setup [env variables](/frameworks/laravel/env-variables).
+
+:::info
+If you want to add a PostgreSQL Database service to your project, you can use the following YAML:
+
+```yml
+services:
+  - hostname: db
+    type: postgresql@16
+    mode: HA
+```
+:::

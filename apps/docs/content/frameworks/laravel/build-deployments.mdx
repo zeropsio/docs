@@ -1,0 +1,97 @@
+---
+title: Build & Deployments
+description: Learn How to Build and Run Your Laravel Application on Zerops
+---
+
+Deploying your application to zerops requires a `zerops.yml` file at the root of your project. This file tells Zerops how to install, build, run and deploy your application.
+
+## Build & Runtime
+
+You can define commands and settings for both your build and runtime environments in your `zerops.yml` file.
+
+### Build Environment
+
+The build environment is the environment where your application is built. It is the environment where your `deployFiles` are deployed and then `buildCommands` are executed on your specified `base` and `os`.
+
+```yml
+zerops:
+  - setup: app
+    build:
+      base:
+        - php@8.4
+      os: alpine
+      buildCommands:
+        - composer install --ignore-platform-reqs
+      deployFiles: ./
+      cache:
+        - vendor
+        - composer.lock
+    deploy:
+      readinessCheck:
+        httpGet:
+          port: 80
+          path: /up
+```
+
+### Runtime Environment
+
+The runtime environment is the environment where your application is running. It is the environment where your built files are deployed.
+
+```yml
+    run:
+      base: php-nginx@8.4
+      os: alpine
+      siteConfigPath: site.conf.tmpl
+      envVariables:
+        APP_URL: ${zeropsSubdomain}
+        DB_CONNECTION: pgsql
+        DB_DATABASE: db
+        DB_HOST: db
+        DB_USERNAME: ${db_user}
+        DB_PASSWORD: ${db_password}
+        DB_PORT: 5432
+      initCommands:
+        - php artisan view:cache
+        - php artisan config:cache
+        - php artisan route:cache
+        - sudo -E -u zerops -- zsc execOnce ${appVersionId} -- php artisan migrate --force
+        - php artisan optimize
+      healthCheck:
+        httpGet:
+          port: 80
+          path: /up
+```
+
+The `zsc execOnce` is a command by Zerops Setup Control (ZSC) CLI tool. This comes pre-installed in all runtime and build containers.
+It provides essential container management capabilities, including dynamic scaling, technology stack
+modifications, and synchronized command execution. It ensures single-execution of critical commands (such as database migrations) across high-availability
+setups.
+
+
+## How to deploy your application?
+
+To deploy your application, you can either push to the repository or use the Zerops CLI.
+
+### Deploying from GitHub or GitLab
+
+To deploy your application from GitHub or GitLab, you need to connect your repository to your Zerops service from the service's Pipeline & CI/CD settings.
+
+- [Github integration](/references/github-integration)
+- [Gitlab integration](/references/gitlab-integration)
+
+The deployment can be triggered either by:
+
+- **Pushing to a specified branch**: If you push to a branch, it will trigger a deployment.
+- **Using a tag**: If you commit with the configured tag, it will trigger a deployment.
+
+
+### Deploying with Zerops CLI
+
+When you have a `zerops.yml` file, you can deploy your codebase to Zerops by running `zcli push`. This will trigger the build pipeline followed by deployment. 
+There are many other features available in the Zerops CLI - you can read more about them at [references/cli](/references/cli).
+
+Any changes to your `zerops.yml` file require redeployment of your application, either by using `zcli push` or by pushing to your connected repository.
+
+:::info
+While deployments are handled through `zcli push` or repository triggers, you can also access your service directly via SSH. Learn more about SSH access [here](/references/ssh).
+:::

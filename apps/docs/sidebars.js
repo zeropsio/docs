@@ -26,15 +26,6 @@ module.exports = {
       },
       className: 'homepage-sidebar-item',
     },
-    // {
-    //   type: "doc",
-    //   id: "getting-started",
-    //   label: "Dive-in",
-    //   customProps: {
-    //     sidebar_icon: "rocket-launch",
-    //   },
-    //   className: "homepage-sidebar-item",
-    // },
     {
       type: 'html',
       value: 'Features',
@@ -106,24 +97,31 @@ module.exports = {
       },
       className: 'homepage-sidebar-item',
     },
+    {
+      type: 'html',
+      value: 'Perfectly suited for',
+      customProps: {
+        sidebar_is_group_divider: true,
+      },
+      className: 'homepage-sidebar-item',
+    },
+    {
+      type: 'ref',
+      id: 'frameworks/laravel',
+      label: 'Laravel',
+      customProps: {
+        sidebar_icon: 'laravel',
+      },
+      className: 'homepage-sidebar-item  service-sidebar-item',
+    },
     // {
-    //   type: 'doc',
-    //   id: 'features/remote-dev',
-    //   label: 'Local & remote development',
+    //   type: 'category',
+    //   label: 'Perfectly suited for',
+    //   collapsible: false,
     //   customProps: {
-    //     sidebar_icon: 'computer-desktop-solid',
+    //     sidebar_is_group_headline: true,
     //   },
-    //   className: 'homepage-sidebar-item',
-    // },
-    // {
-    //   type: 'doc',
-    //   id: 'features/developer-first',
-    //   label: 'Developer first',
-    //   customProps: {
-    //     sidebar_icon: 'heart',
-    //   },
-    //   className: 'homepage-sidebar-item',
-    // },
+    //   items: [
     //  {
     //    type: "html",
     //    value: "Perfectly suited for",
@@ -812,7 +810,7 @@ module.exports = {
     {
       type: 'doc',
       id: 'nodejs/overview',
-      label: 'Getting Started',
+      label: 'Node.js',
       customProps: {
         sidebar_is_title: true,
         sidebar_icon: 'nodejs',
@@ -927,7 +925,7 @@ module.exports = {
     {
       type: 'doc',
       id: 'php/overview',
-      label: 'Zerops PHP Service',
+      label: 'PHP',
       customProps: {
         sidebar_is_title: true,
         sidebar_icon: 'php',
@@ -1046,7 +1044,7 @@ module.exports = {
     {
       type: 'doc',
       id: 'python/overview',
-      label: 'Zerops Python Service',
+      label: 'Python',
       customProps: {
         sidebar_is_title: true,
         sidebar_icon: 'python',
@@ -1160,7 +1158,7 @@ module.exports = {
     {
       type: 'doc',
       id: 'go/overview',
-      label: 'Zerops Go Service',
+      label: 'Go',
       customProps: {
         sidebar_is_title: true,
         sidebar_icon: 'go',
@@ -1274,7 +1272,7 @@ module.exports = {
     {
       type: 'doc',
       id: 'rust/overview',
-      label: 'Zerops Rust Service',
+      label: 'Rust',
       customProps: {
         sidebar_is_title: true,
         sidebar_icon: 'rust',
@@ -1388,7 +1386,7 @@ module.exports = {
     {
       type: 'doc',
       id: 'dotnet/overview',
-      label: 'Zerops .NET Service',
+      label: '.NET',
       customProps: {
         sidebar_is_title: true,
         sidebar_icon: 'dotnet',
@@ -1502,7 +1500,7 @@ module.exports = {
     {
       type: 'doc',
       id: 'java/overview',
-      label: 'Zerops Java Service',
+      label: 'Java',
       customProps: {
         sidebar_is_title: true,
         sidebar_icon: 'java',
@@ -1616,7 +1614,7 @@ module.exports = {
     {
       type: 'doc',
       id: 'nginx/overview',
-      label: 'Zerops Nginx static Service',
+      label: 'Nginx Static',
       customProps: {
         sidebar_is_title: true,
         sidebar_icon: 'nginx',
@@ -1868,37 +1866,6 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'Dive-in',
-      collapsible: false,
-      link: {
-        type: 'doc',
-        id: 'postgresql/getting-started',
-      },
-      customProps: {
-        sidebar_icon: 'rocket-launch',
-      },
-      className: 'homepage-sidebar-item',
-      items: [
-        {
-          type: 'doc',
-          id: 'postgresql/tutorial/quickstart',
-          label: 'Quickstart',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-        {
-          type: 'doc',
-          id: 'postgresql/tutorial/step-by-step',
-          label: 'Step-by-step tutorial',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-      ],
-    },
-    {
-      type: 'category',
       label: 'How-to',
       collapsible: false,
       customProps: {
@@ -2030,38 +1997,6 @@ module.exports = {
         sidebar_is_title: true,
         sidebar_icon: 'keydb',
       },
-    },
-    {
-      type: 'category',
-      label: 'Dive-in',
-      collapsible: false,
-      link: {
-        type: 'doc',
-        id: 'keydb/getting-started',
-      },
-      customProps: {
-        sidebar_icon: 'rocket-launch',
-        sidebar_is_soon: true,
-      },
-      className: 'homepage-sidebar-item',
-      items: [
-        {
-          type: 'doc',
-          id: 'keydb/tutorial/quickstart',
-          label: 'Quickstart',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-        {
-          type: 'doc',
-          id: 'keydb/tutorial/step-by-step',
-          label: 'Step-by-step tutorial',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-      ],
     },
     {
       type: 'category',
@@ -2752,4 +2687,321 @@ module.exports = {
       },
     },
   ],
+  laravel: [
+    {
+      type: 'ref',
+      id: 'homepage',
+      label: 'Back to home',
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: 'back-arrow',
+      },
+    },
+    {
+      type: 'doc',
+      id: 'frameworks/laravel',
+      label: 'Laravel',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'laravel',
+      },
+    },
+    {
+      type: 'category',
+      label: 'Initial Setup',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'frameworks/laravel/create-project',
+          label: 'Create Project',
+        },
+        {
+          type: 'doc',
+          id: 'frameworks/laravel/create-service',
+          label: 'Create PHP Nginx service',
+        },
+        {
+          type: 'doc',
+          id: 'frameworks/laravel/build-deployments',
+          label: 'Build & Deployments',
+        },
+        {
+          type: 'doc',
+          id: 'frameworks/laravel/env-variables',
+          label: 'Environment Variables',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Advanced',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'frameworks/laravel/cron',
+          label: 'Schedule Jobs & CRON',
+        },
+        {
+          type: 'doc',
+          id: 'frameworks/laravel/redis',
+          label: 'Manage Redis',
+        },
+        {
+          type: 'doc',
+          id: 'frameworks/laravel/smtp',
+          label: 'SMTP Configuration',
+        },
+        {
+          type: 'doc',
+          id: 'frameworks/laravel/migrations',
+          label: 'Database Migrations',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Good to know',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'frameworks/laravel/public-access',
+          label: 'Manage Public Access',
+        },
+        {
+          type: 'doc',
+          id: 'frameworks/laravel/logs',
+          label: 'Access logs',
+        },
+        {
+          type: 'doc',
+          id: 'frameworks/laravel/backups',
+          label: 'Database Backups',
+        },    
+      ],
+    },
+    {
+      type: 'doc',
+      id: 'frameworks/laravel/faq',
+      label: 'FAQ',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'chat-bubble-left-right',
+      },
+    },
+  ],
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//  {
+//    type: "category",
+//    label: "Nest.js",
+//    link: {
+//      type: "doc",
+//      id: "frameworks/nestjs/index",
+//    },
+//    customProps: {
+//      sidebar_icon: "nestjs",
+//    },
+//    className: "homepage-sidebar-item",
+//    items: [
+//      {
+//        type: "doc",
+//        id: "frameworks/nestjs/index",
+//        label: "Overview & quickstart",
+//      },
+//      {
+//        type: "doc",
+//        id: "frameworks/nestjs/log",
+//        label: "Setup & access logs",
+//      },
+//      {
+//        type: "doc",
+//        id: "frameworks/nestjs/template",
+//        label: "Create templates with import & seed",
+//      },
+//      {
+//        type: "doc",
+//        id: "frameworks/nestjs/env-variables",
+//        label: "Utilize environment variables",
+//      },
+//      {
+//        type: "doc",
+//        id: "frameworks/nestjs/migration",
+//        label: "Migration & upgrades",
+//      },
+//      {
+//        type: "doc",
+//        id: "frameworks/nestjs/backups",
+//        label: "Backups",
+//      },
+//      {
+//        type: "doc",
+//        id: "frameworks/nestjs/scaling",
+//        label: "Optimize scaling",
+//      },
+//      {
+//        type: "doc",
+//        id: "frameworks/nestjs/scaling",
+//        label: "High availability, when, how, why",
+//      },
+//      {
+//        type: "doc",
+//        id: "frameworks/nestjs/cron",
+//        label: "CRON / Scheduled jobs",
+//      },
+//      {
+//        type: "doc",
+//        id: "frameworks/nestjs/mails",
+//        label: "SMTP & sending emails",
+//      },
+//      {
+//        type: "doc",
+//        id: "frameworks/nestjs/routing",
+//        label: "Public access from domain, IP, subdomain",
+//      },
+//    ],
+//  },
+//  {
+//    type: "category",
+//    label: "Laravel",
+//    link: {
+//      type: "doc",
+//      id: "frameworks/laravel/index",
+//    },
+//    customProps: {
+//      sidebar_icon: "laravel",
+//    },
+//    className: "homepage-sidebar-item",
+//    items: [
+//      {
+//        type: "doc",
+//        id: "frameworks/laravel/examples",
+//        label: "Examples",
+//        customProps: {
+//          exclude_from_doc_list: false,
+//        },
+//      },
+//    ],
+//  },
+//  {
+//    type: "category",
+//    label: "Gingonic",
+//    link: {
+//      type: "doc",
+//      id: "frameworks/gingonic/index",
+//    },
+//    customProps: {
+//      sidebar_icon: "gingonic",
+//    },
+//    className: "homepage-sidebar-item",
+//    items: [
+//      {
+//        type: "doc",
+//        id: "frameworks/gingonic/examples",
+//        label: "Examples",
+//        customProps: {
+//          exclude_from_doc_list: false,
+//        },
+//      },
+//    ],
+//  },
+//  {
+//    type: "category",
+//    label: "Nette",
+//    link: {
+//      type: "doc",
+//      id: "frameworks/nette/index",
+//    },
+//    customProps: {
+//      sidebar_icon: "nette",
+//    },
+//    className: "homepage-sidebar-item",
+//    items: [
+//      {
+//        type: "doc",
+//        id: "frameworks/nette/examples",
+//        label: "Examples",
+//        customProps: {
+//          exclude_from_doc_list: false,
+//        },
+//      },
+//    ],
+//  },
+//  {
+//    type: "category",
+//    label: "Strapi",
+//    link: {
+//      type: "doc",
+//      id: "frameworks/strapi/index",
+//    },
+//    customProps: {
+//      sidebar_icon: "strapi",
+//    },
+//    className: "homepage-sidebar-item",
+//    items: [
+//      {
+//        type: "doc",
+//        id: "frameworks/strapi/examples",
+//        label: "Examples",
+//        customProps: {
+//          exclude_from_doc_list: false,
+//        },
+//      },
+//    ],
+//  },
+//  {
+//    type: "category",
+//    label: "Medusa",
+//    link: {
+//      type: "doc",
+//      id: "frameworks/medusa/index",
+//    },
+//    customProps: {
+//      sidebar_icon: "medusa",
+//    },
+//    className: "homepage-sidebar-item",
+//    items: [
+//      {
+//        type: "doc",
+//        id: "frameworks/medusa/examples",
+//        label: "Examples",
+//        customProps: {
+//          exclude_from_doc_list: false,
+//        },
+//      },
+//    ],
+//  },
