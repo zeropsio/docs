@@ -89,6 +89,15 @@ module.exports = {
       className: 'homepage-sidebar-item',
     },
     {
+      type: 'doc',
+      id: 'features/backup',
+      label: 'Backup',
+      customProps: {
+        sidebar_icon: 'archive-box',
+      },
+      className: 'homepage-sidebar-item',
+    },
+    {
       type: 'html',
       value: 'Perfectly suited for',
       customProps: {
@@ -634,6 +643,15 @@ module.exports = {
       label: 'SSH',
       customProps: {
         sidebar_icon: 'command-line',
+      },
+      className: 'homepage-sidebar-item',
+    },
+    {
+      type: 'doc',
+      label: 'Zsc',
+      id: 'references/zsc',
+      customProps: {
+        sidebar_icon: 'window',
       },
       className: 'homepage-sidebar-item',
     },
@@ -2203,6 +2221,11 @@ module.exports = {
           type: 'doc',
           id: 'object-storage/how-to/delete',
           label: 'Delete object storage service',
+        },
+        {
+          type: 'doc',
+          id: 'object-storage/how-to/curl-file',
+          label: 'Download file from a private bucket',
         },
       ],
     },

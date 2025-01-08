@@ -13,7 +13,7 @@ const config = {
   trailingSlash: false,
   onBrokenLinks: "ignore",
   onBrokenMarkdownLinks: "throw",
-  favicon: "img/favicon.ico",
+  favicon: "favicon.ico",
   organizationName: "zerops",
   projectName: "zerops/docs",
   plugins: [
@@ -136,7 +136,7 @@ const config = {
     socialLinks: [
       {
         type: "discord",
-        href: "https://discord.gg/invite/WDvCZ54",
+        href: "https://docs.zerops.io/discord",
       },
       {
         type: "twitter",

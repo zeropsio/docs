@@ -1,0 +1,66 @@
+---
+title: Download file from a private bucket with cURL
+---
+
+This guide explains how to download a single file from a private Object Storage bucket using cURL and a bash script with Zerops object storage.
+
+## Prerequisites
+
+- Access to Zerops Object Storage
+- Storage credentials (`ACCESS_KEY_ID` and `SECRET_ACCESS_KEY`)
+- Bash environment
+- OpenSSL and cURL installed
+
+:::caution
+Store your storage credentials securely and never commit them to version control.
+:::
+
+## Script
+
+Save this script as `download-storage.sh`:
+
+```bash
+#!/bin/bash
+
+server="${3:-storage-prg1.zerops.io}"
+file_path=$2
+bucket=$1
+set -eu pipefail
+
+contentType="application/octet-stream"
+dateValue=`date -R`
+signature_string="GET\n\n${contentType}\n${dateValue}\n/${bucket}/${file_path}"
+
+signature_hash=`echo -en ${signature_string} | openssl sha1 -hmac ${SECRET_ACCESS_KEY} -binary | base64`
+
+curl -sSo ${file_path} \
+  -H "Date: ${dateValue}" \
+  -H "Content-Type: ${contentType}" \
+  -H "Authorization: AWS ${ACCESS_KEY_ID}:${signature_hash}" \
+  "https://${server}/${bucket}/${file_path}"
+
+```
+
+## Usage
+
+1. Make the script executable:
+```bash
+chmod +x download-storage.sh
+```
+
+2. Set your storage credentials as environment variables:
+```bash
+export ACCESS_KEY_ID=your-access-key
+export SECRET_ACCESS_KEY=your-secret-key
+```
+
+3. Run the script:
+```bash
+./download-storage.sh my-bucket file.pdf
+```
+
+## Troubleshooting
+
+- **Permission Denied**: Check your `ACCESS_KEY_ID` and `SECRET_ACCESS_KEY`
+- **File Not Found**: Verify bucket name and file path
+- **Script Error**: Ensure the script has execute permissions
