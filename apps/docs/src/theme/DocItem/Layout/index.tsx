@@ -53,32 +53,34 @@ export default function DocItemLayout({ children }: Props): JSX.Element {
         className={clsx(
           'col',
           'my-0 mx-auto max-w-main-content w-full ml-auto lg:py-0 py-0 px-1',
-          !docTOC.hidden && 'w-9/12',
-          !sidebarContext?.hiddenSidebarContainer && 'max-w-[720px]'
+          !docTOC.hidden && 'w-9/12 !max-w-[760px]',
+          docTOC.hidden && 'flex justify-center !max-w-[920px]'
         )}
       >
-        {unlisted && <Unlisted />}
-        <DocVersionBanner />
-        <div>
-          <article className={clsx('[&>*:first-child]:mt-0')}>
-            <DocBreadcrumbs />
-            <DocVersionBadge />
-            {docTOC.mobile}
-            <DocItemContent>{children}</DocItemContent>
-            <NavigationButtons
-              prevPage={previous && {
-                href: previous.permalink,
-                title: previous.title
-              }}
-              nextPage={next && {
-                href: next.permalink,
-                title: next.title
-              }}
-            />
-            <DocItemFooter />
-          </article>
-          <DocItemPaginator />
-          <Footer />
+        <div className={clsx(docTOC.hidden && 'w-full')}>
+          {unlisted && <Unlisted />}
+          <DocVersionBanner />
+          <div>
+            <article className={clsx('[&>*:first-child]:mt-0', 'px-1')}>
+              <DocBreadcrumbs />
+              <DocVersionBadge />
+              {docTOC.mobile}
+              <DocItemContent>{children}</DocItemContent>
+              <NavigationButtons
+                prevPage={previous && {
+                  href: previous.permalink,
+                  title: previous.title
+                }}
+                nextPage={next && {
+                  href: next.permalink,
+                  title: next.title
+                }}
+              />
+              <DocItemFooter />
+            </article>
+            <DocItemPaginator />
+            <Footer />
+          </div>
         </div>
       </div>
       {docTOC.desktop && (
