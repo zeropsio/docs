@@ -726,6 +726,15 @@ module.exports = {
       className: 'homepage-sidebar-item',
     },
     {
+      type: 'doc',
+      id: 'references/firewall',
+      label: 'Firewall',
+      customProps: {
+        sidebar_icon: 'firewall',
+      },
+      className: 'homepage-sidebar-item',
+    },
+    {
       type: 'html',
       value: 'Help',
       customProps: {
