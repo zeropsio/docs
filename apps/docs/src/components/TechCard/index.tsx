@@ -23,12 +23,12 @@ const TechCard: React.FC<TechCardProps> = ({ heading, description, items }) => {
                 const CardContent = (
                     <div
                         className={`flex flex-col items-center justify-center p-2 rounded-lg border-2 border-solid
-                        ${isClickable ? "cursor-pointer bg-[#F2F5F7] dark:bg-medusa-bg-base hover:border-[#07c] hover:bg-medusa-bg-subtle-hover dark:hover:bg-medusa-bg-base-hover hover:bg-medusa-bg-base active:bg-[#EEF0F2] dark:active:bg-[#2A2C30]"
+                        ${isClickable ? "cursor-pointer bg-[#F2F5F7] dark:bg-medusa-bg-base hover:border-[#dfdfdf] dark:hover:border-[#333333] hover:bg-medusa-bg-subtle-hover dark:hover:bg-medusa-bg-base-hover hover:bg-medusa-bg-base active:bg-[#EEF0F2] dark:active:bg-[#2A2C30]"
                                       : "cursor-not-allowed opacity-60"}
                         border-transparent transition-all duration-200 ease-in-out bg-medusa-bg-subtle`}
                     >
                         {item.icon && (
-                            <span className="mb-1 flex items-center justify-center rounded-full border border-gray-300">
+                            <span className="mb-1 flex items-center justify-center rounded-full border border-[#dfdfdf] dark:border-[#333333]">
                                 {item.icon}
                             </span>
                         )}
