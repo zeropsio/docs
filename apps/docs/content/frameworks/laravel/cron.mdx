@@ -1,13 +1,15 @@
 ---
-title: Schedule Jobs & CRON
-description: Learn How to Configure and Manage CRON Jobs in Your Zerops Laravel Application
+title: Scheduled Tasks and CRON Jobs
+description: Learn how to configure and manage scheduled tasks in your Zerops Laravel applications using CRON
 ---
 
-Zerops provides a convenient way to configure cron jobs directly in your `zerops.yml` file. These scheduled tasks can be configured to run on single or multiple containers with flexible timing options.
+Zerops provides a convenient way for managing scheduled tasks through CRON jobs, configured directly in your `zerops.yml` file. These tasks can be scheduled to run on single or multiple containers with granular timing control.
 
 ## Basic Configuration
 
-Cron jobs are defined in the `run.crontab` section of your `zerops.yml`. Each job requires at least a `command` and `timing` parameter.
+Cron jobs are defined in the `run.crontab` section of your `zerops.yml`. Each job requires two essential parameters:
+- **command**: The command to execute
+- **timing**: The CRON schedule expression
 
 ```yaml
 run: 
@@ -16,14 +18,13 @@ run:
       timing: "0 * * * *"
 ```
 
-This basic example writes the current date to a log file every hour.
+This example logs the current timestamp every hour.
 
-:::info
-If you want to see the full list of parameters and configuration examples for cron jobs, you can read at [zerops-yml/cron](/zerops-yml/cron).
+:::tip Detailed Configuration
+For comprehensive configuration options and examples, refer to our [CRON configuration guide](/zerops-yml/cron).
 :::
 
-## Common Use Cases
-
+## Common Implementation Patterns
 ### Laravel Scheduler
 To run Laravel's scheduler, configure it to execute every minute:
 
@@ -36,7 +37,7 @@ run:
 ```
 
 ### Cleanup Tasks
-Run maintenance tasks on all containers:
+Execute maintenance tasks on all containers:
 
 ```yaml
 run: 
@@ -47,7 +48,7 @@ run:
 ```
 
 ### Multiple Jobs
-You can define multiple cron jobs in the same configuration:
+Configure multiple scheduled tasks within a single service:
 
 ```yaml
 run:
@@ -67,23 +68,21 @@ run:
 
 ## Best Practices
 
-1. **Log Output**: Consider logging the output of your cron jobs for debugging:
+1. **Log Output**: Implement comprehensive logging for debugging and monitoring:
    ```yaml
    command: "php artisan schedule:run >> /var/log/scheduler.log 2>&1"
    ```
 
-2. **Working Directory**: Always specify `workingDir` for Laravel commands to ensure they run from the correct location.
+2. **Working Directory**: Always specify `workingDir` for Laravel commands to ensure they are executed from the correct location.
 
-3. **Container Selection**: Use `allContainers: true` carefully, as it might cause duplicate operations in a multi-container setup.
+3. **Container Selection**: Use `allContainers: true` carefully to avoid duplicate operations in a multi-container setup.
 
-4. **Timing Considerations**: Avoid running resource-intensive tasks during peak hours.
+4. **Timing Considerations**: Schedule intensive tasks during off-peak hours.
 
 ## Monitoring
 
-You can monitor your cron jobs through Laravel's built-in logging system for artisan commands. Might be a good idea to use [Supervisor](https://laravel.com/docs/5.1/queues#supervisor-configuration) for Laravel queues.
+Enable detailed scheduler [logging](/frameworks/laravel/logs) in your `.env`:
 
-For detailed logs of Laravel scheduled tasks, consider enabling scheduler logging in your `.env`:
 ```
 LOG_CHANNEL=daily
 ```
-

@@ -1,148 +1,13 @@
 ---
-title: Database Migrations in Laravel
-description: Learn How to Manage and Run Database Migrations for Your Laravel Application on Zerops
+title: Database Version Control with Migrations
+description: Learn how to track, version, and manage database schema changes alongside your application updates using Laravel migrations.
 ---
 
 import Image from '/src/components/Image';
 
-:::note
-This guide assumes you're using PostgreSQL, which is the recommended database system on Zerops. While Laravel supports multiple database systems, the examples in this guide are specifically for PostgreSQL.
-:::
+Database migrations are **version control** for your database schema, allowing you to evolve your database structure alongside your application versions. Each migration represents a specific version change in your application's database schema, ensuring your database structure stays synchronized with your codebase as your application evolves.
 
-## Running Migrations
-
-### Automatic Migrations
-
-:::info Configuration Reference
-Here you can find some part of `zerops.yml`. For the complete configuration options including service setup, environment variables, and deployment settings, see the [zerops.yml reference guide](/zerops-yml/specification).
-:::
-
-To automatically run migrations during deployment, add the migration command to your `zerops.yml`:
-
-```yaml:zerops.yml
-zerops:
-  - setup: app
-    run:
-      initCommands:
-        - php artisan migrate --force
-```
-
-:::caution
-The `--force` flag is required when running migrations in production to prevent accidental data loss.
-:::
-
-### Manual Migrations
-
-You can also run migrations by connecting to Zerops VPN and then SSHing into your service:
-
-```bash
-# Connect to your zerops project
-zcli vpn up
-
-# SSH into your service with it's hostname (app)
-ssh app
-
-# If you're on MacOS you should use the following command instead
-ssh app.zerops
-```
-
-## Migration Commands
-
-Common migration commands you can use:
-
-```bash
-# Create a new migration
-php artisan make:migration create_users_table
-
-# Run pending migrations
-php artisan migrate
-
-# Rollback the last migration operation
-php artisan migrate:rollback
-
-# Rollback all migrations and run them again
-php artisan migrate:fresh
-
-# Show migration status
-php artisan migrate:status
-```
-
-## Best Practices
-
-### Migration Structure
-
-```php:database/migrations/2024_03_20_create_users_table.php
-<?php
-
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    public function up()
-    {
-        Schema::create('users', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
-            $table->rememberToken();
-            $table->timestamps();
-        });
-    }
-
-    public function down()
-    {
-        Schema::dropIfExists('users');
-    }
-};
-```
-
-### Safe Migration Practices
-
-1. **Always Include Down Method**
-```php
-public function down()
-{
-    // Reverse the changes made in up()
-    Schema::table('users', function (Blueprint $table) {
-        $table->dropColumn('new_column');
-    });
-}
-```
-
-2. **Use Foreign Keys Properly**
-```php
-public function up()
-{
-    Schema::table('posts', function (Blueprint $table) {
-        $table->foreignId('user_id')
-              ->constrained()
-              ->onDelete('cascade');
-    });
-}
-```
-
-3. **Handle Large Tables**
-```php
-public function up()
-{
-    Schema::table('large_table', function (Blueprint $table) {
-        $table->string('new_column')->nullable(); // Allow null first
-    });
-    
-    // Update data in chunks
-    DB::table('large_table')->orderBy('id')->chunk(1000, function ($records) {
-        foreach ($records as $record) {
-            DB::table('large_table')
-                ->where('id', $record->id)
-                ->update(['new_column' => 'default_value']);
-        }
-    });
-}
-```
+This guide covers how to implement and manage these version-based database changes on Zerops, focusing on PostgreSQL as the recommended database system.
 
 ## Environment Configuration
 
@@ -161,9 +26,156 @@ zerops:
         DB_PASSWORD: ${db_password}
 ```
 
+:::warning Backup your data
+Before running migrations in production, it's strongly recommended to back up your database. Zerops provides automated daily backups - see our [backup documentation](/features/backup) for details.
+:::
+
+## Running Migrations
+
+### Automatic Migrations
+
+The most reliable way to manage migrations in your deployment pipeline is through automatic execution. Configure this in your `zerops.yml`:
+
+```yaml title="zerops.yml"
+zerops:
+  - setup: app
+    run:
+      initCommands:
+        - php artisan migrate --force
+```
+
+:::caution
+When running automatic migrations in production, the `--force` flag is necessary to bypass Laravel's safety prompt. Without this flag, Laravel asks for confirmation to help prevent accidental data loss.
+:::
+
+### Manual Migrations
+
+For development and troubleshooting purposes, you can execute migrations manually through SSH:
+
+```bash
+# Connect to your zerops project
+zcli vpn up
+
+# SSH into your service using it's hostname (app)
+ssh app
+
+# For MacOS users
+ssh app.zerops
+```
+
+## Migration Commands
+
+Essential migration commands for your workflow:
+
+```bash
+# Create a new migration file with timestamp
+php artisan make:migration create_users_table
+
+# Execute all pending migrations
+php artisan migrate
+
+# Revert the most recent migration operation
+php artisan migrate:rollback
+
+# Reset and rerun all migrations (warning: destroys existing data)
+php artisan migrate:fresh
+
+# Display current migration status
+php artisan migrate:status
+```
+
+## Best Practices
+
+### Migration Structure
+
+```php {title="database/migrations/create_users_table.php"}
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     * Creates the users table with essential fields.
+     */
+    public function up()
+    {
+        Schema::create('users', function (Blueprint $table) {
+            $table->id();                    // Auto-incrementing primary key
+            $table->string('name');          // User's full name
+            $table->string('email')->unique(); // Unique email address
+            $table->timestamp('email_verified_at')->nullable(); // Email verification timestamp
+            $table->string('password');      // Hashed password
+            $table->rememberToken();         // Remember me token
+            $table->timestamps();            // Created_at and updated_at timestamps
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     * Removes the users table completely.
+     */
+    public function down()
+    {
+        Schema::dropIfExists('users');
+    }
+};
+```
+
+### Safe Migration Practices
+
+1. **Implement Reversible Changes**
+```php
+public function down()
+{
+    // Always provide a way to undo migration changes
+    Schema::table('users', function (Blueprint $table) {
+        $table->dropColumn('new_column');
+    });
+}
+```
+
+2. **Use Foreign Key Contraints**
+```php
+public function up()
+{
+    Schema::table('posts', function (Blueprint $table) {
+        // Create relationship with cascading delete
+        $table->foreignId('user_id')
+              ->constrained()
+              ->onDelete('cascade');
+    });
+}
+```
+
+3. **Handle Large Tables Efficiently**
+```php
+public function up()
+{
+    // Step 1: Add nullable column to prevent blocking operations
+    Schema::table('large_table', function (Blueprint $table) {
+        $table->string('new_column')->nullable();
+    });
+
+    // Step 2: Update data in manageable chunks
+    DB::table('large_table')
+        ->orderBy('id')
+        ->chunk(1000, function ($records) {
+            foreach ($records as $record) {
+                DB::table('large_table')
+                    ->where('id', $record->id)
+                    ->update(['new_column' => 'default_value']);
+            }
+    });
+}
+```
+
 ## Testing Migrations
 
-### Create Test Database
+### Create a Test Database
 
 Add a testing connection to your `config/database.php`:
 
@@ -177,20 +189,23 @@ Add a testing connection to your `config/database.php`:
 ],
 ```
 
-### Migration Testing Example
+### Migration Test Example
 
-Add a migration test file at `tests/Unit/MigrationTest.php`:
+Create a test file at `tests/Unit/MigrationTest.php`:
 
 ```php
+/**
+ * Test migration execution and schema verification
+ */
 public function test_migrations_can_be_run()
 {
-    // Run migrations
+    // Execute all migrations
     Artisan::call('migrate');
 
-    // Assert the table exists
+    // Verify table creation
     $this->assertTrue(Schema::hasTable('users'));
-    
-    // Assert columns exist
+
+    // Verify column structure
     $this->assertTrue(Schema::hasColumns('users', [
         'id', 'name', 'email', 'password'
     ]));
@@ -198,18 +213,18 @@ public function test_migrations_can_be_run()
 ```
 
 :::tip Migration Tips
-- Always backup your database before running migrations in production
-- Use transactions for complex migrations
-- Test migrations thoroughly in development
-- Consider using seeders for initial data
-- Monitor migration execution time for large tables
+* Always create a backup before running migrations in production
+* Use database transactions for complex migrations
+* Thoroughly test migrations in development environment
+* Implement seeders for initial data population
+* Monitor execution time for migrations on large tables
 :::
 
 ## Troubleshooting
 
-Common migration issues and solutions:
+Common migration issues and their solutions:
 
-1. **Migration Timeout** while running migrations in [zerops.yml](/zerops-yml/specification):
+1. **Migration Timeout** Configure longer timeout in [zerops.yml](/zerops-yml/specification):
 ```yaml
 zerops:
   - setup: app
@@ -218,19 +233,24 @@ zerops:
         - php artisan migrate --force --timeout=1000
 ```
 
-2. **Lock Timeout** in `config/database.php`:
+2. **Database Lock Timeout** Adjust PDO settings in `config/database.php`:
 ```php
 'pgsql' => [
     // ...
     'options' => [
-        PDO::ATTR_LOCK_TIMEOUT => 1000
+        PDO::ATTR_LOCK_TIMEOUT => 1000 // Milliseconds
     ]
 ],
 ```
 
 3. **Reset Migration State** Commands:
 ```bash
+# Reset all migrations
 php artisan migrate:reset
+
+# Re-run all migrations
 php artisan migrate
 ```
 
+## Additional Resources
+* [Laravel Migration Documentation](https://laravel.com/docs/11.x/migrations)

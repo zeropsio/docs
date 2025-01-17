@@ -1,28 +1,26 @@
 ---
-title: Using Redis with Laravel
+title: Cache, Queue & Session Management with Redis
 description: Learn How to Configure and Use Redis for Caching, Queues, and Sessions in Your Laravel Application on Zerops
 ---
 
 import Image from '/src/components/Image';
 
-# Redis Integration with Laravel
+Redis is a powerful in-memory data structure store serving as a database, cache, message broker, and queue. This guide walks you through Redis integration with your Laravel application on Zerops for high-performance caching, session management, and queue processing.
 
-Redis is a powerful in-memory data structure store that can be used as a database, cache, message broker, and queue. This guide will help you integrate Redis with your Laravel application on Zerops, enabling high-performance caching, session management, and queue processing.
+Zerops provides [Valkey](https://valkey.io), an open-source Redis alternative that delivers high-performance key/value storage with full Redis compatibility. Valkey supports all common Redis use cases — from caching and message queues to primary database functionality.
 
 ## Adding Redis Service
 
-Zerops provides Valkey, an open source Redis alternative which is a high-performance key/value datastore that's fully compatible with Redis. Valkey supports all common Redis use cases including caching, message queues, and can even serve as a primary database.
-
-Before using Valkey(Redis) features with Laravel, you'll need to add Valkey as a service to your Zerops project. The service configuration defines the version, availability mode.
+To use Valkey (Redis) features with Laravel, first either import Valkey as a service to your Zerops project
 
 ```yml
 services:
-  - hostname: redis
+  - hostname: valkey
     type: valkey@7.2
-    mode: NON_HA  # or HA for high availability
+    mode: NON_HA  # use HA in production
 ```
 
-You can also add the Valkey service to your project manually from the Zerops GUI.
+or add the Valkey service to your project manually from the Zerops GUI.
 
 <Image
   lightImage="/img/gui/valkey/service.webp"
@@ -32,14 +30,17 @@ You can also add the Valkey service to your project manually from the Zerops GUI
 />
 
 :::tip High Availability Mode
-For production environments, it's recommended to use `HA` mode. This ensures automatic failover in case of node failure and provides data replication across multiple nodes. High availability mode significantly improves reliability and uptime while offering better handling of network partitions.
+For production environments, we recommend using `HA` mode. This configuration:
+* Ensures automatic failover during node failures
+* Provides data replication across multiple nodes
+* Improves reliability and uptime
 :::
 
 ## Environment Configuration
 
 ### Basic Redis Settings
 
-The environment variables configure how your Laravel application connects to and utilizes Redis. These settings control various aspects of Redis integration, from basic connectivity to specific feature configurations.
+Environment variables control how your Laravel application connects to and uses Redis. Below are the core settings grouped by functionality:
 
 ```yml
 zerops:
@@ -55,7 +56,7 @@ zerops:
       envVariables:
         # Redis Connection Settings
         REDIS_CLIENT: phpredis    # PHP Redis client for better performance
-        REDIS_HOST: redis        # Internal hostname of Redis service
+        REDIS_HOST: valkey        # Internal hostname of Valkey service
         REDIS_PORT: 6379         # Standard Redis port number
 
         # Cache Configuration
@@ -77,9 +78,9 @@ zerops:
 
 ### Redis Caching
 
-Laravel's cache system provides a unified API across various cache backends. This configuration sets up Redis as your application's primary cache store, enabling fast and reliable data caching. You can also set up a custom cache connection in the `config/cache.php` file.
+Laravel's cache system offers a unified API across different cache backends. The following configuration establishes Redis as your primary cache store for fast, reliable data caching:
 
-```php
+```php title="config/cache.php"
 'default' => env('CACHE_STORE', 'database'),
 
 'stores' => [
@@ -97,7 +98,7 @@ Laravel's cache system provides a unified API across various cache backends. Thi
 
 Using Redis for session storage provides better performance than file-based sessions and enables seamless session sharing across multiple application servers. You can also set up a custom session connection in the `config/session.php` file.
 
-```php
+```php title="config/session.php"
 'driver' => env('SESSION_DRIVER', 'redis'),
 'lifetime' => env('SESSION_LIFETIME', 120),
 'encrypt' => env('SESSION_ENCRYPT', false),
@@ -107,7 +108,7 @@ Using Redis for session storage provides better performance than file-based sess
 
 Redis queues offer a robust solution for handling background jobs in Laravel. This configuration sets up Redis as your queue backend with retry policies and connection settings. You can also set up a custom queue connection in the `config/queue.php` file.
 
-```php
+```php title="config/queue.php"
 'default' => env('QUEUE_CONNECTION', 'redis'),
 
 'connections' => [
@@ -117,6 +118,24 @@ Redis queues offer a robust solution for handling background jobs in Laravel. Th
         'queue' => 'default',
         'retry_after' => 90,     // Retry failed jobs after 90 seconds
         'block_for' => null,     // Don't block when no jobs available
+    ],
+],
+```
+
+Consider using [Supervisor](https://laravel.com/docs/5.1/queues#supervisor-configuration) for managing Laravel queues in production.
+
+### Performance Optimization
+Configure your Redis connection pool for optimal performance:
+```php
+'redis' => [
+    'client' => env('REDIS_CLIENT', 'phpredis'),
+    'options' => [
+        'cluster' => env('REDIS_CLUSTER', 'redis'),
+        'prefix' => env('REDIS_PREFIX', ''),
+        'pool' => [
+            'max_connections' => 50,
+            'timeout' => 30,
+        ],
     ],
 ],
 ```

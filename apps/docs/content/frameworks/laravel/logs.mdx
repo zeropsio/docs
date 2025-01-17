@@ -1,97 +1,72 @@
 ---
-title: Access Logs in Your Laravel Project
+title: Laravel Logging
 description: Learn How to Configure and Access Logs for Your Laravel Application on Zerops
 ---
 
 import Image from '/src/components/Image';
+import { Dropdown, DropdownItem } from '/src/components/Dropdown';
 
-Zerops provides comprehensive logging capabilities for your Laravel application through three different log types:
+Zerops provides comprehensive logging capabilities for Laravel applications using its distributed logging architecture. This guide shows you how to set up and optimize Laravel logging on Zerops, ensuring your application logs are properly captured and accessible.
 
-- [build log](#build-log)
-- [prepare runtime log](#prepare-runtime-log)
-- [runtime log](#runtime-log)
+## Accessing Logs
 
-## How to Access Logs
+Learn how to [access and view your logs](/php/how-to/logs) in Zerops.
 
-### Build Log
+## Configuration
 
-#### Zerops GUI
+### Zerops Environment Variables
 
-To access a build log in Zerops GUI:
-1. Go to the Service detail
-2. Choose **Service dashboard & runtime containers** in the left menu
-3. Open the pipeline detail of an application version 
-4. Click on **Show build log**
+Laravel logging in Zerops is configured through environment variables, such as:
 
-The **Show build log** button is available only if the build pipeline was triggered for the service by zCLI or by Github/Gitlab Integration.
-The commands inside Build log are specified in `buildCommands` in [zerops.yml](/zerops-yml/specification).
+- `LOG_CHANNEL`: Specifies which logging channel to use (e.g., 'syslog', 'stack')
+- `LOG_STACK`: When using the stack channel, defines which channels to include
+- `LOG_LEVEL`: Sets the minimum log level to capture (e.g., 'debug', 'info', 'error')
 
-#### zCLI
-
-To access a build log in Zerops CLI use:
-
-```sh
-zcli service log --showBuildLogs
+```yml title="zerops.yml"
+zerops:
+  - setup: app
+    run:
+      envVariables:
+        LOG_CHANNEL: syslog
+        LOG_LEVEL: debug
+        LOG_STACK: single
 ```
 
-Read more about the [zcli service log](/references/cli/access-logs) command.
+:::tip Available Log Channels
+Laravel supports several logging channels out of the box:
+- **stack**: Aggregates multiple logging channels into a single channel
+- **single**: Writes logs to a single file (storage/logs/laravel.log)
+- **daily**: Creates daily rotating log files
+- **syslog**: Writes to system log (recommended for Zerops)
+- **stderr**: Writes to PHP's standard error output stream
+- **errorlog**: Uses PHP's error_log function
+- **slack**: Sends log messages to Slack
+- **papertrail**: Sends logs to Papertrail
+- **mongodb**: Stores logs in MongoDB (requires additional package)
+:::
 
-### Prepare Runtime Log
+To use multiple logging channels, [configure](#laravel-configuration) the stack channel:
 
-#### Zerops GUI
-
-To access a prepare runtime log in Zerops GUI:
-1. Go to the service detail 
-2. Choose **Service dashboard & runtime containers** in the left menu
-3. Open the pipeline detail of an application version
-4. Click on **Prepare runtime log**
-
-The **Show prepare runtime log** button is available only if the build pipeline was triggered for the service by zCLI or by Github/Gitlab Integration.
-The commands inside Prepare runtime log are specified in `prepareCommands` in [zerops.yml](/zerops-yml/specification).
-
-#### zCLI
-
-_Prepare runtime log is currently not supported in zCLI._
-
-### Runtime Log
-
-#### Zerops GUI
-
-To access a runtime log in Zerops GUI:
-1. Go to the service detail
-2. Choose **Runtime log** in the left menu
-
-<p align="center">
-  <Image
-    src="/img/gui/laravel/runtime-log.webp"
-    alt="Laravel Runtime Logs"
-    caption="Runtime log"
-    width="95%"
-    height="auto"
-  />
-</p>
-
-Each runtime container has its own log. If your service has multiple containers, select the container in the log header.
-
-You can filter log records by:
-- Minimum severity level
-- Time period
-
-#### zCLI
-
-To access the log of the runtime containers in Zerops CLI use:
-
-```sh
-zcli service log
+```yml
+LOG_CHANNEL: stack
+LOG_STACK: syslog,daily
 ```
 
-Read more about the [zcli service log](/references/cli/access-logs) command.
+This configuration logs to both syslog (for Zerops) and daily files (for local access).
 
-## Laravel Logging Configuration
+:::tip
+Using appropriate log levels makes it easier to filter and find relevant messages in the Zerops GUI.
+:::
 
-Your Laravel application's `config/logging.php` defines how logs are handled:
+### Laravel Configuration
 
-```php
+While Zerops is configured through environment variables, these variables are interpreted by Laravel's logging system. By default, Laravel includes a logging configuration that works out of the box - you don't need to modify anything.
+
+If you're curious about the underlying configuration or need to customize it beyond environment variables, here's what Laravel's logging configuration typically looks like:
+
+<Dropdown>
+    <DropdownItem title="Configuration example">
+```php title="config/logging.php"
 <?php
 
 use Monolog\Handler\NullHandler;
@@ -150,21 +125,10 @@ return [
     ],
 ];
 ```
+</DropdownItem>
+</Dropdown>
 
-:::tip Available Log Channels
-Laravel supports several logging channels out of the box:
-- **stack**: Aggregates multiple logging channels into a single channel
-- **single**: Writes logs to a single file (storage/logs/laravel.log)
-- **daily**: Creates daily rotating log files
-- **syslog**: Writes to system log (recommended for Zerops)
-- **stderr**: Writes to PHP's standard error output stream
-- **errorlog**: Uses PHP's error_log function
-- **slack**: Sends log messages to Slack
-- **papertrail**: Sends logs to Papertrail
-- **mongodb**: Stores logs in MongoDB (requires additional package)
-:::
-
-### Using Logs in Your Code
+### Using Logs
 
 Laravel provides several ways to write log messages:
 
@@ -188,32 +152,3 @@ logger($message); // defaults to info level
 // With context data
 Log::info('User failed to login.', ['id' => $user->id]);
 ```
-
-### Zerops Environment Configuration
-
-For optimal logging in Zerops, use these environment variables in your `zerops.yml`:
-
-```yml
-zerops:
-  - setup: app
-    run:
-      envVariables:
-        LOG_CHANNEL: syslog
-        LOG_LEVEL: debug
-        LOG_STACK: single
-```
-
-### Using Multiple Channels
-
-To use multiple logging channels, configure the stack channel:
-
-```yml
-LOG_CHANNEL: stack
-LOG_STACK: syslog
-```
-
-This will log to both syslog (for Zerops) and daily files (for local access).
-
-:::tip
-Use appropriate log levels to make it easier to filter and find relevant log messages in Zerops GUI.
-:::
