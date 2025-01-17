@@ -41,11 +41,15 @@ zerops:
   - setup: app
     run:
       initCommands:
-        - php artisan migrate --force
+        - php artisan migrate --force --isolated
 ```
 
 :::caution
 When running automatic migrations in production, the `--force` flag is necessary to bypass Laravel's safety prompt. Without this flag, Laravel asks for confirmation to help prevent accidental data loss.
+:::
+
+:::note Migrations in HA mode
+The `--isolated` flag prevents multiple servers from running migrations simultaneously by using a cache lock.
 :::
 
 ### Manual Migrations
@@ -230,7 +234,7 @@ zerops:
   - setup: app
     run:
       initCommands:
-        - php artisan migrate --force --timeout=1000
+        - php artisan migrate --force --isolated --timeout=1000
 ```
 
 2. **Database Lock Timeout** Adjust PDO settings in `config/database.php`:

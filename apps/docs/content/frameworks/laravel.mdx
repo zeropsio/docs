@@ -20,6 +20,10 @@ Zerops implements what we call "transparent infrastructure" - you get enterprise
 
 *No artificial limitations, no framework-specific compromises - just solid infrastructure that lets Laravel do what it does best.*
 
+:::tip
+New Zerops accounts receive $15 in free credits for testing. After verifying your account with a $10 initial payment, you'll get an additional $50 in credits.
+:::
+
 ## Quick Start
 
 Choose a recipe that matches your needs and deploy with a single click. Each recipe sets up a complete environment with all necessary services preconfigured.
@@ -30,11 +34,10 @@ All recipes include:
 - **L3/L7 balancers**
 - **Logging & metrics**
 
-<div className="grid grid-cols-2 gap-2">
+<div className="grid grid-cols-1 md:grid-cols-2 gap-2">
   <div className="min-w-[250px]">
     <CustomCardWithIcon icon={IconLaravel} title="Laravel Minimal">
-    <div className="flex-grow pb-0.5 pt-0.5">This is the most bare-bones example of Laravel app including core services + PostgreSQL.</div>
-
+      <div className="flex-grow pb-0.5 pt-0.5">This is the most bare-bones example of Laravel app including core services + PostgreSQL.</div>
       <DeployButton link="laravel-minimal" badgeWidth="200" />
     </CustomCardWithIcon>
   </div>
@@ -60,6 +63,11 @@ All recipes include:
 
 ## Core Features
 
+### Infrastructure and Security
+Each project runs in its own isolated network with enterprise-level security features automatically configured.
+
+What makes this special is how it combines security with simplicity - this infrastructure requires zero configuration from you – it's all handled automatically when you create your project.
+
 ### Native Service Discovery
 Services within your project communicate seamlessly using internal hostnames:
 
@@ -71,7 +79,13 @@ REDIS_HOST=${cache_hostname}
 *Environment variables are automatically injected and synchronized across all containers.*
 
 ### Intelligent Scaling
-Resources scale automatically in both directions based on actual usage:
+One of Zerops' most powerful features is its intelligent autoscaling system, which:
+* Scales resources (CPU, RAM, Disk) up and down based on actual usage
+* Maintains minimum required resources to optimize costs
+* Handles both vertical and horizontal scaling automatically
+* Manages disk space dynamically (a unique feature in the industry)
+
+Through a simple configuration, you define resource boundaries while Zerops automatically handles the complex scaling decisions:
 
 ```yaml
 # Example scaling configuration
@@ -91,7 +105,6 @@ services:
 Deploy with confidence using our battle-tested pipeline:
 
 ```yaml title="zerops.yml"
-# zerops.yml
 zerops:
   - setup: app
     build:
@@ -105,11 +118,11 @@ zerops:
       initCommands:
         - php artisan config:cache
         - php artisan route:cache
-        - php artisan migrate --force
+        - php artisan migrate --force --isolated
 ```
 
-### High Availability by Design
-Every service can run in HA mode with automatic failover:
+### High Availability
+Every service can run in HA mode with automatic failover.
 
 ```yaml
 services:
@@ -122,22 +135,40 @@ services:
     mode: HA  # Redis cluster configuration
 ```
 
+Setting up a production-grade HA database cluster typically requires deep DevOps expertise. Zerops automates this complexity, giving you an enterprise-grade setup with a single configuration flag:
+* **Database Cluster** distributed across multiple physical servers
+* **Automatic failover** and data replication
+* **Enhanced performance** through load distribution
+* **Production-grade reliability** out of the box
+
 ## Development Workflow
 
-{/* ### Local Development */}
-{/* Connect your local environment directly to remote services: */}
+### Team Collaboration
+Zerops enables seamless team development through:
 
-{/* ```bash */}
-{/* # Install Zerops CLI */}
-{/* npm i -g @zerops/zcli */}
+* **Declarative Infrastructure** - version control your entire setup
+* **Identical Environments** - every team member gets production-parity
+* **Automated Setup** - new team members are productive in minutes
+* **Transparent Configuration** - easily review and audit changes
 
-{/* # Login and connect to your project */}
-{/* zcli login */}
-{/* zcli connect my-laravel-project */}
+### Local Development
+Connect to your production-grade databases without any local setup through Zerops' VPN.
+Start with
+```
+zcli vpn up
+```
+and select your project. Get your database credentials from the service's **Access details** in your project dashboard and update your local `.env`. See PostgreSQL example below:
 
-{/* # Your local .env now works with remote services */}
-{/* php artisan serve */}
-{/* ``` */}
+```yml
+DB_CONNECTION=pgsql
+DB_HOST=db.zerops  # References the service's hostname
+DB_PORT=5432
+DB_DATABASE=db
+DB_USERNAME=db
+DB_PASSWORD=[password from Access details]
+```
+
+With this configuration, you can use any database tool - no local installation needed.
 
 ### Deployment Options
 Choose the workflow that fits your team:
@@ -158,21 +189,19 @@ Choose the workflow that fits your team:
    - Roll back to previous states
    - Test deployment configurations
 
-{/* ## Next Steps */}
+## Next Steps
 
-{/* - [Environment Variables & Secrets](/laravel/env-variables) */}
-{/* - [Database Migrations](/laravel/migrations) */}
-{/* - [Redis Configuration](/laravel/redis) */}
-{/* - [SMTP Setup](/laravel/smtp) */}
-{/* - [Backup Strategies](/laravel/backups) */}
-{/* - [Log Management](/laravel/logging) */}
-{/* - [Advanced Scaling](/laravel/scaling) */}
+- [Environment Variables](/frameworks/laravel/env-variables)
+- [Database Migrations](/frameworks/laravel/migrations)
+- [Cache & Queue with Redis](/frameworks/laravel/redis)
+- [Schedule Jobs & CRON](//frameworks/laravel/cron)
+- [SMTP Configuration](/frameworks/laravel/smtp)
+- [Logs](/frameworks/laravel/logs)
 
-{/* ## Resources */}
+## Resources
 
-{/* - [GitHub Example Repository](https://github.com/zeropsio/laravel-example) */}
-{/* - [Laravel Recipe Reference](/recipes/laravel) */}
-{/* - [CLI Documentation](/cli/overview) */}
-{/* - [API Reference](/api/overview) */}
+- [Laravel Documentation](https://laravel.com/docs)
+- [Laravel Recipe Repository](https://github.com/zeropsio/recipe-laravel-minimal)
+- [zcli Documentation](/references/cli)
 
-*Need help? Join our [Discord community](https://discord.gg/zerops) or check out our [getting started guides](/getting-started).*
+*Need help? Join our [Discord community](https://discord.gg/zerops) or check out our [quickstart guide](/frameworks/laravel/introduction).*

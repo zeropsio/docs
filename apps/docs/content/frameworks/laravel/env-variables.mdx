@@ -42,13 +42,12 @@ services:
 ```
 
 ### Runtime Variables
-These variables are typically environment-specific but not sensitive. Variables that reference secrets can be safely added in `zerops.yml` as they do not contain actual sensitive values.
-
+These variables, defined in `zerops.yml`, are typically environment-specific but not sensitive.
 :::note
 Changes to runtime variables require application redeployment to take effect.
 :::
 
-Below is a complete working example of `envVariables` in `zerops.yml` (sourced from [Laravel Jetstream recipe](https://github.com/zeropsio/recipe-laravel-jetstream/blob/main/zerops.yml):
+Below is a complete working example of `envVariables` in `zerops.yml` (sourced from [Laravel Jetstream recipe](https://github.com/zeropsio/recipe-laravel-jetstream/blob/main/zerops.yml)):
 
 <Dropdown>
 <DropdownItem title="Runtime Variables example">
@@ -152,8 +151,10 @@ FILESYSTEM_DISK: s3
 Read more about [object storage](/object-storage/overview) in Zerops.
 
 #### Logging Configuration
-System monitoring and debugging configuration that determines how your application tracks events and errors.
-
+System monitoring and debugging configuration that determines how your application tracks events and errors. Use `syslog` channel to access logs from Zerops Dashboard.
+```
+LOG_CHANNEL: syslog
+```
 Learn how to properly [configure logging](/frameworks/laravel/logs) for Laravel in Zerops.
 
 #### Mail Configuration
@@ -172,10 +173,11 @@ Learn how to properly [configure cache, queue & session management](/frameworks/
 
 :::tip
 For automatic execution with each deploy, add these commands to the `initCommands` section of your `zerops.yml` file.
+
 ```yml title="zerops.yml"
-  initCommands:
-    - php artisan view:cache
-    - php artisan config:cache
-    - php artisan route:cache
+initCommands:
+  - php artisan view:cache
+  - php artisan config:cache
+  - php artisan route:cache
 ```
 :::
