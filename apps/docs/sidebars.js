@@ -114,201 +114,6 @@ module.exports = {
       },
       className: 'homepage-sidebar-item  service-sidebar-item',
     },
-    // {
-    //   type: 'category',
-    //   label: 'Perfectly suited for',
-    //   collapsible: false,
-    //   customProps: {
-    //     sidebar_is_group_headline: true,
-    //   },
-    //   items: [
-    //  {
-    //    type: "html",
-    //    value: "Perfectly suited for",
-    //    customProps: {
-    //      sidebar_is_group_divider: true,
-    //    },
-    //    className: "homepage-sidebar-item",
-    //  },
-    //  {
-    //    type: "category",
-    //    label: "Nest.js",
-    //    link: {
-    //      type: "doc",
-    //      id: "frameworks/nestjs/index",
-    //    },
-    //    customProps: {
-    //      sidebar_icon: "nestjs",
-    //    },
-    //    className: "homepage-sidebar-item",
-    //    items: [
-    //      {
-    //        type: "doc",
-    //        id: "frameworks/nestjs/index",
-    //        label: "Overview & quickstart",
-    //      },
-    //      {
-    //        type: "doc",
-    //        id: "frameworks/nestjs/log",
-    //        label: "Setup & access logs",
-    //      },
-    //      {
-    //        type: "doc",
-    //        id: "frameworks/nestjs/template",
-    //        label: "Create templates with import & seed",
-    //      },
-    //      {
-    //        type: "doc",
-    //        id: "frameworks/nestjs/env-variables",
-    //        label: "Utilize environment variables",
-    //      },
-    //      {
-    //        type: "doc",
-    //        id: "frameworks/nestjs/migration",
-    //        label: "Migration & upgrades",
-    //      },
-    //      {
-    //        type: "doc",
-    //        id: "frameworks/nestjs/backups",
-    //        label: "Backups",
-    //      },
-    //      {
-    //        type: "doc",
-    //        id: "frameworks/nestjs/scaling",
-    //        label: "Optimize scaling",
-    //      },
-    //      {
-    //        type: "doc",
-    //        id: "frameworks/nestjs/scaling",
-    //        label: "High availability, when, how, why",
-    //      },
-    //      {
-    //        type: "doc",
-    //        id: "frameworks/nestjs/cron",
-    //        label: "CRON / Scheduled jobs",
-    //      },
-    //      {
-    //        type: "doc",
-    //        id: "frameworks/nestjs/mails",
-    //        label: "SMPT & sending emails",
-    //      },
-    //      {
-    //        type: "doc",
-    //        id: "frameworks/nestjs/routing",
-    //        label: "Public access from domain, IP, subdomain",
-    //      },
-    //    ],
-    //  },
-    //  {
-    //    type: "category",
-    //    label: "Laravel",
-    //    link: {
-    //      type: "doc",
-    //      id: "frameworks/laravel/index",
-    //    },
-    //    customProps: {
-    //      sidebar_icon: "laravel",
-    //    },
-    //    className: "homepage-sidebar-item",
-    //    items: [
-    //      {
-    //        type: "doc",
-    //        id: "frameworks/laravel/examples",
-    //        label: "Examples",
-    //        customProps: {
-    //          exclude_from_doc_list: false,
-    //        },
-    //      },
-    //    ],
-    //  },
-    //  {
-    //    type: "category",
-    //    label: "Gingonic",
-    //    link: {
-    //      type: "doc",
-    //      id: "frameworks/gingonic/index",
-    //    },
-    //    customProps: {
-    //      sidebar_icon: "gingonic",
-    //    },
-    //    className: "homepage-sidebar-item",
-    //    items: [
-    //      {
-    //        type: "doc",
-    //        id: "frameworks/gingonic/examples",
-    //        label: "Examples",
-    //        customProps: {
-    //          exclude_from_doc_list: false,
-    //        },
-    //      },
-    //    ],
-    //  },
-    //  {
-    //    type: "category",
-    //    label: "Nette",
-    //    link: {
-    //      type: "doc",
-    //      id: "frameworks/nette/index",
-    //    },
-    //    customProps: {
-    //      sidebar_icon: "nette",
-    //    },
-    //    className: "homepage-sidebar-item",
-    //    items: [
-    //      {
-    //        type: "doc",
-    //        id: "frameworks/nette/examples",
-    //        label: "Examples",
-    //        customProps: {
-    //          exclude_from_doc_list: false,
-    //        },
-    //      },
-    //    ],
-    //  },
-    //  {
-    //    type: "category",
-    //    label: "Strapi",
-    //    link: {
-    //      type: "doc",
-    //      id: "frameworks/strapi/index",
-    //    },
-    //    customProps: {
-    //      sidebar_icon: "strapi",
-    //    },
-    //    className: "homepage-sidebar-item",
-    //    items: [
-    //      {
-    //        type: "doc",
-    //        id: "frameworks/strapi/examples",
-    //        label: "Examples",
-    //        customProps: {
-    //          exclude_from_doc_list: false,
-    //        },
-    //      },
-    //    ],
-    //  },
-    //  {
-    //    type: "category",
-    //    label: "Medusa",
-    //    link: {
-    //      type: "doc",
-    //      id: "frameworks/medusa/index",
-    //    },
-    //    customProps: {
-    //      sidebar_icon: "medusa",
-    //    },
-    //    className: "homepage-sidebar-item",
-    //    items: [
-    //      {
-    //        type: "doc",
-    //        id: "frameworks/medusa/examples",
-    //        label: "Examples",
-    //        customProps: {
-    //          exclude_from_doc_list: false,
-    //        },
-    //      },
-    //    ],
-    //  },
     {
       type: 'html',
       value: 'All Supported Services',
@@ -2716,52 +2521,45 @@ module.exports = {
       },
     },
     {
+      type: 'doc',
+      id: 'frameworks/laravel/introduction',
+      label: 'Quickstart Guide',
+      customProps: {
+        sidebar_icon: 'rocket-launch',
+      },
+    },
+    {
       type: 'category',
-      label: 'Initial Setup',
+      label: 'Features',
       collapsible: false,
       customProps: {
         sidebar_is_group_headline: true,
       },
       items: [
-        {
-          type: 'doc',
-          id: 'frameworks/laravel/create-project',
-          label: 'Create Project',
-        },
-        {
-          type: 'doc',
-          id: 'frameworks/laravel/create-service',
-          label: 'Create PHP Nginx service',
-        },
-        {
-          type: 'doc',
-          id: 'frameworks/laravel/build-deployments',
-          label: 'Build & Deployments',
-        },
         {
           type: 'doc',
           id: 'frameworks/laravel/env-variables',
           label: 'Environment Variables',
         },
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Advanced',
-      collapsible: false,
-      customProps: {
-        sidebar_is_group_headline: true,
-      },
-      items: [
+//        {
+//          type: 'doc',
+//          id: 'frameworks/laravel/local-development',
+//          label: 'Local Development',
+//        },
         {
           type: 'doc',
-          id: 'frameworks/laravel/cron',
-          label: 'Schedule Jobs & CRON',
+          id: 'frameworks/laravel/migrations',
+          label: 'Database Migrations',
         },
         {
           type: 'doc',
           id: 'frameworks/laravel/redis',
-          label: 'Manage Redis',
+          label: 'Cache & Queue with Redis',
+        },
+        {
+          type: 'doc',
+          id: 'frameworks/laravel/cron',
+          label: 'Schedule Jobs & CRON',
         },
         {
           type: 'doc',
@@ -2770,34 +2568,9 @@ module.exports = {
         },
         {
           type: 'doc',
-          id: 'frameworks/laravel/migrations',
-          label: 'Database Migrations',
-        },
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Good to know',
-      collapsible: false,
-      customProps: {
-        sidebar_is_group_headline: true,
-      },
-      items: [
-        {
-          type: 'doc',
-          id: 'frameworks/laravel/public-access',
-          label: 'Manage Public Access',
-        },
-        {
-          type: 'doc',
           id: 'frameworks/laravel/logs',
-          label: 'Access logs',
+          label: 'Logs',
         },
-        {
-          type: 'doc',
-          id: 'frameworks/laravel/backups',
-          label: 'Database Backups',
-        },    
       ],
     },
     {

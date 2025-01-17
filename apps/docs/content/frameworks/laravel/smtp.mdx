@@ -4,53 +4,38 @@ description: Learn How to Configure SMTP for Sending Emails in Your Laravel Appl
 ---
 
 import Image from '/src/components/Image';
+import { Dropdown, DropdownItem } from '/src/components/Dropdown';
 
-## Development Setup with Mailpit
+# SMTP Configuration for Laravel on Zerops
 
-For development environments, Zerops provides Mailpit for testing emails. Add this to your project import configuration:
-
-```yml
-services:
-  - hostname: mailpit
-    type: go@1
-    buildFromGit: https://github.com/zeropsio/recipe-mailpit
-    enableSubdomainAccess: true
-```
-
-Configure your Laravel service to use Mailpit:
-
-```yml
-zerops:
-  - setup: app
-    run:
-      envVariables:
-        MAIL_MAILER: smtp
-        MAIL_HOST: mailpit
-        MAIL_PORT: 1025
-        MAIL_FROM_ADDRESS: hello@example.com
-        MAIL_FROM_NAME: ZeropsLaravel
-```
-
-:::tip
-Enable `enableSubdomainAccess` to access the Mailpit web interface for viewing sent emails.
+:::warning Important Security Note
+By default, SMTP ports are blocked by Zerops firewall for security reasons. To use external SMTP services, please [contact Zerops support](mailto:support@zerops.io) to have the necessary ports opened for your project.
+Include in your request:
+* Detailed explanation of your use case
+* Specific ports and protocols needed
+* Project ID and Organization ID from your Zerops Dashboard
 :::
 
-## Laravel Application Setup
+## Production Configuration
 
-### Mail Configuration File
+### Laravel Mail Configuration
 
-Laravel's default `config/mail.php` provides multiple mailer configurations:
+Laravel comes with a default mail configuration in `config/mail.php`. You typically don't need to modify this file as all settings can be controlled through environment variables.
 
-```php:config/mail.php
+The default configuration supports multiple mailer types and reads all sensitive information from your environment. In this example
+
+<Dropdown>
+    <DropdownItem title="Configuration example">
+```php title="config/mail.php"
 return [
-    'default' => env('MAIL_MAILER', 'log'),
+    'default' => env('MAIL_MAILER', 'smtp'),
 
     'mailers' => [
         'smtp' => [
             'transport' => 'smtp',
             'url' => env('MAIL_URL'),
             'host' => env('MAIL_HOST', '127.0.0.1'),
-            'port' => env('MAIL_PORT', 2525),
+            'port' => env('MAIL_PORT', 587),
             'encryption' => env('MAIL_ENCRYPTION', 'tls'),
             'username' => env('MAIL_USERNAME'),
             'password' => env('MAIL_PASSWORD'),
@@ -64,11 +49,6 @@ return [
 
         'postmark' => [
             'transport' => 'postmark',
-        ],
-
-        'log' => [
-            'transport' => 'log',
-            'channel' => env('MAIL_LOG_CHANNEL'),
         ],
 
         'failover' => [
@@ -87,45 +67,55 @@ return [
 ];
 ```
 
-:::tip Available Transports
-Laravel supports multiple mail transports:
-- "smtp" - Standard SMTP server
-- "sendmail" - Server's sendmail
-- "mailgun" - Mailgun API
-- "ses" - Amazon SES
-- "postmark" - Postmark
-- "log" - Log messages for testing
-- "array" - Store in array for testing
-- "failover" - Fallback to next mailer if one fails
-- "roundrobin" - Rotate between multiple mailers
+:::tip Available Mail Transports
+Laravel supports multiple mail transport options:
+- 'smtp' - Standard SMTP server
+- 'sendmail' - Server's sendmail
+- 'mailgun' - Mailgun API
+- 'ses' - Amazon SES
+- 'postmark' - Postmark
+- 'log' - Log messages for testing
+- 'array' - Store in array for testing
+- 'failover' - Fallback to next mailer if one fails
+- 'roundrobin' - Rotate between multiple mailers
 :::
+</DropdownItem>
+</Dropdown>
 
-### Sending Emails
+### Environment Configuration
 
-Basic example of sending an email:
+Configure your Laravel service with the required mail variables. The following example shows SMTP configuration, but most settings are common across different mail transports:
 
-```php
-use Illuminate\Support\Facades\Mail;
-use App\Mail\WelcomeEmail;
-
-// Send immediately
-Mail::to($user->email)->send(new WelcomeEmail($user));
-
-// Send using queue
-Mail::to($user->email)->queue(new WelcomeEmail($user));
+```yml title="zerops.yml"
+zerops:
+  - setup: app
+    run:
+      envVariables:
+        MAIL_MAILER: smtp
+        MAIL_FROM_ADDRESS: noreply@yourdomain.com
+        MAIL_FROM_NAME: YourApp
+        MAIL_HOST: your-smtp-host
+        MAIL_PORT: 587
+        MAIL_USERNAME: your-username
+        MAIL_PASSWORD: your-password
+        MAIL_ENCRYPTION: tls
 ```
+
+If using other mail transports, you might need additional environment variables. Refer to Laravel's Mail documentation for transport-specific configuration.
+
+## Implementing Email Functionality
 
 ### Creating Mail Classes
 
-Generate a new mail class:
+Generate a new mail class using Artisan:
 
 ```bash
 php artisan make:mail WelcomeEmail
 ```
 
-Example mail class:
-
-```php:app/Mail/WelcomeEmail.php
+<Dropdown>
+<DropdownItem title="Example implementation">
+```php title="app/Mail/WelcomeEmail.php"
 <?php
 
 namespace App\Mail;
@@ -148,12 +138,14 @@ class WelcomeEmail extends Mailable
     }
 }
 ```
+</DropdownItem>
+</Dropdown>
 
 ### Email Template
 
-Create a blade template for your email:
+Create a blade template for your email content:
 
-```php:resources/views/emails/welcome.blade.php
+```php title="resources/views/emails/welcome.blade.php"
 <x-mail::message>
 # Welcome {{ $user->name }}
 
@@ -168,11 +160,34 @@ Thanks,<br>
 </x-mail::message>
 ```
 
-## Queue Configuration for Emails
+### Sending Emails
 
-When using Redis for queues, your email configuration will work automatically with the following settings:
+You can send emails either immediately or using a queue:
 
+```php
+use Illuminate\Support\Facades\Mail;
+use App\Mail\WelcomeEmail;
+
+// Send immediately
+Mail::to($user->email)->send(new WelcomeEmail($user));
+
+// Send using queue
+Mail::to($user->email)->queue(new WelcomeEmail($user));
+```
+
+## Queue Configuration
+For production environments, it's recommended to use a queue system for sending emails to prevent request timeouts and improve application performance. Zerops provides Valkey, an open-source Redis-compatible service that's perfect for handling email queues.
+
+First, add the Valkey service to your project:
 ```yml
+services:
+  - hostname: redis
+    type: valkey@7.2
+    mode: NON_HA  # use HA for high availability in production
+```
+
+Configure your Laravel service to use Redis for queues:
+```yml title="zerops.yml"
 zerops:
   - setup: app
     run:
@@ -181,9 +196,65 @@ zerops:
         QUEUE_CONNECTION: redis
         REDIS_HOST: redis
         REDIS_PORT: 6379
-        REDIS_CLIENT: phpredis
+        REDIS_CLIENT: phpredis # PHP Redis client for better performance
 
         # Mail Configuration
+        MAIL_MAILER: smtp
+        MAIL_HOST: your-smtp-host.com
+        MAIL_PORT: 587
+        MAIL_USERNAME: your-username
+        MAIL_PASSWORD: your-password
+        MAIL_ENCRYPTION: tls
+        MAIL_FROM_ADDRESS: noreply@yourdomain.com
+        MAIL_FROM_NAME: YourApp
+```
+
+You can customize the queue behavior in your `config/queue.php`:
+
+<Dropdown>
+<DropdownItem title="Custom Queue Configuration">
+
+```php title="config/queue.php"
+phpCopy'default' => env('QUEUE_CONNECTION', 'redis'),
+
+'connections' => [
+    'redis' => [
+        'driver' => 'redis',
+        'connection' => 'default',
+        'queue' => 'default',
+        'retry_after' => 90,     // Retry failed jobs after 90 seconds
+        'block_for' => null,     // Don't block when no jobs available
+    ],
+],
+```
+</DropdownItem>
+</Dropdown>
+
+## Development Environment
+
+For local development and testing, Zerops provides a Mailpit service that allows you to catch and inspect all outgoing emails.
+
+### Setting up Mailpit
+
+Add this to your project import configuration or import the service separately:
+
+```yml
+services:
+  - hostname: mailpit
+    type: go@1
+    buildFromGit: https://github.com/zeropsio/recipe-mailpit
+    enableSubdomainAccess: true
+```
+
+See [Mailpit recipe repo](https://github.com/zeropsio/recipe-mailpit) for reference.
+
+Configure your Laravel service to use Mailpit for development:
+
+```yml
+zerops:
+  - setup: app
+    run:
+      envVariables:
         MAIL_MAILER: smtp
         MAIL_HOST: mailpit
         MAIL_PORT: 1025
@@ -191,10 +262,16 @@ zerops:
         MAIL_FROM_NAME: ZeropsLaravel
 ```
 
-:::tip Best Practices
-- Use Mailpit for development email testing
-- Configure Redis for queued email sending
-- Set proper environment variables for each environment
-- Monitor email delivery through Mailpit interface
+:::tip
+Enable `enableSubdomainAccess` to access the Mailpit web interface where you can view all emails during development.
 :::
 
+## Best Practices
+
+- Use queue for sending emails in production to prevent request timeouts
+- Configure proper timeouts for SMTP connections
+- Use environment variables for all mail settings
+- Implement proper error handling for failed email deliveries
+- Test email templates across different email clients
+- Monitor email delivery rates and bounce rates
+- Use Mailpit in development to catch and debug emails

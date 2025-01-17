@@ -87,7 +87,31 @@ const config = {
     },
     prism: {
       defaultLanguage: "ts",
-      additionalLanguages: ["bash", "json"],
+      additionalLanguages: [
+          "bash",          // For CLI commands
+          "json",          // Already included
+          "php",           // For PHP & Apache/nginx
+          "yaml",          // For config files
+          "sql",           // For PostgreSQL/MariaDB
+          "nginx",         // For nginx configs
+          "go",            // For Go code
+          "java",          // For Java code
+          "python",        // For Python code
+          "rust",          // For Rust code
+          "typescript",    // For Node.js/Deno
+          "javascript",    // For Node.js/Bun
+          "csharp",        // For .NET
+          "elixir",        // For Elixir
+          "ruby",          // Common in web development
+          "toml",          // Common for Rust configs
+          "properties",    // For various config files
+          "groovy",        // For Java-related builds
+          "hcl",           // For infrastructure configs
+          "diff",          // For showing changes
+          "scss",          // For static sites
+          "css",           // For static sites
+          "http",          // For API examples
+      ],
       plugins: ["line-numbers", "show-language"],
       theme: {
         ...prismThemes.vsDark,
