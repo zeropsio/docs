@@ -1,0 +1,264 @@
+# Understanding Zerops Build Cache
+
+> Zerops implements a sophisticated two-layer caching strategy that optimizes build times while maintaining complete control over the build environment. This documentation explores the architecture, configuration patterns, and practical implementation of the build cache system.
+
+## Architecture Overview
+
+The build cache operates through two distinct layers:
+
+1. **Base Layer**: Comprises the OS, installed dependencies, and prepare commands
+2. **Build Layer**: Contains the state after executing build commands
+
+The layers work together to create an efficient and predictable build environment, though they are currently coupled in their cache invalidation behavior (invalidating one layer affects the other).
+
+### Cache Implementation
+
+The caching mechanism is implemented through an efficient file movement strategy. This approach ensures near-instantaneous cache operations through simple directory relocation within the container, implementing the following characteristics:
+
+- Files are moved between `/build/source` and `/build/cache` using container-level rename operations
+- No packaging, compression, or network transfer is involved
+- Cache preservation is achieved through simple directory relocation within the container
+- Files maintain their original state and permissions throughout the process
+
+:::note
+See detailed [build process lifecycle](#build-process-lifecycle).
+:::
+
+## Configuration Guide
+
+### Essential zerops.yml Fields
+
+The following fields in `zerops.yml` affect build cache behavior:
+
+**Direct Cache Configuration**:
+- `build.cache`: Explicitly defines what should be cached through paths or patterns
+
+**Cache Invalidation Triggers**:
+These parameters trigger cache invalidation when modified:
+- `build.os`: Base operating system selection
+- `build.base`: Pre-installed software stacks and runtimes
+- `build.prepareCommands`: System preparation and dependency installation
+- `build.cache`: Changes to cache configuration
+
+**Build Artifact Generation**:
+- `build.buildCommands`: Generates the build artifact that will be deployed.
+
+## Cache Configuration Patterns
+
+### Pattern 1: System-Wide Cache Control
+```yaml
+build:
+  cache: true   # Cache everything
+  # OR
+  cache: false  # Intended to disable all caching
+```
+
+The boolean values provide system-wide cache control:
+
+`cache: true`:
+- Preserves the entire build container state
+- Maintains system-level package installations
+- Ideal for globally installed packages (Python/PHP packages, Go modules)
+
+`cache: false`:
+- Intended to disable all caching
+- Currently, due to layer coupling, only files within `/build/source` are not cached
+- Everything outside `/build/source` remains cached (see [Common Pitfalls: Layer Coupling](#common-pitfalls))
+
+### Pattern 2: Path-Specific Caching
+```yaml
+# Single path
+build:
+  cache: node_modules
+
+# Multiple paths
+build:
+  cache:
+    - node_modules
+    - package-lock.json
+    - .build
+```
+
+Execution flow:
+1. Source code extraction to `/build/source`
+2. Build command execution
+3. Specified path preservation in `/build/cache`
+4. Cached content restoration (no-clobber mode - source files take precedence)
+
+:::tip
+Ideal for non-versioned dependencies in your working directory (e.g., `node_modules`, `vendor`, `.venv`).
+:::
+
+## Path Pattern Reference
+
+Zerops supports [Go's filepath.Match](https://pkg.go.dev/path/filepath#Match) syntax. Consider this example structure:
+
+```
+├── node_modules/
+├── package.json
+├── package-lock.json
+└── subdir/
+    ├── file1.txt
+    ├── file2.txt
+    └── file3.md
+```
+
+Pattern examples and matches:
+```yaml
+build:
+  cache:
+    - "subdir/*.txt"      # Matches: subdir/file1.txt, subdir/file2.txt
+    - "package*"          # Matches: package.json, package-lock.json
+    - "node_modules"      # Matches: entire node_modules directory recursively
+```
+
+:::note
+All patterns resolve relative to `/build/source`. Path variations like `./node_modules`, `node_modules`, and `node_modules/` are treated identically.
+:::
+
+## Build Process Lifecycle
+
+1. **Initialization Phase**
+   - Build container startup
+   - Builder process launch
+   - Source code loading into `/build/source`
+
+2. **Cache Restoration Phase**
+   - Cached file movement to `/build/source` (no-clobber mode)
+   - Source file precedence handling
+   - Conflict logging (no build interruption)
+   - Cache directory cleanup
+
+3. **Build Execution Phase**
+   - Build command processing
+   - Artifact packaging (`build.deployFiles`)
+
+4. **Cache Preservation Phase**
+   - Specific cache files movement outside `/build/source`
+   - `/build/source` directory cleanup
+   - Container termination
+
+## Cache Invalidation Reference
+
+The build cache invalidates under these conditions:
+
+1. **Manual Triggers**
+   - API call: `DELETE /service-stack/{id}/build-cache`
+   - GUI: Manual cache clear action
+
+2. **Version Management**
+   - Backup app version activation via `PUT /app-version/{id}/deploy`
+
+3. **Configuration Changes**
+   Any modifications to:
+   ```yaml
+   build.os
+   build.base
+   build.prepareCommands
+   build.cache
+   ```
+
+### Current Pitfalls
+
+The current implementation has some important characteristics:
+
+1. **Layer Coupling**
+   ```yaml
+   build:
+     base: go@1
+     prepareCommands:
+       - sudo apk update
+       - sudo apk add sqlite
+     buildCommands:
+       - go build -o app main.go
+     cache: false
+   ```
+   Even with `cache: false`, Go modules outside `/build/source` remain cached.
+
+2. **Cascade Invalidation**
+   ```yaml
+   build:
+     base: node@22
+     prepareCommands:
+       - sudo apk update
+       - sudo apk add sqlite vim  # Adding 'vim' invalidates everything
+     buildCommands:
+       - npm install
+       - npm build
+     cache:
+       - node_modules
+   ```
+   Modifying `prepareCommands` invalidates both layers, including cached `node_modules`.
+
+## Real-World Implementation Examples
+
+### Node.js Project with TypeScript
+```yaml
+build:
+  base: node@22
+  buildCommands:
+    - npm ci
+    - npm run build
+  cache:
+    - node_modules
+    - .next
+    - .turbo
+    - package-lock.json
+```
+
+### Go Project with Multiple Dependencies
+```yaml
+build:
+  base: go@1
+  prepareCommands:
+    - sudo apk add build-base
+  buildCommands:
+    - go mod download
+    - go build -o bin/app cmd/main.go
+  cache: true  # Caches entire Go modules directory
+```
+
+### PHP/Laravel Project
+```yaml
+build:
+  base: php@8.3
+  buildCommands:
+    - composer install --no-dev
+    - php artisan optimize
+  cache:
+    - vendor
+    - composer.lock
+```
+
+## Debugging and Monitoring
+
+* **Build Logs**
+   - Cache operations are detailed in build logs
+   - File conflicts during restoration are logged
+   - Cache preservation status is visible
+
+## Implementation Best Practices
+
+### Cache Strategy Optimization
+
+1. **Layer Management**
+   - Maintain stable `prepareCommands` to prevent cache invalidation
+   - Group related prepare commands logically
+
+2. **Performance Optimization**:
+   - Cache package manager lock files alongside dependency directories
+   - Use system-wide caching (`cache: true`) for languages with global package managers
+
+3. **Performance Tuning**
+   - Leverage system-wide caching for complex builds
+   - Monitor build logs for cache operations and potential conflicts
+   - Use explicit patterns for precise control
+   - Don't over-optimize – the system handles large caches efficiently
+
+## Future Development
+
+Planned system enhancements include:
+- Layer independence implementation
+- Granular cache control mechanisms
+- Enhanced layer management capabilities
+- Improved cache invalidation patterns

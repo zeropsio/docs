@@ -18,13 +18,17 @@ import data from '@site/static/data.json';
 
 Zerops starts a temporary build container and performs following actions:
 
-1. Installs the build environment
+1. Installs the build environment:
+   - Sets up base system and Go runtime
+   - Restores cached files if available (based on `build.cache` configuration)
+   - Validates cache against current `build.os`, `build.base`, and `build.prepareCommands`
 2. Downloads your application source code from [GitHub ↗](https://www.github.com), [GitLab ↗](https://www.gitlab.com) or via [Zerops CLI](/references/cli)
 3. Optionally [customizes the build environment](#customize-net-build-environment)
 4. Runs the build commands
 5. Uploads the application artefact to the internal Zerops storage
-6. Optionally [customizes the runtime environment](/dotnet/how-to/customize-runtime)
-7. [Deploys your application](/dotnet/how-to/deploy-process)
+6. Preserves specified files for future builds (based on `build.cache` configuration)
+7. Optionally [customizes the runtime environment](/dotnet/how-to/customize-runtime)
+8. [Deploys your application](/dotnet/how-to/deploy-process)
 
 The build container is automatically deleted after the build has finished or failed.
 
@@ -83,17 +87,14 @@ The time limit for the whole build pipeline is **1 hour**. After 1 hour, Zerops 
 If any [prepare command](/dotnet/how-to/build-pipeline#preparecommands) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/dotnet/how-to/logs#build-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom build environment is ready for the build phase.
 
 ### Invalidate the build cache
+If you encounter unexpected build behavior or dependency issues, the problem might be related to [cached build data](/features/build-cache). While Zerops maintains the build cache to speed up deployments, sometimes you may need to start fresh.
+To invalidate the build cache:
 
-Some packages or tools can take a long time to install. Therefore, Zerops caches your custom build environment after each successful build where the `prepareCommands` commands were used. When the second or following build is triggered, Zerops will use the build cache from the previous build if both following conditions are met:
+1. Go to your service detail in Zerops GUI
+2. Choose **Pipelines & CI/CD Settings** from the left menu
+3. Click on the **Invalidate build cache** button
 
-1. Content of the [build.base](/dotnet/how-to/build-pipeline#base) and [build.prepareCommands](/dotnet/how-to/build-pipeline#preparecommands) attributes didn't change from the previous build
-2. The build cache wasn't invalidated in the Zerops GUI.
-
-To invalidate the Zerops build cache go to your service detail in Zerops GUI, choose **Service dashboard & runtime containers** from the left menu and click on the **Open pipeline detail** button. Then click on the **Invalidate build cache** icon.
-
-{/* ** TODO screenshot** */}
-
-When the build cache is used, Zerops doesn't run the prepare commands and the build of your application is faster.
+This will force Zerops to run the next build clean, including all prepare commands, which can help resolve cache-related issues. After invalidation, your next build will also create a fresh cache.
 
 ### Failure of a build command
 
