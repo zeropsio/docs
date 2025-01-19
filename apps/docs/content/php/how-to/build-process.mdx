@@ -72,17 +72,14 @@ The time limit for the whole build pipeline is **1 hour**. After 1 hour, Zerops 
 If any [prepare command](/php/how-to/build-pipeline#preparecommands) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/php/how-to/logs#build-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom build environment is ready for the build phase.
 
 ### Invalidate the build cache
+If you encounter unexpected build behavior or dependency issues, the problem might be related to [cached build data](/features/build-cache). While Zerops maintains the build cache to speed up deployments, sometimes you may need to start fresh.
+To invalidate the build cache:
 
-Some packages or tools can take a long time to install. Therefore, Zerops caches your custom build environment after each successful build where the `prepareCommands` commands were used. When the second or following build is triggered, Zerops will use the build cache from the previous build if both following conditions are met:
+1. Go to your service detail in Zerops GUI
+2. Choose **Pipelines & CI/CD Settings** from the left menu
+3. Click on the **Invalidate build cache** button
 
-1. Content of the [build.base](/php/how-to/build-pipeline#base) and [build.prepareCommands](/php/how-to/build-pipeline#preparecommands) attributes didn't change from the previous build
-2. The build cache wasn't invalidated in the Zerops GUI.
-
-To invalidate the Zerops build cache go to your service detail in Zerops GUI, choose **Service dashboard & runtime containers** from the left menu and click on the **Open pipeline detail** button. Then click on the **Invalidate build cache** icon.
-
-{/* TODO screenshot** */}
-
-When the build cache is used, Zerops doesn't run the prepare commands and the build of your application is faster.
+This will force Zerops to run the next build clean, including all prepare commands, which can help resolve cache-related issues. After invalidation, your next build will also create a fresh cache.
 
 ### Failure of a build command
 

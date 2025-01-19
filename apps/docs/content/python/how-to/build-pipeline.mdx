@@ -141,6 +141,10 @@ See the full list of supported [build base environments](/zerops-yml/base-list#r
 
 To customize your build environment use the [prepareCommands](/python/how-to/build-pipeline#preparecommands) attribute.
 
+:::note
+Modifying the base technology will invalidate your build cache. See our [Build Cache Documentation](/features/build-cache) for more details about cache invalidation.
+:::
+
 ### os
 
 _OPTIONAL._ Sets the operating system for the build environment.
@@ -159,6 +163,10 @@ We are currently using following os version:
 
 :::caution
 The os version is fixed and cannot be customized.
+:::
+
+:::note
+Changing the OS setting will invalidate your build cache. See our [Build Cache Documentation](/features/build-cache) for details about cache behavior.
 :::
 
 ### prepareCommands
@@ -198,6 +206,10 @@ When the first build is triggered, Zerops will
 
 The application code is available in the `/var/www` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
 
+:::note
+These commands are skipped when using cached environment. Modifying `prepareCommands` will invalidate your build cache. See our [Build Cache Documentation](/features/build-cache) for details about cache invalidation.
+:::
+
 #### Command exit code
 
 If any command fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/python/how-to/logs#build-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all prepare commands are finished, your custom build environment is ready for the build phase.
@@ -222,26 +234,6 @@ prepareCommands:
   - apt update
   - apt install python3-pip # already installed for Python services
 ```
-
-#### Cache of your custom build environment
-
-Some packages or tools can take a long time to install. Therefore, Zerops caches your custom build environment after each successful build where the prepare commands were used. When the second or following build is triggered, Zerops will use the build cache from the previous build if both following conditions are met:
-
-1. Content of the base and prepare attributes didn't change from the previous build
-2. The build cache wasn't invalidated in the Zerops GUI.
-
-To invalidate the Zerops build cache go to your service detail in Zerops GUI, choose **Service dashboard & runtime containers** from the left menu and click on the **Open pipeline detail** button. Then click on the **Invalidate build cache** icon.
-
-<p align="center">
-  <img
-    src="/img/screenshots/runtime_clear_build_cache.png"
-    alt="image"
-    width="100%"
-    height="auto"
-  />
-</p>
-
-When the build cache is used, Zerops doesn't run the `prepareCommands` commands and the build of your application is faster.
 
 ### deployFiles
 
@@ -334,10 +326,11 @@ _OPTIONAL._ Defines which files or folders will be cached for the next build.
 cache: file.txt
 ```
 
-By default, Zerops doesn't cache the files in the build container. When the build phase is finished, the files and folders defined in the [deployFiles](#deployfiles) attribute are saved and deployed to your runtime containers. Then, the build container is deleted.
-To speed the second and following build up, cache the files that can be used in the next build.
+The cache attribute helps optimize build times by preserving specified files between builds.
 
 The cache attribute supports the [~ wildcard character](#how-to-use-a-wildcard-in-the-path).
+
+Learn more about the [build cache system](/features/build-cache) in Zerops.
 
 ### envVariables
 

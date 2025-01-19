@@ -44,13 +44,26 @@ module.exports = {
       className: 'homepage-sidebar-item',
     },
     {
-      type: 'doc',
-      id: 'features/pipeline',
+      type: 'category',
+      link: {
+        type: 'doc',
+        id: 'features/pipeline',
+      },
       label: 'Prepare, build, deploy pipeline',
       customProps: {
         sidebar_icon: 'circle-stack',
       },
       className: 'homepage-sidebar-item',
+      items: [
+        {
+          type: 'doc',
+          id: 'features/build-cache',
+          label: 'Build cache',
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        },
+      ],
     },
     {
       type: 'doc',
