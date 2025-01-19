@@ -474,8 +474,8 @@ module.exports = {
       items: [
         {
           type: 'doc',
-          id: 'references/vpn/faq',
-          label: 'FAQ',
+          id: 'references/vpn/troubleshooting',
+          label: 'Troubleshooting',
           customProps: {
             exclude_from_doc_list: false,
           },
