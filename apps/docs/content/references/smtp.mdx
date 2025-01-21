@@ -1,0 +1,206 @@
+---
+title: SMTP in Zerops
+description: Learn about SMTP configuration, security measures, and best practices for sending emails from your Zerops applications.
+---
+
+Simple Mail Transfer Protocol (SMTP) is the internet standard for email transmission. It operates as a set of rules that govern how email messages are formatted, encrypted, and relayed between servers.
+
+## SMTP in Zerops
+
+Zerops implements a security-first approach to email sending operations, allowing only port 587 for SMTP communication. This decision aligns with modern security practices and helps maintain the platform's integrity.
+
+### Port Configuration
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Port</th>
+      <th className="w-fit">Status</th>
+      <th className="w-full">Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit font-semibold">587</td>
+      <td className="w-fit">✅ Allowed</td>
+      <td className="w-full">Modern SMTP submission with STARTTLS</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">25</td>
+      <td className="w-fit">❌ Blocked</td>
+      <td className="w-full">Traditional SMTP (security risk)</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">465</td>
+      <td className="w-fit">❌ Blocked</td>
+      <td className="w-full">Legacy SMTPS (deprecated)</td>
+    </tr>
+  </tbody>
+</table>
+
+### Why Port 587
+
+Port 587 is the modern standard for sending emails through SMTP, designed specifically for authenticated client submissions. This port enforces several security measures:
+
+- Mandatory TLS encryption for data protection
+- Required authentication for all clients
+- Secure transmission through verified providers
+
+#### How It Works
+
+Port 587 implements STARTTLS to establish secure connections. The process follows these steps:
+
+1. Client connects to the SMTP server
+2. Server responds with available capabilities
+3. Client requests STARTTLS upgrade
+4. Connection switches to encrypted TLS
+5. Client provides authentication credentials
+6. Email transmission begins over secure channel
+
+This implementation balances modern security requirements with broad compatibility, making it the recommended choice for email transmission.
+
+### Port Restrictions and Platform Security
+
+Zerops enforces a strict policy of **blocking ports 25 and 465** for email operations.
+
+:::caution
+This is a permanent security measure with no exceptions, designed to protect both the platform and its users.
+:::
+
+Port 25, in particular, is frequently exploited for spam distribution across cloud platforms. Instead of providing basic SMTP functionality, we encourage the use of specialized email services that offer:
+
+- Advanced deliverability management
+- Comprehensive monitoring and analytics
+- Built-in spam protection
+- Professional IP reputation management
+- Automated bounce handling
+
+This strict policy stems from a crucial understanding: poor IP reputation from email abuse can cascade across an entire infrastructure. The impact extends beyond email services to affect:
+
+- Legitimate web applications
+- Platform response times
+- Overall service reliability
+- Other customers' applications
+
+This is why Zerops maintains this strict policy - to ensure consistent, reliable service for all platform users.
+
+## Sending Emails from Zerops
+
+### Recommended Approaches
+
+You have two main options for sending emails from your Zerops applications:
+
+1. **Email Provider SMTP Client**
+   - You act as a client using their SMTP servers
+   - Subject to provider's sending limits and policies
+
+2. **Specialized Email Services**
+   - Purpose-built for application email delivery
+   - Your own dedicated sending infrastructure
+   - Higher limits with scalable pricing
+   - Advanced delivery monitoring and analytics
+
+### Configuration Examples
+
+These examples serve as a starting point. Check your email provider's official documentation for current configuration requirements.
+
+:::note
+Port 587 is mandatory for all SMTP configurations in Zerops. Other ports (25, 465) are blocked for security reasons.
+:::
+
+#### Enterprise Email Providers
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Service</th>
+      <th className="w-fit">Host</th>
+      <th className="w-fit">Port</th>
+      <th className="w-fit">Secure</th>
+      <th className="w-fit">Username</th>
+      <th className="w-full">Password</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit font-semibold"><a href="https://support.google.com/a/answer/176600?hl=en">Gmail</a></td>
+      <td className="w-fit">smtp.gmail.com</td>
+      <td className="w-fit">587</td>
+      <td className="w-fit">false</td>
+      <td className="w-fit">your.name<span>@</span>gmail.com</td>
+      <td className="w-full">App Password required</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold"><a href="https://support.google.com/a/answer/176600?hl=en">Google Workspace</a></td>
+      <td className="w-fit">smtp-relay.gmail.com</td>
+      <td className="w-fit">587</td>
+      <td className="w-fit">false</td>
+      <td className="w-fit">your.name<span>@</span>your-domain.com</td>
+      <td className="w-full">Regular password (App Password if using 2FA)</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold"><a href="https://learn.microsoft.com/en-us/exchange/mail-flow-best-practices/how-to-set-up-a-multifunction-device-or-application-to-send-email-using-microsoft-365-or-office-365">Office 365</a></td>
+      <td className="w-fit">smtp.office365.com</td>
+      <td className="w-fit">587</td>
+      <td className="w-fit">false</td>
+      <td className="w-fit">your.name<span>@</span>your-domain.com</td>
+      <td className="w-full">Account password</td>
+    </tr>
+  </tbody>
+</table>
+
+:::note Google
+- Gmail/Office 365: Better for testing or low-volume sending
+- Google Workspace: Suitable for business needs with higher limits
+:::
+
+#### Email Service Providers
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Provider</th>
+      <th className="w-fit">Host</th>
+      <th className="w-fit">Port</th>
+      <th className="w-fit">Username</th>
+      <th className="w-fit">Password</th>
+      <th className="w-full">Features</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit font-semibold"><a href="https://www.twilio.com/docs/sendgrid/for-developers/sending-email/getting-started-smtp">SendGrid</a></td>
+      <td className="w-fit">smtp.sendgrid.net</td>
+      <td className="w-fit">587</td>
+      <td className="w-fit">apikey</td>
+      <td className="w-fit">SendGrid API key</td>
+      <td className="w-full">• Free tier available<br/>• Real-time analytics<br/>• Webhooks<br/>• Spam detection</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold"><a href="https://documentation.mailgun.com/docs/mailgun/user-manual/sending-messages/#send-via-smtp">Mailgun</a></td>
+      <td className="w-fit">smtp.mailgun.org</td>
+      <td className="w-fit">587</td>
+      <td className="w-fit">postmaster<span>@</span>your-domain.com</td>
+      <td className="w-fit">Mailgun password</td>
+      <td className="w-full">• Free tier available<br/>• Email validation<br/>• Routing rules<br/>• Delivery analytics</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold"><a href="https://docs.aws.amazon.com/ses/latest/dg/send-email-smtp.html">Amazon SES</a></td>
+      <td className="w-fit">email-smtp.us-east-1.amazonaws.com</td>
+      <td className="w-fit">587</td>
+      <td className="w-fit">SES access key ID</td>
+      <td className="w-fit">SES secret access key</td>
+      <td className="w-full">• Pay as you go pricing<br/>• AWS integration<br/>• High deliverability<br/>• Auto-scaling</td>
+    </tr>
+  </tbody>
+</table>
+
+## Best Practices
+
+When implementing email functionality in your applications:
+
+- Store SMTP credentials in environment variables
+- Implement proper error handling and retry logic
+- Use queue systems for bulk sending to prevent rate limits
+- Monitor delivery status and bounce rates
+- Keep SMTP libraries and configurations up to date
