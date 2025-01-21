@@ -553,6 +553,15 @@ module.exports = {
       className: 'homepage-sidebar-item',
     },
     {
+      type: 'doc',
+      id: 'references/smtp',
+      label: 'SMTP',
+      customProps: {
+        sidebar_icon: 'envelope',
+      },
+      className: 'homepage-sidebar-item',
+    },
+    {
       type: 'html',
       value: 'Help',
       customProps: {
