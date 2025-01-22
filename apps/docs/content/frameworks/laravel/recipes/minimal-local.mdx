@@ -1,0 +1,117 @@
+---
+title: Laravel Minimal for Local Development
+description: A streamlined Laravel setup for local development, providing a minimal stack with PostgreSQL database, automated deployment pipeline, and essential services configured for cost-efficient workflows.
+---
+
+import DeployButton from '@site/src/components/DeployButton';
+import CustomCard from '@site/src/components/CustomCard';
+import IconLaravel from '@theme/Icon/Laravel';
+
+This recipe provides a streamlined Laravel setup with PostgreSQL database and automated deployment pipeline, designed for **local development** with cost-efficient resource allocation and the [Lightweight](/features/pricing#understanding-projects) core package. This means:
+- Resources are optimized for development workloads
+- Services can be started/stopped as needed during active development
+- Cost-effective configuration suitable for development and testing
+
+<CustomCard icon={IconLaravel} title="Deploy Laravel Recipe for Local Development">
+  <div className="flex-grow pb-1 pt-0.5">Set up a streamlined Laravel environment optimized for local development with this lightweight, cost-efficient configuration.</div>
+  <DeployButton link="laravel-minimal-local" badgeWidth="200" />
+</CustomCard>
+
+## Environment Overview
+
+Your newly deployed Laravel environment includes:
+
+- A fully configured Laravel application service
+- PostgreSQL database integration with migration automation
+- Automated build and deployment pipeline
+- Health and readiness checks
+
+:::note
+For production environments with high-availability services and enterprise-grade reliability, consider deploying the [production environment recipe](/frameworks/laravel/recipes/minimal-prod).
+:::
+
+## What to Expect
+
+The deployment process takes just a few minutes. Once complete, you'll receive:
+
+- A live URL to access your application
+- Database credentials
+- Access to your project dashboard
+- CLI configuration details for VPN access
+
+## Setting Up Local Development
+
+Zerops provides a built-in VPN feature through its CLI tool, enabling seamless local development against remote resources. Here's how to set it up:
+
+### Prerequisites
+- Install the [Zerops CLI](/references/cli#get-started) and log in with [personal access token](/references/cli#personal-access-tokens)
+- Install [Wireguard](/references/vpn) on your system
+
+### Setup Steps
+
+1. Create your own repository from our [GitHub template](https://github.com/zeropsio/recipe-laravel-minimal) and clone it locally
+
+2. **Configure VPN Access**
+   ```bash
+   # Initialize VPN connection using project ID
+   zcli vpn up <project-id>
+
+   # Or use interactive mode to select your project
+   zcli vpn up
+   ```
+
+3. **Set Up Environment**
+   ```bash
+   # Create and configure environment file
+   cp .env.example .env
+   ```
+   Fill in database access details - in Zerops GUI go to the detail of `db` service and open **Access details** in the left menu.
+
+   ```bash
+   composer install
+   php artisan key:generate
+   ```
+
+4. **Start Development Server**
+   ```bash
+   php artisan serve # or use your preferred setup (Valet, Herd, Sail)
+   ```
+
+Your local environment is now connected to the Zerops infrastructure, utilizing the remote PostgreSQL database while maintaining local development flexibility.
+
+## Application Configuration
+
+Your application's deployment process is managed through [zerops.yml](/zerops-yml/specification), which handles:
+
+- Database migrations
+- Cache management
+- File cleanup
+- Health check implementation
+- Service orchestration
+
+## Try the Build & Deploy Pipeline
+
+Now that you're logged into zcli, deploying your application is straightforward. Simply enter `zcli push` in your terminal from the root of your freshly cloned project.
+
+### Test Your Pipeline
+
+The best way to verify your setup is with a quick test:
+- Make a small change directly in the GitHub UI
+- Commit the change and watch the magic happen in your project detail
+
+### Setting Up Automated CI/CD
+
+To enable automatic deployments:
+
+1. Navigate to **Pipelines & CI/CD settings** in your service dashboard
+2. Connect the service with your new GitHub repository
+3. Set the trigger to **Push to Branch**
+
+## Integration with Existing Applications
+
+If you're looking to integrate an existing Laravel application with Zerops, review the [changes made over the default installation](https://github.com/zeropsio/recipe-laravel-minimal/blob/main/README.md#changes-made-over-the-default-installation) to understand the necessary modifications.
+
+## Get to know Zerops core concepts in depth
+Ready to build from scratch? Our [step-by-step Laravel tutorial](/frameworks/laravel/introduction) takes you through the entire process of integrating Zerops with a new Laravel project.
+
+*Need help? Join our [Discord community](https://discord.gg/zerops).*

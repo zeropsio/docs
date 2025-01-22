@@ -2595,6 +2595,114 @@ module.exports = {
         },
       ],
     },
+      {
+        type: 'html',
+        value: 'Recipes',
+        customProps: {
+          sidebar_is_group_divider: true,
+        },
+        className: 'homepage-sidebar-item',
+      },
+    {
+      type: 'category',
+      label: 'Minimal',
+      collapsible: true,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'frameworks/laravel/recipes/minimal-local',
+          label: 'Local Development',
+        },
+        {
+          type: 'doc',
+          id: 'frameworks/laravel/recipes/minimal-devel',
+          label: 'Stage Environment',
+        },
+        {
+          type: 'doc',
+          id: 'frameworks/laravel/recipes/minimal-prod',
+          label: 'Production',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Jetstream',
+      collapsible: true,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'frameworks/laravel/recipes/jetstream-local',
+          label: 'Local Development',
+        },
+        {
+          type: 'doc',
+          id: 'frameworks/laravel/recipes/jetstream-devel',
+          label: 'Stage Environment',
+        },
+        {
+          type: 'doc',
+          id: 'frameworks/laravel/recipes/jetstream-prod',
+          label: 'Production',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Filament',
+      collapsible: true,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'frameworks/laravel/recipes/filament-local',
+          label: 'Local Development',
+        },
+        {
+          type: 'doc',
+          id: 'frameworks/laravel/recipes/filament-devel',
+          label: 'Stage Environment',
+        },
+        {
+          type: 'doc',
+          id: 'frameworks/laravel/recipes/filament-prod',
+          label: 'Production',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Twill CMS',
+      collapsible: true,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'frameworks/laravel/recipes/twill-local',
+          label: 'Local Development',
+        },
+        {
+          type: 'doc',
+          id: 'frameworks/laravel/recipes/twill-devel',
+          label: 'Stage Environment',
+        },
+        {
+          type: 'doc',
+          id: 'frameworks/laravel/recipes/twill-prod',
+          label: 'Production',
+        },
+      ],
+    },
     {
       type: 'doc',
       id: 'frameworks/laravel/faq',
