@@ -147,6 +147,7 @@ import IconFirewall from './Firewall';
 import IconZerops from './Zerops';
 import IconDatabase from './Database';
 import IconCloudOk from './CloudOk';
+import IconGitlab from './Gitlab';
 
 
 export default {
@@ -212,6 +213,7 @@ export default {
   'gift-solid': GiftSolid,
   'flag-mini': IconFlagMini,
   'firewall': IconFirewall,
+  gitlab: IconGitlab,
   github: IconGitHub,
   'globe-europe': GlobeEurope,
   'globe-europe-solid': GlobeEuropeSolid,

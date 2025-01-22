@@ -539,7 +539,7 @@ module.exports = {
       id: 'references/gitlab-integration',
       label: 'Gitlab Integration',
       customProps: {
-        sidebar_icon: 'cloud-arrow-up',
+        sidebar_icon: 'gitlab',
       },
       className: 'homepage-sidebar-item',
     },
