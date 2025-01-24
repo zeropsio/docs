@@ -1,0 +1,211 @@
+---
+title: Debug Mode
+desc: Learn how to configure and use debug mode in Zerops for effective application debugging during build and runtime phases. Includes step-by-step guides, best practices, and troubleshooting tips for developers.
+---
+
+import Image from '/src/components/Image';
+
+This document describes the debug mode configuration capabilities for service stacks in Zerops, allowing developers to pause execution at specific points during build and runtime processes for debugging purposes.
+
+## Overview
+
+Debug mode introduces control over two distinct phases of deployment:
+
+- **Build phase** - When the `buildCommands` are executed
+- **Runtime prepare phase** - When the `prepareCommands` are executed
+
+For each phase, you can choose when to pause the execution:
+- **Disable** - No pausing, execution proceeds normally
+- **Before first command** - Execution stops before running any commands
+- **After last command** - Execution stops after all commands complete
+- **On command fail** - Execution stops when a command fails
+
+Each phase can be configured with its own debug settings without affecting the other phase.
+
+:::warning Important
+The entire build process, including any time spent in debug mode, has a maximum duration of 60 minutes. After this time limit is reached, the build process is automatically cancelled.
+:::
+
+## Configuration
+
+The debug mode configuration can be found in your service detail under the **Pipelines & CI/CD settings**.
+
+<p align="center">
+  <Image
+    lightImage="/img/screenshots/debug_mode.webp"
+    darkImage="/img/screenshots/debug_mode.webp"
+    alt="Debug mode"
+    style={{ width: '95%', height: 'auto' }}
+  />
+</p>
+
+## Debug Control
+
+When execution is paused in debug mode, you have several commands available to control the debugging process. Each command serves a specific purpose and affects the deployment process differently.
+
+### Debug Pause Points
+
+There are three key points where execution can pause during deployment:
+- ➠ **Disable** - Do not pause
+- ↪ **Before First Command** - Paused before any commands run
+- ✖ **On Command Failure** - Paused when a command fails
+- ✔ **After Last Command** - Paused after all commands complete
+
+### Available Commands
+
+#### Continuing Execution
+To proceed with the normal deployment process, use:
+```bash
+zsc debug continue
+```
+
+<table className="w-full my-1.5 whitespace-nowrap">
+  <thead>
+    <tr>
+      <th className="">Pause Point</th>
+      <th className="w-full">Behavior</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit">↪ <i>Before First Command</i></td>
+      <td className="w-fit">Begins running commands for the current phase until next possible pause point</td>
+    </tr>
+    <tr>
+      <td className="w-fit">✖ <i>On Command Failure</i></td>
+      <td className="w-fit">Skips the failed command and continues deployment</td>
+    </tr>
+    <tr>
+      <td className="w-fit">✔ <i>After Last Command</i></td>
+      <td className="w-fit">Moves to the next phase (from build to runtime prepare) or completes deployment</td>
+    </tr>
+  </tbody>
+</table>
+
+#### Marking Success
+To force a successful deployment status, use:
+```bash
+zsc debug success
+```
+
+<table className="w-full my-1.5 whitespace-nowrap">
+  <thead>
+    <tr>
+      <th className="">Pause Point</th>
+      <th className="w-full">Behavior</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit">↪ <i>Before First Command</i></td>
+      <td className="w-fit">Ends current phase without running any commands</td>
+    </tr>
+    <tr>
+      <td className="w-fit">✖ <i>On Command Failure</i></td>
+      <td className="w-fit">Ignores the failure and ends current phase with success</td>
+    </tr>
+    <tr>
+      <td className="w-fit">✔ <i>After Last Command</i></td>
+      <td className="w-fit">Concludes current phase with a successful status</td>
+    </tr>
+  </tbody>
+</table>
+
+:::note
+Requires valid `deployFiles` to work properly (fails otherwise).
+:::
+
+#### Forcing Failure
+To terminate the deployment with a failure status, use:
+```bash
+zsc debug fail
+```
+
+<table className="w-full my-1.5 whitespace-nowrap">
+  <thead>
+    <tr>
+      <th className="">Pause Point</th>
+      <th className="w-full">Behavior</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit">↪ <i>Before First Command</i></td>
+      <td className="w-fit">Marks current phase as failed without running commands</td>
+    </tr>
+    <tr>
+      <td className="w-fit">✖ <i>On Command Failure</i></td>
+      <td className="w-fit">Ends deployment with original error</td>
+    </tr>
+    <tr>
+      <td className="w-fit">✔ <i>After Last Command</i></td>
+      <td className="w-fit">Overwrites successful execution with failed status and ends deployment</td>
+    </tr>
+  </tbody>
+</table>
+
+Each phase can be configured independently to pause at any of the points described above, giving you precise control over your debugging workflow. The 60-minute timeout ensures deployments don't remain blocked indefinitely.
+
+## Usage Examples
+
+### Example 1: Debugging Build Failures
+
+<table className="w-full my-1.5 whitespace-nowrap">
+  <tbody>
+    <tr>
+      <td className="w-fit"><b>Build phase</b></td>
+      <td className="w-fit">✖ <i>On Command Failure</i></td>
+    </tr>
+    <tr>
+      <td className="w-fit"><b>Prepare runtime phase</b></td>
+      <td className="w-fit">➠ <i>Disable</i></td>
+    </tr>
+  </tbody>
+</table>
+
+This configuration allows you to:
+1. Inspect the container state after a failure
+2. Make necessary adjustments
+3. Use `zsc debug continue` to resume or `zsc debug fail` to abort
+
+### Example 2: Validating Runtime Setup
+
+<table className="w-full my-1.5 whitespace-nowrap">
+  <tbody>
+    <tr>
+      <td className="w-fit"><b>Build phase</b></td>
+      <td className="w-fit">➠ <i>Disable</i></td>
+    </tr>
+    <tr>
+      <td className="w-fit"><b>Prepare runtime phase</b></td>
+      <td className="w-fit">✔ <i>After Last Command</i></td>
+    </tr>
+  </tbody>
+</table>
+
+## Best Practices
+
+#### Targeted Debugging
+- Enable debug mode only for the specific phase you need to investigate
+- This minimizes disruption to the deployment process
+- Helps maintain clear debugging sessions
+
+#### Clean Up
+- Always remember to disable debug mode after completing your debugging session
+- Set both phases to **Disable**
+- Prevents unexpected pauses in future deployments
+
+#### Production Consideration
+- Be cautious when using debug mode in production environments
+- Paused executions can block deployments
+- Consider using separate development services for extended debugging sessions
+
+#### Timeout Awareness
+- Be mindful of the 60-minute maximum debug pause time (p)lan debugging sessions accordingly)
+
+## Technical Considerations
+
+- Debug mode settings persist until explicitly changed
+- Build phase and runtime prepare phase operate independently
+- Debug commands are only available when execution is paused
+- Success signals require valid `deployFiles` to proceed
