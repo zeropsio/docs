@@ -52,7 +52,7 @@ export default function DocSidebarItemHtml({
         dangerouslySetInnerHTML={{ __html: value }}
       ></span>
       {customProps?.sidebar_is_soon && (
-        <Badge variant="purple" className={`sidebar-soon-badge`}>
+        <Badge variant="neutral" className={`sidebar-soon-badge`}>
           🚧
         </Badge>
       )}
