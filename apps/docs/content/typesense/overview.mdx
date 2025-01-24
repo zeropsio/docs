@@ -1,0 +1,148 @@
+---
+title: Managed Typesense Service
+desc:
+---
+
+import UnorderedCodeList from '@site/src/components/UnorderedCodeList';
+import data from '@site/static/data.json';
+
+Zerops provides a fully managed [Typesense search engine](https://typesense.org/) service that combines developer productivity with enterprise-grade reliability. The platform handles infrastructure complexity through automated deployment, scaling, and maintenance while providing developers full access to Typesense's native capabilities.
+
+## Supported Versions
+
+Currently supported Typesense versions:
+<UnorderedCodeList>{data.typesense.import}</UnorderedCodeList>
+
+## Service Configuration
+
+Our Typesense implementation comes with carefully tuned defaults that diverge from the [standard Typesense configuration](https://typesense.org/docs/27.1/api/server-configuration.html#using-command-line-arguments) in the following ways:
+
+```yaml
+thread-pool-size: 16
+num-collections-parallel-load: 8
+```
+
+These defaults are optimized for most common use cases and managed by the platform. If you need to adjust these settings, please contact us through our [support channels](#support).
+
+### Deployment Modes
+
+:::warning
+The choice between HA and non-HA mode must be made during service creation and cannot be changed later. Make sure to carefully consider your requirements before deploying.
+:::
+
+#### Non-HA Mode
+- Suitable for development and testing
+- Data persistence not guaranteed during node failures
+- Lower resource requirements
+
+#### HA Mode
+- Implements Typesense's native [**Raft consensus**](https://typesense.org/docs/guide/high-availability.html) mechanism for data replication
+- Deploys as a **3-node cluster by default** for optimal reliability
+  - Scaling configuration of 3-5 or 3-7 nodes for higher workloads is possible upon request (contact [support](#support) to configure custom node ranges)
+- Includes **built-in data synchronization** across all nodes
+- Features **automatic leader election** to maintain cluster availability
+  - Recovery typically takes up to 1 minute during node failures or leader transitions
+  - During these periods, requests may temporarily receive `503 Not Ready or Lagging` or `500 Could not find a leader` responses
+  - These states automatically resolve once consensus is reestablished
+
+### API Key Management
+
+The master API key is automatically generated and managed by the platform. You can access it through:
+- The service access details in the Zerops GUI
+- The `apiKey` environment variable in your service configuration
+
+:::warning
+Currently, as a security-focused design decision, the master API key cannot be modified after generation.
+:::
+
+### CORS Configuration
+
+Your Typesense instance comes with CORS enabled by default, ensuring seamless integration with frontend applications. Browser-based clients can directly access the instance by providing the `X-Typesense-Api-Key` header, maintaining security while enabling straightforward client-side implementation.
+
+## Network Architecture & Access Patterns
+
+### Access Methods
+
+#### HTTPS Access
+
+When using HTTPS access (either through Zerops subdomain or custom domain), traffic is distributed across nodes via our integrated Nginx proxy layer. This provides a single access point that handles load balancing automatically.
+
+For enabling HTTPS access:
+1. Configure through the [Zerops access documentation](/features/access)
+2. Or use `enableSubdomainAccess: true` when [importing](/references/import#service-configuration) a Typesense service
+
+#### Direct Node Access
+
+Allows to access individual nodes using internal DNS:
+1. **Via [Zerops VPN](/references/vpn)**
+2. **Internal Project Access** - services within the same project can reach nodes directly
+
+Node addressing patterns:
+##### Standard format
+**Format:**```node{n}.db.{hostname}.zerops```
+- e.g. `node1.db.typesenseha.zerops`, `node2.db.typesenseha.zerops`
+##### Stable DNS records
+**Format:**```node-stable-{n}.db.{hostname}.zerops```
+- **maintain consistent IP mapping** until node retirement (scaling down or failure events)
+- e.g. `node-stable-1.db.typesenseha.zerops`, `node-stable-2.db.typesenseha.zerops`
+
+## Quick Start Example
+
+Here's a simple example of using Typesense with the JavaScript client:
+
+```javascript
+import TypesenseClient from 'typesense'
+
+const client = new TypesenseClient({
+  nodes: [{
+    host: 'your-service.zerops.dev', // Your Zerops subdomain
+    port: '443',
+    protocol: 'https'
+  }],
+  apiKey: process.env.TYPESENSE_API_KEY,
+  connectionTimeoutSeconds: 2
+})
+
+// Create a collection
+await client.collections().create({
+  name: 'companies',
+  fields: [
+    { name: 'company_name', type: 'string' },
+    { name: 'num_employees', type: 'int32' },
+    { name: 'country', type: 'string', facet: true }
+  ],
+  default_sorting_field: 'num_employees'
+})
+
+// Example search query
+const searchResults = await client.collections('companies')
+  .documents()
+  .search({
+    q: 'tech',
+    query_by: 'company_name',
+    filter_by: 'country:=USA',
+    sort_by: 'num_employees:desc'
+  })
+```
+
+## Best Practices
+
+#### API Key Security
+- Never expose the master API key in client-side code
+- Generate scoped search-only API keys for frontend applications
+- Rotate API keys periodically through your service configuration
+
+#### High Availability
+- Implement retry logic in clients for handling temporary unavailability
+- Use stable DNS records for direct node access when needed
+
+#### Performance Optimization
+- Utilize batch operations for bulk updates
+- Configure appropriate timeout values based on your use case
+- Consider data volume when designing collection schemas
+
+## Support
+
+For advanced configurations or custom requirements:
+- Join our [Discord community](https://discord.gg/zerops)
+- Contact support via [email](mailto:support@zerops.io)

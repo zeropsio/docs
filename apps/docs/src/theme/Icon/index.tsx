@@ -148,6 +148,7 @@ import IconZerops from './Zerops';
 import IconDatabase from './Database';
 import IconCloudOk from './CloudOk';
 import IconGitlab from './Gitlab';
+import IconTypesense from './Typesense';
 
 
 export default {
@@ -302,4 +303,5 @@ export default {
   zerops: IconZerops,
   database: IconDatabase,
   cloudok: IconCloudOk,
+  typesense: IconTypesense,
 };
