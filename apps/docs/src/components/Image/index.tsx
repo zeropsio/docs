@@ -31,7 +31,7 @@ const Image: React.FC<ImageProps> = ({
   return (
     <div className="py-0.5 text-center text-sm flex flex-col">
       <img
-        className={`mx-auto ${applyFilters ? 'filter invert hue-rotate-180' : ''}`}
+        className={`mx-auto ${applyFilters ? 'filter invert grayscale' : ''}`}
         loading="lazy"
         src={useBaseUrl(imageUrl)}
         alt={alt}
