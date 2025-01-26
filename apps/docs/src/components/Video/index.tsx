@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from 'react';
 import { useColorMode } from '@docusaurus/theme-common';
-import styles from './styles.module.css';
 
 interface VideoProps {
   src: string;
@@ -47,7 +46,7 @@ const Video: React.FC<VideoProps> = ({
           }
         });
       },
-      { threshold: 0.2 } // 20% visibility threshold
+      { threshold: 0.2 }
     );
 
     observer.observe(video);
@@ -59,20 +58,22 @@ const Video: React.FC<VideoProps> = ({
   }, []);
 
   return (
-    <video
-      ref={videoRef}
-      className={`${styles.video} ${isDarkMode ? styles.darkMode : ''} ${className || ''}`}
-      width={width}
-      height={height}
-      autoPlay={autoPlay}
-      loop={loop}
-      muted={muted}
-      playsInline={playsInline}
-      preload={preload}
-    >
-      <source src={src} type={type} />
-      Your browser does not support the video tag.
-    </video>
+    <div className="flex justify-center pb-1">
+      <video
+        ref={videoRef}
+        className={`max-w-full h-auto ${isDarkMode ? 'dark:invert-[0.85] dark:hue-rotate-180 dark:contrast-[1.3] dark:brightness-[0.7] dark:saturate-[1.5] dark:opacity-85' : ''} ${className || ''}`}
+        width={width}
+        height={height}
+        autoPlay={autoPlay}
+        loop={loop}
+        muted={muted}
+        playsInline={playsInline}
+        preload={preload}
+      >
+        <source src={src} type={type} />
+        Your browser does not support the video tag.
+      </video>
+    </div>
   );
 };
 
