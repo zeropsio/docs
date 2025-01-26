@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useColorMode } from '@docusaurus/theme-common';
 import styles from './styles.module.css';
 
@@ -29,9 +29,38 @@ const Video: React.FC<VideoProps> = ({
 }) => {
   const { colorMode } = useColorMode();
   const isDarkMode = colorMode === 'dark';
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            video.play().catch(() => {
+              // Autoplay might be blocked by browser
+            });
+          } else {
+            video.pause();
+          }
+        });
+      },
+      { threshold: 0.2 } // 20% visibility threshold
+    );
+
+    observer.observe(video);
+
+    return () => {
+      observer.unobserve(video);
+      observer.disconnect();
+    };
+  }, []);
 
   return (
     <video
+      ref={videoRef}
       className={`${styles.video} ${isDarkMode ? styles.darkMode : ''} ${className || ''}`}
       width={width}
       height={height}
