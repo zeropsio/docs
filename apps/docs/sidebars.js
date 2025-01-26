@@ -307,6 +307,15 @@ module.exports = {
           },
           className: "homepage-sidebar-item  service-sidebar-item",
         },
+        {
+          type: "ref",
+          id: "typesense/overview",
+          label: "Typesense",
+          customProps: {
+            sidebar_icon: "typesense",
+          },
+          className: "homepage-sidebar-item  service-sidebar-item",
+        },
 //        {
 //          type: "ref",
 //          id: "meilisearch/overview",
@@ -1886,6 +1895,26 @@ module.exports = {
       customProps: {
         sidebar_is_title: true,
         sidebar_icon: 'chat-bubble-left-right',
+      },
+    },
+  ],
+  typesense: [
+    {
+      type: 'ref',
+      id: 'homepage',
+      label: 'Back to home',
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: 'back-arrow',
+      },
+    },
+    {
+      type: 'doc',
+      id: 'typesense/overview',
+      label: 'Zerops Typesense Service',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'typesense',
       },
     },
   ],
