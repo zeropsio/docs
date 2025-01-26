@@ -7,11 +7,11 @@
 - [ ] Minor Improvement
 - [ ] Major Improvement
 
-#### Description (required)
+#### Description <Badge text="Required" color="red" />
 
 <!-- Please describe the change you are proposing, and why -->
 
-#### Related issues & labels (optional)
+#### Related issues & labels <Badge text="Optional" color="blue" />
 
 - /closes # <!-- Add an issue number  -->
 
