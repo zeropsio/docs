@@ -1,5 +1,4 @@
 import React, { useEffect, useRef } from 'react';
-import { useColorMode } from '@docusaurus/theme-common';
 
 interface VideoProps {
   src: string;
@@ -26,8 +25,6 @@ const Video: React.FC<VideoProps> = ({
   preload = 'none',
   className,
 }) => {
-  const { colorMode } = useColorMode();
-  const isDarkMode = colorMode === 'dark';
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -61,7 +58,7 @@ const Video: React.FC<VideoProps> = ({
     <div className="flex justify-center pb-1">
       <video
         ref={videoRef}
-        className={`max-w-full h-auto ${isDarkMode ? 'dark:invert-[0.85] dark:hue-rotate-180 dark:contrast-[1.3] dark:brightness-[0.7] dark:saturate-[1.5] dark:opacity-85' : ''} ${className || ''}`}
+        className={`max-w-full h-auto ${className || ''}`}
         width={width}
         height={height}
         autoPlay={autoPlay}
