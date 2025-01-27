@@ -22,7 +22,7 @@ const Video: React.FC<VideoProps> = ({
   loop = true,
   muted = true,
   playsInline = true,
-  preload = 'none',
+  preload = 'auto',
   className,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -55,53 +55,47 @@ const Video: React.FC<VideoProps> = ({
 
   const handleZoom = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsZoomed(true);
-    document.body.style.overflow = 'hidden';
-  };
-
-  const handleUnzoom = () => {
-    setIsZoomed(false);
-    document.body.style.overflow = '';
+    setIsZoomed(!isZoomed);
+    document.body.style.overflow = isZoomed ? '' : 'hidden';
   };
 
   return (
-    <>
-      <div className="flex justify-center pb-1">
-        <video
-          ref={videoRef}
-          className={`max-w-full h-auto rounded-lg cursor-zoom-in hover:opacity-90 transition-opacity ${className || ''}`}
-          width={width}
-          height={height}
-          autoPlay={autoPlay}
-          loop={loop}
-          muted={muted}
-          playsInline={playsInline}
-          preload={preload}
-          onClick={handleZoom}
-        >
-          <source src={src} type={type} />
-          Your browser does not support the video tag.
-        </video>
-      </div>
-      {isZoomed && (
-        <div 
-          className="fixed inset-0 bg-black/80 z-[9999] flex items-center justify-center cursor-zoom-out p-8"
-          onClick={handleUnzoom}
-        >
-          <div className="relative w-full max-w-6xl animate-in fade-in zoom-in duration-200">
-            <video
-              className="w-full h-auto rounded-lg shadow-2xl ring-1 ring-white/10"
-              autoPlay={autoPlay}
-              loop={loop}
-              muted={muted}
-              playsInline={playsInline}
-            >
-              <source src={src} type={type} />
-            </video>
-          </div>
+    <div className="w-full flex justify-center">
+      <div 
+        className={
+          isZoomed 
+            ? 'fixed inset-0 z-[9999] bg-black/75 flex items-center justify-center' 
+            : 'w-full'
+        }
+        onClick={isZoomed ? handleZoom : undefined}
+      >
+        <div className={
+          isZoomed 
+            ? 'w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-8'
+            : 'w-full'
+        }>
+          <video
+            ref={videoRef}
+            className={`
+              w-full rounded-xl cursor-zoom-in
+              ${isZoomed ? 'max-h-[85vh] object-contain' : 'h-auto'}
+              ${className || ''}
+            `}
+            width={width}
+            height={height}
+            autoPlay={autoPlay}
+            loop={loop}
+            muted={!isZoomed}
+            playsInline={playsInline}
+            preload="auto"
+            onClick={handleZoom}
+          >
+            <source src={src} type={type} />
+            Your browser does not support the video tag.
+          </video>
         </div>
-      )}
-    </>
+      </div>
+    </div>
   );
 };
 
