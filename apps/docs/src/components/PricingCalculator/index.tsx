@@ -26,19 +26,50 @@ type Service = {
 };
 
 export default function PricingCalculator() {
-  const [services, setServices] = React.useState<Service[]>([]);
-  const [resources, setResources] = React.useState<ResourcesType>({
-    cpu: 1,
-    cpuType: 'shared',
-    ram: 0.25,
-    disk: 0.5,
-    storage: 0,
-    ipv4_addr: 0,
-    backup: 0,
-    buildTime: 0,
-    egress: 0,
-    core: 'lightweight',
+  const [services, setServices] = React.useState<Service[]>(() => {
+    const saved = localStorage.getItem('zerops-calculator-services');
+    return saved ? JSON.parse(saved) : [];
   });
+
+  const [resources, setResources] = React.useState<ResourcesType>(() => {
+    const saved = localStorage.getItem('zerops-calculator-resources');
+    return saved ? JSON.parse(saved) : {
+      cpu: 1,
+      cpuType: 'shared',
+      ram: 0.25,
+      disk: 0.5,
+      storage: 0,
+      ipv4_addr: 0,
+      backup: 0,
+      buildTime: 0,
+      egress: 0,
+      core: 'lightweight',
+    };
+  });
+
+  React.useEffect(() => {
+    localStorage.setItem('zerops-calculator-services', JSON.stringify(services));
+  }, [services]);
+
+  React.useEffect(() => {
+    localStorage.setItem('zerops-calculator-resources', JSON.stringify(resources));
+  }, [resources]);
+
+  const clearAll = () => {
+    setServices([]);
+    setResources({
+      cpu: 1,
+      cpuType: 'shared',
+      ram: 0.25,
+      disk: 0.5,
+      storage: 0,
+      ipv4_addr: 0,
+      backup: 0,
+      buildTime: 0,
+      egress: 0,
+      core: 'lightweight',
+    });
+  };
 
   const price = {
     cpu: resources.cpuType === 'shared' ? 0.6 : 6,
@@ -46,9 +77,9 @@ export default function PricingCalculator() {
     disk: 0.05,
     storage: 0.01,
     ipv4_addr: 3,
-    backup: 0.1,  // $0.50 per 5GB
-    buildTime: 0.033, // $0.50 per 15 hours
-    egress: 0.1, // $0.10 per 1GB
+    backup: 0.1,
+    buildTime: 0.033,
+    egress: 0.1,
     core: resources.core === 'lightweight' ? 0.0 : 10.0,
   };
 
@@ -64,9 +95,8 @@ export default function PricingCalculator() {
     if (isNaN(numValue)) return;
 
     let formattedValue = numValue;
-    // Round specific fields to appropriate decimal places
     if (['storage', 'backup', 'egress'].includes(name)) {
-      formattedValue = Math.max(0, Math.round(numValue * 100) / 100); // 2 decimal places
+      formattedValue = Math.max(0, Math.round(numValue * 100) / 100);
     } else {
       formattedValue = Math.max(0, Math.round(numValue));
     }
@@ -167,9 +197,8 @@ export default function PricingCalculator() {
                           field === 'ram' ? 0.25 : 
                           field === 'disk' ? 0.5 : 1;
           
-          // Format decimal places based on field type
           const formattedValue = field === 'ram' || field === 'disk' 
-            ? Math.max(minValue, Math.round(numValue * 4) / 4) // Round to nearest 0.25
+            ? Math.max(minValue, Math.round(numValue * 4) / 4)
             : Math.max(minValue, Math.round(numValue));
 
           return { ...service, [field]: formattedValue };
@@ -186,47 +215,77 @@ export default function PricingCalculator() {
     const lineHeight = 7;
     const sectionSpacing = 20;
     const indent = 10;
+    const pageWidth = doc.internal.pageSize.width;
+    const contentWidth = pageWidth - (margin * 2);
 
-    // Helper function for consistent text styling
-    const addText = (text: string, x: number, y: number, options: { fontSize?: number; isBold?: boolean; isGray?: boolean; align?: 'left' | 'right' } = {}) => {
-      const { fontSize = 12, isBold = false, isGray = false, align = 'left' } = options;
+    const colors = {
+      primary: [46, 164, 149],      // #2EA495
+      success: [46, 164, 149],      // #2EA495
+      gray: [46, 164, 149],         // #2EA495
+      darkText: [46, 164, 149],     // #2EA495
+      lightGray: [236, 239, 243],   // #ECEFF3
+      white: [236, 239, 243],       // #ECEFF3
+      lightBlue: [236, 239, 243],   // #ECEFF3
+      footerBg: [236, 239, 243]     // #ECEFF3
+    };
+
+    const setColor = (colorArray: number[]) => {
+      doc.setFillColor(colorArray[0], colorArray[1], colorArray[2]);
+      doc.setTextColor(colorArray[0], colorArray[1], colorArray[2]);
+    };
+
+    const addText = (text: string, x: number, y: number, options: { 
+      fontSize?: number; 
+      isBold?: boolean; 
+      isGray?: boolean; 
+      align?: 'left' | 'right';
+      color?: number[];
+    } = {}) => {
+      const { fontSize = 12, isBold = false, isGray = false, align = 'left', color } = options;
       doc.setFontSize(fontSize);
       doc.setFont('helvetica', isBold ? 'bold' : 'normal');
-      if (isGray) {
-        doc.setTextColor(107, 114, 128); // Gray color
+      
+      if (color) {
+        setColor(color);
+      } else if (isGray) {
+        setColor(colors.gray);
       } else {
-        doc.setTextColor(17, 24, 39); // Default text color
+        setColor(colors.darkText);
       }
       
       if (align === 'right') {
         const textWidth = doc.getTextWidth(text);
-        doc.text(text, doc.internal.pageSize.width - margin - textWidth, y);
+        doc.text(text, pageWidth - margin - textWidth, y);
       } else {
         doc.text(text, x, y);
       }
     };
 
-    // Add horizontal line
     const addLine = (yPos: number) => {
-      doc.setDrawColor(229, 231, 235); // Light gray
-      doc.line(margin, yPos, doc.internal.pageSize.width - margin, yPos);
+      doc.setDrawColor(colors.lightGray[0], colors.lightGray[1], colors.lightGray[2]);
+      doc.line(margin, yPos, pageWidth - margin, yPos);
     };
 
-    // Title and Package Type
-    addText('Zerops Cost Calculator', margin, y, { fontSize: 24, isBold: true });
+    const addSectionBackground = (yStart: number, height: number) => {
+      doc.setFillColor(colors.lightBlue[0], colors.lightBlue[1], colors.lightBlue[2]);
+      doc.rect(margin - 5, yStart - 5, contentWidth + 10, height, 'F');
+    };
+
+    addSectionBackground(y - 5, 30);
+    addText('Zerops Cost Calculator', margin, y, { fontSize: 24, isBold: true, color: colors.primary });
     y += lineHeight * 2;
-    addText(`Selected Package: ${resources.core === 'lightweight' ? 'Lightweight' : 'Serious'} Core`, margin, y, { fontSize: 14 });
+    addText(`Selected Package: ${resources.core === 'lightweight' ? 'Lightweight' : 'Serious'} Core`, margin, y, { fontSize: 14, color: colors.success });
     y += lineHeight * 2;
     addLine(y - 3);
     y += lineHeight;
 
-    // Services Section
     if (services.length > 0) {
-      addText('Services', margin, y, { fontSize: 16, isBold: true });
+      addText('Services', margin, y, { fontSize: 16, isBold: true, color: colors.primary });
       y += lineHeight * 1.5;
 
       services.forEach((service, index) => {
-        addText(service.name, margin, y, { fontSize: 14, isBold: true });
+        addSectionBackground(y - 5, 45);
+        addText(service.name, margin, y, { fontSize: 14, isBold: true, color: colors.darkText });
         y += lineHeight;
 
         const details = [
@@ -237,14 +296,14 @@ export default function PricingCalculator() {
         ];
 
         details.forEach(detail => {
-          addText(`${detail.label}:`, margin + indent, y);
-          addText(detail.value.toString(), margin + 80, y);
+          addText(`${detail.label}:`, margin + indent, y, { color: colors.gray });
+          addText(detail.value.toString(), margin + 80, y, { color: colors.darkText });
           y += lineHeight;
         });
 
         const serviceCost = calculateServiceCost(service);
-        addText('Monthly Cost:', margin + indent, y);
-        addText(`$${formatNumber(serviceCost)}`, margin + 80, y, { isBold: true });
+        addText('Monthly Cost:', margin + indent, y, { color: colors.gray });
+        addText(`$${formatNumber(serviceCost)}`, margin + 80, y, { isBold: true, color: colors.primary });
         y += lineHeight;
 
         if (index < services.length - 1) {
@@ -257,72 +316,97 @@ export default function PricingCalculator() {
       addLine(y - 10);
     }
 
-    // Additional Features Section
     if (resources.ipv4_addr > 0 || resources.storage > 0) {
       y += lineHeight;
-      addText('Additional Features', margin, y, { fontSize: 16, isBold: true });
+      addText('Additional Features', margin, y, { fontSize: 16, isBold: true, color: colors.primary });
       y += lineHeight * 1.5;
 
+      addSectionBackground(y - 5, resources.ipv4_addr > 0 && resources.storage > 0 ? 30 : 15);
+
       if (resources.ipv4_addr > 0) {
-        addText('IPv4 Addresses:', margin, y);
-        addText(`${resources.ipv4_addr} × $${price.ipv4_addr.toFixed(2)}/month`, doc.internal.pageSize.width - margin - 80, y, { align: 'right' });
+        addText('IPv4 Addresses:', margin, y, { color: colors.gray });
+        addText(`${resources.ipv4_addr} × $${price.ipv4_addr.toFixed(2)}/month`, pageWidth - margin - 80, y, { align: 'right', color: colors.darkText });
         y += lineHeight;
       }
 
       if (resources.storage > 0) {
-        addText('Object Storage:', margin, y);
-        addText(`${resources.storage}GB × $${price.storage.toFixed(2)}/GB/month`, doc.internal.pageSize.width - margin - 80, y, { align: 'right' });
+        addText('Object Storage:', margin, y, { color: colors.gray });
+        addText(`${resources.storage}GB × $${price.storage.toFixed(2)}/GB/month`, pageWidth - margin - 80, y, { align: 'right', color: colors.darkText });
         y += lineHeight;
       }
       y += sectionSpacing - lineHeight;
       addLine(y - 10);
     }
 
-    // Additional Costs Section
     if (resources.backup > 0 || resources.buildTime > 0 || resources.egress > 0) {
       y += lineHeight;
-      addText('Additional Costs', margin, y, { fontSize: 16, isBold: true });
+      addText('Additional Costs', margin, y, { fontSize: 16, isBold: true, color: colors.primary });
       y += lineHeight * 1.5;
 
+      const costsHeight = (
+        (resources.backup > 0 ? 1 : 0) + 
+        (resources.buildTime > 0 ? 1 : 0) + 
+        (resources.egress > 0 ? 1 : 0)
+      ) * lineHeight + 10;
+
+      addSectionBackground(y - 5, costsHeight);
+
       if (resources.backup > 0) {
-        addText('Backup Space:', margin, y);
-        addText(`${resources.backup}GB ($0.50 per 5GB)`, doc.internal.pageSize.width - margin - 80, y, { align: 'right' });
+        addText('Backup Space:', margin, y, { color: colors.gray });
+        addText(`${resources.backup}GB ($0.50 per 5GB)`, pageWidth - margin - 80, y, { align: 'right', color: colors.darkText });
         y += lineHeight;
       }
 
       if (resources.buildTime > 0) {
-        addText('Build Time:', margin, y);
-        addText(`${resources.buildTime} hours ($0.50 per 15 hours)`, doc.internal.pageSize.width - margin - 80, y, { align: 'right' });
+        addText('Build Time:', margin, y, { color: colors.gray });
+        addText(`${resources.buildTime} hours ($0.50 per 15 hours)`, pageWidth - margin - 80, y, { align: 'right', color: colors.darkText });
         y += lineHeight;
       }
 
       if (resources.egress > 0) {
-        addText('Egress Traffic:', margin, y);
-        addText(`${resources.egress}GB ($0.10 per 1GB)`, doc.internal.pageSize.width - margin - 80, y, { align: 'right' });
+        addText('Egress Traffic:', margin, y, { color: colors.gray });
+        addText(`${resources.egress}GB ($0.10 per 1GB)`, pageWidth - margin - 80, y, { align: 'right', color: colors.darkText });
         y += lineHeight;
       }
       y += sectionSpacing - lineHeight;
       addLine(y - 10);
     }
 
-    // Total Section
     y += lineHeight;
-    addText('Core Package:', margin, y);
-    addText(`${resources.core === 'lightweight' ? 'Lightweight' : 'Serious'} ($${resources.core === 'lightweight' ? '0.00' : '10.00'}/month)`, doc.internal.pageSize.width - margin - 80, y, { align: 'right' });
+    addSectionBackground(y - 5, 35);
+    const packageName = resources.core === 'lightweight' ? 'Lightweight Core' : 'Serious Core';
+    const packageCost = resources.core === 'lightweight' ? '0.00' : '10.00';
+    addText(packageName + ':', margin, y, { color: colors.gray });
+    addText(`$${packageCost}/month`, pageWidth - margin - 80, y, { align: 'right', color: colors.darkText });
     y += lineHeight * 2;
 
-    // Final total with larger font
-    addText('Total Monthly Cost:', margin, y, { fontSize: 16, isBold: true });
-    addText(`$${calculateTotal()}`, doc.internal.pageSize.width - margin - 80, y, { fontSize: 16, isBold: true, align: 'right' });
+    addText('Total Monthly Cost:', margin, y, { fontSize: 16, isBold: true, color: colors.gray });
+    addText(`$${calculateTotal()}`, pageWidth - margin - 80, y, { 
+      fontSize: 16, 
+      isBold: true, 
+      align: 'right',
+      color: colors.primary 
+    });
 
-    // Save the PDF
+    const addFooter = () => {
+      const footerY = doc.internal.pageSize.height - 20;
+      
+      doc.setFillColor(colors.footerBg[0], colors.footerBg[1], colors.footerBg[2]);
+      doc.rect(0, footerY - 10, pageWidth, 30, 'F');
+      
+      doc.setFontSize(10);
+      doc.setTextColor(colors.gray[0], colors.gray[1], colors.gray[2]);
+      doc.text('Generated from docs.zerops.io', margin, footerY + 5);
+    };
+
+    addFooter();
+
     doc.save('zerops-cost-calculator.pdf');
   };
 
   return (
-    <div className="pt-2">
+    <div className="pt-1">
       <div className="package-selection">
-        <h2 className="package-title">Project core package</h2>
         <div className="package-options">
           <div 
             className={`package-option ${resources.core === 'lightweight' ? 'selected' : ''}`}
@@ -362,7 +446,27 @@ export default function PricingCalculator() {
           </svg>
           Show full package comparison & limits
         </a>
+
+        <button 
+          className="comparison-button mt-2 !text-gray-700 dark:!text-gray-300 w-[100px]"
+          onClick={clearAll}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 6h18"></path>
+            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+          </svg>
+          Clear All
+        </button>
       </div>
+
+      <button className="add-service w-full mb-4" onClick={addService}>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        <span>Add Service</span>
+      </button>
 
       {services.map((service) => (
         <div key={service.id} className="feature-section">
@@ -523,14 +627,6 @@ export default function PricingCalculator() {
           </div>
         </div>
       ))}
-
-      <button className="add-service w-full mb-1" onClick={addService}>
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="12" y1="5" x2="12" y2="19"></line>
-          <line x1="5" y1="12" x2="19" y2="12"></line>
-        </svg>
-        <span>Add Service</span>
-      </button>
 
       <div className="feature-section">
         <div className="section-title">Additional Features</div>
