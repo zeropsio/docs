@@ -149,6 +149,7 @@ import IconDatabase from './Database';
 import IconCloudOk from './CloudOk';
 import IconGitlab from './Gitlab';
 import IconTypesense from './Typesense';
+import IconDocker from './Docker';
 
 
 export default {
@@ -203,6 +204,7 @@ export default {
   discord: Discord,
   'document-text': DocumentText,
   'document-text-solid': DocumentTextSolid,
+  docker: IconDocker,
   'ellipse-mini-solid': EllipseMiniSolid,
   'envelope': Envelope,
   'exclamation-circle-solid': ExclamationCircleSolid,

@@ -1,0 +1,190 @@
+---
+title: Docker Service
+desc:
+---
+
+import UnorderedCodeList from '@site/src/components/UnorderedCodeList';
+import data from '@site/static/data.json';
+
+Zerops provides Docker support through dedicated Virtual Machine (VM) environments, ensuring maximum compatibility and isolation while maintaining integration with the broader Zerops ecosystem. This guide explains how to effectively use Docker services on Zerops, including best practices and important considerations.
+
+## Why VMs
+
+While Zerops primarily uses native Linux containers for optimal performance, this VM-based approach allows you to run virtually any Docker container while maintaining Zerops' robust infrastructure management.
+
+You can learn more about [differences](/features/container-vs-vm) between Containers and Virtual Machines on Zerops.
+
+Before using Docker services, consider these important aspects:
+
+### Virtual Machine Environment
+
+Docker services on Zerops operate in a full VM environment, which has several implications:
+
+- **Slower Boot Times**: VMs require more time to initialize due to full kernel boot
+- **Higher Resource Usage**: VMs include additional system overhead compared to native containers
+- **Scaling Limitations**:
+    - Vertical scaling requires VM restart
+    - Resources must be set as fixed values (no min-max ranges)
+    - Zerops automatically restarts the VM when resource values are changed in UI
+- **Storage Management**: Disk space can only be increased, not decreased without recreation
+- **Build Phase Limitations**: Build phase runs in containers, not in the VM environment
+
+### Advantages
+
+Despite these limitations, Docker services offer some benefits:
+
+- **Broad Compatibility**: Run almost any Docker container with minimal modification
+- **Familiar Environment**: Standard Docker runtime environment
+
+## Configuration Guide
+
+### Supported Version
+
+Currently supported Docker versions:
+<UnorderedCodeList data={data.docker.import}/>
+
+### Basic Structure
+
+Docker services in Zerops are configured through the `zerops.yml` file. Here's a typical configuration pattern:
+
+```yaml title="zerops.yml"
+zerops:
+  - setup: app
+    run:
+      prepareCommands:
+        - docker image pull <your-image>
+      start: docker run --network=host <your-image>
+      ports:
+        - port: <port-number>
+          httpSupport: true
+```
+
+Refer to the [Docker recipe repository](https://github.com/zeropsio/recipe-docker) for an example configuration.
+
+:::note
+We are actively working on improving the speed of image caching after `run.prepareCommands` and reducing the startup time of runtime VMs. These improvements will be released in future updates.
+:::
+
+### Network Configuration
+
+Docker services require the `--network=host` flag for proper integration with Zerops:
+
+- **Direct Port Management**: Ports are managed through `zerops.yml`
+- **Simplified Configuration**: Avoids double port exposure in Docker and Zerops
+- **Native Performance**: Direct access to host networking
+
+### Docker Compose Support
+
+For projects using Docker Compose, additional configuration is required:
+
+1. **File Deployment**:
+   ```yaml title="zerops.yml"
+   build:
+     deployFiles: ./docker-compose.yml
+     addToRunPrepare: ./docker-compose.yml
+   ```
+
+2. **Network Mode**:
+   ```yaml title="docker-compose.yml"
+   services:
+     your-service:
+       network_mode: host
+   ```
+
+## Implementation Examples
+
+### Single Container
+
+```yaml title="zerops.yml"
+zerops:
+  - setup: app
+    run:
+      prepareCommands:
+        - docker image pull crccheck/hello-world
+      start: docker run --network=host crccheck/hello-world
+      ports:
+        - port: 8000
+          httpSupport: true
+```
+
+### Single Service with Docker Compose
+
+```yaml title="zerops.yml"
+zerops:
+  - setup: api
+    build:
+      deployFiles: ./docker-compose.yml
+      addToRunPrepare: ./docker-compose.yml
+    run:
+      prepareCommands:
+        - docker compose pull api
+      start: docker compose up api --force-recreate
+      ports:
+        - port: 8000
+          httpSupport: true
+```
+
+### Multiple Services with Docker Compose
+
+```yaml title="zerops.yml"
+zerops:
+  - setup: apps
+    build:
+      deployFiles: ./docker-compose.yml
+      addToRunPrepare: ./docker-compose.yml
+    run:
+      prepareCommands:
+        - docker compose pull
+      start: docker compose up --force-recreate
+      ports:
+        - port: 8000
+          httpSupport: true
+```
+
+## Best Practices
+
+#### Image Management
+- Use `prepareCommands` for image pulling
+- Consider using specific image tags instead of `latest`
+
+#### Resource Planning
+- Account for VM overhead in resource allocation
+- Plan for longer initialization times
+- Consider the impact on scaling operations
+
+#### Migration Consideration
+- Evaluate if your workload could run on native containers
+- Consider gradual migration for complex applications
+- Balance development effort against operational benefits
+
+## Limitations and Workarounds
+
+### Build Phase
+
+Since the build phase runs in containers rather than VMs:
+
+- Use `run.prepareCommands` for Docker-specific build steps
+- Consider external CI/CD for complex Docker builds
+- Leverage pre-built images when possible
+
+### Scaling Operations
+
+Docker services on Zerops have specific scaling characteristics that differ from native containers:
+
+#### Vertical Scaling
+- Resources must be defined with **fixed** values instead of min-max ranges
+- CPU, RAM, and disk are specified as single values:
+  ```yaml
+  verticalAutoscaling:
+    cpu: 3
+    ram: 2
+    disk: 20
+  ```
+- Any change to these values through the UI triggers an automatic VM restart
+- Plan your resource allocation carefully to minimize scaling operations
+
+#### Horizontal Scaling
+- Still supports multiple containers through `minContainers` and `maxContainers`
+- Consider breaking large services into smaller components
+- Implement proper health checks for reliable scaling
+- Use horizontal scaling when possible to avoid VM restarts
