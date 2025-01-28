@@ -1,6 +1,7 @@
 import React from 'react';
 import './calculator.css';
 import jsPDF from 'jspdf';
+import BrowserOnly from '@docusaurus/BrowserOnly';
 
 type ResourcesType = {
   cpu: number;
@@ -25,7 +26,7 @@ type Service = {
   disk: number;
 };
 
-export default function PricingCalculator() {
+function PricingCalculatorContent() {
   const [services, setServices] = React.useState<Service[]>(() => {
     const saved = localStorage.getItem('zerops-calculator-services');
     return saved ? JSON.parse(saved) : [];
@@ -803,5 +804,13 @@ export default function PricingCalculator() {
         Export as PDF
       </button>
     </div>
+  );
+}
+
+export default function PricingCalculator() {
+  return (
+    <BrowserOnly>
+      {() => <PricingCalculatorContent />}
+    </BrowserOnly>
   );
 }
