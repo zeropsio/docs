@@ -27,33 +27,53 @@ type Service = {
 };
 
 function PricingCalculatorContent() {
-  const [services, setServices] = React.useState<Service[]>(() => {
-    const saved = localStorage.getItem('zerops-calculator-services');
-    return saved ? JSON.parse(saved) : [];
+  const [services, setServices] = React.useState<Service[]>([]);
+  const [resources, setResources] = React.useState<ResourcesType>({
+    cpu: 1,
+    cpuType: 'shared',
+    ram: 0.25,
+    disk: 0.5,
+    storage: 0,
+    ipv4_addr: 0,
+    backup: 0,
+    buildTime: 0,
+    egress: 0,
+    core: 'lightweight',
   });
 
-  const [resources, setResources] = React.useState<ResourcesType>(() => {
-    const saved = localStorage.getItem('zerops-calculator-resources');
-    return saved ? JSON.parse(saved) : {
-      cpu: 1,
-      cpuType: 'shared',
-      ram: 0.25,
-      disk: 0.5,
-      storage: 0,
-      ipv4_addr: 0,
-      backup: 0,
-      buildTime: 0,
-      egress: 0,
-      core: 'lightweight',
-    };
-  });
-
+  // Load saved data when component mounts
   React.useEffect(() => {
-    localStorage.setItem('zerops-calculator-services', JSON.stringify(services));
+    try {
+      const savedServices = localStorage.getItem('zerops-calculator-services');
+      const savedResources = localStorage.getItem('zerops-calculator-resources');
+      
+      if (savedServices) {
+        setServices(JSON.parse(savedServices));
+      }
+      
+      if (savedResources) {
+        setResources(JSON.parse(savedResources));
+      }
+    } catch (error) {
+      console.warn('Failed to load saved calculator data:', error);
+    }
+  }, []);
+
+  // Save data when it changes
+  React.useEffect(() => {
+    try {
+      localStorage.setItem('zerops-calculator-services', JSON.stringify(services));
+    } catch (error) {
+      console.warn('Failed to save services data:', error);
+    }
   }, [services]);
 
   React.useEffect(() => {
-    localStorage.setItem('zerops-calculator-resources', JSON.stringify(resources));
+    try {
+      localStorage.setItem('zerops-calculator-resources', JSON.stringify(resources));
+    } catch (error) {
+      console.warn('Failed to save resources data:', error);
+    }
   }, [resources]);
 
   const clearAll = () => {
@@ -435,30 +455,6 @@ function PricingCalculatorContent() {
             </div>
           </div>
         </div>
-
-        <a 
-          href="#project-plans" 
-          className="comparison-button"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-            <line x1="8" y1="21" x2="16" y2="21"></line>
-            <line x1="12" y1="17" x2="12" y2="21"></line>
-          </svg>
-          Show full package comparison & limits
-        </a>
-
-        <button 
-          className="comparison-button mt-2 !text-gray-700 dark:!text-gray-300 w-[100px]"
-          onClick={clearAll}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M3 6h18"></path>
-            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-          </svg>
-          Clear All
-        </button>
       </div>
 
       <button className="add-service w-full mb-4" onClick={addService}>
@@ -629,6 +625,18 @@ function PricingCalculatorContent() {
         </div>
       ))}
 
+        <button 
+          className="comparison-button !text-gray-700 dark:!text-gray-300 w-[100px]"
+          onClick={clearAll}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 6h18"></path>
+            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+          </svg>
+          Clear All
+        </button>
+
       <div className="feature-section">
         <div className="section-title">Additional Features</div>
         
@@ -793,10 +801,10 @@ function PricingCalculatorContent() {
       </div>
 
       <button 
-        className="export-button w-full"
+        className="export-button w-full flex items-center justify-center gap-2"
         onClick={exportToPDF}
       >
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
           <polyline points="7 10 12 15 17 10"/>
           <line x1="12" y1="15" x2="12" y2="3"/>
