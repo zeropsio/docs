@@ -1,0 +1,321 @@
+---
+title: Static Service
+desc: A comprehensive guide to Zerops' Static service, covering configuration, routing, and deployment options for serving static content through Nginx.
+---
+
+import DeployButton from '@site/src/components/DeployButton';
+import CustomCard from '@site/src/components/CustomCard';
+
+The Static service provides a streamlined way to serve static content through a pre-configured Nginx setup. It's designed to be simple to use while maintaining the flexibility needed for modern web applications.
+
+<CustomCard title="Experience the simplicity of Zerops">
+  Deploy an Analog app with static hosting in seconds. All you need is a Zerops account.
+
+  <DeployButton link="analog" badgeWidth="200" />
+</CustomCard>
+
+## Quick Start
+
+Add a Static service to your project by including this in your `zerops.yml`:
+
+```yaml title="zerops.yml"
+zerops:
+  - setup: app
+    run:
+      os: alpine
+      base: static
+```
+
+The Static service comes with sensible defaults that work out of the box for most SPAs and static websites. By default, without any `routing` configuration, the service will:
+1. Try to serve the exact path (`$uri`)
+2. Try with .html extension (`$uri.html`)
+3. Look for an index.html in the directory (`$uri/index.html`)
+4. Fall back to `/index.html`
+5. Return 404 if none of the above exist
+
+:::note Zero Configuration for SPAs
+This means for basic SPA deployments or static file hosting, you don't need to specify any redirects at all!
+:::
+
+## Routing Configuration
+
+The Static service allows you to configure URL routing and redirects through a simple YAML configuration, abstracting away the complexity of Nginx configuration.
+
+### Basic Structure
+
+Configure routing in the `run.routing` section of your `zerops.yml`:
+
+```yaml title="zerops.yml"
+run:
+  routing:
+    redirects:
+      - from: /*
+        to: /index.html
+        status: 302
+```
+
+### Redirect Types
+
+#### Relative Redirects
+
+Use relative redirects to route paths within your application. When both `from` and `to` are relative paths, you can omit the `status` code to create a masked redirect that shows the content of the target page while preserving the original URL:
+
+```yaml title="zerops.yml"
+routing:
+  redirects:
+    # Masked redirect - URL stays the same but shows content from index.html
+    - from: /*
+      to: /index.html
+
+    # Standard redirect with status code
+    - from: /old-page
+      to: /new-page
+      status: 301
+
+    # Preserve the path when redirecting between directories
+    - from: /blog/*
+      to: /articles/
+      preservePath: true
+      status: 302
+
+    # Preserve both path and query parameters
+    - from: /posts/*
+      to: /blog/
+      preservePath: true
+      preserveQuery: true
+      status: 302
+```
+
+:::caution Important
+When using `preservePath` with wildcards, ensure the `to` path ends with a `/` to maintain proper path concatenation. For example, `/blog/*` to `/new-blog/` will correctly redirect `/blog/hello.html` to `/new-blog/hello.html`, while `/new-blog` would result in `/new-bloghello.html`.
+:::
+
+#### Absolute Redirects
+
+For redirecting between domains or to external URLs, use absolute redirects by including `http://` or `https://`. When using absolute URLs in either `from` or `to`, you must specify a `status` code:
+
+```yaml title="zerops.yml"
+routing:
+  redirects:
+    # Redirect an old domain to a new one
+    - from: https://old-domain.com/*
+      to: https://new-domain.com
+      status: 301
+      preserveQuery: true  # Optional: maintain query parameters
+
+    # Redirect with path preservation
+    - from: https://old-site.com/*
+      to: https://new-site.com/
+      status: 301
+      preservePath: true
+```
+
+### Advanced Routing Features
+
+#### Wildcard Matching
+
+Use `*` as a wildcard in your paths:
+- **At the end of a path**: Matches any subsequent content
+- **At the start of a domain** (after `https://`): Enables regex matching for subdomains
+
+Example of complex domain management:
+
+```yaml title="zerops.yml"
+run:
+  routing:
+    redirects:
+      # Redirect a specific domain to an article
+      - from: https://promo-domain.com/*
+        to: https://main-site.com/special-offer
+        status: 302
+
+      # Redirect all subdomains to main site
+      - from: https://*.old-domain.com/*
+        to: https://main-site.com
+        status: 302
+```
+
+#### Matching Priority
+
+When multiple redirects are configured, they follow Nginx's matching priority system:
+
+1. Exact matches are checked first
+2. Simple path matches (without wildcards) are checked next
+3. Pattern matches (with wildcards) are checked last, in the order they appear in your configuration
+
+For example:
+
+```yaml title="zerops.yml"
+routing:
+  redirects:
+    # Exact match for homepage - standard redirect
+    - from: /
+      to: /home
+      status: 302
+
+    # Simple path match - masked redirect
+    - from: /about
+      to: /about-us
+
+    # Pattern match with path preservation
+    - from: /blog/*
+      to: /articles/
+      preservePath: true
+      status: 302
+
+    # Catch-all pattern - masked redirect for SPA
+    - from: /*
+      to: /index.html
+```
+
+In this configuration:
+- `/` will redirect to `/home` with a 302 status
+- `/about` will show content from `/about-us` but keep the URL as `/about`
+- `/blog/post-123.html` will redirect to `/articles/post-123.html`
+- Any other path will show the content from `/index.html` while preserving the original URL (common for SPAs)
+
+## Prerender Integration
+
+The Static service includes built-in support for Prerender.io, making it easy to implement server-side rendering for search engines and social media crawlers.
+
+### Basic Prerender Setup
+
+1. Set the `PRERENDER_TOKEN` secret variable with your Prerender.io token
+2. The service automatically configures necessary rewrites based on user agents
+
+### Custom Prerender Host
+
+If you're using a custom Prerender host, add it to environment variables in `zerops.yml`:
+
+```yaml
+run:
+  envVariables:
+  - PRERENDER_HOST=your.prerender.host
+```
+
+:::note Default
+The default host is `service.prerender.io` if not specified.
+:::
+
+## Advanced Configuration
+
+### Switching to Full Nginx
+
+If you need more control over your Nginx configuration:
+
+1. Go to your Static service overview in the UI
+2. Click the three vertical dots in the left panel
+3. Select **Need to switch to full Nginx service?**
+4. Copy the generated Nginx configuration
+5. Use this configuration as a starting point for a full Nginx service
+
+:::tip
+This allows you to graduate to a more customizable setup while maintaining your existing routing logic.
+:::
+
+## Best Practices
+
+1. **SPA Configuration**
+   ```yaml title="zerops.yml"
+   routing:
+     redirects:
+       - from: /*
+         to: /index.html
+         status: 302
+   ```
+   Use this configuration for Single Page Applications to ensure all routes are handled by your application.
+
+2. **Domain Migration**
+   ```yaml title="zerops.yml"
+   routing:
+     redirects:
+       - from: https://old-domain.com/*
+         to: https://new-domain.com
+         status: 301
+   ```
+   Use permanent (301) redirects when permanently moving content to maintain SEO value.
+
+3. **Complex Redirects**
+   Order your redirects from most specific to most general to ensure proper routing:
+   ```yaml title="zerops.yml"
+   routing:
+     redirects:
+       - from: /specific-path/*
+         to: /specific-landing
+         status: 302
+       - from: /*
+         to: /index.html
+         status: 302
+   ```
+
+## Frontend Framework Integration
+
+The Static service seamlessly integrates with modern frontend frameworks. It can serve built static files from any framework while maintaining the option to add custom routing and Prerender.io integration if needed.
+
+### Example: Analog App Deployment
+
+Here's a simple configuration for deploying an [Analog application](https://github.com/zeropsio/recipe-analog-static):
+
+```yaml title="zerops.yml"
+zerops:
+  - setup: app
+    build:
+      base: nodejs@20
+      buildCommands:
+        - pnpm i
+        - pnpm build
+      deployFiles:
+        - dist/analog/public/~
+    run:
+      base: static
+```
+
+This configuration:
+1. Uses Node.js 20 for building the application
+2. Installs dependencies with pnpm
+3. Builds the application
+4. Deploys the resulting static files to the Static service
+
+You can enhance this basic setup by adding:
+- Custom redirects for URL management
+- Prerender.io integration for SEO
+- Additional routing rules as needed
+
+## Common Configurations
+
+### Multiple Domain Management
+```yaml title="zerops.yml"
+run:
+  routing:
+    redirects:
+      # Product-specific domain
+      - from: https://product-promo.com/*
+        to: https://main-site.com/products
+        status: 302
+
+      # Campaign domain
+      - from: https://special-offer.com/*
+        to: https://main-site.com/campaign
+        status: 302
+
+      # Legacy domains and subdomains
+      - from: https://*.legacy-domain.com/*
+        to: https://main-site.com
+        status: 302
+```
+
+### Development Setup
+```yaml title="zerops.yml"
+run:
+  routing:
+    redirects:
+      # API requests
+      - from: /api/*
+        to: https://api.your-domain.com
+        status: 302
+
+      # SPA fallback
+      - from: /*
+        to: /index.html
+        status: 302
+```

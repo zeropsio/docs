@@ -40,7 +40,7 @@ module.exports = {
         type: 'doc',
         id: 'features/infrastructure',
       },
-      label: 'Projects & services',
+      label: 'Projects, services & containers',
       customProps: {
         sidebar_icon: 'server-stack',
       },
@@ -264,6 +264,16 @@ module.exports = {
           },
           className: 'homepage-sidebar-item  service-sidebar-item',
         },
+        {
+          type: 'ref',
+          id: 'static/overview',
+          label: 'Static',
+          customProps: {
+            sidebar_icon: 'computer-desktop',
+          },
+          className: 'homepage-sidebar-item  service-sidebar-item',
+        },
+
       ],
     },
     {
@@ -1630,6 +1640,26 @@ module.exports = {
       customProps: {
         sidebar_is_title: true,
         sidebar_icon: 'chat-bubble-left-right',
+      },
+    },
+  ],
+  static: [
+    {
+      type: 'ref',
+      id: 'homepage',
+      label: 'Back to home',
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: 'back-arrow',
+      },
+    },
+    {
+      type: 'doc',
+      id: 'static/overview',
+      label: 'Static Service',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'computer-desktop',
       },
     },
   ],
