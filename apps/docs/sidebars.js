@@ -35,13 +35,26 @@ module.exports = {
       className: 'homepage-sidebar-item',
     },
     {
-      type: 'doc',
-      id: 'features/infrastructure',
+      type: 'category',
+      link: {
+        type: 'doc',
+        id: 'features/infrastructure',
+      },
       label: 'Projects & services',
       customProps: {
         sidebar_icon: 'server-stack',
       },
       className: 'homepage-sidebar-item',
+      items: [
+        {
+          type: 'doc',
+          id: 'features/container-vs-vm',
+          label: 'Containers vs VMs',
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        },
+      ],
     },
     {
       type: 'category',
@@ -137,7 +150,7 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'Runtimes, web servers & Linux containers',
+      label: 'Runtimes & Web Servers',
       collapsible: false,
       customProps: {
         sidebar_is_group_headline: true,
@@ -251,6 +264,16 @@ module.exports = {
           },
           className: 'homepage-sidebar-item  service-sidebar-item',
         },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Linux containers & VMs',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
 //        {
 //          type: 'ref',
 //          id: 'ubuntu/overview',
@@ -261,6 +284,25 @@ module.exports = {
 //          },
 //          className: 'homepage-sidebar-item  service-sidebar-item',
 //        },
+//        {
+//          type: 'ref',
+//          id: 'alpine/overview',
+//          label: 'Alpine',
+//          customProps: {
+//            sidebar_icon: 'alpine',
+//            sidebar_is_soon: true,
+//          },
+//          className: 'homepage-sidebar-item  service-sidebar-item',
+//        },
+            {
+              type: 'ref',
+              id: 'docker/overview',
+              label: 'Docker',
+              customProps: {
+                sidebar_icon: 'docker',
+              },
+              className: 'homepage-sidebar-item  service-sidebar-item',
+            },
       ],
     },
     {
@@ -1588,6 +1630,26 @@ module.exports = {
       customProps: {
         sidebar_is_title: true,
         sidebar_icon: 'chat-bubble-left-right',
+      },
+    },
+  ],
+  docker: [
+    {
+      type: 'ref',
+      id: 'homepage',
+      label: 'Back to home',
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: 'back-arrow',
+      },
+    },
+    {
+      type: 'doc',
+      id: 'docker/overview',
+      label: 'Docker Service',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'docker',
       },
     },
   ],
