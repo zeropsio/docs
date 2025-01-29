@@ -2,7 +2,7 @@ import React from 'react';
 
 const ComparisonSection = ({ title, items, type }) => (
   <div className="flex-1">
-    <h4 className={`flex items-center gap-1 mb-1 ${type === 'pros' ? 'text-[#2F7B6E]' : 'text-[#925A61]'}`}>
+    <h4 className={`flex items-center gap-1 mb-1 ${type === 'pros' ? 'text-[#3FA997]' : 'text-[#D6828C]'}`}>
       {title}
     </h4>
     <ul className="list-none p-0 m-0 flex flex-col gap-0.5">
