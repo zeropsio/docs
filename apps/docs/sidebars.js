@@ -738,15 +738,15 @@ module.exports = {
         },
       ],
     },
-    {
-      type: 'doc',
-      id: 'nodejs/faq',
-      label: 'FAQ',
-      customProps: {
-        sidebar_is_title: true,
-        sidebar_icon: 'chat-bubble-left-right',
-      },
-    },
+    // {
+    //   type: 'doc',
+    //   id: 'nodejs/faq',
+    //   label: 'FAQ',
+    //   customProps: {
+    //     sidebar_is_title: true,
+    //     sidebar_icon: 'chat-bubble-left-right',
+    //   },
+    // },
   ],
   php: [
     {
@@ -857,15 +857,15 @@ module.exports = {
         },
       ],
     },
-    {
-      type: 'doc',
-      id: 'php/faq',
-      label: 'FAQ',
-      customProps: {
-        sidebar_is_title: true,
-        sidebar_icon: 'chat-bubble-left-right',
-      },
-    },
+    // {
+    //   type: 'doc',
+    //   id: 'php/faq',
+    //   label: 'FAQ',
+    //   customProps: {
+    //     sidebar_is_title: true,
+    //     sidebar_icon: 'chat-bubble-left-right',
+    //   },
+    // },
   ],
   python: [
     {
@@ -971,15 +971,15 @@ module.exports = {
         },
       ],
     },
-    {
-      type: 'doc',
-      id: 'python/faq',
-      label: 'FAQ',
-      customProps: {
-        sidebar_is_title: true,
-        sidebar_icon: 'chat-bubble-left-right',
-      },
-    },
+    // {
+    //   type: 'doc',
+    //   id: 'python/faq',
+    //   label: 'FAQ',
+    //   customProps: {
+    //     sidebar_is_title: true,
+    //     sidebar_icon: 'chat-bubble-left-right',
+    //   },
+    // },
   ],
   go: [
     {
@@ -1085,15 +1085,15 @@ module.exports = {
         },
       ],
     },
-    {
-      type: 'doc',
-      id: 'go/faq',
-      label: 'FAQ',
-      customProps: {
-        sidebar_is_title: true,
-        sidebar_icon: 'chat-bubble-left-right',
-      },
-    },
+    // {
+    //   type: 'doc',
+    //   id: 'go/faq',
+    //   label: 'FAQ',
+    //   customProps: {
+    //     sidebar_is_title: true,
+    //     sidebar_icon: 'chat-bubble-left-right',
+    //   },
+    // },
   ],
   rust: [
     {
@@ -1199,15 +1199,15 @@ module.exports = {
         },
       ],
     },
-    {
-      type: 'doc',
-      id: 'rust/faq',
-      label: 'FAQ',
-      customProps: {
-        sidebar_is_title: true,
-        sidebar_icon: 'chat-bubble-left-right',
-      },
-    },
+    // {
+    //   type: 'doc',
+    //   id: 'rust/faq',
+    //   label: 'FAQ',
+    //   customProps: {
+    //     sidebar_is_title: true,
+    //     sidebar_icon: 'chat-bubble-left-right',
+    //   },
+    // },
   ],
   dotnet: [
     {
@@ -1313,15 +1313,15 @@ module.exports = {
         },
       ],
     },
-    {
-      type: 'doc',
-      id: 'dotnet/faq',
-      label: 'FAQ',
-      customProps: {
-        sidebar_is_title: true,
-        sidebar_icon: 'chat-bubble-left-right',
-      },
-    },
+    // {
+    //   type: 'doc',
+    //   id: 'dotnet/faq',
+    //   label: 'FAQ',
+    //   customProps: {
+    //     sidebar_is_title: true,
+    //     sidebar_icon: 'chat-bubble-left-right',
+    //   },
+    // },
   ],
   java: [
     {
@@ -1427,15 +1427,15 @@ module.exports = {
         },
       ],
     },
-    {
-      type: 'doc',
-      id: 'java/faq',
-      label: 'FAQ',
-      customProps: {
-        sidebar_is_title: true,
-        sidebar_icon: 'chat-bubble-left-right',
-      },
-    },
+    // {
+    //   type: 'doc',
+    //   id: 'java/faq',
+    //   label: 'FAQ',
+    //   customProps: {
+    //     sidebar_is_title: true,
+    //     sidebar_icon: 'chat-bubble-left-right',
+    //   },
+    // },
   ],
   nginx: [
     {
@@ -1671,15 +1671,15 @@ module.exports = {
         },
       ],
     },
-    {
-      type: 'doc',
-      id: 'mariadb/faq',
-      label: 'FAQ',
-      customProps: {
-        sidebar_is_title: true,
-        sidebar_icon: 'chat-bubble-left-right',
-      },
-    },
+    // {
+    //   type: 'doc',
+    //   id: 'mariadb/faq',
+    //   label: 'FAQ',
+    //   customProps: {
+    //     sidebar_is_title: true,
+    //     sidebar_icon: 'chat-bubble-left-right',
+    //   },
+    // },
   ],
   postgresql: [
     {
@@ -1879,15 +1879,15 @@ module.exports = {
         },
       ],
     },
-    {
-      type: 'doc',
-      id: 'keydb/faq',
-      label: 'FAQ',
-      customProps: {
-        sidebar_is_title: true,
-        sidebar_icon: 'chat-bubble-left-right',
-      },
-    },
+    // {
+    //   type: 'doc',
+    //   id: 'keydb/faq',
+    //   label: 'FAQ',
+    //   customProps: {
+    //     sidebar_is_title: true,
+    //     sidebar_icon: 'chat-bubble-left-right',
+    //   },
+    // },
   ],
   //  rabbitmq: [
   //    {
@@ -2171,15 +2171,15 @@ module.exports = {
         },
       ],
     },
-    {
-      type: 'doc',
-      id: 'deno/faq',
-      label: 'FAQ',
-      customProps: {
-        sidebar_is_title: true,
-        sidebar_icon: 'chat-bubble-left-right',
-      },
-    },
+    // {
+    //   type: 'doc',
+    //   id: 'deno/faq',
+    //   label: 'FAQ',
+    //   customProps: {
+    //     sidebar_is_title: true,
+    //     sidebar_icon: 'chat-bubble-left-right',
+    //   },
+    // },
   ],
   bun: [
     {
@@ -2285,15 +2285,15 @@ module.exports = {
         },
       ],
     },
-    {
-      type: 'doc',
-      id: 'bun/faq',
-      label: 'FAQ',
-      customProps: {
-        sidebar_is_title: true,
-        sidebar_icon: 'chat-bubble-left-right',
-      },
-    },
+    // {
+    //   type: 'doc',
+    //   id: 'bun/faq',
+    //   label: 'FAQ',
+    //   customProps: {
+    //     sidebar_is_title: true,
+    //     sidebar_icon: 'chat-bubble-left-right',
+    //   },
+    // },
   ],
   gleam: [
     {
@@ -2399,15 +2399,15 @@ module.exports = {
         },
       ],
     },
-    {
-      type: 'doc',
-      id: 'gleam/faq',
-      label: 'FAQ',
-      customProps: {
-        sidebar_is_title: true,
-        sidebar_icon: 'chat-bubble-left-right',
-      },
-    },
+    // {
+    //   type: 'doc',
+    //   id: 'gleam/faq',
+    //   label: 'FAQ',
+    //   customProps: {
+    //     sidebar_is_title: true,
+    //     sidebar_icon: 'chat-bubble-left-right',
+    //   },
+    // },
   ],
   elixir: [
     {
@@ -2513,15 +2513,15 @@ module.exports = {
         },
       ],
     },
-    {
-      type: 'doc',
-      id: 'elixir/faq',
-      label: 'FAQ',
-      customProps: {
-        sidebar_is_title: true,
-        sidebar_icon: 'chat-bubble-left-right',
-      },
-    },
+    // {
+    //   type: 'doc',
+    //   id: 'elixir/faq',
+    //   label: 'FAQ',
+    //   customProps: {
+    //     sidebar_is_title: true,
+    //     sidebar_icon: 'chat-bubble-left-right',
+    //   },
+    // },
   ],
   laravel: [
     {
