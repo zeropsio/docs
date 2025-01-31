@@ -12,9 +12,9 @@ const Badge: React.FC<BadgeProps> = ({
   className = '',
 }) => {
   const colorClasses = {
-    blue: 'bg-blue-200 text-blue-900 dark:bg-blue-800 dark:text-blue-50',
+    blue: 'bg-blue-200 text-blue-900 dark:bg-blue-900 dark:text-blue-50',
     green: 'bg-green-200 text-green-900 dark:bg-green-800 dark:text-green-50',
-    yellow: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-50',
+    yellow: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-600 dark:text-yellow-50',
     red: 'bg-red-200 text-red-900 dark:bg-red-800 dark:text-red-50',
     purple: 'bg-purple-200 text-purple-900 dark:bg-purple-800 dark:text-purple-50',
     gray: 'bg-gray-200 text-gray-900 dark:bg-gray-800 dark:text-gray-50',
