@@ -82,7 +82,7 @@ function PricingCalculatorContent() {
       cpu: 1,
       cpuType: 'shared',
       ram: 0.25,
-      disk: 0.5,
+      disk: 1,
       storage: 0,
       ipv4_addr: 0,
       backup: 0,
@@ -134,7 +134,7 @@ function PricingCalculatorContent() {
         if (service.id === serviceId) {
           const minValue = field === 'nodes' ? 1 : 
                           field === 'ram' ? 0.25 : 
-                          field === 'disk' ? 0.5 : 1;
+                          field === 'disk' ? 1 : 1;
           const step = field === 'ram' ? 0.25 : 
                       field === 'disk' ? 0.5 : 1;
           const newValue = Math.max(minValue, service[field] as number + amount * step);
@@ -173,7 +173,7 @@ function PricingCalculatorContent() {
       cpu: 1,
       cpuType: 'shared',
       ram: 0.25,
-      disk: 0.5,
+      disk: 1,
     };
     setServices([...services, newService]);
   };
@@ -216,7 +216,7 @@ function PricingCalculatorContent() {
         if (service.id === serviceId) {
           const minValue = field === 'nodes' ? 1 : 
                           field === 'ram' ? 0.25 : 
-                          field === 'disk' ? 0.5 : 1;
+                          field === 'disk' ? 1 : 1;
           
           const formattedValue = field === 'ram' || field === 'disk' 
             ? Math.max(minValue, Math.round(numValue * 4) / 4)
@@ -597,7 +597,7 @@ function PricingCalculatorContent() {
                 <button 
                   className="calculator-button"
                   onClick={() => handleServiceAdjust(service.id, 'disk', -1)}
-                  disabled={service.disk <= 0.5}
+                  disabled={service.disk <= 1}
                 >
                   -
                 </button>
@@ -606,7 +606,7 @@ function PricingCalculatorContent() {
                   className="number-input" 
                   value={service.disk}
                   onChange={(e) => handleServiceInputChange(service.id, 'disk', e.target.value)}
-                  min={0.5}
+                  min={1}
                   step={0.5}
                 />
                 <button 
