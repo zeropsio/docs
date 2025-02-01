@@ -7,6 +7,7 @@ type ImageProps = {
   darkImage?: string;
   alt: string;
   caption?: string;
+  invertColors?: boolean;
   [key: string]: any;
 };
 
@@ -15,22 +16,28 @@ const Image: React.FC<ImageProps> = ({
   darkImage,
   alt,
   caption,
+  invertColors = false,
   ...props
 }) => {
   const { colorMode } = useColorMode();
 
-  const imageUrl = colorMode === 'dark' ? darkImage : lightImage;
+  const imageUrl =
+    colorMode === 'dark' && darkImage
+      ? darkImage
+      : lightImage;
+
+  const applyFilters = colorMode === 'dark' && !darkImage && invertColors;
 
   return (
-    <div className="py-0.5 text-center text-sm flex flex-col ">
+    <div className="py-0.5 text-center text-sm flex flex-col">
       <img
-        className="mx-auto"
+        className={`mx-auto rounded-sm ${applyFilters ? 'filter invert grayscale' : ''}`}
         loading="lazy"
         src={useBaseUrl(imageUrl)}
         alt={alt}
         {...props}
       />
-      <span className="pt-0.5 opacity-65">{caption}</span>
+      {caption && <span className="pt-0.5 opacity-65">{caption}</span>}
     </div>
   );
 };
