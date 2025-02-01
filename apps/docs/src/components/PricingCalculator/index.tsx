@@ -32,7 +32,7 @@ function PricingCalculatorContent() {
     cpu: 1,
     cpuType: 'shared',
     ram: 0.25,
-    disk: 0.5,
+    disk: 1,
     storage: 0,
     ipv4_addr: 0,
     backup: 0,
