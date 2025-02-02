@@ -76,6 +76,14 @@ module.exports = {
             exclude_from_doc_list: false,
           },
         },
+        {
+          type: 'doc',
+          id: 'references/debug-mode',
+          label: 'Debug Mode',
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        },
       ],
     },
     {
