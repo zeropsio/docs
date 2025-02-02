@@ -40,7 +40,7 @@ module.exports = {
         type: 'doc',
         id: 'features/infrastructure',
       },
-      label: 'Projects, services & containers',
+      label: 'Projects, Services & Containers',
       customProps: {
         sidebar_icon: 'server-stack',
       },
@@ -62,7 +62,7 @@ module.exports = {
         type: 'doc',
         id: 'features/pipeline',
       },
-      label: 'Prepare, build, deploy pipeline',
+      label: 'Prepare, Build, Deploy Pipeline',
       customProps: {
         sidebar_icon: 'circle-stack',
       },
@@ -71,7 +71,7 @@ module.exports = {
         {
           type: 'doc',
           id: 'features/build-cache',
-          label: 'Build cache',
+          label: 'Build Cache',
           customProps: {
             exclude_from_doc_list: false,
           },
@@ -89,7 +89,7 @@ module.exports = {
     {
       type: 'doc',
       id: 'features/scaling-ha',
-      label: 'Automatic scaling & High Availability',
+      label: 'Automatic Scaling & High Availability',
       customProps: {
         sidebar_icon: 'adjustments',
       },
@@ -98,7 +98,7 @@ module.exports = {
     {
       type: 'doc',
       id: 'features/access',
-      label: 'Custom domains & IP access',
+      label: 'Custom Domains & IP Access',
       customProps: {
         sidebar_icon: 'globe-europe',
       },
@@ -286,7 +286,7 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'Linux containers & VMs',
+      label: 'Linux Containers & VMs',
       collapsible: false,
       customProps: {
         sidebar_is_group_headline: true,
@@ -325,7 +325,7 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'Databases, search engines & message brokers',
+      label: 'Databases, Search Engines & Message Brokers',
       collapsible: false,
       customProps: {
         sidebar_is_group_headline: true,
@@ -471,7 +471,7 @@ module.exports = {
     {
       type: 'doc',
       id: 'zerops-yml/base-list',
-      label: 'Base list',
+      label: 'Base List',
       customProps: {
         sidebar_icon: 'swatch',
       },
@@ -509,7 +509,7 @@ module.exports = {
         {
           type: 'doc',
           id: 'references/cli/commands',
-          label: 'Available commands',
+          label: 'Available Commands',
           customProps: {
             exclude_from_doc_list: false,
           },
@@ -517,7 +517,7 @@ module.exports = {
         {
           type: 'doc',
           id: 'references/cli/access-logs',
-          label: 'Access logs',
+          label: 'Access Logs',
           customProps: {
             exclude_from_doc_list: false,
           },
@@ -566,7 +566,7 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'Import file',
+      label: 'Import File',
       link: {
         type: 'doc',
         id: 'references/import',
@@ -587,7 +587,7 @@ module.exports = {
         {
           type: 'doc',
           id: 'references/importyml/type-list',
-          label: 'Service types',
+          label: 'Service Types',
           customProps: {
             exclude_from_doc_list: false,
           },
