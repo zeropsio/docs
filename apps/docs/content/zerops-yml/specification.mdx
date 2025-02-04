@@ -54,7 +54,7 @@ Each service configuration requires `build` and `run` sections. An optional `dep
 
 ## Build Configuration
 
-### base <Badge text="Required" color="red" />
+### base <Badge type="required" />
 
 Sets the base technology for the build environment. [See available options](/zerops-yml/base-list).
 
@@ -73,7 +73,7 @@ build:
     - zsc add python@3.9
 ```
 
-### os <Badge text="Optional" color="blue" />
+### os <Badge type="optional" />
 
 Sets the operating system for the build environment. Options:
 
@@ -90,7 +90,7 @@ build:
   os: ubuntu
 ```
 
-### prepareCommands <Badge text="Optional" color="blue" />
+### prepareCommands <Badge type="optional" />
 
 Customizes the build environment by installing additional dependencies or tools.
 
@@ -101,7 +101,7 @@ build:
     - apt-get install -y some-package
 ```
 
-### buildCommands <Badge text="Required" color="red" />
+### buildCommands <Badge type="required" />
 
 Defines the commands to build your application.
 
@@ -121,7 +121,7 @@ buildCommands:
     npm run build
 ```
 
-### deployFiles <Badge text="Required" color="red" />
+### deployFiles <Badge type="required" />
 
 Specifies which files or folders to deploy after a successful build.
 
@@ -182,7 +182,7 @@ This example above ignores `file.txt` in ANY directory named `src`, such as:
 `.deployignore` file also works with <a href="/references/cli/commands#deploy">`zcli service deploy`</a> command.
 :::
 
-### cache <Badge text="Optional" color="blue" />
+### cache <Badge type="optional" />
 
 Defines which files or folders to cache for subsequent builds.
 
@@ -193,7 +193,7 @@ build:
 
 For more information, see our detailed [guide on build cache](/features/build-cache), complete with extensive examples.
 
-### envVariables <Badge text="Optional" color="blue" />
+### envVariables <Badge type="optional" />
 
 Sets environment variables for the build environment.
 
@@ -212,7 +212,7 @@ The `yamlPreprocessor` option in your project & service import YAML allows you t
 
 ## Runtime Configuration
 
-### base <Badge text="Optional" color="blue" />
+### base <Badge type="optional" />
 
 Sets the base technology for the runtime environment. If not specified, the current version is maintained.
 
@@ -221,11 +221,11 @@ run:
   base: nodejs@latest
 ```
 
-### os <Badge text="Optional" color="blue" />
+### os <Badge type="optional" />
 
 Sets the operating system for the runtime environment. Options and versions are the same as for the build environment.
 
-### ports <Badge text="Optional" color="blue" />
+### ports <Badge type="optional" />
 
 Specifies the internal ports on which your application will listen.
 
@@ -233,19 +233,36 @@ Specifies the internal ports on which your application will listen.
 run:
   ports:
     - port: 8080
-      protocol: TCP
-      httpSupport: true
+      protocol: TCP # Optional
+      httpSupport: true # Optional
+    - port: 8081
+      ...
 ```
 
-### prepareCommands <Badge text="Optional" color="blue" />
+Available parameters:
+
+#### port <Badge type="required" />
+Defines the port number on which your application listens. Must be between *10* and *65435*, as ports outside this range are reserved for internal Zerops systems.
+
+#### protocol <Badge type="optional" />
+Specifies the network protocol to use:
+- Allowed values: `TCP` *(default)* or `UDP`
+#### httpSupport <Badge type="optional" />
+Indicates whether the port is running a web server:
+- Default value: `true`
+- Set to `false` if a web server isn't running on the port
+- Only available with TCP protocol
+- Used by Zerops for [public access](/features/access) configuration
+
+### prepareCommands <Badge type="optional" />
 
 Customizes the runtime environment by installing additional dependencies or tools.
 
-### addToRunPrepare <Badge text="Optional" color="blue" />
+### addToRunPrepare <Badge type="optional" />
 
 Defines files or folders to be copied from the build container to the prepare runtime container.
 
-### initCommands <Badge text="Optional" color="blue" />
+### initCommands <Badge type="optional" />
 
 Defines commands to run each time a new runtime container starts or restarts.
 
@@ -255,7 +272,7 @@ run:
     - rm -rf ./cache
 ```
 
-### start <Badge text="Required for some runtimes" color="yellow" />
+### start <Badge type="required-some"/>
 
 Defines the start command for your application.
 
@@ -264,7 +281,7 @@ run:
   start: npm start
 ```
 
-### startCommands <Badge text="Optional" color="blue" />
+### startCommands <Badge type="optional" />
 
 Defines start commands 
 
@@ -287,15 +304,15 @@ run:
 
 See [start-commands-example](https://github.com/zeropsio/start-commands-example)
 
-### documentRoot <Badge text="Optional" color="blue" />
+### documentRoot <Badge type="optional" />
 
 Customizes the root folder for publicly accessible web server content (available only for webserver runtimes).
 
-### siteConfigPath <Badge text="Optional" color="blue" />
+### siteConfigPath <Badge type="optional" />
 
 Sets the custom webserver configuration (available only for webserver runtimes).
 
-### envVariables <Badge text="Optional" color="blue" />
+### envVariables <Badge text="Optional" color="#202e57" />
 
 Defines environment variables for the runtime environment.
 
@@ -309,7 +326,7 @@ Defines environment variables for the runtime environment.
         DB_PASS: ${db_password}
 ```
 
-### healthCheck <Badge text="Optional" color="blue" />
+### healthCheck <Badge type="optional" />
 
 Defines a health check for your application.
 
@@ -321,7 +338,7 @@ run:
       path: /status
 ```
 
-### crontab <Badge text="Optional" color="blue" />
+### crontab <Badge type="optional" />
 
   Defines scheduled commands to run as cron jobs within a service.
 
@@ -336,7 +353,7 @@ Setup cron jobs. See [examples](/references/cron).
 
 ## Deploy Configuration
 
-### readinessCheck <Badge text="Optional" color="blue" />
+### readinessCheck <Badge type="optional" />
 
 Defines a readiness check for your application. (See [readiness checks](/features/pipeline#readiness-checks))
 
