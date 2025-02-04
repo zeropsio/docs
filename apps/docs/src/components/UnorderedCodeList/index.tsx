@@ -5,22 +5,49 @@ interface Props {
   data: (string | string[])[];
 }
 
+// Helper function to split text into code and comment parts
+const splitCodeAndComment = (text: string): { code: string; comment: string | null } => {
+  const match = text.match(/^(.+?)(\s*\([^)]+\))$/);
+  if (match) {
+    return {
+      code: match[1].trim(),
+      comment: match[2].trim()
+    };
+  }
+  return {
+    code: text,
+    comment: null
+  };
+};
+
 export default function UnorderedCodeList({ data }: Props): JSX.Element {
   return (
     <ul>
       {data.map((token, index) => (
         <li key={index}>
           {Array.isArray(token) ? (
-            // If token is an array, render each item in a separate <code> block
-            token.map((item, subIndex) => (
-              <React.Fragment key={subIndex}>
-                <InlineCode>{item}</InlineCode>
-                {subIndex < token.length - 1 && ', '}
-              </React.Fragment>
-            ))
+            // If token is an array, handle each item separately
+            token.map((item, subIndex) => {
+              const { code, comment } = splitCodeAndComment(item);
+              return (
+                <React.Fragment key={subIndex}>
+                  <InlineCode>{code}</InlineCode>
+                  {comment && <span className="text-gray-400 ml-0.5">{comment}</span>}
+                  {subIndex < token.length - 1 && ', '}
+                </React.Fragment>
+              );
+            })
           ) : (
-            // If token is a string, render it in a single <code> block
-            <InlineCode>{token}</InlineCode>
+            // If token is a string, handle single item
+            (() => {
+              const { code, comment } = splitCodeAndComment(token);
+              return (
+                <>
+                  <InlineCode>{code}</InlineCode>
+                  {comment && <span className="text-gray-400 ml-1">{comment}</span>}
+                </>
+              );
+            })()
           )}
         </li>
       ))}
