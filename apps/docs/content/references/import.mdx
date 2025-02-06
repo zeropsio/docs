@@ -1,56 +1,21 @@
 ---
-title: Project Import YAML Configuration
-description: Learn how to define and import a project using a YAML configuration file
+title: Import & Export YAML Configuration
+description: Learn how to define, import and export projects and services using YAML configuration files
 ---
 
 import { Dropdown, DropdownItem } from '/src/components/Dropdown';
 import { Tooltip } from 'docs-ui';
 
-The Zerops YAML import scripts provide an intuitive way to manage your projects. You can create and instantiate entire Zerops projects or specific services
-with a single click in the Zerops GUI.
+The Zerops YAML configuration provides powerful capabilities for both importing and exporting your projects and services. This documentation covers both aspects to help you effectively manage your infrastructure configurations.
 
-You can also use the `zcli project project-import` (or `zcli project service-import` when importing services only) command. This configuration is a simple way to migrate or replicate your projects or services.
+## Import
 
-:::info
-This is a general guideline; not all keys are valid for every service type. For technology-specific details, refer to the **Create service** page in the **How To** section of the Zerops documentation.
-:::
+Create or replicate services in Zerops using YAML definitions. You can do this in two ways:
 
----
+- **Using the GUI**: Import entire projects or specific services with a simple point-and-click interface
+- **Using the [CLI](/references/cli)**: Run `zcli project project-import` for projects or `zcli project service-import` for individual services
 
-:::info Laravel project's import yaml example with <Tooltip text="The yamlPreprocessor option in your project & service import YAML allows you to generate random secret values, passwords, and public/private key pairs for your secret environment variables."><a href="/references/importyml/pre-processor">yamlPreprocessor</a></Tooltip>
-<br/>
-```yml
-#yamlPreprocessor=on
-project:
-  name: recipe-laravel-minimal
-  tags:
-    - zerops-recipe
-
-services:
-  - hostname: app
-    type: php-nginx@8.4
-    buildFromGit: https://github.com/zeropsio/recipe-laravel-minimal
-    enableSubdomainAccess: true
-    envSecrets:
-      APP_KEY: <@generateRandomString(<32>)>
-      APP_DEBUG: true
-      APP_ENV: development
-
-  - hostname: db
-    type: postgresql@16
-    mode: NON_HA
-    priority: 10
-
-  - hostname: adminer
-    type: php-apache@8.3
-    buildFromGit: https://github.com/zeropsio/recipe-adminer@main
-    enableSubdomainAccess: true
-```
-:::
-
-:::note
-- `REQUIRED.` If a parent object is defined, the key-value pair is required to be filled. All other key-value pairs are optional.
-:::
+Both methods provide an easy way to migrate or replicate your infrastructure according to your needs.
 
 <Dropdown>
 <DropdownItem title="Comprehensive example of an import YAML configuration">
@@ -156,11 +121,21 @@ services:
 </DropdownItem>
 </Dropdown>
 
-## Project Configuration
+:::warning
+This is a general guideline; not all keys are valid for every service type. For technology-specific details, refer to the **Create service** page in the **How To** section of the Zerops documentation.
+:::
+
+---
+
+:::note
+- `REQUIRED.` If a parent object is defined, the key-value pair is required to be filled. All other key-value pairs are optional.
+:::
+
+### Project Configuration
 
 The project configuration is used to define the project you want to import.
 
-### Usage
+#### Usage
 
 <Dropdown>
   <DropdownItem title="Project Structure">
@@ -225,11 +200,11 @@ This will create a project with the name `project0` and the description `This pr
 
 The `project` object requires only the `name` parameter - both `description` and `tags` are optional.
 
-## Service Configuration
+### Service Configuration
 
 The service configuration is used to define the services, environment variables, and other settings you want to import into the project(You require at least one service and you need to have a project to import into or define the project in the yaml).
 
-### Usage
+#### Usage
 
 <Dropdown>
   <DropdownItem title="Service Structure">
@@ -373,11 +348,11 @@ The `services` object allows you to define one or more services in the same yaml
 The `yamlPreprocessor` option in your project & service import YAML is required to generate random secret values, passwords, and public/private key pairs. For more information, see the [yamlPreprocessor](/references/importyml/pre-processor) page.
 :::
 
-## Vertical Autoscaling Configuration
+### Vertical Autoscaling Configuration
 
 The vertical autoscaling configuration is used to define the vertical autoscaling settings for the service.
 
-### Usage
+#### Usage
 
 <Dropdown>
   <DropdownItem title="Vertical Autoscaling Structure">
@@ -504,11 +479,11 @@ This yaml will create a service with the hostname `app` with `php-nginx@8.4` run
 
 The `VerticalAutoscaling` map allows you to define the vertical autoscaling settings for the service with parameters like `minVCpu`, `maxVCpu`, `cpuMode`, `minRam`, `maxRam`, `minDisk`, `maxDisk`, `startCpuCoreCount`, `minFreeCpuCores`, `minFreeCpuPercent`, `minFreeRamGB`, `minFreeRamPercent`.
 
-## Horizontal Autoscaling Configuration
+### Horizontal Autoscaling Configuration
 
 The horizontal autoscaling configuration is used to define the horizontal autoscaling settings for the service.
 
-### Usage
+#### Usage
 
 <Dropdown>
   <DropdownItem title="Horizontal Autoscaling Structure">
@@ -550,12 +525,11 @@ services:
 
 The `minContainers` and `maxContainers` parameters allow you to define the minimum and maximum number of containers(It automatically scales the service between the minimum and maximum number of containers) for the service.
 
-## Mount Shared Storage
+### Mount Shared Storage
 
 The mount shared storage configuration is used to define the shared storage to mount to the service.
 
-### Usage
-
+#### Usage
 
 <table className="w-full my-1.5">
   <thead>
@@ -587,11 +561,11 @@ services:
 The `mount: |-` parameter allows you to mount a shared storage(should be created inside the project) to the service.
 
 
-## Using Nginx Configuration
+### Using Nginx Configuration
 
 The nginx configuration is used to define the nginx settings for the service.
 
-### Usage
+#### Usage
 
 <table className="w-full my-1.5 whitespace-nowrap">
   <thead>
@@ -638,11 +612,11 @@ services:
 
 The `nginxConfig: |-` parameter allows you to use a custom nginx configuration for the service.
 
-## Using zerops.yml Configuration
+### Using zerops.yml Configuration
 
 This shows you how you can use the `zeropsSetup` parameter as a way to insert a full [zerops.yml configuration file](/zerops-yml/specification) into your service using import yaml.
 
-### Usage
+#### Usage
 
 <table className="w-full my-1.5">
   <thead>
@@ -688,3 +662,29 @@ services:
 
 The `zeropsSetup: |-` parameter allows you to use a custom [zerops.yml](/zerops-yml/specification) configuration for the service.
 
+## Export
+
+Zerops provides the ability to export your existing projects and services as YAML configurations through the GUI. This feature is particularly useful for:
+- Creating backups of your project configurations
+- Replicating project or service setups across different environments
+- Sharing project templates with team members
+- Creating version-controlled infrastructure configurations
+
+The exported YAML follows the same structure as the import YAML configuration detailed above. It will contain all the configuration parameters you've set for your project and services.
+
+### How to Export
+
+#### Exporting a Single Service
+Navigate to your service dashboard in the Zerops GUI, click the three-dot menu (⋮), and choose **Export service as yaml**.
+
+#### Exporting an Entire Project
+In the Zerops GUI, click the three-dot menu (⋮) in the project dashboard and select **Export project as yaml**.
+
+### Using Exported Configurations
+
+The exported YAML files are compatible with both:
+- The Zerops GUI import functionality
+- The `zcli project project-import` command
+- The `zcli project service-import` command (for single service exports)
+
+This allows you to easily move configurations between environments or create new instances of your infrastructure.

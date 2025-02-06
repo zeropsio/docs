@@ -575,7 +575,7 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'Import File',
+      label: 'Import & Export File',
       link: {
         type: 'doc',
         id: 'references/import',
