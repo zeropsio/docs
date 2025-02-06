@@ -376,6 +376,15 @@ module.exports = {
           },
           className: "homepage-sidebar-item  service-sidebar-item",
         },
+        {
+          type: "ref",
+          id: "meilisearch/overview",
+          label: "Meilisearch",
+          customProps: {
+            sidebar_icon: "meilisearch",
+          },
+          className: "homepage-sidebar-item  service-sidebar-item",
+        },
 //        {
 //          type: "ref",
 //          id: "meilisearch/overview",
@@ -2015,6 +2024,26 @@ module.exports = {
       customProps: {
         sidebar_is_title: true,
         sidebar_icon: 'typesense',
+      },
+    },
+  ],
+  meilisearch: [
+    {
+      type: 'ref',
+      id: 'homepage',
+      label: 'Back to home',
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: 'back-arrow',
+      },
+    },
+    {
+      type: 'doc',
+      id: 'meilisearch/overview',
+      label: 'Zerops Meilisearch Service',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'meilisearch',
       },
     },
   ],

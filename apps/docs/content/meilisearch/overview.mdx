@@ -1,0 +1,178 @@
+---
+title: Meilisearch
+desc: Production-ready Meilisearch on Zerops platform with managed infrastructure and automatic security configuration. Deploy and run search with zero operational overhead.
+---
+
+import UnorderedList from '@site/src/components/UnorderedList';
+import UnorderedCodeList from '@site/src/components/UnorderedCodeList';
+import data from '@site/static/data.json';
+
+Deploy and manage Meilisearch on a fully managed infrastructure. Get instant access to fast, typo-tolerant search with zero operational overhead.
+
+## Supported Versions
+
+Currently supported Meilisearch versions:
+<UnorderedList data={data.meilisearch.readable}/>
+
+Import configuration version:
+<UnorderedCodeList data={data.meilisearch.import}/>
+
+## Service Configuration
+
+Our Meilisearch implementation runs as a **single-node** setup, as Meilisearch does not currently support cluster configurations.
+
+### Environment Modes
+
+:::note
+Environment mode affects the availability of certain features and can impact your application's security. Choose carefully based on your use case.
+:::
+
+#### Production Mode (Default)
+- Optimized for performance and security
+- Search Preview (Mini-dashboard) disabled
+- Recommended for production deployments
+
+#### Development Mode
+- Includes Search Preview (Mini-dashboard)
+- Enhanced debugging capabilities
+- Suitable for development and testing
+
+To switch between modes:
+1. Navigate to the **Environment variables** section in the Meilisearch service detail and scroll to the **Generated Variables**
+2. Set the `environment` variable to either:
+   - `production` - for production mode (default)
+   - `development` - for development mode with Mini-dashboard
+3. Restart the service to apply changes
+
+### API Key Management
+
+The service provides three pre-configured API keys, each with specific access levels:
+
+#### `masterKey`
+- Root access to your Meilisearch instance
+- Use only for initial setup and key management
+- **Never expose in application code or frontend**
+
+#### `defaultSearchKey`
+- Read-only search operations across all indices
+- Safe for frontend implementations
+- **Can be exposed in client-side code**
+
+#### `defaultAdminKey`
+- Full administrative access to all indices
+- For backend operations and index management
+- **Keep secure in backend services only**
+
+[Custom API keys](https://www.meilisearch.com/docs/reference/api/keys) provide fine-grained access control for specific use cases. For example, you might create:
+- Search-only keys for specific indices
+- Temporary keys with expiration dates
+- Keys with restricted actions for third-party integrations
+
+## Network Architecture & Access
+
+### Access Methods
+
+#### Public HTTPS Access
+When enabled, access via [Zerops subdomain](/features/access#public-access-through-zeropsapp-subdomain).
+
+#### Internal Project Access
+Services within the same project can reach Meilisearch directly:
+```
+http://{hostname}:7700
+```
+
+## Quick Start Example
+
+Here's a minimal example of implementing search in a React application:
+
+```javascript
+import { useState } from 'react';
+
+const MEILISEARCH_URL = process.env.zeropsSubdomain;
+const SEARCH_KEY = process.env.defaultSearchKey;
+
+function SearchComponent() {
+  const [results, setResults] = useState([]);
+
+  const handleSearch = async (query) => {
+    const response = await fetch(`${MEILISEARCH_URL}/indexes/products/search`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${SEARCH_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        q: query,
+        limit: 10
+      })
+    });
+
+    const data = await response.json();
+    setResults(data.hits);
+  };
+
+  return (
+    <div>
+      <input
+        type="search"
+        onChange={(e) => handleSearch(e.target.value)}
+        placeholder="Search products..."
+      />
+      <ul>
+        {results.map(hit => (
+          <li key={hit.id}>{hit.name}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+## Best Practices
+
+#### Security
+- Store sensitive keys (`masterKey`, `defaultAdminKey`) securely in backend services
+- Use `defaultSearchKey` or custom keys with minimal permissions for frontend
+- Rotate custom keys periodically
+
+#### Performance
+- Implement debouncing for search inputs
+- Cache frequently accessed search results
+- Monitor response times and adjust index settings
+- Use appropriate batch sizes for bulk operations
+
+#### Error Handling
+- Implement retry logic for temporary failures
+- Set appropriate timeout values for your use case
+- Handle rate limiting gracefully
+
+## Troubleshooting
+
+### Common Issues
+
+#### Connection Problems
+- Check if your instance is in the correct environment mode
+- Ensure your API keys have the necessary permissions
+- Confirm your service is running and healthy in the Zerops dashboard
+
+#### Search Performance
+- Review your index settings for optimal search performance
+- Monitor your instance's resource usage
+- Consider implementing client-side caching for frequent searches
+
+#### API Key Issues
+- Verify you're using the correct key type for your operation (search vs. admin)
+- Check key permissions match your intended operations
+- Ensure keys are properly formatted in your Authorization header
+- Remember that master and admin keys should never be used in frontend code
+
+## Learn More
+
+- [Official Meilisearch Documentation](https://www.meilisearch.com/docs) - Comprehensive guide to all Meilisearch features and capabilities
+- [API Reference](https://www.meilisearch.com/docs/reference/api/overview) - Detailed API specifications and usage examples
+
+## Support
+
+For advanced configurations or custom requirements:
+- Join our [Discord community](https://discord.gg/zerops)
+- Contact support via [email](mailto:support@zerops.io)
