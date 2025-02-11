@@ -96,13 +96,26 @@ module.exports = {
       className: 'homepage-sidebar-item',
     },
     {
-      type: 'doc',
-      id: 'features/access',
+      type: 'category',
+      link: {
+        type: 'doc',
+        id: 'features/access',
+      },
       label: 'Custom Domains & IP Access',
       customProps: {
         sidebar_icon: 'globe-europe',
       },
       className: 'homepage-sidebar-item',
+      items: [
+        {
+          type: 'doc',
+          id: 'features/dns',
+          label: 'DNS & Proxy Setup',
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        },
+      ],
     },
     {
       type: 'doc',
