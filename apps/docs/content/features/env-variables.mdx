@@ -36,7 +36,7 @@ These variables are defined with `envVariables` attribute in the `build` or `run
       DB_PASS: password
 ```
 
-See how to [reference variables](#referencing-variables) between services and deployment phases.
+See how to [reference variables](#referencing-variables) between services and between build and runtime environments.
 
 :::note
 Your application must be redeployed when updating environmental variables in `zerops.yml`.
@@ -166,15 +166,23 @@ setup: app
       dbConnection: ${dbtest_connectionString}
 ```
 
-#### Between Build and Runtime
-Prefix variables with `RUNTIME_` or `BUILD_`:
-```yml
+#### Between Build and Runtime Environments
+
+Build and runtime are two distinct environments in Zerops. Each environment can have its own set of variables, and you can use the same variable names in both environments since they are separate. Due to this separation, variables defined in one are not automatically accessible in the other.
+
+To share variables between environments, you need to use specific prefixes:
+- Use `RUNTIME_` prefix to access runtime variables during build
+- Use `BUILD_` prefix to access build variables during runtime
+
+Here's an example of `zerops.yml` file showing how to reference a runtime variable during build:
+
+```yml title="zerops.yml"
 build:
   envVariables:
-    variable: ${RUNTIME_someVariable}
+    API_KEY: ${RUNTIME_API_KEY}  # Using runtime variable during build
 run:
   envVariables:
-    someVariable: hello world
+    API_KEY: "12345-abcde"      # Referenced in build with RUNTIME_ prefix
 ```
 
 #### Project Variables
