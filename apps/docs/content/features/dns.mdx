@@ -1,0 +1,176 @@
+---
+title: DNS and Proxy Configuration Guide
+desc: A comprehensive guide for configuring DNS records and proxy settings with Zerops applications, including shared and dedicated IPv4 setups, security measures, and troubleshooting tips.
+---
+
+This guide will show you how to configure DNS records and proxy settings to work with your Zerops applications, with specific implementation details for Cloudflare.
+
+## DNS Configuration
+
+DNS records for Zerops services can be configured in two main ways:
+* **With Proxy**: Routes traffic through proxy services, providing additional security and performance features
+* **Without Proxy (DNS Only)**: Direct connection to your Zerops service's IP address
+
+DNS allows you to set two records based on IP address type:
+* **A** record for **IPv4** - Zerops offers either a free **shared** IPv4 or a paid **dedicated** IPv4
+* **AAAA** record for **IPv6** - Zerops provides a free **dedicated** IPv6
+
+### With Proxy
+
+#### IPv6 only
+```bash
+Type    Name      Content                Proxy status   TTL
+AAAA    <name>    <your-project-ipv6>    Proxied        Auto
+```
+
+:::note
+Make sure your proxy service supports IPv4 to IPv6 translation for this configuration to work for **both IPv4 and IPv6** users.
+
+Do not add a proxied A record with shared IPv4 - doing so would prevent the proxy from properly routing IPv4 traffic to your service.
+:::
+
+#### Dedicated IPv4
+```bash
+Type    Name      Content                Proxy status   TTL
+A       <name>    <your-dedicated-ipv4>  Proxied        Auto
+# Optional
+AAAA    <name>    <your-project-ipv6>    Proxied        Auto
+```
+
+:::tip
+Adding also AAAA record can be beneficial as visitors with IPv6 support will connect directly via IPv6.
+:::
+
+#### Shared IPv4 *(valid but NOT recommended)*
+```bash
+Type    Name      Content                Proxy status  TTL
+AAAA    <name>    <your-project-ipv6>    DNS only      Auto
+A       <name>    <zerops-shared-ipv4>   Proxied       Auto
+```
+
+:::tip Why not?
+It does not make sense to expose your IPv6 address while proxying the shared IPv4. Use [IPv6 only](#ipv6-only) setup instead.
+:::
+
+### Without Proxy
+
+#### Shared IPv4
+```bash
+Type    Name      Content                Proxy status   TTL
+AAAA    <name>    <your-project-ipv6>    DNS only       Auto
+A       <name>    <zerops-shared-ipv4>   DNS only       Auto
+```
+
+:::note Both A + AAAA Required
+Adding AAAA record is essential for shared IPv4 configuration as it serves as a [security measure](#understand-shared-ipv4) to prevent unauthorized domain claims.
+:::
+
+#### Dedicated IPv4
+```bash
+Type    Name      Content                Proxy status   TTL
+A       <name>    <your-dedicated-ipv4>  DNS only       Auto
+# Optional
+AAAA    <name>    <your-project-ipv6>    DNS only       Auto
+```
+
+:::tip
+Adding also AAAA record can be beneficial as visitors with IPv6 support will connect directly via IPv6.
+:::
+
+#### IPv6 only
+```bash
+Type    Name      Content                Proxy status   TTL
+AAAA    <name>    <your-project-ipv6>    DNS only       Auto
+```
+
+:::note
+This configuration will only work for users with IPv6 connectivity, which may limit your service accessibility.
+:::
+
+### Understanding Shared IPv4 Addresses {#understand-shared-ipv4}
+
+Shared IPv4 allows multiple Zerops projects to use the same IPv4 address while maintaining separate routing for each project. Here's how it works:
+
+1. When a visitor makes a request, it first arrives at the shared IPv4 address
+2. The system looks at the domain name in the request (using SNI - Server Name Indication)
+3. For security, it checks if this domain properly resolves to your project's IPv6 address
+4. Only if IPv6 address matches your project will the traffic be routed correctly
+
+This is why configuring both A (IPv4) and AAAA (IPv6) records is crucial when using shared IPv4 addresses - the IPv6 record acts as a security key that helps prevent unauthorized use of the shared IPv4 address.
+
+### Best Practices
+
+#### Security
+- Enable proxy protection for DDoS mitigation when available
+- Review firewall rules regularly
+
+#### Performance
+- Enable Auto Minify and Brotli Compression
+- Configure appropriate cache rules
+- Monitor analytics and metrics
+- Review bandwidth usage patterns
+
+## General Troubleshooting Guide
+
+### Common Issues
+
+1. **DNS Resolution Issues**
+   - Confirm correct record configuration
+   - Verify proxy status settings
+   - Check IPv6 address accuracy
+   - Allow time for DNS propagation (typically 5-10 minutes)
+   - Verify DNS resolver settings
+
+2. **Connection Problems**
+   - Test both IPv4 and IPv6 connectivity
+   - Verify firewall rules
+   - Check proxy server status if applicable
+   - Confirm port configurations
+
+### Validation Steps
+
+Test your configuration:
+```bash
+# Check DNS resolution
+dig AAAA yourdomain.com
+
+# Verify connectivity
+curl -vI https://yourdomain.com
+
+# Test IPv4 access
+curl -4 -v https://yourdomain.com
+
+# Test IPv6 access
+curl -6 -v https://yourdomain.com
+```
+
+## Cloudflare Configuration
+
+### SSL/TLS Mode
+Set encryption mode to `Full (strict)` or `Full`
+   - Ensures end-to-end encryption
+   - *Full* mode requires any SSL certificate (even if self-signed/expired), while *Full (strict)* requires a valid certificate
+
+### Certificate Management
+1. Enable Edge Certificates to allow Cloudflare to manage SSL/TLS certificates
+2. During initial setup, handle HTTPS settings in one of two ways:
+   - **Option A (Simple but Limited)**:
+     - Disable `Always Use HTTPS`
+     - *This approach will interfere with automatic certificate renewal*
+   - **Option B (Recommended for Production)**:
+     - Keep `Always Use HTTPS` enabled
+     - Create and enable a Configuration Rule, which disables Automatic HTTPS Rewrites for this specific path:
+       ```
+       Field: URI Path
+       Operator: starts with
+       Value: /.well-known/acme-challenge/
+       ```
+       This rule disables Automatic HTTPS Rewrites for the certificate validation path.
+
+### Cloudflare Troubleshooting
+
+#### SSL Certificate Problems
+   - Verify `Always Use HTTPS` is disabled
+   - If you encounter **too many redirects** or similar SSL errors:
+       - Double-check that SSL/TLS encryption mode is set to *Full* or *Full (strict)*, not *Flexible*
+       - SSL mode might show incorrectly for newly added domains, try refreshing the page if settings appear incorrect
