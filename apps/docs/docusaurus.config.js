@@ -1,21 +1,21 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 import "dotenv/config"
-import { themes as prismThemes } from "prism-react-renderer"
+import { themes } from "prism-react-renderer"
 const reverseSidebar = require("./src/utils/reverse-sidebar")
 const excludeSidebarResults = require("./src/utils/exclude-sidebar-results")
 
-/** @type {import('@medusajs/docs').MedusaDocusaurusConfig} */
+/** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: "Zerops",
-  tagline: "Explore and learn how to use Zerops",
-  url: process.env.URL || "http://localhost:3000",
+  title: "Zerops Documentation",
+  tagline: "Developer-First Cloud Platform",
+  url: "https://docs.zerops.io",
   baseUrl: "/",
   trailingSlash: false,
-  onBrokenLinks: "ignore",
-  onBrokenMarkdownLinks: "throw",
-  favicon: "favicon.ico",
-  organizationName: "zerops",
-  projectName: "zerops/docs",
+  onBrokenLinks: "throw",
+  onBrokenMarkdownLinks: "warn",
+  favicon: "img/favicon.ico",
+  organizationName: "zeropsio",
+  projectName: "docs",
   plugins: [
     require.resolve("docusaurus-plugin-image-zoom"),
     async function tailwindPlugin() {
@@ -79,7 +79,16 @@ const config = {
         },
       },
     },
-    image: "img/docs-meta.jpg",
+    image: {
+      url: ({ frontMatter }) => {
+        if (frontMatter.image) {
+          return frontMatter.image;
+        }
+        const pagePath = frontMatter.slug || '';
+        const fileName = pagePath.split('/').pop() || 'default';
+        return `/img/og/${fileName}.png`;
+      },
+    },
     colorMode: {
       defaultMode: "light",
       disableSwitch: false,
@@ -114,9 +123,9 @@ const config = {
       ],
       plugins: ["line-numbers", "show-language"],
       theme: {
-        ...prismThemes.vsDark,
+        ...themes.vsDark,
         plain: {
-          ...prismThemes.vsDark.plain,
+          ...themes.vsDark.plain,
           backgroundColor: "#111827",
         },
       },
@@ -195,6 +204,12 @@ const config = {
       },
       roundCorners: 16,
     },
+    metadata: [
+      { name: 'twitter:card', content: 'summary_large_image' },
+      { name: 'twitter:site', content: '@zeropsio' },
+      { name: 'og:type', content: 'website' },
+      { name: 'og:site_name', content: 'Zerops Documentation' },
+    ],
   },
   presets: [
     [
