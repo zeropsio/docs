@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import glob from 'glob';
 import { ImageResponse } from '@vercel/og';
-import { createFolderIfNotExists } from './utils';
+import OpenGraphImage from '../src/components/OpenGraph';
 
 interface Frontmatter {
   title: string;
@@ -10,6 +10,8 @@ interface Frontmatter {
   og?: {
     title?: string;
     description?: string;
+    layout?: 'default' | 'dashboard' | 'code' | 'terminal';
+    background?: string;
   };
 }
 
@@ -17,119 +19,17 @@ async function generateOGImage(
   title: string,
   description: string,
   type: 'feature' | 'guide' | 'reference',
-  outputPath: string
+  outputPath: string,
+  layout?: 'default' | 'dashboard' | 'code' | 'terminal',
+  background?: string
 ) {
-  const imageResponse = new ImageResponse(
-    (
-      <div
-        style={{
-          height: '100%',
-          width: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          backgroundColor: '#0F172A',
-          padding: '48px',
-        }}
-      >
-        {/* Logo and Type Badge */}
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
-          <img
-            src={path.join(process.cwd(), 'static/img/logo.svg')}
-            alt="Zerops"
-            width={180}
-            height={48}
-          />
-          <div
-            style={{
-              backgroundColor: '#1E293B',
-              padding: '8px 16px',
-              borderRadius: '8px',
-              color: '#94A3B8',
-              fontSize: '16px',
-              textTransform: 'uppercase',
-            }}
-          >
-            {type}
-          </div>
-        </div>
-
-        {/* Content */}
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            flex: 1,
-            gap: '24px',
-          }}
-        >
-          <h1
-            style={{
-              fontSize: '48px',
-              color: '#F8FAFC',
-              lineHeight: 1.2,
-              margin: 0,
-              fontFamily: 'Inter',
-              fontWeight: 700,
-            }}
-          >
-            {title}
-          </h1>
-          <p
-            style={{
-              fontSize: '24px',
-              color: '#94A3B8',
-              lineHeight: 1.5,
-              margin: 0,
-              fontFamily: 'Inter',
-              fontWeight: 400,
-            }}
-          >
-            {description}
-          </p>
-        </div>
-
-        {/* Footer */}
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            color: '#64748B',
-            fontSize: '16px',
-            fontFamily: 'Inter',
-          }}
-        >
-          <span>docs.zerops.io</span>
-          <span>Developer-First Cloud Platform</span>
-        </div>
-      </div>
-    ),
-    {
-      width: 1200,
-      height: 630,
-      fonts: [
-        {
-          name: 'Inter',
-          data: fs.readFileSync(path.join(process.cwd(), 'static/fonts/Inter-Bold.ttf')),
-          weight: 700,
-          style: 'normal',
-        },
-        {
-          name: 'Inter',
-          data: fs.readFileSync(path.join(process.cwd(), 'static/fonts/Inter-Regular.ttf')),
-          weight: 400,
-          style: 'normal',
-        },
-      ],
-    }
-  );
+  const imageResponse = await OpenGraphImage({
+    title,
+    description,
+    type,
+    layout,
+    background
+  });
 
   const buffer = await imageResponse.arrayBuffer();
   await fs.promises.writeFile(outputPath, Buffer.from(buffer));
@@ -171,6 +71,19 @@ async function extractFrontmatter(content: string): Promise<Frontmatter | null> 
   }
 }
 
+function determineLayout(filePath: string): 'default' | 'dashboard' | 'code' | 'terminal' {
+  if (filePath.includes('/features/')) {
+    return 'dashboard';
+  }
+  if (filePath.includes('/references/')) {
+    return 'code';
+  }
+  if (filePath.includes('/how-to/')) {
+    return 'terminal';
+  }
+  return 'default';
+}
+
 async function generateOGImages() {
   console.log('Starting OG image generation...');
   
@@ -210,12 +123,15 @@ async function generateOGImages() {
       const outputFileName = path.basename(file, '.mdx') + '.png';
       const outputPath = path.join(outputDir, outputFileName);
       const contentType = await getContentType(file);
+      const layout = frontmatter.og?.layout || determineLayout(file);
 
       await generateOGImage(
         frontmatter.og?.title || frontmatter.title,
         frontmatter.og?.description || frontmatter.description,
         contentType,
-        outputPath
+        outputPath,
+        layout,
+        frontmatter.og?.background
       );
       
       console.log(`✅ Generated OG image for ${file}`);
@@ -231,5 +147,15 @@ async function generateOGImages() {
   console.log(`❌ Failed: ${errorCount}`);
   console.log(`Total files processed: ${files.length}`);
 }
+
+const createFolderIfNotExists = async (folderPath: string) => {
+  try {
+    await fs.promises.mkdir(folderPath, { recursive: true });
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'EEXIST') {
+      throw error;
+    }
+  }
+};
 
 generateOGImages().catch(console.error); 
