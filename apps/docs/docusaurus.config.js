@@ -85,8 +85,8 @@ const config = {
           return frontMatter.image;
         }
         const pagePath = frontMatter.slug || '';
-        const fileName = pagePath.split('/').pop() || 'default';
-        return `/img/og/${fileName}.png`;
+        const uniqueFileName = pagePath.replace(/\//g, '-');
+        return `/img/og/${uniqueFileName}.png`;
       },
     },
     colorMode: {

@@ -87,8 +87,13 @@ async function generateOGImages() {
         continue;
       }
 
-      const outputFileName = path.basename(file, '.mdx') + '.png';
-      const outputPath = path.join(outputDir, outputFileName);
+      // Get the directory path and filename
+      const dirPath = path.dirname(file);
+      const fileName = path.basename(file, '.mdx');
+      
+      // Create a unique filename by combining directory path and filename
+      const uniqueFileName = dirPath === '.' ? fileName : dirPath.replace(/\//g, '-') + '-' + fileName;
+      const outputPath = path.join(outputDir, uniqueFileName + '.png');
 
       await generateOGImage(
         frontmatter.title,
