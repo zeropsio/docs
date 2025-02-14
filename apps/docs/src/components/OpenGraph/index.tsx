@@ -1,42 +1,15 @@
-import React from 'react';
-import { ImageResponse } from '@vercel/og';
+import React from 'react'
+import { ImageResponse } from '@vercel/og'
 
 interface OpenGraphImageProps {
-  title: string;
-  description: string;
-  type?: 'feature' | 'guide' | 'reference';
-  layout?: 'default' | 'dashboard' | 'code' | 'terminal';
-  background?: string;
+  title: string
+  description?: string
 }
-
-const LAYOUTS = {
-  default: {
-    background: '#0F172A',
-    overlay: 'linear-gradient(90deg, rgba(15, 23, 42, 0.9) 0%, rgba(15, 23, 42, 0.85) 100%)',
-  },
-  dashboard: {
-    background: 'url(https://docs.zerops.io/img/og-backgrounds/dashboard.png)',
-    overlay: 'linear-gradient(90deg, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.8) 100%)',
-  },
-  code: {
-    background: 'url(https://docs.zerops.io/img/og-backgrounds/code.png)',
-    overlay: 'linear-gradient(90deg, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.85) 100%)',
-  },
-  terminal: {
-    background: 'url(https://docs.zerops.io/img/og-backgrounds/terminal.png)',
-    overlay: 'linear-gradient(90deg, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.8) 100%)',
-  },
-};
 
 export default async function OpenGraphImage({
   title,
   description,
-  type = 'feature',
-  layout = 'default',
-  background,
 }: OpenGraphImageProps) {
-  const selectedLayout = LAYOUTS[layout];
-  
   return new ImageResponse(
     (
       <div
@@ -45,125 +18,107 @@ export default async function OpenGraphImage({
           width: '100%',
           display: 'flex',
           flexDirection: 'column',
-          backgroundImage: background || selectedLayout.background,
-          padding: '48px',
-          position: 'relative',
+          alignItems: 'flex-start',
+          justifyContent: 'center',
+          padding: 80,
+          backgroundColor: '#030303',
+          backgroundImage:
+            'radial-gradient(circle at 25px 25px, #333 2%, transparent 0%), radial-gradient(circle at 75px 75px, #333 2%, transparent 0%)',
+          backgroundSize: '100px 100px',
+          backgroundPosition: '-30px -30px',
         }}
       >
-        {/* Background Overlay */}
         <div
           style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: selectedLayout.overlay,
-            zIndex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            marginBottom: 40,
           }}
-        />
-
-        {/* Content Container */}
-        <div style={{ position: 'relative', zIndex: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
-          {/* Logo and Type Badge */}
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
+        >
+          <svg
+            width="50"
+            height="50"
+            viewBox="0 0 50 50"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
           >
-            <img
-              src="https://docs.zerops.io/img/logo.svg"
-              alt="Zerops"
-              width={180}
-              height={48}
+            <path
+              d="M25 50C38.8071 50 50 38.8071 50 25C50 11.1929 38.8071 0 25 0C11.1929 0 0 11.1929 0 25C0 38.8071 11.1929 50 25 50Z"
+              fill="#00E6A7"
             />
-            <div
-              style={{
-                backgroundColor: '#1E293B',
-                padding: '8px 16px',
-                borderRadius: '8px',
-                color: '#94A3B8',
-                fontSize: '16px',
-                textTransform: 'uppercase',
-              }}
-            >
-              {type}
-            </div>
-          </div>
+            <path
+              d="M25 50C38.8071 50 50 38.8071 50 25C50 11.1929 38.8071 0 25 0C11.1929 0 0 11.1929 0 25C0 38.8071 11.1929 50 25 50Z"
+              fill="url(#paint0_linear_1_2)"
+            />
+            <defs>
+              <linearGradient
+                id="paint0_linear_1_2"
+                x1="25"
+                y1="0"
+                x2="25"
+                y2="50"
+                gradientUnits="userSpaceOnUse"
+              >
+                <stop stopColor="#00E6A7" />
+                <stop offset="1" stopColor="#00E6A7" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
 
-          {/* Content */}
-          <div
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'flex-start',
+          }}
+        >
+          <h1
             style={{
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              flex: 1,
-              gap: '24px',
+              fontSize: 60,
+              fontFamily: 'Inter',
+              fontWeight: 700,
+              color: '#fff',
+              margin: 0,
+              lineHeight: 1.2,
+              marginBottom: description ? 20 : 0,
             }}
           >
-            <h1
-              style={{
-                fontSize: '48px',
-                color: '#F8FAFC',
-                lineHeight: 1.2,
-                margin: 0,
-                textShadow: '0 2px 4px rgba(0,0,0,0.1)',
-              }}
-            >
-              {title}
-            </h1>
+            {title}
+          </h1>
+          {description && (
             <p
               style={{
-                fontSize: '24px',
-                color: '#94A3B8',
-                lineHeight: 1.5,
+                fontSize: 30,
+                fontFamily: 'Inter',
+                color: '#888',
                 margin: 0,
-                textShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                lineHeight: 1.4,
               }}
             >
               {description}
             </p>
-          </div>
+          )}
+        </div>
 
-          {/* Footer */}
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              color: '#64748B',
-              fontSize: '16px',
-            }}
-          >
-            <span>docs.zerops.io</span>
-            <span>Developer-First Cloud Platform</span>
-          </div>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            position: 'absolute',
+            bottom: 80,
+            color: '#888',
+            fontFamily: 'Inter',
+            fontSize: 24,
+          }}
+        >
+          docs.zerops.io
         </div>
       </div>
     ),
     {
       width: 1200,
       height: 630,
-      fonts: [
-        {
-          name: 'Inter',
-          data: await fetch(
-            'https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiA.woff2'
-          ).then((res) => res.arrayBuffer()),
-          weight: 400,
-          style: 'normal',
-        },
-        {
-          name: 'Inter',
-          data: await fetch(
-            'https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuFuYAZ9hiA.woff2'
-          ).then((res) => res.arrayBuffer()),
-          weight: 700,
-          style: 'normal',
-        },
-      ],
     }
-  );
+  )
 } 

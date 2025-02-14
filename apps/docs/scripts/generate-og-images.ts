@@ -1,44 +1,15 @@
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
-import glob from 'glob';
-import { ImageResponse } from '@vercel/og';
-import OpenGraphImage from '../src/components/OpenGraph';
+import { fileURLToPath } from 'url';
+import { glob } from 'glob';
+import OpenGraphImage from '../src/components/OpenGraph/index.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 interface Frontmatter {
   title: string;
-  description: string;
-  og?: {
-    title?: string;
-    description?: string;
-    layout?: 'default' | 'dashboard' | 'code' | 'terminal';
-    background?: string;
-  };
-}
-
-async function generateOGImage(
-  title: string,
-  description: string,
-  type: 'feature' | 'guide' | 'reference',
-  outputPath: string,
-  layout?: 'default' | 'dashboard' | 'code' | 'terminal',
-  background?: string
-) {
-  const imageResponse = await OpenGraphImage({
-    title,
-    description,
-    type,
-    layout,
-    background
-  });
-
-  const buffer = await imageResponse.arrayBuffer();
-  await fs.promises.writeFile(outputPath, Buffer.from(buffer));
-}
-
-async function getContentType(filePath: string): Promise<'feature' | 'guide' | 'reference'> {
-  if (filePath.includes('/features/')) return 'feature';
-  if (filePath.includes('/guides/')) return 'guide';
-  return 'reference';
+  description?: string;
 }
 
 async function extractFrontmatter(content: string): Promise<Frontmatter | null> {
@@ -52,14 +23,7 @@ async function extractFrontmatter(content: string): Promise<Frontmatter | null> 
       .reduce((acc: Record<string, any>, line) => {
         const [key, ...valueParts] = line.split(':');
         if (key && valueParts.length) {
-          const value = valueParts.join(':').trim();
-          if (key.includes('.')) {
-            const [parent, child] = key.split('.');
-            acc[parent] = acc[parent] || {};
-            acc[parent][child] = value;
-          } else {
-            acc[key.trim()] = value;
-          }
+          acc[key.trim()] = valueParts.join(':').trim();
         }
         return acc;
       }, {});
@@ -71,17 +35,18 @@ async function extractFrontmatter(content: string): Promise<Frontmatter | null> 
   }
 }
 
-function determineLayout(filePath: string): 'default' | 'dashboard' | 'code' | 'terminal' {
-  if (filePath.includes('/features/')) {
-    return 'dashboard';
-  }
-  if (filePath.includes('/references/')) {
-    return 'code';
-  }
-  if (filePath.includes('/how-to/')) {
-    return 'terminal';
-  }
-  return 'default';
+async function generateOGImage(
+  title: string,
+  description: string | undefined,
+  outputPath: string
+) {
+  const imageResponse = await OpenGraphImage({
+    title,
+    description,
+  });
+
+  const buffer = await imageResponse.arrayBuffer();
+  await fs.writeFile(outputPath, Buffer.from(buffer));
 }
 
 async function generateOGImages() {
@@ -89,14 +54,16 @@ async function generateOGImages() {
   
   const contentDir = path.join(process.cwd(), 'content');
   const outputDir = path.join(process.cwd(), 'static/img/og');
-  const fontsDir = path.join(process.cwd(), 'static/fonts');
   
-  // Ensure required directories exist
-  await createFolderIfNotExists(outputDir);
-  await createFolderIfNotExists(fontsDir);
+  // Ensure output directory exists
+  try {
+    await fs.mkdir(outputDir, { recursive: true });
+  } catch (error) {
+    // Ignore if directory already exists
+  }
 
   // Find all MDX files
-  const files = glob.sync('**/*.mdx', { cwd: contentDir });
+  const files = await glob('**/*.mdx', { cwd: contentDir });
   console.log(`Found ${files.length} MDX files`);
 
   let successCount = 0;
@@ -105,7 +72,7 @@ async function generateOGImages() {
   for (const file of files) {
     try {
       const filePath = path.join(contentDir, file);
-      const content = await fs.promises.readFile(filePath, 'utf-8');
+      const content = await fs.readFile(filePath, 'utf-8');
       const frontmatter = await extractFrontmatter(content);
 
       if (!frontmatter) {
@@ -114,24 +81,19 @@ async function generateOGImages() {
         continue;
       }
 
-      if (!frontmatter.title || !frontmatter.description) {
-        console.warn(`⚠️ Missing required frontmatter in ${file}`);
+      if (!frontmatter.title) {
+        console.warn(`⚠️ Missing title in ${file}`);
         errorCount++;
         continue;
       }
 
       const outputFileName = path.basename(file, '.mdx') + '.png';
       const outputPath = path.join(outputDir, outputFileName);
-      const contentType = await getContentType(file);
-      const layout = frontmatter.og?.layout || determineLayout(file);
 
       await generateOGImage(
-        frontmatter.og?.title || frontmatter.title,
-        frontmatter.og?.description || frontmatter.description,
-        contentType,
-        outputPath,
-        layout,
-        frontmatter.og?.background
+        frontmatter.title,
+        frontmatter.description,
+        outputPath
       );
       
       console.log(`✅ Generated OG image for ${file}`);
@@ -147,15 +109,5 @@ async function generateOGImages() {
   console.log(`❌ Failed: ${errorCount}`);
   console.log(`Total files processed: ${files.length}`);
 }
-
-const createFolderIfNotExists = async (folderPath: string) => {
-  try {
-    await fs.promises.mkdir(folderPath, { recursive: true });
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== 'EEXIST') {
-      throw error;
-    }
-  }
-};
 
 generateOGImages().catch(console.error); 
