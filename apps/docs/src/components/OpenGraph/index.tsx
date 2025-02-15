@@ -1,15 +1,16 @@
-import React from 'react'
-import { ImageResponse } from '@vercel/og'
+/// <reference types="react" />
 
 interface OpenGraphImageProps {
-  title: string
-  description?: string
+  title: string;
+  description?: string;
 }
 
-export default async function OpenGraphImage({
+const OpenGraphImage = async ({
   title,
   description,
-}: OpenGraphImageProps) {
+}: OpenGraphImageProps) => {
+  const { ImageResponse } = await import('@vercel/og');
+  
   return new ImageResponse(
     (
       <div
@@ -121,4 +122,8 @@ export default async function OpenGraphImage({
       height: 630,
     }
   )
-} 
+}
+
+module.exports = {
+  default: OpenGraphImage
+}; 

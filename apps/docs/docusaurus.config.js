@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
-import "dotenv/config"
-import { themes } from "prism-react-renderer"
+const path = require('path');
 const reverseSidebar = require("./src/utils/reverse-sidebar")
 const excludeSidebarResults = require("./src/utils/exclude-sidebar-results")
+
+require('dotenv').config();
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -53,6 +54,7 @@ const config = {
         },
       }
     },
+    './src/plugins/dynamic-og-plugin.js',
   ],
   themes: ["@docusaurus/theme-mermaid"],
   themeConfig: {
@@ -79,16 +81,24 @@ const config = {
         },
       },
     },
-    image: {
-      url: ({ frontMatter }) => {
-        if (frontMatter.image) {
-          return frontMatter.image;
-        }
-        const pagePath = frontMatter.slug || '';
-        const uniqueFileName = pagePath.replace(/\//g, '-');
-        return `/img/og/${uniqueFileName}.png`;
+    image: '/img/og/homepage.png',
+    headTags: [
+      {
+        tagName: 'meta',
+        attributes: {
+          property: 'og:image',
+          content: function(context) {
+            const {frontMatter, relativePath} = context;
+            if (frontMatter.image) {
+              return frontMatter.image;
+            }
+            const pagePath = relativePath?.replace(/\.mdx?$/, '') || 'homepage';
+            const uniqueFileName = pagePath.replace(/\//g, '-');
+            return `/img/og/${uniqueFileName}.png`;
+          },
+        },
       },
-    },
+    ],
     colorMode: {
       defaultMode: "light",
       disableSwitch: false,
@@ -122,13 +132,7 @@ const config = {
           "http",          // For API examples
       ],
       plugins: ["line-numbers", "show-language"],
-      theme: {
-        ...themes.vsDark,
-        plain: {
-          ...themes.vsDark.plain,
-          backgroundColor: "#111827",
-        },
-      },
+      theme: require('prism-react-renderer').themes.vsDark,
     },
     zoom: {
       selector: ".markdown :not(.no-zoom-img) > img:not(.no-zoom-img)",
@@ -210,6 +214,20 @@ const config = {
       { name: 'og:type', content: 'website' },
       { name: 'og:site_name', content: 'Zerops Documentation' },
     ],
+    openGraph: {
+      type: 'website',
+      images: [{
+        alt: 'Zerops Documentation',
+        url: ({ frontMatter, relativePath }) => {
+          if (frontMatter.image) {
+            return frontMatter.image;
+          }
+          const pagePath = relativePath?.replace(/\.mdx?$/, '') || 'homepage';
+          const uniqueFileName = pagePath.replace(/\//g, '-');
+          return `/img/og/${uniqueFileName}.png`;
+        },
+      }],
+    },
   },
   presets: [
     [
@@ -253,7 +271,16 @@ const config = {
       process.env.MEILISEARCH_HOST || "https://docs-search.zerops.io",
     meilisearchApiKey: process.env.MEILISEARCH_API_KEY || "foo",
     meilisearchIndexUid: process.env.MEILISEARCH_INDEX_UID || "docs",
+    getOgImageUrl: (context) => {
+      const {frontMatter, relativePath} = context;
+      if (frontMatter.image) {
+        return frontMatter.image;
+      }
+      const pagePath = relativePath?.replace(/\.mdx?$/, '') || 'homepage';
+      const uniqueFileName = pagePath.replace(/\//g, '-');
+      return `/img/og/${uniqueFileName}.png`;
+    },
   },
 }
 
-module.exports = config
+module.exports = config;

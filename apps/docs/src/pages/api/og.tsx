@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import OpenGraphImage from '@/components/OpenGraph';
+import OpenGraphImage from '../../components/OpenGraph';
 
 export const config = {
   runtime: 'edge',

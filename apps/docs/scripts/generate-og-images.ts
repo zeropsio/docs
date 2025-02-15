@@ -1,11 +1,7 @@
-import fs from 'fs/promises';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { glob } from 'glob';
-import OpenGraphImage from '../src/components/OpenGraph/index.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const fs = require('fs/promises');
+const path = require('path');
+const { glob } = require('glob');
+const OGImage = require('../src/components/OpenGraph/index.tsx').default;
 
 interface Frontmatter {
   title: string;
@@ -40,7 +36,7 @@ async function generateOGImage(
   description: string | undefined,
   outputPath: string
 ) {
-  const imageResponse = await OpenGraphImage({
+  const imageResponse = await OGImage({
     title,
     description,
   });
