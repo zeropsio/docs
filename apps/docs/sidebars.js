@@ -398,24 +398,15 @@ module.exports = {
           },
           className: "homepage-sidebar-item  service-sidebar-item",
         },
-//        {
-//          type: "ref",
-//          id: "meilisearch/overview",
-//          label: "Meilisearch",
-//          customProps: {
-//            sidebar_icon: "meilisearch",
-//          },
-//          className: "homepage-sidebar-item  service-sidebar-item",
-//        },
-//        {
-//          type: "ref",
-//          id: "qdrant/overview",
-//          label: "Qdrant",
-//          customProps: {
-//            sidebar_icon: "qdrant",
-//          },
-//          className: "homepage-sidebar-item  service-sidebar-item",
-//        },
+        {
+          type: "ref",
+          id: "qdrant/overview",
+          label: "Qdrant",
+          customProps: {
+            sidebar_icon: "qdrant",
+          },
+          className: "homepage-sidebar-item  service-sidebar-item",
+        },
 //        {
 //          type: "ref",
 //          id: "valkey/overview",
