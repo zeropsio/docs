@@ -2060,6 +2060,26 @@ module.exports = {
       },
     },
   ],
+  qdrant: [
+    {
+      type: 'ref',
+      id: 'homepage',
+      label: 'Back to home',
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: 'back-arrow',
+      },
+    },
+    {
+      type: 'doc',
+      id: 'qdrant/overview',
+      label: 'Zerops Qdrant Service',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'qdrant',
+      },
+    },
+  ],
   //  rabbitmq: [
   //    {
   //      type: "ref",
