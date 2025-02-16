@@ -1,0 +1,62 @@
+---
+title: Qdrant
+desc: Production-ready Qdrant vector database on Zerops platform with managed infrastructure, automatic cluster configuration, and built-in high availability.
+---
+
+import UnorderedList from '@site/src/components/UnorderedList';
+import UnorderedCodeList from '@site/src/components/UnorderedCodeList';
+import data from '@site/static/data.json';
+
+[Qdrant](https://qdrant.tech/) on Zerops provides a fully managed vector database solution designed for AI applications. Focus on building vector search features while we handle infrastructure maintenance, high availability, and data protection.
+
+## Supported Versions
+
+Currently supported Qdrant versions:
+<UnorderedList data={data.qdrant.readable}/>
+
+Import configuration version:
+<UnorderedCodeList data={data.qdrant.import}/>
+
+## Deployment Modes
+
+#### Non-HA Mode
+- Single node setup ideal for development and non-production projects
+- Simple deployment and management
+
+#### HA Cluster
+- Automatically configured with 3 nodes
+- Recommended for production environments
+- Built-in data replication across nodes
+- By default (`automaticClusterReplication=true`), automatically creates replicas of all shards across all three nodes
+  - Can be disabled by setting `automaticClusterReplication` to `false`
+- Automatic cluster recovery and node replacement in case of failures
+
+## Data Backup
+
+Backups are performed in `snapshot` format. For HA Cluster, backups are created on the primary container (leader) and saved to the local disk before being compressed and streamed to backup storage. The local file is then deleted.
+
+For general information about backup frequency and storage limits, see our [Backup documentation](/features/backup).
+
+## Network Architecture & Access
+
+Qdrant can be accessed only from services within the same project, public access is not available.
+
+### API Keys
+API key authentication is required for both HTTP and gRPC API calls. Include the key in your request headers. The keys can be found in generated environment variables of the service:
+
+- **API Key:** Full access API key for administrative operations (creating collections, indexing)
+- **Read-only API Key:** Restricted API key for search operations
+
+#### HTTP API
+- **Port:** `6333`
+- **Connection String:** `http://${hostname}:${port}`
+
+#### gRPC API
+- **Port:** `6334`
+- **gRPC Connection String:** `tcp://${hostname}:${grpcPort}`
+
+## Support
+
+For advanced configurations or custom requirements:
+- Join our [Discord community](https://discord.gg/zerops)
+- Contact support via [email](mailto:support@zerops.io)
