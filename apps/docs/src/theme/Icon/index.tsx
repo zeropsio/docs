@@ -41,6 +41,7 @@ import {
   ComputerDesktopSolid,
   CreditCardSolid,
   CubeSolid,
+  CurlyBraces,
   CurrencyDollar,
   CurrencyDollarSolid,
   Discord,
@@ -150,7 +151,7 @@ import IconCloudOk from './CloudOk';
 import IconGitlab from './Gitlab';
 import IconTypesense from './Typesense';
 import IconDocker from './Docker';
-
+import IconCurlyBraces from './CurlyBraces';
 
 export default {
   'academic-cap-solid': AcademicCapSolid,
@@ -306,4 +307,5 @@ export default {
   database: IconDatabase,
   cloudok: IconCloudOk,
   typesense: IconTypesense,
+  'curly-braces': IconCurlyBraces,
 };
