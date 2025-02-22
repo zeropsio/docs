@@ -100,7 +100,7 @@ function PricingCalculatorContent() {
     ipv4_addr: 3,
     backup: 0.1,
     buildTime: 0.033,
-    egress: 0.1,
+    egress: 0.02,
     core: resources.core === 'lightweight' ? 0.0 : 10.0,
   };
 
@@ -386,7 +386,7 @@ function PricingCalculatorContent() {
 
       if (resources.egress > 0) {
         addText('Egress Traffic:', margin, y, { color: colors.gray });
-        addText(`${resources.egress}GB ($0.10 per 1GB)`, pageWidth - margin - 80, y, { align: 'right', color: colors.darkText });
+        addText(`${resources.egress}GB ($0.02 per 1GB)`, pageWidth - margin - 80, y, { align: 'right', color: colors.darkText });
         y += lineHeight;
       }
       y += sectionSpacing - lineHeight;
@@ -763,7 +763,7 @@ function PricingCalculatorContent() {
         <div className="resource-row">
           <div className="resource-info">
             <span className="resource-name">Egress Traffic (GB)</span>
-            <span className="resource-price">$0.10 per 1GB</span>
+            <span className="resource-price">$0.02 per 1GB</span>
           </div>
           <div className="controls">
             <button
