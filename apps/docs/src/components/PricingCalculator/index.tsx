@@ -240,205 +240,264 @@ const exportToPDF = () => {
     };
   };
 
-  // Open print window
-  const printWindow = window.open('', '', 'width=800,height=600');
+  // Create new PDF document
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4'
+  });
 
-  printWindow.document.write(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>Zerops Cost Estimate</title>
-      <style>
-        body {
-          font-family: -apple-system, system-ui, sans-serif;
-          line-height: 1.5;
-          color: #333;
-          margin: 0;
-          padding: 20px;
-          font-size: 14px;
-        }
-        .header {
-          background: #68BAB2;
-          color: white;
-          padding: 25px;
-          margin: -20px -20px 20px -20px;
-        }
-        .header h1 {
-          font-size: 24px;
-          margin: 0;
-        }
-        .header p {
-          font-size: 14px;
-          margin: 8px 0 0 0;
-          opacity: 0.9;
-        }
-        .section {
-          margin: 25px 0;
-          padding: 20px;
-          background: #ECEFF3;
-          border-radius: 4px;
-        }
-        .section h2 {
-          font-size: 18px;
-          margin: 0 0 15px 0;
-        }
-        .row {
-          display: flex;
-          justify-content: space-between;
-          margin: 12px 0;
-          padding: 6px 0;
-          font-size: 14px;
-        }
-        .service-name {
-          font-weight: bold;
-          font-size: 16px;
-          color: #68BAB2;
-          margin: 20px 0 10px 0;
-          padding-bottom: 5px;
-          border-bottom: 2px solid #68BAB2;
-        }
-        .resource-row {
-          display: flex;
-          justify-content: space-between;
-          padding: 4px 0;
-          margin-left: 15px;
-          font-size: 13px;
-          color: #555;
-        }
-        .service-total {
-          display: flex;
-          justify-content: space-between;
-          padding: 8px 0;
-          margin-top: 5px;
-          font-weight: bold;
-          border-top: 1px solid #ddd;
-        }
-        .total {
-          background: #68BAB2;
-          color: white;
-          padding: 20px;
-          margin: 25px -20px;
-        }
-        .total .row {
-          border: none;
-          font-size: 16px;
-        }
-        .total .row strong {
-          font-size: 20px;
-        }
-        .footer {
-          font-size: 12px;
-          color: #666;
-          margin-top: 25px;
-          line-height: 1.5;
-        }
-        @media print {
-          body { padding: 20px; }
-          .header, .total {
-            background: #68BAB2 !important;
-            color: white !important;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-          }
-        }
-      </style>
-    </head>
-    <body>
-      <div class="header">
-        <h1>Zerops Cost Estimate</h1>
-        <p>Generated on ${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}</p>
-      </div>
+  // Document dimensions
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 8;
+  const contentWidth = pageWidth - (margin * 2);
 
-    <div class="section">
-        <h2>Project Configuration</h2>
-        <div class="row">
-          <span>Selected Plan: ${resources.core === 'lightweight' ? 'Lightweight' : 'Serious'}</span>
-          <strong>$${price.core.toFixed(2)}</strong>
-        </div>
-      </div>
+  // Set up fonts - using standard fonts for compatibility
+  doc.setFont("helvetica");
 
-${services.map(service => {
-  const resourceCosts = calculateResourceCosts(service);
-  return `
-    <div>
-      <div class="service-name">${service.name}</div>
-      <div class="resource-row">
-        <span>CPU</span>
-        <span>(${service.cpu} ${service.cpuType}, ${service.nodes} nodes) @ $${service.cpuType === 'shared' ? '0.60' : '6.00'}/CPU = $${formatNumber(resourceCosts.cpu)}</span>
-      </div>
-      <div class="resource-row">
-        <span>RAM</span>
-        <span>(${service.ram}GB × ${service.nodes} nodes) @ $3.00/GB = $${formatNumber(resourceCosts.ram)}</span>
-      </div>
-      <div class="resource-row">
-        <span>Disk</span>
-        <span>(${service.disk}GB × ${service.nodes} nodes) @ $0.05/GB = $${formatNumber(resourceCosts.disk)}</span>
-      </div>
-      <div class="service-total">
-        <span>Service Total</span>
-        <span>$${formatNumber(calculateServiceCost(service))}</span>
-      </div>
-    </div>
-  `;
-}).join('')}
+  // Color settings
+  const primaryColor = [104, 186, 178]; // #68BAB2 in RGB
+  const grayBg = [236, 239, 243]; // #ECEFF3 in RGB
+  const textColor = [51, 51, 51]; // #333333 in RGB
+  const secondaryTextColor = [85, 85, 85]; // #555555 in RGB
 
-      <div class="section">
-        <h2>Additional Features</h2>
-        ${resources.ipv4_addr > 0 ? `
-          <div class="row">
-            <span>Dedicated IPv4 (${resources.ipv4_addr})</span>
-            <span>$${formatNumber(resources.ipv4_addr * price.ipv4_addr)}</span>
-          </div>
-        ` : ''}
-        ${resources.storage > 0 ? `
-          <div class="row">
-            <span>Object Storage (${resources.storage} GB)</span>
-            <span>$${formatNumber(resources.storage * price.storage)}</span>
-          </div>
-        ` : ''}
-        ${resources.backup > 0 ? `
-          <div class="row">
-            <span>Extra Backup Space (${resources.backup} GB)</span>
-            <span>$${formatNumber(resources.backup * price.backup)}</span>
-          </div>
-        ` : ''}
-        ${resources.buildTime > 0 ? `
-          <div class="row">
-            <span>Extra Build Time (${resources.buildTime} hours)</span>
-            <span>$${formatNumber(resources.buildTime * price.buildTime)}</span>
-          </div>
-        ` : ''}
-        ${resources.egress > 0 ? `
-          <div class="row">
-            <span>Extra Egress (${resources.egress} GB)</span>
-            <span>$${formatNumber(resources.egress * price.egress)}</span>
-          </div>
-        ` : ''}
-      </div>
+  // Helper function for text
+  const addText = (text, x, y, options = {}) => {
+    const defaultOptions = {
+      align: 'left',
+      size: 10,
+      style: 'normal',
+      color: textColor
+    };
+    const opts = { ...defaultOptions, ...options };
 
-      <div class="total">
-        <div class="row">
-          <span>Total Monthly Cost</span>
-          <strong>$${calculateTotal()}</strong>
-        </div>
-      </div>
+    doc.setTextColor(...opts.color);
+    doc.setFontSize(opts.size);
 
-      <div class="footer">
-        <p>All prices are in USD and calculated for a 30-day period</p>
-        <p>Resources are billed by the minute with hourly credit deduction based on actual usage</p>
-      </div>
+    if (opts.style === 'bold') {
+      doc.setFont("helvetica", "bold");
+    } else {
+      doc.setFont("helvetica", "normal");
+    }
 
-      <script>
-        window.onload = () => {
-          window.print();
-          window.onfocus = () => { window.close(); }
-        }
-      </script>
-    </body>
-    </html>
-  `);
+    doc.text(text, x, y, { align: opts.align });
+  };
 
-  printWindow.document.close();
+  // Helper function for colored rectangles
+  const addRect = (x, y, width, height, color) => {
+    doc.setFillColor(...color);
+    doc.rect(x, y, width, height, 'F');
+  };
+
+  // Helper for drawing lines
+  const addLine = (x1, y1, x2, y2, color = [221, 221, 221]) => {
+    doc.setDrawColor(...color);
+    doc.setLineWidth(0.1);
+    doc.line(x1, y1, x2, y2);
+  };
+
+  // Current position tracker
+  let y = 20;
+
+  // Header
+  addRect(0, 0, pageWidth, 28, primaryColor);
+  addText('Zerops Cost Estimate', margin, 12, {
+    size: 16,
+    style: 'bold',
+    color: [255, 255, 255]
+  });
+  addText(`Generated on ${new Date().toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  })}`, margin, 20, {
+    size: 8,
+    color: [255, 255, 255]
+  });
+
+  y = 32;
+
+  // Project Configuration Section
+  y += 4;
+  addText('Project Configuration', margin, y, {
+    size: 12,
+    style: 'bold'
+  });
+  y += 8;
+  addText(`Selected Plan: ${resources.core === 'lightweight' ? 'Lightweight' : 'Serious'}`,
+    margin + 5, y);
+  addText(`$${price.core.toFixed(2)}`, pageWidth - margin - 5, y, {
+    align: 'right',
+    style: 'bold'
+  });
+
+  y += 12;
+
+  addText('Services', margin, y, {
+    size: 12,
+    style: 'bold'
+  });
+  y += 8;
+
+  // Services Section
+  services.forEach((service, index) => {
+    const resourceCosts = calculateResourceCosts(service);
+
+    // Add a page break if necessary
+    if (y > 250) {
+      doc.addPage();
+      y = 20;
+    }
+
+    // Service header
+    addText(service.name, margin, y, {
+      size: 12,
+      style: 'bold',
+      color: primaryColor
+    });
+
+    y += 6;
+
+    // CPU
+    addText('CPU', margin + 5, y, { color: secondaryTextColor, size: 9 });
+    addText(`(${service.cpu} ${service.cpuType}, ${service.nodes} nodes) @ $${service.cpuType === 'shared' ? '0.60' : '6.00'}/CPU = $${formatNumber(resourceCosts.cpu)}`,
+      pageWidth - margin - 5, y, {
+        align: 'right',
+        color: secondaryTextColor,
+        size: 9
+      });
+
+    y += 6;
+
+    // RAM
+    addText('RAM', margin + 5, y, { color: secondaryTextColor, size: 9 });
+    addText(`(${service.ram}GB × ${service.nodes} nodes) @ $3.00/GB = $${formatNumber(resourceCosts.ram)}`,
+      pageWidth - margin - 5, y, {
+        align: 'right',
+        color: secondaryTextColor,
+        size: 9
+      });
+
+    y += 6;
+
+    // Disk
+    addText('Disk', margin + 5, y, { color: secondaryTextColor, size: 9 });
+    addText(`(${service.disk}GB × ${service.nodes} nodes) @ $0.05/GB = $${formatNumber(resourceCosts.disk)}`,
+      pageWidth - margin - 5, y, {
+        align: 'right',
+        color: secondaryTextColor,
+        size: 9
+      });
+
+    y += 6;
+
+    addText('Total', margin + 5, y, {
+        color: secondaryTextColor,
+        size: 9,
+        style: 'bold'
+    });
+    addText(`$${formatNumber(calculateServiceCost(service))}`, pageWidth - margin - 5, y, {
+      align: 'right',
+      size: 9,
+      style: 'bold'
+    });
+
+    addLine(margin, y + 5, pageWidth - margin - 5, y + 5);
+
+    y += 12;
+  });
+
+  y += 4
+
+  // Additional Features Section
+  if (resources.ipv4_addr > 0 || resources.storage > 0 || resources.backup > 0 ||
+      resources.buildTime > 0 || resources.egress > 0) {
+
+    // Add a page break if necessary
+    if (y > 200) {
+      doc.addPage();
+      y = 20;
+    }
+
+    // Section background
+    // Section title
+    addText('Additional Features', margin, y, {
+      size: 12,
+      style: 'bold'
+    });
+
+    y += 8;
+
+    if (resources.ipv4_addr > 0) {
+      addText(`Dedicated IPv4 (${resources.ipv4_addr})`, margin + 5, y);
+      addText(`$${formatNumber(resources.ipv4_addr * price.ipv4_addr)}`,
+        pageWidth - margin - 5, y, { align: 'right' });
+      y += 8;
+    }
+
+    if (resources.storage > 0) {
+      addText(`Object Storage (${resources.storage} GB)`, margin + 5, y);
+      addText(`$${formatNumber(resources.storage * price.storage)}`,
+        pageWidth - margin - 5, y, { align: 'right' });
+      y += 8;
+    }
+
+    if (resources.backup > 0) {
+      addText(`Extra Backup Space (${resources.backup} GB)`, margin + 5, y);
+      addText(`$${formatNumber(resources.backup * price.backup)}`,
+        pageWidth - margin - 5, y, { align: 'right' });
+      y += 8;
+    }
+
+    if (resources.buildTime > 0) {
+      addText(`Extra Build Time (${resources.buildTime} hours)`, margin + 5, y);
+      addText(`$${formatNumber(resources.buildTime * price.buildTime)}`,
+        pageWidth - margin - 5, y, { align: 'right' });
+      y += 8;
+    }
+
+    if (resources.egress > 0) {
+      addText(`Extra Egress (${resources.egress} GB)`, margin + 5, y);
+      addText(`$${formatNumber(resources.egress * price.egress)}`,
+        pageWidth - margin - 5, y, { align: 'right' });
+      y += 8;
+    }
+  }
+
+  // Add a page break if necessary for the total
+  if (y > 220) {
+    doc.addPage();
+    y = 20;
+  }
+
+  // Total section
+  addRect(0, y, pageWidth, 20, primaryColor);
+  addText('Total Monthly Cost', margin, y + 12, {
+    size: 12,
+    color: [255, 255, 255]
+  });
+  addText(`$${calculateTotal()}`, pageWidth - margin - 5, y + 12, {
+    align: 'right',
+    size: 14,
+    style: 'bold',
+    color: [255, 255, 255]
+  });
+
+  y += 30;
+
+  // Footer
+  addText('All prices are in USD and calculated for a 30-day period', margin, y, {
+    size: 8,
+    color: [102, 102, 102]
+  });
+
+  y += 5;
+
+  addText('Resources are billed by the minute with hourly credit deduction based on actual usage',
+    margin, y, { size: 8, color: [102, 102, 102] });
+
+  // Save PDF
+  doc.save('zerops-cost-estimate.pdf');
 };
 
   return (
