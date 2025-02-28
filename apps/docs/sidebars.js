@@ -1852,7 +1852,7 @@ module.exports = {
         {
           type: 'doc',
           id: 'postgresql/how-to/manage',
-          label: 'Manage users and databases',
+          label: 'Manage users, databases & plugins',
         },
         {
           type: 'doc',
