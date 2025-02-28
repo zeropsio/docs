@@ -1,7 +1,9 @@
 ---
-title: Manage PostgreSQL users and databases in Zerops
+title: Manage PostgreSQL users, databases and plugins
 description: Learn how you can manage postgresql users and databases on Zerops.
 ---
+
+import { Dropdown, DropdownItem } from '/src/components/Dropdown';
 
 ## Default database and user
 
@@ -146,3 +148,69 @@ psql -h [hostname] -U [user] -p [password] -d [database_name]
 :::caution
 Do not use SSL/TLS protocols when connecting to PostgreSQL over VPN. Zerops PostgreSQL is not configured to support these protocols. The security is assured by the VPN.
 :::
+
+## How to install and manage PostgreSQL plugins
+
+You can list all available PostgreSQL plugins by running the following query *(superuser privileges not required)*:
+
+```sql
+SELECT * FROM pg_available_extensions ORDER BY name;
+```
+
+To install plugins, you must **connect as a superuser** (`postgres`) and run the appropriate CREATE EXTENSION command. For example:
+
+```sql
+CREATE EXTENSION pg_stat_statements;
+CREATE EXTENSION vector;
+CREATE EXTENSION postgis;
+```
+
+:::warning
+Currently, it is not possible to add new plugins that are not already listed in `pg_available_extensions`.
+:::
+
+When working with text search functionality, you'll need to reference the correct `stop`, `dict`, and `affix` files when creating dictionaries in your database. These files are essential for proper text search configuration.
+
+Zerops PostgreSQL includes the following dictionary files:
+
+<Dropdown>
+<DropdownItem title="Available dictionary files">
+**Stop word files** - used to remove common words that don't add significant meaning:
+```
+czech.stop
+danish.stop
+dutch.stop
+english.stop
+finnish.stop
+french.stop
+german.stop
+hungarian.stop
+italian.stop
+nepali.stop
+norwegian.stop
+polish.stop
+portuguese.stop
+russian.stop
+slovak.stop
+spanish.stop
+swedish.stop
+turkish.stop
+```
+**Dictionary and affix files** - used for stemming and word normalization:
+```
+cs_CZ.affix
+cs_CZ.dict
+en_US.affix
+en_US.dict
+pl_PL.affix
+pl_PL.dict
+sk_SK.affix
+sk_SK.dict
+```
+**Special rules file:**
+```
+unaccent.rules
+```
+</DropdownItem>
+</Dropdown>
+For more information on text search dictionaries, refer to the [PostgreSQL documentation](https://www.postgresql.org/docs/16/textsearch-dictionaries.html).
