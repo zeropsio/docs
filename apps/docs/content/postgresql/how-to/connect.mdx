@@ -1,134 +1,87 @@
 ---
 title: Connect to PostgreSQL in Zerops
-description: Connecting to PostgreSQL in Zerops with GUI and zCLI.
+description: Learn how to connect to your PostgreSQL database in Zerops from various environments.
 ---
 
-## Default PostgreSQL database and user
+This guide covers how to connect to your PostgreSQL database in Zerops, both from services within the same project and from your local workstation.
 
-Zerops creates a default database and a default user automatically when a new PostgreSQL service is [created](/postgresql/how-to/create).
+## Connection Options Overview
 
-#### Database
+Zerops provides two primary ways to connect to PostgreSQL:
 
-The default database name is identical to the service hostname. The default encoding is set to `utf8mb4`.
+1. **Internal connections** - Between services in the same Zerops project (via private network)
+2. **Remote connections** - From your local machine (via Zerops VPN)
 
-#### DB user
-
-Default user name is identical to the service hostname. Default user password is generated randomly. You will find the password in [Zerops GUI](#copy-access-details-from-zerops-gui) or you can use the [environment variable](#use-postgresql-environment-variables).
-
-:::info
-Zerops creates a second DB user: `zps` for maintenance reasons with full privileges. Do not delete, change the password or remove privileges from this user, it will disrupt Zerops ability to maintain the database cluster.
+:::caution
+For security reasons, Zerops doesn't allow exposing PostgreSQL services directly to the internet.
 :::
 
-## Copy access details from Zerops GUI
+## Connection Details
 
-You will find the PostgreSQL access details under the **Access details** button in the project dashboard page.
+You'll find PostgreSQL connection details in two places in the Zerops GUI:
 
-{/*TODO screenshot (Access detail popover)*/}
+1. Under the **Access details** button in the project dashboard
+2. In the service detail page under the **Peek access details** button
 
-The same information is available in the service detail page in the left menu under the **Peek access details** button.
+### Connection Parameters
 
-### PostgreSQL access parameters:
+| Parameter             | Description                                                           |
+| --------------------- | --------------------------------------------------------------------- |
+| **Hostname**          | Identical to the service hostname                                     |
+| **Port**              | **5432** (fixed for all PostgreSQL services)                          |
+| **User**              | Identical to the service hostname                                     |
+| **Password**          | Randomly generated during service creation                            |
+| **Connection string** | `postgresql://${user}:${password}@{hostname}:5432`                    |
 
-| Parameter             | Description                                                                                                                          |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| **Hostname**          | The service hostname specified when the PostgreSQL service was created.                                                              |
-| **Port**              | **5432**<br/>This port is fixed for all PostgreSQL services and cannot be customized.                                                |
-| **User**              | Zerops creates a database user automatically when the service is created. The user name is always identical to the service hostname. |
-| **Password**          | Zerops sets a random password when the service is created.                                                                           |
-| **Connection string** | The connection string for PostgreSQL service is:<br/>`postgresql://${user}:${password}@{hostname}:5432`                              |
+:::warning
+Zerops creates a system user named `zps` with full privileges for maintenance purposes. Do not delete, change the password, or remove privileges from this user, as it will disrupt Zerops' ability to maintain the database cluster.
+:::
 
-## Connect to PostgreSQL from runtime services of the same project
+:::info
+For more information about default PostgreSQL setup, users, and databases, see [Manage PostgreSQL Users and Databases](/postgresql/how-to/manage).
+:::
 
-Projects in Zerops represent a group of one or more services. Services can be of different types (runtime services, databases, message brokers, object storage, etc.). All services of the same project share a **dedicated private network**. To connect to a service within the same project, just use the service hostname and its internal port.
+## Connect from Services in the Same Project
 
-{/*TODO image (project example diagram)*/}
+All services within a Zerops project share a dedicated private network. There are two ways to implement connections between services in the same project:
 
-#### Example
+### Method 1: Direct Connection Parameters
 
-To connect to PostgreSQL `database1` service, set
+You can directly use the connection parameters from Access Details:
 
 ```
 host = database1
+port = 5432
 user = database1
-password = **********
+password = ********** (find under Access Details)
 ```
 
-You will find the password under the [**Access details**](#copy-access-details-from-zerops-gui) button in Zerops GUI.
+### Method 2: Environment Variables (Recommended)
 
-:::caution
-Do not use SSL/TLS protocols when connecting to PostgreSQL from other runtime services in the same project. Zerops PostgreSQL is not configured to support these protocols. The security is assured by the project private network. Due to security reasons Zerops doesn't allow exposing PostgreSQL service to the internet.
+For better maintainability, Zerops creates environment variables for each PostgreSQL service that you can use in your application configuration. List of service environment variables is available in Zerops GUI. Go to a PostgreSQL service detail and choose **Environment variables**.
+
+To use variables from one service in another, prefix the variable name with the service hostname and underscore - to access the `connectionString` variable of `postgresql1`, use `postgresql1_connectionString`.
+
+For more details on how to use environment variables, and instructions for adding your own custom variables, see the [Environment Variables](/features/env-variables) documentation.
+
+:::caution Important notes
+- When changing passwords, update both the database user password and the environment variable separately - they don't automatically synchronize.
+- While both `postgresql://` and `postgres://` URI formats are valid, Zerops uses the `postgresql://` format. If your software requires `postgres://`, create a custom environment variable with this format.
+- Do not use SSL/TLS protocols for internal connections. Security is assured by the project's private network.
 :::
 
-## Use PostgreSQL environment variables
+## Connect Remotely
 
-Zerops creates default environment variables for each PostgreSQL service to help you with connection from runtime services in the same project. To avoid the need to copy database access parameters manually, use environment variables in your [runtime service].
+You can securely connect to PostgreSQL from your local workstation via Zerops VPN:
 
-### Prefix the environment variable key
-
-All services of the same project can reference environment variables from other services. To use an environment variable from one service in another service in the same project, you must prefix the environment variable key with the service hostname and underscore.
-
-#### Example
-
-To access the `connectionString` env variable of the `postgresql1` service, use `postgresql1_connectionString` as the env variable key.
-To access the `password` env variable of the `postgresql2` service, use `postgresql2_password` as the env variable key.
-
-### PostgreSQL environment variables
-
-List of service environment variables is available in Zerops GUI. Go to a PostgreSQL service detail and choose **Environment variables** in the left menu.
-
-{/*TODO screenshot (Service env variables table page in the PostgreSQL detail)*/}
-
-Zerops creates following environment variables when the PostgreSQL service is created:
-
-| Variable              | Description                                                                                                                                                                                                                                                                                                                                                                     |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Hostname**          | The service hostname specified when the PostgreSQL service was created.                                                                                                                                                                                                                                                                                                         |
-| **Port**              | **5432**<br/>This port is fixed for all PostgreSQL services and cannot be customized.                                                                                                                                                                                                                                                                                           |
-| **projectId**         | ID of the project. Generated by Zerops.                                                                                                                                                                                                                                                                                                                                         |
-| **serviceId**         | ID of the PostgreSQL service. Generated by Zerops.                                                                                                                                                                                                                                                                                                                              |
-| **Connection string** | The connection string for PostgreSQL service is:<br/>`postgresql://${user}:${password}@{hostname}:5432`<br/><br/>Connection string contains [references](/postgresql/how-to/connect#postgresql-access-parameters) to `user` and `password` variables. Each time the `user` or `password` variable is updated, the `connectionString` variable is automatically updated as well. |
-| **User**              | Zerops creates a database user automatically when the service is created. The user name is always identical to the service hostname.                                                                                                                                                                                                                                            |
-| **Password**          | Zerops sets a random password when the service is created.                                                                                                                                                                                                                                                                                                                      |
-
-:::caution
-When you change the value of the password env variable, only the env variable is updated, not the actual password of the PostgreSQL user. You have to update the password of the database user manually.
-
-When you change the password of the default PostgreSQL user in the database, the new password is not synchronised to the password env variable. You have to update the `password` env variable manually.
-:::
-:::caution
-The official PostgreSQL documentation states that both `postgresql://` and `postgres://` URIs are valid. In Zerops, we chose to generate the connection string with the widely used `postgresql://` schema.
-Some softwares however require the connection string to start with the shorter `postgres://` version only, which might cause errors. To fix that, create your own environment variable with the correct URI, e.g. when your PostgreSQL service is called `db` - `postgres://${db_user}:${db_password}@${db_hostname}:${db_port}`.
-:::
-
-You can create own custom [environment variables](/features/env-variables) for the PostgreSQL service in Zerops GUI and use them in the same way as the default variables.
-
-## Connect to PostgreSQL in Zerops remotely
-
-:::caution
-Due to security reasons Zerops doesn't allow exposing PostgreSQL service directly to the internet.
-:::
-
-### Start VPN connection
-
-You can securely connect to PostgreSQL from your local workspace via Zerops VPN. Zerops VPN client is included into zCLI, the Zerops command-line tool. To start a VPN connection to the selected Zerops project, follow these steps:
-
-1. [Install & setup zCLI](/references/cli)
+1. [Install & set up zCLI](/references/cli)
 2. [Start the Zerops VPN](/references/vpn#start-vpn)
+3. Use the connection details from Access Details in the PostgreSQL service detail in Zerops GUI
+4. When finished, [stop the Zerops VPN](/references/vpn#stop-vpn)
 
-### Access PostgreSQL through VPN
-
-Once the VPN session is established, you have the secured connection to the project's private network in Zerops. You can access all project services locally by using their hostname. The only difference is that no [environment variables](#use-postgresql-environment-variables) are available when connected through VPN. To connect to PostgreSQL in Zerops you have to copy the [access details](#copy-access-details-from-zerops-gui) manually from Zerops GUI.
-
-:::caution
-Do not use SSL/TLS protocols when connecting to PostgreSQL over VPN. Zerops PostgreSQL is not configured to support these protocols. The security is assured by the VPN.
+:::warning Important notes
+* If your connection over VPN doesn't work, try adding `.zerops` suffix to the service hostname (e.g., `database1.zerops`). For additional help, check the [VPN troubleshooting page](/references/vpn/troubleshooting).
+* Do not use SSL/TLS protocols when connecting over VPN. Security is provided by the VPN tunnel.
 :::
 
-### Stop VPN connection
-
-[Stop the Zerops VPN](/references/vpn#stop-vpn) in zCLI.
-
-### Connect to PostgreSQL from another Zerops project
-
-All services of the same project share a **dedicated private network**. You can use the service hostname to connect from one service to another within the same project.
-
-Different Zerops projects have no special connection. They can communicate with each other only via the internet. If you need to connect to a PostgreSQL service in a Zerops project from a runtime service in another project, you need to use the [Zerops VPN](#access-postgresql-through-vpn). Due to security reasons Zerops doesn't allow exposing PostgreSQL service directly to the internet.
+For database management tools and how to manage users and databases, see [Manage PostgreSQL Users and Databases](/postgresql/how-to/manage).

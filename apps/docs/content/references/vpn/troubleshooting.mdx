@@ -12,20 +12,26 @@ zcli vpn down
 zcli vpn up
 ```
 
-## 2. macOS Hostname Resolution
-**Problem**: Even with VPN successfully connected, hostname resolution fails on macOS with errors like:
+## 2. Hostname Resolution
+**Problem**: Even with VPN successfully connected, hostname resolution fails with errors like:
 ```
 could not translate host name "hostname" to address: nodename nor servname provided, or not known
 ```
 
-**Solution**: On macOS, append `.zerops` to the hostname, even when VPN shows as connected:
+* The issue is known to happen on macOS and rarely on Windows
+
+**Solution**: Append `.zerops` to the hostname, even when VPN shows as connected:
 ```bash
 # Instead of
-psql -h hostname -U user
+psql -h [hostname] -U [user]
 
 # Use
-psql -h hostname.zerops -U user
+psql -h [hostname].zerops -U [user]
 ```
+
+:::tip Windows OS tip
+In the Advanced TCP/IP Settings dialog, navigate to the DNS tab and confirm that "zerops" appears in the "Append these DNS suffixes (in order)" list. If missing, add it using the Add button.
+:::
 
 ## 3. WSL2 VPN Connection
 **Problem**: VPN not running in WSL2
