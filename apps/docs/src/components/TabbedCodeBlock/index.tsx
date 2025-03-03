@@ -19,6 +19,9 @@ const TabbedCodeBlocks = ({ tabs, defaultTab }) => {
   // Find the currently active tab object
   const activeTabData = tabs.find(tab => tab.label === activeTab) || tabs[0];
 
+  // Determine title - only use title if it's non-empty
+  const codeTitle = activeTabData.title ? activeTabData.title : null;
+
   return (
     <div className={styles.tabbedCodeContainer}>
       <div className={styles.tabsHeader}>
@@ -35,7 +38,7 @@ const TabbedCodeBlocks = ({ tabs, defaultTab }) => {
       <div className={styles.codeBlockWrapper}>
         <CodeBlock
           className={`language-${activeTabData.language || 'yaml'}`}
-          title={activeTabData.title || activeTabData.label}
+          title={codeTitle}
         >
           {activeTabData.code}
         </CodeBlock>
