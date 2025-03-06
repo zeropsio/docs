@@ -745,11 +745,10 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'How-to',
+      label: 'Management',
       collapsible: false,
       customProps: {
         sidebar_is_group_headline: true,
-        sidebar_icon: 'academic-cap-solid',
       },
       items: [
         {
@@ -759,14 +758,49 @@ module.exports = {
         },
         {
           type: 'doc',
+          id: 'nodejs/how-to/upgrade',
+          label: 'Upgrade Node.js service',
+        },
+        {
+          type: 'doc',
+          id: 'nodejs/how-to/delete',
+          label: 'Delete Node.js service',
+        },
+        {
+          type: 'doc',
+          id: 'nodejs/how-to/controls',
+          label: 'Stop & start Node.js runtime service',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Configuration & Environment',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
           id: 'nodejs/how-to/env-variables',
           label: 'Manage environment variables',
         },
         {
           type: 'doc',
-          id: 'nodejs/how-to/upgrade',
-          label: 'Upgrade Node.js service',
+          id: 'nodejs/how-to/customize-runtime',
+          label: 'Customize NodeJS runtime',
         },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Build & Deployment',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
         {
           type: 'doc',
           id: 'nodejs/how-to/build-pipeline',
@@ -787,11 +821,16 @@ module.exports = {
           id: 'nodejs/how-to/deploy-process',
           label: 'Deploy process',
         },
-        {
-          type: 'doc',
-          id: 'nodejs/how-to/customize-runtime',
-          label: 'Customize NodeJS runtime',
-        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Maintenance & Monitoring',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
         {
           type: 'doc',
           id: 'nodejs/how-to/logs',
@@ -814,30 +853,11 @@ module.exports = {
         },
         {
           type: 'doc',
-          id: 'nodejs/how-to/controls',
-          label: 'Stop & start Node.js runtime service',
-        },
-        {
-          type: 'doc',
           id: 'nodejs/how-to/shared-storage',
           label: 'Connect / disconnect shared storage',
         },
-        {
-          type: 'doc',
-          id: 'nodejs/how-to/delete',
-          label: 'Delete Node.js service',
-        },
       ],
     },
-    // {
-    //   type: 'doc',
-    //   id: 'nodejs/faq',
-    //   label: 'FAQ',
-    //   customProps: {
-    //     sidebar_is_title: true,
-    //     sidebar_icon: 'chat-bubble-left-right',
-    //   },
-    // },
   ],
   php: [
     {
@@ -860,7 +880,7 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'How-to',
+      label: 'Management',
       collapsible: false,
       customProps: {
         sidebar_is_group_headline: true,
@@ -873,14 +893,54 @@ module.exports = {
         },
         {
           type: 'doc',
+          id: 'php/how-to/upgrade',
+          label: 'Upgrade PHP service',
+        },
+        {
+          type: 'doc',
+          id: 'php/how-to/delete',
+          label: 'Delete PHP service',
+        },
+        {
+          type: 'doc',
+          id: 'php/how-to/controls',
+          label: 'Stop & start PHP runtime service',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Configuration & Environment',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
           id: 'php/how-to/env-variables',
           label: 'Manage environment variables',
         },
         {
           type: 'doc',
-          id: 'php/how-to/upgrade',
-          label: 'Upgrade PHP service',
+          id: 'php/how-to/customize-runtime',
+          label: 'Customize PHP runtime',
         },
+        {
+          type: 'doc',
+          id: 'php/how-to/customize-web-server',
+          label: 'Customize web server',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Build & Deployment',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
         {
           type: 'doc',
           id: 'php/how-to/build-pipeline',
@@ -901,16 +961,16 @@ module.exports = {
           id: 'php/how-to/deploy-process',
           label: 'Deploy process',
         },
-        {
-          type: 'doc',
-          id: 'php/how-to/customize-runtime',
-          label: 'Customize PHP runtime',
-        },
-        {
-          type: 'doc',
-          id: 'php/how-to/customize-web-server',
-          label: 'Customize web server',
-        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Maintenance & Monitoring',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
         {
           type: 'doc',
           id: 'php/how-to/logs',
@@ -933,30 +993,11 @@ module.exports = {
         },
         {
           type: 'doc',
-          id: 'php/how-to/controls',
-          label: 'Stop & start PHP runtime service',
-        },
-        {
-          type: 'doc',
           id: 'php/how-to/shared-storage',
           label: 'Connect / disconnect shared storage',
         },
-        {
-          type: 'doc',
-          id: 'php/how-to/delete',
-          label: 'Delete PHP service',
-        },
       ],
     },
-    // {
-    //   type: 'doc',
-    //   id: 'php/faq',
-    //   label: 'FAQ',
-    //   customProps: {
-    //     sidebar_is_title: true,
-    //     sidebar_icon: 'chat-bubble-left-right',
-    //   },
-    // },
   ],
   python: [
     {
@@ -979,7 +1020,7 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'How-to',
+      label: 'Management',
       collapsible: false,
       customProps: {
         sidebar_is_group_headline: true,
@@ -992,14 +1033,49 @@ module.exports = {
         },
         {
           type: 'doc',
+          id: 'python/how-to/upgrade',
+          label: 'Upgrade Python service',
+        },
+        {
+          type: 'doc',
+          id: 'python/how-to/delete',
+          label: 'Delete Python service',
+        },
+        {
+          type: 'doc',
+          id: 'python/how-to/controls',
+          label: 'Stop & start Python runtime service',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Configuration & Environment',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
           id: 'python/how-to/env-variables',
           label: 'Manage environment variables',
         },
         {
           type: 'doc',
-          id: 'python/how-to/upgrade',
-          label: 'Upgrade Python service',
+          id: 'python/how-to/customize-runtime',
+          label: 'Customize Python runtime',
         },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Build & Deployment',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
         {
           type: 'doc',
           id: 'python/how-to/build-pipeline',
@@ -1020,11 +1096,16 @@ module.exports = {
           id: 'python/how-to/deploy-process',
           label: 'Deploy process',
         },
-        {
-          type: 'doc',
-          id: 'python/how-to/customize-runtime',
-          label: 'Customize Python runtime',
-        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Maintenance & Monitoring',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
         {
           type: 'doc',
           id: 'python/how-to/logs',
@@ -1047,632 +1128,727 @@ module.exports = {
         },
         {
           type: 'doc',
-          id: 'python/how-to/controls',
-          label: 'Stop & start Python runtime service',
-        },
-        {
-          type: 'doc',
           id: 'python/how-to/shared-storage',
           label: 'Connect / disconnect shared storage',
         },
-        {
-          type: 'doc',
-          id: 'python/how-to/delete',
-          label: 'Delete Python service',
-        },
       ],
     },
-    // {
-    //   type: 'doc',
-    //   id: 'python/faq',
-    //   label: 'FAQ',
-    //   customProps: {
-    //     sidebar_is_title: true,
-    //     sidebar_icon: 'chat-bubble-left-right',
-    //   },
-    // },
   ],
   go: [
-    {
-      type: 'ref',
-      id: 'homepage',
-      label: 'Back to home',
-      customProps: {
-        sidebar_is_back_link: true,
-        sidebar_icon: 'back-arrow',
+      {
+        type: 'ref',
+        id: 'homepage',
+        label: 'Back to home',
+        customProps: {
+          sidebar_is_back_link: true,
+          sidebar_icon: 'back-arrow',
+        },
       },
-    },
-    {
-      type: 'doc',
-      id: 'go/overview',
-      label: 'Go',
-      customProps: {
-        sidebar_is_title: true,
-        sidebar_icon: 'go',
-      },
-    },
-    {
-      type: 'category',
-      label: 'How-to',
-      collapsible: false,
-      customProps: {
-        sidebar_is_group_headline: true,
-      },
-      items: [
-        {
-          type: 'doc',
-          id: 'go/how-to/create',
-          label: 'Create Go service',
-        },
-        {
-          type: 'doc',
-          id: 'go/how-to/env-variables',
-          label: 'Manage environment variables',
-        },
-        {
-          type: 'doc',
-          id: 'go/how-to/upgrade',
-          label: 'Upgrade Go service',
-        },
-        {
-          type: 'doc',
-          id: 'go/how-to/build-pipeline',
-          label: 'Configure build & deploy pipeline',
-        },
-        {
-          type: 'doc',
-          id: 'go/how-to/trigger-pipeline',
-          label: 'Trigger build pipeline',
-        },
-        {
-          type: 'doc',
-          id: 'go/how-to/build-process',
-          label: 'Build process',
-        },
-        {
-          type: 'doc',
-          id: 'go/how-to/deploy-process',
-          label: 'Deploy process',
-        },
-        {
-          type: 'doc',
-          id: 'go/how-to/customize-runtime',
-          label: 'Customize Go runtime',
-        },
-        {
-          type: 'doc',
-          id: 'go/how-to/logs',
-          label: 'Setup & access logs',
-        },
-        {
-          type: 'doc',
-          id: 'go/how-to/filebrowser',
-          label: 'Browse container files',
-        },
-        {
-          type: 'doc',
-          id: 'go/how-to/access',
-          label: 'Access Go runtime service',
-        },
-        {
-          type: 'doc',
-          id: 'go/how-to/scaling',
-          label: 'Scale Go runtime service',
-        },
-        {
-          type: 'doc',
-          id: 'go/how-to/controls',
-          label: 'Stop & start Go runtime service',
-        },
-        {
-          type: 'doc',
-          id: 'go/how-to/shared-storage',
-          label: 'Connect / disconnect shared storage',
-        },
-        {
-          type: 'doc',
-          id: 'go/how-to/delete',
-          label: 'Delete Go service',
-        },
-      ],
-    },
-    // {
-    //   type: 'doc',
-    //   id: 'go/faq',
-    //   label: 'FAQ',
-    //   customProps: {
-    //     sidebar_is_title: true,
-    //     sidebar_icon: 'chat-bubble-left-right',
-    //   },
-    // },
-  ],
-  rust: [
-    {
-      type: 'ref',
-      id: 'homepage',
-      label: 'Back to home',
-      customProps: {
-        sidebar_is_back_link: true,
-        sidebar_icon: 'back-arrow',
-      },
-    },
-    {
-      type: 'doc',
-      id: 'rust/overview',
-      label: 'Rust',
-      customProps: {
-        sidebar_is_title: true,
-        sidebar_icon: 'rust',
-      },
-    },
-    {
-      type: 'category',
-      label: 'How-to',
-      collapsible: false,
-      customProps: {
-        sidebar_is_group_headline: true,
-      },
-      items: [
-        {
-          type: 'doc',
-          id: 'rust/how-to/create',
-          label: 'Create Rust service',
-        },
-        {
-          type: 'doc',
-          id: 'rust/how-to/env-variables',
-          label: 'Manage environment variables',
-        },
-        {
-          type: 'doc',
-          id: 'rust/how-to/upgrade',
-          label: 'Upgrade Rust service',
-        },
-        {
-          type: 'doc',
-          id: 'rust/how-to/build-pipeline',
-          label: 'Configure build & deploy pipeline',
-        },
-        {
-          type: 'doc',
-          id: 'rust/how-to/trigger-pipeline',
-          label: 'Trigger build pipeline',
-        },
-        {
-          type: 'doc',
-          id: 'rust/how-to/build-process',
-          label: 'Build process',
-        },
-        {
-          type: 'doc',
-          id: 'rust/how-to/deploy-process',
-          label: 'Deploy process',
-        },
-        {
-          type: 'doc',
-          id: 'rust/how-to/customize-runtime',
-          label: 'Customize Rust runtime',
-        },
-        {
-          type: 'doc',
-          id: 'rust/how-to/logs',
-          label: 'Setup & access logs',
-        },
-        {
-          type: 'doc',
-          id: 'rust/how-to/filebrowser',
-          label: 'Browse container files',
-        },
-        {
-          type: 'doc',
-          id: 'rust/how-to/access',
-          label: 'Access Rust runtime service',
-        },
-        {
-          type: 'doc',
-          id: 'rust/how-to/scaling',
-          label: 'Scale Rust runtime service',
-        },
-        {
-          type: 'doc',
-          id: 'rust/how-to/controls',
-          label: 'Stop & start Rust runtime service',
-        },
-        {
-          type: 'doc',
-          id: 'rust/how-to/shared-storage',
-          label: 'Connect / disconnect shared storage',
-        },
-        {
-          type: 'doc',
-          id: 'rust/how-to/delete',
-          label: 'Delete Rust service',
-        },
-      ],
-    },
-    // {
-    //   type: 'doc',
-    //   id: 'rust/faq',
-    //   label: 'FAQ',
-    //   customProps: {
-    //     sidebar_is_title: true,
-    //     sidebar_icon: 'chat-bubble-left-right',
-    //   },
-    // },
-  ],
-  dotnet: [
-    {
-      type: 'ref',
-      id: 'homepage',
-      label: 'Back to home',
-      customProps: {
-        sidebar_is_back_link: true,
-        sidebar_icon: 'back-arrow',
-      },
-    },
-    {
-      type: 'doc',
-      id: 'dotnet/overview',
-      label: '.NET',
-      customProps: {
-        sidebar_is_title: true,
-        sidebar_icon: 'dotnet',
-      },
-    },
-    {
-      type: 'category',
-      label: 'How-to',
-      collapsible: false,
-      customProps: {
-        sidebar_is_group_headline: true,
-      },
-      items: [
-        {
-          type: 'doc',
-          id: 'dotnet/how-to/create',
-          label: 'Create .NET service',
-        },
-        {
-          type: 'doc',
-          id: 'dotnet/how-to/env-variables',
-          label: 'Manage environment variables',
-        },
-        {
-          type: 'doc',
-          id: 'dotnet/how-to/upgrade',
-          label: 'Upgrade .NET service',
-        },
-        {
-          type: 'doc',
-          id: 'dotnet/how-to/build-pipeline',
-          label: 'Configure build & deploy pipeline',
-        },
-        {
-          type: 'doc',
-          id: 'dotnet/how-to/trigger-pipeline',
-          label: 'Trigger build pipeline',
-        },
-        {
-          type: 'doc',
-          id: 'dotnet/how-to/build-process',
-          label: 'Build process',
-        },
-        {
-          type: 'doc',
-          id: 'dotnet/how-to/deploy-process',
-          label: 'Deploy process',
-        },
-        {
-          type: 'doc',
-          id: 'dotnet/how-to/customize-runtime',
-          label: 'Customize .NET runtime',
-        },
-        {
-          type: 'doc',
-          id: 'dotnet/how-to/logs',
-          label: 'Setup & access logs',
-        },
-        {
-          type: 'doc',
-          id: 'dotnet/how-to/filebrowser',
-          label: 'Browse container files',
-        },
-        {
-          type: 'doc',
-          id: 'dotnet/how-to/access',
-          label: 'Access .NET runtime service',
-        },
-        {
-          type: 'doc',
-          id: 'dotnet/how-to/scaling',
-          label: 'Scale .NET runtime service',
-        },
-        {
-          type: 'doc',
-          id: 'dotnet/how-to/controls',
-          label: 'Stop & start .NET runtime service',
-        },
-        {
-          type: 'doc',
-          id: 'dotnet/how-to/shared-storage',
-          label: 'Connect / disconnect shared storage',
-        },
-        {
-          type: 'doc',
-          id: 'dotnet/how-to/delete',
-          label: 'Delete .NET service',
-        },
-      ],
-    },
-    // {
-    //   type: 'doc',
-    //   id: 'dotnet/faq',
-    //   label: 'FAQ',
-    //   customProps: {
-    //     sidebar_is_title: true,
-    //     sidebar_icon: 'chat-bubble-left-right',
-    //   },
-    // },
-  ],
-  java: [
-    {
-      type: 'ref',
-      id: 'homepage',
-      label: 'Back to home',
-      customProps: {
-        sidebar_is_back_link: true,
-        sidebar_icon: 'back-arrow',
-      },
-    },
-    {
-      type: 'doc',
-      id: 'java/overview',
-      label: 'Java',
-      customProps: {
-        sidebar_is_title: true,
-        sidebar_icon: 'java',
-      },
-    },
-    {
-      type: 'category',
-      label: 'How-to',
-      collapsible: false,
-      customProps: {
-        sidebar_is_group_headline: true,
-      },
-      items: [
-        {
-          type: 'doc',
-          id: 'java/how-to/create',
-          label: 'Create Java service',
-        },
-        {
-          type: 'doc',
-          id: 'java/how-to/env-variables',
-          label: 'Manage environment variables',
-        },
-        {
-          type: 'doc',
-          id: 'java/how-to/upgrade',
-          label: 'Upgrade Java service',
-        },
-        {
-          type: 'doc',
-          id: 'java/how-to/build-pipeline',
-          label: 'Configure build & deploy pipeline',
-        },
-        {
-          type: 'doc',
-          id: 'java/how-to/trigger-pipeline',
-          label: 'Trigger build pipeline',
-        },
-        {
-          type: 'doc',
-          id: 'java/how-to/build-process',
-          label: 'Build process',
-        },
-        {
-          type: 'doc',
-          id: 'java/how-to/deploy-process',
-          label: 'Deploy process',
-        },
-        {
-          type: 'doc',
-          id: 'java/how-to/customize-runtime',
-          label: 'Customize Java runtime',
-        },
-        {
-          type: 'doc',
-          id: 'java/how-to/logs',
-          label: 'Setup & access logs',
-        },
-        {
-          type: 'doc',
-          id: 'java/how-to/filebrowser',
-          label: 'Browse container files',
-        },
-        {
-          type: 'doc',
-          id: 'java/how-to/access',
-          label: 'Access Java runtime service',
-        },
-        {
-          type: 'doc',
-          id: 'java/how-to/scaling',
-          label: 'Scale Java runtime service',
-        },
-        {
-          type: 'doc',
-          id: 'java/how-to/controls',
-          label: 'Stop & start Java runtime service',
-        },
-        {
-          type: 'doc',
-          id: 'java/how-to/shared-storage',
-          label: 'Connect / disconnect shared storage',
-        },
-        {
-          type: 'doc',
-          id: 'java/how-to/delete',
-          label: 'Delete Java service',
-        },
-      ],
-    },
-    // {
-    //   type: 'doc',
-    //   id: 'java/faq',
-    //   label: 'FAQ',
-    //   customProps: {
-    //     sidebar_is_title: true,
-    //     sidebar_icon: 'chat-bubble-left-right',
-    //   },
-    // },
-  ],
-  nginx: [
-    {
-      type: 'ref',
-      id: 'homepage',
-      label: 'Back to home',
-      customProps: {
-        sidebar_is_back_link: true,
-        sidebar_icon: 'back-arrow',
-      },
-    },
-    {
-      type: 'doc',
-      id: 'nginx/overview',
-      label: 'Nginx Static',
-      customProps: {
-        sidebar_is_title: true,
-        sidebar_icon: 'nginx',
-      },
-    },
-    {
-      type: 'category',
-      label: 'Dive-in',
-      collapsible: false,
-      link: {
+      {
         type: 'doc',
-        id: 'nginx/getting-started',
+        id: 'go/overview',
+        label: 'Go',
+        customProps: {
+          sidebar_is_title: true,
+          sidebar_icon: 'go',
+        },
       },
-      customProps: {
-        sidebar_icon: 'rocket-launch',
-      },
-      className: 'homepage-sidebar-item',
-      items: [
-        {
-          type: 'doc',
-          id: 'nginx/tutorial/quickstart',
-          label: 'Quickstart',
-          customProps: {
-            exclude_from_doc_list: false,
+      {
+        type: 'category',
+        label: 'Management',
+        collapsible: false,
+        customProps: {
+          sidebar_is_group_headline: true,
+        },
+        items: [
+          {
+            type: 'doc',
+            id: 'go/how-to/create',
+            label: 'Create Go service',
           },
-        },
-        {
-          type: 'doc',
-          id: 'nginx/tutorial/step-by-step',
-          label: 'Step-by-step tutorial',
-          customProps: {
-            exclude_from_doc_list: false,
+          {
+            type: 'doc',
+            id: 'go/how-to/upgrade',
+            label: 'Upgrade Go service',
           },
-        },
-      ],
-    },
-    {
-      type: 'category',
-      label: 'How-to',
-      collapsible: false,
-      customProps: {
-        sidebar_is_group_headline: true,
+          {
+            type: 'doc',
+            id: 'go/how-to/delete',
+            label: 'Delete Go service',
+          },
+          {
+            type: 'doc',
+            id: 'go/how-to/controls',
+            label: 'Stop & start Go runtime service',
+          },
+        ],
       },
-      items: [
-        {
-          type: 'doc',
-          id: 'nginx/how-to/create',
-          label: 'Create Nginx static service',
+      {
+        type: 'category',
+        label: 'Configuration & Environment',
+        collapsible: false,
+        customProps: {
+          sidebar_is_group_headline: true,
         },
-        {
-          type: 'doc',
-          id: 'nginx/how-to/env-variables',
-          label: 'Manage environment variables',
-        },
-        {
-          type: 'doc',
-          id: 'nginx/how-to/upgrade',
-          label: 'Upgrade Nginx service',
-        },
-        {
-          type: 'doc',
-          id: 'nginx/how-to/build-pipeline',
-          label: 'Configure build & deploy pipeline',
-        },
-        {
-          type: 'doc',
-          id: 'nginx/how-to/trigger-pipeline',
-          label: 'Trigger build pipeline',
-        },
-        {
-          type: 'doc',
-          id: 'nginx/how-to/deploy-process',
-          label: 'Deploy process',
-        },
-        {
-          type: 'doc',
-          id: 'nginx/how-to/customize-runtime',
-          label: 'Customize Nginx static runtime',
-        },
-        {
-          type: 'doc',
-          id: 'nginx/how-to/customize-web-server',
-          label: 'Customize web server',
-        },
-        {
-          type: 'doc',
-          id: 'nginx/how-to/logs',
-          label: 'Setup & access logs',
-        },
-        {
-          type: 'doc',
-          id: 'nginx/how-to/filebrowser',
-          label: 'Browse container files',
-        },
-        {
-          type: 'doc',
-          id: 'nginx/how-to/access',
-          label: 'Access Nginx runtime service',
-        },
-        {
-          type: 'doc',
-          id: 'nginx/how-to/scaling',
-          label: 'Scale Nginx static service',
-        },
-        {
-          type: 'doc',
-          id: 'nginx/how-to/controls',
-          label: 'Stop & start Nginx static service',
-        },
-        {
-          type: 'doc',
-          id: 'nginx/how-to/shared-storage',
-          label: 'Connect / disconnect shared storage',
-        },
-        {
-          type: 'doc',
-          id: 'nginx/how-to/delete',
-          label: 'Delete Nginx static service',
-        },
-      ],
-    },
-    {
-      type: 'doc',
-      id: 'nginx/faq',
-      label: 'FAQ',
-      customProps: {
-        sidebar_is_title: true,
-        sidebar_icon: 'chat-bubble-left-right',
+        items: [
+          {
+            type: 'doc',
+            id: 'go/how-to/env-variables',
+            label: 'Manage environment variables',
+          },
+          {
+            type: 'doc',
+            id: 'go/how-to/customize-runtime',
+            label: 'Customize Go runtime',
+          },
+        ],
       },
-    },
-  ],
+      {
+        type: 'category',
+        label: 'Build & Deployment',
+        collapsible: false,
+        customProps: {
+          sidebar_is_group_headline: true,
+        },
+        items: [
+          {
+            type: 'doc',
+            id: 'go/how-to/build-pipeline',
+            label: 'Configure build & deploy pipeline',
+          },
+          {
+            type: 'doc',
+            id: 'go/how-to/trigger-pipeline',
+            label: 'Trigger build pipeline',
+          },
+          {
+            type: 'doc',
+            id: 'go/how-to/build-process',
+            label: 'Build process',
+          },
+          {
+            type: 'doc',
+            id: 'go/how-to/deploy-process',
+            label: 'Deploy process',
+          },
+        ],
+      },
+      {
+        type: 'category',
+        label: 'Maintenance & Monitoring',
+        collapsible: false,
+        customProps: {
+          sidebar_is_group_headline: true,
+        },
+        items: [
+          {
+            type: 'doc',
+            id: 'go/how-to/logs',
+            label: 'Setup & access logs',
+          },
+          {
+            type: 'doc',
+            id: 'go/how-to/filebrowser',
+            label: 'Browse container files',
+          },
+          {
+            type: 'doc',
+            id: 'go/how-to/access',
+            label: 'Access Go runtime service',
+          },
+          {
+            type: 'doc',
+            id: 'go/how-to/scaling',
+            label: 'Scale Go runtime service',
+          },
+          {
+            type: 'doc',
+            id: 'go/how-to/shared-storage',
+            label: 'Connect / disconnect shared storage',
+          },
+        ],
+      },
+    ],
+  rust: [
+      {
+        type: 'ref',
+        id: 'homepage',
+        label: 'Back to home',
+        customProps: {
+          sidebar_is_back_link: true,
+          sidebar_icon: 'back-arrow',
+        },
+      },
+      {
+        type: 'doc',
+        id: 'rust/overview',
+        label: 'Rust',
+        customProps: {
+          sidebar_is_title: true,
+          sidebar_icon: 'rust',
+        },
+      },
+      {
+        type: 'category',
+        label: 'Management',
+        collapsible: false,
+        customProps: {
+          sidebar_is_group_headline: true,
+        },
+        items: [
+          {
+            type: 'doc',
+            id: 'rust/how-to/create',
+            label: 'Create Rust service',
+          },
+          {
+            type: 'doc',
+            id: 'rust/how-to/upgrade',
+            label: 'Upgrade Rust service',
+          },
+          {
+            type: 'doc',
+            id: 'rust/how-to/delete',
+            label: 'Delete Rust service',
+          },
+          {
+            type: 'doc',
+            id: 'rust/how-to/controls',
+            label: 'Stop & start Rust runtime service',
+          },
+        ],
+      },
+      {
+        type: 'category',
+        label: 'Configuration & Environment',
+        collapsible: false,
+        customProps: {
+          sidebar_is_group_headline: true,
+        },
+        items: [
+          {
+            type: 'doc',
+            id: 'rust/how-to/env-variables',
+            label: 'Manage environment variables',
+          },
+          {
+            type: 'doc',
+            id: 'rust/how-to/customize-runtime',
+            label: 'Customize Rust runtime',
+          },
+        ],
+      },
+      {
+        type: 'category',
+        label: 'Build & Deployment',
+        collapsible: false,
+        customProps: {
+          sidebar_is_group_headline: true,
+        },
+        items: [
+          {
+            type: 'doc',
+            id: 'rust/how-to/build-pipeline',
+            label: 'Configure build & deploy pipeline',
+          },
+          {
+            type: 'doc',
+            id: 'rust/how-to/trigger-pipeline',
+            label: 'Trigger build pipeline',
+          },
+          {
+            type: 'doc',
+            id: 'rust/how-to/build-process',
+            label: 'Build process',
+          },
+          {
+            type: 'doc',
+            id: 'rust/how-to/deploy-process',
+            label: 'Deploy process',
+          },
+        ],
+      },
+      {
+        type: 'category',
+        label: 'Maintenance & Monitoring',
+        collapsible: false,
+        customProps: {
+          sidebar_is_group_headline: true,
+        },
+        items: [
+          {
+            type: 'doc',
+            id: 'rust/how-to/logs',
+            label: 'Setup & access logs',
+          },
+          {
+            type: 'doc',
+            id: 'rust/how-to/filebrowser',
+            label: 'Browse container files',
+          },
+          {
+            type: 'doc',
+            id: 'rust/how-to/access',
+            label: 'Access Rust runtime service',
+          },
+          {
+            type: 'doc',
+            id: 'rust/how-to/scaling',
+            label: 'Scale Rust runtime service',
+          },
+          {
+            type: 'doc',
+            id: 'rust/how-to/shared-storage',
+            label: 'Connect / disconnect shared storage',
+          },
+        ],
+      },
+    ],
+    dotnet: [
+      {
+        type: 'ref',
+        id: 'homepage',
+        label: 'Back to home',
+        customProps: {
+          sidebar_is_back_link: true,
+          sidebar_icon: 'back-arrow',
+        },
+      },
+      {
+        type: 'doc',
+        id: 'dotnet/overview',
+        label: '.NET',
+        customProps: {
+          sidebar_is_title: true,
+          sidebar_icon: 'dotnet',
+        },
+      },
+      {
+        type: 'category',
+        label: 'Management',
+        collapsible: false,
+        customProps: {
+          sidebar_is_group_headline: true,
+        },
+        items: [
+          {
+            type: 'doc',
+            id: 'dotnet/how-to/create',
+            label: 'Create .NET service',
+          },
+          {
+            type: 'doc',
+            id: 'dotnet/how-to/upgrade',
+            label: 'Upgrade .NET service',
+          },
+          {
+            type: 'doc',
+            id: 'dotnet/how-to/delete',
+            label: 'Delete .NET service',
+          },
+          {
+            type: 'doc',
+            id: 'dotnet/how-to/controls',
+            label: 'Stop & start .NET runtime service',
+          },
+        ],
+      },
+      {
+        type: 'category',
+        label: 'Configuration & Environment',
+        collapsible: false,
+        customProps: {
+          sidebar_is_group_headline: true,
+        },
+        items: [
+          {
+            type: 'doc',
+            id: 'dotnet/how-to/env-variables',
+            label: 'Manage environment variables',
+          },
+          {
+            type: 'doc',
+            id: 'dotnet/how-to/customize-runtime',
+            label: 'Customize .NET runtime',
+          },
+        ],
+      },
+      {
+        type: 'category',
+        label: 'Build & Deployment',
+        collapsible: false,
+        customProps: {
+          sidebar_is_group_headline: true,
+        },
+        items: [
+          {
+            type: 'doc',
+            id: 'dotnet/how-to/build-pipeline',
+            label: 'Configure build & deploy pipeline',
+          },
+          {
+            type: 'doc',
+            id: 'dotnet/how-to/trigger-pipeline',
+            label: 'Trigger build pipeline',
+          },
+          {
+            type: 'doc',
+            id: 'dotnet/how-to/build-process',
+            label: 'Build process',
+          },
+          {
+            type: 'doc',
+            id: 'dotnet/how-to/deploy-process',
+            label: 'Deploy process',
+          },
+        ],
+      },
+      {
+        type: 'category',
+        label: 'Maintenance & Monitoring',
+        collapsible: false,
+        customProps: {
+          sidebar_is_group_headline: true,
+        },
+        items: [
+          {
+            type: 'doc',
+            id: 'dotnet/how-to/logs',
+            label: 'Setup & access logs',
+          },
+          {
+            type: 'doc',
+            id: 'dotnet/how-to/filebrowser',
+            label: 'Browse container files',
+          },
+          {
+            type: 'doc',
+            id: 'dotnet/how-to/access',
+            label: 'Access .NET runtime service',
+          },
+          {
+            type: 'doc',
+            id: 'dotnet/how-to/scaling',
+            label: 'Scale .NET runtime service',
+          },
+          {
+            type: 'doc',
+            id: 'dotnet/how-to/shared-storage',
+            label: 'Connect / disconnect shared storage',
+          },
+        ],
+      },
+    ],
+  java: [
+      {
+        type: 'ref',
+        id: 'homepage',
+        label: 'Back to home',
+        customProps: {
+          sidebar_is_back_link: true,
+          sidebar_icon: 'back-arrow',
+        },
+      },
+      {
+        type: 'doc',
+        id: 'java/overview',
+        label: 'Java',
+        customProps: {
+          sidebar_is_title: true,
+          sidebar_icon: 'java',
+        },
+      },
+      {
+        type: 'category',
+        label: 'Management',
+        collapsible: false,
+        customProps: {
+          sidebar_is_group_headline: true,
+        },
+        items: [
+          {
+            type: 'doc',
+            id: 'java/how-to/create',
+            label: 'Create Java service',
+          },
+          {
+            type: 'doc',
+            id: 'java/how-to/upgrade',
+            label: 'Upgrade Java service',
+          },
+          {
+            type: 'doc',
+            id: 'java/how-to/delete',
+            label: 'Delete Java service',
+          },
+          {
+            type: 'doc',
+            id: 'java/how-to/controls',
+            label: 'Stop & start Java runtime service',
+          },
+        ],
+      },
+      {
+        type: 'category',
+        label: 'Configuration & Environment',
+        collapsible: false,
+        customProps: {
+          sidebar_is_group_headline: true,
+        },
+        items: [
+          {
+            type: 'doc',
+            id: 'java/how-to/env-variables',
+            label: 'Manage environment variables',
+          },
+          {
+            type: 'doc',
+            id: 'java/how-to/customize-runtime',
+            label: 'Customize Java runtime',
+          },
+        ],
+      },
+      {
+        type: 'category',
+        label: 'Build & Deployment',
+        collapsible: false,
+        customProps: {
+          sidebar_is_group_headline: true,
+        },
+        items: [
+          {
+            type: 'doc',
+            id: 'java/how-to/build-pipeline',
+            label: 'Configure build & deploy pipeline',
+          },
+          {
+            type: 'doc',
+            id: 'java/how-to/trigger-pipeline',
+            label: 'Trigger build pipeline',
+          },
+          {
+            type: 'doc',
+            id: 'java/how-to/build-process',
+            label: 'Build process',
+          },
+          {
+            type: 'doc',
+            id: 'java/how-to/deploy-process',
+            label: 'Deploy process',
+          },
+        ],
+      },
+      {
+        type: 'category',
+        label: 'Maintenance & Monitoring',
+        collapsible: false,
+        customProps: {
+          sidebar_is_group_headline: true,
+        },
+        items: [
+          {
+            type: 'doc',
+            id: 'java/how-to/logs',
+            label: 'Setup & access logs',
+          },
+          {
+            type: 'doc',
+            id: 'java/how-to/filebrowser',
+            label: 'Browse container files',
+          },
+          {
+            type: 'doc',
+            id: 'java/how-to/access',
+            label: 'Access Java runtime service',
+          },
+          {
+            type: 'doc',
+            id: 'java/how-to/scaling',
+            label: 'Scale Java runtime service',
+          },
+          {
+            type: 'doc',
+            id: 'java/how-to/shared-storage',
+            label: 'Connect / disconnect shared storage',
+          },
+        ],
+      },
+    ],
+  nginx: [
+      {
+        type: 'ref',
+        id: 'homepage',
+        label: 'Back to home',
+        customProps: {
+          sidebar_is_back_link: true,
+          sidebar_icon: 'back-arrow',
+        },
+      },
+      {
+        type: 'doc',
+        id: 'nginx/overview',
+        label: 'Nginx Static',
+        customProps: {
+          sidebar_is_title: true,
+          sidebar_icon: 'nginx',
+        },
+      },
+      {
+        type: 'category',
+        label: 'Dive-in',
+        collapsible: false,
+        link: {
+          type: 'doc',
+          id: 'nginx/getting-started',
+        },
+        customProps: {
+          sidebar_icon: 'rocket-launch',
+        },
+        className: 'homepage-sidebar-item',
+        items: [
+          {
+            type: 'doc',
+            id: 'nginx/tutorial/quickstart',
+            label: 'Quickstart',
+            customProps: {
+              exclude_from_doc_list: false,
+            },
+          },
+          {
+            type: 'doc',
+            id: 'nginx/tutorial/step-by-step',
+            label: 'Step-by-step tutorial',
+            customProps: {
+              exclude_from_doc_list: false,
+            },
+          },
+        ],
+      },
+      {
+        type: 'category',
+        label: 'Management',
+        collapsible: false,
+        customProps: {
+          sidebar_is_group_headline: true,
+        },
+        items: [
+          {
+            type: 'doc',
+            id: 'nginx/how-to/create',
+            label: 'Create Nginx static service',
+          },
+          {
+            type: 'doc',
+            id: 'nginx/how-to/upgrade',
+            label: 'Upgrade Nginx service',
+          },
+          {
+            type: 'doc',
+            id: 'nginx/how-to/delete',
+            label: 'Delete Nginx static service',
+          },
+          {
+            type: 'doc',
+            id: 'nginx/how-to/controls',
+            label: 'Stop & start Nginx static service',
+          },
+        ],
+      },
+      {
+        type: 'category',
+        label: 'Configuration & Environment',
+        collapsible: false,
+        customProps: {
+          sidebar_is_group_headline: true,
+        },
+        items: [
+          {
+            type: 'doc',
+            id: 'nginx/how-to/env-variables',
+            label: 'Manage environment variables',
+          },
+          {
+            type: 'doc',
+            id: 'nginx/how-to/customize-runtime',
+            label: 'Customize Nginx static runtime',
+          },
+          {
+            type: 'doc',
+            id: 'nginx/how-to/customize-web-server',
+            label: 'Customize web server',
+          },
+        ],
+      },
+      {
+        type: 'category',
+        label: 'Build & Deployment',
+        collapsible: false,
+        customProps: {
+          sidebar_is_group_headline: true,
+        },
+        items: [
+          {
+            type: 'doc',
+            id: 'nginx/how-to/build-pipeline',
+            label: 'Configure build & deploy pipeline',
+          },
+          {
+            type: 'doc',
+            id: 'nginx/how-to/trigger-pipeline',
+            label: 'Trigger build pipeline',
+          },
+          {
+            type: 'doc',
+            id: 'nginx/how-to/deploy-process',
+            label: 'Deploy process',
+          },
+        ],
+      },
+      {
+        type: 'category',
+        label: 'Maintenance & Monitoring',
+        collapsible: false,
+        customProps: {
+          sidebar_is_group_headline: true,
+        },
+        items: [
+          {
+            type: 'doc',
+            id: 'nginx/how-to/logs',
+            label: 'Setup & access logs',
+          },
+          {
+            type: 'doc',
+            id: 'nginx/how-to/filebrowser',
+            label: 'Browse container files',
+          },
+          {
+            type: 'doc',
+            id: 'nginx/how-to/access',
+            label: 'Access Nginx runtime service',
+          },
+          {
+            type: 'doc',
+            id: 'nginx/how-to/scaling',
+            label: 'Scale Nginx static service',
+          },
+          {
+            type: 'doc',
+            id: 'nginx/how-to/shared-storage',
+            label: 'Connect / disconnect shared storage',
+          },
+        ],
+      },
+      {
+        type: 'doc',
+        id: 'nginx/faq',
+        label: 'FAQ',
+        customProps: {
+          sidebar_is_title: true,
+          sidebar_icon: 'chat-bubble-left-right',
+        },
+      },
+    ],
   static: [
     {
       type: 'ref',
@@ -2258,462 +2434,545 @@ module.exports = {
     },
   ],
   deno: [
-    {
-      type: 'ref',
-      id: 'homepage',
-      label: 'Back to home',
-      customProps: {
-        sidebar_is_back_link: true,
-        sidebar_icon: 'back-arrow',
+      {
+        type: 'ref',
+        id: 'homepage',
+        label: 'Back to home',
+        customProps: {
+          sidebar_is_back_link: true,
+          sidebar_icon: 'back-arrow',
+        },
       },
-    },
-    {
-      type: 'doc',
-      id: 'deno/overview',
-      label: 'Getting Started',
-      customProps: {
-        sidebar_is_title: true,
-        sidebar_icon: 'deno',
+      {
+        type: 'doc',
+        id: 'deno/overview',
+        label: 'Getting Started',
+        customProps: {
+          sidebar_is_title: true,
+          sidebar_icon: 'deno',
+        },
       },
-    },
-    {
-      type: 'category',
-      label: 'How-to',
-      collapsible: false,
-      customProps: {
-        sidebar_is_group_headline: true,
-        sidebar_icon: 'academic-cap-solid',
+      {
+        type: 'category',
+        label: 'Management',
+        collapsible: false,
+        customProps: {
+          sidebar_is_group_headline: true,
+        },
+        items: [
+          {
+            type: 'doc',
+            id: 'deno/how-to/create',
+            label: 'Create Deno service',
+          },
+          {
+            type: 'doc',
+            id: 'deno/how-to/upgrade',
+            label: 'Upgrade Deno service',
+          },
+          {
+            type: 'doc',
+            id: 'deno/how-to/delete',
+            label: 'Delete Deno service',
+          },
+          {
+            type: 'doc',
+            id: 'deno/how-to/controls',
+            label: 'Stop & start Deno runtime service',
+          },
+        ],
       },
-      items: [
-        {
-          type: 'doc',
-          id: 'deno/how-to/create',
-          label: 'Create Deno service',
+      {
+        type: 'category',
+        label: 'Configuration & Environment',
+        collapsible: false,
+        customProps: {
+          sidebar_is_group_headline: true,
         },
-        {
-          type: 'doc',
-          id: 'deno/how-to/env-variables',
-          label: 'Manage environment variables',
+        items: [
+          {
+            type: 'doc',
+            id: 'deno/how-to/env-variables',
+            label: 'Manage environment variables',
+          },
+          {
+            type: 'doc',
+            id: 'deno/how-to/customize-runtime',
+            label: 'Customize Deno runtime',
+          },
+        ],
+      },
+      {
+        type: 'category',
+        label: 'Build & Deployment',
+        collapsible: false,
+        customProps: {
+          sidebar_is_group_headline: true,
         },
-        {
-          type: 'doc',
-          id: 'deno/how-to/upgrade',
-          label: 'Upgrade Deno service',
+        items: [
+          {
+            type: 'doc',
+            id: 'deno/how-to/build-pipeline',
+            label: 'Configure build & deploy pipeline',
+          },
+          {
+            type: 'doc',
+            id: 'deno/how-to/trigger-pipeline',
+            label: 'Trigger build pipeline',
+          },
+          {
+            type: 'doc',
+            id: 'deno/how-to/build-process',
+            label: 'Build process',
+          },
+          {
+            type: 'doc',
+            id: 'deno/how-to/deploy-process',
+            label: 'Deploy process',
+          },
+        ],
+      },
+      {
+        type: 'category',
+        label: 'Maintenance & Monitoring',
+        collapsible: false,
+        customProps: {
+          sidebar_is_group_headline: true,
         },
-        {
-          type: 'doc',
-          id: 'deno/how-to/build-pipeline',
-          label: 'Configure build & deploy pipeline',
-        },
-        {
-          type: 'doc',
-          id: 'deno/how-to/trigger-pipeline',
-          label: 'Trigger build pipeline',
-        },
-        {
-          type: 'doc',
-          id: 'deno/how-to/build-process',
-          label: 'Build process',
-        },
-        {
-          type: 'doc',
-          id: 'deno/how-to/deploy-process',
-          label: 'Deploy process',
-        },
-        {
-          type: 'doc',
-          id: 'deno/how-to/customize-runtime',
-          label: 'Customize Deno runtime',
-        },
-        {
-          type: 'doc',
-          id: 'deno/how-to/logs',
-          label: 'Setup & access logs',
-        },
-        {
-          type: 'doc',
-          id: 'deno/how-to/filebrowser',
-          label: 'Browse container files',
-        },
-        {
-          type: 'doc',
-          id: 'deno/how-to/access',
-          label: 'Access Bun runtime service',
-        },
-        {
-          type: 'doc',
-          id: 'deno/how-to/scaling',
-          label: 'Scale Deno runtime service',
-        },
-        {
-          type: 'doc',
-          id: 'deno/how-to/controls',
-          label: 'Stop & start Deno runtime service',
-        },
-        {
-          type: 'doc',
-          id: 'deno/how-to/shared-storage',
-          label: 'Connect / disconnect shared storage',
-        },
-        {
-          type: 'doc',
-          id: 'deno/how-to/delete',
-          label: 'Delete Deno service',
-        },
-      ],
-    },
-    // {
-    //   type: 'doc',
-    //   id: 'deno/faq',
-    //   label: 'FAQ',
-    //   customProps: {
-    //     sidebar_is_title: true,
-    //     sidebar_icon: 'chat-bubble-left-right',
-    //   },
-    // },
-  ],
+        items: [
+          {
+            type: 'doc',
+            id: 'deno/how-to/logs',
+            label: 'Setup & access logs',
+          },
+          {
+            type: 'doc',
+            id: 'deno/how-to/filebrowser',
+            label: 'Browse container files',
+          },
+          {
+            type: 'doc',
+            id: 'deno/how-to/access',
+            label: 'Access Bun runtime service',
+          },
+          {
+            type: 'doc',
+            id: 'deno/how-to/scaling',
+            label: 'Scale Deno runtime service',
+          },
+          {
+            type: 'doc',
+            id: 'deno/how-to/shared-storage',
+            label: 'Connect / disconnect shared storage',
+          },
+        ],
+      },
+    ],
   bun: [
-    {
-      type: 'ref',
-      id: 'homepage',
-      label: 'Back to home',
-      customProps: {
-        sidebar_is_back_link: true,
-        sidebar_icon: 'back-arrow',
+      {
+        type: 'ref',
+        id: 'homepage',
+        label: 'Back to home',
+        customProps: {
+          sidebar_is_back_link: true,
+          sidebar_icon: 'back-arrow',
+        },
       },
-    },
-    {
-      type: 'doc',
-      id: 'bun/overview',
-      label: 'Getting Started',
-      customProps: {
-        sidebar_is_title: true,
-        sidebar_icon: 'bun',
+      {
+        type: 'doc',
+        id: 'bun/overview',
+        label: 'Getting Started',
+        customProps: {
+          sidebar_is_title: true,
+          sidebar_icon: 'bun',
+        },
       },
-    },
-    {
-      type: 'category',
-      label: 'How-to',
-      collapsible: false,
-      customProps: {
-        sidebar_is_group_headline: true,
+      {
+        type: 'category',
+        label: 'Management',
+        collapsible: false,
+        customProps: {
+          sidebar_is_group_headline: true,
+        },
+        items: [
+          {
+            type: 'doc',
+            id: 'bun/how-to/create',
+            label: 'Create Bun service',
+          },
+          {
+            type: 'doc',
+            id: 'bun/how-to/upgrade',
+            label: 'Upgrade Bun service',
+          },
+          {
+            type: 'doc',
+            id: 'bun/how-to/delete',
+            label: 'Delete Bun service',
+          },
+          {
+            type: 'doc',
+            id: 'bun/how-to/controls',
+            label: 'Stop & start Bun runtime service',
+          },
+        ],
       },
-      items: [
-        {
-          type: 'doc',
-          id: 'bun/how-to/create',
-          label: 'Create Bun service',
+      {
+        type: 'category',
+        label: 'Configuration & Environment',
+        collapsible: false,
+        customProps: {
+          sidebar_is_group_headline: true,
         },
-        {
-          type: 'doc',
-          id: 'bun/how-to/env-variables',
-          label: 'Manage environment variables',
+        items: [
+          {
+            type: 'doc',
+            id: 'bun/how-to/env-variables',
+            label: 'Manage environment variables',
+          },
+          {
+            type: 'doc',
+            id: 'bun/how-to/customize-runtime',
+            label: 'Customize Bun runtime',
+          },
+        ],
+      },
+      {
+        type: 'category',
+        label: 'Build & Deployment',
+        collapsible: false,
+        customProps: {
+          sidebar_is_group_headline: true,
         },
-        {
-          type: 'doc',
-          id: 'bun/how-to/upgrade',
-          label: 'Upgrade Bun service',
+        items: [
+          {
+            type: 'doc',
+            id: 'bun/how-to/build-pipeline',
+            label: 'Configure build & deploy pipeline',
+          },
+          {
+            type: 'doc',
+            id: 'bun/how-to/trigger-pipeline',
+            label: 'Trigger build pipeline',
+          },
+          {
+            type: 'doc',
+            id: 'bun/how-to/build-process',
+            label: 'Build process',
+          },
+          {
+            type: 'doc',
+            id: 'bun/how-to/deploy-process',
+            label: 'Deploy process',
+          },
+        ],
+      },
+      {
+        type: 'category',
+        label: 'Maintenance & Monitoring',
+        collapsible: false,
+        customProps: {
+          sidebar_is_group_headline: true,
         },
-        {
-          type: 'doc',
-          id: 'bun/how-to/build-pipeline',
-          label: 'Configure build & deploy pipeline',
-        },
-        {
-          type: 'doc',
-          id: 'bun/how-to/trigger-pipeline',
-          label: 'Trigger build pipeline',
-        },
-        {
-          type: 'doc',
-          id: 'bun/how-to/build-process',
-          label: 'Build process',
-        },
-        {
-          type: 'doc',
-          id: 'bun/how-to/deploy-process',
-          label: 'Deploy process',
-        },
-        {
-          type: 'doc',
-          id: 'bun/how-to/customize-runtime',
-          label: 'Customize Bun runtime',
-        },
-        {
-          type: 'doc',
-          id: 'bun/how-to/logs',
-          label: 'Setup & access logs',
-        },
-        {
-          type: 'doc',
-          id: 'bun/how-to/filebrowser',
-          label: 'Browse container files',
-        },
-        {
-          type: 'doc',
-          id: 'bun/how-to/access',
-          label: 'Access Bun runtime service',
-        },
-        {
-          type: 'doc',
-          id: 'bun/how-to/scaling',
-          label: 'Scale Bun runtime service',
-        },
-        {
-          type: 'doc',
-          id: 'bun/how-to/controls',
-          label: 'Stop & start Bun runtime service',
-        },
-        {
-          type: 'doc',
-          id: 'bun/how-to/shared-storage',
-          label: 'Connect / disconnect shared storage',
-        },
-        {
-          type: 'doc',
-          id: 'bun/how-to/delete',
-          label: 'Delete Bun service',
-        },
-      ],
-    },
-    // {
-    //   type: 'doc',
-    //   id: 'bun/faq',
-    //   label: 'FAQ',
-    //   customProps: {
-    //     sidebar_is_title: true,
-    //     sidebar_icon: 'chat-bubble-left-right',
-    //   },
-    // },
-  ],
+        items: [
+          {
+            type: 'doc',
+            id: 'bun/how-to/logs',
+            label: 'Setup & access logs',
+          },
+          {
+            type: 'doc',
+            id: 'bun/how-to/filebrowser',
+            label: 'Browse container files',
+          },
+          {
+            type: 'doc',
+            id: 'bun/how-to/access',
+            label: 'Access Bun runtime service',
+          },
+          {
+            type: 'doc',
+            id: 'bun/how-to/scaling',
+            label: 'Scale Bun runtime service',
+          },
+          {
+            type: 'doc',
+            id: 'bun/how-to/shared-storage',
+            label: 'Connect / disconnect shared storage',
+          },
+        ],
+      },
+    ],
   gleam: [
-    {
-      type: 'ref',
-      id: 'homepage',
-      label: 'Back to home',
-      customProps: {
-        sidebar_is_back_link: true,
-        sidebar_icon: 'back-arrow',
+      {
+        type: 'ref',
+        id: 'homepage',
+        label: 'Back to home',
+        customProps: {
+          sidebar_is_back_link: true,
+          sidebar_icon: 'back-arrow',
+        },
       },
-    },
-    {
-      type: 'doc',
-      id: 'gleam/overview',
-      label: 'Getting Started',
-      customProps: {
-        sidebar_is_title: true,
-        sidebar_icon: 'gleam',
+      {
+        type: 'doc',
+        id: 'gleam/overview',
+        label: 'Getting Started',
+        customProps: {
+          sidebar_is_title: true,
+          sidebar_icon: 'gleam',
+        },
       },
-    },
-    {
-      type: 'category',
-      label: 'How-to',
-      collapsible: false,
-      customProps: {
-        sidebar_is_group_headline: true,
+      {
+        type: 'category',
+        label: 'Management',
+        collapsible: false,
+        customProps: {
+          sidebar_is_group_headline: true,
+        },
+        items: [
+          {
+            type: 'doc',
+            id: 'gleam/how-to/create',
+            label: 'Create Gleam service',
+          },
+          {
+            type: 'doc',
+            id: 'gleam/how-to/upgrade',
+            label: 'Upgrade Gleam service',
+          },
+          {
+            type: 'doc',
+            id: 'gleam/how-to/delete',
+            label: 'Delete Gleam service',
+          },
+          {
+            type: 'doc',
+            id: 'gleam/how-to/controls',
+            label: 'Stop & start Gleam runtime service',
+          },
+        ],
       },
-      items: [
-        {
-          type: 'doc',
-          id: 'gleam/how-to/create',
-          label: 'Create Gleam service',
+      {
+        type: 'category',
+        label: 'Configuration & Environment',
+        collapsible: false,
+        customProps: {
+          sidebar_is_group_headline: true,
         },
-        {
-          type: 'doc',
-          id: 'gleam/how-to/env-variables',
-          label: 'Manage environment variables',
+        items: [
+          {
+            type: 'doc',
+            id: 'gleam/how-to/env-variables',
+            label: 'Manage environment variables',
+          },
+          {
+            type: 'doc',
+            id: 'gleam/how-to/customize-runtime',
+            label: 'Customize Gleam runtime',
+          },
+        ],
+      },
+      {
+        type: 'category',
+        label: 'Build & Deployment',
+        collapsible: false,
+        customProps: {
+          sidebar_is_group_headline: true,
         },
-        {
-          type: 'doc',
-          id: 'gleam/how-to/upgrade',
-          label: 'Upgrade Gleam service',
+        items: [
+          {
+            type: 'doc',
+            id: 'gleam/how-to/build-pipeline',
+            label: 'Configure build & deploy pipeline',
+          },
+          {
+            type: 'doc',
+            id: 'gleam/how-to/trigger-pipeline',
+            label: 'Trigger build pipeline',
+          },
+          {
+            type: 'doc',
+            id: 'gleam/how-to/build-process',
+            label: 'Build process',
+          },
+          {
+            type: 'doc',
+            id: 'gleam/how-to/deploy-process',
+            label: 'Deploy process',
+          },
+        ],
+      },
+      {
+        type: 'category',
+        label: 'Maintenance & Monitoring',
+        collapsible: false,
+        customProps: {
+          sidebar_is_group_headline: true,
         },
-        {
-          type: 'doc',
-          id: 'gleam/how-to/build-pipeline',
-          label: 'Configure build & deploy pipeline',
-        },
-        {
-          type: 'doc',
-          id: 'gleam/how-to/trigger-pipeline',
-          label: 'Trigger build pipeline',
-        },
-        {
-          type: 'doc',
-          id: 'gleam/how-to/build-process',
-          label: 'Build process',
-        },
-        {
-          type: 'doc',
-          id: 'gleam/how-to/deploy-process',
-          label: 'Deploy process',
-        },
-        {
-          type: 'doc',
-          id: 'gleam/how-to/customize-runtime',
-          label: 'Customize Gleam runtime',
-        },
-        {
-          type: 'doc',
-          id: 'gleam/how-to/logs',
-          label: 'Setup & access logs',
-        },
-        {
-          type: 'doc',
-          id: 'gleam/how-to/filebrowser',
-          label: 'Browse container files',
-        },
-        {
-          type: 'doc',
-          id: 'gleam/how-to/access',
-          label: 'Access Gleam runtime service',
-        },
-        {
-          type: 'doc',
-          id: 'gleam/how-to/scaling',
-          label: 'Scale Gleam runtime service',
-        },
-        {
-          type: 'doc',
-          id: 'gleam/how-to/controls',
-          label: 'Stop & start Gleam runtime service',
-        },
-        {
-          type: 'doc',
-          id: 'gleam/how-to/shared-storage',
-          label: 'Connect / disconnect shared storage',
-        },
-        {
-          type: 'doc',
-          id: 'gleam/how-to/delete',
-          label: 'Delete Gleam service',
-        },
-      ],
-    },
-    // {
-    //   type: 'doc',
-    //   id: 'gleam/faq',
-    //   label: 'FAQ',
-    //   customProps: {
-    //     sidebar_is_title: true,
-    //     sidebar_icon: 'chat-bubble-left-right',
-    //   },
-    // },
-  ],
+        items: [
+          {
+            type: 'doc',
+            id: 'gleam/how-to/logs',
+            label: 'Setup & access logs',
+          },
+          {
+            type: 'doc',
+            id: 'gleam/how-to/filebrowser',
+            label: 'Browse container files',
+          },
+          {
+            type: 'doc',
+            id: 'gleam/how-to/access',
+            label: 'Access Gleam runtime service',
+          },
+          {
+            type: 'doc',
+            id: 'gleam/how-to/scaling',
+            label: 'Scale Gleam runtime service',
+          },
+          {
+            type: 'doc',
+            id: 'gleam/how-to/shared-storage',
+            label: 'Connect / disconnect shared storage',
+          },
+        ],
+      },
+    ],
   elixir: [
-    {
-      type: 'ref',
-      id: 'homepage',
-      label: 'Back to home',
-      customProps: {
-        sidebar_is_back_link: true,
-        sidebar_icon: 'back-arrow',
+      {
+        type: 'ref',
+        id: 'homepage',
+        label: 'Back to home',
+        customProps: {
+          sidebar_is_back_link: true,
+          sidebar_icon: 'back-arrow',
+        },
       },
-    },
-    {
-      type: 'doc',
-      id: 'elixir/overview',
-      label: 'Getting Started',
-      customProps: {
-        sidebar_is_title: true,
-        sidebar_icon: 'elixir',
+      {
+        type: 'doc',
+        id: 'elixir/overview',
+        label: 'Getting Started',
+        customProps: {
+          sidebar_is_title: true,
+          sidebar_icon: 'elixir',
+        },
       },
-    },
-    {
-      type: 'category',
-      label: 'How-to',
-      collapsible: false,
-      customProps: {
-        sidebar_is_group_headline: true,
+      {
+        type: 'category',
+        label: 'Management',
+        collapsible: false,
+        customProps: {
+          sidebar_is_group_headline: true,
+        },
+        items: [
+          {
+            type: 'doc',
+            id: 'elixir/how-to/create',
+            label: 'Create Elixir service',
+          },
+          {
+            type: 'doc',
+            id: 'elixir/how-to/upgrade',
+            label: 'Upgrade Elixir service',
+          },
+          {
+            type: 'doc',
+            id: 'elixir/how-to/delete',
+            label: 'Delete Elixir service',
+          },
+          {
+            type: 'doc',
+            id: 'elixir/how-to/controls',
+            label: 'Stop & start Elixir runtime service',
+          },
+        ],
       },
-      items: [
-        {
-          type: 'doc',
-          id: 'elixir/how-to/create',
-          label: 'Create Gleam service',
+      {
+        type: 'category',
+        label: 'Configuration & Environment',
+        collapsible: false,
+        customProps: {
+          sidebar_is_group_headline: true,
         },
-        {
-          type: 'doc',
-          id: 'elixir/how-to/env-variables',
-          label: 'Manage environment variables',
+        items: [
+          {
+            type: 'doc',
+            id: 'elixir/how-to/env-variables',
+            label: 'Manage environment variables',
+          },
+          {
+            type: 'doc',
+            id: 'elixir/how-to/customize-runtime',
+            label: 'Customize Elixir runtime',
+          },
+        ],
+      },
+      {
+        type: 'category',
+        label: 'Build & Deployment',
+        collapsible: false,
+        customProps: {
+          sidebar_is_group_headline: true,
         },
-        {
-          type: 'doc',
-          id: 'elixir/how-to/upgrade',
-          label: 'Upgrade Gleam service',
+        items: [
+          {
+            type: 'doc',
+            id: 'elixir/how-to/build-pipeline',
+            label: 'Configure build & deploy pipeline',
+          },
+          {
+            type: 'doc',
+            id: 'elixir/how-to/trigger-pipeline',
+            label: 'Trigger build pipeline',
+          },
+          {
+            type: 'doc',
+            id: 'elixir/how-to/build-process',
+            label: 'Build process',
+          },
+          {
+            type: 'doc',
+            id: 'elixir/how-to/deploy-process',
+            label: 'Deploy process',
+          },
+        ],
+      },
+      {
+        type: 'category',
+        label: 'Maintenance & Monitoring',
+        collapsible: false,
+        customProps: {
+          sidebar_is_group_headline: true,
         },
-        {
-          type: 'doc',
-          id: 'elixir/how-to/build-pipeline',
-          label: 'Configure build & deploy pipeline',
-        },
-        {
-          type: 'doc',
-          id: 'elixir/how-to/trigger-pipeline',
-          label: 'Trigger build pipeline',
-        },
-        {
-          type: 'doc',
-          id: 'elixir/how-to/build-process',
-          label: 'Build process',
-        },
-        {
-          type: 'doc',
-          id: 'elixir/how-to/deploy-process',
-          label: 'Deploy process',
-        },
-        {
-          type: 'doc',
-          id: 'elixir/how-to/customize-runtime',
-          label: 'Customize Gleam runtime',
-        },
-        {
-          type: 'doc',
-          id: 'elixir/how-to/logs',
-          label: 'Setup & access logs',
-        },
-        {
-          type: 'doc',
-          id: 'elixir/how-to/filebrowser',
-          label: 'Browse container files',
-        },
-        {
-          type: 'doc',
-          id: 'elixir/how-to/access',
-          label: 'Access Gleam runtime service',
-        },
-        {
-          type: 'doc',
-          id: 'elixir/how-to/scaling',
-          label: 'Scale Gleam runtime service',
-        },
-        {
-          type: 'doc',
-          id: 'elixir/how-to/controls',
-          label: 'Stop & start Gleam runtime service',
-        },
-        {
-          type: 'doc',
-          id: 'elixir/how-to/shared-storage',
-          label: 'Connect / disconnect shared storage',
-        },
-        {
-          type: 'doc',
-          id: 'elixir/how-to/delete',
-          label: 'Delete Gleam service',
-        },
-      ],
-    },
-    // {
-    //   type: 'doc',
-    //   id: 'elixir/faq',
-    //   label: 'FAQ',
-    //   customProps: {
-    //     sidebar_is_title: true,
-    //     sidebar_icon: 'chat-bubble-left-right',
-    //   },
-    // },
-  ],
+        items: [
+          {
+            type: 'doc',
+            id: 'elixir/how-to/logs',
+            label: 'Setup & access logs',
+          },
+          {
+            type: 'doc',
+            id: 'elixir/how-to/filebrowser',
+            label: 'Browse container files',
+          },
+          {
+            type: 'doc',
+            id: 'elixir/how-to/access',
+            label: 'Access Elixir runtime service',
+          },
+          {
+            type: 'doc',
+            id: 'elixir/how-to/scaling',
+            label: 'Scale Elixir runtime service',
+          },
+          {
+            type: 'doc',
+            id: 'elixir/how-to/shared-storage',
+            label: 'Connect / disconnect shared storage',
+          },
+        ],
+      },
+    ],
   laravel: [
     {
       type: 'ref',
@@ -2905,206 +3164,3 @@ module.exports = {
     },
   ],
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//  {
-//    type: "category",
-//    label: "Nest.js",
-//    link: {
-//      type: "doc",
-//      id: "frameworks/nestjs/index",
-//    },
-//    customProps: {
-//      sidebar_icon: "nestjs",
-//    },
-//    className: "homepage-sidebar-item",
-//    items: [
-//      {
-//        type: "doc",
-//        id: "frameworks/nestjs/index",
-//        label: "Overview & quickstart",
-//      },
-//      {
-//        type: "doc",
-//        id: "frameworks/nestjs/log",
-//        label: "Setup & access logs",
-//      },
-//      {
-//        type: "doc",
-//        id: "frameworks/nestjs/template",
-//        label: "Create templates with import & seed",
-//      },
-//      {
-//        type: "doc",
-//        id: "frameworks/nestjs/env-variables",
-//        label: "Utilize environment variables",
-//      },
-//      {
-//        type: "doc",
-//        id: "frameworks/nestjs/migration",
-//        label: "Migration & upgrades",
-//      },
-//      {
-//        type: "doc",
-//        id: "frameworks/nestjs/backups",
-//        label: "Backups",
-//      },
-//      {
-//        type: "doc",
-//        id: "frameworks/nestjs/scaling",
-//        label: "Optimize scaling",
-//      },
-//      {
-//        type: "doc",
-//        id: "frameworks/nestjs/scaling",
-//        label: "High availability, when, how, why",
-//      },
-//      {
-//        type: "doc",
-//        id: "frameworks/nestjs/cron",
-//        label: "CRON / Scheduled jobs",
-//      },
-//      {
-//        type: "doc",
-//        id: "frameworks/nestjs/mails",
-//        label: "SMTP & sending emails",
-//      },
-//      {
-//        type: "doc",
-//        id: "frameworks/nestjs/routing",
-//        label: "Public access from domain, IP, subdomain",
-//      },
-//    ],
-//  },
-//  {
-//    type: "category",
-//    label: "Laravel",
-//    link: {
-//      type: "doc",
-//      id: "frameworks/laravel/index",
-//    },
-//    customProps: {
-//      sidebar_icon: "laravel",
-//    },
-//    className: "homepage-sidebar-item",
-//    items: [
-//      {
-//        type: "doc",
-//        id: "frameworks/laravel/examples",
-//        label: "Examples",
-//        customProps: {
-//          exclude_from_doc_list: false,
-//        },
-//      },
-//    ],
-//  },
-//  {
-//    type: "category",
-//    label: "Gingonic",
-//    link: {
-//      type: "doc",
-//      id: "frameworks/gingonic/index",
-//    },
-//    customProps: {
-//      sidebar_icon: "gingonic",
-//    },
-//    className: "homepage-sidebar-item",
-//    items: [
-//      {
-//        type: "doc",
-//        id: "frameworks/gingonic/examples",
-//        label: "Examples",
-//        customProps: {
-//          exclude_from_doc_list: false,
-//        },
-//      },
-//    ],
-//  },
-//  {
-//    type: "category",
-//    label: "Nette",
-//    link: {
-//      type: "doc",
-//      id: "frameworks/nette/index",
-//    },
-//    customProps: {
-//      sidebar_icon: "nette",
-//    },
-//    className: "homepage-sidebar-item",
-//    items: [
-//      {
-//        type: "doc",
-//        id: "frameworks/nette/examples",
-//        label: "Examples",
-//        customProps: {
-//          exclude_from_doc_list: false,
-//        },
-//      },
-//    ],
-//  },
-//  {
-//    type: "category",
-//    label: "Strapi",
-//    link: {
-//      type: "doc",
-//      id: "frameworks/strapi/index",
-//    },
-//    customProps: {
-//      sidebar_icon: "strapi",
-//    },
-//    className: "homepage-sidebar-item",
-//    items: [
-//      {
-//        type: "doc",
-//        id: "frameworks/strapi/examples",
-//        label: "Examples",
-//        customProps: {
-//          exclude_from_doc_list: false,
-//        },
-//      },
-//    ],
-//  },
-//  {
-//    type: "category",
-//    label: "Medusa",
-//    link: {
-//      type: "doc",
-//      id: "frameworks/medusa/index",
-//    },
-//    customProps: {
-//      sidebar_icon: "medusa",
-//    },
-//    className: "homepage-sidebar-item",
-//    items: [
-//      {
-//        type: "doc",
-//        id: "frameworks/medusa/examples",
-//        label: "Examples",
-//        customProps: {
-//          exclude_from_doc_list: false,
-//        },
-//      },
-//    ],
-//  },
