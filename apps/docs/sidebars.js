@@ -154,11 +154,57 @@ module.exports = {
     },
     {
       type: 'html',
-      value: 'All Supported Services',
+      value: 'Services',
       customProps: {
         sidebar_is_group_divider: true,
       },
       className: 'homepage-sidebar-item',
+    },
+    {
+      type: 'category',
+      label: 'Management',
+      link: {
+        type: 'doc',
+        id: 'common/service-management',
+      },
+      customProps: {
+        sidebar_icon: 'cog-six-tooth',
+      },
+      className: 'homepage-sidebar-item',
+      items: [
+      {
+        type: 'doc',
+        id: 'common/management/create',
+        label: 'Create service',
+        customProps: {
+          exclude_from_doc_list: false,
+        },
+      },
+      {
+        type: 'doc',
+        id: 'common/management/upgrade',
+        label: 'Upgrade service',
+        customProps: {
+          exclude_from_doc_list: false,
+        },
+      },
+      {
+        type: 'doc',
+        id: 'common/management/delete',
+        label: 'Delete service',
+        customProps: {
+          exclude_from_doc_list: false,
+        },
+      },
+      {
+        type: 'doc',
+        id: 'common/management/controls',
+        label: 'Stop & start service',
+        customProps: {
+          exclude_from_doc_list: false,
+        },
+      },
+    ],
     },
     {
       type: 'category',
