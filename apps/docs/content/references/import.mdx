@@ -29,6 +29,8 @@ project:
   name: project0
   # Project description
   description: "This project is an example only"
+  # Project core package - LIGHT/SERIOUS
+  corePackage: SERIOUS
   # List of project tags for filtering
   tags:
     - test
@@ -121,8 +123,8 @@ services:
 </DropdownItem>
 </Dropdown>
 
-:::warning
-This is a general guideline; not all keys are valid for every service type. For technology-specific details, refer to the **Create service** page in the **How To** section of the Zerops documentation.
+:::note
+The example above is a general guideline; not all keys are valid for every service type. For technology-specific details, refer to the **Create service** page in the **How To** section of the Zerops documentation.
 :::
 
 ---
@@ -137,9 +139,6 @@ The project configuration is used to define the project you want to import.
 
 #### Usage
 
-<Dropdown>
-  <DropdownItem title="Project Structure">
-
     <table className="w-full my-1.5">
       <thead>
         <tr>
@@ -150,38 +149,38 @@ The project configuration is used to define the project you want to import.
       </thead>
       <tbody>
         <tr>
-          <td className="w-fit">project</td>
+          <td className="w-fit font-semibold">project</td>
           <td className="w-fit">object</td>
-          <td className="w-fit">
-            _REQUIRED, if a whole project is imported_
-            Only one project can be defined.
-          </td>
+          <td className="w-fit">_REQUIRED, if a whole project is imported_ <br/>Only one project can be defined.</td>
         </tr>
         <tr>
-          <td className="w-fit">name</td>
+          <td className="w-fit font-semibold">name</td>
           <td className="w-fit">string, REQUIRED</td>
-          <td className="w-fit">
-            The name of the new project. Duplicates are allowed.
-          </td>
+          <td className="w-fit">The name of the new project. Duplicates are allowed.</td>
         </tr>
         <tr>
-      <td className="w-fit">description</td>
-      <td className="w-fit">string</td>
-      <td className="w-fit">
-        Description of the new project.
-          </td>
+          <td className="w-fit font-semibold">description</td>
+          <td className="w-fit">string</td>
+          <td className="w-fit">Description of the new project.</td>
         </tr>
         <tr>
-          <td className="w-fit">tags</td>
+          <td className="w-fit font-semibold">corePackage</td>
+          <td className="w-fit">string</td>
+          <td className="w-fit">Core package of the new project. <br/>Values: <b>LIGHT</b>/<b>SERIOUS</b> (default LIGHT)</td>
+        </tr>
+        <tr>
+          <td className="w-fit font-semibold">tags</td>
           <td className="w-fit">list of strings</td>
-          <td className="w-fit">
-            One or more string tags. Tags do not have a functional meaning, they only provide better orientation in projects.
-          </td>
+          <td className="w-fit">One or more string tags.<br/>Tags do not have a functional meaning, they only provide better orientation in projects.</td>
         </tr>
       </tbody>
     </table>
-  </DropdownItem>
-</Dropdown>
+
+:::warning
+The `corePackage` value can't be changed later. Make sure to choose a suitable core package for your project.
+:::
+
+This example will create a project named `project0` with [serious core](/features/infrastructure#serious-core) package and the description `This project is an example only`. The project will have two tags: `test` and `dev`:
 
 ```yml
 # ==== Define a project to import ====
@@ -190,15 +189,13 @@ project:
   name: project0
   # Project description
   description: "This project is an example only"
+  # Project core package
+  corePackage: SERIOUS
   # List of project tags for filtering
   tags:
     - test
     - dev
 ```
-
-This will create a project with the name `project0` and the description `This project is an example only`. The project will have two tags: `test` and `dev`.
-
-The `project` object requires only the `name` parameter - both `description` and `tags` are optional.
 
 ### Service Configuration
 
@@ -207,7 +204,7 @@ The service configuration is used to define the services, environment variables,
 #### Usage
 
 <Dropdown>
-  <DropdownItem title="Service Structure">
+  <DropdownItem title="Service Structure Parameters">
 
     <table className="w-full my-1.5">
   <thead>
@@ -219,14 +216,12 @@ The service configuration is used to define the services, environment variables,
   </thead>
   <tbody>
     <tr>
-      <td className="w-fit">services</td>
+      <td className="w-fit font-semibold">services</td>
       <td className="w-fit">list of objects, REQUIRED</td>
-      <td className="w-fit">
-        At least one service is required.
-      </td>
+      <td className="w-fit">At least one service is required.</td>
     </tr>
     <tr>
-      <td className="w-fit">hostname</td>
+      <td className="w-fit font-semibold">hostname</td>
       <td className="w-fit">string, REQUIRED</td>
       <td className="w-fit">
         The unique service identifier.
@@ -236,36 +231,27 @@ The service configuration is used to define the services, environment variables,
       </td>
     </tr>
     <tr>
-      <td className="w-fit">type</td>
+      <td className="w-fit font-semibold">type</td>
       <td className="w-fit">enum, REQUIRED</td>
-      <td className="w-fit">
-        Specifies the service type and version. See [supported types](/references/importyml/type-list).
-      </td>
+      <td className="w-fit">Specifies the service type and version. See [supported types](/references/importyml/type-list).</td>
     </tr>
     <tr>
-      <td className="w-fit">mode</td>
+      <td className="w-fit font-semibold">mode</td>
       <td className="w-fit">enum</td>
-      <td className="w-fit">
-        Values: **HA / NON_HA** (default NON_HA)
-        Defines the operation mode of the service.
-      </td>
+      <td className="w-fit">Values: <b>HA</b> / <b>NON_HA</b> (default NON_HA)<br/>Defines the operation mode of the service.</td>
     </tr>
     <tr>
-      <td className="w-fit">envSecrets</td>
+      <td className="w-fit font-semibold">envSecrets</td>
       <td className="w-fit">map[string]string</td>
-      <td className="w-fit">
-        Environment variables that are blurred by default in Zerops GUI. Can be edited or deleted in Zerops GUI.
-      </td>
+      <td className="w-fit">Environment variables that are blurred by default in Zerops GUI. Can be edited or deleted in Zerops GUI.</td>
     </tr>
     <tr>
-      <td className="w-fit">objectStorageSize</td>
+      <td className="w-fit font-semibold">objectStorageSize</td>
       <td className="w-fit">integer</td>
-      <td className="w-fit">
-        Object storage size in GB.
-      </td>
+      <td className="w-fit">Object storage size in GB.</td>
     </tr>
     <tr>
-      <td className="w-fit">objectStoragePolicy</td>
+      <td className="w-fit font-semibold">objectStoragePolicy</td>
       <td className="w-fit">enum</td>
       <td className="w-fit">
         Values: **private / public-read / public-objects-read / public-write / public-read-write / custom**
@@ -273,7 +259,7 @@ The service configuration is used to define the services, environment variables,
       </td>
     </tr>
     <tr>
-      <td className="w-fit">objectStorageRawPolicy</td>
+      <td className="w-fit font-semibold">objectStorageRawPolicy</td>
       <td className="w-fit">json</td>
       <td className="w-fit">
         Define your own AWS S3 bucket access policy. See [AWS docs](https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-policy-language-overview.html) for details.
@@ -281,14 +267,14 @@ The service configuration is used to define the services, environment variables,
       </td>
     </tr>
     <tr>
-      <td className="w-fit">buildFromGit</td>
+      <td className="w-fit font-semibold">buildFromGit</td>
       <td className="w-fit">string (URL)</td>
       <td className="w-fit">
         A URL of a Github or Gitlab repository used for a one-time build of your service.
       </td>
     </tr>
     <tr>
-      <td className="w-fit">enableSubdomainAccess</td>
+      <td className="w-fit font-semibold">enableSubdomainAccess</td>
       <td className="w-fit">boolean</td>
       <td className="w-fit">
         Default: false
@@ -296,7 +282,7 @@ The service configuration is used to define the services, environment variables,
       </td>
     </tr>
     <tr>
-      <td className="w-fit">priority</td>
+      <td className="w-fit font-semibold">priority</td>
       <td className="w-fit">integer</td>
       <td className="w-fit">
         Services are sorted before creation by priority in descending order, i.e. the higher the priority the sooner the service is created.
@@ -355,7 +341,7 @@ The vertical autoscaling configuration is used to define the vertical autoscalin
 #### Usage
 
 <Dropdown>
-  <DropdownItem title="Vertical Autoscaling Structure">
+  <DropdownItem title="Vertical Autoscaling Structure Parameters">
 
 <table className="w-full my-1.5">
   <thead>
@@ -367,78 +353,78 @@ The vertical autoscaling configuration is used to define the vertical autoscalin
   </thead>
   <tbody>
     <tr>
-      <td className="w-fit">minCpu</td>
+      <td className="w-fit font-semibold">minCpu</td>
       <td className="w-fit">integer</td>
       <td className="w-fit">Minimum number of virtual CPUs</td>
     </tr>
     <tr>
-      <td className="w-fit">maxCpu</td>
+      <td className="w-fit font-semibold">maxCpu</td>
       <td className="w-fit">integer</td>
       <td className="w-fit">Maximum number of virtual CPUs</td>
     </tr>
     <tr>
-      <td className="w-fit">cpuMode</td>
+      <td className="w-fit font-semibold">cpuMode</td>
       <td className="w-fit">enum</td>
       <td className="w-fit">Values: **SHARED / DEDICATED**</td>
     </tr>
     <tr>
-      <td className="w-fit">minRam</td>
+      <td className="w-fit font-semibold">minRam</td>
       <td className="w-fit">float</td>
       <td className="w-fit">
         Minimum RAM in GB that each container of the service can scale down to.
       </td>
     </tr>
     <tr>
-      <td className="w-fit">maxRam</td>
+      <td className="w-fit font-semibold">maxRam</td>
       <td className="w-fit">float</td>
       <td className="w-fit">
         Maximum RAM in GB that each container of the service can scale up to.
       </td>
     </tr>
     <tr>
-      <td className="w-fit">minDisk</td>
+      <td className="w-fit font-semibold">minDisk</td>
       <td className="w-fit">float</td>
       <td className="w-fit">
         Minimum disk space in GB that each container of the service can scale down to.
       </td>
     </tr>
     <tr>
-      <td className="w-fit">maxDisk</td>
+      <td className="w-fit font-semibold">maxDisk</td>
       <td className="w-fit">float</td>
       <td className="w-fit">
         Maximum disk space in GB that each container of the service can scale up to.
       </td>
     </tr>
     <tr>
-      <td className="w-fit">startCpuCoreCount</td>
+      <td className="w-fit font-semibold">startCpuCoreCount</td>
       <td className="w-fit">integer</td>
       <td className="w-fit">
         Number of CPU cores with which each container starts.
       </td>
     </tr>
     <tr>
-      <td className="w-fit">minFreeCpuCores</td>
+      <td className="w-fit font-semibold">minFreeCpuCores</td>
       <td className="w-fit">float</td>
       <td className="w-fit">
         Minimum number of unused CPU cores before a container starts scaling.
       </td>
     </tr>
     <tr>
-      <td className="w-fit">minFreeCpuPercent</td>
+      <td className="w-fit font-semibold">minFreeCpuPercent</td>
       <td className="w-fit">float</td>
       <td className="w-fit">
         Minimum percentage of unused CPU cores before a container starts scaling.
       </td>
     </tr>
     <tr>
-      <td className="w-fit">minFreeRamGB</td>
+      <td className="w-fit font-semibold">minFreeRamGB</td>
       <td className="w-fit">float</td>
       <td className="w-fit">
         Minimum unused memory in GB before a container starts scaling.
       </td>
     </tr>
     <tr>
-      <td className="w-fit">minFreeRamPercent</td>
+      <td className="w-fit font-semibold">minFreeRamPercent</td>
       <td className="w-fit">float</td>
       <td className="w-fit">
         Minimum percentage of unused memory before a container starts scaling.
@@ -486,7 +472,7 @@ The horizontal autoscaling configuration is used to define the horizontal autosc
 #### Usage
 
 <Dropdown>
-  <DropdownItem title="Horizontal Autoscaling Structure">
+  <DropdownItem title="Horizontal Autoscaling Structure Parameters">
     <table className="w-full my-1.5">
       <thead>
         <tr>
@@ -497,14 +483,14 @@ The horizontal autoscaling configuration is used to define the horizontal autosc
       </thead>
       <tbody>
     <tr>
-      <td className="w-fit">minContainers</td>
+      <td className="w-fit font-semibold">minContainers</td>
       <td className="w-fit">integer</td>
-      <td className="w-fit">Default: 1, maximum value: 6 - Minimum number of containers of the service.</td>
+      <td className="w-fit">Minimum number of containers of the service.<br/>Default: 1, maximum value: 6</td>
     </tr>
     <tr>
-      <td className="w-fit">maxContainers</td>
+      <td className="w-fit font-semibold">maxContainers</td>
       <td className="w-fit">integer</td>
-      <td className="w-fit">Maximum value: 6 - Maximum number of containers of the service.</td>
+      <td className="w-fit">Maximum number of containers of the service.<br/>Maximum value: 6</td>
     </tr>
     </tbody>
     </table>
@@ -541,7 +527,7 @@ The mount shared storage configuration is used to define the shared storage to m
   </thead>
   <tbody>
   <tr>
-    <td className="w-fit">mount</td>
+    <td className="w-fit font-semibold">mount</td>
     <td className="w-fit">list of strings</td>
     <td className="w-fit">Mount shared storage to the service. `buildFromGit` must be filled.</td>
     </tr>
@@ -558,7 +544,7 @@ services:
       - teststorage1
 ```
 
-The `mount: |-` parameter allows you to mount a shared storage(should be created inside the project) to the service.
+The `mount: |-` parameter allows you to mount a shared storage (should be created inside the project) to the service.
 
 
 ### Using Nginx Configuration
@@ -577,7 +563,7 @@ The nginx configuration is used to define the nginx settings for the service.
   </thead>
   <tbody>
     <tr>
-      <td className="w-fit">nginxConfig</td>
+      <td className="w-fit font-semibold">nginxConfig</td>
       <td className="w-fit">string (multiline)</td>
       <td className="w-full">Insert full nginx config.</td>
     </tr>
@@ -628,7 +614,7 @@ This shows you how you can use the `zeropsSetup` parameter as a way to insert a 
   </thead>
   <tbody>
     <tr>
-      <td className="w-fit">zeropsSetup</td>
+      <td className="w-fit font-semibold">zeropsSetup</td>
       <td className="w-fit whitespace-nowrap">string or object</td>
       <td className="w-fit">Provide the name of the service from your zerops.yml (find it under `-setup: {name}`) or insert full [zerops.yml configuration file](/zerops-yml/specification).</td>
     </tr>
