@@ -1,6 +1,6 @@
 ---
 title: Docker Service
-desc:
+desc: Comprehensive guide to using Docker on Zerops with VM-based environments. Includes configuration examples and best practices.
 ---
 
 import UnorderedCodeList from '@site/src/components/UnorderedCodeList';
@@ -72,6 +72,27 @@ Docker services require the `--network=host` flag for proper integration with Ze
 - **Direct Port Management**: Ports are managed through `zerops.yml`
 - **Simplified Configuration**: Avoids double port exposure in Docker and Zerops
 - **Native Performance**: Direct access to host networking
+
+### Environment Variables
+
+When using Docker services on Zerops, environment variables defined in the `run.envVariables` section are available to the host VM but need to be explicitly passed to Docker containers.
+
+To pass environment variables from Zerops to your Docker containers, use the `-e` flag in your Docker run command:
+
+```yaml title="zerops.yml"
+zerops:
+  - setup: app
+    run:
+      envVariables:
+        DB_USER: db
+        DB_PORT: 5432
+      prepareCommands:
+        - docker image pull my-application:latest
+      start: docker run -e DB_USER -e DB_PORT --network=host my-application:latest
+      ports:
+        - port: 8080
+          httpSupport: true
+```
 
 ### Docker Compose Support
 
