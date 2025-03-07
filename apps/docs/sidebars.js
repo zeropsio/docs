@@ -2166,11 +2166,6 @@ module.exports = {
         },
         {
           type: 'doc',
-          id: 'keydb/how-to/export-import-data',
-          label: 'Export and import data',
-        },
-        {
-          type: 'doc',
           id: 'keydb/how-to/scale',
           label: 'Scale KeyDB service',
         },
