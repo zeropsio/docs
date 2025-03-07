@@ -1,0 +1,56 @@
+---
+title: Upgrading a service version
+description: Learn how to upgrade your service's version
+---
+
+In Zerops, service version management is handled through two key parameters in your `zerops.yml`:
+- `run.base`: Controls the runtime version
+- `build.base`: Controls the build environment version (required)
+
+:::note
+For a complete list of supported versions for each service, see all currently [supported versions](/zerops-yml/base-list).
+:::
+
+## Version Management
+
+Configure your service versions in `zerops.yml`. Here's an example for Node.js service:
+
+```yaml
+zerops:
+  - setup: nodejs
+    build:
+      base: nodejs@18  # Required: Sets build environment version
+      build:
+        - npm ci
+        - npm run build
+    run:
+      base: nodejs@18  # Optional: Sets runtime version
+```
+
+**Note:** If `run.base` is not specified, Zerops maintains the current version. After changing the version in `zerops.yml`, you need to redeploy your application for the changes to take effect. The deployment process will ensure zero-downtime when switching to the new version.
+
+## Best Practices
+
+- Test version changes in development environment first
+- Review service's changelog for breaking changes
+- Document version changes in your project
+
+## Troubleshooting
+
+Common issues and their solutions:
+
+1. **Build fails after version change**
+   - Check build logs {/*[build logs](/common/maintenance/logs#build-log)*/} for specific error messages
+   - Verify if the error is related to dependencies
+   - Roll back to previous version if needed
+
+2. **Application Crashes After Deployment**
+   - Check application logs {/*[application logs](/common/maintenance/logs#runtime-log)*/} for runtime errors
+   - Verify [environment variables](/features/env-variables) are set correctly
+   - Ensure all required dependencies are installed
+
+## Additional Resources
+
+- [zerops.yml Configurations](/zerops-yml/specification)
+- [Prepare, build, deploy pipeline overview](/features/pipeline)
+{/*- [Build & Deployment Setup](/common/build-deployment)*/}

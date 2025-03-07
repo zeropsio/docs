@@ -174,14 +174,6 @@ module.exports = {
       items: [
       {
         type: 'doc',
-        id: 'common/management/create',
-        label: 'Create service',
-        customProps: {
-          exclude_from_doc_list: false,
-        },
-      },
-      {
-        type: 'doc',
         id: 'common/management/upgrade',
         label: 'Upgrade service',
         customProps: {
@@ -796,21 +788,6 @@ module.exports = {
           id: 'nodejs/how-to/create',
           label: 'Create Node.js service',
         },
-        {
-          type: 'doc',
-          id: 'nodejs/how-to/upgrade',
-          label: 'Upgrade Node.js service',
-        },
-        {
-          type: 'doc',
-          id: 'nodejs/how-to/delete',
-          label: 'Delete Node.js service',
-        },
-        {
-          type: 'doc',
-          id: 'nodejs/how-to/controls',
-          label: 'Stop & start Node.js runtime service',
-        },
       ],
     },
     {
@@ -931,21 +908,7 @@ module.exports = {
           id: 'php/how-to/create',
           label: 'Create PHP service',
         },
-        {
-          type: 'doc',
-          id: 'php/how-to/upgrade',
-          label: 'Upgrade PHP service',
-        },
-        {
-          type: 'doc',
-          id: 'php/how-to/delete',
-          label: 'Delete PHP service',
-        },
-        {
-          type: 'doc',
-          id: 'php/how-to/controls',
-          label: 'Stop & start PHP runtime service',
-        },
+
       ],
     },
     {
@@ -1071,21 +1034,6 @@ module.exports = {
           id: 'python/how-to/create',
           label: 'Create Python service',
         },
-        {
-          type: 'doc',
-          id: 'python/how-to/upgrade',
-          label: 'Upgrade Python service',
-        },
-        {
-          type: 'doc',
-          id: 'python/how-to/delete',
-          label: 'Delete Python service',
-        },
-        {
-          type: 'doc',
-          id: 'python/how-to/controls',
-          label: 'Stop & start Python runtime service',
-        },
       ],
     },
     {
@@ -1205,21 +1153,6 @@ module.exports = {
             type: 'doc',
             id: 'go/how-to/create',
             label: 'Create Go service',
-          },
-          {
-            type: 'doc',
-            id: 'go/how-to/upgrade',
-            label: 'Upgrade Go service',
-          },
-          {
-            type: 'doc',
-            id: 'go/how-to/delete',
-            label: 'Delete Go service',
-          },
-          {
-            type: 'doc',
-            id: 'go/how-to/controls',
-            label: 'Stop & start Go runtime service',
           },
         ],
       },
@@ -1341,21 +1274,6 @@ module.exports = {
             id: 'rust/how-to/create',
             label: 'Create Rust service',
           },
-          {
-            type: 'doc',
-            id: 'rust/how-to/upgrade',
-            label: 'Upgrade Rust service',
-          },
-          {
-            type: 'doc',
-            id: 'rust/how-to/delete',
-            label: 'Delete Rust service',
-          },
-          {
-            type: 'doc',
-            id: 'rust/how-to/controls',
-            label: 'Stop & start Rust runtime service',
-          },
         ],
       },
       {
@@ -1476,21 +1394,6 @@ module.exports = {
             id: 'dotnet/how-to/create',
             label: 'Create .NET service',
           },
-          {
-            type: 'doc',
-            id: 'dotnet/how-to/upgrade',
-            label: 'Upgrade .NET service',
-          },
-          {
-            type: 'doc',
-            id: 'dotnet/how-to/delete',
-            label: 'Delete .NET service',
-          },
-          {
-            type: 'doc',
-            id: 'dotnet/how-to/controls',
-            label: 'Stop & start .NET runtime service',
-          },
         ],
       },
       {
@@ -1610,21 +1513,6 @@ module.exports = {
             type: 'doc',
             id: 'java/how-to/create',
             label: 'Create Java service',
-          },
-          {
-            type: 'doc',
-            id: 'java/how-to/upgrade',
-            label: 'Upgrade Java service',
-          },
-          {
-            type: 'doc',
-            id: 'java/how-to/delete',
-            label: 'Delete Java service',
-          },
-          {
-            type: 'doc',
-            id: 'java/how-to/controls',
-            label: 'Stop & start Java runtime service',
           },
         ],
       },
@@ -1776,21 +1664,6 @@ module.exports = {
             type: 'doc',
             id: 'nginx/how-to/create',
             label: 'Create Nginx static service',
-          },
-          {
-            type: 'doc',
-            id: 'nginx/how-to/upgrade',
-            label: 'Upgrade Nginx service',
-          },
-          {
-            type: 'doc',
-            id: 'nginx/how-to/delete',
-            label: 'Delete Nginx static service',
-          },
-          {
-            type: 'doc',
-            id: 'nginx/how-to/controls',
-            label: 'Stop & start Nginx static service',
           },
         ],
       },
@@ -1991,11 +1864,6 @@ module.exports = {
           id: 'mariadb/how-to/control',
           label: 'Stop and start MariaDB service',
         },
-        {
-          type: 'doc',
-          id: 'mariadb/how-to/delete',
-          label: 'Delete MariaDB service',
-        },
       ],
     },
     {
@@ -2084,11 +1952,6 @@ module.exports = {
           type: 'doc',
           id: 'postgresql/how-to/control',
           label: 'Stop and start PostgreSQL service',
-        },
-        {
-          type: 'doc',
-          id: 'postgresql/how-to/delete',
-          label: 'Delete PostgreSQL service',
         },
       ],
     },
@@ -2213,11 +2076,6 @@ module.exports = {
           type: 'doc',
           id: 'keydb/how-to/control',
           label: 'Stop and start KeyDB service',
-        },
-        {
-          type: 'doc',
-          id: 'keydb/how-to/delete',
-          label: 'Delete KeyDB service',
         },
       ],
     },
@@ -2348,11 +2206,6 @@ module.exports = {
   //          id: "rabbitmq/how-to/control",
   //          label: "Stop and start RabbitMQ service",
   //        },
-  //        {
-  //          type: "doc",
-  //          id: "rabbitmq/how-to/delete",
-  //          label: "Delete RabbitMQ service",
-  //        },
   //      ],
   //    },
   //  ],
@@ -2466,11 +2319,6 @@ module.exports = {
         },
         {
           type: 'doc',
-          id: 'object-storage/how-to/delete',
-          label: 'Delete object storage service',
-        },
-        {
-          type: 'doc',
           id: 'object-storage/how-to/curl-file',
           label: 'Download file from a private bucket',
         },
@@ -2508,21 +2356,6 @@ module.exports = {
             type: 'doc',
             id: 'deno/how-to/create',
             label: 'Create Deno service',
-          },
-          {
-            type: 'doc',
-            id: 'deno/how-to/upgrade',
-            label: 'Upgrade Deno service',
-          },
-          {
-            type: 'doc',
-            id: 'deno/how-to/delete',
-            label: 'Delete Deno service',
-          },
-          {
-            type: 'doc',
-            id: 'deno/how-to/controls',
-            label: 'Stop & start Deno runtime service',
           },
         ],
       },
@@ -2644,21 +2477,6 @@ module.exports = {
             id: 'bun/how-to/create',
             label: 'Create Bun service',
           },
-          {
-            type: 'doc',
-            id: 'bun/how-to/upgrade',
-            label: 'Upgrade Bun service',
-          },
-          {
-            type: 'doc',
-            id: 'bun/how-to/delete',
-            label: 'Delete Bun service',
-          },
-          {
-            type: 'doc',
-            id: 'bun/how-to/controls',
-            label: 'Stop & start Bun runtime service',
-          },
         ],
       },
       {
@@ -2779,21 +2597,6 @@ module.exports = {
             id: 'gleam/how-to/create',
             label: 'Create Gleam service',
           },
-          {
-            type: 'doc',
-            id: 'gleam/how-to/upgrade',
-            label: 'Upgrade Gleam service',
-          },
-          {
-            type: 'doc',
-            id: 'gleam/how-to/delete',
-            label: 'Delete Gleam service',
-          },
-          {
-            type: 'doc',
-            id: 'gleam/how-to/controls',
-            label: 'Stop & start Gleam runtime service',
-          },
         ],
       },
       {
@@ -2913,21 +2716,6 @@ module.exports = {
             type: 'doc',
             id: 'elixir/how-to/create',
             label: 'Create Elixir service',
-          },
-          {
-            type: 'doc',
-            id: 'elixir/how-to/upgrade',
-            label: 'Upgrade Elixir service',
-          },
-          {
-            type: 'doc',
-            id: 'elixir/how-to/delete',
-            label: 'Delete Elixir service',
-          },
-          {
-            type: 'doc',
-            id: 'elixir/how-to/controls',
-            label: 'Stop & start Elixir runtime service',
           },
         ],
       },
