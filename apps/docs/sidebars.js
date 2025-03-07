@@ -206,6 +206,41 @@ module.exports = {
         sidebar_is_group_headline: true,
       },
       items: [
+          {
+            type: 'category',
+            label: 'Build & Deployment',
+            link: {
+              type: 'doc',
+              id: 'common/build-deployment',
+            },
+            className: 'homepage-sidebar-item',
+            items: [
+            {
+              type: 'doc',
+              id: 'common/build-deployment/trigger-pipeline',
+              label: 'Trigger pipeline',
+              customProps: {
+                exclude_from_doc_list: false,
+              },
+            },
+            {
+              type: 'doc',
+              id: 'common/build-deployment/build-process',
+              label: 'Build process',
+              customProps: {
+                exclude_from_doc_list: false,
+              },
+            },
+            {
+              type: 'doc',
+              id: 'common/build-deployment/deploy-process',
+              label: 'Deploy process',
+              customProps: {
+                exclude_from_doc_list: false,
+              },
+            },
+          ],
+          },
         {
           type: 'ref',
           id: 'nodejs/overview',
