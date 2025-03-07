@@ -1,6 +1,6 @@
 ---
 title: Docker Service
-desc:
+desc: Comprehensive guide to using Docker on Zerops with VM-based environments. Includes configuration examples and best practices.
 ---
 
 import UnorderedCodeList from '@site/src/components/UnorderedCodeList';
@@ -90,6 +90,52 @@ For projects using Docker Compose, additional configuration is required:
      your-service:
        network_mode: host
    ```
+
+3. **Start Command**:
+   ```yaml title="zerops.yml"
+   run:
+     start: docker compose up --force-recreate
+   ```
+
+### Environment Variables
+
+When using Docker services, there's an additional layer to consider since environment variables defined in Zerops must be explicitly passed to your Docker containers.
+
+#### 1. Defining Variables in Zerops
+
+Define your environment variables in the `run.envVariables` section of your `zerops.yml` (example uses [referenced](/features/env-variables#referencing-variables) variables):
+
+```yaml title="zerops.yml"
+zerops:
+  - setup: app
+    run:
+      envVariables:
+        DB_HOST: ${db_hostname}
+        DB_PORT: ${db_port}
+```
+
+#### 2. Passing Variables to Docker Containers
+
+For single containers, pass variables using the `-e` flag:
+
+```yaml title="zerops.yml"
+run:
+  prepareCommands:
+    - docker image pull my-application:latest
+  start: docker run -e DB_HOST -e DB_PORT --network=host my-application:latest
+```
+
+For Docker Compose setups, pass environment variables in your `docker-compose.yml`:
+
+```yaml title="docker-compose.yml"
+services:
+  api:
+    image: my-application:latest
+    network_mode: host
+    environment:
+      - DB_HOST
+      - DB_PORT
+```
 
 ## Implementation Examples
 
