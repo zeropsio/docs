@@ -2356,20 +2356,29 @@ module.exports = {
         },
         {
           type: 'doc',
-          id: 'shared-storage/how-to/access',
-          label: 'Use shared storage',
+          id: 'shared-storage/how-to/use',
+          label: 'Usage & Limitations',
+        },
+        {
+          type: 'doc',
+          id: 'shared-storage/how-to/manage',
+          label: 'Manage & Access shared storage',
         },
         {
           type: 'doc',
           id: 'shared-storage/how-to/backup',
           label: 'Backup shared storage',
         },
-        {
-          type: 'doc',
-          id: 'shared-storage/how-to/delete',
-          label: 'Delete shared storage service',
-        },
       ],
+    },
+    {
+      type: 'doc',
+      id: 'shared-storage/tech-details',
+      label: 'Technical details',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'document-text',
+      },
     },
   ],
   objectstorage: [
