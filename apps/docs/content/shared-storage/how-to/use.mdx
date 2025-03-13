@@ -1,0 +1,49 @@
+---
+title: Usage & Limitations of Shared Storage
+description: Learn how to use Shared Storage on Zerops and understand its use cases and limitations.
+---
+
+Once a Shared Storage is [connected](/shared-storage/how-to/connect) to a runtime service, Zerops will create a new folder `/mnt/[shared storage name]` in the runtime service's filesystem.
+
+For example, `/mnt/teststorage` for a `teststorage` Shared Storage:
+
+<p align="center">
+  <img
+    src="/img/screenshots/connect_shared_storage_2.png"
+    alt="image"
+    width="100%"
+    height="auto"
+  />
+</p>
+
+:::note
+The content of this folder is shared among all containers of the connected runtime service.
+
+If you connect multiple runtimes, the content of the folder will be shared among all containers of these services.
+:::
+
+## Mount Points and Multiple Volumes
+
+- Multiple storage volumes can be mounted to a single service (e.g., `/mnt/files1`, `/mnt/files2`, etc.)
+- All filesystem operations are automatically logged to runtime logs
+
+For technical details about mount behavior and filesystem capabilities, see the [Technical Details](/shared-storage/technical-details#mount-integration) page.
+
+## Use Cases
+
+Shared Storage is ideal for:
+
+- **Persistent filesystem-based databases**: SQLite, Prometheus DB, etc.
+- **Configuration sharing**: Deploy configurations once and share across multiple services
+  - Example: Deploy Apache Airflow configurations and DAG files once and share with all worker nodes
+- **Alternative to object storage**: For applications that require filesystem semantics rather than object storage
+- **Application data**: Store and serve images, documents, and other assets
+
+## Performance Considerations
+
+When using Shared Storage, keep in mind:
+
+- For write-heavy workloads, consider batching operations
+- Minimize operations with many small files for better performance
+
+For more detailed information about performance constraints and limitations, see the [Technical Details](/shared-storage/technical-details#performance-considerations) page.

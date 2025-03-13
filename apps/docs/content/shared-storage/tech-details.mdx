@@ -1,0 +1,103 @@
+---
+title: Shared Storage Technical Details
+description: Explore the technical architecture and deployment options of Zerops Shared Storage.
+---
+
+import ResourceTable from '/src/components/ResourceTable';
+
+Zerops Shared Storage is built on [SeaweedFS](https://github.com/seaweedfs/seaweedfs), a distributed filesystem optimized for high-volume storage with efficient retrieval.
+
+## Architecture
+
+Shared Storage consists of three main components:
+- **Master Server**: Manages metadata and coordinates volume servers
+- **Volume Servers**: Store the actual file data
+- **Filer**: Provides a POSIX-compatible interface for file operations
+
+### Mount Integration
+
+When connected to a runtime service:
+- Storage is mounted at `/mnt/<storage-hostname>`
+- Mount point is owned by the `zerops` user and group (no sudo required)
+- All filesystem operations are logged to runtime logs (tagged as `zerops-mount-<service-hostname>`)
+- Mounting will overwrite any existing content in the mount directory
+
+## Deployment Modes
+
+Zerops provides Shared Storage in two deployment modes:
+
+### Highly Available
+
+Recommended for production environments where data reliability is critical.
+
+- **Architecture**: 2 volume servers with the master located on one of them
+- **Data Durability**: Data and filer metadata are replicated 1:1 across nodes
+- **Fault Tolerance**:
+    - If a node fails, an automatic repair process begins
+    - A new container replaces the failed one
+    - Data is automatically replicated to the new container (duration depends on data size)
+    - During master node failure, mounted directories become temporarily unavailable until the new master initializes (~30s)
+
+### Single Container
+
+Suitable for development environments or non-critical data storage.
+
+- **Architecture**: Master, volume, and filer server all located on a single container
+- **Data Durability**: All data is lost if the container fails
+- **Recommended For**: Development environments or temporary data storage
+
+:::warning
+The deployment mode is fixed after the service is created and cannot be changed later.
+:::
+
+## Filesystem Capabilities
+
+Shared Storage supports standard POSIX filesystem operations:
+
+- Create, read, update, and delete files and directories
+- Set permissions (with some limitations)
+- Standard file locking operations
+- Hard and symbolic links
+- Directory listing and traversal
+
+For a complete list of supported features, see the [SeaweedFS FUSE documentation](https://github.com/seaweedfs/seaweedfs/wiki/FUSE-Mount#supported-features).
+
+## Resource Constraints
+
+### Storage Limits
+
+- Maximum storage space: 60GB (can be increased via support request)
+- Maximum file size: Unlimited within the 60GB total storage constraint
+- Maximum upload size via Filer UI: 64MB
+
+### Memory Usage
+
+- Base memory consumption: ~60MB when idle
+- Peak memory usage: ~150MB under higher filesystem loads
+- Optimized for low RAM usage (may trade off some performance)
+
+### Performance Considerations
+
+- **Latency**: Higher latency compared to local storage due to network-based distributed architecture
+- **Write Performance**: For write-heavy workloads, consider batching operations
+- **Small Files**: Minimize operations with many small files for better performance
+
+## Auto Scaling Configuration
+
+Zerops scales Shared Storage services automatically by raising or lowering the hardware resources of each database container.
+
+Vertical auto scaling has the following default configuration:
+
+<ResourceTable resources={{
+  ram: {
+    min: '0.25 GB',
+  }
+}} />
+
+For most cases, the default parameters will work without issues. If you need to limit the cost of the Shared Storage service, lower the maximal resources. Zerops will never scale above the selected maximums.
+
+When you are experiencing problems with insufficient Shared Storage performance or capacity, increase the minimal resources. Zerops will never scale below the selected minimums.
+
+:::note
+You can change the auto scaling parameters later.
+:::
