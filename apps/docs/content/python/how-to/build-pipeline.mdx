@@ -3,6 +3,7 @@ title: Configure Your Python build & deploy pipeline
 description: Learn more about how you can configure your python service for build & deploy pipeline.
 ---
 
+import Badge from 'docs/src/components/Badge';
 import data from '@site/static/data.json';
 import UnorderedCodeList from 'docs/src/components/UnorderedCodeList';
 
@@ -93,9 +94,9 @@ Each service configuration contains at least two sections: **build** and **run**
 
 ## Build pipeline configuration
 
-### base
+### base <Badge type="required" />
 
-_REQUIRED._ Sets the base technology for the build environment.
+Sets the base technology for the build environment.
 
 Following options are available for Python builds:
 
@@ -145,9 +146,9 @@ To customize your build environment use the [prepareCommands](/python/how-to/bui
 Modifying the base technology will invalidate your build cache. See our [Build Cache Documentation](/features/build-cache) for more details about cache invalidation.
 :::
 
-### os
+### os <Badge type="optional" />
 
-_OPTIONAL._ Sets the operating system for the build environment.
+Sets the operating system for the build environment.
 
 Following options are available:
 
@@ -169,9 +170,9 @@ The os version is fixed and cannot be customized.
 Changing the OS setting will invalidate your build cache. See our [Build Cache Documentation](/features/build-cache) for details about cache behavior.
 :::
 
-### prepareCommands
+### prepareCommands <Badge type="optional" />
 
-_OPTIONAL._ Customizes the build environment by installing additional dependencies or tools to the base build environment.
+Customizes the build environment by installing additional dependencies or tools to the base build environment.
 
 The base build environment contains:
 
@@ -235,9 +236,9 @@ prepareCommands:
   - apt install python3-pip # already installed for Python services
 ```
 
-### deployFiles
+### deployFiles <Badge type="required" />
 
-_REQUIRED._ Selects which files or folders will be deployed after the build has successfully finished. To filter out specific files or folders, use <a href="#deployignore">`.deployignore`</a> file.
+Selects which files or folders will be deployed after the build has successfully finished. To filter out specific files or folders, use <a href="#deployignore">`.deployignore`</a> file.
 
 ```yml
 # REQUIRED. Select which files / folders to deploy after
@@ -336,9 +337,9 @@ This example above ignores `file.txt` in ANY directory named `src`, such as:
 `.deployignore` file also works with <a href="/references/cli/commands#deploy">`zcli service deploy`</a> command.
 :::
 
-### cache
+### cache <Badge type="optional" />
 
-_OPTIONAL._ Defines which files or folders will be cached for the next build.
+Defines which files or folders will be cached for the next build.
 
 ```yml
 # OPTIONAL. Which files / folders you want to cache for the next build.
@@ -352,9 +353,9 @@ The cache attribute supports the [~ wildcard character](#how-to-use-a-wildcard-i
 
 Learn more about the [build cache system](/features/build-cache) in Zerops.
 
-### envVariables
+### envVariables <Badge type="optional" />
 
-_OPTIONAL._ Defines the environment variables for the build environment.
+Defines the environment variables for the build environment.
 
 Enter one or more env variables in following format:
 
@@ -380,9 +381,9 @@ Read more about [environment variables](/python/how-to/env-variables) in Zerops.
 
 ## Runtime configuration
 
-### base
+### base <Badge type="optional" />
 
-_OPTIONAL._ Sets the base technology for the runtime environment.
+Sets the base technology for the runtime environment.
 If you don't specify the `run.base` attribute, Zerops keeps the current Python version for your runtime.
 
 Following options are available for Python builds:
@@ -441,9 +442,9 @@ See the full list of supported [run base environments](/zerops-yml/base-list).
 
 To customize your build environment use the `prepareCommands` attribute.
 
-### os
+### os <Badge type="optional" />
 
-_OPTIONAL._ Sets the operating system for the runtime environment.
+Sets the operating system for the runtime environment.
 
 Following options are available:
 
@@ -461,9 +462,9 @@ We are currently using following os version:
 The os version is fixed and cannot be customised.
 :::
 
-### ports
+### ports <Badge type="optional" />
 
-_OPTIONAL._ Specifies one or more internal ports on which your application will listen.
+Specifies one or more internal ports on which your application will listen.
 
 Projects in Zerops represent a group of one or more services. Services can be of different types (runtime services, databases, message brokers, object storage, etc.). All services of the same project share a **dedicated private network**. To connect to a service within the same project, just use the service hostname and its internal port.
 
@@ -494,9 +495,9 @@ Each port has following attributes:
   </tbody>
 </table>
 
-### prepareCommands
+### prepareCommands <Badge type="optional" />
 
-_OPTIONAL._ Customises the Python runtime environment by installing additional dependencies or tools to the runtime base environment.
+Customises the Python runtime environment by installing additional dependencies or tools to the runtime base environment.
 
 <p>
   The base Python environment contains {data.alpine.default}, the selected
@@ -578,9 +579,9 @@ zerops:
 
 In the example above Zerops will copy the `runtime-config.yml` file from your build container **after the build has finished** into the new **prepare runtime** container. The copied files and folders will be available in the `xxx` folder in the new prepare runtime container before the prepare commands are triggered.
 
-### initCommands
+### initCommands <Badge type="optional" />
 
-_OPTIONAL._ Defines one or more commands to be run each time a new runtime container is started or a container is restarted.
+Defines one or more commands to be run each time a new runtime container is started or a container is restarted.
 
 ```yml
 zerops:
@@ -616,9 +617,9 @@ If any of the `initCommands` fails, it returns an exit code other than 0, but de
 
 You can configure your `initCommands` to be run in a single shell instance or multiple shell instances. The format is identical to [build:prepareCommands](#preparecommands).
 
-### envVariables
+### envVariables <Badge type="optional" />
 
-_OPTIONAL._ Defines the environment variables for the runtime environment.
+Defines the environment variables for the runtime environment.
 
 Enter one or more env variables in following format:
 
@@ -639,9 +640,9 @@ zerops:
 
 Read more about [environment variables](/python/how-to/env-variables) in Zerops.
 
-### start
+### start <Badge type="required" />
 
-_REQUIRED._ Defines the start command for your Python application.
+Defines the start command for your Python application.
 
 ```yml
 zerops:
@@ -656,9 +657,9 @@ zerops:
       start: app.py
 ```
 
-### health check
+### healthCheck <Badge type="optional" />
 
-_OPTIONAL._ Defines a health check.
+Defines a health check.
 
 `healthCheck` requires either one `httpGet` object or one `exec` object.
 
@@ -750,9 +751,9 @@ zerops:
 
 Read more about how the [health check works] in Zerops.
 
-### crontab
+### crontab <Badge type="optional" />
 
-_OPTIONAL._ Defines cron jobs.
+Defines cron jobs.
 
 Setup cron jobs in the following format:
 
@@ -774,9 +775,9 @@ Read more about setting up [cron](/references/cron) in Zerops.
 
 ## Deploy configuration
 
-### readiness check
+### readinessCheck <Badge type="optional" />
 
-_OPTIONAL._ Defines a readiness check. Read more about how the [readiness check works](/python/how-to/deploy-process#readiness-checks) in Zerops.
+Defines a readiness check. Read more about how the [readiness check works](/python/how-to/deploy-process#readiness-checks) in Zerops.
 
 `readinessCheck` requires either one `httpGet` object or one `exec` object.
 

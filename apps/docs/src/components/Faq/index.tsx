@@ -12,11 +12,28 @@ export function FAQItem({ question, children }: FAQItemProps) {
   const [height, setHeight] = useState<number | undefined>(0);
 
   useEffect(() => {
-    if (isOpen && answerRef.current) {
-      setHeight(answerRef.current.scrollHeight);
-    } else {
-      setHeight(0);
+    const updateHeight = () => {
+      if (isOpen && answerRef.current) {
+        setHeight(answerRef.current.scrollHeight);
+      } else {
+        setHeight(0);
+      }
+    };
+
+    updateHeight();
+    // Add a small delay to handle image loading
+    const timer = setTimeout(updateHeight, 100);
+
+    // Handle dynamic content changes
+    const resizeObserver = new ResizeObserver(updateHeight);
+    if (answerRef.current) {
+      resizeObserver.observe(answerRef.current);
     }
+
+    return () => {
+      clearTimeout(timer);
+      resizeObserver.disconnect();
+    };
   }, [isOpen]);
 
   return (
@@ -36,11 +53,11 @@ export function FAQItem({ question, children }: FAQItemProps) {
         </button>
         <div
           ref={answerRef}
-          className={`overflow-hidden transition-all duration-300 ease-in-out`}
+          className={`transition-all duration-300 ease-in-out ${isOpen ? 'overflow-visible' : 'overflow-hidden'}`}
           style={{ height: height }}
           role="region"
         >
-          <p className="px-0.75 mt-1 -mb-1">{children}</p>
+          <div className="px-0.75 mt-1 mb-2">{children}</div>
         </div>
       </div>
     </div>
