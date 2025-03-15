@@ -14,6 +14,8 @@ Shared Storage consists of three main components:
 - **Volume Servers**: Store the actual file data
 - **Filer**: Provides a POSIX-compatible interface for file operations
 
+An **automatic vacuum process** helps maintain optimal storage performance by reclaiming space from deleted files. This process is triggered when the size of deleted content exceeds 15% (reduced from the default 30%).
+
 ### Mount Integration
 
 When connected to a runtime service:
@@ -21,6 +23,7 @@ When connected to a runtime service:
 - Mount point is owned by the `zerops` user and group (no sudo required)
 - All filesystem operations are logged to runtime logs (tagged as `zerops-mount-<service-hostname>`)
 - Mounting will overwrite any existing content in the mount directory
+- Shared storage mount is only available in runtime containers, not during build and prepare runtime phases
 
 ## Deployment Modes
 
@@ -90,8 +93,11 @@ Vertical auto scaling has the following default configuration:
 
 <ResourceTable resources={{
   ram: {
-    min: '0.25 GB',
-  }
+    min: '0.5 GB',
+  },
+  disk: {
+      min: '5 GB'
+      }
 }} />
 
 For most cases, the default parameters will work without issues. If you need to limit the cost of the Shared Storage service, lower the maximal resources. Zerops will never scale above the selected maximums.
