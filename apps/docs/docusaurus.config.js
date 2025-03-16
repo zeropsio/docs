@@ -115,6 +115,11 @@ const config = {
       plugins: ["line-numbers", "show-language"],
       theme: {
         ...prismThemes.vsDark,
+        plain: {
+          ...prismThemes.vsDark.plain,
+          backgroundColor: "#111827",
+          color: "#e6e6e6",
+        },
         styles: [
           ...prismThemes.vsDark.styles,
           {
