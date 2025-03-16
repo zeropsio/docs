@@ -114,6 +114,7 @@ const config = {
       ],
       plugins: ["line-numbers", "show-language"],
       theme: {
+        ...prismThemes.vsDark,
         styles: [
           ...prismThemes.vsDark.styles,
           {
