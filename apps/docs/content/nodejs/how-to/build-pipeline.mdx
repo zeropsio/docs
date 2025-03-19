@@ -9,11 +9,11 @@ import UnorderedCodeList from 'docs/src/components/UnorderedCodeList';
 
 Zerops provides a customizable build and runtime environment for your Node.js application.
 
-## Add zerops.yml to your repository
+## Add zerops.yaml to your repository
 
-Start by adding `zerops.yml` file to the **root of your repository** and modify it to fit your application:
+Start by adding `zerops.yaml` file to the **root of your repository** and modify it to fit your application:
 
-```yml
+```yaml
 zerops:
   # define hostname of your service
   - setup: app
@@ -78,9 +78,9 @@ The top-level element is always `zerops`.
 ### Setup
 
 The first element `setup` contains the **hostname** of your service. A runtime service with the same hostname must exist in Zerops.
-Zerops supports the definition of multiple runtime services in a single `zerops.yml`. This is useful when you use a monorepo. Just add multiple setup elements in your `zerops.yml`:
+Zerops supports the definition of multiple runtime services in a single `zerops.yaml`. This is useful when you use a monorepo. Just add multiple setup elements in your `zerops.yaml`:
 
-```yml
+```yaml
 zerops:
   # definition for app service
   - setup: app
@@ -105,7 +105,7 @@ Following options are available for Node.js builds:
 
 <UnorderedCodeList data={data.nodejs.base} />
 
-```yml
+```yaml
 zerops:
   # hostname of your service
   - setup: app
@@ -122,12 +122,12 @@ zerops:
 </p>
 
 :::info
-You can change the base environment when you need to. Just simply modify the `zerops.yml` in your repository.
+You can change the base environment when you need to. Just simply modify the `zerops.yaml` in your repository.
 :::
 
 If you need to install more technologies to the build environment, set multiple values as a yaml array. For example:
 
-```yml
+```yaml
 zerops:
   # hostname of your service
   - setup: app
@@ -141,7 +141,7 @@ zerops:
       ...
 ```
 
-See the full list of supported [build base environments](/zerops-yml/base-list#runtime-services).
+See the full list of supported [build base environments](/zerops-yaml/base-list#runtime-services).
 
 To customize your build environment use the [prepareCommands](/nodejs/how-to/build-pipeline#preparecommands) attribute.
 
@@ -186,7 +186,7 @@ The base build environment contains:
 
 To install additional packages or tools add one or more prepare commands:
 
-```yml
+```yaml
 zerops:
   # hostname of your service
   - setup: app
@@ -227,7 +227,7 @@ You can configure your prepare commands to be run in a single shell instance or 
 
 _REQUIRED._ Defines build commands.
 
-```yml
+```yaml
 zerops:
   # hostname of your service
   - setup: app
@@ -255,7 +255,7 @@ Before the build commands are triggered the build container contains:
 
 Use following syntax to run all commands in the same environment context. For example, if one command changes the current directory, the next command continues in that directory. When one command creates an environment variable, the next command can access it.
 
-```yml
+```yaml
 buildCommands:
   - |
     npm i
@@ -266,7 +266,7 @@ buildCommands:
 
 When the following syntax is used, each command is triggered in a separate environment context. For example, each shell instance starts in the home directory again. When one command creates an environment variable, it won't be available for the next command.
 
-```yml
+```yaml
 buildCommands:
   - npm i
   - npm run build
@@ -276,7 +276,7 @@ buildCommands:
 
 If any command fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/nodejs/how-to/logs#build-log) to troubleshoot the error. If the error log doesn't contain any specific error message, try to run your build with the --verbose option.
 
-```yml
+```yaml
 buildCommands:
   - npm i --verbose
   - npm run build
@@ -288,7 +288,7 @@ If the command ends successfully, it returns the exit code 0 and Zerops triggers
 
 _REQUIRED._ Selects which files or folders will be deployed after the build has successfully finished. To filter out specific files or folders, use <a href="#deployignore">`.deployignore`</a> file.
 
-```yml
+```yaml
 # REQUIRED. Select which files / folders to deploy after
 # the build has successfully finished
 deployFiles:
@@ -299,7 +299,7 @@ deployFiles:
 
 Determines files or folders produced by your build, which should be deployed to your runtime service containers.
 
-The path starts from the **root directory** of your project (the location of `zerops.yml`). You must enclose the name in quotes if the folder or the file name contains a space.
+The path starts from the **root directory** of your project (the location of `zerops.yaml`). You must enclose the name in quotes if the folder or the file name contains a space.
 
 The files/folders will be placed into `/var/www` folder in runtime, e.g. `./src/assets/fonts` would result in `/var/www/src/assets/fonts`.
 
@@ -307,7 +307,7 @@ The files/folders will be placed into `/var/www` folder in runtime, e.g. `./src/
 
 Deploys a folder, and a file from the project root directory:
 
-```yml
+```yaml
 deployFiles:
   - dist
   - package.json
@@ -315,13 +315,13 @@ deployFiles:
 
 Deploys the whole content of the build container:
 
-```yml
+```yaml
 deployFiles: .
 ```
 
 Deploys a folder, and a file in a defined path:
 
-```yml
+```yaml
 deployFiles:
   - ./path/to/file.txt
   - ./path/to/dir/
@@ -333,19 +333,19 @@ Zerops supports the `~` character as a wildcard for one or more folders in the p
 
 Deploys all `file.txt` files that are located in any path that begins with `/path/` and ends with `/to/`
 
-```yml
+```yaml
 deployFiles: ./path/~/to/file.txt
 ```
 
 Deploys all folders that are located in any path that begins with `/path/to/`
 
-```yml
+```yaml
 deployFiles: ./path/to/~/
 ```
 
 Deploys all folders that are located in any path that begins with `/path/` and ends with `/to/`
 
-```yml
+```yaml
 deployFiles: ./path/~/to/
 ```
 
@@ -364,7 +364,7 @@ For consistency, it's recommended to configure both your `.gitignore` and `.depl
 
 Examples:
 
-```yml title="zerops.yml"
+```yaml title="zerops.yaml"
 zerops:
   - setup: app
     build:
@@ -391,7 +391,7 @@ This example above ignores `file.txt` in ANY directory named `src`, such as:
 
 _OPTIONAL._ Defines which files or folders will be cached for the next build.
 
-```yml
+```yaml
 # OPTIONAL. Which files / folders you want to cache for the next build.
 # Next builds will be faster when the cache is used.
 cache: file.txt
@@ -409,7 +409,7 @@ _OPTIONAL._ Defines the environment variables for the build environment.
 
 Enter one or more env variables in following format:
 
-```yml
+```yaml
 zerops:
   # define hostname of your service
   - setup: app
@@ -440,7 +440,7 @@ Following options are available for Node.js builds:
 
 <UnorderedCodeList data={data.nodejs.base} />
 
-```yml
+```yaml
 zerops:
   # hostname of your service
   - setup: app
@@ -463,12 +463,12 @@ zerops:
 </p>
 
 :::info
-You can change the base environment when you need to. Just simply modify the `zerops.yml` in your repository.
+You can change the base environment when you need to. Just simply modify the `zerops.yaml` in your repository.
 :::
 
 If you need to install more technologies to the runtime environment, set multiple values as a yaml array. For example:
 
-```yml
+```yaml
 zerops:
   # hostname of your service
   - setup: app
@@ -488,7 +488,7 @@ zerops:
       ...
 ```
 
-See the full list of supported [run base environments](/zerops-yml/base-list).
+See the full list of supported [run base environments](/zerops-yaml/base-list).
 
 To customize your build environment use the `prepareCommands` attribute.
 
@@ -555,7 +555,7 @@ _OPTIONAL._ Customises the Node.js runtime environment by installing additional 
   additional packages or tools add one or more prepare commands:
 </p>
 
-```yml
+```yaml
 zerops:
   # hostname of your service
   - setup: app
@@ -609,14 +609,14 @@ You can configure your prepare commands to be run in a single shell instance or 
 
 The prepare runtime container does not contain your application code nor the built application. If you need to copy some folders or files from the build container to the runtime container (e.g. a configuration file) use the `addToRunPrepare` attribute in the [build section](#build-pipeline-configuration).
 
-```yml
+```yaml
 zerops:
   # hostname of your service
   - setup: app
     # ==== how to build your application ====
     build:
       ...
-      addToRunPrepare: ./runtime-config.yml
+      addToRunPrepare: ./runtime-config.yaml
 
     # ==== how to run your application ====
     run:
@@ -628,13 +628,13 @@ zerops:
       ...
 ```
 
-In the example above Zerops will copy the `runtime-config.yml` file from your build container **after the build has finished** into the new **prepare runtime** container. The copied files and folders will be available in the `xxx` folder in the new prepare runtime container before the prepare commands are triggered.
+In the example above Zerops will copy the `runtime-config.yaml` file from your build container **after the build has finished** into the new **prepare runtime** container. The copied files and folders will be available in the `xxx` folder in the new prepare runtime container before the prepare commands are triggered.
 
 ### initCommands
 
 _OPTIONAL._ Defines one or more commands to be run each time a new runtime container is started or a container is restarted.
 
-```yml
+```yaml
 zerops:
   # hostname of your service
   - setup: app
@@ -674,7 +674,7 @@ _OPTIONAL._ Defines the environment variables for the runtime environment.
 
 Enter one or more env variables in following format:
 
-```yml
+```yaml
 zerops:
   # define hostname of your service
   - setup: app
@@ -695,7 +695,7 @@ Read more about [environment variables](/nodejs/how-to/env-variables) in Zerops.
 
 _REQUIRED._ Defines the start command for your Node.js application.
 
-```yml
+```yaml
 zerops:
   # hostname of your service
   - setup: app
@@ -731,7 +731,7 @@ Following attributes are available:
 
 **Example:**
 
-```yml
+```yaml
 zerops:
   # hostname of your service
   - setup: app
@@ -779,7 +779,7 @@ Following attributes are available:
 
 **Example:**
 
-```yml
+```yaml
 zerops:
   # hostname of your service
   - setup: app
@@ -808,7 +808,7 @@ _OPTIONAL._ Defines cron jobs.
 
 Setup cron jobs in the following format:
 
-```yml
+```yaml
 zerops:
   # define hostname of your service
   - setup: app
@@ -847,7 +847,7 @@ Following attributes are available:
 
 **Example:**
 
-```yml
+```yaml
 zerops:
   # hostname of your service
   - setup: app
@@ -895,7 +895,7 @@ Following attributes are available:
 
 **Example:**
 
-```yml
+```yaml
 zerops:
   # hostname of your service
   - setup: app

@@ -18,7 +18,7 @@ Some Laravel variables contain sensitive information that should never be expose
 * Defining them in a configuration file when importing a project or service (allows [automatic generation](#automatic-generation-during-import))
 
 When importing a project or service, you can define secret variables directly in your import configuration:
-```yml
+```yaml
 services:
   - hostname: app
     type: php-nginx@8.4
@@ -31,8 +31,8 @@ Secret variables can be updated at any time without requiring application redepl
 :::
 
 #### Automatic Generation During Import
-If you prefer to have certain secrets **generated automatically**, you can use the [yaml preprocessor](/references/importyml/pre-processor). This is optional and only available during import:
-```yml
+If you prefer to have certain secrets **generated automatically**, you can use the [yaml preprocessor](/references/import-yaml/pre-processor). This is optional and only available during import:
+```yaml
 #yamlPreprocessor=on
 services:
   - hostname: app
@@ -42,16 +42,16 @@ services:
 ```
 
 ### Runtime Variables
-These variables, defined in `zerops.yml`, are typically environment-specific but not sensitive.
+These variables, defined in `zerops.yaml`, are typically environment-specific but not sensitive.
 :::note
 Changes to runtime variables require application redeployment to take effect.
 :::
 
-Below is a complete working example of `envVariables` in `zerops.yml` (sourced from [Laravel Jetstream recipe](https://github.com/zeropsio/recipe-laravel-jetstream/blob/main/zerops.yml)):
+Below is a complete working example of `envVariables` in `zerops.yaml` (sourced from [Laravel Jetstream recipe](https://github.com/zeropsio/recipe-laravel-jetstream/blob/main/zerops.yaml)):
 
 <Dropdown>
 <DropdownItem title="Runtime Variables example">
-```yml title="zerops.yml"
+```yaml title="zerops.yaml"
 run:
   envVariables:
     APP_LOCALE: en
@@ -118,7 +118,7 @@ Let's look at variable configurations that may need additional context and where
 
 #### Application Configuration
 Core application settings that define your Laravel app's identity, URL structure, and environment parameters. Reference environment variables from the same service.
-```yml
+```yaml
 APP_URL: ${zeropsSubdomain} # zeropsSubdomain variable is system generated
 ASSET_URL: ${APP_URL}
 VITE_APP_NAME: ${APP_NAME} # APP_NAME variable was created during import (envSecrets)
@@ -129,7 +129,7 @@ Essential database connection parameters that securely reference your PostgreSQL
 
 It is safe to store `DB_PASSWORD` in `envVariables` by reference as it does not contain the sensitive value itself.
 
-```yml
+```yaml
 DB_HOST: db
 DB_PASSWORD: ${db_password}
 DB_USERNAME: ${db_user}
@@ -138,7 +138,7 @@ Read more about [database management](/frameworks/laravel/migrations) for Larave
 
 #### Storage Configuration
 S3-compatible object storage settings that enable efficient file handling and asset management in your Laravel application. Reference variables of Object storage service called `storage`.
-```yml
+```yaml
 AWS_ACCESS_KEY_ID: ${storage_accessKeyId}
 AWS_REGION: us-east-1
 AWS_BUCKET: ${storage_bucketName}
@@ -172,9 +172,9 @@ REDIS_HOST: valkey
 Learn how to properly [configure cache, queue & session management](/frameworks/laravel/redis) for Laravel in Zerops.
 
 :::tip
-For automatic execution with each deploy, add these commands to the `initCommands` section of your `zerops.yml` file.
+For automatic execution with each deploy, add these commands to the `initCommands` section of your `zerops.yaml` file.
 
-```yml title="zerops.yml"
+```yaml title="zerops.yaml"
 initCommands:
   - php artisan view:cache
   - php artisan config:cache

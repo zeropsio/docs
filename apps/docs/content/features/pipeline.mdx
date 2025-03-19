@@ -48,11 +48,11 @@ export const customizeRuntime = [
 ## Configure the pipeline
 
 Zerops provides a customizable build and runtime environment for your application.
-Start by adding a [zerops.yml](/zerops-yml/specification) file to the **root of your repository** and modify it to fit your application.
+Start by adding a [zerops.yaml](/zerops-yaml/specification) file to the **root of your repository** and modify it to fit your application.
 
 Here is a basic example for a Node.js application:
 
-```yml
+```yaml
 zerops:
   - setup: api
     build:
@@ -67,7 +67,7 @@ zerops:
       start: npm start
 ```
 
-The zerops.yml in your repository tells Zerops how to build and deploy your application.
+The zerops.yaml in your repository tells Zerops how to build and deploy your application.
 
 Zerops will follow these instruction when the build & deploy pipeline is triggered for the Node.js service named `api`:
 
@@ -78,9 +78,9 @@ Zerops will follow these instruction when the build & deploy pipeline is trigger
 5. Cache the content of the `./node_modules` folder for the next build
 6. Start your application using the `npm start` command
 
-Learn more about all `zerops.yml` parameters for your runtime:
+Learn more about all `zerops.yaml` parameters for your runtime:
 
-<GroupCards emoji="🚀" heading="Know more about zerops.yml for your Runtime" items={languages} />
+<GroupCards emoji="🚀" heading="Know more about zerops.yaml for your Runtime" items={languages} />
 
 ## Trigger the pipeline
 
@@ -113,7 +113,7 @@ To start a new build & deploy pipeline manually, use the [Zerops CLI](/reference
 
 The [zcli push](/references/cli/commands#push) command uploads your application code, builds and deploys your application in Zerops.
 
-The command triggers the build pipeline defined in `zerops.yml`. `zerops.yml` must be in the working directory. The working directory is by default the current directory and can be changed using the `--workingDir` flag.
+The command triggers the build pipeline defined in `zerops.yaml`. `zerops.yaml` must be in the working directory. The working directory is by default the current directory and can be changed using the `--workingDir` flag.
 
 zCLI uploads all files and subdirectories of the working directory to Zerops and starts the build pipeline. If the `.gitignore` file is found, it is interpreted and the defined files and folders will be ignored.
 
@@ -134,8 +134,8 @@ Flags:
                                  command is to be executed.
       --versionName string       Adds a custom version name. Automatically filled if the VERSIONNAME environment variable exists.
       --workingDir string        Sets a custom working directory. Default working directory is the current directory. (default "./")
-      --zeropsYamlPath string    Sets a custom path to the zerops.yml file relative to the working directory. By default zCLI
-                                 looks for zerops.yml in the working directory.
+      --zeropsYamlPath string    Sets a custom path to the zerops.yaml file relative to the working directory. By default zCLI
+                                 looks for zerops.yaml in the working directory.
 ```
 
 If you just want to [deploy](#deploy-phase) your already built application to Zerops, use the <a href="/references/cli/commands#service"><code>zcli service deploy</code></a> command instead.
@@ -181,8 +181,8 @@ The time limit for the whole build pipeline is **1 hour**. After 1 hour, Zerops 
 
 ### Customize the build environment
 
-Each runtime service in Zerops has a default build environment with a major version based on the [build.base](/zerops-yml/specification#base-) attribute in `zerops.yml`.
-To install additional packages or tools add one or more [build.prepareCommands](/zerops-yml/specification#preparecommands-) commands to your `zerops.yml`.
+Each runtime service in Zerops has a default build environment with a major version based on the [build.base](/zerops-yaml/specification#base-) attribute in `zerops.yaml`.
+To install additional packages or tools add one or more [build.prepareCommands](/zerops-yaml/specification#preparecommands-) commands to your `zerops.yaml`.
 
 Learn more about what is included in the default build environment:
 
@@ -227,7 +227,7 @@ Zerops performs following actions for each new container:
 Services with multiple containers are deployed in parallel.
 
 :::info
-If your application needs to be initialized in each runtime container, add [init commands](/go/how-to/build-pipeline#initcommands) to `zerops.yml`.
+If your application needs to be initialized in each runtime container, add [init commands](/go/how-to/build-pipeline#initcommands) to `zerops.yaml`.
 :::
 
 :::caution
@@ -245,7 +245,7 @@ The old containers are then removed from the project balancer so they don't rece
 
 ### Readiness checks
 
-If your application isn't ready to handle requests right after it is started via the [start command](/nodejs/how-to/build-pipeline#start), configure a [readiness check](/nodejs/how-to/build-pipeline#readiness-check) in your `zerops.yml`.
+If your application isn't ready to handle requests right after it is started via the [start command](/nodejs/how-to/build-pipeline#start), configure a [readiness check](/nodejs/how-to/build-pipeline#readiness-check) in your `zerops.yaml`.
 
 If the readiness check is defined, Zerops will:
 
@@ -266,12 +266,12 @@ Read the [runtime log](/nodejs/how-to/logs#runtime-log) to troubleshoot failed r
 
 ## Customize the runtime environment
 
-Each runtime service in Zerops has a default runtime environment with a major version based on the [run.base](/zerops-yml/specification#base--1) attribute in `zerops.yml`.
-To install additional packages or tools add one or more [run.prepareCommands](/zerops-yml/specification#preparecommands--1) commands to your `zerops.yml`.
+Each runtime service in Zerops has a default runtime environment with a major version based on the [run.base](/zerops-yaml/specification#base--1) attribute in `zerops.yaml`.
+To install additional packages or tools add one or more [run.prepareCommands](/zerops-yaml/specification#preparecommands--1) commands to your `zerops.yaml`.
 
 Learn more about what is included in the default runtime environment:
 
-<GroupCards emoji="🚀" heading="Customize your runtime environment with zerops.yml" items={customizeRuntime} />
+<GroupCards emoji="🚀" heading="Customize your runtime environment with zerops.yaml" items={customizeRuntime} />
 
 <p align="center">
   <Image
@@ -282,15 +282,15 @@ Learn more about what is included in the default runtime environment:
   />
 </p>
 
-When the first deploy with a defined [prepareCommands](/zerops-yml/specification#preparecommands--1) attribute is triggered, Zerops will
+When the first deploy with a defined [prepareCommands](/zerops-yaml/specification#preparecommands--1) attribute is triggered, Zerops will
 
 1. create a prepare runtime container
 2. optionally: [copy selected folders or files from your build container]
-3. run the [run.prepareCommands](/zerops-yml/specification#preparecommands--1) commands in the defined order
+3. run the [run.prepareCommands](/zerops-yaml/specification#preparecommands--1) commands in the defined order
 
 Some packages or tools can take a long time to install. Therefore, Zerops caches your custom runtime environment after the installation of your custom packages or tools is completed. When the second or following deploy is triggered, Zerops will use the custom runtime cache from the previous deploy if following conditions are met:
 
-1. Content of the [build.addToRunPrepare](/zerops-yml/specification#addtorunprepare-) and [run.prepareCommands](/zerops-yml/specification#preparecommands--1) attributes didn't change from the previous deploy
+1. Content of the [build.addToRunPrepare](/zerops-yaml/specification#addtorunprepare-) and [run.prepareCommands](/zerops-yaml/specification#preparecommands--1) attributes didn't change from the previous deploy
 2. The custom runtime cache wasn't invalidated in the Zerops GUI.
 
 When the custom runtime cache is used, Zerops doesn't create a prepare runtime container and executes the deployment of your application directly.
@@ -317,8 +317,8 @@ Usage:
 Flags:
       --archiveFilePath string   If set, zCLI creates a tar.gz archive with the application code in the required path relative
                                  to the working directory. By default, no archive is created.
-      --deployGitFolder          Sets a custom path to the zerops.yml file relative to the working directory. By default zCLI
-                                 looks for zerops.yml in the working directory.
+      --deployGitFolder          Sets a custom path to the zerops.yaml file relative to the working directory. By default zCLI
+                                 looks for zerops.yaml in the working directory.
   -h, --help                     the service deploy command.
       --projectId string         If you have access to more than one project, you must specify the project ID for which the
                                  command is to be executed.
@@ -326,16 +326,16 @@ Flags:
                                  command is to be executed.
       --versionName string       Adds a custom version name. Automatically filled if the VERSIONNAME environment variable exists.
       --workingDir string        Sets a custom working directory. Default working directory is the current directory. (default "./")
-      --zeropsYamlPath string    Sets a custom path to the zerops.yml file relative to the working directory. By default zCLI
-                                 looks for zerops.yml in the working directory.
+      --zeropsYamlPath string    Sets a custom path to the zerops.yaml file relative to the working directory. By default zCLI
+                                 looks for zerops.yaml in the working directory.
 ```
 
 `pathToFileOrDir` defines a path to one or more directories and/or files relative to the working directory. The working directory is by default the current directory and can be changed using the <br/>`--workingDir` flag.
 
-`zerops.yml` must be placed in the working directory.
+`zerops.yaml` must be placed in the working directory.
 
 :::info
-You can change the deploy pipeline when you need to. Just simply modify the `zerops.yml` in your working directory.
+You can change the deploy pipeline when you need to. Just simply modify the `zerops.yaml` in your working directory.
 :::
 
 ## Manage build and deploys
@@ -374,7 +374,7 @@ The list of application versions is available in Zerops GUI. Go to the service d
 
 The pipeline detail is accessible from the additional menu. The pipeline detail contains
 
-- The pipeline config (`zerops.yml`) that was used for the selected version
+- The pipeline config (`zerops.yaml`) that was used for the selected version
 - The build log (if available)
 - The prepare runtime log (if available)
 

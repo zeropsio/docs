@@ -45,9 +45,9 @@ Currently supported Docker versions:
 
 ### Basic Structure
 
-Docker services in Zerops are configured through the `zerops.yml` file. Here's a typical configuration pattern:
+Docker services in Zerops are configured through the `zerops.yaml` file. Here's a typical configuration pattern:
 
-```yaml title="zerops.yml"
+```yaml title="zerops.yaml"
 zerops:
   - setup: app
     run:
@@ -69,7 +69,7 @@ We are actively working on improving the speed of image caching after `run.prepa
 
 Docker services require the `--network=host` flag for proper integration with Zerops:
 
-- **Direct Port Management**: Ports are managed through `zerops.yml`
+- **Direct Port Management**: Ports are managed through `zerops.yaml`
 - **Simplified Configuration**: Avoids double port exposure in Docker and Zerops
 - **Native Performance**: Direct access to host networking
 
@@ -78,21 +78,21 @@ Docker services require the `--network=host` flag for proper integration with Ze
 For projects using Docker Compose, additional configuration is required:
 
 1. **File Deployment**:
-   ```yaml title="zerops.yml"
+   ```yaml title="zerops.yaml"
    build:
-     deployFiles: ./docker-compose.yml
-     addToRunPrepare: ./docker-compose.yml
+     deployFiles: ./docker-compose.yaml
+     addToRunPrepare: ./docker-compose.yaml
    ```
 
 2. **Network Mode**:
-   ```yaml title="docker-compose.yml"
+   ```yaml title="docker-compose.yaml"
    services:
      your-service:
        network_mode: host
    ```
 
 3. **Start Command**:
-   ```yaml title="zerops.yml"
+   ```yaml title="zerops.yaml"
    run:
      start: docker compose up --force-recreate
    ```
@@ -103,9 +103,9 @@ When using Docker services, there's an additional layer to consider since enviro
 
 #### 1. Defining Variables in Zerops
 
-Define your environment variables in the `run.envVariables` section of your `zerops.yml` (example uses [referenced](/features/env-variables#referencing-variables) variables):
+Define your environment variables in the `run.envVariables` section of your `zerops.yaml` (example uses [referenced](/features/env-variables#referencing-variables) variables):
 
-```yaml title="zerops.yml"
+```yaml title="zerops.yaml"
 zerops:
   - setup: app
     run:
@@ -118,16 +118,16 @@ zerops:
 
 For single containers, pass variables using the `-e` flag:
 
-```yaml title="zerops.yml"
+```yaml title="zerops.yaml"
 run:
   prepareCommands:
     - docker image pull my-application:latest
   start: docker run -e DB_HOST -e DB_PORT --network=host my-application:latest
 ```
 
-For Docker Compose setups, pass environment variables in your `docker-compose.yml`:
+For Docker Compose setups, pass environment variables in your `docker-compose.yaml`:
 
-```yaml title="docker-compose.yml"
+```yaml title="docker-compose.yaml"
 services:
   api:
     image: my-application:latest
@@ -141,7 +141,7 @@ services:
 
 ### Single Container
 
-```yaml title="zerops.yml"
+```yaml title="zerops.yaml"
 zerops:
   - setup: app
     run:
@@ -155,12 +155,12 @@ zerops:
 
 ### Single Service with Docker Compose
 
-```yaml title="zerops.yml"
+```yaml title="zerops.yaml"
 zerops:
   - setup: api
     build:
-      deployFiles: ./docker-compose.yml
-      addToRunPrepare: ./docker-compose.yml
+      deployFiles: ./docker-compose.yaml
+      addToRunPrepare: ./docker-compose.yaml
     run:
       prepareCommands:
         - docker compose pull api
@@ -172,12 +172,12 @@ zerops:
 
 ### Multiple Services with Docker Compose
 
-```yaml title="zerops.yml"
+```yaml title="zerops.yaml"
 zerops:
   - setup: apps
     build:
-      deployFiles: ./docker-compose.yml
-      addToRunPrepare: ./docker-compose.yml
+      deployFiles: ./docker-compose.yaml
+      addToRunPrepare: ./docker-compose.yaml
     run:
       prepareCommands:
         - docker compose pull

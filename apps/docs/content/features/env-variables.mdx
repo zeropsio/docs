@@ -17,9 +17,9 @@ You can define service-level variables in two ways:
 
 #### 1. Build & Runtime Variables
 
-These variables are defined with `envVariables` attribute in the `build` or `run` section of your [zerops.yml](/zerops-yml/specification) file and are accessible within their respective containers.
+These variables are defined with `envVariables` attribute in the `build` or `run` section of your [zerops.yaml](/zerops-yaml/specification) file and are accessible within their respective containers.
 
-```yml title="zerops.yml"
+```yaml title="zerops.yaml"
 ...
   build:
     envVariables:
@@ -39,7 +39,7 @@ These variables are defined with `envVariables` attribute in the `build` or `run
 See how to [reference variables](#referencing-variables) between services and between build and runtime environments.
 
 :::note
-Your application must be redeployed when updating environmental variables in `zerops.yml`.
+Your application must be redeployed when updating environmental variables in `zerops.yaml`.
 :::
 
 #### 2. Secret Variables
@@ -65,9 +65,9 @@ Navigate to service details and find **Environment variables** in the menu. You 
 
 ##### Import Configuration
 
-Create secret variables for a service with `envSecrets` attribute. See the complete [import.yml structure](/reference/import).
+Create secret variables for a service with `envSecrets` attribute. See the complete [import.yaml structure](/reference/import).
 
-```yml title="import.yml"
+```yaml title="import.yaml"
 services:
   ...
   envSecrets:
@@ -85,7 +85,7 @@ These variables can also be [referenced](#referencing-variables).
 
 ## Project Variables
 
-Variables that apply across all services within a [project](/features/infrastructure#project). These provide a way to share common configuration across services.
+Variables that apply across all services within a [project](/features/infrastructure#projects). These provide a way to share common configuration across services.
 
 They work similarly to service secret variables but at project scope - they're managed through the GUI and can be updated without redeployment (though services need to be restarted).
 
@@ -102,9 +102,9 @@ Access **Project environment variables** in your project detail to:
 
 #### Import Configuration
 
-Create project variables with `envVariables` attribute. See the complete [import.yml structure](/reference/import).
+Create project variables with `envVariables` attribute. See the complete [import.yaml structure](/reference/import).
 
-```yml title="import.yml"
+```yaml title="import.yaml"
 project:
   ...
   envVariables:
@@ -145,7 +145,7 @@ When the same environment variable key exists in multiple places, Zerops follows
 You can reference other variables using the `${variable_name}` syntax:
 
 #### Within Same Service
-```yml
+```yaml
 envVariables:
   id: 42069
   hostname: app
@@ -154,7 +154,7 @@ envVariables:
 
 #### Across Services
 Prefix variables with their respective service name:
-```yml
+```yaml
 setup: dbtest
   run:
     envVariables:
@@ -174,9 +174,9 @@ To share variables between environments, you need to use specific prefixes:
 - Use `RUNTIME_` prefix to access runtime variables during build
 - Use `BUILD_` prefix to access build variables during runtime
 
-Here's an example of `zerops.yml` file showing how to reference a runtime variable during build:
+Here's an example of `zerops.yaml` file showing how to reference a runtime variable during build:
 
-```yml title="zerops.yml"
+```yaml title="zerops.yaml"
 build:
   envVariables:
     API_KEY: ${RUNTIME_API_KEY}  # Using runtime variable during build
@@ -187,14 +187,14 @@ run:
 
 #### Project Variables
 No prefix needed when referencing project variables:
-```yml title="import.yml"
+```yaml title="import.yaml"
 project:
   ...
   envVariables:
     projectName: devel
 ```
 
-```yml title="zerops.yml"
+```yaml title="zerops.yaml"
 envVariables:
   id: 42069
   hostname: app
