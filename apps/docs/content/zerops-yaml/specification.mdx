@@ -1,6 +1,6 @@
 ---
 title: Zerops YAML Configuration
-description: Learn how you can configure your zerops yaml and use the available parameters. 
+description: Learn how you can configure your Zerops.yaml and use the available parameters.
 ---
 
 import data from '@site/static/data.json';
@@ -19,8 +19,8 @@ export const languages = [
     { name: "Nginx", link: "/nginx/how-to/build-pipeline" }
 ]
 
-The `zerops.yml` file is crucial for defining how Zerops should [build and deploy](/features/pipeline) your application.
-Add the `zerops.yml` file to the **root of your repository** and customize it to suit your application's needs.
+The `zerops.yaml` file is crucial for defining how Zerops should [build and deploy](/features/pipeline) your application.
+Add the `zerops.yaml` file to the **root of your repository** and customize it to suit your application's needs.
 
 ---
 
@@ -28,7 +28,7 @@ Add the `zerops.yml` file to the **root of your repository** and customize it to
 
 ## Basic Structure
 
-```yml title="zerops.yml"
+```yaml title="zerops.yaml"
 zerops:
   - setup: <service_name>
     build: ...
@@ -37,9 +37,9 @@ zerops:
 
 - The top-level element is always `zerops`.
 - `setup` contains the **hostname** of your service (must exist in Zerops).
-- Multiple services can be defined in a single `zerops.yml` (useful for monorepos):
+- Multiple services can be defined in a single `zerops.yaml` (useful for monorepos):
 
-```yml
+```yaml
 zerops:
   - setup: app
     build: ...
@@ -56,16 +56,16 @@ Each service configuration requires `build` and `run` sections. An optional `dep
 
 ### base <Badge type="required" />
 
-Sets the base technology for the build environment. [See available options](/zerops-yml/base-list).
+Sets the base technology for the build environment. [See available options](/zerops-yaml/base-list).
 
-```yml
+```yaml
 build:
   base: nodejs@latest
 ```
 
 You can specify multiple technologies:
 
-```yml
+```yaml
 build:
   base:
     - nodejs@latest
@@ -85,7 +85,7 @@ Current versions:
 - {data.alpine.default}
 - {data.ubuntu.default}
 
-```yml
+```yaml
 build:
   os: ubuntu
 ```
@@ -94,7 +94,7 @@ build:
 
 Customizes the build environment by installing additional dependencies or tools.
 
-```yml
+```yaml
 build:
   prepareCommands:
     - apt-get update
@@ -105,7 +105,7 @@ build:
 
 Defines the commands to build your application.
 
-```yml
+```yaml
 build:
   buildCommands:
     - npm install
@@ -114,7 +114,7 @@ build:
 
 #### Running commands in a single shell instance:
 
-```yml
+```yaml
 buildCommands:
   - |
     npm install
@@ -125,7 +125,7 @@ buildCommands:
 
 Specifies which files or folders to deploy after a successful build.
 
-```yml
+```yaml
 build:
   deployFiles:
     - dist
@@ -141,7 +141,7 @@ Zerops supports the `~` character as a wildcard for one or more folders in the p
 
 Deploys all `file.txt` files that are located in any path that begins with `/path/` and ends with `/to/`.
 
-```yml
+```yaml
 deployFiles: ./path/~/to/file.txt
 ```
 
@@ -159,7 +159,7 @@ For consistency, it's recommended to configure both your `.gitignore` and `.depl
 
 Examples:
 
-```yml title="zerops.yml"
+```yaml title="zerops.yaml"
 zerops:
   - setup: app
     build:
@@ -186,7 +186,7 @@ This example above ignores `file.txt` in ANY directory named `src`, such as:
 
 Defines which files or folders to cache for subsequent builds.
 
-```yml
+```yaml
 build:
   cache: node_modules
 ```
@@ -197,7 +197,7 @@ For more information, see our detailed [guide on build cache](/features/build-ca
 
 Sets environment variables for the build environment.
 
-```yml
+```yaml
 build:
   envVariables:
     DB_NAME: db
@@ -207,7 +207,7 @@ build:
 ```
 
 :::info
-The `yamlPreprocessor` option in your project & service import YAML allows you to generate random secret values, passwords, and public/private key pairs. For more information, see the [yamlPreprocessor](/references/importyml/pre-processor) page.
+The `yamlPreprocessor` option in your project & service import YAML allows you to generate random secret values, passwords, and public/private key pairs. For more information, see the [yamlPreprocessor](/references/import-yaml/pre-processor) page.
 :::
 
 ## Runtime Configuration
@@ -216,7 +216,7 @@ The `yamlPreprocessor` option in your project & service import YAML allows you t
 
 Sets the base technology for the runtime environment. If not specified, the current version is maintained.
 
-```yml
+```yaml
 run:
   base: nodejs@latest
 ```
@@ -229,7 +229,7 @@ Sets the operating system for the runtime environment. Options and versions are 
 
 Specifies the internal ports on which your application will listen.
 
-```yml
+```yaml
 run:
   ports:
     - port: 8080
@@ -266,7 +266,7 @@ Defines files or folders to be copied from the build container to the prepare ru
 
 Defines commands to run each time a new runtime container starts or restarts.
 
-```yml
+```yaml
 run:
   initCommands:
     - rm -rf ./cache
@@ -276,7 +276,7 @@ run:
 
 Defines the start command for your application.
 
-```yml
+```yaml
 run:
   start: npm start
 ```
@@ -287,7 +287,7 @@ Defines start commands
 
 Unlike `start`, you can define multiple commands that starts their own processes.
 
-```yml
+```yaml
 run:
   startCommands:
     # start the application
@@ -295,11 +295,11 @@ run:
       name: server
     # start the replication
     
-    - command: litestream replicate -config=litestream.yml
+    - command: litestream replicate -config=litestream.yaml
       name: replication
       # restore the database on container init
       initCommands:
-        - litestream restore -if-replica-exists -if-db-not-exists -config=litestream.yml $DB_NAME
+        - litestream restore -if-replica-exists -if-db-not-exists -config=litestream.yaml $DB_NAME
 ```
 
 See [start-commands-example](https://github.com/zeropsio/start-commands-example)
@@ -316,7 +316,7 @@ Sets the custom webserver configuration (available only for webserver runtimes).
 
 Defines environment variables for the runtime environment.
 
-```yml
+```yaml
     run:
       base: nodejs@20
       envVariables:
@@ -330,7 +330,7 @@ Defines environment variables for the runtime environment.
 
 Defines a health check for your application.
 
-```yml
+```yaml
 run:
   healthCheck:
     httpGet:
@@ -342,7 +342,7 @@ run:
 
   Defines scheduled commands to run as cron jobs within a service.
 
-  ```yml
+  ```yaml
   run:
     crontab:
       - command: "date >> /var/log/cron.log"
@@ -357,7 +357,7 @@ Setup cron jobs. See [examples](/references/cron).
 
 Defines a readiness check for your application. (See [readiness checks](/features/pipeline#readiness-checks))
 
-```yml
+```yaml
 deploy:
   readinessCheck:
     httpGet:

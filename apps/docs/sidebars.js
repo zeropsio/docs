@@ -127,13 +127,26 @@ module.exports = {
       className: 'homepage-sidebar-item',
     },
     {
-      type: 'doc',
-      id: 'features/pricing',
-      label: 'Pricing Plans & Usage',
+      type: 'category',
+      link: {
+        type: 'doc',
+        id: 'features/pricing',
+      },
+      label: 'Pricing Plans & Calculator',
       customProps: {
         sidebar_icon: 'currency-dollar',
       },
       className: 'homepage-sidebar-item',
+      items: [
+        {
+          type: 'doc',
+          id: 'features/payment',
+          label: 'Top-up & Billing',
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        },
+      ],
     },
     {
       type: 'doc',
@@ -474,7 +487,7 @@ module.exports = {
     },
     {
       type: 'doc',
-      id: 'zerops-yml/specification',
+      id: 'zerops-yaml/specification',
       label: 'Specification',
       customProps: {
         sidebar_icon: 'document-text',
@@ -483,7 +496,7 @@ module.exports = {
     },
     {
       type: 'doc',
-      id: 'zerops-yml/base-list',
+      id: 'zerops-yaml/base-list',
       label: 'Base List',
       customProps: {
         sidebar_icon: 'swatch',
@@ -492,7 +505,7 @@ module.exports = {
     },
     {
       type: 'doc',
-      id: 'zerops-yml/cron',
+      id: 'zerops-yaml/cron',
       label: 'Cron',
       customProps: {
         sidebar_icon: 'arrow-path',
@@ -591,7 +604,7 @@ module.exports = {
       items: [
         {
           type: 'doc',
-          id: 'references/importyml/pre-processor',
+          id: 'references/import-yaml/pre-processor',
           label: 'Yaml Preprocessing',
           customProps: {
             exclude_from_doc_list: false,
@@ -599,7 +612,7 @@ module.exports = {
         },
         {
           type: 'doc',
-          id: 'references/importyml/type-list',
+          id: 'references/import-yaml/type-list',
           label: 'Service Types',
           customProps: {
             exclude_from_doc_list: false,
