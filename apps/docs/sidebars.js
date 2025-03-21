@@ -127,28 +127,6 @@ module.exports = {
       className: 'homepage-sidebar-item',
     },
     {
-      type: 'category',
-      link: {
-        type: 'doc',
-        id: 'features/pricing',
-      },
-      label: 'Pricing Plans & Calculator',
-      customProps: {
-        sidebar_icon: 'currency-dollar',
-      },
-      className: 'homepage-sidebar-item',
-      items: [
-        {
-          type: 'doc',
-          id: 'features/payment',
-          label: 'Top-up & Billing',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-      ],
-    },
-    {
       type: 'doc',
       id: 'features/backup',
       label: 'Backup',
@@ -692,50 +670,53 @@ module.exports = {
       className: 'homepage-sidebar-item',
     },
     {
-      type: 'doc',
-      id: 'help/branding',
-      label: 'Branding',
+      type: 'html',
+      value: 'Company',
       customProps: {
-        sidebar_icon: 'document-text',
+        sidebar_is_group_divider: true,
       },
       className: 'homepage-sidebar-item',
     },
     {
-      type: 'html',
-      value: 'Additional resources',
+      type: 'doc',
+      id: 'company/about',
+      label: 'About',
       customProps: {
-        sidebar_is_group_divider: true,
-        sidebar_is_soon: true,
+        sidebar_icon: 'information-circle-solid',
       },
       className: 'homepage-sidebar-item',
     },
-    //    {
-    //      type: "doc",
-    //      id: "additional-resources/utility-recipes",
-    //      label: "Utility recipes",
-    //      customProps: {
-    //        sidebar_icon: "swatch",
-    //      },
-    //      className: "homepage-sidebar-item",
-    //    },
-    //    {
-    //      type: "doc",
-    //      id: "additional-resources/glossary",
-    //      label: "Glossary",
-    //      customProps: {
-    //        sidebar_icon: "list-bullet",
-    //      },
-    //      className: "homepage-sidebar-item",
-    //    },
-    //    {
-    //      type: "doc",
-    //      id: "additional-resources/roadmap",
-    //      label: "Roadmap",
-    //      customProps: {
-    //        sidebar_icon: "map",
-    //      },
-    //      className: "homepage-sidebar-item",
-    //    },
+    {
+      type: 'category',
+      link: {
+        type: 'doc',
+        id: 'company/pricing',
+      },
+      label: 'Pricing',
+      customProps: {
+        sidebar_icon: 'currency-dollar',
+      },
+      className: 'homepage-sidebar-item',
+      items: [
+        {
+          type: 'doc',
+          id: 'company/payment',
+          label: 'Top-up & Billing',
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        },
+      ],
+    },
+    {
+      type: 'doc',
+      id: 'company/branding',
+      label: 'Branding',
+      customProps: {
+        sidebar_icon: 'tag-solid',
+      },
+      className: 'homepage-sidebar-item',
+    },
   ],
   nodejs: [
     {
