@@ -713,7 +713,7 @@ module.exports = {
       id: 'company/branding',
       label: 'Branding',
       customProps: {
-        sidebar_icon: 'currency-dollar',
+        sidebar_icon: 'tag-solid',
       },
       className: 'homepage-sidebar-item',
     },
