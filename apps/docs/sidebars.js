@@ -682,7 +682,7 @@ module.exports = {
       id: 'company/about',
       label: 'About',
       customProps: {
-        sidebar_icon: 'information-circle-solid',
+        sidebar_icon: 'information-circle',
       },
       className: 'homepage-sidebar-item',
     },
@@ -713,7 +713,7 @@ module.exports = {
       id: 'company/branding',
       label: 'Branding',
       customProps: {
-        sidebar_icon: 'tag-solid',
+        sidebar_icon: 'tag',
       },
       className: 'homepage-sidebar-item',
     },
