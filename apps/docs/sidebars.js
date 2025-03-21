@@ -682,7 +682,7 @@ module.exports = {
       id: 'company/about',
       label: 'About',
       customProps: {
-        sidebar_icon: 'currency-dollar',
+        sidebar_icon: 'information-circle-solid',
       },
       className: 'homepage-sidebar-item',
     },
