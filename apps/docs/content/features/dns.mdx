@@ -1,6 +1,6 @@
 ---
 title: DNS and Proxy Configuration Guide
-desc: A comprehensive guide for configuring DNS records and proxy settings with Zerops applications, including shared and dedicated IPv4 setups, security measures, and troubleshooting tips.
+desc: A comprehensive guide for configuring DNS records and proxy settings with Zerops applications, including shared and dedicated IPv4 setups, wildcard domains, certificate validation, and troubleshooting tips.
 ---
 
 This guide will show you how to configure DNS records and proxy settings to work with your Zerops applications, with specific implementation details for Cloudflare.
@@ -19,8 +19,8 @@ DNS allows you to set two records based on IP address type:
 
 #### IPv6 only
 ```bash
-Type    Name      Content                Proxy status   TTL
-AAAA    <name>    <your-project-ipv6>    Proxied        Auto
+Type    Name              Content                Proxy status   TTL
+AAAA    <your-domain>     <your-project-ipv6>    Proxied        Auto
 ```
 
 :::note
@@ -31,10 +31,10 @@ Do not add a proxied A record with shared IPv4 - doing so would prevent the prox
 
 #### Dedicated IPv4
 ```bash
-Type    Name      Content                Proxy status   TTL
-A       <name>    <your-dedicated-ipv4>  Proxied        Auto
+Type    Name              Content                Proxy status   TTL
+A       <your-domain>     <your-dedicated-ipv4>  Proxied        Auto
 # Optional
-AAAA    <name>    <your-project-ipv6>    Proxied        Auto
+AAAA    <your-domain>     <your-project-ipv6>    Proxied        Auto
 ```
 
 :::tip
@@ -43,9 +43,9 @@ Adding also AAAA record can be beneficial as visitors with IPv6 support will con
 
 #### Shared IPv4 *(valid but NOT recommended)*
 ```bash
-Type    Name      Content                Proxy status  TTL
-AAAA    <name>    <your-project-ipv6>    DNS only      Auto
-A       <name>    <zerops-shared-ipv4>   Proxied       Auto
+Type    Name              Content                Proxy status  TTL
+AAAA    <your-domain>     <your-project-ipv6>    DNS only      Auto
+A       <your-domain>     <zerops-shared-ipv4>   Proxied       Auto
 ```
 
 :::tip Why not?
@@ -56,9 +56,9 @@ It does not make sense to expose your IPv6 address while proxying the shared IPv
 
 #### Shared IPv4
 ```bash
-Type    Name      Content                Proxy status   TTL
-AAAA    <name>    <your-project-ipv6>    DNS only       Auto
-A       <name>    <zerops-shared-ipv4>   DNS only       Auto
+Type    Name              Content                Proxy status   TTL
+AAAA    <your-domain>     <your-project-ipv6>    DNS only       Auto
+A       <your-domain>     <zerops-shared-ipv4>   DNS only       Auto
 ```
 
 :::note Both A + AAAA Required
@@ -67,10 +67,10 @@ Adding AAAA record is essential for shared IPv4 configuration as it serves as a 
 
 #### Dedicated IPv4
 ```bash
-Type    Name      Content                Proxy status   TTL
-A       <name>    <your-dedicated-ipv4>  DNS only       Auto
+Type    Name              Content                Proxy status   TTL
+A       <your-domain>     <your-dedicated-ipv4>  DNS only       Auto
 # Optional
-AAAA    <name>    <your-project-ipv6>    DNS only       Auto
+AAAA    <your-domain>     <your-project-ipv6>    DNS only       Auto
 ```
 
 :::tip
@@ -79,65 +79,86 @@ Adding also AAAA record can be beneficial as visitors with IPv6 support will con
 
 #### IPv6 only
 ```bash
-Type    Name      Content                Proxy status   TTL
-AAAA    <name>    <your-project-ipv6>    DNS only       Auto
+Type    Name              Content                Proxy status   TTL
+AAAA    <your-domain>     <your-project-ipv6>    DNS only       Auto
 ```
 
 :::note
 This configuration will only work for users with IPv6 connectivity, which may limit your service accessibility.
 :::
 
-### Understanding Shared IPv4 Addresses {#understand-shared-ipv4}
+## Wildcard Domain Configuration
 
-Shared IPv4 allows multiple Zerops projects to use the same IPv4 address while maintaining separate routing for each project. Here's how it works:
+Zerops supports wildcard domains (`*.<your-domain>`) that allow routing all subdomains to your project.
 
-1. When a visitor makes a request, it first arrives at the shared IPv4 address
-2. The system looks at the domain name in the request (using SNI - Server Name Indication)
-3. For security, it checks if this domain properly resolves to your project's IPv6 address
-4. Only if IPv6 address matches your project will the traffic be routed correctly
+### DNS Configuration
+#### Method A: Direct configuration of A and AAAA records
+Configure wildcard DNS records following the same patterns described in the [DNS Configuration](#dns-configuration) section, using `*.<your-domain>` in the Name field:
 
-This is why configuring both A (IPv4) and AAAA (IPv6) records is crucial when using shared IPv4 addresses - the IPv6 record acts as a security key that helps prevent unauthorized use of the shared IPv4 address.
-
-## General Troubleshooting Guide
-
-### Common Issues
-
-1. **DNS Resolution Issues**
-   - Confirm correct record configuration
-   - Verify proxy status settings
-   - Check IPv6 address accuracy
-   - Allow time for DNS propagation (typically 5-10 minutes)
-
-2. **Connection Problems**
-   - Test both IPv4 and IPv6 connectivity
-   - Check proxy server status if applicable
-   - Confirm port configurations
-
-### Validation Steps
-
-Test your configuration:
 ```bash
-# Check DNS resolution
-dig AAAA yourdomain.com
-
-# Verify connectivity
-curl -vI https://yourdomain.com
-
-# Test IPv4 access
-curl -4 -v https://yourdomain.com
-
-# Test IPv6 access
-curl -6 -v https://yourdomain.com
+Type   Name              Content               Proxy status       TTL
+A      *.<your-domain>   <your-ipv4-address>   DNS only/Proxied   Auto
+AAAA   *.<your-domain>   <your-ipv6-address>   DNS only/Proxied   Auto
 ```
 
-## Cloudflare Configuration
+#### Method B: Using a CNAME record
+First configure A and AAAA records for your main domain (`<your-domain>`), then set up a CNAME record:
 
-### SSL/TLS Mode
+```bash
+Type    Name              Content         Proxy status       TTL
+CNAME   *.<your-domain>   <your-domain>   DNS only/Proxied   Auto
+```
+
+### Certificate Validation
+
+For proper HTTPS certificate functionality with wildcard domains, configure:
+```bash
+Type    Name                            Content                     Proxy status   TTL
+CNAME   _acme-challenge.<your-domain>   <your-domain>.zerops.zone   DNS only       Auto
+```
+
+This record enables Zerops to issue and verify a wildcard certificate for your domain.
+
+### Higher-Level Wildcard Subdomains
+
+You can also set up higher-level wildcard subdomains like `*.<subdomain>.<your-domain>`:
+
+#### Method A: Direct configuration
+```bash
+Type   Name                          Content               Proxy status       TTL
+A      *.<subdomain>.<your-domain>   <your-ipv4-address>   DNS only/Proxied   Auto
+AAAA   *.<subdomain>.<your-domain>   <your-ipv6-address>   DNS only/Proxied   Auto
+```
+
+#### Method B: Using a CNAME record
+```bash
+Type    Name                          Content                     Proxy status       TTL
+CNAME   *.<subdomain>.<your-domain>   <subdomain>.<your-domain>   DNS only/Proxied   Auto
+```
+or
+```bash
+Type    Name                          Content         Proxy status       TTL
+CNAME   *.<subdomain>.<your-domain>   <your-domain>   DNS only/Proxied   Auto
+```
+
+For certificate validation:
+```bash
+Type    Name                                        Content                                 Proxy status   TTL
+CNAME   _acme-challenge.<subdomain>.<your-domain>   <subdomain>.<your-domain>.zerops.zone   DNS only       Auto
+```
+
+### Combining Main Domain and Wildcard Domain
+
+To use both `<your-domain>` and `*.<your-domain>`, specify both variants in your [Zerops configuration](/features/access#configuring-http-routing). Zerops automatically issues a single shared certificate for both the main domain and all its subdomains.
+
+## Cloudflare-Specific Configuration
+
+#### SSL/TLS Mode
 Set encryption mode to `Full (strict)` or `Full`
    - Ensures end-to-end encryption
    - *Full* mode requires any SSL certificate (even if self-signed/expired), while *Full (strict)* requires a valid certificate
 
-### Certificate Management
+#### Certificate Management
 1. Enable Edge Certificates to allow Cloudflare to manage SSL/TLS certificates
 2. During initial setup, handle HTTPS settings in one of two ways:
    - **Option A (Simple but Limited)**:
@@ -152,10 +173,73 @@ Set encryption mode to `Full (strict)` or `Full`
        ```
        This rule disables Automatic HTTPS Rewrites for the certificate validation path.
 
-### Cloudflare Troubleshooting
+## Validation Steps
 
-#### SSL Certificate Problems
-   - Verify `Always Use HTTPS` is disabled
-   - If you encounter **too many redirects** or similar SSL errors:
+Test your configuration:
+```bash
+# Check DNS resolution
+dig AAAA <your-domain>
+
+# Verify connectivity
+curl -vI https://<your-domain>
+
+# Test IPv4 access
+curl -4 -v https://<your-domain>
+
+# Test IPv6 access
+curl -6 -v https://<your-domain>
+```
+
+## Troubleshooting Guide
+
+1. **DNS Resolution Issues**
+   - Confirm correct record configuration
+   - Verify proxy status settings
+   - Check IPv6 address accuracy
+   - Allow time for DNS propagation (typically 5-10 minutes)
+
+2. **Connection Problems**
+   - Test both IPv4 and IPv6 connectivity
+   - Check proxy server status if applicable
+   - Confirm port configurations
+
+3. **Certificate Issues**
+   - Verify proper _acme-challenge CNAME configuration for wildcard domains
+   - Check that DNS records match the domains configured in Zerops
+   - **Cloudflare-specific certificate problems**:
+     - Verify `Always Use HTTPS` is disabled
+     - If you encounter **too many redirects** or similar SSL errors:
        - Double-check that SSL/TLS encryption mode is set to *Full* or *Full (strict)*, not *Flexible*
        - SSL mode might show incorrectly for newly added domains, try refreshing the page if settings appear incorrect
+
+## Technical Background
+
+### Understanding Shared IPv4 Addresses {#understand-shared-ipv4}
+
+Shared IPv4 allows multiple Zerops projects to use the same IPv4 address while maintaining separate routing for each project. Here's how it works:
+
+1. When a visitor makes a request, it first arrives at the shared IPv4 address
+2. The system looks at the domain name in the request (using SNI - Server Name Indication)
+3. For security, it checks if this domain properly resolves to your project's IPv6 address
+4. Only if IPv6 address matches your project will the traffic be routed correctly
+
+This is why configuring both A (IPv4) and AAAA (IPv6) records is crucial when using shared IPv4 addresses - the IPv6 record acts as a security key that helps prevent unauthorized use of the shared IPv4 address.
+
+### Certificate Verification Methods
+
+When issuing SSL/TLS certificates, different verification methods are used depending on the certificate type:
+
+#### HTTP-01 vs DNS-01 Verification
+
+- **Regular certificates** (for a single domain like `<your-domain>`) are typically issued using the **HTTP-01** challenge method. This verification checks that you control the domain by placing a specific file at a specific URL.
+
+- **Wildcard certificates** (for domains like `*.<your-domain>`) must be issued using the **DNS-01** challenge method. This method requires creating specific TXT records in your DNS configuration.
+
+### How Zerops Handles Wildcard Certificate Verification
+
+Zerops simplifies the DNS-01 challenge process:
+
+1. You create a CNAME record (e.g., `_acme-challenge.<your-domain> CNAME <your-domain>.zerops.zone`)
+2. When a certificate needs to be issued or renewed, Zerops automatically creates the required TXT records on its `zerops.zone` domain
+3. The certificate authority verifies these TXT records through the CNAME redirection
+4. Once verified, the wildcard certificate is issued without requiring manual intervention
