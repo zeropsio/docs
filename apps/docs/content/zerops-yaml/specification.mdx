@@ -52,6 +52,49 @@ zerops:
 
 Each service configuration requires `build` and `run` sections. An optional `deploy` section can be added for readiness checks.
 
+## Service Inheritance
+
+### extends <Badge type="optional" />
+
+The `extends` key allows you to inherit configuration from another service defined in the same `zerops.yaml` file. This is useful for creating environment-specific configurations while maintaining a common base.
+
+```yaml
+zerops:
+  - setup: base
+    build:
+      buildCommands:
+        - echo "hello"
+      deployFiles: ./
+    run:
+      start: server run
+
+  - setup: prod
+    extends: base
+    run:
+      crontab:
+        - command: xyz
+          allContainers: false
+          timing: "* * * * *"
+
+  - setup: dev
+    extends: base
+    run:
+      crontab:
+        - command: different command
+          allContainers: false
+          timing: "* * * * *"
+```
+
+When using `extends`:
+- The `extends` value must refer to another service's `setup` value in the same file
+- The child service inherits all configuration from the base service
+- Configuration is merged at the section level (`build`, `run`, `deploy`)
+- You can override specific sections by redefining them
+
+:::tip
+Create a base service with common configuration and extend it for environment-specific services to keep your `zerops.yaml` file DRY (Don't Repeat Yourself).
+:::
+
 ## Build Configuration
 
 ### base <Badge type="required" />
