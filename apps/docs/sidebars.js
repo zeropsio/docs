@@ -201,7 +201,7 @@ module.exports = {
     {
       type: 'category',
       label: 'Runtimes & Web Servers',
-      collapsible: false,
+      collapsible: true,
       customProps: {
         sidebar_is_group_headline: true,
       },
@@ -364,7 +364,7 @@ module.exports = {
     {
       type: 'category',
       label: 'Linux Containers & VMs',
-      collapsible: false,
+      collapsible: true,
       customProps: {
         sidebar_is_group_headline: true,
       },
@@ -403,7 +403,7 @@ module.exports = {
     {
       type: 'category',
       label: 'Databases, Search Engines & Message Brokers',
-      collapsible: false,
+      collapsible: true,
       customProps: {
         sidebar_is_group_headline: true,
       },
@@ -503,7 +503,7 @@ module.exports = {
     {
       type: 'category',
       label: 'Storages',
-      collapsible: false,
+      collapsible: true,
       customProps: {
         sidebar_is_group_headline: true,
       },
