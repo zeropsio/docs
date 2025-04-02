@@ -3,6 +3,7 @@ import IconTwitter from '@site/src/theme/Icon/Twitter';
 import IconGitHub from '@site/src/theme/Icon/GitHub';
 import IconDiscord from '@site/src/theme/Icon/Discord';
 import IconLinkedIn from '@site/src/theme/Icon/LinkedIn';
+import IconModel from '@site/src/theme/Icon/Model';
 import { SocialLink } from '@medusajs/docs';
 import Link from '@docusaurus/Link';
 
@@ -12,6 +13,9 @@ type SocialLinksProps = {
 
 const SocialLinks: React.FC<SocialLinksProps> = ({ links = [] }) => {
   const socialIcons = {
+    model: (
+      <IconModel className="!text-ui-fg-muted group-hover:!text-ui-fg-subtle" />
+    ),
     twitter: (
       <IconTwitter className="!text-ui-fg-muted group-hover:!text-ui-fg-subtle" />
     ),
@@ -37,6 +41,7 @@ const SocialLinks: React.FC<SocialLinksProps> = ({ links = [] }) => {
           {socialIcons[link.type]}
         </Link>
       ))}
+
     </div>
   );
 };
