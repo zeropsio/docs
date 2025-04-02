@@ -21,6 +21,26 @@ function capitalizeDelimiter(str: string): string {
     .join('-')
 }
 
+async function generateContent(
+  files: string[],
+  contentDir: string,
+  header: string
+): Promise<string> {
+  let content = header + '# Start of Zerops documentation\n'
+  for (const file of files) {
+    console.log(`> Writing '${file}' `)
+    const fileContent = fs.readFileSync(
+      path.resolve(contentDir, file),
+      'utf-8'
+    )
+    const contentWithoutFrontmatter = fileContent.replace(frontmatterRegex, '')
+    const lines = contentWithoutFrontmatter.split('\n')
+    const filteredLines = lines.filter(line => !line.trim().startsWith('import '))
+    content += filteredLines.join('\n') + '\n\n'
+  }
+  return content
+}
+
 async function generateLLMDocs() {
   const publicDir = path.resolve('apps/docs/static')
   
@@ -87,23 +107,4 @@ async function generateLLMDocs() {
   console.log(`< Output '${outputTinyFile}' `)
 }
 
-async function generateContent(
-  files: string[],
-  contentDir: string,
-  header: string
-): Promise<string> {
-  let content = header + '# Start of Zerops documentation\n'
-
-  for (const file of files) {
-    console.log(`> Writing '${file}' `)
-    const fileContent = fs.readFileSync(
-      path.resolve(contentDir, file),
-      'utf-8'
-    )
-    content += fileContent.replace(frontmatterRegex, '') + '\n\n'
-  }
-
-  return content
-}
-
-generateLLMDocs().catch(console.error) 
+generateLLMDocs().catch(console.error)
