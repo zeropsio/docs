@@ -159,6 +159,10 @@ const config = {
     },
     socialLinks: [
       {
+        type: "model",
+        href: "https://docs.zerops.io/llms.txt",
+      },
+      {
         type: "discord",
         href: "https://docs.zerops.io/discord",
       },
