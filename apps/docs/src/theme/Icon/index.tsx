@@ -156,6 +156,7 @@ import IconGitlab from './Gitlab';
 import IconTypesense from './Typesense';
 import IconDocker from './Docker';
 import IconCurlyBraces from './CurlyBraces';
+import IconCdn from './Cdn';
 
 export default {
   'academic-cap-solid': AcademicCapSolid,
@@ -316,4 +317,5 @@ export default {
   cloudok: IconCloudOk,
   typesense: IconTypesense,
   'curly-braces': IconCurlyBraces,
+  cdn: IconCdn,
 };

@@ -1,0 +1,294 @@
+---
+title: Content Delivery Network (CDN)
+description: A comprehensive guide to using Zerops CDN to deliver your content globally with minimal latency.
+---
+
+import Image from '/src/components/Image';
+
+Zerops CDN is a global content delivery network that brings your static content closer to your users, resulting in faster load times and improved user experience. Built on Nginx and Cloudflare geo-steering technology, our CDN automatically routes users to the nearest server location based on their DNS request.
+
+## Key Benefits
+
+- **Global Reach**: Serve content from strategic locations across the world
+- **Reduced Latency**: Content is delivered from the server closest to your users
+- **Simple Integration**: No complex configuration required
+
+## Global CDN Infrastructure
+
+Zerops CDN operates across **6 strategic regions** to ensure your content is always delivered from a location close to your users:
+
+<table className="w-full my-1.5 whitespace-nowrap">
+  <thead>
+    <tr>
+      <th className="w-fit" colspan="2">Region</th>
+      <th className="w-fit">Location</th>
+      <th className="w-fit">Coverage Area</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit font-semibold" rowspan="2">EU</td>
+      <td className="w-fit font-semibold">CZ</td>
+      <td className="w-fit">Prague, Czech Republic</td>
+      <td className="w-full" rowspan="2">Primary European coverage + failover for all regions</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">DE</td>
+      <td className="w-fit">Falkenstein, Germany</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold" colspan="2">UK</td>
+      <td className="w-fit">London, United Kingdom</td>
+      <td className="w-full">UK and surrounding areas</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold" colspan="2">AU</td>
+      <td className="w-fit">Sydney, Australia</td>
+      <td className="w-full">Australia and Oceania</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold" colspan="2">SG</td>
+      <td className="w-fit">Singapore, Singapore</td>
+      <td className="w-full">Southeast Asia</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold" colspan="2">CA</td>
+      <td className="w-fit">Beauharnois, Canada</td>
+      <td className="w-full">North America</td>
+    </tr>
+   </tbody>
+</table>
+
+### Geo-Steering Technology
+Zerops CDN's geo-steering technology automatically routes users to the server location closest to them. Here's how it works:
+
+* **Automatic routing**: Users are directed to the optimal CDN node based on their geographic location
+* **Quick failover**: The DNS TTL is set to just 30 seconds, allowing fast recovery if a node fails
+* **Redundancy**: If any node becomes unavailable, Cloudflare automatically redirects traffic to the next closest node
+* **Reliable backup**: The EU region serves as the ultimate fallback - if all other nodes go down, EU will always be served in DNS
+
+## CDN Modes and Implementation
+
+Zerops CDN currently supports two distinct usage modes (with a third mode coming soon), each designed for specific content delivery needs.
+
+### Object Storage Mode
+
+Perfect for efficiently delivering media files, documents, and other static assets stored in Zerops [Object Storage](/object-storage/overview) to users across different geographical regions.
+
+**Setup process:**
+1. Create an Object Storage service or select an existing one
+2. Enable the CDN option for this service
+3. Set appropriate public read access policies for objects you want to serve via CDN
+
+**Accessing content:**
+```txt
+https://storage.cdn.zerops.app/your-bucket/path/to/file
+```
+
+:::tip
+Access the storage CDN URL via the `storageCdnUrl` **project** environment variable `${storageCdnUrl}/your-bucket/path/to/file`.
+:::
+
+### Static Mode
+
+Ideal for caching and delivering static website assets like HTML, CSS, JavaScript, and images served from your custom domains.
+
+**Setup process:**
+1. Configure domain access for your service
+2. Ensure your domains are DNS-verified and have active SSL certificates
+3. Enable CDN for the domain group
+
+**Accessing content:**
+```txt
+https://static.cdn.zerops.app/your-domain.com/path/to/file
+```
+
+:::tip
+Access the static CDN URL via the `staticCdnUrl` **project** environment variable `${staticCdnUrl}/your-domain.com/path/to/file`.
+:::
+
+:::warning Wildcard Domains Not Supported
+Static CDN cannot be activated for wildcard domains (e.g., *.example.com). You must use specific domain names.
+:::
+
+### API Mode *(Coming Soon)*
+
+Designed for caching API responses to reduce load on your backend services and deliver faster responses to clients.
+
+**Environment variable:** Once available, you'll be able to access the API CDN URL via the `apiCdnUrl` **project** environment variable.
+
+:::warning
+API Mode is currently under development and will be available in a future release.
+:::
+
+### HTML Implementation Examples
+
+Here's how to integrate CDN URLs in your HTML code:
+
+```html
+<!-- Compare: Direct Object Storage vs. CDN-accelerated Storage -->
+<!-- Direct from Object Storage -->
+<img src="https://storage-prg1.zerops.io/my-bucket/logo.png"/>
+
+<!-- Via CDN for faster global delivery -->
+<img src="https://storage.cdn.zerops.app/my-bucket/logo.png"/>
+
+<!-- Using environment variables in templates -->
+<img src="{{ osGetEnv "storageCdnUrl" }}/assets/hero-image.jpg"/>
+
+<!-- Compare: Direct Domain vs. CDN-accelerated Domain -->
+<!-- Direct from your domain -->
+<script src="/static/js/main.js"></script>
+
+<!-- Via CDN for faster global delivery -->
+<script src="https://static.cdn.zerops.app/your-domain.com/static/js/main.js"></script>
+```
+
+### Testing Specific CDN Nodes
+
+For testing or debugging purposes, you can bypass the automatic geo-steering and access a specific CDN node directly:
+
+```
+https://{region}-{mode}.cdn.zerops.app/path/to/content
+```
+
+Available region prefixes: `cz`, `de`, `au`, `sg`, `uk`, and `ca`
+
+**Examples:**
+- Test Australia node: `https://au-storage.cdn.zerops.app/my-bucket/test.jpg`
+- Test UK node: `https://uk-static.cdn.zerops.app/my-domain.com/index.html`
+
+## Managing CDN Content
+
+### Cache Lifecycle
+
+Content served through Zerops CDN follows this lifecycle:
+
+1. **First Request**: When a user requests content not yet in the CDN cache, the request goes to the origin server (your Zerops service), and the response is cached at the CDN node
+2. **Subsequent Requests**: Further requests for the same content are served directly from the CDN cache, reducing latency and origin server load
+3. **Cache Expiration**: By default, content remains cached for 30 days unless explicitly purged
+4. **Automatic Management**: When CDN storage reaches capacity, the least recently used content is automatically removed
+
+:::note Important Cache Behavior
+Zerops CDN implements a fixed 30-day TTL policy. Currently, HTTP caching headers such as `Cache-Control`, `Expires`, `Pragma`, etc. do not influence CDN caching behavior. To refresh content sooner than the 30-day period, use the [purge API](#api-reference).
+
+Your `Cache-Control` headers will still affect browser caching behavior.
+:::
+
+### When to Purge Cache
+
+You should consider purging cached content when:
+
+- **Content Updates**: You've updated content but kept the same URL (e.g., updated images, CSS files)
+- **Deployment Rollouts**: You've deployed a new version of your application
+- **Emergency Removal**: You need to immediately remove content that was accidentally made public
+- **Testing Changes**: You want to ensure users see the latest version during testing
+
+### Purging Cached Content
+
+Zerops provides a simple [API](#api-reference) to manage and purge cached content before its normal expiration. You can use wildcard patterns to target specific content sets:
+
+#### Purge Pattern Examples
+
+<table className="w-full my-1.5 whitespace-nowrap">
+  <thead>
+    <tr>
+      <th className="w-fit">Pattern</th>
+      <th className="w-fit">Description</th>
+      <th className="w-fit">Example</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit font-semibold">`/*`</td>
+      <td className="w-fit">Purges all content</td>
+      <td className="w-full">Useful after major updates</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">`/images/*`</td>
+      <td className="w-fit">Purges all content in a directory</td>
+      <td className="w-full">Clear all cached images</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">`/css/main.css$`</td>
+      <td className="w-fit">Purges a specific file</td>
+      <td className="w-full">Update a single CSS file</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">`/2023*`</td>
+      <td className="w-fit">Purges content starting with pattern</td>
+      <td className="w-full">Clear content with date prefix</td>
+    </tr>
+   </tbody>
+</table>
+
+:::warning Pattern Rules
+- Wildcards (`*`) must be at the end of the pattern
+- Specific files must include `$` at the end
+- Nested wildcards (e.g., `/dir/*.jpg`) are not supported
+:::
+
+## API Reference
+
+Zerops provides a comprehensive set of API endpoints to manage your CDN configuration and content. For complete information about base URLs, authorization, and general API usage, please refer to our [API specification](/references/api).
+
+The endpoint links below will take you to the Swagger documentation with detailed request/response schemas and examples:
+
+### CDN Management API
+
+- **[Enable CDN for Storage ↗](https://api.app-prg1.zerops.io/api/rest/public/swagger/#/PublicServiceStack/EnableStorageCdn)** `PUT /api/rest/public/service-stack/{id}/cdn`
+- **[Disable CDN for Storage ↗](https://api.app-prg1.zerops.io/api/rest/public/swagger/#/PublicServiceStack/DisableStorageCdn)** `DELETE /api/rest/public/service-stack/{id}/cdn`
+- **[Create Object Storage with CDN ↗](https://api.app-prg1.zerops.io/api/rest/public/swagger/#/PublicServiceStackObjectStorage/CreateObjectStorageV1)** `POST /api/rest/public/service-stack/object_storage_v1`
+- **[Create Domain Routing with CDN ↗](https://api.app-prg1.zerops.io/api/rest/public/swagger/#/PublicPublicHttpRouting/CreatePublicHttpRouting)** `POST /api/public/public-http-routing`
+- **[Update Domain Routing with CDN ↗](https://api.app-prg1.zerops.io/api/rest/public/swagger/#/PublicPublicHttpRouting/UpdatePublicHttpRouting)** `PUT /api/public/public-http-routing/{id}`
+
+### Cache Purge API
+
+- **[Purge Storage Mode Cache ↗](https://api.app-prg1.zerops.io/api/rest/public/swagger/#/PublicServiceStack/PurgeStorageCdn)** `PUT /api/rest/public/service-stack/{id}/purge-cdn/{path}`
+- **[Purge Static Mode Cache ↗](https://api.app-prg1.zerops.io/api/rest/public/swagger/#/PublicProject/PurgeStaticCdn)** `PUT /api/rest/public/project/{id}/purge-cdn/static/{domain}/{path}`
+- **Purge Api Mode Cache *(Coming soon)*** {/*(https://api.app-prg1.zerops.io/api/rest/public/swagger/#/PublicProject/PurgeApiCdn)** `PUT /api/rest/public/project/{id}/purge-cdn/api/{domain}/{path}` */}
+
+## Troubleshooting
+
+Having issues with your CDN? Here are solutions to the most common problems:
+
+#### Content Not Updated After Changes
+* **Issue:** You've updated content, but users still see the old version.
+* **Possible Cause:** The CDN cache is continuing to serve the previously cached version.
+* **Solution:**
+    - Use the [purge API](#api-reference) with the specific content path
+    - For immediate changes, use versioned file names (e.g., `style.v2.css` instead of just `style.css`)
+
+#### Content Not Being Cached
+* **Issue:** Your content isn't being cached by the CDN.
+* **Possible Cause:** Missing public read permissions on objects.
+* **Solution:**
+    - For object storage: Check bucket and object access policies
+    - Verify the object is accessible directly before attempting CDN access
+
+:::note
+Remember that only publicly accessible objects will be cached by the CDN. Private objects will always be fetched directly from the origin.
+:::
+
+#### Environment Variables Not Available
+* **Issue:** You can't access the new CDN-related project level environment variables in your containers.
+* **Possible Cause:** When new environment variables are created, existing services need to be restarted to access them. Services created before the CDN feature release require special handling.
+* **Solution:**
+    - For services created after CDN release: Restart the service to apply the new environment variables
+    - For services created before CDN release: Add and then remove a dummy environment variable in the project settings adn restart the service
+
+#### Unexpected 404 Errors
+* **Issue:** Users receive 404 errors when accessing content via CDN.
+* **Possible Cause:** Incorrect CDN URL formatting or missing content at origin.
+* **Solution:**
+    - Double-check your [URL structure](#) (pay attention to domain names and paths)
+    - Verify content exists at the origin before attempting CDN access
+    - Test accessing the content directly from origin first
+
+**Correct URL patterns:**
+- Object Storage: `https://storage.cdn.zerops.app/your-bucket/path/to/file`
+- Static Mode: `https://static.cdn.zerops.app/your-domain.com/path/to/file`
+
+---
+
+*Need help implementing CDN in your project? Join our [Discord community](https://discord.gg/zerops) where our team and other Zerops users can assist you!*

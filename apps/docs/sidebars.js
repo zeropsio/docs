@@ -136,6 +136,15 @@ module.exports = {
       className: 'homepage-sidebar-item',
     },
     {
+      type: 'doc',
+      id: 'features/cdn',
+      label: 'CDN',
+      customProps: {
+        sidebar_icon: 'cdn',
+      },
+      className: 'homepage-sidebar-item',
+    },
+    {
       type: 'html',
       value: 'Perfectly suited for',
       customProps: {
