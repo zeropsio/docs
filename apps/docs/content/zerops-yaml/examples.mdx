@@ -3,8 +3,278 @@ title: Yaml Examples
 description: Yaml Examples for different technologies
 ---
 
-import ZeropsYamlEditor from '@site/src/components/ZeropsYamlEditor';
+import RecipeZeropsYaml from '@site/src/components/RecipeZeropsYaml';
 
-<ZeropsYamlEditor />
+<RecipeZeropsYaml />
 
 ## Different Use Cases Examples
+
+### Full Example of Zerops Yaml
+
+```yaml
+zerops:
+  # Base service configuration that can be extended
+  - setup: frontend
+    build:
+      base: nodejs@20
+      os: ubuntu
+      prepareCommands:
+        - apt-get update
+        - apt-get install -y imagemagick ffmpeg
+      envVariables:
+        NODE_ENV: production
+      buildCommands:
+        - npm ci
+        - npm run build
+      deployFiles: ./
+      cache:
+        - node_modules
+    run:
+      base: nodejs@20
+      initCommands:
+        - mkdir -p /tmp/cache
+        - chmod 777 /tmp/cache
+      envVariables:
+        NODE_ENV: production
+      ports:
+        - port: 3000
+          httpSupport: true
+      start: node dist/server.js
+
+  # Production service with health checks and cron jobs
+  - setup: app-production
+    extends: base-app
+    build:
+      buildCommands:
+        - npm ci --production
+        - npm run build:production
+      envVariables:
+        NODE_ENV: production
+        OPTIMIZE: "true"
+    run:
+      envVariables:
+        DB_URL: $db_connectionString
+        REDIS_HOST: $redis_hostname
+        REDIS_PORT: $redis_port
+        API_URL: https://api.example.com
+      healthCheck:
+        httpGet:
+          port: 3000
+          path: /health
+      crontab:
+        - command: "node /var/www/dist/cron/cleanup.js"
+          timing: "0 0 * * *"
+          allContainers: false
+          workingDir: /var/www
+        - command: "node /var/www/dist/cron/sendReports.js"
+          timing: "0 8 * * 1-5"
+          allContainers: true
+
+    deploy:
+      readinessCheck:
+        httpGet:
+          port: 3000
+          path: /ready
+          host: 127.0.0.1
+          scheme: http
+
+  # Development service with different settings
+  - setup: app-development
+    extends: base-app
+    build:
+      envVariables:
+        NODE_ENV: development
+        DEBUG: true
+      buildCommands:
+        - npm ci
+        - npm run build:development
+    run:
+      envVariables:
+        DB_HOST: $db_hostname
+        DB_PORT: $db_port
+        DB_USER: $db_user
+        DB_PASSWORD: $db_password
+        API_URL: https://dev-api.example.com
+
+  # Worker service for background processing
+  - setup: worker
+    build:
+      base: nodejs@20
+      buildCommands:
+        - npm ci
+        - npm run build:worker
+      deployFiles:
+        - dist/worker
+        - node_modules
+      cache:
+        - node_modules
+    run:
+      base: nodejs@20
+      start: node dist/worker/index.js
+      envVariables:
+        DB_HOST: $db_hostname
+        DB_PORT: $db_port
+        DB_USER: $db_user
+        DB_PASSWORD: $db_password
+      crontab:
+        - command: "node /var/www/dist/worker/scheduledTasks.js"
+          timing: "*/15 * * * *"
+          allContainers: false
+
+  # Multiple runtime processes
+  - setup: frontend
+    build:
+      base: nodejs@20
+      buildCommands:
+        - npm ci
+        - npm run build:static
+      deployFiles:
+        - dist/public
+        - dist/ssr
+        - package.json
+        - node_modules
+
+    run:
+      base: nodejs@20
+      envVariables:
+        STATIC_PATH: /var/www/dist/public
+        API_ENDPOINT: https://api.example.com
+      ports:
+        - port: 3000
+          httpSupport: true
+      startCommands:
+        - command: node dist/ssr/server.js
+          name: ssr-server
+        - command: node dist/ssr/api-proxy.js
+          name: api-proxy
+          initCommands:
+            - mkdir -p /project2
+
+  # Nginx static site example
+  - setup: static-site
+    build:
+      base: nodejs@20
+      buildCommands:
+        - npm ci
+        - npm run build
+      deployFiles:
+        - build
+    run:
+      base: nginx@1.22
+      documentRoot: build
+      routing:
+        root: /index.html
+        redirects:
+          - from: /api/*
+            to: https://api.example.com
+            status: 301
+            preserveQuery: true
+          - from: /old-page
+            to: /new-page
+            status: 302
+```
+
+### Cron Jobs
+
+### Monorepo
+
+### Multiple Start Commands
+
+### Multiple Services
+
+
+### Multiplayer Game Server
+
+```yaml
+zerops:
+  # Multiplayer Game Server with UDP port configuration
+  - setup: game-server
+    build:
+      base: golang@1.22
+      envVariables:
+        GO_ENV: production
+        BUILD_VERSION: "1.5.0"
+      buildCommands:
+        - go mod download
+        - go build -o game-server ./cmd/server
+      deployFiles:
+        - game-server
+        - config
+        - assets
+      cache:
+        - /go/pkg/mod
+    run:
+      base: golang@1.22
+      envVariables:
+        SERVER_NAME: "Battle Arena"
+        MAX_PLAYERS: "100"
+        UDP_GAME_PORT: "3001"
+        UDP_VOICE_PORT: "3002"
+        TICK_RATE: "64"
+      ports:
+        # TCP port for API and dashboard
+        - port: 3000
+          protocol: tcp
+          httpSupport: true
+        # UDP port for real-time game data
+        - port: 3001
+          protocol: udp
+        # UDP port for voice chat
+        - port: 3002
+          protocol: udp
+      start: ./game-server        
+      healthCheck:
+        httpGet:
+          port: 8080
+          path: /health
+```
+
+### Real-time Voice & Video Service
+```yaml
+# Real-time messaging service with UDP
+zerops:
+  - setup: voip-service
+    build:
+      base: nodejs@20
+      buildCommands:
+        - npm ci
+        - npm run build
+      deployFiles:
+        - dist
+        - package.json
+        - node_modules
+      cache:
+        - node_modules
+    run:
+      base: nodejs@20
+      envVariables:
+        STUN_SERVER: "stun.example.com:3478"
+        TURN_SERVER: "turn.example.com:3478"
+        TURN_USERNAME: "${TURN_USERNAME}"
+        TURN_CREDENTIAL: "${TURN_PASSWORD}"
+        RTP_PORT: "4001"
+        RTCP_PORT: "4002"
+        WEBRTC_PORT_MIN: "4003"
+        WEBRTC_PORT_MAX: "4005"
+      ports:
+        # TCP port for signaling and web interface
+        - port: 4000
+          protocol: tcp
+          httpSupport: true
+        # UDP port for RTP media streams
+        - port: 4001
+          protocol: udp
+        # UDP port for RTCP control
+        - port: 4002
+          protocol: udp  
+        # UDP port range for WebRTC
+        - port: 4003
+          protocol: udp
+        - port: 4004
+          protocol: udp
+        - port: 4005
+          protocol: udp
+      start: node dist/server.js
+```
+
+

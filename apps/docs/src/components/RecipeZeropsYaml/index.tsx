@@ -8,11 +8,11 @@ interface ExampleTemplate {
   config: string;
 }
 
-interface ZeropsYamlEditorProps {
+interface RecipeZeropsYamlProps {
   initialYaml?: string;
 }
 
-const ZeropsYamlEditor: React.FC<ZeropsYamlEditorProps> = ({ initialYaml }) => {
+const RecipeZeropsYaml: React.FC<RecipeZeropsYamlProps> = ({ initialYaml }) => {
   const [yamlContent, setYamlContent] = useState<string>(initialYaml || '');
   const [selectedExampleIndex, setSelectedExampleIndex] = useState<number>(-1);
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -299,12 +299,12 @@ const ZeropsYamlEditor: React.FC<ZeropsYamlEditorProps> = ({ initialYaml }) => {
   };
 
   return (
-    <div className={styles.zeropsEditorContainer}>
+    <div className={styles.zeropsContainer}>
       <div className={styles.optionsContainer}>
         {/* Searchable Example Selector */}
         <div className={styles.selectorContainer}>
           <label htmlFor="example-search" className={styles.selectorLabel}>
-            Select Example
+            Select Recipe
           </label>
           <div className={styles.searchContainer} ref={searchRef}>
             <input
@@ -312,7 +312,7 @@ const ZeropsYamlEditor: React.FC<ZeropsYamlEditorProps> = ({ initialYaml }) => {
               ref={inputRef}
               type="text"
               className={styles.searchInput}
-              placeholder="Search examples or click to browse..."
+              placeholder="Search recipes or click to browse..."
               value={getInputValue()}
               onChange={handleSearchChange}
               onFocus={handleInputFocus}
@@ -357,8 +357,8 @@ const ZeropsYamlEditor: React.FC<ZeropsYamlEditorProps> = ({ initialYaml }) => {
         </div>
       </div>
       
-      <div className={styles.editorContainer}>
-        <div className={styles.editorHeader}>
+      <div className={styles.codeContainer}>
+        <div className={styles.codeHeader}>
           <div className={styles.fileName}>zerops.yml</div>
           {/* Use the Analog Node.js GitHub repo URL for default template */}
           <a 
@@ -372,7 +372,7 @@ const ZeropsYamlEditor: React.FC<ZeropsYamlEditorProps> = ({ initialYaml }) => {
             source recipe ↗
           </a>
         </div>
-        <div className={styles.editorContent}>
+        <div className={styles.codeViewContent}>
           <button 
             onClick={copyToClipboard}
             className={styles.copyButton}
@@ -391,4 +391,4 @@ const ZeropsYamlEditor: React.FC<ZeropsYamlEditorProps> = ({ initialYaml }) => {
   );
 };
 
-export default ZeropsYamlEditor; 
+export default RecipeZeropsYaml; 
