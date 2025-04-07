@@ -1,0 +1,113 @@
+---
+title: Zerops CLI Configuration
+description: Configuration options, environment variables, and logging capabilities for the Zerops command line tool (zcli)
+---
+
+:::tip Commands Reference
+For a comprehensive reference of all available commands, see the [Commands Reference](/references/cli/commands) page.
+:::
+
+## Configuration Overview
+
+You can configure default values for zCLI commands using the following methods (in order of increasing precedence):
+
+1. [Configuration files](#configuration-files)
+2. [Environment variables](#environment-variables)
+3. [Command-line flags](/references/cli/commands)
+
+:::note Precedence
+This precedence order means that command-line flags will override environment variables, which will override settings in configuration files.
+:::
+
+## Configuration Files
+
+zCLI supports configuration via YAML files in the following locations:
+
+1. Global config (user home): `~/.config/zerops/zcli.yaml` or `~/zerops/zcli.yaml`
+2. Project-specific config: `./.zcli.yaml` in the root of your application repository
+
+The system first loads the global config file, then merges in the project-specific config if it exists:
+- Settings unique to the global config are preserved
+- Settings in the project-specific config will override any duplicate keys from the global config
+
+### Configuration File Examples
+
+**Global config file (placed in user home directory):**
+```yaml
+# Set organization-wide defaults
+workspaceState: "all"
+```
+
+**Project-specific `.zcli.yml` file (placed in the root of your application repository):**
+```yaml
+# Set project-specific settings
+projectId: "your-project-id"
+serviceId: "your-service-id"
+
+# Override global workspace state for this project
+workspaceState: "clean"
+```
+
+## Environment Variables
+
+### Standard Environment Variables
+
+Any flag can be set via environment variables by:
+- Using the `ZEROPS_` prefix
+- Converting the flag name to uppercase
+- Using the full flag name (not shorthand)
+
+**Example:**
+```sh
+export ZEROPS_WORKSPACESTATE=clean
+export ZEROPS_PROJECTID=your-project-id
+```
+
+### Special Environment Variables
+
+zCLI also recognizes special environment variables that control its behavior:
+
+#### Terminal Mode Configuration
+
+The `ZEROPS_CLI_TERMINAL_MODE` environment variable controls the interactive mode of zCLI:
+
+```sh
+export ZEROPS_CLI_TERMINAL_MODE=<mode>
+```
+
+Available modes:
+- `auto` (default): Automatically detects if interactive mode can be used and enables it when possible
+- `enabled`: Forces interactive mode to be enabled
+- `disabled`: Forces interactive mode to be disabled
+
+This setting affects interactive prompts, progress indicators, and other terminal-based user interface elements.
+
+#### Logging Configuration
+
+zCLI maintains a debug log file for the `service push` and `service deploy` commands. This logging feature is designed specifically for debugging purposes. The log file can be found in one of these locations:
+
+**1. Default locations** (checked in this order):
+  - `/var/log/zcli.log` (if zCLI has write permissions)
+  - `~/.config/zerops/zerops.log` (as fallback)
+
+**2. Custom location** (if specified):
+  - Set with `ZEROPS_CLI_LOG_FILE_PATH` environment variable
+
+:::note
+zCLI must have write permissions for the specified log file locations.
+:::
+
+To enable verbose logging with additional debug information, use the `--verbose` flag (or its shorthand `-v`):
+```sh
+zcli service push --verbose
+zcli service push -v
+```
+
+To troubleshoot deployment issues, you can check these log files using commands like `cat` or `tail`:
+```sh
+# View the entire log file
+cat ~/.config/zerops/zerops.log
+
+# Stream new log entries
+tail -f ~/.config/zerops/zerops.log
+```

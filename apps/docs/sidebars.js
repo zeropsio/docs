@@ -521,16 +521,16 @@ module.exports = {
       items: [
         {
           type: 'doc',
-          id: 'references/cli/commands',
-          label: 'Available Commands',
+          id: 'references/cli/configuration',
+          label: 'Configuration',
           customProps: {
             exclude_from_doc_list: false,
           },
         },
         {
           type: 'doc',
-          id: 'references/cli/access-logs',
-          label: 'Access Logs',
+          id: 'references/cli/commands',
+          label: 'Commands',
           customProps: {
             exclude_from_doc_list: false,
           },
