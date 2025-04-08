@@ -186,7 +186,30 @@ You should consider purging cached content when:
 
 ### Purging Cached Content
 
-Zerops provides a simple [API](#api-reference) to manage and purge cached content before its normal expiration. You can use wildcard patterns to target specific content sets:
+Zerops provides multiple ways to manage and purge cached content before its normal expiration:
+
+- **Command Line**: Use the `zsc cdn purge` [command](/references/zsc#cdn) available in all Zerops containers:
+  ```sh
+  # Purge all content for a domain
+  zsc cdn purge example.com
+
+  # Purge specific path
+  zsc cdn purge example.com /images/
+  ```
+
+- **API Endpoints**: For programmatic control, use the [API endpoints](#api-reference). Here are ready-to-use curl examples for quickly purging content in your scripts:
+
+  ```sh
+  # Static mode: Purge all content for a domain
+  curl --location --request PUT "https://api.app-prg1.zerops.io/api/rest/public/project/$PROJECT_ID/purge-cdn/static/$DOMAIN/*" \
+  --header "Authorization: Bearer $USER_OR_ACCESS_TOKEN"
+  ```
+
+  ```sh
+  # Storage mode: Purge all content for object storage
+  curl --location --request PUT "https://api.app-prg1.zerops.io/api/rest/public/service-stack/$OBJECT_STORAGE_SERVICE_ID/purge-cdn/*" \
+  --header "Authorization: Bearer $USER_OR_ACCESS_TOKEN"
+  ```
 
 #### Purge Pattern Examples
 
