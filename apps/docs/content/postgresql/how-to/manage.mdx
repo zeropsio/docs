@@ -108,23 +108,27 @@ You can use various database management tools from your local workstation to con
 
 ## How to install and manage PostgreSQL plugins
 
+### Viewing available plugins
 You can list all available PostgreSQL plugins by running the following query *(superuser privileges not required)*:
 
 ```sql
 SELECT * FROM pg_available_extensions ORDER BY name;
 ```
 
-To install plugins, you must **connect as a superuser** (see note below) and run the appropriate CREATE EXTENSION command. For example:
+### Installing plugins (requires superuser)
 
-```sql
-CREATE EXTENSION pg_stat_statements;
-CREATE EXTENSION vector;
-CREATE EXTENSION postgis;
-```
+1. **Connect with superuser credentials**:
+   - Use the `superUser` (user `postgres`) and `superUserPassword` environment variables from your PostgreSQL service
 
-:::info Superuser Credentials
-The PostgreSQL superuser credentials can be found in the `superUser` and `superUserPassword` environment variables of your PostgreSQL service.
-:::
+2. **Switch to your service database**:
+   When logging in as the superuser, you're initially in the `postgres` database, not your service database.
+
+3. **Install required extensions**:
+   ```sql
+   CREATE EXTENSION pg_stat_statements;
+   CREATE EXTENSION vector;
+   CREATE EXTENSION postgis;
+   ```
 
 :::warning
 Currently, it is not possible to add new plugins that are not already listed in `pg_available_extensions`.
