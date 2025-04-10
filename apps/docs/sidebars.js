@@ -363,13 +363,13 @@ module.exports = {
           className: 'homepage-sidebar-item  service-sidebar-item',
         },
         {
-          type: 'ref',
-          id: 'keydb/overview',
-          label: 'KeyDB (Redis)',
+          type: "ref",
+          id: "valkey/overview",
+          label: "Valkey (Redis)",
           customProps: {
-            sidebar_icon: 'keydb',
+            sidebar_icon: "valkey",
           },
-          className: 'homepage-sidebar-item  service-sidebar-item',
+          className: "homepage-sidebar-item  service-sidebar-item",
         },
         {
           type: "ref",
@@ -407,15 +407,15 @@ module.exports = {
           },
           className: "homepage-sidebar-item  service-sidebar-item",
         },
-//        {
-//          type: "ref",
-//          id: "valkey/overview",
-//          label: "Valkey",
-//          customProps: {
-//            sidebar_icon: "valkey",
-//          },
-//          className: "homepage-sidebar-item  service-sidebar-item",
-//        },
+        {
+          type: 'ref',
+          id: 'keydb/overview',
+          label: 'KeyDB',
+          customProps: {
+            sidebar_icon: 'keydb',
+          },
+          className: 'homepage-sidebar-item  service-sidebar-item',
+        },
 //        {
 //          type: "ref",
 //          id: "kafka/overview",
@@ -2231,6 +2231,26 @@ module.exports = {
       customProps: {
         sidebar_is_title: true,
         sidebar_icon: 'meilisearch',
+      },
+    },
+  ],
+  valkey: [
+    {
+      type: 'ref',
+      id: 'homepage',
+      label: 'Back to home',
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: 'back-arrow',
+      },
+    },
+    {
+      type: 'doc',
+      id: 'valkey/overview',
+      label: 'Zerops Valkey Service',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'valkey',
       },
     },
   ],

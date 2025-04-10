@@ -12522,13 +12522,9 @@ You should consider purging cached content when:
 
 ### Purging Cached Content
 
-Zerops provides multiple ways to manage and purge cached content before its normal expiration.
+Zerops provides multiple ways to manage and purge cached content before its normal expiration:
 
-#### Using the Command Line or API
-
-You can purge CDN cache using:
-
-- **Command Line**: Use the [`zsc cdn purge`](/references/zsc#cdn) command available in all Zerops containers:
+- **Command Line**: Use the `zsc cdn purge` [command](/references/zsc#cdn) available in all Zerops containers:
   ```sh
   # Purge all content for a domain
   zsc cdn purge example.com
@@ -12537,7 +12533,19 @@ You can purge CDN cache using:
   zsc cdn purge example.com /images/
   ```
 
-- **API Endpoints**: For programmatic control, use the [API endpoints](#api-reference).
+- **API Endpoints**: For programmatic control, use the [API endpoints](#api-reference). Here are ready-to-use curl examples for quickly purging content in your scripts:
+
+  ```sh
+  # Static mode: Purge all content for a domain
+  curl --location --request PUT "https://api.app-prg1.zerops.io/api/rest/public/project/$PROJECT_ID/purge-cdn/static/$DOMAIN/*" \
+  --header "Authorization: Bearer $USER_OR_ACCESS_TOKEN"
+  ```
+
+  ```sh
+  # Storage mode: Purge all content for object storage
+  curl --location --request PUT "https://api.app-prg1.zerops.io/api/rest/public/service-stack/$OBJECT_STORAGE_SERVICE_ID/purge-cdn/*" \
+  --header "Authorization: Bearer $USER_OR_ACCESS_TOKEN"
+  ```
 
 #### Purge Pattern Examples
 
@@ -22607,12 +22615,12 @@ export const containers = [
 export const databases = [
     { name: "PostgreSQL", link: "/postgresql/overview", icon: <Icons.postgresql/> },
     { name: "MariaDB", link: "/mariadb/overview", icon: <Icons.mariadb/> },
-    { name: "KeyDB", link: "/keydb/overview", icon: <Icons.keydb/> },
+    { name: "Valkey", link: "/valkey/overview", icon: <Icons.valkey/> },
     { name: "Elasticsearch", link: "/elasticsearch/overview", icon: <Icons.elasticsearch/> },
     { name: "Typesense", link: "/typesense/overview", icon: <Icons.typesense/> },
     { name: "Meilisearch", link: "/meilisearch/overview", icon: <Icons.meilisearch/> },
     { name: "Qdrant", link: "/qdrant/overview", icon: <Icons.qdrant/> },
-    { name: "Valkey", icon: <Icons.valkey/> },
+    { name: "KeyDB", link: "/keydb/overview", icon: <Icons.keydb/> },
     { name: "Kafka", icon: <Icons.kafka/> },
     { name: "NATS", icon: <Icons.nats/> },
 ]
@@ -38271,23 +38279,27 @@ You can use various database management tools from your local workstation to con
 
 ## How to install and manage PostgreSQL plugins
 
+### Viewing available plugins
 You can list all available PostgreSQL plugins by running the following query *(superuser privileges not required)*:
 
 ```sql
 SELECT * FROM pg_available_extensions ORDER BY name;
 ```
 
-To install plugins, you must **connect as a superuser** (see note below) and run the appropriate CREATE EXTENSION command. For example:
+### Installing plugins (requires superuser)
 
-```sql
-CREATE EXTENSION pg_stat_statements;
-CREATE EXTENSION vector;
-CREATE EXTENSION postgis;
-```
+1. **Connect with superuser credentials**:
+   - Use the `superUser` (user `postgres`) and `superUserPassword` environment variables from your PostgreSQL service
 
-:::info Superuser Credentials
-The PostgreSQL superuser credentials can be found in the `superUser` and `superUserPassword` environment variables of your PostgreSQL service.
-:::
+2. **Switch to your service database**:
+   When logging in as the superuser, you're initially in the `postgres` database, not your service database.
+
+3. **Install required extensions**:
+   ```sql
+   CREATE EXTENSION pg_stat_statements;
+   CREATE EXTENSION vector;
+   CREATE EXTENSION postgis;
+   ```
 
 :::warning
 Currently, it is not possible to add new plugins that are not already listed in `pg_available_extensions`.
@@ -42207,13 +42219,13 @@ The system first loads the global config file, then merges in the project-specif
 
 ### Configuration File Examples
 
-**Global config file (placed in user home directory):**
+**Global config file:**
 ```yaml
 # Set organization-wide defaults
 workspaceState: "all"
 ```
 
-**Project-specific `.zcli.yml` file (placed in the root of your application repository):**
+**Project-specific file:**
 ```yaml
 # Set project-specific settings
 projectId: "your-project-id"
@@ -49794,6 +49806,169 @@ const searchResults = await client.collections('companies')
 - Utilize batch operations for bulk updates
 - Configure appropriate timeout values based on your use case
 - Consider data volume when designing collection schemas
+
+## Support
+
+For advanced configurations or custom requirements:
+- Join our [Discord community](https://discord.gg/zerops)
+- Contact support via [email](mailto:support@zerops.io)
+
+
+
+Valkey is a powerful, open-source alternative to Redis, offering full compatibility with Redis clients while providing an independent development path focused on community-driven innovation. Deploy and manage Valkey on Zerops' fully managed infrastructure to get instant access to high-performance in-memory data storage.
+
+## Supported Versions
+
+Currently supported Valkey versions:
+<UnorderedList data={data.valkey.readable}/>
+
+Import configuration version:
+<UnorderedCodeList data={data.valkey.import}/>
+
+## Service Configuration
+
+Zerops offers Valkey in two deployment configurations to meet different availability requirements.
+
+## Deployment Options
+
+### Non-HA Setup
+- Single node deployment on port tcp://:6379
+- No backup mechanism beyond Zerops infrastructure reliability
+- Data persists unless the hardware node fails
+- Suitable for development or non-critical workloads
+
+### HA (High Availability) Setup
+- 3-node configuration (1 master + 2 replicas)
+- Access ports:
+  - tcp://6379 - read/write operations (routed to master)
+  - tcp://7000 - read-only operations (writes will return errors)
+- Automatic failover and recovery:
+  - Failed nodes are replaced automatically
+  - If master fails, a replica is promoted and others sync from it
+  - If replica fails, a new replica is created and synchronized
+
+### HA Implementation Details
+
+Our HA implementation uses a unique approach to ensure high availability while maintaining compatibility with all Redis clients:
+
+1. All nodes are configured identically and listen on port 6379
+2. The first node in the cluster is designated as the master
+3. On replica nodes, port 6379 traffic is forwarded to the master
+4. Port 7000 is mapped to port 6379 locally on each node for direct replica access
+5. When a master fails, a replica is promoted to master, and routing is updated
+6. DNS entries are updated automatically for seamless client connection
+7. This implementation provides traffic forwarding to the master - a feature not natively supported by Valkey
+
+## Network Access
+
+### Internal Project Access
+
+Services within the same project can access Valkey directly:
+
+**For non-HA setup:**
+```
+tcp://{hostname}:6379
+# TLS port
+tcp://{hostname}:6380
+```
+
+**For HA setup:**
+```
+tcp://{hostname}:6379  # Read/write operations (routed to master)
+tcp://{hostname}:7000  # Read-only operations (writes return errors)
+```
+
+> **Note:** Port 7000 for read-only operations is a Zerops-specific feature. Port forwarding on 6379 ensures all write operations reach the master regardless of which node you connect to.
+
+> **Performance tip:** For read-heavy workloads, use port 7000 to distribute reads across all nodes. Be aware that replica data may lag slightly behind the master due to asynchronous replication.
+
+## Quick Start Example
+
+Connect to Valkey in a Node.js application:
+
+```javascript
+const { createClient } = require('redis');
+
+// Connection details from Zerops environment variables
+const VALKEY_HOST = process.env.hostname;
+const VALKEY_PASSWORD = process.env.masterPassword;
+const VALKEY_PORT = 6379; // Use 7000 for read-only in HA setup
+
+async function connectToValkey() {
+  const client = createClient({
+    socket: {
+      host: VALKEY_HOST,
+      port: VALKEY_PORT
+    },
+    password: VALKEY_PASSWORD
+  });
+
+  client.on('error', (err) => console.log('Valkey Client Error', err));
+
+  await client.connect();
+
+  // Basic operations
+  await client.set('key', 'value');
+  const value = await client.get('key');
+  console.log(value);
+
+  return client;
+}
+
+// Connect and use Valkey
+connectToValkey().catch(console.error);
+```
+
+## Best Practices
+
+#### Working with HA Setup
+- All write operations work automatically on port 6379
+- Use port 7000 for distributing read operations across replicas
+- Consider replication lag when reading from replicas
+- Failover is handled automatically - your application continues without interruption
+
+#### Security
+- Store connection credentials securely in backend services
+- Use TLS for encrypted connections
+- Regularly rotate passwords
+
+#### Performance
+- Use connection pooling for high-throughput applications
+- Monitor memory usage and configure appropriate eviction policies
+- Optimize data structures for your specific use cases
+
+#### Persistence
+- Configure persistence settings based on your durability requirements
+- Implement additional backup strategies if needed
+
+#### Error Handling
+- Implement retry logic for temporary failures
+- Set appropriate timeout values
+- Handle potential replication lag in your application logic
+
+## Troubleshooting
+
+### Common Issues
+
+#### Connection Problems
+- Verify your instance is running correctly
+- Check authentication credentials
+- Confirm the service is healthy in the Zerops dashboard
+
+#### Performance Issues
+- Review memory allocation and eviction policies
+- Monitor resource usage
+- Consider upgrading to HA setup for better scalability
+- Use monitoring tools to identify slow operations
+
+#### Authentication Issues
+- Verify you're using the correct password
+- Check that TLS is properly configured if using encrypted connections
+
+## Learn More
+
+- [Official Valkey Documentation](https://valkey.io/docs) - Comprehensive guide to Valkey features
+- [Command Reference](https://valkey.io/commands) - Detailed command specifications
 
 ## Support
 
