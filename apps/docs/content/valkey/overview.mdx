@@ -1,0 +1,67 @@
+---
+title: Valkey
+desc: Production-ready Valkey on Zerops platform with managed infrastructure and automatic security configuration. Deploy and run your in-memory data store with zero operational overhead.
+---
+
+import UnorderedList from '@site/src/components/UnorderedList';
+import UnorderedCodeList from '@site/src/components/UnorderedCodeList';
+import data from '@site/static/data.json';
+
+Valkey is a powerful, open-source alternative to Redis, offering full compatibility with Redis clients while providing an independent development path focused on community-driven innovation. Deploy and manage Valkey on Zerops' fully managed infrastructure to get instant access to high-performance in-memory data storage.
+
+:::tip
+Valkey is our recommended Redis alternative as KeyDB's development has slowed significantly in recent times.
+:::
+
+## Supported Versions
+
+Currently supported Valkey versions:
+<UnorderedList data={data.valkey.readable}/>
+
+Import configuration version:
+<UnorderedCodeList data={data.valkey.import}/>
+
+## Service Configuration
+
+Zerops offers Valkey in two deployment configurations to meet different availability requirements.
+
+## Deployment Options
+
+### Non-HA Setup
+- Single node deployment on port `6379` (non-TLS) and `6380` (TLS)
+- No backup mechanism beyond Zerops infrastructure reliability
+- Data persists unless the hardware node fails
+- Suitable for development or non-critical workloads
+
+### HA (High Availability) Setup
+
+Our HA implementation uses a unique approach to ensure high availability while maintaining compatibility with all Redis clients:
+
+- 3-node configuration (1 master + 2 replicas)
+- Access ports:
+  - `6379` - read/write operations (non-TLS, routed to master)
+  - `6380` - read/write operations over TLS (routed to master)
+  - `7000` - read-only operations (non-TLS)
+  - `7001` - read-only operations over TLS
+- Implementation details:
+  - All nodes are configured identically and listen on standard ports
+  - First node in the cluster is designated as the master
+  - On replica nodes, ports `6379`/`6380` traffic is forwarded to the master
+  - Ports `7000`/`7001` are mapped locally to each node for direct replica access
+  - When a master fails, a replica is promoted and routing is updated automatically
+  - DNS entries are updated for seamless client connection
+  - This implementation provides traffic forwarding to master (not natively supported by Valkey)
+
+:::note
+Be aware that replica data may lag slightly behind the master due to asynchronous replication.
+:::
+
+## Learn More
+
+- [Official Valkey Documentation](https://valkey.io/docs) - Comprehensive guide to Valkey features
+
+## Support
+
+For advanced configurations or custom requirements:
+- Join our [Discord community](https://discord.gg/zerops)
+- Contact support via [email](mailto:support@zerops.io)
