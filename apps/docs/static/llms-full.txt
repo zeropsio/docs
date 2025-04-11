@@ -11901,6 +11901,10 @@ When using Let's Encrypt certificates (recommended):
 
 For applications requiring direct port access or non-HTTP protocols, Zerops provides flexible port configuration options.
 
+:::important
+Currently, direct public port access is only available for runtime services and PostgreSQL databases.
+:::
+
 <p align="center">
   <Image
     src="/img/gui/ipv6-public-port.webp"
@@ -11911,8 +11915,11 @@ For applications requiring direct port access or non-HTTP protocols, Zerops prov
 
 ### Port Configuration
 
-1. Navigate to service detail page in Zerops GUI, select **Public access & internal ports** and click **Setup first access through IPv6** or activate **Unique IPv4 add-on**
+1. Navigate to service detail page in Zerops GUI
+   - For runtime services select **Subdomain & domain & IP access**
+   - For PostgreSQL select **Direct access through IP address**
 2. Configure your port settings:
+   - Either **Setup first access through IPv6** or activate **Unique IPv4 add-on** (if needed)
    - Choose any port from 10-65435 (except 80 and 443)
    - Select destination service and internal port
    - Each public port can be mapped to any internal service port
@@ -11938,8 +11945,6 @@ Optionally secure your ports with firewall rules:
    style={{ width: '90%', height: 'auto' }}
  />
 </p>
-
-
 
 Zerops provides data backup for certain services.
 
@@ -26382,7 +26387,7 @@ Zerops provides information about how much hardware resources the KeyDB service 
 [KeyDB ↗](https://docs.keydb.dev/) is a fully open source database, a faster drop-in alternative to Redis. It offers enhanced performance, multithreading capabilities, and maintains full compatibility with Redis clients and APIs.
 
 :::important
-While KeyDB is available on Zerops, please note that KeyDB development has not been very active recently. For new Redis-compatible deployments, we recommend considering [Valkey](https://valkey.io/) as the preferred alternative due to its active development and ongoing support.
+While KeyDB is available on Zerops, please note that KeyDB development has not been very active recently. For new Redis-compatible deployments, we recommend considering [Valkey](/valkey/overview) as the preferred alternative due to its active development and ongoing support.
 :::
 
 ## Feature Highlights
@@ -26453,87 +26458,6 @@ While KeyDB is available on Zerops, please note that KeyDB development has not b
   ]}
 />
 
-### Service Management
-
-<DocCardList
-  colSize={6}
-  items={[
-    {
-      type: 'link',
-      href: '/keydb/how-to/scale',
-      label: 'Scale KeyDB service',
-      customProps: {
-        icon: Icons['adjustments'],
-      },
-    },
-    {
-      type: 'link',
-      href: '/keydb/how-to/stop-start',
-      label: 'Stop and start service',
-      customProps: {
-        icon: Icons['pause'],
-      },
-    },
-  ]}
-/>
-
-### Additional Operations
-
-<DocCardList
-  colSize={6}
-  items={[
-    {
-      type: 'link',
-      href: '/keydb/how-to/delete',
-      label: 'Delete KeyDB service',
-      customProps: {
-        icon: Icons['trash'],
-      },
-    },
-    {
-      type: 'link',
-      href: '/keydb/how-to/use-environment-variables',
-      label: 'Use environment variables',
-      customProps: {
-        icon: Icons['variable'],
-      },
-    },
-  ]}
-/>
-
-## When in doubt, reach out
-
-Don't know how to start or got stuck during the process? You might not be the first one, visit the FAQ section to find out.
-
-In case you haven't found an answer (and also if you have), we and our community are looking forward to hearing from you on Discord.
-
-Have you built something that others might find useful? Don't hesitate to share your knowledge!
-
-<DocCardList
-  colSize={6}
-  items={[
-    {
-      type: 'link',
-      href: '/keydb/faq',
-      label: 'FAQ',
-      customProps: {
-        icon: Icons['chat-bubble-left-right'],
-        description: 'Most common questions in one place.',
-      },
-    },
-    {
-      type: 'link',
-      href: 'https://discord.com/invite/WDvCZ54',
-      label: 'Discord',
-      customProps: {
-        icon: Icons['discord'],
-        description:
-          'Join our core team and Zerops community on Discord. Ask questions and share your tips with other members.',
-      },
-    },
-  ]}
-/>
-
 ## Popular Guides
 
 <DocCardList
@@ -26560,6 +26484,8 @@ Have you built something that others might find useful? Don't hesitate to share 
     },
   ]}
 />
+
+*Need help? Join our [Discord community](https://discord.gg/zeropsio).*
 
 
 
@@ -37709,35 +37635,67 @@ Did none of these Guides fit your needs? Join our **[Discord](https://discord.co
 
 
 
-This guide covers how to connect to your PostgreSQL database in Zerops, both from services within the same project and from your local workstation.
+This guide covers how to connect to your PostgreSQL database in Zerops, both from services within the same project and from outside the Zerops environment.
 
 ## Connection Options Overview
 
-Zerops provides two primary ways to connect to PostgreSQL:
+Zerops provides several ways to connect to PostgreSQL:
 
 1. **Internal connections** - Between services in the same Zerops project (via private network)
-2. **Remote connections** - From your local machine (via Zerops VPN)
-
-:::caution
-For security reasons, Zerops doesn't allow exposing PostgreSQL services directly to the internet.
-:::
+2. **Remote connections**:
+   - **VPN access** - From your local machine via Zerops VPN
+   - **Direct IP access** - Enables external applications to connect using TLS encryption by opening public ports on IPv6 (available by default) or IPv4 (requires add-on activation if not already enabled)
 
 ## Connection Details
 
-You'll find PostgreSQL connection details in two places in the Zerops GUI:
+You'll find internal PostgreSQL connection details in two places in the Zerops GUI:
 
 1. Under the **Access details** button in the project dashboard
 2. In the service detail page under the **Peek access details** button
 
 ### Connection Parameters
 
-| Parameter             | Description                                                           |
-| --------------------- | --------------------------------------------------------------------- |
-| **Hostname**          | Identical to the service hostname                                     |
-| **Port**              | **5432** (fixed for all PostgreSQL services)                          |
-| **User**              | Identical to the service hostname                                     |
-| **Password**          | Randomly generated during service creation                            |
-| **Connection string** | `postgresql://${user}:${password}@{hostname}:5432`                    |
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Parameter</th>
+      <th className="w-fit">Internal Connection</th>
+      <th className="w-fit">Direct IP Access (TLS)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">Hostname/IP</td>
+      <td className="w-fit">Service hostname</td>
+      <td className="w-full">Public IP address</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">Port</td>
+      <td className="w-fit">5432</td>
+      <td className="w-full">6432</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">User</td>
+      <td className="w-fit">Identical to the service hostname</td>
+      <td className="w-full">Same as internal</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">Password</td>
+      <td className="w-fit">Randomly generated during service creation</td>
+      <td className="w-full">Same as internal</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">Port env variable</td>
+      <td className="w-fit">`port`</td>
+      <td className="w-full">`portTls`</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">Connection string env variable</td>
+      <td className="w-fit">`connectionString`</td>
+      <td className="w-full">`connectionTlsString`</td>
+    </tr>
+  </tbody>
+</table>
 
 :::warning
 Zerops creates a system user named `zps` with full privileges for maintenance purposes. Do not delete, change the password, or remove privileges from this user, as it will disrupt Zerops' ability to maintain the database cluster.
@@ -37778,6 +37736,10 @@ For more details on how to use environment variables, and instructions for addin
 
 ## Connect Remotely
 
+Zerops offers two methods for connecting to your PostgreSQL database from outside the Zerops environment:
+
+### Method 1: Connect via Zerops VPN
+
 You can securely connect to PostgreSQL from your local workstation via Zerops VPN:
 
 1. [Install & set up zCLI](/references/cli)
@@ -37789,6 +37751,25 @@ You can securely connect to PostgreSQL from your local workstation via Zerops VP
 * Do not use SSL/TLS protocols when connecting over VPN. Security is provided by the VPN tunnel.
 * If your connection over VPN doesn't work, try adding `.zerops` suffix to the service hostname (e.g., `database1.zerops`). For additional help, check the [VPN troubleshooting page](/references/vpn/troubleshooting).
 :::
+
+### Method 2: Connect via Direct IP Access
+
+Direct IP Access uses [pgBouncer](https://www.pgbouncer.org/) for connection pooling and TLS termination.
+
+Internally, port `5432` is available without SSL. Externally, connections are secured with TLS through pgBouncer (port `6432`) before being routed to your PostgreSQL service.
+
+#### Enable external access
+
+1. Navigate to your PostgreSQL service in the Zerops GUI and choose the **Public Access through IP Addresses** section
+2. Choose either IPv6 (available by default) or IPv4 (requires the [unique IPv4](/features/access#dedicated-ipv4-address-330-days) add-on)
+3. Open one or more ports and point them to your PostgreSQL service (the system will direct them through pgBouncer)
+   - Choose any port from 10-65435 (except 80 and 443)
+   - Select destination service and internal port
+   - Each public port can be mapped to any internal service port
+   - Multiple public ports can point to the same internal port if needed
+   - Port configurations can be set independently for IPv4 and IPv6
+4. Optionally enable firewall protection for additional security
+5. Click the **Publish X IP access change(s)** button to apply your settings
 
 For database management tools and how to manage users and databases, see [Manage PostgreSQL Users and Databases](/postgresql/how-to/manage).
 
