@@ -44686,16 +44686,18 @@ Versions listed on the same line are aliases of the same underlying version.
 
 
 
-The Zerops YAML configuration provides powerful capabilities for both importing and exporting your projects and services. This documentation covers both aspects to help you effectively manage your infrastructure configurations.
+The Zerops YAML configuration provides powerful capabilities for both importing and exporting projects and services. This documentation covers how to define your infrastructure as code and move configurations between environments.
 
-## Import
+## YAML Configuration Basics
 
-Create or replicate services in Zerops using YAML definitions. You can do this in two ways:
+The Zerops YAML configuration can be used to create or replicate services in Zerops. You can import configurations in two ways:
 
-- **Using the GUI**: Import entire projects or specific services with a simple point-and-click interface
+- **Using the GUI**:
+  - **For projects**: In the Zerops dashboard, click on **Import a project** in the Projects section
+  - **For services**: Navigate to a project's details page and click **Import services** in the services section
 - **Using the [CLI](/references/cli)**: Run `zcli project project-import` for projects or `zcli project service-import` for individual services
 
-Both methods provide an easy way to migrate or replicate your infrastructure according to your needs.
+Both methods provide straightforward ways to migrate or replicate infrastructure as needed.
 
 <Dropdown>
 <DropdownItem title="Comprehensive example of an import YAML configuration">
@@ -44715,6 +44717,10 @@ project:
   tags:
     - test
     - dev
+  # Project-level environment variables
+  envVariables:
+    LOG_LEVEL: info
+    API_VERSION: v1
 # ==== Define a list of services to import into the project ====
 services:
   # REQUIRED. Name of your service
@@ -44728,6 +44734,10 @@ services:
       SECRET_KEY: <@generateRandomString(<32>)>
       DATABASE_HOST: ${db_hostname}
       DATABASE_NAME: ${db_hostname}
+    # Environment variables defined in .env format (automatically creates secret envs)
+    dotEnvSecrets: |
+      APP_KEY=<@generateRandomString(<32>)>
+      DB_PASSWORD=secure123
     # Object storage size in GB
     objectStorageSize: 2
     # Choose object storage policy from a predefined list
@@ -44778,23 +44788,29 @@ services:
           access_log syslog:server=unix:/dev/log,facility=local1 default_short;
           error_log syslog:server=unix:/dev/log,facility=local1;
       }
-    # zerops.yaml service name or full config file
-    zeropsSetup:
-      build:
-        base: nodejs@latest
-        buildCommands:
-          - echo zerops.yaml from import
-          - yarn
-          - yarn run build
-        deployFiles: ./
-        cache: node_modules
-      run:
-        initCommands:
-          - |
-            if ! zcli bucket s3 create $STORAGE_HOSTNAME $STORAGE_BUCKET_NAME --x-amz-acl=private; then
-            echo "The bucket was not created, you have to do it manually!"
-            fi
-        start: yarn start
+    # Service name from zerops.yaml or reference to a service setup
+    zeropsSetup: nodejs-app
+    # Full zerops.yaml configuration
+    zeropsYaml:
+      zerops:
+        - setup: nodejs-app
+          build:
+            base: nodejs@latest
+            buildCommands:
+              - echo zerops.yaml from import
+              - yarn
+              - yarn run build
+            deployFiles: ./
+            cache: node_modules
+          run:
+            initCommands:
+              - |
+                if ! zcli bucket s3 create $STORAGE_HOSTNAME $STORAGE_BUCKET_NAME --x-amz-acl=private; then
+                echo "The bucket was not created, you have to do it manually!"
+                fi
+            start: yarn start
+    # When set to true, enables overriding an existing runtime service with the same hostname and triggers a redeploy
+    override: false
   # REQUIRED. Name of your other service
   - hostname: teststorage1
     type: shared-storage
@@ -44805,19 +44821,15 @@ services:
 
 :::note
 The example above is a general guideline; not all keys are valid for every service type. For technology-specific details, refer to the **Create service** page in the **How To** section of the Zerops documentation.
-:::
 
----
-
-:::note
 - `REQUIRED.` If a parent object is defined, the key-value pair is required to be filled. All other key-value pairs are optional.
 :::
 
-### Project Configuration
+## Project Configuration
 
 The project configuration is used to define the project you want to import.
 
-#### Usage
+### Usage
 
     <table className="w-full my-1.5">
       <thead>
@@ -44846,12 +44858,17 @@ The project configuration is used to define the project you want to import.
         <tr>
           <td className="w-fit font-semibold">corePackage</td>
           <td className="w-fit">string</td>
-          <td className="w-fit">Core package of the new project. <br/>Values: <b>LIGHT</b>/<b>SERIOUS</b> (default LIGHT)</td>
+          <td className="w-fit">[Core package](/features/infrastructure#project-core) of the new project. <br/>Values: <b>LIGHT</b>/<b>SERIOUS</b> (default LIGHT)</td>
         </tr>
         <tr>
           <td className="w-fit font-semibold">tags</td>
           <td className="w-fit">list of strings</td>
-          <td className="w-fit">One or more string tags.<br/>Tags do not have a functional meaning, they only provide better orientation in projects.</td>
+          <td className="w-fit">One or more string tags.<br/>Tags provide better orientation in projects.</td>
+        </tr>
+        <tr>
+          <td className="w-fit font-semibold">envVariables</td>
+          <td className="w-fit">map[string]string</td>
+          <td className="w-fit">[Project-level environment variables](/features/env-variables#project-variables) that are available to all services in the project.</td>
         </tr>
       </tbody>
     </table>
@@ -44860,7 +44877,7 @@ The project configuration is used to define the project you want to import.
 The `corePackage` value can't be changed later. Make sure to choose a suitable core package for your project.
 :::
 
-This example will create a project named `project0` with [serious core](/features/infrastructure#serious-core) package and the description `This project is an example only`. The project will have two tags: `test` and `dev`:
+This example will create a project named `project0` with [serious core](/features/infrastructure#serious-core) package and the description `This project is an example only`. The project will have two tags: `test` and `dev`, and two environment variables: `LOG_LEVEL` and `API_VERSION`:
 
 ```yaml
 # ==== Define a project to import ====
@@ -44875,13 +44892,130 @@ project:
   tags:
     - test
     - dev
+  # Project-level environment variables
+  envVariables:
+    LOG_LEVEL: info
+    API_VERSION: v1
 ```
 
-### Service Configuration
+## Service Configuration
 
-The service configuration is used to define the services, environment variables, and other settings you want to import into the project(You require at least one service and you need to have a project to import into or define the project in the yaml).
+The service configuration defines one or more services to import into your project. Services are specified as an array under the `services` key, allowing you to configure multiple services in a single YAML file. You need at least one service and either an existing project to import into or a project defined in the YAML file.
 
-#### Usage
+The Service Configuration section is divided into multiple subsections for better organization:
+- [**Service Basic Configuration**](#service-basic-configuration) - Core parameters like hostname, type, mode, and environment variables
+- [**Service Vertical Autoscaling**](#service-vertical-autoscaling) - CPU, RAM, and disk scaling settings
+- [**Service Horizontal Autoscaling**](#service-horizontal-autoscaling) - Container count scaling settings
+- [**Service Mount Shared Storage**](#service-mount-shared-storage) - Connecting to shared storage services
+- [**Service Nginx Configuration**](#service-nginx-configuration) - Custom web server settings
+- [**Service zerops.yaml Configuration**](#service-zeropsyaml-configuration) - Build and run configurations
+
+<Dropdown>
+<DropdownItem title="Complete Service Configuration Example">
+
+```yaml
+#yamlPreprocessor=on
+services:
+  - hostname: api-service           # REQUIRED: Unique service identifier
+    type: nodejs@18                 # REQUIRED: Service type and version
+    mode: HA                        # HA or NON_HA mode (default: NON_HA)
+
+    # Environment variables
+    envSecrets:                     # Secret environment variables (blurred in GUI)
+      DATABASE_URL: ${db_hostname}  # Reference to another service
+      API_KEY: <@generateRandomString(<32>)>  # Generated random string
+    dotEnvSecrets: |                # Environment vars in .env format
+      APP_KEY=<@generateRandomString(<32>)>
+      DEBUG=false
+
+    # Storage configuration
+    objectStorageSize: 2            # Object storage size in GB
+    objectStoragePolicy: public-read-write  # Predefined S3 bucket policy
+    objectStorageRawPolicy: |       # Custom S3 bucket policy
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": ["s3:GetObject"],
+            "Resource": ["arn:aws:s3:::{{ .BucketName }}/*"]
+          }
+        ]
+      }
+
+    # Build and deployment
+    buildFromGit: https://github.com/myorg/api-service  # Git repo for one-time build
+    enableSubdomainAccess: true     # Enable public access via Zerops subdomain
+    priority: 1                     # Higher priority services are created sooner
+    override: true                  # When true, triggers redeploy of existing service
+
+    # Vertical autoscaling
+    verticalAutoscaling:
+      minCpu: 1                     # Minimum number of virtual CPUs
+      maxCpu: 3                     # Maximum number of virtual CPUs
+      cpuMode: DEDICATED            # SHARED or DEDICATED CPU mode
+      minRam: 1                     # Minimum RAM in GB
+      maxRam: 4                     # Maximum RAM in GB
+      minDisk: 1                    # Minimum disk space in GB
+      maxDisk: 10                   # Maximum disk space in GB
+      startCpuCoreCount: 2          # Initial CPU core count
+      minFreeCpuCores: 0.5          # Min free CPU cores before scaling
+      minFreeCpuPercent: 20         # Min free CPU percentage before scaling
+      minFreeRamGB: 0.5             # Min free RAM in GB before scaling
+      minFreeRamPercent: 20         # Min free RAM percentage before scaling
+
+    # Horizontal autoscaling
+    minContainers: 2                # Minimum number of containers (default: 1, max: 6)
+    maxContainers: 4                # Maximum number of containers (max: 6)
+
+    # Shared storage
+    mount:                          # List of shared storage services to mount
+      - teststorage1
+
+    # Nginx configuration
+    nginxConfig: |-                 # Custom nginx configuration
+      server {
+          listen 80 default_server;
+          listen [::]:80 default_server;
+          server_name _;
+          root /var/www/public;
+
+          location / {
+              try_files $uri $uri/ /index.html;
+          }
+
+          access_log syslog:server=unix:/dev/log,facility=local1 default_short;
+          error_log syslog:server=unix:/dev/log,facility=local1;
+      }
+
+    # Zerops.yaml configuration
+    zeropsSetup: api-setup          # Service setup name from zeropsYaml or repo
+    zeropsYaml:                     # Full zerops.yaml configuration
+      zerops:
+        - setup: api-setup
+          build:
+            base: nodejs@18
+            buildCommands:
+              - npm ci
+              - npm run build
+            deployFiles: ./
+            cache: node_modules
+          run:
+            initCommands:
+              - npm run db:migrate
+            start: npm start
+
+  # A second, simpler service example
+  - hostname: teststorage1
+    type: shared-storage
+```
+
+This example includes all possible configuration options for Zerops services. Not all options are required or applicable to every service type. The example shows two services in the same YAML file: a fully configured Node.js API service and a simpler static frontend service.
+</DropdownItem>
+</Dropdown>
+
+### Service Basic Configuration
 
 <Dropdown>
   <DropdownItem title="Service Structure Parameters">
@@ -44926,6 +45060,11 @@ The service configuration is used to define the services, environment variables,
       <td className="w-fit">Environment variables that are blurred by default in Zerops GUI. Can be edited or deleted in Zerops GUI.</td>
     </tr>
     <tr>
+      <td className="w-fit font-semibold">dotEnvSecrets</td>
+      <td className="w-fit">string (multiline)</td>
+      <td className="w-fit">Environment variables in .env file format that are automatically created as secret envs. Supports the [yamlPreprocessor](/references/import-yaml/pre-processor) directive.</td>
+    </tr>
+    <tr>
       <td className="w-fit font-semibold">objectStorageSize</td>
       <td className="w-fit">integer</td>
       <td className="w-fit">Object storage size in GB.</td>
@@ -44968,6 +45107,14 @@ The service configuration is used to define the services, environment variables,
         Services are sorted before creation by priority in descending order, i.e. the higher the priority the sooner the service is created.
       </td>
     </tr>
+    <tr>
+      <td className="w-fit font-semibold">override</td>
+      <td className="w-fit">boolean</td>
+      <td className="w-fit">
+        Default: false
+        The parameter allows you to replace an existing runtime service with the same hostname. When set to true, it triggers a redeploy if the service already exists. This is useful when you want to update an existing service's configuration without having to delete it first. Note that this only works for runtime services, not databases or other service types.
+      </td>
+    </tr>
   </tbody>
     </table>
   </DropdownItem>
@@ -44987,6 +45134,9 @@ services:
     SECRET_KEY: <@generateRandomString(<32>)>
     DATABASE_HOST: ${db_hostname}
     DATABASE_NAME: ${db_hostname}
+  # Environment variables in .env format
+  dotEnvSecrets: |
+    APP_KEY=<@generateRandomString(<32>)>
   # Object storage size in GB
   objectStorageSize: 2
   # Choose object storage policy from a predefined list
@@ -44999,26 +45149,29 @@ services:
   enableSubdomainAccess: true
   # The higher the sooner the service is created
   priority: 1
+  # When set to true, triggers a redeploy of an existing runtime service with the same hostname
+  override: false
 ```
 
 This yaml will create a `nodejs@latest` service named `service1` in `HA` (High-Availability) mode with the following configurations:
-- Environment variables: `SECRET_KEY`(requires yamlPreprocessor), `DATABASE_HOST` and `DATABASE_NAME`(requires you to have a db service in the same project)
+- Environment variables:
+  - From `envSecrets`: `SECRET_KEY` (requires yamlPreprocessor), `DATABASE_HOST` and `DATABASE_NAME` (requires a db service in the same project)
+  - From `dotEnvSecrets`: `APP_KEY` in .env format
 - Object storage: 2GB with `public-read-write` policy
 - Git repository: `https://github.com/zeropsio/recipe-nodejs-hello-world@main`
 - Public access enabled via Zerops subdomain
 - Priority: 1
+- Override existing service: `false`
 
-The `services` object allows you to define one or more services in the same yaml file and you can define the same parameters like `hostname`, `type`, `mode`, `envSecrets`, `objectStorageSize`, `objectStoragePolicy`, `objectStorageRawPolicy`, `buildFromGit`, `enableSubdomainAccess`, `priority` for each service no matter if it's runtime, database, etc.
+The `services` object allows you to define one or more services in the same yaml file.
 
 :::caution
 The `yamlPreprocessor` option in your project & service import YAML is required to generate random secret values, passwords, and public/private key pairs. For more information, see the [yamlPreprocessor](/references/import-yaml/pre-processor) page.
 :::
 
-### Vertical Autoscaling Configuration
+### Service Vertical Autoscaling
 
-The vertical autoscaling configuration is used to define the vertical autoscaling settings for the service.
-
-#### Usage
+The vertical autoscaling configuration defines how the service can scale its resources vertically.
 
 <Dropdown>
   <DropdownItem title="Vertical Autoscaling Structure Parameters">
@@ -45145,11 +45298,9 @@ This yaml will create a service with the hostname `app` with `php-nginx@8.4` run
 
 The `VerticalAutoscaling` map allows you to define the vertical autoscaling settings for the service with parameters like `minCpu`, `maxCpu`, `cpuMode`, `minRam`, `maxRam`, `minDisk`, `maxDisk`, `startCpuCoreCount`, `minFreeCpuCores`, `minFreeCpuPercent`, `minFreeRamGB`, `minFreeRamPercent`.
 
-### Horizontal Autoscaling Configuration
+### Service Horizontal Autoscaling
 
 The horizontal autoscaling configuration is used to define the horizontal autoscaling settings for the service.
-
-#### Usage
 
 <Dropdown>
   <DropdownItem title="Horizontal Autoscaling Structure Parameters">
@@ -45189,13 +45340,11 @@ services:
     maxContainers: 6
 ```
 
-The `minContainers` and `maxContainers` parameters allow you to define the minimum and maximum number of containers(It automatically scales the service between the minimum and maximum number of containers) for the service.
+The `minContainers` and `maxContainers` parameters allow you to define the minimum and maximum number of containers for the service. The service will automatically scale between these values as needed.
 
-### Mount Shared Storage
+### Service Mount Shared Storage
 
-The mount shared storage configuration is used to define the shared storage to mount to the service.
-
-#### Usage
+The mount shared storage configuration defines which shared storage services should be mounted to the service.
 
 <table className="w-full my-1.5">
   <thead>
@@ -45224,14 +45373,11 @@ services:
       - teststorage1
 ```
 
-The `mount: |-` parameter allows you to mount a shared storage (should be created inside the project) to the service.
+The `mount:` parameter allows you to mount a shared storage (which should be created inside the project) to the service.
 
+### Service Nginx Configuration
 
-### Using Nginx Configuration
-
-The nginx configuration is used to define the nginx settings for the service.
-
-#### Usage
+The nginx configuration defines the nginx settings for the service.
 
 <table className="w-full my-1.5 whitespace-nowrap">
   <thead>
@@ -45276,13 +45422,11 @@ services:
       }
 ```
 
-The `nginxConfig: |-` parameter allows you to use a custom nginx configuration for the service.
+The `nginxConfig: |-` parameter allows you to specify a custom nginx configuration for the service.
 
-### Using zerops.yaml Configuration
+### Service zerops.yaml Configuration
 
-This shows you how you can use the `zeropsSetup` parameter as a way to insert a full [zerops.yaml configuration file](/zerops-yaml/specification) into your service using import yaml.
-
-#### Usage
+The `zeropsSetup` and `zeropsYaml` parameters provide flexibility in how you define and use your service configurations. Both parameters are optional and work together in the following ways:
 
 <table className="w-full my-1.5">
   <thead>
@@ -45295,38 +45439,32 @@ This shows you how you can use the `zeropsSetup` parameter as a way to insert a 
   <tbody>
     <tr>
       <td className="w-fit font-semibold">zeropsSetup</td>
-      <td className="w-fit whitespace-nowrap">string or object</td>
-      <td className="w-fit">Provide the name of the service from your zerops.yaml (find it under `-setup: {name}`) or insert full [zerops.yaml configuration file](/zerops-yaml/specification).</td>
+      <td className="w-fit whitespace-nowrap">string</td>
+      <td className="w-fit">Specifies which service setup to use. This should match a setup name found in either the `zeropsYaml` parameter (if provided) or the `zerops.yaml` file in the repository root. If not specified, defaults to the service hostname.</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">zeropsYaml</td>
+      <td className="w-fit whitespace-nowrap">object</td>
+      <td className="w-fit">Contains the full [zerops.yaml configuration](/zerops-yaml/specification), including the 'zerops:' root element. If provided, this will be used instead of looking for a `zerops.yaml` file in the repository.</td>
     </tr>
   </tbody>
 </table>
 
-```yaml
-#yamlPreprocessor=on
-services:
-  - hostname: app
-    type: php-nginx@8.4
-    buildFromGit: https://github.com/example/app
-    enableSubdomainAccess: true
-    envSecrets:
-      APP_KEY: <@generateRandomString(<32>)>
-    zeropsSetup:
-      build:
-        base: php-nginx@8.4
-        buildCommands:
-          - composer install
-        deployFiles: ./
-        cache: vendor
-    run:
-      initCommands:
-        - |
-          if ! zcli bucket s3 create $STORAGE_HOSTNAME $STORAGE_BUCKET_NAME --x-amz-acl=private; then
-          echo "The bucket was not created, you have to do it manually!"
-          fi
-      start: yarn start
-```
+#### How They Work Together
 
-The `zeropsSetup: |-` parameter allows you to use a custom [zerops.yaml](/zerops-yaml/specification) configuration for the service.
+- **Neither parameter specified**:
+  - The system looks for a `zerops.yaml` file in the repository root
+  - It searches for a setup with a name that matches the service hostname
+- **Only `zeropsSetup` specified**:
+  - The system looks for a setup with the specified name in the `zerops.yaml` file in the repository root
+- **Only `zeropsYaml` specified**:
+  - The system uses the provided YAML configuration instead of looking for a file in the repository
+  - It searches for a setup with a name that matches the service hostname
+- **Both parameters specified**:
+  - The system uses the provided `zeropsYaml` configuration
+  - It specifically looks for the setup named in `zeropsSetup` within that YAML
+
+If the specified `zeropsSetup` does not exist in the available YAML configuration (either provided in `zeropsYaml` or found in the repository), the import will fail.
 
 ## Export
 
@@ -45341,14 +45479,14 @@ The exported YAML follows the same structure as the import YAML configuration de
 ### How to Export
 
 #### Exporting a Single Service
-Navigate to your service dashboard in the Zerops GUI, click the three-dot menu (⋮), and choose **Export service as yaml**.
+Navigate to your service dashboard in the Zerops GUI, click the three-dot menu (⋮) in the top-right corner of the service card, and choose **Export service as yaml**.
 
 #### Exporting an Entire Project
-In the Zerops GUI, click the three-dot menu (⋮) in the project dashboard and select **Export project as yaml**.
+In the Zerops GUI, go to the project dashboard, click the three-dot menu (⋮) in the top-right corner of the project card, and select **Export project as yaml**.
 
 ### Using Exported Configurations
 
-The exported YAML files are compatible with both:
+The exported YAML files are compatible with:
 - The Zerops GUI import functionality
 - The `zcli project project-import` command
 - The `zcli project service-import` command (for single service exports)
