@@ -1,0 +1,108 @@
+---
+title: NATS
+desc: Production-ready NATS messaging system on Zerops platform with automated scaling and enterprise reliability. Deploy, manage, and scale with zero infrastructure hassle.
+---
+
+import UnorderedList from '@site/src/components/UnorderedList';
+import UnorderedCodeList from '@site/src/components/UnorderedCodeList';
+import data from '@site/static/data.json';
+
+Zerops provides a fully managed [NATS](https://nats.io/) messaging system with automated scaling and zero infrastructure overhead, letting developers focus entirely on development.
+
+## Supported Versions
+
+Currently supported NATS version:
+<UnorderedList data={data.nats.readable}/>
+
+Import configuration version:
+<UnorderedCodeList data={data.nats.import}/>
+
+## Service Configuration
+
+Our NATS implementation features optimized default settings designed for common use cases.
+
+**Key configuration aspects** include:
+- Standard protocol port `4222` for client connections
+- HTTP monitoring interface `8222` for management
+- Secure authentication with automatically generated credentials
+- Optimized settings for performance and reliability
+
+### JetStream Configuration
+
+The service includes [JetStream](https://docs.nats.io/nats-concepts/jetstream) functionality **enabled by default**, providing persistent storage capabilities for your messaging workloads:
+- **Memory store**: Up to 40GB for high-performance message caching
+- **File store**: Up to 250GB for persistent storage
+- **Regular sync intervals**: Ensures data durability and consistency
+:::note
+In HA deployments, data persistence is further enhanced with 1-minute sync intervals across all nodes, ensuring robust data durability and high availability.
+:::
+
+This configuration provides a robust foundation for message persistence while balancing performance and reliability.
+
+#### Disabling JetStream
+
+If you don't need message persistence, you can disable JetStream by setting the `JET_STREAM_ENABLED` environment variable to `0` in your service configuration. This can be done:
+
+- During service creation through the [import configuration](/references/import)
+- In the Zerops GUI under service environment variables
+- Via the [Zerops API](/references/api) when creating a new service
+
+:::tip
+Disabling JetStream may reduce resource usage when persistence isn't required for your application.
+:::
+
+### Deployment Modes
+
+:::warning
+Deployment mode is selected during service creation and cannot be changed later.
+:::
+
+#### Non-HA Mode
+- Suitable for development and testing
+- Data persistence not guaranteed during node failures
+- Lower resource requirements
+
+#### HA Mode
+- Creates a multi-node NATS cluster
+- Configures routes between cluster nodes automatically
+- Implements [NATS clustering](https://docs.nats.io/running-a-nats-service/configuration/clustering) for high availability
+- Provides improved reliability compared to non-HA deployments
+
+### Authentication Management
+
+Authentication credentials are automatically generated and managed by the platform. The system creates a default user (`zerops`) with a secure 16-character password. You can access these credentials through:
+- The service access details in the Zerops GUI
+- Environment variables in your service configuration:
+  - `user` - Username for authentication (default: "zerops")
+  - `password` - Generated secure password
+  - `connectionString` - Complete connection string in the format `nats://${dbUser}:${dbPassword}@${hostname}:${port}`
+
+## Health Monitoring
+
+Zerops continuously monitors your NATS service health using built-in health checks:
+
+- **HTTP Health Check**: The system checks the `/healthz` endpoint at port 8222
+- **Self-Healing**: The platform automatically recovers unhealthy nodes when issues are detected
+
+### Health Status
+
+You can check the health status of your NATS service:
+
+1. Through the Zerops GUI dashboard
+2. By accessing the management interface at port `8222`
+
+## Backup and Recovery
+
+Zerops provides built-in backup functionality for your NATS JetStream data, ensuring your message streams and configurations can be safely preserved and restored when needed.
+
+### Backup Process
+
+Backups are created in `.tar.gz` format using the `nats` backup command. They are saved to local disk, compressed, streamed to backup storage, and then deleted locally.
+
+For general information about backup frequency and storage limits, see our [Backup documentation](/features/backup).
+
+## Support
+
+For advanced configurations or custom requirements:
+- Join our [Discord community](https://discord.gg/zerops)
+- Contact support via [email](mailto:support@zerops.io)

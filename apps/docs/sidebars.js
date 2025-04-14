@@ -408,6 +408,15 @@ module.exports = {
           className: "homepage-sidebar-item  service-sidebar-item",
         },
         {
+          type: "ref",
+          id: "nats/overview",
+          label: "NATS",
+          customProps: {
+            sidebar_icon: "nats",
+          },
+          className: "homepage-sidebar-item  service-sidebar-item",
+        },
+        {
           type: 'ref',
           id: 'keydb/overview',
           label: 'KeyDB',
@@ -422,15 +431,6 @@ module.exports = {
 //          label: "Kafka",
 //          customProps: {
 //            sidebar_icon: "kafka",
-//          },
-//          className: "homepage-sidebar-item  service-sidebar-item",
-//        },
-//        {
-//          type: "ref",
-//          id: "nats/overview",
-//          label: "NATS",
-//          customProps: {
-//            sidebar_icon: "nats",
 //          },
 //          className: "homepage-sidebar-item  service-sidebar-item",
 //        },
@@ -2271,6 +2271,26 @@ module.exports = {
       customProps: {
         sidebar_is_title: true,
         sidebar_icon: 'qdrant',
+      },
+    },
+  ],
+  nats: [
+    {
+      type: 'ref',
+      id: 'homepage',
+      label: 'Back to home',
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: 'back-arrow',
+      },
+    },
+    {
+      type: 'doc',
+      id: 'nats/overview',
+      label: 'Zerops NATS Service',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'nats',
       },
     },
   ],
