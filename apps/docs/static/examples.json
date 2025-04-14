@@ -428,5 +428,5 @@
     "name": "Ruby on Rails",
     "url": "https://github.com/zeropsio/recipe-rails",
     "config": "zerops:\n  - setup: app\n    build:\n      os: alpine\n      base: ruby@3.4\n      envVariables:\n        RAILS_ENV: production\n        BUNDLE_DEPLOYMENT: 1\n        BUNDLE_WITHOUT: development\n      buildCommands:\n        # After permissions fix, use this simple version\n        # - bundle install\n        # - bundle exec rails assets:precompile \n        - sudo chown -R zerops:zerops /build/source\n        - |\n          su zerops << EOF\n          whoami\n          bundle install\n          bundle exec rails assets:precompile\n          EOF\n      deployFiles:\n        - .\n    run:\n      os: alpine\n      base: ruby@3.4\n      envVariables:\n        RAILS_ENV: production\n        BUNDLE_DEPLOYMENT: 1\n        BUNDLE_WITHOUT: development\n        \n        DATABASE_HOST: $db_hostname\n        DATABASE_PORT: $db_port\n        DATABASE_USERNAME: $db_user\n        DATABASE_PASSWORD: $db_password\n        DATABASE_NAME: $db_dbName\n      ports:\n        - port: 3000\n          httpSupport: true\n      initCommands:\n        - bin/rails db:migrate\n        - zsc execOnce \"seed\" -- bin/rails db:seed \n      start: bin/rails server\n      "
-  },
+  }
 ]
