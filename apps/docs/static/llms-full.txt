@@ -44704,7 +44704,7 @@ Both methods provide straightforward ways to migrate or replicate infrastructure
 
 This section provides a comprehensive example of an import YAML configuration file, allowing you to define and import a project and its services with environment variables.
 
-  ```yaml
+```yaml
 # ==== Define a project to import ====
 project:
   # REQUIRED. Name of your project
@@ -44724,16 +44724,14 @@ project:
 # ==== Define a list of services to import into the project ====
 services:
   # REQUIRED. Name of your service
-  - hostname: service1
+  - hostname: app
     # REQUIRED. Choose from list of supported technologies and their versions
-    type: nodejs@latest
+    type: nodejs@22
     # HA or NON_HA mode
     mode: HA
     # Map of secret environment variables
     envSecrets:
       SECRET_KEY: <@generateRandomString(<32>)>
-      DATABASE_HOST: ${db_hostname}
-      DATABASE_NAME: ${db_hostname}
     # Environment variables defined in .env format (automatically creates secret envs)
     dotEnvSecrets: |
       APP_KEY=<@generateRandomString(<32>)>
@@ -44745,7 +44743,7 @@ services:
     # Define additional policy
     objectStorageRawPolicy:
     # One time build git repository
-    buildFromGit: https://github.com/zeropsio/recipe-nodejs
+    buildFromGit: https://github.com/myorg/myapp
     # true or false
     enableSubdomainAccess: true
     # The higher the sooner the service is created
@@ -44753,18 +44751,18 @@ services:
     # Vertical autoscaling configuration object
     verticalAutoscaling:
       minCpu: 1
-      maxCpu: 5
+      maxCpu: 3
       # Choose SHARED or DEDICATED
       cpuMode: DEDICATED
       minRam: 1
-      maxRam: 32
+      maxRam: 4
       minDisk: 1
-      maxDisk: 100
-      startCpuCoreCount:
-      minFreeCpuCores:
-      minFreeCpuPercent:
-      minFreeRamGB:
-      minFreeRamPercent:
+      maxDisk: 10
+      startCpuCoreCount: 2
+      minFreeCpuCores: 0.5
+      minFreeCpuPercent: 20
+      minFreeRamGB: 0.5
+      minFreeRamPercent: 20
     # Minimum number of containers
     minContainers: 2
     # Maximum number of containers
@@ -44788,34 +44786,29 @@ services:
           access_log syslog:server=unix:/dev/log,facility=local1 default_short;
           error_log syslog:server=unix:/dev/log,facility=local1;
       }
-    # Service name from zerops.yaml or reference to a service setup
-    zeropsSetup: nodejs-app
-    # Full zerops.yaml configuration
+    # Zerops.yaml configuration
+    zeropsSetup: backendapi
     zeropsYaml:
       zerops:
-        - setup: nodejs-app
+        - setup: backendapi
           build:
-            base: nodejs@latest
+            base: nodejs@22
             buildCommands:
-              - echo zerops.yaml from import
-              - yarn
-              - yarn run build
+              - npm ci
+              - npm run build
             deployFiles: ./
             cache: node_modules
           run:
             initCommands:
-              - |
-                if ! zcli bucket s3 create $STORAGE_HOSTNAME $STORAGE_BUCKET_NAME --x-amz-acl=private; then
-                echo "The bucket was not created, you have to do it manually!"
-                fi
-            start: yarn start
+              - npm run db:migrate
+            start: npm start
     # When set to true, enables overriding an existing runtime service with the same hostname and triggers a redeploy
     override: false
   # REQUIRED. Name of your other service
   - hostname: teststorage1
     type: shared-storage
     ...
-  ```
+```
 </DropdownItem>
 </Dropdown>
 
@@ -44887,7 +44880,7 @@ project:
   # Project description
   description: "This project is an example only"
   # Project core package
-  corePackage: SERIOUS
+  corePackage: LIGHT
   # List of project tags for filtering
   tags:
     - test
@@ -44916,21 +44909,20 @@ The Service Configuration section is divided into multiple subsections for bette
 ```yaml
 #yamlPreprocessor=on
 services:
-  - hostname: api-service           # REQUIRED: Unique service identifier
-    type: nodejs@18                 # REQUIRED: Service type and version
+  - hostname: app           # REQUIRED: Unique service identifier
+    type: nodejs@22                 # REQUIRED: Service type and version
     mode: HA                        # HA or NON_HA mode (default: NON_HA)
 
     # Environment variables
     envSecrets:                     # Secret environment variables (blurred in GUI)
-      DATABASE_URL: ${db_hostname}  # Reference to another service
-      API_KEY: <@generateRandomString(<32>)>  # Generated random string
+      SECRET_KEY: <@generateRandomString(<32>)>  # Generated random string
     dotEnvSecrets: |                # Environment vars in .env format
       APP_KEY=<@generateRandomString(<32>)>
-      DEBUG=false
 
     # Storage configuration
     objectStorageSize: 2            # Object storage size in GB
     objectStoragePolicy: public-read-write  # Predefined S3 bucket policy
+    # Note: Typically you would use either objectStoragePolicy OR objectStorageRawPolicy, not both
     objectStorageRawPolicy: |       # Custom S3 bucket policy
       {
         "Version": "2012-10-17",
@@ -44945,7 +44937,7 @@ services:
       }
 
     # Build and deployment
-    buildFromGit: https://github.com/myorg/api-service  # Git repo for one-time build
+    buildFromGit: https://github.com/myorg/myapp  # Git repo for one-time build
     enableSubdomainAccess: true     # Enable public access via Zerops subdomain
     priority: 1                     # Higher priority services are created sooner
     override: true                  # When true, triggers redeploy of existing service
@@ -44966,8 +44958,8 @@ services:
       minFreeRamPercent: 20         # Min free RAM percentage before scaling
 
     # Horizontal autoscaling
-    minContainers: 2                # Minimum number of containers (default: 1, max: 6)
-    maxContainers: 4                # Maximum number of containers (max: 6)
+    minContainers: 2                # Minimum number of containers (default: 1, max: 10)
+    maxContainers: 6                # Maximum number of containers (max: 10)
 
     # Shared storage
     mount:                          # List of shared storage services to mount
@@ -44990,12 +44982,12 @@ services:
       }
 
     # Zerops.yaml configuration
-    zeropsSetup: api-setup          # Service setup name from zeropsYaml or repo
+    zeropsSetup: backendapi          # Service setup name from zeropsYaml or repo
     zeropsYaml:                     # Full zerops.yaml configuration
       zerops:
-        - setup: api-setup
+        - setup: backendapi
           build:
-            base: nodejs@18
+            base: nodejs@22
             buildCommands:
               - npm ci
               - npm run build
@@ -45062,7 +45054,7 @@ This example includes all possible configuration options for Zerops services. No
     <tr>
       <td className="w-fit font-semibold">dotEnvSecrets</td>
       <td className="w-fit">string (multiline)</td>
-      <td className="w-fit">Environment variables in .env file format that are automatically created as secret envs. Supports the [yamlPreprocessor](/references/import-yaml/pre-processor) directive.</td>
+      <td className="w-fit">Environment variables in .env file format that are automatically created as secret envs.</td>
     </tr>
     <tr>
       <td className="w-fit font-semibold">objectStorageSize</td>
@@ -45096,7 +45088,7 @@ This example includes all possible configuration options for Zerops services. No
       <td className="w-fit font-semibold">enableSubdomainAccess</td>
       <td className="w-fit">boolean</td>
       <td className="w-fit">
-        Default: false
+        Default: `false`<br/>
         Set `true`, if you want to enable a public access to your service via a Zerops subdomain. Not suitable for production.
       </td>
     </tr>
@@ -45111,8 +45103,9 @@ This example includes all possible configuration options for Zerops services. No
       <td className="w-fit font-semibold">override</td>
       <td className="w-fit">boolean</td>
       <td className="w-fit">
-        Default: false
-        The parameter allows you to replace an existing runtime service with the same hostname. When set to true, it triggers a redeploy if the service already exists. This is useful when you want to update an existing service's configuration without having to delete it first. Note that this only works for runtime services, not databases or other service types.
+        Default: `false`<br/>
+        This only works for **runtime** services.<br/>
+        The parameter allows you to replace an existing runtime service with the same hostname byt triggering a redeploy if the service already exists.
       </td>
     </tr>
   </tbody>
@@ -45124,16 +45117,14 @@ This example includes all possible configuration options for Zerops services. No
 #yamlPreprocessor=on
 services:
 # REQUIRED: Name of your service
-- hostname: service1
+- hostname: app
   # REQUIRED: Choose from list of supported technologies and their versions
-  type: nodejs@latest
+  type: nodejs@22
   # High-Availability or Non-High-Availability mode
   mode: HA
   # Map of secret environment variables
   envSecrets:
     SECRET_KEY: <@generateRandomString(<32>)>
-    DATABASE_HOST: ${db_hostname}
-    DATABASE_NAME: ${db_hostname}
   # Environment variables in .env format
   dotEnvSecrets: |
     APP_KEY=<@generateRandomString(<32>)>
@@ -45144,7 +45135,7 @@ services:
   # Define additional policy
   objectStorageRawPolicy:
   # One time build git repository
-  buildFromGit: https://github.com/zeropsio/recipe-nodejs-hello-world@main
+  buildFromGit: https://github.com/myorg/myapp
   # Enables public access via zerops.app subdomain
   enableSubdomainAccess: true
   # The higher the sooner the service is created
@@ -45153,12 +45144,12 @@ services:
   override: false
 ```
 
-This yaml will create a `nodejs@latest` service named `service1` in `HA` (High-Availability) mode with the following configurations:
+This yaml will create a `nodejs@latest` service named `app` in `HA` (High-Availability) mode with the following configurations:
 - Environment variables:
-  - From `envSecrets`: `SECRET_KEY` (requires yamlPreprocessor), `DATABASE_HOST` and `DATABASE_NAME` (requires a db service in the same project)
-  - From `dotEnvSecrets`: `APP_KEY` in .env format
+  - From `envSecrets`: `SECRET_KEY` (requires yamlPreprocessor)
+  - From `dotEnvSecrets`: `APP_KEY` in .env format (requires yamlPreprocessor)
 - Object storage: 2GB with `public-read-write` policy
-- Git repository: `https://github.com/zeropsio/recipe-nodejs-hello-world@main`
+- Git repository: `https://github.com/zeropsio/recipe-nodejs`
 - Public access enabled via Zerops subdomain
 - Priority: 1
 - Override existing service: `false`
@@ -45271,68 +45262,61 @@ The vertical autoscaling configuration defines how the service can scale its res
 ```yaml
 services:
   - hostname: app
-    type: php-nginx@8.4
-    buildFromGit: https://github.com/example/app
+    type: nodejs@22
+    buildFromGit: https://github.com/myorg/myapp
     enableSubdomainAccess: true
     verticalAutoscaling:
-      minCpu: 1
-      maxCpu: 5
-      # Choose SHARED or DEDICATED
-      cpuMode: DEDICATED
-      minRam: 1
-      maxRam: 32
-      minDisk: 1
-      maxDisk: 100
-      startCpuCoreCount:
-      minFreeCpuCores:
-      minFreeCpuPercent:
-      minFreeRamGB:
-      minFreeRamPercent:
+      minCpu: 1                     # Minimum number of virtual CPUs
+      maxCpu: 3                     # Maximum number of virtual CPUs
+      cpuMode: DEDICATED            # SHARED or DEDICATED CPU mode
+      minRam: 1                     # Minimum RAM in GB
+      maxRam: 4                     # Maximum RAM in GB
+      minDisk: 1                    # Minimum disk space in GB
+      maxDisk: 10                   # Maximum disk space in GB
+      startCpuCoreCount: 2          # Initial CPU core count
+      minFreeCpuCores: 0.5          # Min free CPU cores before scaling
+      minFreeCpuPercent: 20         # Min free CPU percentage before scaling
+      minFreeRamGB: 0.5             # Min free RAM in GB before scaling
+      minFreeRamPercent: 20         # Min free RAM percentage before scaling
 ```
 
 This yaml will create a service with the hostname `app` with `php-nginx@8.4` runtime with `HA` High-Availability mode for vertical autoscaling:
 
-- CPU: `1-5` virtual CPUs in `DEDICATED` mode
-- RAM: `1-32 GB`
-- Disk Space: `1-100 GB`
-
-The `VerticalAutoscaling` map allows you to define the vertical autoscaling settings for the service with parameters like `minCpu`, `maxCpu`, `cpuMode`, `minRam`, `maxRam`, `minDisk`, `maxDisk`, `startCpuCoreCount`, `minFreeCpuCores`, `minFreeCpuPercent`, `minFreeRamGB`, `minFreeRamPercent`.
+- CPU: `1-3` virtual CPUs in `DEDICATED` mode
+- RAM: `1-4 GB`
+- Disk Space: `1-10 GB`
 
 ### Service Horizontal Autoscaling
 
 The horizontal autoscaling configuration is used to define the horizontal autoscaling settings for the service.
 
-<Dropdown>
-  <DropdownItem title="Horizontal Autoscaling Structure Parameters">
-    <table className="w-full my-1.5">
-      <thead>
-        <tr>
-          <th className="w-fit">Field</th>
-          <th className="w-fit">Type</th>
-          <th className="w-fit">Description</th>
-        </tr>
-      </thead>
-      <tbody>
+<table className="w-full my-1.5">
+  <thead>
     <tr>
-      <td className="w-fit font-semibold">minContainers</td>
-      <td className="w-fit">integer</td>
-      <td className="w-fit">Minimum number of containers of the service.<br/>Default: 1, maximum value: 6</td>
+      <th className="w-fit">Field</th>
+      <th className="w-fit">Type</th>
+      <th className="w-fit">Description</th>
     </tr>
-    <tr>
-      <td className="w-fit font-semibold">maxContainers</td>
-      <td className="w-fit">integer</td>
-      <td className="w-fit">Maximum number of containers of the service.<br/>Maximum value: 6</td>
-    </tr>
-    </tbody>
-    </table>
-  </DropdownItem>
-</Dropdown>
+  </thead>
+  <tbody>
+<tr>
+  <td className="w-fit font-semibold">minContainers</td>
+  <td className="w-fit">integer</td>
+  <td className="w-fit">Minimum number of containers of the service.<br/>Default: 1, maximum value: 10</td>
+</tr>
+<tr>
+  <td className="w-fit font-semibold">maxContainers</td>
+  <td className="w-fit">integer</td>
+  <td className="w-fit">Maximum number of containers of the service.<br/>Maximum value: 10</td>
+</tr>
+</tbody>
+</table>
 
 ```yaml
 services:
   - hostname: app
-    type: php-nginx@8.4
-    buildFromGit: https://github.com/example/app
+    type: nodejs@22
+    buildFromGit: https://github.com/zeropsio/recipe-php
     enableSubdomainAccess: true
     # Minimum number of containers
     minContainers: 2
@@ -45366,8 +45350,8 @@ The mount shared storage configuration defines which shared storage services sho
 ```yaml
 services:
   - hostname: app
-    type: php-nginx@8.4
-    buildFromGit: https://github.com/example/app
+    type: nodejs@22
+    buildFromGit: https://github.com/myorg/myapp
     enableSubdomainAccess: true
     mount:
       - teststorage1
@@ -45401,10 +45385,7 @@ The nginx configuration defines the nginx settings for the service.
 services:
   - hostname: app
     type: php-nginx@8.4
-    buildFromGit: https://github.com/example/app
     enableSubdomainAccess: true
-    envSecrets:
-      APP_KEY: <@generateRandomString(<32>)>
     nginxConfig: |-
       server {
           listen 80 default_server;
@@ -45445,10 +45426,34 @@ The `zeropsSetup` and `zeropsYaml` parameters provide flexibility in how you def
     <tr>
       <td className="w-fit font-semibold">zeropsYaml</td>
       <td className="w-fit whitespace-nowrap">object</td>
-      <td className="w-fit">Contains the full [zerops.yaml configuration](/zerops-yaml/specification), including the 'zerops:' root element. If provided, this will be used instead of looking for a `zerops.yaml` file in the repository.</td>
+      <td className="w-fit">Contains the full [zerops.yaml configuration](/zerops-yaml/specification). If provided, this will be used instead of looking for a `zerops.yaml` file in the repository.</td>
     </tr>
   </tbody>
 </table>
+
+```yaml
+services:
+  - hostname: app
+    type: nodejs@22
+    buildFromGit: https://github.com/myorg/myapp
+    # Specify which setup to use from zerops.yaml
+    zeropsSetup: backendapi
+    # Full zerops.yaml configuration
+    zeropsYaml:
+      zerops:
+        - setup: backendapi
+          build:
+            base: nodejs@18
+            buildCommands:
+              - npm ci
+              - npm run build
+            deployFiles: ./dist
+            cache: node_modules
+          run:
+            initCommands:
+              - npm run db:migrate
+            start: npm start
+```
 
 #### How They Work Together
 
