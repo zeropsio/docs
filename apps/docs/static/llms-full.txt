@@ -12533,10 +12533,16 @@ Zerops provides multiple ways to manage and purge cached content before its norm
   ```sh
   # Purge all content for a domain
   zsc cdn purge example.com
-
-  # Purge specific path
-  zsc cdn purge example.com /images/
+  # Purge all content (wildcard)
+  zsc cdn purge example.com "/*"
+  # Purge specific file
+  zsc cdn purge example.com "/path/to/my-file$"
   ```
+
+  :::important
+    - This command must be executed in any container within the project that has the CDN-enabled domain active
+    - Currently only works for [Static Mode](#static-mode) CDN
+  :::
 
 - **API Endpoints**: For programmatic control, use the [API endpoints](#api-reference). Here are ready-to-use curl examples for quickly purging content in your scripts:
 
@@ -28181,8 +28187,9 @@ The service includes [JetStream](https://docs.nats.io/nats-concepts/jetstream) f
 - **Memory store**: Up to 40GB for high-performance message caching
 - **File store**: Up to 250GB for persistent storage
 - **Regular sync intervals**: Ensures data durability and consistency
-
+:::note
 In HA deployments, data persistence is further enhanced with 1-minute sync intervals across all nodes, ensuring robust data durability and high availability.
+:::
 
 This configuration provides a robust foundation for message persistence while balancing performance and reliability.
 
@@ -46120,13 +46127,20 @@ zsc cdn [command]
 
 #### Examples
 ```sh
-# Purge CDN cache for a specific domain
+# Purge all CDN cache for a specific domain
 zsc cdn purge example.com
-
-# Purge CDN cache for a specific path on a domain
-zsc cdn purge example.com /images/
+# Purge all content using wildcard pattern
+zsc cdn purge example.com "/*"
+# Purge CDN cache for a specific file (note the $ suffix)
+zsc cdn purge example.com "/path/to/my-file$"
+# Purge CDN cache for a specific directory
+zsc cdn purge example.com "/images/"
 ```
 
+:::important
+- This command must be executed in any container within the project that has the CDN-enabled domain active
+- Currently, the purge command only works for the [Static Mode](/features/cdn#static-mode) CDN
+:::
 ---
 
 ### shared-storage
