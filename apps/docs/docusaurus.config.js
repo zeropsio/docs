@@ -232,7 +232,9 @@ const config = {
           trackingID: "xxx",
         },
         sitemap: {
-          filename: "sitemap-docs.xml",
+          filename: "sitemap.xml",
+          changefreq: "weekly",
+          priority: 0.5
         },
       },
     ],
