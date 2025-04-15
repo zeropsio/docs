@@ -3,6 +3,9 @@ import * as path from 'node:path'
 import * as globModule from 'glob'
 
 const frontmatterRegex = /^\n*---(\n.+)*?\n---\n/
+const mdxComponentRegex = /<[^>]+>/g
+const imageRegex = /!\[.*?\]\(.*?\)/g
+const importRegex = /^import\s+.*?from\s+['"].*?['"];?/gm
 
 const contentDir = path.resolve('apps/docs/content')
 
@@ -11,7 +14,13 @@ const sliceExt = (file: string) => {
 }
 
 const extractLabel = (file: string) => {
-  return sliceExt(file.split('/').pop() || '')
+  const pathWithoutExt = sliceExt(file)
+  const parts = pathWithoutExt.split('/')
+  return parts.map(part => 
+    part.split('-')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ')
+  ).join(' > ')
 }
 
 function capitalizeDelimiter(str: string): string {
@@ -21,23 +30,77 @@ function capitalizeDelimiter(str: string): string {
     .join('-')
 }
 
+function cleanMarkdownContent(content: string): string {
+  let cleaned = content.replace(frontmatterRegex, '')
+  
+  cleaned = cleaned.replace(/<FAQItem\s+question="([^"]+)"\s*>([\s\S]*?)<\/FAQItem>/g, (match, question, answer) => {
+    return `Question: ${question}\nAnswer: ${answer}\n`
+  })
+  cleaned = cleaned.replace(/<FAQ>([\s\S]*?)<\/FAQ>/g, (match, content) => {
+    return content
+  })
+  
+  const sections = cleaned.split(/(\|.*\|\n\|.*\|\n(\|.*\|\n)*)/)
+  let processedContent = ''
+  
+  for (let i = 0; i < sections.length; i++) {
+    const section = sections[i]
+    
+    if (section.trim().startsWith('|')) {
+      processedContent += section
+    } else {
+      let processedSection = section
+      processedSection = processedSection.replace(mdxComponentRegex, '')
+      processedSection = processedSection.replace(imageRegex, '')
+      processedSection = processedSection.replace(importRegex, '')
+      processedContent += processedSection
+    }
+  }
+  
+  const lines = processedContent.split('\n')
+  const processedLines: string[] = []
+  let lastLineWasEmpty = false
+  
+  for (const line of lines) {
+    const trimmedLine = line.trim()
+    
+    if (trimmedLine === '' && lastLineWasEmpty) {
+      continue
+    }
+    
+    processedLines.push(line)
+    lastLineWasEmpty = trimmedLine === ''
+  }
+  
+  return processedLines.join('\n')
+}
+
 async function generateContent(
   files: string[],
   contentDir: string,
   header: string
 ): Promise<string> {
-  let content = header + '# Start of Zerops documentation\n'
-  for (const file of files) {
+  let content = header + '# Start of Zerops documentation\n\n'
+  
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i]
     console.log(`> Writing '${file}' `)
     const fileContent = fs.readFileSync(
       path.resolve(contentDir, file),
       'utf-8'
     )
-    const contentWithoutFrontmatter = fileContent.replace(frontmatterRegex, '')
-    const lines = contentWithoutFrontmatter.split('\n')
-    const filteredLines = lines.filter(line => !line.trim().startsWith('import '))
-    content += filteredLines.join('\n') + '\n\n'
+    
+    const cleanedContent = cleanMarkdownContent(fileContent)
+    const title = extractLabel(file)
+    
+    if (i === 0) {
+      content += '-'.repeat(40) + '\n\n'
+    }
+    
+    content += `# ${title}\n\n${cleanedContent}\n\n`
+    content += '-'.repeat(40) + '\n\n'
   }
+  
   return content
 }
 
