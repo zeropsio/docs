@@ -85,14 +85,9 @@ function cleanMarkdownContent(content: string): string {
 
 async function generateContent(
   files: string[],
-  contentDir: string,
-  header: string
+  contentDir: string
 ): Promise<string> {
-  const systemPrompt = `<SYSTEM>Zerops - A developer-first Platform-as-a-Service that runs on bare metal.
-This documentation contains comprehensive information about Zerops's features, services, and best practices.
-Focus on providing accurate, clear, and practical guidance based on this documentation. Handle tables and code blocks efficiently.
-</SYSTEM>\n\n`
-  let content = systemPrompt + header + '# Start of Zerops documentation\n\n'
+  let content = ''
   
   for (let i = 0; i < files.length; i++) {
     const file = files[i]
@@ -160,8 +155,7 @@ async function generateLLMDocs() {
 
   const fullContent = await generateContent(
     files,
-    contentDir,
-    ''
+    contentDir
   )
 
   fs.writeFileSync(outputFullFile, fullContent, 'utf-8')
@@ -174,8 +168,7 @@ async function generateLLMDocs() {
 
   const tinyContent = await generateContent(
     tinyFiles,
-    contentDir,
-    ''
+    contentDir
   )
 
   fs.writeFileSync(outputTinyFile, tinyContent, 'utf-8')
