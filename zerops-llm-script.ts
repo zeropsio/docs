@@ -33,6 +33,13 @@ function capitalizeDelimiter(str: string): string {
 function cleanMarkdownContent(content: string): string {
   let cleaned = content.replace(frontmatterRegex, '')
   
+  cleaned = cleaned.replace(/<FAQItem\s+question="([^"]+)"\s*>([\s\S]*?)<\/FAQItem>/g, (match, question, answer) => {
+    return `Question: ${question}\nAnswer: ${answer}\n`
+  })
+  cleaned = cleaned.replace(/<FAQ>([\s\S]*?)<\/FAQ>/g, (match, content) => {
+    return content
+  })
+  
   const sections = cleaned.split(/(\|.*\|\n\|.*\|\n(\|.*\|\n)*)/)
   let processedContent = ''
   
