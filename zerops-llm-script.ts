@@ -88,7 +88,6 @@ async function generateContent(
 ): Promise<string> {
   const systemPrompt = `<SYSTEM>Zerops - A developer-first Platform-as-a-Service that runs on bare metal.
 This documentation contains comprehensive information about Zerops's features, services, and best practices.
-Your task is to help users understand and effectively use Zerops for their development needs.
 Focus on providing accurate, clear, and practical guidance based on this documentation. Handle tables and code blocks efficiently.
 </SYSTEM>\n\n`
   let content = systemPrompt + header + '# Start of Zerops documentation\n\n'
