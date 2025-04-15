@@ -149,7 +149,7 @@ async function generateLLMDocs() {
   const fullContent = await generateContent(
     files,
     contentDir,
-    '<SYSTEM>This is the full developer documentation for Zerops.</SYSTEM>\n\n'
+    ''
   )
 
   fs.writeFileSync(outputFullFile, fullContent, 'utf-8')
