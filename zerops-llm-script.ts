@@ -33,6 +33,12 @@ function capitalizeDelimiter(str: string): string {
 function cleanMarkdownContent(content: string): string {
   let cleaned = content.replace(frontmatterRegex, '')
   
+  // Remove JSX-style comments
+  cleaned = cleaned.replace(/{\/\*[\s\S]*?\*\/}/g, '')
+  
+  // Remove <br/> tags
+  cleaned = cleaned.replace(/<br\s*\/?>/g, '\n')
+  
   cleaned = cleaned.replace(/<FAQItem\s+question="([^"]+)"\s*>([\s\S]*?)<\/FAQItem>/g, (match, question, answer) => {
     return `Question: ${question}\nAnswer: ${answer}\n`
   })
@@ -80,7 +86,12 @@ async function generateContent(
   contentDir: string,
   header: string
 ): Promise<string> {
-  let content = header + '# Start of Zerops documentation\n\n'
+  const systemPrompt = `<SYSTEM>Zerops - A developer-first Platform-as-a-Service that runs on bare metal.
+This documentation contains comprehensive information about Zerops's features, services, and best practices.
+Your task is to help users understand and effectively use Zerops for their development needs.
+Focus on providing accurate, clear, and practical guidance based on this documentation. Handle tables and code blocks efficiently.
+</SYSTEM>\n\n`
+  let content = systemPrompt + header + '# Start of Zerops documentation\n\n'
   
   for (let i = 0; i < files.length; i++) {
     const file = files[i]
@@ -149,7 +160,7 @@ async function generateLLMDocs() {
   const fullContent = await generateContent(
     files,
     contentDir,
-    '<SYSTEM>This is the full developer documentation for Zerops.</SYSTEM>\n\n'
+    ''
   )
 
   fs.writeFileSync(outputFullFile, fullContent, 'utf-8')
@@ -163,7 +174,7 @@ async function generateLLMDocs() {
   const tinyContent = await generateContent(
     tinyFiles,
     contentDir,
-    '<SYSTEM>This is the tiny developer documentation for Zerops.</SYSTEM>\n\n'
+    ''
   )
 
   fs.writeFileSync(outputTinyFile, tinyContent, 'utf-8')
