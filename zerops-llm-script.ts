@@ -51,6 +51,7 @@ function cleanMarkdownContent(content: string): string {
   
   for (let i = 0; i < sections.length; i++) {
     const section = sections[i]
+    if (!section) continue
     
     if (section.trim().startsWith('|')) {
       processedContent += section
@@ -68,6 +69,7 @@ function cleanMarkdownContent(content: string): string {
   let lastLineWasEmpty = false
   
   for (const line of lines) {
+    if (!line) continue
     const trimmedLine = line.trim()
     
     if (trimmedLine === '' && lastLineWasEmpty) {
