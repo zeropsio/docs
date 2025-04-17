@@ -27,28 +27,54 @@ Our NATS implementation features optimized default settings designed for common 
 - Secure authentication with automatically generated credentials
 - Optimized settings for performance and reliability
 
+You can fine-tune your NATS service by adjusting **environment variables**:
+
+### Available Configuration Options
+
+:::note
+If certain variables are not visible in your configuration, they may have been introduced after your service was created. Simply add them as [secret variables](/features/env-variables#2-secret-variables) to access the functionality.
+:::
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Variable</th>
+      <th className="w-fit">Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit whitespace-nowrap"><code>MAX_PAYLOAD</code></td>
+      <td className="w-fit">Defines the maximum allowed message size for all NATS traffic. Default: <code>8MB</code>, Maximum: <code>64MB</code>. See <a href="https://docs.nats.io/running-a-nats-service/configuration#limits">NATS limits documentation</a> for details.</td>
+    </tr>
+    <tr>
+      <td className="w-fit whitespace-nowrap"><code>JET_STREAM_ENABLED</code></td>
+      <td className="w-fit">Controls whether JetStream functionality is enabled. Default: <code>1</code> (enabled), Set to <code>0</code> to disable. See <a href="#jetstream-configuration">JetStream Configuration</a> section below for more details.</td>
+    </tr>
+  </tbody>
+</table>
+
+:::important
+Configuration changes require a service **restart** to take effect. While NATS itself supports configuration hot-reload, this feature will be implemented in a future Zerops update.
+:::
+
+After restarting, check your service logs to confirm the changes were applied successfully.
+
 ### JetStream Configuration
 
 The service includes [JetStream](https://docs.nats.io/nats-concepts/jetstream) functionality **enabled by default**, providing persistent storage capabilities for your messaging workloads:
 - **Memory store**: Up to 40GB for high-performance message caching
 - **File store**: Up to 250GB for persistent storage
 - **Regular sync intervals**: Ensures data durability and consistency
+
 :::note
 In HA deployments, data persistence is further enhanced with 1-minute sync intervals across all nodes, ensuring robust data durability and high availability.
 :::
 
 This configuration provides a robust foundation for message persistence while balancing performance and reliability.
 
-#### Disabling JetStream
-
-If you don't need message persistence, you can disable JetStream by setting the `JET_STREAM_ENABLED` environment variable to `0` in your service configuration. This can be done:
-
-- During service creation through the [import configuration](/references/import)
-- In the Zerops GUI under service environment variables
-- Via the [Zerops API](/references/api) when creating a new service
-
 :::tip
-Disabling JetStream may reduce resource usage when persistence isn't required for your application.
+Disabling JetStream can reduce resource utilization for applications that don't require message persistence.
 :::
 
 ### Deployment Modes
