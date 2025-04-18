@@ -33,6 +33,12 @@ function capitalizeDelimiter(str: string): string {
 function cleanMarkdownContent(content: string): string {
   let cleaned = content.replace(frontmatterRegex, '')
   
+  // Remove JSX-style comments
+  cleaned = cleaned.replace(/{\/\*[\s\S]*?\*\/}/g, '')
+  
+  // Remove <br/> tags
+  cleaned = cleaned.replace(/<br\s*\/?>/g, '\n')
+  
   cleaned = cleaned.replace(/<FAQItem\s+question="([^"]+)"\s*>([\s\S]*?)<\/FAQItem>/g, (match, question, answer) => {
     return `Question: ${question}\nAnswer: ${answer}\n`
   })
@@ -45,6 +51,7 @@ function cleanMarkdownContent(content: string): string {
   
   for (let i = 0; i < sections.length; i++) {
     const section = sections[i]
+    if (!section) continue
     
     if (section.trim().startsWith('|')) {
       processedContent += section
@@ -62,6 +69,7 @@ function cleanMarkdownContent(content: string): string {
   let lastLineWasEmpty = false
   
   for (const line of lines) {
+    if (!line) continue
     const trimmedLine = line.trim()
     
     if (trimmedLine === '' && lastLineWasEmpty) {
@@ -77,10 +85,9 @@ function cleanMarkdownContent(content: string): string {
 
 async function generateContent(
   files: string[],
-  contentDir: string,
-  header: string
+  contentDir: string
 ): Promise<string> {
-  let content = header + '# Start of Zerops documentation\n\n'
+  let content = ''
   
   for (let i = 0; i < files.length; i++) {
     const file = files[i]
@@ -148,8 +155,7 @@ async function generateLLMDocs() {
 
   const fullContent = await generateContent(
     files,
-    contentDir,
-    ''
+    contentDir
   )
 
   fs.writeFileSync(outputFullFile, fullContent, 'utf-8')
@@ -162,8 +168,7 @@ async function generateLLMDocs() {
 
   const tinyContent = await generateContent(
     tinyFiles,
-    contentDir,
-    '<SYSTEM>This is the tiny developer documentation for Zerops.</SYSTEM>\n\n'
+    contentDir
   )
 
   fs.writeFileSync(outputTinyFile, tinyContent, 'utf-8')
