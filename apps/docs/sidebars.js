@@ -88,15 +88,6 @@ module.exports = {
     },
     {
       type: 'doc',
-      id: 'features/developer-first',
-      label: 'Dev-First Experience',
-      customProps: {
-        sidebar_icon: 'heart',
-      },
-      className: 'homepage-sidebar-item',
-    },
-    {
-      type: 'doc',
       id: 'features/scaling-ha',
       label: 'Automatic Scaling & High Availability',
       customProps: {
@@ -701,6 +692,15 @@ module.exports = {
       label: 'About',
       customProps: {
         sidebar_icon: 'information-circle',
+      },
+      className: 'homepage-sidebar-item',
+    },
+    {
+      type: 'doc',
+      id: 'company/developer-first',
+      label: 'Dev-First Experience',
+      customProps: {
+        sidebar_icon: 'heart',
       },
       className: 'homepage-sidebar-item',
     },
