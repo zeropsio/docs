@@ -1,0 +1,114 @@
+---
+title: Apache Kafka
+desc: Production-ready Apache Kafka on Zerops platform with automated scaling and enterprise reliability. Deploy, manage, and scale with zero infrastructure overhead.
+---
+
+import UnorderedList from '@site/src/components/UnorderedList';
+import UnorderedCodeList from '@site/src/components/UnorderedCodeList';
+import data from '@site/static/data.json';
+
+Zerops provides a fully managed [Apache Kafka](https://kafka.apache.org/) messaging platform with automated scaling and zero infrastructure overhead, letting developers focus entirely on development.
+
+## Supported Versions
+
+Currently supported Kafka version:
+<UnorderedList data={data.kafka.readable}/>
+
+Import configuration version:
+<UnorderedCodeList data={data.kafka.import}/>
+
+## Service Configuration
+
+Our Kafka implementation features optimized default settings designed for common use cases.
+
+### Key Configuration
+
+* **Client Connections:** Data brokers available on port `9092`
+* **Authentication:** Secure SASL PLAIN with automatically generated credentials
+* **Data Persistence:** Topic data stored indefinitely (no time or size limit)
+* **Performance:** Optimized settings for reliability and throughput
+
+### Resource Allocation
+
+Zerops automatically allocates resources to your Kafka service based on demand:
+
+* **Memory:** Up to 40GB RAM for high-performance message processing
+* **Storage:** Up to 250GB for persistent storage of messages and logs
+* **Auto-scaling:** Resources scale up and down automatically based on workload
+
+## Deployment Modes
+
+:::important
+Deployment mode is selected during service creation and cannot be changed later.
+:::
+
+### High-Availability (HA) Setup
+
+The recommended solution for production workloads and mission-critical data:
+
+* Creates a multi-node Kafka cluster with 3 broker nodes
+* Configures 6 partitions across the cluster
+* Implements replication factor of 3 (each broker node has a copy of each partition)
+* Default topic replication is also 3 (overridable by user application)
+* Zerops automatically attempts to repair the cluster and data replication in case of a node failure
+
+### Single Node Instance
+
+Suitable for development and testing environments:
+
+* Consists of 1 broker node
+* Configures 3 partitions
+* No data replication
+* Lower resource requirements
+
+:::note
+Use for development or non-critical data only, as data loss may occur due to container volatility.
+:::
+
+## Authentication Management
+
+Authentication credentials are automatically generated and managed by the platform using SASL PLAIN authentication.
+
+**Access your credentials through:**
+* The service access details in the Zerops GUI
+* Environment variables in your service configuration:
+  * `user` - Username for authentication
+  * `password` - Generated secure password
+  * `port` - Kafka port (value: `9092`)
+
+## Client Access
+
+Client implementations differ, please refer to your chosen client's configuration manual for specific details.
+
+### Access Methods
+
+#### Seed Broker Connection
+Connect to the Kafka cluster using the "seed" (or "bootstrap") broker server:
+```
+<hostname>:9092
+```
+
+#### Specific Broker Access
+To access a single specific broker or a list of all/some brokers:
+```
+node-stable-1.db.<hostname>.zerops:9092,node-stable-2.db.<hostname>.zerops:9092,...
+```
+
+## Best Practices
+
+### Production Workloads
+* Use HA mode for all production deployments
+* Configure proper retention policies for your topics based on your data requirements
+* Monitor consumer lag to ensure messages are being processed efficiently
+* Use consumer groups to distribute processing load
+
+### Development Environments
+* Single node instances are suitable for development and testing
+* Be aware of potential data loss in non-HA deployments
+* Consider using smaller message sizes during development to reduce resource usage
+
+## Support
+
+For advanced configurations or custom requirements:
+* Join our [Discord community](https://discord.gg/zerops)
+* Contact support via [email](mailto:support@zerops.io)
