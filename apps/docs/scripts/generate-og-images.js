@@ -3,11 +3,12 @@ const path = require('path');
 const { createCanvas, loadImage, registerFont } = require('canvas');
 const glob = require('glob');
 const matter = require('gray-matter');
+const { slugifyWithCounter } = require('@docusaurus/utils');
 
 const OUTPUT_DIR = path.join(__dirname, '../static/img/og');
-const FONT_PATH = path.join(__dirname, '../static/fonts');
+const FONT_PATH = path.join(__dirname, '../static/font');
 const LOGO_PATH = path.join(__dirname, '../static/img/logo-icon.png');
-const BACKGROUND_PATH = path.join(__dirname, '../static/img/squares-bg.svg');
+const BACKGROUND_PATH = path.join(__dirname, '../static/img/og-bg.png');
 const CONTENT_DIR = path.join(__dirname, '../content');
 
 if (!fs.existsSync(OUTPUT_DIR)) {
@@ -15,11 +16,12 @@ if (!fs.existsSync(OUTPUT_DIR)) {
 }
 
 try {
-  if (fs.existsSync(path.join(FONT_PATH, 'Inter-Bold.ttf'))) {
-    registerFont(path.join(FONT_PATH, 'Inter-Bold.ttf'), { family: 'Inter', weight: 'bold' });
-    registerFont(path.join(FONT_PATH, 'Inter-Regular.ttf'), { family: 'Inter', weight: 'normal' });
+  // Using Roboto variable font
+  if (fs.existsSync(path.join(FONT_PATH, 'robot-variable.ttf'))) {
+    registerFont(path.join(FONT_PATH, 'robot-variable.ttf'), { family: 'Roboto' });
+    console.log('Registered Roboto variable font');
   } else {
-    console.log('Inter font not found, using system fonts');
+    console.log('Roboto variable font not found, using system fonts');
   }
 } catch (error) {
   console.log('Failed to register fonts, using system fonts', error);
@@ -34,10 +36,11 @@ try {
 async function generateImage(title, description, outputPath) {
   const canvas = createCanvas(1200, 630);
   const ctx = canvas.getContext('2d');
+  const padding = 24;
 
-  ctx.fillStyle = '#111827';
+  ctx.fillStyle = '#EDEFF3';
   ctx.fillRect(0, 0, 1200, 630);
-
+  
   let bgImage;
   try {
     if (fs.existsSync(BACKGROUND_PATH)) {
@@ -59,30 +62,27 @@ async function generateImage(title, description, outputPath) {
     }
     
     if (bgImage) {
-      ctx.globalAlpha = 0.3; // Make it subtle
+      ctx.globalAlpha = 0.2;
       ctx.drawImage(bgImage, 0, 0, 1200, 630);
       ctx.globalAlpha = 1.0;
     } else {
-      // Draw a simple pattern if no background image is available
-      ctx.globalAlpha = 0.1;
-      ctx.fillStyle = '#ffffff';
-      for (let i = 0; i < 1200; i += 20) {
-        for (let j = 0; j < 630; j += 20) {
-          ctx.fillRect(i, j, 2, 2);
-        }
-      }
-      ctx.globalAlpha = 1.0;
+      // Just use a solid background without a grid
+      // The background is already filled with #EDEFF3 at the beginning of the function
     }
   } catch (error) {
     console.log('Error with background image, using solid color', error);
   }
 
-  // Draw logo
   try {
     if (fs.existsSync(LOGO_PATH)) {
       const logo = await loadImage(LOGO_PATH);
-      const logoSize = 80;
-      ctx.drawImage(logo, 70, 70, logoSize, logoSize);
+      const logoHeight = 80; 
+      const logoWidth = (logo.width / logo.height) * logoHeight;
+      
+      const logoX = 1200 - logoWidth - padding;
+      const logoY = padding;
+      
+      ctx.drawImage(logo, logoX, logoY, logoWidth, logoHeight);
     } else {
       console.log('Logo not found, skipping logo');
     }
@@ -90,20 +90,20 @@ async function generateImage(title, description, outputPath) {
     console.log('Error with logo, skipping', error);
   }
 
-  // Draw title
-  ctx.font = 'bold 48px Inter, sans-serif';
-  ctx.fillStyle = 'white';
-  wrapText(ctx, title, 70, 250, 1060, 60);
+
+  const titleY = 450;
+  
+  ctx.font = '600 48px Roboto, sans-serif';
+  ctx.fillStyle = '#1A1A1A';
+  wrapText(ctx, title, padding, titleY, 1200 - (padding * 2), 60);
 
   if (description) {
-    ctx.font = '32px Inter, sans-serif';
-    ctx.fillStyle = '#9CA3AF';
-    wrapText(ctx, description, 70, 400, 1060, 40);
+    const descriptionY = titleY + 60 + 8;
+    
+    ctx.font = '500 30px Roboto, sans-serif';
+    ctx.fillStyle = '#616A71';
+    wrapText(ctx, description, padding, descriptionY, 1200 - (padding * 2), 40);
   }
-
-  ctx.font = 'bold 24px Inter, sans-serif';
-  ctx.fillStyle = '#6B7280';
-  ctx.fillText('docs.zerops.io', 70, 570);
 
   const buffer = canvas.toBuffer('image/png');
   fs.writeFileSync(outputPath, buffer);
@@ -288,11 +288,8 @@ async function generateAllImages() {
                      (pathWithoutIndex ? `, pathWithoutIndex=${pathWithoutIndex}` : '') +
                      (nestedPathSlug ? `, nestedPath=${nestedPathSlug}` : ''));
         
-        const slugsToGenerate = [fullSlug, filenameSlug, parentDirSlug];
-        if (directorySlug) slugsToGenerate.push(directorySlug);
-        if (sectionSlug) slugsToGenerate.push(sectionSlug);
-        if (pathWithoutIndex) slugsToGenerate.push(pathWithoutIndex);
-        if (nestedPathSlug) slugsToGenerate.push(nestedPathSlug);
+        // Only use fullSlug for generating images
+        const slugsToGenerate = [fullSlug];
         
         const uniqueSlugs = [...new Set(slugsToGenerate)].filter(Boolean);
         
