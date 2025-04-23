@@ -3570,12 +3570,15 @@ zerops:
   - setup: app
     run:
       prepareCommands:
-        - docker image pull 
-      start: docker run --network=host 
+        - docker image pull :  # Always use specific version tags
+      start: docker run --network=host :
       ports:
         - port: 
           httpSupport: true
 ```
+:::important
+Always use specific version tags (like `1.0.0`) instead of `:latest`. Zerops caches the `prepareCommands` output, which means a new `:latest` image won't be automatically pulled on subsequent deployments unless the cache is manually cleared or the commands change.
+:::
 Refer to the [Docker recipe repository](https://github.com/zeropsio/recipe-docker) for an example configuration.
 :::note
 We are actively working on improving the speed of image caching after `run.prepareCommands` and reducing the startup time of runtime VMs. These improvements will be released in future updates.
@@ -3597,6 +3600,7 @@ For projects using Docker Compose, additional configuration is required:
    ```yaml title="docker-compose.yaml"
    services:
      your-service:
+       image: your-image:1.0.0
        network_mode: host
    ```
 3. **Start Command**:
@@ -3621,14 +3625,17 @@ For single containers, pass variables using the `-e` flag:
 ```yaml title="zerops.yaml"
 run:
   prepareCommands:
-    - docker image pull my-application:latest
-  start: docker run -e DB_HOST -e DB_PORT --network=host my-application:latest
+    - docker image pull my-application:1.0.0  # Use specific version tags, not :latest
+  start: docker run -e DB_HOST -e DB_PORT --network=host my-application:1.0.0
 ```
+:::important
+Always use specific version tags (like `1.0.0`) instead of `:latest`. Zerops caches the `prepareCommands` output, which means a new `:latest` image won't be automatically pulled on subsequent deployments unless the cache is manually cleared or the commands change.
+:::
 For Docker Compose setups, pass environment variables in your `docker-compose.yaml`:
 ```yaml title="docker-compose.yaml"
 services:
   api:
-    image: my-application:latest
+    image: my-application:1.0.0
     network_mode: host
     environment:
       - DB_HOST
@@ -3641,12 +3648,15 @@ zerops:
   - setup: app
     run:
       prepareCommands:
-        - docker image pull crccheck/hello-world
-      start: docker run --network=host crccheck/hello-world
+        - docker image pull crccheck/hello-world:1.0.0  # Always use specific version tags
+      start: docker run --network=host crccheck/hello-world:1.0.0
       ports:
         - port: 8000
           httpSupport: true
 ```
+:::important
+Always use specific version tags (like `1.0.0`) instead of `:latest`. Zerops caches the `prepareCommands` output, which means a new `:latest` image won't be automatically pulled on subsequent deployments unless the cache is manually cleared or the commands change.
+:::
 ### Single Service with Docker Compose
 ```yaml title="zerops.yaml"
 zerops:
@@ -3661,6 +3671,13 @@ zerops:
       ports:
         - port: 8000
           httpSupport: true
+```
+```yaml title="docker-compose.yaml (excerpt)"
+services:
+  api:
+    image: your-image:1.0.0
+    network_mode: host
+    # other configuration...
 ```
 ### Multiple Services with Docker Compose
 ```yaml title="zerops.yaml"
@@ -3677,10 +3694,20 @@ zerops:
         - port: 8000
           httpSupport: true
 ```
+```yaml title="docker-compose.yaml (excerpt)"
+services:
+  web:
+    image: web-image:1.0.0
+    network_mode: host
+    # other configuration...
+  api:
+    image: api-image:1.0.0
+    network_mode: host
+    # other configuration...
+```
 ## Best Practices
 #### Image Management
-- Use `prepareCommands` for image pulling
-- Consider using specific image tags instead of `latest`
+- **Always use specific version tags** instead of `:latest` - This prevents caching issues as Zerops caches `prepareCommands` output
 #### Resource Planning
 - Account for VM overhead in resource allocation
 - Plan for longer initialization times
