@@ -31714,10 +31714,42 @@ Defines a health check for your application.
 ```yaml
 run:
   healthCheck:
+    # HTTP GET method example
     httpGet:
       port: 80
       path: /status
+      host: my-host.zerops
+      scheme: https
+    # OR command-based example
+    exec:
+      command: |
+        curl -s http://localhost:8080/status > /tmp/status
+        grep -q "OK" /tmp/status
+    # Common parameters
+    failureTimeout: 60
+    disconnectTimeout: 30
+    recoveryTimeout: 30
+    execPeriod: 10
 ```
+Available parameters:
+#### httpGet 
+Configures the health check to request a local URL using a HTTP GET method.
+- **port**  - Defines the port of the HTTP GET request.
+- **path**  - Defines the URL path of the HTTP GET request.
+- **host**  - The health check is triggered from inside of your runtime container so it uses the localhost (127.0.0.1). If you need to add a host to the request header, specify it in the host attribute.
+- **scheme**  - The health check is triggered from inside of your runtime container so no https is required. If your application requires a https request, set scheme: `https`.
+#### exec 
+Configures the health check to run a local command.
+- **command**  - Defines a local command to be run. The command has access to the same environment variables. A single string is required. If you need to run multiple commands create a shell script or, use a multiline format as in the example above.
+#### Common parameters 
+The following parameters can be used with either `httpGet` or `exec` health checks:
+- **failureTimeout** - Time in seconds until container fails after consecutive health check failures (reset by success).
+- **disconnectTimeout** - Time in seconds until container is disconnected and becomes publicly unavailable.
+- **recoveryTimeout** - Time in seconds until container is connected and becomes publicly available.
+- **execPeriod** - Time interval in seconds between health check attempts.
+:::tip
+Health checks continuously monitor your running application, while readiness checks verify if a new deployment is ready to receive traffic. For readiness checks, see the [readinessCheck section](#readinesscheck-).
+:::
 ### crontab 
   Defines scheduled commands to run as cron jobs within a service.
   ```yaml
@@ -31729,22 +31761,31 @@ run:
 Setup cron jobs. See [examples](/references/cron).
 ## Deploy Configuration
 ### readinessCheck 
-Defines a readiness check for your application. (See [readiness checks](/features/pipeline#readiness-checks))
+Defines a readiness check for your application. Requires either `httpGet` object or `exec` object.
 ```yaml
 deploy:
   readinessCheck:
+    # HTTP GET method example
     httpGet:
       port: 80
       path: /status
-      host: 127.0.0.1
+      host: my-host.zerops
       scheme: https
-    # Or use commands
-    exec:
-      command: |
-        touch grass
-        rm -rf life
-        mv /outside/user /home/user
+    # Common parameters
+    failureTimeout: 60
+    retryPeriod: 10
 ```
+Readiness checks work similarly to [health checks](#healthcheck-) but are specifically for deployment. They verify if a new deployment is ready to receive traffic.
+Available parameters:
+#### httpGet and exec
+The `httpGet` and `exec` options work the same way as in [health checks](#healthcheck-). See that section for detailed parameter descriptions.
+#### Common parameters 
+The following parameters can be used with either `httpGet` or `exec` readiness checks:
+- **failureTimeout** - Time in seconds until container is marked as failed.
+- **retryPeriod** - Time interval in seconds between readiness check attempts (equivalent to `execPeriod` in health checks).
+:::tip
+Unlike health checks which run continuously, readiness checks only run during deployments to determine when your application is ready to accept traffic.
+:::
 :::note
 For more detailed information on specific configurations, refer to the runtime-specific guides linked at the beginning of this document.
 :::
