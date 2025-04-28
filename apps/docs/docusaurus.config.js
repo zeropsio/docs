@@ -118,7 +118,172 @@ const config = {
         plain: {
           ...prismThemes.vsDark.plain,
           backgroundColor: "#111827",
+          color: "#e6e6e6",
         },
+        styles: [
+          ...prismThemes.vsDark.styles,
+          {
+            types: ["comment", "prolog", "doctype", "cdata"],
+            style: {
+              color: "#6a9955",
+              fontStyle: "italic",
+            },
+          },
+          {
+            types: ["namespace"],
+            style: {
+              opacity: 0.7,
+            },
+          },
+          {
+            types: ["string", "attr-value"],
+            style: {
+              color: "#ce9178",
+            },
+          },
+          {
+            types: ["punctuation", "operator"],
+            style: {
+              color: "#d4d4d4",
+            },
+          },
+          {
+            types: ["entity", "url", "symbol", "number", "boolean", "variable", "constant", "property", "regex", "inserted"],
+            style: {
+              color: "#b5cea8",
+            },
+          },
+          {
+            types: ["atrule", "keyword", "attr-name", "selector"],
+            style: {
+              color: "#569cd6",
+            },
+          },
+          {
+            types: ["function", "deleted", "tag"],
+            style: {
+              color: "#f44747",
+            },
+          },
+          {
+            types: ["function-variable"],
+            style: {
+              color: "#dcdcaa",
+            },
+          },
+          {
+            types: ["tag", "selector", "keyword"],
+            style: {
+              color: "#569cd6",
+            },
+          },
+          {
+            types: ["important", "bold"],
+            style: {
+              // fontWeight: "bold",
+            },
+          },
+          {
+            types: ["italic"],
+            style: {
+              fontStyle: "italic",
+            },
+          },
+          {
+            types: ["key", "property"],
+            languages: ["yaml", "yml"],
+            style: {
+              color: "#9cdcfe",
+            },
+          },
+          {
+            types: ["string"],
+            languages: ["yaml", "yml"],
+            style: {
+              color: "#ce9178",
+            },
+          },
+          {
+            types: ["number"],
+            languages: ["yaml", "yml"],
+            style: {
+              color: "#C5DDB8",
+            },
+          },
+          {
+            types: ["function", "builtin"],
+            languages: ["bash", "shell", "sh"],
+            style: {
+              color: "#569CD6", // Light blue for commands
+            },
+          },
+          {
+            types: ["command", "builtin"],
+            languages: ["bash", "shell", "sh"],
+            style: {
+              color: "#569CD6", // Light blue for commands
+              fontWeight: "bold",
+            },
+          },
+          {
+            types: ["option", "parameter"],
+            languages: ["bash", "shell", "sh"],
+            style: {
+              color: "#eac787", // Yellowish for parameters
+            },
+          },
+          {
+            types: ["keyword", "selector"],
+            languages: ["bash", "shell", "sh"],
+            style: {
+              color: "#81a1c1", // Blue for keywords like if, then, else
+            },
+          },
+          {
+            types: ["string", "char", "attr-value"],
+            languages: ["bash", "shell", "sh"],
+            style: {
+              color: "#a3be8c", // Green for strings
+            },
+          },
+          {
+            types: ["variable"],
+            languages: ["bash", "shell", "sh"],
+            style: {
+              color: "#d8dee9", // Light gray for variables
+            },
+          },
+          {
+            types: ["comment"],
+            languages: ["bash", "shell", "sh"],
+            style: {
+              color: "#616e88", // Gray for comments
+              fontStyle: "italic",
+            },
+          },
+          {
+            types: ["shebang"],
+            languages: ["bash", "shell", "sh"],
+            style: {
+              color: "#8fbcbb", // Cyan for shebang
+              fontWeight: "bold",
+            },
+          },
+          {
+            types: ["operator"],
+            languages: ["bash", "shell", "sh"], 
+            style: {
+              color: "#81a1c1", // Blue for operators
+            },
+          },
+          {
+            types: ["punctuation"],
+            languages: ["bash", "shell", "sh"],
+            style: {
+              color: "#eceff4", // White for punctuation
+            },
+          },
+        ],
       },
     },
     zoom: {
