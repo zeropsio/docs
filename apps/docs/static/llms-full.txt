@@ -8122,7 +8122,7 @@ See how to [reference variables](#referencing-variables) between services and be
 Your application must be redeployed when updating environmental variables in `zerops.yaml`.
 :::
 #### 2. Secret Variables
-For storing sensitive data you don't want in your source repository. They can be updated without redeployment (though services need to be restarted).
+For storing sensitive data you don't want in your source repository. They can be updated without redeployment (though services need to be reloaded).
 Secret variables can be managed through:
 ##### GUI Interface
 Navigate to service details and find **Environment variables** in the menu. You can:
@@ -8145,14 +8145,14 @@ These variables cannot be deleted and are always listed at the bottom of the env
 These variables can also be [referenced](#referencing-variables).
 ## Project Variables
 Variables that apply across all services within a [project](/features/infrastructure#projects). These provide a way to share common configuration across services.
-They work similarly to service secret variables but at project scope - they're managed through the GUI and can be updated without redeployment (though services need to be restarted).
+They work similarly to service secret variables but at project scope - they're managed through the GUI and can be updated without redeployment (though services need to be reloaded).
 ### User-Defined Variables
 You can set project-wide variables through:
 #### GUI Interface
 Access **Project environment variables** in your project detail to:
 - Add individual variables one by one
 - Edit individual variables
-- Use the bulk editor with .env format:
+- Use the bulk editor with .env format
 #### Import Configuration
 Create project variables with `envVariables` attribute. See the complete [import.yaml structure](/reference/import).
 ```yaml title="import.yaml"
@@ -8163,7 +8163,61 @@ project:
     API_VERSION: v1
 ```
 ### System-Generated Variables
-Zerops automatically generates project-level variables containing that can be [referenced](#referencing-variables) from services.
+Zerops automatically generates project-level variables that can be [referenced](#referencing-variables) from services.
+## Environment Variable Isolation
+> A security feature that controls the visibility of environment variables across services within a project.
+By default, Zerops isolates environment variables between services to enhance security and prevent unintended access to sensitive information. This isolation can be configured at both project and service levels.
+### Isolation Modes
+Zerops supports two isolation modes:
+| Mode      | Description |
+|-----------|-------------|
+| `service` | **Default mode.** Variables are isolated to their respective services. Services can only access their own variables and must explicitly reference variables from other services. |
+| `none`    | Legacy mode. All variables from all services are automatically shared and accessible via prefixing. |
+| `none`    | Legacy mode. All variables from all services are automatically shared and accessible via prefixing. |
+### Configuring Isolation
+#### Project-Level Isolation
+Zerops automatically creates the `envIsolation` project variable with the default value `service`. You only need to modify this if you want to disable isolation:
+```yaml title="import.yaml"
+project:
+  ...
+  envVariables:
+    envIsolation: none  # Disables isolation, sharing all variables
+```
+This can also be set through the Project Environment Variables section in the GUI.
+#### Service-Level Override
+Individual services can override the project-level isolation setting:
+```yaml title="import.yaml"
+services:
+  - hostname: db
+    ...
+    envSecrets:
+      envIsolation: none  # This service's variables will be visible to all services
+```
+:::note
+You might set a database service to `envIsolation: none` to expose its connection details to other services, without having to manually reference them, while keeping the rest of your services isolated.
+:::
+### Accessing Variables Across Services
+#### With Isolation Enabled (`service` mode)
+When isolation is enabled, you must explicitly create reference variables to access variables from other services:
+```yaml title="zerops.yaml"
+# In the 'app' service:
+run:
+  envVariables:
+    # Create a local reference to the 'password' variable from the 'db' service
+    DB_PASSWORD: ${db_password}
+```
+This approach gives you complete control over which variables are shared between services.
+#### With Isolation Disabled (`none` mode)
+When isolation is disabled, variables are automatically available across all services with the service name prefix:
+```yaml
+# In any service, you can directly access:
+${db_password}  # Accesses the 'password' variable from the 'db' service
+```
+### Best Practices for Variable Isolation
+1. **Use Default Isolation**: Keep the default `service` isolation for enhanced security.
+2. **Explicit References**: Create explicit references only for variables that need to be shared.
+3. **Naming Conventions**: Use clear naming patterns for reference variables (e.g., `DB_PASSWORD` for a reference to `db_password`).
+4. **Service-Level Exceptions**: Use service-level isolation overrides sparingly and only for services that need to expose their variables widely.
 ## Variable Restrictions
 All environment variables must follow these restrictions:
 ### Key
@@ -8190,17 +8244,22 @@ envVariables:
   name: ${id}-${hostname}  # Results in: 42069-app
 ```
 #### Across Services
-Prefix variables with their respective service name:
+How this works depends on your environment variable isolation setting:
+**With Isolation Enabled** (`service` mode - default):
+1. Create an explicit reference in the destination service:
 ```yaml
-setup: dbtest
-  run:
-    envVariables:
-      connectionString: 127.0.0.1
-setup: app
-  run:
-    envVariables:
-      dbConnection: ${dbtest_connectionString}
+# In the 'app' service
+envVariables:
+  # Creating a reference to the 'connectionString' from 'dbtest' service
+  dbConnection: ${dbtest_connectionString}
 ```
+**With Isolation Disabled** (`none` mode):
+Variables from other services are automatically available using the service prefix format `servicename_variablename`:
+```yaml
+# In any container, you can directly access variables from other services:
+# ${dbtest_connectionString}
+```
+You don't need to define these in your environment variables - they're automatically injected into the container.
 #### Between Build and Runtime Environments
 Build and runtime are two distinct environments in Zerops. Each environment can have its own set of variables, and you can use the same variable names in both environments since they are separate. Due to this separation, variables defined in one are not automatically accessible in the other.
 To share variables between environments, you need to use specific prefixes:
@@ -8229,6 +8288,34 @@ envVariables:
   hostname: app
   name: ${projectName}-${hostname}  # Results in: devel-app
 ```
+## Environment Variable Examples
+### Variable Isolation Example
+Consider a project with three services: `api`, `db`, and `cache`:
+```yaml title="Project structure"
+project:
+  name: my-project
+services:
+  - hostname: db
+    envSecrets:
+      password: secureDbPassword
+      user: dbuser
+      port: 5432
+  - hostname: cache
+    envSecrets:
+      password: cacheServerPass
+      port: 6379
+  - hostname: api
+    envSecrets:
+      # Creating explicit references to needed variables
+      DB_CONNECTION: ${db_user}:${db_password}@${db_hostname}:${db_port}
+      CACHE_URL: ${cache_hostname}:${cache_port}
+      # Notice we didn't reference cache_password since we don't need it
+```
+With this setup:
+- The `api` service can only access the specific `db` and `cache` variables it explicitly references
+- The `db` service cannot see any variables from `api` or `cache`
+- The `cache` service cannot see any variables from `api` or `db`
+If we changed the project's `envIsolation` to `none`, all services would be able to see all variables from all other services (prefixed with the service name).
 *Need help? Join our [Discord community](https://discord.gg/zeropsio).*
 
 ----------------------------------------
