@@ -6,7 +6,7 @@ desc: A comprehensive guide to Zerops' Static service, covering configuration, r
 import DeployButton from '@site/src/components/DeployButton';
 import CustomCard from '@site/src/components/CustomCard';
 
-The Static service provides a streamlined way to serve static content through a pre-configured Nginx setup. It's designed to be simple to use while maintaining the flexibility needed for modern web applications.
+The Static service provides a way to serve static content through a pre-configured Nginx setup. It balances simplicity with the flexibility needed for modern web applications.
 
 <CustomCard title="Experience the simplicity of Zerops">
   Deploy an Analog app with static hosting in seconds. All you need is a Zerops account.
@@ -26,31 +26,34 @@ zerops:
       base: static
 ```
 
-The Static service comes with sensible defaults that work out of the box for most SPAs and static websites. By default, without any `routing` configuration, the service will:
+## Default Behavior
+
+Every Static service in Zerops comes with built-in defaults optimized for modern web applications, including Single Page Applications. By default, for any incoming request, the service will:
 1. Try to serve the exact path (`$uri`)
 2. Try with .html extension (`$uri.html`)
 3. Look for an index.html in the directory (`$uri/index.html`)
-4. Fall back to `/index.html`
+4. Fall back to `/index.html` (suitable for SPAs)
 5. Return 404 if none of the above exist
 
-:::note Zero Configuration for SPAs
-This means for basic SPA deployments or static file hosting, you don't need to specify any redirects at all!
+:::important SPAs
+Single Page Applications work out of the box without any additional configuration. The built-in fallback to `/index.html` ensures that client-side routing functions properly.
 :::
 
 ## Routing Configuration
 
-The Static service allows you to configure URL routing and redirects through a simple YAML configuration, abstracting away the complexity of Nginx configuration.
+The Static service allows you to configure additional URL routing and redirects through simple YAML configuration, abstracting away the complexity of Nginx configuration.
 
-### Basic Structure
+### Custom Routing Configuration
 
-Configure routing in the `run.routing` section of your `zerops.yaml`:
+Configure custom routing beyond the default behavior in the `run.routing` section of your `zerops.yaml`:
 
 ```yaml title="zerops.yaml"
 run:
   routing:
     redirects:
-      - from: /*
-        to: /index.html
+      # Only needed for custom redirect scenarios
+      - from: /special-path/*
+        to: /specific-landing-page
         status: 302
 ```
 
@@ -58,14 +61,18 @@ run:
 
 #### Relative Redirects
 
+:::note
+Remember that SPA routing is already built into the default behavior. You don't need to add any custom redirects for client-side routing to work.
+:::
+
 Use relative redirects to route paths within your application. When both `from` and `to` are relative paths, you can omit the `status` code to create a masked redirect that shows the content of the target page while preserving the original URL:
 
 ```yaml title="zerops.yaml"
 routing:
   redirects:
-    # Masked redirect - URL stays the same but shows content from index.html
-    - from: /*
-      to: /index.html
+    # Masked redirect - URL stays the same but shows content from about-us
+    - from: /about
+      to: /about-us
 
     # Standard redirect with status code
     - from: /old-page
@@ -118,7 +125,7 @@ Use `*` as a wildcard in your paths:
 - **At the end of a path**: Matches any subsequent content
 - **At the start of a domain** (after `https://`): Enables regex matching for subdomains
 
-Example of complex domain management:
+Example of domain management:
 
 ```yaml title="zerops.yaml"
 run:
@@ -141,7 +148,7 @@ When multiple redirects are configured, they follow Nginx's matching priority sy
 
 1. Exact matches are checked first
 2. Simple path matches (without wildcards) are checked next
-3. Pattern matches (with wildcards) are checked last, in the order they appear in your configuration
+3. Pattern matches (with wildcards) are checked last
 
 For example:
 
@@ -162,21 +169,17 @@ routing:
       to: /articles/
       preservePath: true
       status: 302
-
-    # Catch-all pattern - masked redirect for SPA
-    - from: /*
-      to: /index.html
 ```
 
 In this configuration:
 - `/` will redirect to `/home` with a 302 status
 - `/about` will show content from `/about-us` but keep the URL as `/about`
 - `/blog/post-123.html` will redirect to `/articles/post-123.html`
-- Any other path will show the content from `/index.html` while preserving the original URL (common for SPAs)
+- Any other path will use the [default behavior](#default-behavior)
 
 ### CORS Configuration
 
-You can easily enable CORS for your static service by adding a `cors` directive:
+You can enable CORS for your static service by adding a `cors` directive:
 
 ```yaml title="zerops.yaml"
 run:
@@ -188,13 +191,19 @@ run:
     cors: "'*' always"
 ```
 
+The `cors` directive sets the following headers:
+- `Access-Control-Allow-Origin`
+- `Access-Control-Allow-Methods`
+- `Access-Control-Allow-Headers`
+- `Access-Control-Expose-Headers`
+
 :::note
 The `cors` directive has a special case: if you specify just `"*"`, it's automatically converted to `'*'`. For any other values, you need to include the proper Nginx syntax including quotes.
 :::
 
 ### Custom Headers
 
-For more fine-grained control over HTTP headers, use the `headers` directive:
+For more control over HTTP headers, use the `headers` directive:
 
 ```yaml title="zerops.yaml"
 run:
@@ -250,7 +259,7 @@ add_header Content-Security-Policy "default-src 'self' https://cdn.example.com; 
 ```
 
 :::important Path Handling
-When you specify headers for a path that doesn't have an existing location block, the Static service automatically creates a location with the same default behavior as the root path (trying files in order: `$uri`, `$uri.html`, `$uri/index.html`, `/index.html` or returning 404).
+When you specify headers for a path that doesn't have an existing location block, the Static service automatically creates a location with the same [default behavior](#default-behavior) as the root path (trying files in order: `$uri`, `$uri.html`, `$uri/index.html`, `/index.html` or returning 404).
 
 If you add headers for a path that already has a location block, your headers will be merged with the existing configuration.
 :::
@@ -277,7 +286,7 @@ If you specify Access-Control headers in the `headers` directive, they will over
 
 ## Prerender Integration
 
-The Static service includes built-in support for Prerender.io, making it easy to implement server-side rendering for search engines and social media crawlers.
+The Static service includes built-in support for Prerender.io for server-side rendering for search engines and social media crawlers.
 
 ### Basic Prerender Setup
 
@@ -311,22 +320,12 @@ If you need more control over your Nginx configuration:
 5. Use this configuration as a starting point for a full Nginx service
 
 :::tip
-This allows you to graduate to a more customizable setup while maintaining your existing routing logic.
+This allows you to move to a more customizable setup while maintaining your existing routing logic.
 :::
 
 ## Best Practices
 
-1. **SPA Configuration**
-   ```yaml title="zerops.yaml"
-   routing:
-     redirects:
-       - from: /*
-         to: /index.html
-         status: 302
-   ```
-   Use this configuration for Single Page Applications to ensure all routes are handled by your application.
-
-2. **Domain Migration**
+1. **Domain Migration**
    ```yaml title="zerops.yaml"
    routing:
      redirects:
@@ -336,20 +335,17 @@ This allows you to graduate to a more customizable setup while maintaining your 
    ```
    Use permanent (301) redirects when permanently moving content to maintain SEO value.
 
-3. **Complex Redirects**
-   Order your redirects from most specific to most general to ensure proper routing:
+2. **Complex Redirects**
    ```yaml title="zerops.yaml"
    routing:
      redirects:
        - from: /specific-path/*
          to: /specific-landing
          status: 302
-       - from: /*
-         to: /index.html
-         status: 302
+       # Additional specific redirects go here
    ```
 
-4. **Security Headers**
+3. **Security Headers**
    Add security headers to protect your application:
    ```yaml title="zerops.yaml"
    routing:
@@ -364,11 +360,11 @@ This allows you to graduate to a more customizable setup while maintaining your 
 
 ## Frontend Framework Integration
 
-The Static service seamlessly integrates with modern frontend frameworks. It can serve built static files from any framework while maintaining the option to add custom routing and Prerender.io integration if needed.
+The Static service works with modern frontend frameworks. It can serve built static files from any framework with options for custom routing and Prerender.io integration if needed.
 
 ### Example: Analog App Deployment
 
-Here's a simple configuration for deploying an [Analog application](https://github.com/zeropsio/recipe-analog-static):
+Here's a configuration for deploying an [Analog application](https://github.com/zeropsio/recipe-analog-static):
 
 ```yaml title="zerops.yaml"
 zerops:
@@ -390,7 +386,7 @@ This configuration:
 3. Builds the application
 4. Deploys the resulting static files to the Static service
 
-You can enhance this basic setup by adding:
+You can enhance this basic setup with:
 - Custom redirects for URL management
 - Prerender.io integration for SEO
 - Additional routing rules as needed
@@ -429,11 +425,6 @@ run:
       - from: /api/*
         to: https://api.your-domain.com
         status: 302
-
-      # SPA fallback
-      - from: /*
-        to: /index.html
-        status: 302
 ```
 
 ### Security-Enhanced Configuration
@@ -448,7 +439,4 @@ run:
           X-Content-Type-Options: "'nosniff' always"
           # Note the proper escaping of single quotes
           Content-Security-Policy: '"default-src ''self''" always'
-    redirects:
-      - from: /*
-        to: /index.html
 ```
