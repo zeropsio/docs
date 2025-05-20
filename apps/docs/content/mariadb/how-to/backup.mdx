@@ -1,51 +1,52 @@
 ---
-title: Backup in Mariadb
-description: Learn how you can work with backups in mariadb service on Zerops.
+title: Backup in MariaDB
+description: Learn how you can work with backups in MariaDB service on Zerops.
 ---
 
-Zerops provides data backup for certain services, including MariaDB. The data is stored in S3 storage.
+Zerops provides automated data backup for MariaDB services with full encryption and flexible management options.
 
-## Frequency and volume
+For general backup information including configuration, scheduling, and management options, see the [Zerops Backups](/features/backup) documentation, which covers:
+- Backup scheduling and retention policies
+- Tagging system and storage quotas
+- Manual backup creation and CLI tools
+- Security and encryption details
 
-By default, your data is backed up automatically **every day** at 00:00:00 UTC, unless you update your settings:
+This page focuses on MariaDB-specific backup details.
 
-### In GUI
+## MariaDB Backup Format
 
-Following changes are available in Zerops GUI. Go to the service detail and choose **Backups List & Configuration** section in the left menu.
+MariaDB backups are created using `mariabackup` and stored in `.xb.gz` format:
 
-- do a one-time backup of your data
-- change time of your automatic backup
-- turn off backing up your data completely
-- view all of your backups
-- download a backup
-- delete a backup
+- **Format**: `.xb.gz` (single archive)
+- **Tooling**: `mariabackup`
+- **Compression**: Uses `xbstream` format, gzip compressed
+- **Storage**: Encrypted and stored in isolated object storage
 
-### Via API
+## Restoring MariaDB Backups
 
-- do a one-time backup of your data
-- change time of your automatic backup
+To restore a MariaDB backup:
 
-### Limits
+1. **Download** the backup file (`.xb.gz`) from the Zerops UI
+2. **Prepare** your target environment (clean existing data or use a new instance)
+3. **Extract** the backup file to access the database contents
+4. **Restore** using either:
+   - **MariaDB native tools**: Follow the [official MariaDB backup documentation](https://mariadb.com/kb/en/mariabackup/) for detailed restore procedures
+   - **Third-party management tools**: Use web-based tools like phpMyAdmin or Adminer as described in [MariaDB Management Tools](/mariadb/how-to/manage)
 
-- Each backup is stored for a maximum period of **1 month**.
-- For each **service** a maximum of **100 backups** is stored.
-- For each **project** a maximum of **25 GiB** of backup volume is stored. Only full backups are stored, the backup that exceeds the limit by its part is not stored.
+For assistance with the restoration process, contact Zerops support.
 
-#### Examples
+## High Availability
 
-1. If you backup your data every day, and the total volume is less than 25 GiB, the maximum number of backups is ~30 for the last month. A new backup is stored every day (with the oldest one being deleted), unless you exceed the 25 GiB limit.
-2. If you backup your data every hour, and the total volume is less than 25 GiB, the total number of backups is 100 for the last 100 hours. A new backup is stored every hour (with the oldest one being deleted), unless you exceed the 25 GiB limit.
-3. If you backup your data every hour, and your backups exceed 25 GiB after 50 hours, the total number of backups is 50, unless you delete some of your backups or wait the oldest one is older than 1 month.
+For MariaDB services running in High Availability mode:
+- Backups are created on a randomly selected healthy node
+- Other nodes remain operational during the backup process
+- Manual backups typically run on the primary node
 
-## Persistence
+## Best Practices
 
-When deleting a service or a project:
-* Project deletion affects backups of **all** services within that project
-* Backups remain accessible for 7 days
-* After 7 days, all backups are permanently removed
+- Always create a manual backup with a protected tag before database migrations or major schema changes
+- Test your restore process periodically in a non-production environment
+- Monitor your backup storage usage in the Project Overview
+- Use descriptive tags like `pre-migration-v2` for important snapshots
 
-## Security
-
-All backups are stored in a separate S3 instance, isolated from the instance accessible by users.
-
-A unique encryption key is created for every project and each backup of the project is encrypted with this key.
+For additional best practices and troubleshooting, refer to the [main backup documentation](/features/backup).

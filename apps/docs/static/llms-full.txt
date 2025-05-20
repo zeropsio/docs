@@ -5474,7 +5474,7 @@ Have you build something that others might find useful? Don't hesitate to share 
 
 # Elasticsearch > Overview
 
-Deploy [Elasticsearch] instances in Zerops with flexible scaling options, from standalone to highly available clusters.
+Deploy [Elasticsearch](https://www.elastic.co/elasticsearch) instances in Zerops with flexible scaling options, from standalone to highly available clusters.
 ## Connection
 - **Port**: 9200
 - **Protocol**: HTTP only
@@ -5502,9 +5502,20 @@ envSecrets:
 - **Note**: To increase available memory, adjust the service's RAM allocation in scaling configuration 
 - **Important**: Changes to HEAP_PERCENT require a service restart to take effect
 ## Backup
-- **Format:** .gz
-- **Implementation:** Created using elasticdump and compressed using gzip
-For detailed information about backup configuration and management, see [Backup Management](/features/backup)
+Elasticsearch backups are created using `elasticdump`:
+- **Format**: `.gz` (per index/component dump)
+- **Tooling**: `elasticdump`
+- **Compression**: Gzip compressed JSON data
+For backup configuration, scheduling, retention policies, and management options, see the [Zerops Backups](/features/backup) documentation.
+### Restoring Backups
+To restore an Elasticsearch backup:
+1. **Download** the backup file (`.gz`) from the Zerops UI
+2. **Extract** the compressed files to access the JSON data
+3. **Prepare** your target environment (clean existing indices or use a new instance)
+4. **Restore** using either:
+   - **elasticdump tool**: Use the same tool that created the backup for restoration via Zerops VPN or during deployment
+   - **Elasticsearch API**: Import the data through REST API [calls](https://www.elastic.co/docs/deploy-manage/tools/snapshot-and-restore/restore-snapshot)
+For assistance with the restoration process, contact Zerops support.
 ## Example Configuration
 ```yaml
 services:
@@ -7333,24 +7344,23 @@ Optionally secure your ports with firewall rules:
 
 # Features > Backup
 
-Zerops provides data backup for certain services.
-Whether a service supports backups is specified on the documentation page of each service. Technical details about backup implementation for each service are also described on their respective service pages.
-## Frequency and volume
+Zerops provides an automated, secure backup system for supported services. This guide covers how to configure, manage, and restore your backups.
+## Supported Services
+Zerops provides automated backup functionality for the following services. For specific backup format details and restore instructions, visit each service's documentation: [MariaDB](/mariadb/how-to/backup), [PostgreSQL](/postgresql/how-to/backup), [Qdrant](/qdrant/overview), [Elasticsearch](/elasticsearch/overview), [NATS](/nats/overview), [Meilisearch](/meilisearch/overview), and [Shared Storage](/shared-storage/how-to/backup).
+## Managing Backups in the UI
 By default, your data is backed up automatically **every day** between 00:00:00 UTC and 01:00:00 UTC, unless you update your settings.
-### Managing Backups in GUI
-To manage backups, go to the service detail and choose **Backups List & Configuration** section in the left menu.
-#### Configure Backup Settings
+To manage backups, go to the service detail and choose **Backups List & Configuration** in the left menu.
 From this section, you can:
-- Do a one-time backup of your data
-- Change the frequency of your automatic backups
-- Turn off backing up your data completely
+- Create a one-time backup
+- Change the frequency/disable of automatic backups
+- Configure retention policies and limits
   
-#### Backup Frequency Options
-You can configure backups with several preset schedules:
+### Backup Frequency Options
+Available schedules:
 - **No backups**: Disable automatic backups (not recommended)
-- **Once a day**: Daily backups at the specified time
-- **Once a week**: Weekly backups on the specified day and time
-- **Once a month**: Monthly backups on the specified day and time
+- **Once a day**: Daily backups at a specified time
+- **Once a week**: Weekly backups on a specific day and time
+- **Once a month**: Monthly backups on a specific day and time
 - **Custom CRON**: Define a custom schedule using CRON syntax
 For the Custom CRON option, you can use the following syntax:
   
@@ -7376,36 +7386,121 @@ Examples:
 - `0 2 * * *` - Every day at 2:00 AM
 - `0 4 * * 0` - Every Sunday at 4:00 AM
 - `0 0 1 * *` - First day of every month at midnight
-#### View and Manage Backup Files
-In the same section, you can:
-- View all of your backups
-- Download a backup
-- Delete a backup
+- `0 */6 * * *` - Every 6 hours
+### Backup Tagging
+Zerops uses tags to categorize and manage backups:
+**Time-Based Tags** (assigned automatically):
+- `daily`: Every automatic backup
+- `weekly`: First backup of each week (Monday UTC)
+- `monthly`: First backup of each month (1st UTC)
+**User Tags** (custom labels you create):
+- Used for organization and identification (e.g., `v2.1-release`, `before-migration`, `monthly-snapshot`)
+- Add when creating manual backups - up to 24 characters (letters, numbers, `:-_`)
+**Protected Tags** (configured in retention policy):
+- Backups with these tag names are exempt from automatic deletion, regardless of storage limits
+- Define in the backup retention configuration section of the UI and add when creating manual backups
+:::important
+Manual backups don't get automatic time-based tags. Always add a protected tag to preserve critical manual backups.
+:::
+### View and Manage Backup Files
+In this section, you can:
+- Create manual backups
+- View all backups with their timestamps and sizes
+- Download backups
+- Delete backups
   
-### Limits
-- Each backup is stored for a maximum period of **1 month**
-- For each **service** a maximum of **100 backups** is stored
-- For each **project** a maximum of **25 GiB** of backup volume is stored. Only full backups are stored, the backup that exceeds the limit by its part is not stored
-If you need more backup storage space, contact our support team.
-#### Examples
-1. If you backup your data every day, and the total volume is less than 25 GiB, the maximum number of backups is ~30 for the last month. A new backup is stored every day (with the oldest one being deleted), unless you exceed the 25 GiB limit.
-2. If you backup your data every hour, and the total volume is less than 25 GiB, the total number of backups is 100 for the last 100 hours. A new backup is stored every hour (with the oldest one being deleted), unless you exceed the 25 GiB limit.
-3. If you backup your data every hour, and your backups exceed 25 GiB after 50 hours, the total number of backups is 50, unless you delete some of your backups or wait the oldest one is older than 1 month.
-## Persistence
-When deleting a service or a project:
-* Project deletion affects backups of **all** services within that project
-* Backups remain accessible for 7 days
-* After 7 days, all backups are permanently removed
-## High Availability Setup
-For services running in HA mode, the backup is created on one of the nodes at random. Other nodes report that the backup is running on another node.
-## Encryption and Security
-Backups are encrypted as soon as they are created. Here is the process:
-* **Key Generation:** We use asymmetric cryptography (X25519) to generate a private key, which is then encrypted using our secret key (RSA-OAEP) and securely stored in our database.
-* **Public Key Usage:** The public key is sent to the application, which uses it to encrypt the backup.
-* **Decryption:** When a user downloads a backup, it is decrypted using the private key stored safely in our database.
-This ensures your data remains secure during both storage and transmission.
-All backups are stored in a separate ObjectStorage instance, isolated from the instance accessible by users.
-After a project is deleted and the 7-day retention period expires, the project's encryption key is permanently deleted. Once this happens, there is no way to decrypt or restore the backup data.
+:::note
+When creating manual backups via the UI, you'll see immediate feedback. If the backup takes longer than 10 seconds, the process continues in the background. You can verify completion by refreshing the backup list or checking service logs.
+:::
+## Storage and Limits
+### Project Storage Quotas
+Each Zerops project includes a base storage quota for backups:
+- **Lightweight Package**: 5 GB included
+- **Serious Package**: 25 GB included
+:::note
+This quota is shared across all service backups within the project.
+:::
+### Retention Policy and Configuration
+Zerops manages which backups are kept using a retention policy that you can customize through the UI:
+**Default Time-Based Retention** (minimums):
+- At least 7 daily backups
+- At least 4 weekly backups
+- At least 3 monthly backups
+**Default Resource Limits** (maximums):
+- Max 50 total backups per service
+- Storage limited to your project's quota (5GB or 25GB)
+**Customization Options:**
+You can modify these defaults in the backup retention configuration interface:
+- **Set Protected Tags**: Define tag names that prevent automatic deletion of backups
+- **Configure Maximum Limits**: Adjust total number of backups and storage size limits per service
+- **Customize Minimum Retention**: Change how many daily, weekly, and monthly backups to keep
+- **Set Type-Specific Limits**: Control maximum backups for each type (0 means unlimited, subject to total limits)
+:::important
+Backups with [protected tags](#backup-tagging) and the minimum required time-based backups will always be kept, even if they exceed the limits above. This ensures your critical recovery points are preserved.
+:::
+If you need more storage space, contact our support team.
+### When Deleting Services or Projects
+Deleted services/projects have their backups kept for a 7-day grace period before final removal.
+## Command Line Interface
+You can also manage backups using the Zerops CLI (zCLI):
+```bash
+# Create a backup
+zcli backup create myServiceName
+# Create a backup with tags (including protection)
+zcli backup create myServiceName --tags pre-deploy,protected
+```
+Check `zcli backup --help` for current commands.
+:::note
+zCLI currently focuses on creation; listing/deletion/tag management is primarily via UI.
+:::
+## Restoring Backups
+Restoration involves downloading backups and using service-specific methods. Zerops facilitates the backup creation and download; the restore action uses service-specific tools and APIs.
+1. **Download**: Find the backup in the UI (by date/tag) and download it
+2. **Prepare**: Set up your target environment (clean existing data or use a new instance)
+3. **Restore**: Use service-specific tools via Zerops VPN, run the restore during deployment, or use the service API if available. For service-specific restore instructions, see each service's documentation linked in the [Supported Services](#supported-services) section above.
+:::info Continuous Improvement
+We're working on enhancing the restore experience, potentially including more automated options in the future.
+:::
+For assistance with restoration, contact Zerops support.
+## High Availability (HA)
+For multi-node HA services:
+- **Automatic Backups**: Run on a randomly selected healthy node
+- **Manual Backups**: Typically run on the primary/designated node (check logs)
+- **Cluster State**: Other nodes stay operational
+## Security
+Backups are protected with end-to-end encryption:
+- **Unique Encryption**: Each project gets its own encryption key (X25519)
+- **Secure Process**: Data is encrypted immediately as backups are created
+- **Zero-Trust**: Even Zerops staff cannot access your raw backup data
+- **Isolated Storage**: Backups are stored separately from your regular data
+- **Secure Download**: Backups are only decrypted when you download them
+:::important
+When a project is deleted, the encryption key is permanently destroyed after 7 days, making the backup data unrecoverable.
+:::
+## Best Practices
+1. **Create backups before major changes**:
+   - Always create a manual backup with a protected tag before database migrations, deployments, or large data operations
+   - Use descriptive tags like `pre-migration` or `pre-release-v2`
+2. **Manage storage efficiently**:
+   - Regularly check usage in the Project Overview & Service Backup tabs
+   - Remove unnecessary backups, especially those with [protected tags](#backup-tagging)
+   - Adjust [retention policies](#retention-policy-and-configuration) based on your recovery needs
+3. **Test your restore process** periodically in a non-production environment to ensure you can recover when needed
+## Troubleshooting
+### Storage Quota Issues
+**Cause**: High backup frequency, long retention periods, or many protected tags.
+**Solutions**:
+1. **Review & Prune**: Delete unnecessary manual backups or remove protected status from older backups
+2. **Adjust Retention Policy**: Reduce minimum retention counts if your recovery requirements allow
+3. **Optimize Schedule**: Reduce backup frequency if daily backups aren't essential
+4. **Upgrade Package**: Consider upgrading to the "Serious" package for larger storage quota
+### Backup Failures
+**Cause**: Service health issues, resource exhaustion, or platform problems.
+**Solutions**:
+1. **Check Service Logs**: Look for error messages around the scheduled backup time
+2. **Verify Service Health**: Ensure the service is running properly with adequate resources
+3. **Check Platform Status**: Visit status.zerops.io for any ongoing incidents
+4. **Contact Support**: If issues persist, reach out with service name, failure time, and relevant logs
 
 ----------------------------------------
 
@@ -16666,36 +16761,39 @@ Did none of these Guides fit your needs? Join our **[Discord](https://discord.co
 
 # Mariadb > How To > Backup
 
-Zerops provides data backup for certain services, including MariaDB. The data is stored in S3 storage.
-## Frequency and volume
-By default, your data is backed up automatically **every day** at 00:00:00 UTC, unless you update your settings:
-### In GUI
-Following changes are available in Zerops GUI. Go to the service detail and choose **Backups List & Configuration** section in the left menu.
-- do a one-time backup of your data
-- change time of your automatic backup
-- turn off backing up your data completely
-- view all of your backups
-- download a backup
-- delete a backup
-### Via API
-- do a one-time backup of your data
-- change time of your automatic backup
-### Limits
-- Each backup is stored for a maximum period of **1 month**.
-- For each **service** a maximum of **100 backups** is stored.
-- For each **project** a maximum of **25 GiB** of backup volume is stored. Only full backups are stored, the backup that exceeds the limit by its part is not stored.
-#### Examples
-1. If you backup your data every day, and the total volume is less than 25 GiB, the maximum number of backups is ~30 for the last month. A new backup is stored every day (with the oldest one being deleted), unless you exceed the 25 GiB limit.
-2. If you backup your data every hour, and the total volume is less than 25 GiB, the total number of backups is 100 for the last 100 hours. A new backup is stored every hour (with the oldest one being deleted), unless you exceed the 25 GiB limit.
-3. If you backup your data every hour, and your backups exceed 25 GiB after 50 hours, the total number of backups is 50, unless you delete some of your backups or wait the oldest one is older than 1 month.
-## Persistence
-When deleting a service or a project:
-* Project deletion affects backups of **all** services within that project
-* Backups remain accessible for 7 days
-* After 7 days, all backups are permanently removed
-## Security
-All backups are stored in a separate S3 instance, isolated from the instance accessible by users.
-A unique encryption key is created for every project and each backup of the project is encrypted with this key.
+Zerops provides automated data backup for MariaDB services with full encryption and flexible management options.
+For general backup information including configuration, scheduling, and management options, see the [Zerops Backups](/features/backup) documentation, which covers:
+- Backup scheduling and retention policies
+- Tagging system and storage quotas
+- Manual backup creation and CLI tools
+- Security and encryption details
+This page focuses on MariaDB-specific backup details.
+## MariaDB Backup Format
+MariaDB backups are created using `mariabackup` and stored in `.xb.gz` format:
+- **Format**: `.xb.gz` (single archive)
+- **Tooling**: `mariabackup`
+- **Compression**: Uses `xbstream` format, gzip compressed
+- **Storage**: Encrypted and stored in isolated object storage
+## Restoring MariaDB Backups
+To restore a MariaDB backup:
+1. **Download** the backup file (`.xb.gz`) from the Zerops UI
+2. **Prepare** your target environment (clean existing data or use a new instance)
+3. **Extract** the backup file to access the database contents
+4. **Restore** using either:
+   - **MariaDB native tools**: Follow the [official MariaDB backup documentation](https://mariadb.com/kb/en/mariabackup/) for detailed restore procedures
+   - **Third-party management tools**: Use web-based tools like phpMyAdmin or Adminer as described in [MariaDB Management Tools](/mariadb/how-to/manage)
+For assistance with the restoration process, contact Zerops support.
+## High Availability
+For MariaDB services running in High Availability mode:
+- Backups are created on a randomly selected healthy node
+- Other nodes remain operational during the backup process
+- Manual backups typically run on the primary node
+## Best Practices
+- Always create a manual backup with a protected tag before database migrations or major schema changes
+- Test your restore process periodically in a non-production environment
+- Monitor your backup storage usage in the Project Overview
+- Use descriptive tags like `pre-migration-v2` for important snapshots
+For additional best practices and troubleshooting, refer to the [main backup documentation](/features/backup).
 
 ----------------------------------------
 
@@ -17523,6 +17621,18 @@ Services within the same project can reach Meilisearch directly:
 ```
 http://{hostname}:7700
 ```
+## Backup
+Meilisearch backups are created using native dump commands:
+- **Format**: `.dump` (standard Meilisearch dump)
+- **Tooling**: Native dump command
+- **Content**: Contains index data and settings
+For backup configuration, scheduling, retention policies, and management options, see the [Zerops Backups](/documentation/backup) documentation.
+### Restoring Backups
+To restore a Meilisearch backup:
+1. **Download** the backup file (`.dump`) from the Zerops UI
+2. **Prepare** your target environment (clean existing indices or use a new instance)
+3. **Restore** using the Meilisearch API. Use the dump import endpoint to restore your data. Follow the [official Meilisearch documentation](https://www.meilisearch.com/docs/learn/data_backup/dumps#importing-a-dump-in-self-hosted-instances) for detailed restore procedures.
+For assistance with the restoration process, contact Zerops support.
 ## Quick Start Example
 Here's a minimal example of implementing search in a React application:
 ```javascript
@@ -17670,10 +17780,18 @@ You can check the health status of your NATS service:
 1. Through the Zerops GUI dashboard
 2. By accessing the management interface at port `8222`
 ## Backup and Recovery
-Zerops provides built-in backup functionality for your NATS JetStream data, ensuring your message streams and configurations can be safely preserved and restored when needed.
-### Backup Process
-Backups are created in `.tar.gz` format using the `nats` backup command. They are saved to local disk, compressed, streamed to backup storage, and then deleted locally.
-For general information about backup frequency and storage limits, see our [Backup documentation](/features/backup).
+NATS backups are created using filesystem archival:
+- **Format**: `.tar.gz` (archive of queue state)
+- **Tooling**: Filesystem archival
+- **Content**: Captures persistent message state
+For backup configuration, scheduling, retention policies, and management options, see the [Zerops Backups](/documentation/backup) documentation.
+### Restoring Backups
+To restore a NATS backup:
+1. **Download** the backup file (`.tar.gz`) from the Zerops UI
+2. **Extract** the archive to access the queue state data
+3. **Prepare** your target environment (clear existing data if needed)
+4. **Restore** using NATS CLI commands via Zerops VPN or during deployment. Follow the [official NATS documentation](https://docs.nats.io/running-a-nats-service/nats_admin/jetstream_admin/disaster_recovery) for detailed restore procedures.
+For assistance with the restoration process, contact Zerops support.
 ## Support
 For advanced configurations or custom requirements:
 - Join our [Discord community](https://discord.gg/zerops)
@@ -23440,6 +23558,43 @@ Did none of these Guides fit your needs? Join our **[Discord](https://discord.co
 
 ----------------------------------------
 
+# Postgresql > How To > Backup
+
+Zerops provides automated data backup for PostgreSQL services with full encryption and flexible management options.
+For general backup information including configuration, scheduling, and management options, see the [Zerops Backups](/features/backup) documentation, which covers:
+- Backup scheduling and retention policies
+- Tagging system and storage quotas
+- Manual backup creation and CLI tools
+- Security and encryption details
+This page focuses on PostgreSQL-specific backup details.
+## PostgreSQL Backup Format
+PostgreSQL backups are created using `pg_dump` and stored in `.zip` format:
+- **Format**: `.zip` (containing per-schema `.dump` files)
+- **Tooling**: `pg_dump`
+- **Compression**: Custom format (`-Fc`), schema files named `schemaName.dump`
+- **Storage**: Encrypted and stored in isolated object storage
+## Restoring PostgreSQL Backups
+To restore a PostgreSQL backup:
+1. **Download** the backup file (`.zip`) from the Zerops UI
+2. **Extract** the zip file to access the individual schema dump files
+3. **Prepare** your target environment (clean existing data or use a new instance)
+4. **Restore** using PostgreSQL native tools. Follow the [official PostgreSQL backup documentation](https://www.postgresql.org/docs/current/backup-dump.html) for detailed restore procedures, or use web-based management tools like phpMyAdmin or Adminer as described in [PostgreSQL Management](/postgresql/how-to/manage).
+For assistance with the restoration process, contact Zerops support.
+## High Availability
+For PostgreSQL services running in High Availability mode:
+- Backups are created on a randomly selected healthy node
+- Other nodes remain operational during the backup process
+- Manual backups typically run on the primary node
+## Best Practices
+- Always create a manual backup with a protected tag before database migrations or major schema changes
+- Test your restore process periodically in a non-production environment
+- Monitor your backup storage usage in the Project Overview
+- Use descriptive tags like `pre-migration-v2` for important snapshots
+- Consider the order of schema restoration if you have dependencies between schemas
+For additional best practices and troubleshooting, refer to the [main backup documentation](/features/backup).
+
+----------------------------------------
+
 # Postgresql > How To > Connect
 
 This guide covers how to connect to your PostgreSQL database in Zerops, both from services within the same project and from outside the Zerops environment.
@@ -25944,8 +26099,17 @@ Import configuration version:
   - Can be disabled by setting `automaticClusterReplication` to `false`
 - Automatic cluster recovery and node replacement in case of failures
 ## Data Backup
-Backups are performed in `snapshot` format. For HA Cluster, backups are created on the primary container (leader) and saved to the local disk before being compressed and streamed to backup storage. The local file is then deleted.
-For general information about backup frequency and storage limits, see our [Backup documentation](/features/backup).
+Qdrant backups are created using native snapshotting:
+- **Format**: `.snapshot` (compressed)
+- **Tooling**: Native snapshotting
+- **Source**: Taken from the primary node (leader in HA clusters)
+For backup configuration, scheduling, retention policies, and management options, see the [Zerops Backups](/documentation/backup) documentation.
+### Restoring Backups
+To restore a Qdrant backup:
+1. **Download** the backup file (`.snapshot`) from the Zerops UI
+2. **Prepare** your target environment (clean existing collections or use a new instance)
+3. **Restore** using the Qdrant API. Use the snapshot restore endpoint to import the snapshot file. Follow the [official Qdrant documentation](https://qdrant.tech/documentation/database-tutorials/create-snapshot/#restore-from-snapshot) for detailed snapshot restore procedures.
+For assistance with the restoration process, contact Zerops support.
 ## Network Architecture & Access
 Qdrant can be accessed only from services within the same project, public access is not available.
 ### API Keys
@@ -31004,15 +31168,27 @@ Have you build something that others might find useful? Don't hesitate to share 
 
 # Shared Storage > How To > Backup
 
-Zerops provides built-in backup functionality for your Shared Storage service. For general information about configuring backups, viewing backup files, limits, and security, please refer to the [general backup documentation](/features/backup).
-Shared Storage backups on Zerops:
-- Are stored as tarballs containing the entire contents of the shared storage directory (`/mnt/`)
-- Can be managed through the Shared Storage service detail page under **Backups List & Configuration**
-### Storage Optimization
-For large Shared Storage volumes:
-- Be mindful of the [project backup limits](/features/backup#limits) (25 GiB total backup volume per project)
-- Consider adjusting your backup frequency for optimal storage usage
+Zerops provides automated data backup for Shared Storage services with full encryption and flexible management options.
+For general backup information including configuration, scheduling, and management options, see the [Zerops Backups](/features/backup) documentation, which covers:
+- Backup scheduling and retention policies
+- Tagging system and storage quotas
+- Manual backup creation and CLI tools
+- Security and encryption details
+## Shared Storage Backup Format
+Shared Storage backups are created using tar archival:
+- **Format**: `.tar.gz` (archive of directory contents)
+- **Tooling**: `tar`
+- **Content**: Compresses the entire shared volume (`/mnt/`)
+- **Storage**: Encrypted and stored in isolated object storage
+### Restoring Backups
+To restore a Shared Storage backup: Download the backup file (`.tar.gz`) from the Zerops UI, extract the archive, and upload the contents back to your Shared Storage.
+## Best Practices
+For Shared Storage backups:
 - Regularly clean up unnecessary files from your Shared Storage to reduce backup size
+- Create manual backups with protected tags before major file operations or migrations
+- Consider adjusting your backup frequency for optimal storage usage
+- Test your restore process periodically to ensure data integrity
+For additional best practices and troubleshooting, refer to the [main backup documentation](/features/backup).
 
 ----------------------------------------
 

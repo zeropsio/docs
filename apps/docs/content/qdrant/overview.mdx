@@ -33,9 +33,23 @@ Import configuration version:
 
 ## Data Backup
 
-Backups are performed in `snapshot` format. For HA Cluster, backups are created on the primary container (leader) and saved to the local disk before being compressed and streamed to backup storage. The local file is then deleted.
+Qdrant backups are created using native snapshotting:
 
-For general information about backup frequency and storage limits, see our [Backup documentation](/features/backup).
+- **Format**: `.snapshot` (compressed)
+- **Tooling**: Native snapshotting
+- **Source**: Taken from the primary node (leader in HA clusters)
+
+For backup configuration, scheduling, retention policies, and management options, see the [Zerops Backups](/documentation/backup) documentation.
+
+### Restoring Backups
+
+To restore a Qdrant backup:
+
+1. **Download** the backup file (`.snapshot`) from the Zerops UI
+2. **Prepare** your target environment (clean existing collections or use a new instance)
+3. **Restore** using the Qdrant API. Use the snapshot restore endpoint to import the snapshot file. Follow the [official Qdrant documentation](https://qdrant.tech/documentation/database-tutorials/create-snapshot/#restore-from-snapshot) for detailed snapshot restore procedures.
+
+For assistance with the restoration process, contact Zerops support.
 
 ## Network Architecture & Access
 

@@ -1,0 +1,51 @@
+---
+title: Backup in PostgreSQL
+description: Learn how you can work with backups in PostgreSQL service on Zerops.
+---
+
+Zerops provides automated data backup for PostgreSQL services with full encryption and flexible management options.
+
+For general backup information including configuration, scheduling, and management options, see the [Zerops Backups](/features/backup) documentation, which covers:
+- Backup scheduling and retention policies
+- Tagging system and storage quotas
+- Manual backup creation and CLI tools
+- Security and encryption details
+
+This page focuses on PostgreSQL-specific backup details.
+
+## PostgreSQL Backup Format
+
+PostgreSQL backups are created using `pg_dump` and stored in `.zip` format:
+
+- **Format**: `.zip` (containing per-schema `.dump` files)
+- **Tooling**: `pg_dump`
+- **Compression**: Custom format (`-Fc`), schema files named `schemaName.dump`
+- **Storage**: Encrypted and stored in isolated object storage
+
+## Restoring PostgreSQL Backups
+
+To restore a PostgreSQL backup:
+
+1. **Download** the backup file (`.zip`) from the Zerops UI
+2. **Extract** the zip file to access the individual schema dump files
+3. **Prepare** your target environment (clean existing data or use a new instance)
+4. **Restore** using PostgreSQL native tools. Follow the [official PostgreSQL backup documentation](https://www.postgresql.org/docs/current/backup-dump.html) for detailed restore procedures, or use web-based management tools like phpMyAdmin or Adminer as described in [PostgreSQL Management](/postgresql/how-to/manage).
+
+For assistance with the restoration process, contact Zerops support.
+
+## High Availability
+
+For PostgreSQL services running in High Availability mode:
+- Backups are created on a randomly selected healthy node
+- Other nodes remain operational during the backup process
+- Manual backups typically run on the primary node
+
+## Best Practices
+
+- Always create a manual backup with a protected tag before database migrations or major schema changes
+- Test your restore process periodically in a non-production environment
+- Monitor your backup storage usage in the Project Overview
+- Use descriptive tags like `pre-migration-v2` for important snapshots
+- Consider the order of schema restoration if you have dependencies between schemas
+
+For additional best practices and troubleshooting, refer to the [main backup documentation](/features/backup).

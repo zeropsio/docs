@@ -3,15 +3,33 @@ title: Backup Shared Storage
 description: Learn how to backup and restore your Shared Storage data on Zerops.
 ---
 
-Zerops provides built-in backup functionality for your Shared Storage service. For general information about configuring backups, viewing backup files, limits, and security, please refer to the [general backup documentation](/features/backup).
+Zerops provides automated data backup for Shared Storage services with full encryption and flexible management options.
 
-Shared Storage backups on Zerops:
-- Are stored as tarballs containing the entire contents of the shared storage directory (`/mnt/<volume>`)
-- Can be managed through the Shared Storage service detail page under **Backups List & Configuration**
+For general backup information including configuration, scheduling, and management options, see the [Zerops Backups](/features/backup) documentation, which covers:
+- Backup scheduling and retention policies
+- Tagging system and storage quotas
+- Manual backup creation and CLI tools
+- Security and encryption details
 
-### Storage Optimization
+## Shared Storage Backup Format
 
-For large Shared Storage volumes:
-- Be mindful of the [project backup limits](/features/backup#limits) (25 GiB total backup volume per project)
-- Consider adjusting your backup frequency for optimal storage usage
+Shared Storage backups are created using tar archival:
+
+- **Format**: `.tar.gz` (archive of directory contents)
+- **Tooling**: `tar`
+- **Content**: Compresses the entire shared volume (`/mnt/<volume>`)
+- **Storage**: Encrypted and stored in isolated object storage
+
+### Restoring Backups
+
+To restore a Shared Storage backup: Download the backup file (`.tar.gz`) from the Zerops UI, extract the archive, and upload the contents back to your Shared Storage.
+
+## Best Practices
+
+For Shared Storage backups:
 - Regularly clean up unnecessary files from your Shared Storage to reduce backup size
+- Create manual backups with protected tags before major file operations or migrations
+- Consider adjusting your backup frequency for optimal storage usage
+- Test your restore process periodically to ensure data integrity
+
+For additional best practices and troubleshooting, refer to the [main backup documentation](/features/backup).
