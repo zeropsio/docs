@@ -861,6 +861,15 @@ module.exports = {
         },
       ],
     },
+      {
+        type: 'doc',
+        id: 'nodejs/faq',
+        label: 'FAQ',
+        customProps: {
+          sidebar_is_title: true,
+          sidebar_icon: 'chat-bubble-left-right',
+        },
+      },
   ],
   php: [
     {
