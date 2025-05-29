@@ -1,29 +1,52 @@
 ---
 title: Connecting to Your Service via SSH
-description: Learn how to establish SSH connections to your services using VPN
+description: Learn how to establish SSH connections to your services using VPN and configure access controls
 ---
 
-:::note
+import { Dropdown, DropdownItem } from '/src/components/Dropdown';
+
+:::important
 SSH access is available only for runtime services and web servers.
-Database services, message brokers, and object storage are not accessible via SSH.
+
+Database services, message brokers, and object storage are **not accessible** via SSH.
 :::
 
-## Prerequisites
+:::warning Non-Persistent Changes
+SSH connections should not be used for making persistent changes to your service:
 
-Before establishing an SSH connection to your runtime service, you must first connect to the [Zerops VPN](/references/vpn).
+- In [HA mode](/features/scaling-ha), changes via SSH affect only the current container
+- Container replacements or scaling events will deploy the original application version
+- For persistent changes across all containers, use:
+  - [`run.prepareCommands`](/zerops-yaml/specification#preparecommands--1)
+  - [`run.initCommands`](/zerops-yaml/specification#initcommands-)
+:::
 
-## Setting Up Your Connection
+## Connection Methods
 
-### 1. Configure VPN Access
+You can connect to your services using two methods:
+
+### Web Terminal (Always Available)
+For quick debugging and inspection, use the **Remote Web Terminal** available in each service's detail page. This browser-based terminal:
+- **Always accessible** regardless of [SSH isolation](#ssh-access-control) settings
+- Requires no VPN setup
+- Provides instant access to your containers
+- Perfect for quick debugging sessions and emergency access
+
+### SSH via VPN (Full Access)
+For full SSH capabilities and persistent connections, connect through the [Zerops VPN](/references/vpn).
+
+## Setting Up SSH Access
+
+### 1. Configure VPN Connection (For SSH Access)
 
 The [Zerops CLI (zCLI)](/references/cli) comes bundled with the [Zerops VPN](/references/vpn) client. To connect to your [Zerops project](/features/infrastructure#projects):
 
 1. [Install and configure zCLI](/references/cli)
 2. [Initialize the Zerops VPN connection](/references/vpn#start-vpn)
 
-### 2. Establish SSH Connection
+### 2. Establish SSH Connection via VPN
 
-Once your VPN session is active, you can connect to any [service](/features/infrastructure#services) using its hostname:
+Once your VPN session is active, you can connect to any [service](/features/infrastructure#services) using its hostname via SSH:
 
 ```sh
 ssh <service hostname>
@@ -45,13 +68,7 @@ Are you sure you want to continue connecting (yes/no/[fingerprint])?
 
 Type `yes` to trust the host and prevent future prompts.
 
-## Advanced Connection Options
-
-<p align="center">
- <img src="/img/screenshots/ssh.png" alt="image" width="100%" height="auto" style={{ borderRadius: 0.5 + 'rem' }} />
-</p>
-
-## Connecting to Specific Containers
+#### Connecting to Specific Containers
 
 To access a specific container instead of the service as a whole, use the container's hostname:
 
@@ -68,7 +85,7 @@ ssh node-id-1.runtime.app.zerops
 When using [HA mode](/features/scaling-ha), connecting to the service hostname will route you to a random container within that service.
 :::
 
-## Container Naming Conventions
+#### Container Naming Conventions
 
 Each container in your project has a unique hostname following these patterns:
 
@@ -85,14 +102,187 @@ When your application [scales horizontally](https://docs.zerops.io/features/scal
 Never connect to containers using their local IP addresses, as these addresses are dynamic and may change.
 :::
 
-## Important Considerations
+## SSH Access Control
 
-### Non-Persistent Changes
+Zerops provides fine-grained control over SSH access through SSH Isolation. It is configured with the `sshIsolation` project variable. This security feature determines who can connect to your services via SSH, controlling both VPN connections and service-to-service SSH access.
 
-SSH connections should not be used for making persistent changes to your service:
+### Default Behavior
 
-- In [HA mode](/features/scaling-ha), changes via SSH affect only the current container
-- Container replacements or scaling events will deploy the original application version
-- For persistent changes across all containers, use:
-  - [`run.prepareCommands`](/zerops-yaml/specification#preparecommands--1)
-  - [`run.initCommands`](/zerops-yaml/specification#initcommands-)
+By default, `sshIsolation` is set to `vpn`, which means:
+
+- ✅ VPN users can SSH to any service
+- ✅ **Web Terminal is always accessible** (unaffected by isolation settings)
+- ❌ Services cannot SSH to each other
+
+*This configuration maintains maximum security for production environments.*
+
+### Configuring SSH Isolation
+
+SSH isolation can be configured at two levels:
+
+#### Project-Level Configuration
+
+Set the `sshIsolation` project variable through:
+- **GUI**: Navigate to **Project Environment Variables**
+- **Import**: Add to your `import.yaml`:
+
+```yaml title="import.yaml"
+project:
+  sshIsolation: "vpn project"
+```
+
+#### Service-Level Override
+
+Individual services can override the project setting:
+
+```yaml title="import.yaml"
+services:
+  - hostname: api
+    sshIsolation: "vpn service@admin"
+```
+
+:::note
+In import YAML, `sshIsolation` can be also defined in `envVariables`/`envSecrets`.  (If both are present, the nested version takes precedence).
+:::
+
+### Isolation Modes
+
+#### Rule Types
+
+**Allow Rules**: Grant SSH access
+- `vpn` *(default)* - VPN SSH connections
+- `project` - Any service in the project
+- `service` - Containers within the same service
+- `service@name` - Specific service named "name"
+
+**Block Rules**: Deny SSH access (use `-` prefix)
+- `-vpn` - Block VPN SSH connections
+- `-project` - Block all services
+- `-service` - Block all services
+- `-service@name` - Block specific service named "name"
+
+:::info
+**Web Terminal access is never blocked** by these rules and remains available as an emergency access method.
+:::
+
+### Combining Rules
+
+You can combine multiple rules using spaces. The system evaluates rules by checking the most specific matches first.
+
+#### Rule Evaluation Order
+
+The system checks SSH connection rules in this priority:
+1. **Specific service rules**: `service@name` or `-service@name`
+2. **General service rules**: `service` or `-service`
+3. **Project rules**: `project` or `-project`
+4. **VPN rules**: `vpn` or `-vpn`
+
+:::note Important
+- Block rules (`-`) always take priority over allow rules when both apply to the same source
+- **Web Terminal access bypasses all these rules** and is always available
+:::
+
+When a service tries to connect, the system:
+
+1. **Identifies the connecting source** (VPN user, Web Terminal, or specific service name)
+2. **Checks for specific rules** first (like `service@admin` or `-service@api`)
+3. **Falls back to general rules** (like `project` or `-service`)
+4. **Allows or blocks** based on the first matching rule
+
+#### Rule Evaluation Examples
+
+<Dropdown>
+<DropdownItem title="Simple Rule">
+**Rule**: `project -service@untrusted`
+
+1. When **Web Terminal** is used:
+- Always allowed → **ALLOWED**
+2. When **`untrusted` service** connects:
+- Matches `-service@untrusted` rule → **BLOCKED**
+3. When **any other service** connects:
+- Matches `project` rule → **ALLOWED**
+
+**Effective behavior**:
+- ✅ All services can SSH to each other
+- ✅ Web Terminal always accessible
+- ❌ Except the `untrusted` service cannot SSH anywhere
+- ❌ No VPN SSH access (no `vpn` rule present)
+</DropdownItem>
+<DropdownItem title="Complex Rule">
+**Rule**: `vpn project -service service@admin`
+
+1. When **VPN user** connects via SSH:
+  - Matches `vpn` rule → **ALLOWED**
+2. When **Web Terminal** is used:
+  - Always allowed regardless of rules → **ALLOWED**
+3. When **`admin` service** connects:
+- Matches `service@admin` rule → **ALLOWED**
+4. When **any other service** (like `api`) connects:
+- Matches `-service` rule → **BLOCKED**
+- Never reaches the `project` rule
+
+**Effective behavior**:
+- ✅ VPN SSH connections can access all services
+- ✅ Web Terminal always accessible
+- ✅ Only the `admin` service can SSH to other services
+- ❌ All other services are blocked from SSH connections
+
+:::note
+The `project` rule remains in the configuration but becomes unreachable for most services because they get blocked by `-service` first.
+:::
+</DropdownItem>
+</Dropdown>
+
+#### Common Combinations
+
+**Development Setup** *(ideal for microservices debugging)*:
+```yaml
+sshIsolation: "vpn project"
+```
+- ✅ VPN SSH connections can access all services
+- ✅ Services can SSH to each other
+- ✅ Web Terminal always accessible
+
+**Gateway Pattern**:
+```yaml
+sshIsolation: "vpn service@gateway"
+```
+- ✅ VPN SSH connections can access all services
+- ✅ Only the `gateway` service can SSH to other services
+- ✅ Web Terminal always accessible
+- ❌ Other services cannot SSH anywhere
+
+**Selective Exclusion**:
+```yaml
+sshIsolation: "project -service@untrusted"
+```
+- ✅ All services can SSH to each other
+- ✅ Web Terminal always accessible
+- ❌ The `untrusted` service cannot SSH anywhere
+- ❌ No VPN SSH access (not included in rules)
+
+### Security Considerations
+
+:::warning
+Be careful with block rules - they can prevent expected SSH access even when allow rules are present.
+
+**Example**: `project -service` would block all services from SSH, making the `project` rule ineffective for service-to-service connections.
+:::
+
+**Safety Mechanism**: Web Terminal access is never blocked by SSH isolation rules, ensuring you always have a way to access your containers for debugging or emergency fixes.
+
+**Common Gotchas**:
+- `service -service@api` blocks the `api` service from SSH but allows others within their own service
+- `project -service` allows VPN SSH access but blocks all service-to-service SSH
+- `-vpn -project -service` blocks all SSH connections but Web Terminal remains accessible
+- Missing `vpn` in rules blocks VPN SSH access but Web Terminal still works
+
+### Best Practices
+- Start with `vpn` for production environments
+- Use `vpn project` for development and debugging
+- Test isolation changes in development environments first
+- Be explicit about what you want to allow rather than relying on complex combinations
+- Remember that Web Terminal provides emergency access when SSH rules are too restrictive
+- Document your isolation strategy for team members
+
+*Need help? Join our [Discord community](https://discord.gg/zeropsio).*

@@ -8003,9 +8003,7 @@ Zerops supports two isolation modes:
 Zerops automatically creates the `envIsolation` project variable with the default value `service`. You only need to modify this if you want to disable isolation:
 ```yaml title="import.yaml"
 project:
-  ...
-  envVariables:
-    envIsolation: none  # Disables isolation, sharing all variables
+  envIsolation: none  # Disables isolation, sharing all variables
 ```
 This can also be set through the Project Environment Variables section in the GUI.
 #### Service-Level Override
@@ -8013,12 +8011,13 @@ Individual services can override the project-level isolation setting:
 ```yaml title="import.yaml"
 services:
   - hostname: db
-    ...
-    envSecrets:
-      envIsolation: none  # This service's variables will be visible to all services
+    envIsolation: none  # This service's variables will be visible to all services
 ```
 :::tip
 You might set a database service to `envIsolation: none` to expose its connection details to other services, without having to manually reference them, while keeping the rest of your services isolated.
+:::
+:::note
+In import YAML, `envIsolation` can also be nested under `envVariables`/`envSecrets`. (If both are present, the nested version takes precedence).
 :::
 ### Accessing Variables Across Services
 #### With Isolation Enabled (`service` mode)
