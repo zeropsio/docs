@@ -2049,6 +2049,11 @@ module.exports = {
         },
         {
           type: 'doc',
+          id: 'mariadb/how-to/backup',
+          label: 'Backup data',
+        },
+        {
+          type: 'doc',
           id: 'postgresql/how-to/scale',
           label: 'Scale PostgreSQL service',
         },

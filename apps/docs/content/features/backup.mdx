@@ -1,25 +1,24 @@
 ---
 title: Backup data
-description: Learn how you can work with backups in Zerops works.
+description: Learn how you can work with backups in Zerops.
 ---
-Zerops provides data backup for certain services.
 
-Whether a service supports backups is specified on the documentation page of each service. Technical details about backup implementation for each service are also described on their respective service pages.
+Zerops provides an automated, secure backup system for supported services. This guide covers how to configure, manage, and restore your backups.
 
-## Frequency and volume
+## Supported Services
+
+Zerops provides automated backup functionality for the following services. For specific backup format details and restore instructions, visit each service's documentation: [MariaDB](/mariadb/how-to/backup), [PostgreSQL](/postgresql/how-to/backup), [Qdrant](/qdrant/overview), [Elasticsearch](/elasticsearch/overview), [NATS](/nats/overview), [Meilisearch](/meilisearch/overview), and [Shared Storage](/shared-storage/how-to/backup).
+
+## Managing Backups in the UI
 
 By default, your data is backed up automatically **every day** between 00:00:00 UTC and 01:00:00 UTC, unless you update your settings.
 
-### Managing Backups in GUI
-
-To manage backups, go to the service detail and choose **Backups List & Configuration** section in the left menu.
-
-#### Configure Backup Settings
+To manage backups, go to the service detail and choose **Backups List & Configuration** in the left menu.
 
 From this section, you can:
-- Do a one-time backup of your data
-- Change the frequency of your automatic backups
-- Turn off backing up your data completely
+- Create a one-time backup
+- Change the frequency/disable of automatic backups
+- Configure retention policies and limits
 
 <p align="center">
   <img
@@ -30,13 +29,13 @@ From this section, you can:
   />
 </p>
 
-#### Backup Frequency Options
+### Backup Frequency Options
 
-You can configure backups with several preset schedules:
+Available schedules:
 - **No backups**: Disable automatic backups (not recommended)
-- **Once a day**: Daily backups at the specified time
-- **Once a week**: Weekly backups on the specified day and time
-- **Once a month**: Monthly backups on the specified day and time
+- **Once a day**: Daily backups at a specified time
+- **Once a week**: Weekly backups on a specific day and time
+- **Once a month**: Monthly backups on a specific day and time
 - **Custom CRON**: Define a custom schedule using CRON syntax
 
 For the Custom CRON option, you can use the following syntax:
@@ -76,13 +75,36 @@ Examples:
 - `0 2 * * *` - Every day at 2:00 AM
 - `0 4 * * 0` - Every Sunday at 4:00 AM
 - `0 0 1 * *` - First day of every month at midnight
+- `0 */6 * * *` - Every 6 hours
 
-#### View and Manage Backup Files
+### Backup Tagging
 
-In the same section, you can:
-- View all of your backups
-- Download a backup
-- Delete a backup
+Zerops uses tags to categorize and manage backups:
+
+**Time-Based Tags** (assigned automatically):
+- `daily`: Every automatic backup
+- `weekly`: First backup of each week (Monday UTC)
+- `monthly`: First backup of each month (1st UTC)
+
+**User Tags** (custom labels you create):
+- Used for organization and identification (e.g., `v2.1-release`, `before-migration`, `monthly-snapshot`)
+- Add when creating manual backups - up to 24 characters (letters, numbers, `:-_`)
+
+**Protected Tags** (configured in retention policy):
+- Backups with these tag names are exempt from automatic deletion, regardless of storage limits
+- Define in the backup retention configuration section of the UI and add when creating manual backups
+
+:::important
+Manual backups don't get automatic time-based tags. Always add a protected tag to preserve critical manual backups.
+:::
+
+### View and Manage Backup Files
+
+In this section, you can:
+- Create manual backups
+- View all backups with their timestamps and sizes
+- Download backups
+- Delete backups
 
 <p align="center">
   <img
@@ -93,43 +115,134 @@ In the same section, you can:
   />
 </p>
 
-### Limits
+:::note
+When creating manual backups via the UI, you'll see immediate feedback. If the backup takes longer than 10 seconds, the process continues in the background. You can verify completion by refreshing the backup list or checking service logs.
+:::
 
-- Each backup is stored for a maximum period of **1 month**
-- For each **service** a maximum of **100 backups** is stored
-- For each **project** a maximum of **25 GiB** of backup volume is stored. Only full backups are stored, the backup that exceeds the limit by its part is not stored
+## Storage and Limits
 
-If you need more backup storage space, contact our support team.
+### Project Storage Quotas
 
-#### Examples
+Each Zerops project includes a base storage quota for backups:
+- **Lightweight Package**: 5 GB included
+- **Serious Package**: 25 GB included
 
-1. If you backup your data every day, and the total volume is less than 25 GiB, the maximum number of backups is ~30 for the last month. A new backup is stored every day (with the oldest one being deleted), unless you exceed the 25 GiB limit.
+:::note
+This quota is shared across all service backups within the project.
+:::
 
-2. If you backup your data every hour, and the total volume is less than 25 GiB, the total number of backups is 100 for the last 100 hours. A new backup is stored every hour (with the oldest one being deleted), unless you exceed the 25 GiB limit.
+### Retention Policy and Configuration
 
-3. If you backup your data every hour, and your backups exceed 25 GiB after 50 hours, the total number of backups is 50, unless you delete some of your backups or wait the oldest one is older than 1 month.
+Zerops manages which backups are kept using a retention policy that you can customize through the UI:
 
-## Persistence
+**Default Time-Based Retention** (minimums):
+- At least 7 daily backups
+- At least 4 weekly backups
+- At least 3 monthly backups
 
-When deleting a service or a project:
-* Project deletion affects backups of **all** services within that project
-* Backups remain accessible for 7 days
-* After 7 days, all backups are permanently removed
+**Default Resource Limits** (maximums):
+- Max 50 total backups per service
+- Storage limited to your project's quota (5GB or 25GB)
 
-## High Availability Setup
+**Customization Options:**
+You can modify these defaults in the backup retention configuration interface:
+- **Set Protected Tags**: Define tag names that prevent automatic deletion of backups
+- **Configure Maximum Limits**: Adjust total number of backups and storage size limits per service
+- **Customize Minimum Retention**: Change how many daily, weekly, and monthly backups to keep
+- **Set Type-Specific Limits**: Control maximum backups for each type (0 means unlimited, subject to total limits)
 
-For services running in HA mode, the backup is created on one of the nodes at random. Other nodes report that the backup is running on another node.
+:::important
+Backups with [protected tags](#backup-tagging) and the minimum required time-based backups will always be kept, even if they exceed the limits above. This ensures your critical recovery points are preserved.
+:::
 
-## Encryption and Security
+If you need more storage space, contact our support team.
 
-Backups are encrypted as soon as they are created. Here is the process:
+### When Deleting Services or Projects
 
-* **Key Generation:** We use asymmetric cryptography (X25519) to generate a private key, which is then encrypted using our secret key (RSA-OAEP) and securely stored in our database.
-* **Public Key Usage:** The public key is sent to the application, which uses it to encrypt the backup.
-* **Decryption:** When a user downloads a backup, it is decrypted using the private key stored safely in our database.
+Deleted services/projects have their backups kept for a 7-day grace period before final removal.
 
-This ensures your data remains secure during both storage and transmission.
+## Command Line Interface
 
-All backups are stored in a separate ObjectStorage instance, isolated from the instance accessible by users.
+You can also manage backups using the Zerops CLI (zCLI):
 
-After a project is deleted and the 7-day retention period expires, the project's encryption key is permanently deleted. Once this happens, there is no way to decrypt or restore the backup data.
+```bash
+# Create a backup
+zcli backup create myServiceName
+
+# Create a backup with tags (including protection)
+zcli backup create myServiceName --tags pre-deploy,protected
+```
+
+Check `zcli backup --help` for current commands.
+
+:::note
+zCLI currently focuses on creation; listing/deletion/tag management is primarily via UI.
+:::
+
+## Restoring Backups
+
+Restoration involves downloading backups and using service-specific methods. Zerops facilitates the backup creation and download; the restore action uses service-specific tools and APIs.
+
+1. **Download**: Find the backup in the UI (by date/tag) and download it
+2. **Prepare**: Set up your target environment (clean existing data or use a new instance)
+3. **Restore**: Use service-specific tools via Zerops VPN, run the restore during deployment, or use the service API if available. For service-specific restore instructions, see each service's documentation linked in the [Supported Services](#supported-services) section above.
+
+:::info Continuous Improvement
+We're working on enhancing the restore experience, potentially including more automated options in the future.
+:::
+
+For assistance with restoration, contact Zerops support.
+
+## High Availability (HA)
+
+For multi-node HA services:
+- **Automatic Backups**: Run on a randomly selected healthy node
+- **Manual Backups**: Typically run on the primary/designated node (check logs)
+- **Cluster State**: Other nodes stay operational
+
+## Security
+
+Backups are protected with end-to-end encryption:
+
+- **Unique Encryption**: Each project gets its own encryption key (X25519)
+- **Secure Process**: Data is encrypted immediately as backups are created
+- **Zero-Trust**: Even Zerops staff cannot access your raw backup data
+- **Isolated Storage**: Backups are stored separately from your regular data
+- **Secure Download**: Backups are only decrypted when you download them
+
+:::important
+When a project is deleted, the encryption key is permanently destroyed after 7 days, making the backup data unrecoverable.
+:::
+
+## Best Practices
+
+1. **Create backups before major changes**:
+   - Always create a manual backup with a protected tag before database migrations, deployments, or large data operations
+   - Use descriptive tags like `pre-migration` or `pre-release-v2`
+
+2. **Manage storage efficiently**:
+   - Regularly check usage in the Project Overview & Service Backup tabs
+   - Remove unnecessary backups, especially those with [protected tags](#backup-tagging)
+   - Adjust [retention policies](#retention-policy-and-configuration) based on your recovery needs
+
+3. **Test your restore process** periodically in a non-production environment to ensure you can recover when needed
+
+## Troubleshooting
+
+### Storage Quota Issues
+**Cause**: High backup frequency, long retention periods, or many protected tags.
+
+**Solutions**:
+1. **Review & Prune**: Delete unnecessary manual backups or remove protected status from older backups
+2. **Adjust Retention Policy**: Reduce minimum retention counts if your recovery requirements allow
+3. **Optimize Schedule**: Reduce backup frequency if daily backups aren't essential
+4. **Upgrade Package**: Consider upgrading to the "Serious" package for larger storage quota
+
+### Backup Failures
+**Cause**: Service health issues, resource exhaustion, or platform problems.
+
+**Solutions**:
+1. **Check Service Logs**: Look for error messages around the scheduled backup time
+2. **Verify Service Health**: Ensure the service is running properly with adequate resources
+3. **Check Platform Status**: Visit status.zerops.io for any ongoing incidents
+4. **Contact Support**: If issues persist, reach out with service name, failure time, and relevant logs
