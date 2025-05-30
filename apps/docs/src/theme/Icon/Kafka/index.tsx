@@ -1,13 +1,17 @@
 import { IconProps } from '@medusajs/icons/dist/types';
+import { useColorMode } from '@docusaurus/theme-common';
 import clsx from 'clsx';
 import React from 'react';
 
-const IconValkey = (props: IconProps) => {
+const IconKafka = (props: IconProps) => {
+  const { colorMode } = useColorMode();
+  const isDark = colorMode === 'dark';
   return (
     <svg
         width={props.width || 20}
         height={props.height || 20}
         viewBox="0 0 256 416"
+        fill={isDark ? '#ccc' : '#231f20'}
         xmlns="http://www.w3.org/2000/svg"
         {...props}
         className={clsx('text-ui-fg-subtle', props.className)}>
@@ -16,4 +20,4 @@ const IconValkey = (props: IconProps) => {
   );
 };
 
-export default IconValkey;
+export default IconKafka;
