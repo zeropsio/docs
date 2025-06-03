@@ -157,6 +157,7 @@ import IconTypesense from './Typesense';
 import IconDocker from './Docker';
 import IconCurlyBraces from './CurlyBraces';
 import IconCdn from './Cdn';
+import IconClickhouse from './Clickhouse';
 
 export default {
   'academic-cap-solid': AcademicCapSolid,
@@ -318,4 +319,5 @@ export default {
   typesense: IconTypesense,
   'curly-braces': IconCurlyBraces,
   cdn: IconCdn,
+  clickhouse: IconClickhouse,
 };

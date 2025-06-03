@@ -426,6 +426,15 @@ module.exports = {
           className: "homepage-sidebar-item  service-sidebar-item",
         },
         {
+          type: "ref",
+          id: "clickhouse/overview",
+          label: "Clickhouse",
+          customProps: {
+            sidebar_icon: "clickhouse",
+          },
+          className: "homepage-sidebar-item  service-sidebar-item",
+        },
+        {
           type: 'ref',
           id: 'keydb/overview',
           label: 'KeyDB',
@@ -2328,6 +2337,26 @@ module.exports = {
       },
     },
   ],
+    clickhouse: [
+      {
+        type: 'ref',
+        id: 'homepage',
+        label: 'Back to home',
+        customProps: {
+          sidebar_is_back_link: true,
+          sidebar_icon: 'back-arrow',
+        },
+      },
+      {
+        type: 'doc',
+        id: 'clickhouse/overview',
+        label: 'Zerops Clickhouse Service',
+        customProps: {
+          sidebar_is_title: true,
+          sidebar_icon: 'clickhouse',
+        },
+      },
+    ],
   sharedstorage: [
     {
       type: 'ref',
