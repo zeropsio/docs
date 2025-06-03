@@ -7233,12 +7233,14 @@ When creating manual backups via the UI, you'll see immediate feedback. If the b
 :::
 ## Storage and Limits
 ### Project Storage Quotas
-Each Zerops project includes a base storage quota for backups:
-- **Lightweight Package**: 5 GB included
-- **Serious Package**: 25 GB included
-:::note
-This quota is shared across all service backups within the project.
-:::
+Each Zerops project has a **technical maximum backup storage limit of 1 TiB**:
+- Only full backups are stored
+- If a backup would exceed the storage limit, it will not be stored
+- This quota is shared across all service backups within the project
+### Billing
+- **Lightweight Project Core**: 5 GB backup storage and 100 GB egress included
+- **Serious Project Core**: 25 GB backup storage and 3 TB egress included
+When you exceed your plan's free limits, **additional charges apply** according to our [pricing](/company/pricing#overage-costs).
 ### Retention Policy and Configuration
 Zerops manages which backups are kept using a retention policy that you can customize through the UI:
 **Default Time-Based Retention** (minimums):
@@ -7247,7 +7249,7 @@ Zerops manages which backups are kept using a retention policy that you can cust
 - At least 3 monthly backups
 **Default Resource Limits** (maximums):
 - Max 50 total backups per service
-- Storage limited to your project's quota (5GB or 25GB)
+- Storage limited to your project's 1 TiB technical maximum (with billing for usage beyond free tier)
 **Customization Options:**
 You can modify these defaults in the backup retention configuration interface:
 - **Set Protected Tags**: Define tag names that prevent automatic deletion of backups
@@ -7301,18 +7303,20 @@ When a project is deleted, the encryption key is permanently destroyed after 7 d
    - Always create a manual backup with a protected tag before database migrations, deployments, or large data operations
    - Use descriptive tags like `pre-migration` or `pre-release-v2`
 2. **Manage storage efficiently**:
-   - Regularly check usage in the Project Overview & Service Backup tabs
+   - Regularly check usage in the Project Overview & Service Backup tabs to monitor free tier usage and stay within the 1 TiB technical limit
    - Remove unnecessary backups, especially those with [protected tags](#backup-tagging)
    - Adjust [retention policies](#retention-policy-and-configuration) based on your recovery needs
+   - Regularly review and clean up old backups to optimize storage usage and minimize overage costs
 3. **Test your restore process** periodically in a non-production environment to ensure you can recover when needed
 ## Troubleshooting
 ### Storage Quota Issues
-**Cause**: High backup frequency, long retention periods, or many protected tags.
+**Cause**: High backup frequency, long retention periods, or many protected tags can lead to exceeding free tier limits or approaching technical maximums.
 **Solutions**:
 1. **Review & Prune**: Delete unnecessary manual backups or remove protected status from older backups
 2. **Adjust Retention Policy**: Reduce minimum retention counts if your recovery requirements allow
 3. **Optimize Schedule**: Reduce backup frequency if daily backups aren't essential
-4. **Upgrade Package**: Consider upgrading to the "Serious" package for larger storage quota
+4. **Monitor Costs**: Check usage against your free tier (5GB/25GB) to avoid unexpected overage charges
+5. **Contact Support**: If you need assistance managing storage
 ### Backup Failures
 **Cause**: Service health issues, resource exhaustion, or platform problems.
 **Solutions**:
