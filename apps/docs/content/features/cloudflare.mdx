@@ -1,0 +1,283 @@
+---
+title: Cloudflare DNS Configuration for Zerops
+description: Complete guide for configuring Cloudflare DNS records and proxy settings with your Zerops applications, including SSL/TLS setup and troubleshooting.
+---
+
+This guide provides step-by-step instructions for configuring Cloudflare to work with your Zerops applications, covering DNS records, proxy settings, SSL/TLS configuration, and common troubleshooting scenarios.
+
+## Prerequisites
+
+Before starting, ensure you have:
+- A Cloudflare account
+- A registered domain name
+- Access to your Zerops project with [domain access configured](/features/access#public-access-through-your-domain)
+- Your Zerops IP addresses (IPv4 and/or IPv6) from the Zerops GUI
+
+## DNS Record Configuration
+
+Configure your DNS records in Cloudflare using one of these approaches based on your needs:
+
+### With Cloudflare Proxy
+
+#### IPv6 only
+```bash
+Type    Name              Content                Proxy status   TTL
+AAAA    <your-domain>     <your-project-ipv6>    Proxied        Auto
+```
+
+Cloudflare handles IPv4 to IPv6 translation, making your service accessible to both IPv4 and IPv6 users. Uses Zerops' free dedicated IPv6 address.
+
+:::note
+Do not add a proxied A record with shared IPv4 when using this setup, as it would prevent proper IPv4 traffic routing.
+:::
+
+#### Dedicated IPv4
+```bash
+Type    Name              Content                Proxy status   TTL
+A       <your-domain>     <your-dedicated-ipv4>  Proxied        Auto
+# Optional
+AAAA    <your-domain>     <your-project-ipv6>    Proxied        Auto
+```
+
+Uses your dedicated IPv4 address with Cloudflare's proxy features.
+
+:::tip
+Adding the AAAA record allows visitors with IPv6 support to connect directly via IPv6.
+:::
+
+#### Shared IPv4 *(not recommended)*
+```bash
+Type    Name              Content                Proxy status  TTL
+AAAA    <your-domain>     <your-project-ipv6>    DNS only      Auto
+A       <your-domain>     <zerops-shared-ipv4>   Proxied       Auto
+```
+
+:::tip Why Not?
+Creates inconsistent security posture by mixing direct and proxied connections. Consider using IPv6 only or dedicated IPv4 configurations instead.
+:::
+
+### DNS-Only Configuration (Without Cloudflare Proxy)
+
+If you prefer direct connections without Cloudflare's proxy features:
+
+#### Shared IPv4
+```bash
+Type    Name              Content                Proxy status   TTL
+A       <your-domain>     <zerops-shared-ipv4>   DNS only       Auto
+AAAA    <your-domain>     <your-project-ipv6>    DNS only       Auto
+```
+
+Uses Zerops' free shared IPv4.
+
+:::note Both A + AAAA Required
+Adding AAAA record is essential for shared IPv4 configuration as it serves as a [security measure](/features/dns#understand-shared-ipv4) to prevent unauthorized domain claims.
+:::
+
+#### Dedicated IPv4
+```bash
+Type    Name              Content                Proxy status   TTL
+A       <your-domain>     <your-dedicated-ipv4>  DNS only       Auto
+# Optional
+AAAA    <your-domain>     <your-project-ipv6>    DNS only       Auto
+```
+
+Uses your dedicated IPv4 address.
+:::tip
+Adding the AAAA record allows visitors with IPv6 support to connect directly via IPv6.
+:::
+
+#### IPv6 only
+```bash
+Type    Name              Content                Proxy status   TTL
+AAAA    <your-domain>     <your-project-ipv6>    DNS only       Auto
+```
+
+Uses only Zerops' free dedicated IPv6.
+:::note
+This configuration will only work for users with IPv6 connectivity.
+:::
+
+## Wildcard Domain Configuration
+
+Zerops supports wildcard domains (`*.<your-domain>`) that allow routing all subdomains to your project.
+
+### DNS Records for Wildcards
+
+Configure wildcard domains using either method:
+
+#### Method A: Direct Wildcard Records
+```bash
+Type   Name              Content               Proxy status       TTL
+A      *.<your-domain>   <your-ipv4-address>   DNS only/Proxied   Auto
+AAAA   *.<your-domain>   <your-ipv6-address>   DNS only/Proxied   Auto
+```
+
+#### Method B: CNAME to Main Domain
+First ensure your main domain has proper A/AAAA records, then add:
+```bash
+Type    Name              Content         Proxy status       TTL
+CNAME   *.<your-domain>   <your-domain>   DNS only/Proxied   Auto
+```
+
+### Certificate Validation for Wildcards
+
+To enable automatic SSL certificate issuance for wildcard domains:
+
+```bash
+Type    Name                            Content                     Proxy status   TTL
+CNAME   _acme-challenge.<your-domain>   <your-domain>.zerops.zone   DNS only       Auto
+```
+
+This CNAME record allows Zerops to handle the DNS-01 challenge required for wildcard SSL certificates.
+
+### Higher-Level Wildcard Subdomains
+
+You can also set up higher-level wildcard subdomains like `*.<subdomain>.<your-domain>`:
+
+#### Method A: Direct Configuration
+```bash
+Type   Name                          Content               Proxy status       TTL
+A      *.<subdomain>.<your-domain>   <your-ipv4-address>   DNS only/Proxied   Auto
+AAAA   *.<subdomain>.<your-domain>   <your-ipv6-address>   DNS only/Proxied   Auto
+```
+
+#### Method B: Using a CNAME Record
+```bash
+Type    Name                          Content                     Proxy status       TTL
+CNAME   *.<subdomain>.<your-domain>   <subdomain>.<your-domain>   DNS only/Proxied   Auto
+```
+or
+```bash
+Type    Name                          Content         Proxy status       TTL
+CNAME   *.<subdomain>.<your-domain>   <your-domain>   DNS only/Proxied   Auto
+```
+
+For certificate validation with higher-level wildcards:
+```bash
+Type    Name                                        Content                                 Proxy status   TTL
+CNAME   _acme-challenge.<subdomain>.<your-domain>   <subdomain>.<your-domain>.zerops.zone   DNS only       Auto
+```
+
+### Combining Main Domain and Wildcard Domain
+
+To use both `<your-domain>` and `*.<your-domain>`, specify both variants in your [Zerops configuration](/features/access#configuring-http-routing). Zerops automatically issues a single shared certificate for both the main domain and all its subdomains.
+
+## Cloudflare SSL/TLS Configuration
+
+### Essential SSL/TLS Settings
+
+1. **Set Encryption Mode**
+   - Navigate to **SSL/TLS** → **Overview** in your Cloudflare dashboard
+   - Select **Full (strict)** for production or **Full** for testing
+   - **Never use Flexible mode** - this will cause redirect loops
+
+2. **Edge Certificates**
+   - Go to **SSL/TLS** → **Edge Certificates**
+   - Ensure **Always Use HTTPS** is enabled for production
+   - Keep **Automatic HTTPS Rewrites** enabled
+
+### Certificate Validation Configuration
+
+For proper certificate issuance, especially with Let's Encrypt:
+
+#### Option A: Simple Setup (Testing/Development)
+- Temporarily disable **Always Use HTTPS** during initial certificate setup
+- Re-enable after certificates are issued
+
+#### Option B: Production Setup
+Keep **Always Use HTTPS** enabled and create a Configuration Rule:
+
+1. Go to **Rules** → **Configuration Rules**
+2. Create a new rule with these settings:
+   - **Rule name:** "Allow ACME Challenge"
+   - **Field:** URI Path
+   - **Operator:** starts with
+   - **Value:** `/.well-known/acme-challenge/`
+   - **Action:** Disable **Automatic HTTPS Rewrites**
+
+This rule allows certificate validation to work while maintaining HTTPS enforcement for all other traffic.
+
+## Validation and Testing
+
+### DNS Resolution Testing
+```bash
+# Check IPv4 resolution
+dig A <your-domain>
+
+# Check IPv6 resolution
+dig AAAA <your-domain>
+
+# Check from specific DNS server
+dig @1.1.1.1 <your-domain>
+```
+
+### Connectivity Testing
+```bash
+# Basic HTTPS test
+curl -vI https://<your-domain>
+
+# Test with specific subdomain (for wildcards)
+curl -vI https://api.<your-domain>
+
+# Test IPv4 specifically
+curl -4 -v https://<your-domain>
+
+# Test IPv6 specifically
+curl -6 -v https://<your-domain>
+```
+
+### Cloudflare-Specific Checks
+
+1. **Verify proxy status** in Cloudflare DNS dashboard (orange cloud = proxied)
+2. **Check SSL/TLS mode** in SSL/TLS → Overview
+3. **Confirm certificate issuance** in SSL/TLS → Edge Certificates
+4. **Test redirect behavior** by accessing `http://` version of your domain
+
+## Troubleshooting Common Issues
+
+### SSL Certificate Problems
+
+**Symptom:** "Too many redirects" or SSL errors
+**Solutions:**
+- Verify SSL/TLS mode is set to **Full** or **Full (strict)**, not **Flexible**
+- Check that both Zerops and Cloudflare have valid certificates
+- Ensure **Always Use HTTPS** is properly configured
+- For new domains, refresh the Cloudflare SSL/TLS page as settings may display incorrectly initially
+
+**Symptom:** Certificate validation fails for wildcard domains
+**Solutions:**
+- Verify the `_acme-challenge` CNAME record is correctly configured
+- Ensure DNS propagation is complete (check with `dig` command)
+- Check that the CNAME points to `<your-domain>.zerops.zone`
+
+### DNS Resolution Issues
+
+**Symptom:** Domain not resolving
+**Solutions:**
+- Confirm DNS records are correctly configured in Cloudflare
+- Verify proxy status matches your intended setup
+- Check for typos in IP addresses
+- Wait for DNS propagation (typically 5-10 minutes)
+
+**Symptom:** IPv4 traffic not working with IPv6-only setup
+**Solutions:**
+- Ensure Cloudflare proxy is enabled (orange cloud)
+- Verify IPv6 address is correct in AAAA record
+- Confirm no conflicting A record with shared IPv4 exists
+
+## Security Considerations
+
+- Always use **Full (strict)** SSL mode for production
+- Enable **HSTS (HTTP Strict Transport Security)** in Cloudflare
+- Consider enabling **Bot Fight Mode** for additional protection
+- Use Cloudflare's **Firewall Rules** to block malicious traffic
+- Regularly monitor SSL certificate expiration dates
+
+## Getting Help
+
+If you encounter issues not covered in this guide:
+- Check the [general DNS configuration guide](/features/dns#technical-background) for additional context
+- Review your Zerops service logs for error messages
+- Verify your configuration against Cloudflare's documentation
+- Test with simple curl commands to isolate the problem
+- Contact Zerops support via [email](mailto:support@zerops.io) or reach out on [Discord](https://discord.gg/zeropsio)

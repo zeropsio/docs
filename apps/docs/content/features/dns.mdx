@@ -3,7 +3,11 @@ title: DNS and Proxy Configuration Guide
 desc: A comprehensive guide for configuring DNS records and proxy settings with Zerops applications, including shared and dedicated IPv4 setups, wildcard domains, certificate validation, and troubleshooting tips.
 ---
 
-This guide will show you how to configure DNS records and proxy settings to work with your Zerops applications, with specific implementation details for Cloudflare.
+This guide will show you how to configure DNS records and proxy settings to work with your Zerops applications.
+
+:::important Cloudflare
+If you're using Cloudflare, check out our dedicated [Cloudflare DNS Configuration Guide](/features/cloudflare-dns) for step-by-step instructions specific to Cloudflare's interface and features.
+:::
 
 ## DNS Configuration
 
@@ -151,28 +155,6 @@ CNAME   _acme-challenge.<subdomain>.<your-domain>   <subdomain>.<your-domain>.ze
 
 To use both `<your-domain>` and `*.<your-domain>`, specify both variants in your [Zerops configuration](/features/access#configuring-http-routing). Zerops automatically issues a single shared certificate for both the main domain and all its subdomains.
 
-## Cloudflare-Specific Configuration
-
-#### SSL/TLS Mode
-Set encryption mode to `Full (strict)` or `Full`
-   - Ensures end-to-end encryption
-   - *Full* mode requires any SSL certificate (even if self-signed/expired), while *Full (strict)* requires a valid certificate
-
-#### Certificate Management
-1. Enable Edge Certificates to allow Cloudflare to manage SSL/TLS certificates
-2. During initial setup, handle HTTPS settings in one of two ways:
-   - **Option A (Simple but Limited)**:
-     - Disable `Always Use HTTPS`
-   - **Option B (Recommended for Production)**:
-     - Keep `Always Use HTTPS` enabled
-     - Create and enable a Configuration Rule, which disables Automatic HTTPS Rewrites for this specific path:
-       ```
-       Field: URI Path
-       Operator: starts with
-       Value: /.well-known/acme-challenge/
-       ```
-       This rule disables Automatic HTTPS Rewrites for the certificate validation path.
-
 ## Validation Steps
 
 Test your configuration:
@@ -206,11 +188,7 @@ curl -6 -v https://<your-domain>
 3. **Certificate Issues**
    - Verify proper _acme-challenge CNAME configuration for wildcard domains
    - Check that DNS records match the domains configured in Zerops
-   - **Cloudflare-specific certificate problems**:
-     - Verify `Always Use HTTPS` is disabled
-     - If you encounter **too many redirects** or similar SSL errors:
-       - Double-check that SSL/TLS encryption mode is set to *Full* or *Full (strict)*, not *Flexible*
-       - SSL mode might show incorrectly for newly added domains, try refreshing the page if settings appear incorrect
+   - **Provider-specific certificate problems**: Consult your DNS provider's documentation for SSL/TLS configuration requirements
 
 ## Technical Background
 

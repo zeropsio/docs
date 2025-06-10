@@ -7255,7 +7255,10 @@ To set up domain access:
 All settings can be modified later as your needs change.
 ### DNS Configuration
 After setting up domain access in Zerops, you'll need to configure your DNS records with your domain registrar.
-For detailed instructions on DNS configuration, including specific implementation details for Cloudflare, please refer to the [DNS and Proxy Setup](/features/dns) guide.
+:::tip DNS Provider Guides
+- **Cloudflare users**: Follow our [Cloudflare DNS Configuration Guide](/features/cloudflare) for step-by-step Cloudflare-specific instructions
+- **Other providers**: Use the [general DNS and Proxy Configuration Guide](/features/dns) for universal DNS setup instructions
+:::
 ### HTTPS Configuration
 When using Let's Encrypt certificates (recommended):
 #### Certificate Management
@@ -7896,6 +7899,219 @@ Remember that only publicly accessible objects will be cached by the CDN. Privat
 
 ----------------------------------------
 
+# Features > Cloudflare
+
+This guide provides step-by-step instructions for configuring Cloudflare to work with your Zerops applications, covering DNS records, proxy settings, SSL/TLS configuration, and common troubleshooting scenarios.
+## Prerequisites
+Before starting, ensure you have:
+- A Cloudflare account
+- A registered domain name
+- Access to your Zerops project with [domain access configured](/features/access#public-access-through-your-domain)
+- Your Zerops IP addresses (IPv4 and/or IPv6) from the Zerops GUI
+## DNS Record Configuration
+Configure your DNS records in Cloudflare using one of these approaches based on your needs:
+### With Cloudflare Proxy
+#### IPv6 only
+```bash
+Type    Name              Content                Proxy status   TTL
+AAAA             Proxied        Auto
+```
+Cloudflare handles IPv4 to IPv6 translation, making your service accessible to both IPv4 and IPv6 users. Uses Zerops' free dedicated IPv6 address.
+:::note
+Do not add a proxied A record with shared IPv4 when using this setup, as it would prevent proper IPv4 traffic routing.
+:::
+#### Dedicated IPv4
+```bash
+Type    Name              Content                Proxy status   TTL
+A              Proxied        Auto
+# Optional
+AAAA             Proxied        Auto
+```
+Uses your dedicated IPv4 address with Cloudflare's proxy features.
+:::tip
+Adding the AAAA record allows visitors with IPv6 support to connect directly via IPv6.
+:::
+#### Shared IPv4 *(not recommended)*
+```bash
+Type    Name              Content                Proxy status  TTL
+AAAA             DNS only      Auto
+A               Proxied       Auto
+```
+:::tip Why Not?
+Creates inconsistent security posture by mixing direct and proxied connections. Consider using IPv6 only or dedicated IPv4 configurations instead.
+:::
+### DNS-Only Configuration (Without Cloudflare Proxy)
+If you prefer direct connections without Cloudflare's proxy features:
+#### Shared IPv4
+```bash
+Type    Name              Content                Proxy status   TTL
+A               DNS only       Auto
+AAAA             DNS only       Auto
+```
+Uses Zerops' free shared IPv4.
+:::note Both A + AAAA Required
+Adding AAAA record is essential for shared IPv4 configuration as it serves as a [security measure](/features/dns#understand-shared-ipv4) to prevent unauthorized domain claims.
+:::
+#### Dedicated IPv4
+```bash
+Type    Name              Content                Proxy status   TTL
+A              DNS only       Auto
+# Optional
+AAAA             DNS only       Auto
+```
+Uses your dedicated IPv4 address.
+:::tip
+Adding the AAAA record allows visitors with IPv6 support to connect directly via IPv6.
+:::
+#### IPv6 only
+```bash
+Type    Name              Content                Proxy status   TTL
+AAAA             DNS only       Auto
+```
+Uses only Zerops' free dedicated IPv6.
+:::note
+This configuration will only work for users with IPv6 connectivity.
+:::
+## Wildcard Domain Configuration
+Zerops supports wildcard domains (`*.`) that allow routing all subdomains to your project.
+### DNS Records for Wildcards
+Configure wildcard domains using either method:
+#### Method A: Direct Wildcard Records
+```bash
+Type   Name              Content               Proxy status       TTL
+A      *.      DNS only/Proxied   Auto
+AAAA   *.      DNS only/Proxied   Auto
+```
+#### Method B: CNAME to Main Domain
+First ensure your main domain has proper A/AAAA records, then add:
+```bash
+Type    Name              Content         Proxy status       TTL
+CNAME   *.      DNS only/Proxied   Auto
+```
+### Certificate Validation for Wildcards
+To enable automatic SSL certificate issuance for wildcard domains:
+```bash
+Type    Name                            Content                     Proxy status   TTL
+CNAME   _acme-challenge.   .zerops.zone   DNS only       Auto
+```
+This CNAME record allows Zerops to handle the DNS-01 challenge required for wildcard SSL certificates.
+### Higher-Level Wildcard Subdomains
+You can also set up higher-level wildcard subdomains like `*..`:
+#### Method A: Direct Configuration
+```bash
+Type   Name                          Content               Proxy status       TTL
+A      *..      DNS only/Proxied   Auto
+AAAA   *..      DNS only/Proxied   Auto
+```
+#### Method B: Using a CNAME Record
+```bash
+Type    Name                          Content                     Proxy status       TTL
+CNAME   *..   .   DNS only/Proxied   Auto
+```
+or
+```bash
+Type    Name                          Content         Proxy status       TTL
+CNAME   *..      DNS only/Proxied   Auto
+```
+For certificate validation with higher-level wildcards:
+```bash
+Type    Name                                        Content                                 Proxy status   TTL
+CNAME   _acme-challenge..   ..zerops.zone   DNS only       Auto
+```
+### Combining Main Domain and Wildcard Domain
+To use both `` and `*.`, specify both variants in your [Zerops configuration](/features/access#configuring-http-routing). Zerops automatically issues a single shared certificate for both the main domain and all its subdomains.
+## Cloudflare SSL/TLS Configuration
+### Essential SSL/TLS Settings
+1. **Set Encryption Mode**
+   - Navigate to **SSL/TLS** → **Overview** in your Cloudflare dashboard
+   - Select **Full (strict)** for production or **Full** for testing
+   - **Never use Flexible mode** - this will cause redirect loops
+2. **Edge Certificates**
+   - Go to **SSL/TLS** → **Edge Certificates**
+   - Ensure **Always Use HTTPS** is enabled for production
+   - Keep **Automatic HTTPS Rewrites** enabled
+### Certificate Validation Configuration
+For proper certificate issuance, especially with Let's Encrypt:
+#### Option A: Simple Setup (Testing/Development)
+- Temporarily disable **Always Use HTTPS** during initial certificate setup
+- Re-enable after certificates are issued
+#### Option B: Production Setup
+Keep **Always Use HTTPS** enabled and create a Configuration Rule:
+1. Go to **Rules** → **Configuration Rules**
+2. Create a new rule with these settings:
+   - **Rule name:** "Allow ACME Challenge"
+   - **Field:** URI Path
+   - **Operator:** starts with
+   - **Value:** `/.well-known/acme-challenge/`
+   - **Action:** Disable **Automatic HTTPS Rewrites**
+This rule allows certificate validation to work while maintaining HTTPS enforcement for all other traffic.
+## Validation and Testing
+### DNS Resolution Testing
+```bash
+# Check IPv4 resolution
+dig A 
+# Check IPv6 resolution
+dig AAAA 
+# Check from specific DNS server
+dig @1.1.1.1 
+```
+### Connectivity Testing
+```bash
+# Basic HTTPS test
+curl -vI https://
+# Test with specific subdomain (for wildcards)
+curl -vI https://api.
+# Test IPv4 specifically
+curl -4 -v https://
+# Test IPv6 specifically
+curl -6 -v https://
+```
+### Cloudflare-Specific Checks
+1. **Verify proxy status** in Cloudflare DNS dashboard (orange cloud = proxied)
+2. **Check SSL/TLS mode** in SSL/TLS → Overview
+3. **Confirm certificate issuance** in SSL/TLS → Edge Certificates
+4. **Test redirect behavior** by accessing `http://` version of your domain
+## Troubleshooting Common Issues
+### SSL Certificate Problems
+**Symptom:** "Too many redirects" or SSL errors
+**Solutions:**
+- Verify SSL/TLS mode is set to **Full** or **Full (strict)**, not **Flexible**
+- Check that both Zerops and Cloudflare have valid certificates
+- Ensure **Always Use HTTPS** is properly configured
+- For new domains, refresh the Cloudflare SSL/TLS page as settings may display incorrectly initially
+**Symptom:** Certificate validation fails for wildcard domains
+**Solutions:**
+- Verify the `_acme-challenge` CNAME record is correctly configured
+- Ensure DNS propagation is complete (check with `dig` command)
+- Check that the CNAME points to `.zerops.zone`
+### DNS Resolution Issues
+**Symptom:** Domain not resolving
+**Solutions:**
+- Confirm DNS records are correctly configured in Cloudflare
+- Verify proxy status matches your intended setup
+- Check for typos in IP addresses
+- Wait for DNS propagation (typically 5-10 minutes)
+**Symptom:** IPv4 traffic not working with IPv6-only setup
+**Solutions:**
+- Ensure Cloudflare proxy is enabled (orange cloud)
+- Verify IPv6 address is correct in AAAA record
+- Confirm no conflicting A record with shared IPv4 exists
+## Security Considerations
+- Always use **Full (strict)** SSL mode for production
+- Enable **HSTS (HTTP Strict Transport Security)** in Cloudflare
+- Consider enabling **Bot Fight Mode** for additional protection
+- Use Cloudflare's **Firewall Rules** to block malicious traffic
+- Regularly monitor SSL certificate expiration dates
+## Getting Help
+If you encounter issues not covered in this guide:
+- Check the [general DNS configuration guide](/features/dns#technical-background) for additional context
+- Review your Zerops service logs for error messages
+- Verify your configuration against Cloudflare's documentation
+- Test with simple curl commands to isolate the problem
+- Contact Zerops support via [email](mailto:support@zerops.io) or reach out on [Discord](https://discord.gg/zeropsio)
+
+----------------------------------------
+
 # Features > Container Vs Vm
 
 Ever wondered why container technologies like Docker took over the development world so quickly? Let's break down the real differences between traditional VMs and containers - and why you might want to use one over the other.
@@ -7967,7 +8183,10 @@ Not sure which to choose? Start with containers. You can always switch to VMs if
 
 # Features > Dns
 
-This guide will show you how to configure DNS records and proxy settings to work with your Zerops applications, with specific implementation details for Cloudflare.
+This guide will show you how to configure DNS records and proxy settings to work with your Zerops applications.
+:::important Cloudflare
+If you're using Cloudflare, check out our dedicated [Cloudflare DNS Configuration Guide](/features/cloudflare-dns) for step-by-step instructions specific to Cloudflare's interface and features.
+:::
 ## DNS Configuration
 DNS records for Zerops services can be configured in two main ways:
 * **With Proxy**: Routes traffic through proxy services, providing additional security and performance features (recommended for DDoS protection)
@@ -8080,25 +8299,6 @@ CNAME   _acme-challenge..   ..zerops.zone   DNS only       Auto
 ```
 ### Combining Main Domain and Wildcard Domain
 To use both `` and `*.`, specify both variants in your [Zerops configuration](/features/access#configuring-http-routing). Zerops automatically issues a single shared certificate for both the main domain and all its subdomains.
-## Cloudflare-Specific Configuration
-#### SSL/TLS Mode
-Set encryption mode to `Full (strict)` or `Full`
-   - Ensures end-to-end encryption
-   - *Full* mode requires any SSL certificate (even if self-signed/expired), while *Full (strict)* requires a valid certificate
-#### Certificate Management
-1. Enable Edge Certificates to allow Cloudflare to manage SSL/TLS certificates
-2. During initial setup, handle HTTPS settings in one of two ways:
-   - **Option A (Simple but Limited)**:
-     - Disable `Always Use HTTPS`
-   - **Option B (Recommended for Production)**:
-     - Keep `Always Use HTTPS` enabled
-     - Create and enable a Configuration Rule, which disables Automatic HTTPS Rewrites for this specific path:
-       ```
-       Field: URI Path
-       Operator: starts with
-       Value: /.well-known/acme-challenge/
-       ```
-       This rule disables Automatic HTTPS Rewrites for the certificate validation path.
 ## Validation Steps
 Test your configuration:
 ```bash
@@ -8124,11 +8324,7 @@ curl -6 -v https://
 3. **Certificate Issues**
    - Verify proper _acme-challenge CNAME configuration for wildcard domains
    - Check that DNS records match the domains configured in Zerops
-   - **Cloudflare-specific certificate problems**:
-     - Verify `Always Use HTTPS` is disabled
-     - If you encounter **too many redirects** or similar SSL errors:
-       - Double-check that SSL/TLS encryption mode is set to *Full* or *Full (strict)*, not *Flexible*
-       - SSL mode might show incorrectly for newly added domains, try refreshing the page if settings appear incorrect
+   - **Provider-specific certificate problems**: Consult your DNS provider's documentation for SSL/TLS configuration requirements
 ## Technical Background
 ### Understanding Shared IPv4 Addresses {#understand-shared-ipv4}
 Shared IPv4 allows multiple Zerops projects to use the same IPv4 address while maintaining separate routing for each project. Here's how it works:
