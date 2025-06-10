@@ -109,8 +109,16 @@ module.exports = {
       items: [
         {
           type: 'doc',
+          id: 'features/cloudflare',
+          label: 'Cloudflare Setup',
+          customProps: {
+            exclude_from_doc_list: false,
+          },
+        },
+        {
+          type: 'doc',
           id: 'features/dns',
-          label: 'DNS & Proxy Setup',
+          label: 'General DNS & Proxy Setup',
           customProps: {
             exclude_from_doc_list: false,
           },
