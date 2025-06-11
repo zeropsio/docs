@@ -1,0 +1,58 @@
+import { SetVar, Var, VarLink, VarCodeBlock, VarReasons } from '@site/src/components/content/var';
+import data from '@site/static/data.json';
+
+## Build Custom Runtime Images
+
+Zerops allows you to build custom runtime images (CRI) when the default base runtime images don't meet your <Var name="serviceDisplay" /> application's requirements. This is an optional phase in the [build and deploy pipeline](/features/pipeline#runtime-prepare-phase-optional).
+
+## Configuration
+
+### Default <Var name="serviceDisplay" /> Runtime Environment
+
+The default <Var name="serviceDisplay" /> runtime environment contains:
+
+- <span>{data.alpine.default}</span>
+- Selected version of <Var name="serviceDisplay" /> when the runtime service was created
+- [zCLI](/references/cli)
+- <Var name="defaultEnvironment" />
+
+### When You Need a Custom Runtime Image
+
+If your <Var name="serviceDisplay" /> application needs more than what's included in the default environment, you'll need to build a custom runtime image. Common scenarios include:
+
+<VarReasons name="customReasons" />
+
+:::important
+You should not include your application code in the custom runtime image, as your built/packaged code is deployed automatically into fresh containers.
+:::
+
+Here are <Var name="serviceDisplay" />-specific examples of configuring custom runtime images in your `zerops.yml`:
+
+### Basic <Var name="serviceDisplay" /> Setup
+
+<VarCodeBlock codeVar="basicSetupCode" languageVar="codeLanguage" />
+
+### Using Build Files in Runtime Preparation
+
+<VarCodeBlock codeVar="buildFilesCode" languageVar="codeLanguage" />
+
+For complete configuration details, see the [runtime prepare phase configuration guide](/features/pipeline#configuration).
+
+## Process and Caching
+
+### How Runtime Prepare Works
+The runtime prepare process follows the same steps for all runtimes. See [how runtime prepare works](/features/pipeline#how-it-works) for the complete process details.
+
+### Caching Behavior
+Zerops caches custom runtime images to optimize deployment times. Learn about [custom runtime image caching](/features/pipeline#custom-runtime-image-caching) including when images are cached and reused.
+
+### Build Management
+For information about managing builds and deployments, see [managing builds and deployments](/features/pipeline#manage-build-and-deploys).
+
+:::warning
+Shared storage mounts are not available during the runtime prepare phase.
+:::
+
+## Troubleshooting
+
+If your `prepareCommands` fail, check the <VarLink name="servicePath" path="/{{VAR}}/how-to/logs#prepare-runtime-log">prepare runtime log</VarLink> for specific error messages.

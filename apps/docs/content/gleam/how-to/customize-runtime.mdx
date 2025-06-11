@@ -3,50 +3,36 @@ title: Customise Gleam runtime environment
 description: Learn how you can customise your Gleam runtime environment on Zerops.
 ---
 
-<p align="center">
-  <img
-    src="/img/screenshots/build_deploy_pipeline_custom_runtime.png"
-    alt="image"
-    width="100%"
-    height="auto"
-  />
-</p>
-
 import data from '@site/static/data.json';
+import { SetVar } from '@site/src/components/content/var';
+import CustomizeRuntimeContent from '@site/src/components/content/customize-runtime.mdx';
 
-The default Gleam runtime environment contains:
+<SetVar name="serviceDisplay" value="Gleam" />
+<SetVar name="serviceVersion" value={data.gleam.base[0][0]} />
+<SetVar name="servicePath" value="gleam" />
+<SetVar name="defaultEnvironment" value="Erlang, Gleam, Rebar3 and Git" />
+<SetVar name="packageManager" value="gleam" />
+<SetVar name="codeLanguage" value="yaml" />
+<SetVar name="customReasons" value={[
+  '<strong>System packages for processing</strong>: When your app processes images, videos, or files (requiring packages like <code>sudo apk add imagemagick</code>)',
+  '<strong>Erlang libraries</strong>: When you need additional Erlang libraries for your Gleam application',
+  '<strong>Native dependencies</strong>: When your Gleam dependencies require system libraries that aren\'t in the default environment',
+  '<strong>Different base OS</strong>: When you need Ubuntu instead of Alpine for specific compatibility requirements'
+]} />
+<SetVar name="basicSetupCode" value={`run:
+  os: ubuntu
+  base: {{serviceVersion}}
+  prepareCommands:
+    - sudo apt-get update
+    - sudo apt-get install -y imagemagick
+    - gleam add some_package`} />
+<SetVar name="buildFilesCode" value={`build:
+  addToRunPrepare:
+    - gleam.toml
+    - manifest.toml
+run:
+  prepareCommands:
+    - sudo apk add imagemagick
+    - gleam deps download`} />
 
-- <span>{data.alpine.default}</span>
-- selected version of Gleam selected when the runtime service was created.
-- <a href="/references/cli">
-    `zCLI`
-  </a>
-  , Zerops command line tool
-- `npm`, `yarn`, `git` and `npx` tools
-
-If you prefer the Ubuntu OS instead of Alpine, set the [build.os](/gleam/how-to/build-pipeline#os) attribute to `ubuntu`. To install additional packages or tools add one or more <a href="/gleam/how-to/build-pipeline#preparecommands-1">`run.prepareCommands`</a> commands to your `zerops.yaml`.
-
-When the first deploy with a defined `prepareCommands` attribute is triggered, Zerops will
-
-1. create a prepare runtime container
-2. optionally: [copy selected folders or files from your build container](/gleam/how-to/build-pipeline#copy-folders-or-files-from-your-build-container)
-3. run the `run.prepareCommands` commands in the defined order
-
-### Command exit code
-
-If any command fails, it returns an exit code other than 0 and the deploy is canceled. Read the [prepare runtime log](/gleam/how-to/logs#prepare-runtime-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom runtime environment is ready for the deploy phase.
-
-The prepare runtime container is automatically deleted after the prepare runtime phase has finished or failed.
-
-### Custom runtime environment cache
-
-Some packages or tools can take a long time to install. Therefore, Zerops caches your custom runtime environment after the installation of your custom packages or tools is completed. When the second or following deploy is triggered, Zerops will use the custom runtime cache from the previous deploy if following conditions are met:
-
-1. Content of the <a href="/gleam/how-to/build-pipeline#copy-folders-or-files-from-your-build-container">`build.addToRunPrepare`</a> and <a href="/gleam/how-to/build-pipeline#preparecommands-1">`run.prepareCommands`</a> attributes didn't change from the previous deploy
-2. The custom runtime cache wasn't invalidated in the Zerops GUI.
-
-To invalidate the custom runtime cache go to `yyy`
-
-{/*TODO screenshot*/}
-
-When the custom runtime cache is used, Zerops doesn't create a prepare runtime container and executes the deployment of your application directly.
+<CustomizeRuntimeContent />

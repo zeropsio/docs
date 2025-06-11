@@ -3,50 +3,81 @@ title: Customise Deno runtime environment
 description: Learn how you can customise your deno runtime environment on Zerops.
 ---
 
-<p align="center">
-  <img
-    src="/img/screenshots/build_deploy_pipeline_custom_runtime.png"
-    alt="image"
-    width="100%"
-    height="auto"
-  />
-</p>
-
 import data from '@site/static/data.json';
+import { SetVar, VarCodeBlock } from '@site/src/components/content/var';
+
+## Build Custom Runtime Images
+
+Zerops allows you to build custom runtime images (CRI) when the default base runtime images don't meet your Deno application's requirements. This is an optional phase in the [build and deploy pipeline](/features/pipeline#runtime-prepare-phase-optional).
+
+:::important
+You should not include your application code in the custom runtime image, as your built/packaged code is deployed automatically into fresh containers.
+:::
+
+## Configuration
+
+### Default Deno Runtime Environment
 
 The default Deno runtime environment contains:
 
-- <span>{data.alpine.default}</span>
-- selected version of Deno selected when the runtime service was created.
-- <a href="/references/cli">
-    `zCLI`
-  </a>
-  , Zerops command line tool
-- `npm`, `yarn`, `git` and `npx` tools
+- <span>{data.ubuntu.default}</span>
+- Selected version of Deno when the runtime service was created
+- [zCLI](/references/cli)
+- Deno and Git
 
-If you prefer the Ubuntu OS instead of Alpine, set the [build.os](/deno/how-to/build-pipeline#os) attribute to `ubuntu`. To install additional packages or tools add one or more <a href="/deno/how-to/build-pipeline#preparecommands-1">`run.prepareCommands`</a> commands to your `zerops.yaml`.
+### When You Need a Custom Runtime Image
 
-When the first deploy with a defined `prepareCommands` attribute is triggered, Zerops will
+If your Deno application needs more than what's included in the default environment, you'll need to build a custom runtime image. Common scenarios include:
 
-1. create a prepare runtime container
-2. optionally: [copy selected folders or files from your build container](/deno/how-to/build-pipeline#copy-folders-or-files-from-your-build-container)
-3. run the `run.prepareCommands` commands in the defined order
+- **System packages for processing**: When your app processes images, videos, or files (requiring packages like `sudo apt-get install -y imagemagick`)
+- **Global Deno tools**: When you need CLI tools or utilities available system-wide
+- **Native dependencies**: When your Deno modules require system libraries that aren't in the default environment
 
-### Command exit code
+Here are Deno-specific examples of configuring custom runtime images in your `zerops.yml`:
 
-If any command fails, it returns an exit code other than 0 and the deploy is canceled. Read the [prepare runtime log](/deno/how-to/logs#prepare-runtime-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom runtime environment is ready for the deploy phase.
+### Basic Deno Setup
 
-The prepare runtime container is automatically deleted after the prepare runtime phase has finished or failed.
+<SetVar name="serviceVersion" value={data.deno.base[0][0]} />
+<SetVar name="basicSetupCode" value={`run:
+  base: {{serviceVersion}}
+  prepareCommands:
+    - sudo apt-get update
+    - sudo apt-get install -y imagemagick
+    - deno install --allow-all --global some-tool`} />
+    <SetVar name="codeLanguage" value="yaml" />
+<VarCodeBlock codeVar="basicSetupCode" languageVar="codeLanguage" />
 
-### Custom runtime environment cache
+### Using Build Files in Runtime Preparation
 
-Some packages or tools can take a long time to install. Therefore, Zerops caches your custom runtime environment after the installation of your custom packages or tools is completed. When the second or following deploy is triggered, Zerops will use the custom runtime cache from the previous deploy if following conditions are met:
+```yaml
+build:
+  addToRunPrepare:
+    - deno.json
+    - import_map.json
+run:
+  prepareCommands:
+    - sudo apt-get update
+    - sudo apt-get install -y imagemagick
+    - deno cache deps.ts
+```
 
-1. Content of the <a href="/deno/how-to/build-pipeline#copy-folders-or-files-from-your-build-container">`build.addToRunPrepare`</a> and <a href="/deno/how-to/build-pipeline#preparecommands-1">`run.prepareCommands`</a> attributes didn't change from the previous deploy
-2. The custom runtime cache wasn't invalidated in the Zerops GUI.
+For complete configuration details, see the [runtime prepare phase configuration guide](/features/pipeline#configuration).
 
-To invalidate the custom runtime cache go to `yyy`
+## Process and Caching
 
-{/*TODO screenshot*/}
+### How Runtime Prepare Works
+The runtime prepare process follows the same steps for all runtimes. See [how runtime prepare works](/features/pipeline#how-it-works) for the complete process details.
 
-When the custom runtime cache is used, Zerops doesn't create a prepare runtime container and executes the deployment of your application directly.
+### Caching Behavior
+Zerops caches custom runtime images to optimize deployment times. Learn about [custom runtime image caching](/features/pipeline#custom-runtime-image-caching) including when images are cached and reused.
+
+### Build Management
+For information about managing builds and deployments, see [managing builds and deployments](/features/pipeline#manage-build-and-deploys).
+
+:::warning
+Shared storage mounts are not available during the runtime prepare phase.
+:::
+
+## Troubleshooting
+
+If your `prepareCommands` fail, check the [prepare runtime log](/deno/how-to/logs#prepare-runtime-log) for specific error messages.

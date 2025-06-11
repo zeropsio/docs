@@ -19,9 +19,31 @@ export const VarLink = ({ name, path, children }) => {
 };
 
 export const VarCodeBlock = ({ codeVar, languageVar }) => {
-  const code = variables[codeVar] || '';
+  const codeTemplate = variables[codeVar] || '';
   const language = variables[languageVar] || 'javascript';
+
+  let code = codeTemplate;
+  Object.keys(variables).forEach(key => {
+    const placeholder = `{{${key}}}`;
+    code = code.split(placeholder).join(variables[key]);
+  });
+
   return <CodeBlock language={language}>{code}</CodeBlock>;
+};
+
+export const VarReasons = ({ name }) => {
+  const reasons = variables[name] || [];
+  if (!Array.isArray(reasons) || reasons.length === 0) {
+    return <p>If your application needs additional tools beyond the default environment, you'll need to build a custom runtime image.</p>;
+  }
+
+  return (
+    <ul>
+      {reasons.map((reason, index) => (
+        <li key={index} dangerouslySetInnerHTML={{ __html: reason }} />
+      ))}
+    </ul>
+  );
 };
 
 export default Var;

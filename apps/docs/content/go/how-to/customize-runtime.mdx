@@ -3,53 +3,36 @@ title: Customize Go runtime environment
 description: Learn how you can customize your go runtime environment on Zerops.
 ---
 
-<p align="center">
-  <img
-    src="/img/screenshots/build_deploy_pipeline_custom_runtime.png"
-    alt="image"
-    width="100%"
-    height="auto"
-  />
-</p>
-
 import data from '@site/static/data.json';
+import { SetVar } from '@site/src/components/content/var';
+import CustomizeRuntimeContent from '@site/src/components/content/customize-runtime.mdx';
 
-The default Go runtime environment contains:
+<SetVar name="serviceDisplay" value="Go" />
+<SetVar name="serviceVersion" value={data.go.base[0][0]} />
+<SetVar name="servicePath" value="go" />
+<SetVar name="defaultEnvironment" value="Git" />
+<SetVar name="packageManager" value="go modules" />
+<SetVar name="codeLanguage" value="yaml" />
+<SetVar name="customReasons" value={[
+  '<strong>System packages for processing</strong>: When your app processes images, videos, or files (requiring packages like <code>sudo apk add imagemagick</code>)',
+  '<strong>CGO dependencies</strong>: When you use CGO and need C libraries not included in the default environment',
+  '<strong>Development tools</strong>: When you need debugging tools, profilers, or other development utilities',
+  '<strong>Different base OS</strong>: When you need Ubuntu instead of Alpine for specific compatibility requirements'
+]} />
+<SetVar name="basicSetupCode" value={`run:
+  os: ubuntu
+  base: {{serviceVersion}}
+  prepareCommands:
+    - sudo apt-get update
+    - sudo apt-get install -y imagemagick
+    - go install github.com/some/tool@latest`} />
+<SetVar name="buildFilesCode" value={`build:
+  addToRunPrepare:
+    - go.mod
+    - go.sum
+run:
+  prepareCommands:
+    - sudo apk add imagemagick
+    - go mod download`} />
 
-- <span>{data.alpine.default}</span>
-- Selected version of Go when the runtime service was created.
-- [zCLI](/references/cli)
-- Git
-
-:::note
-To use Ubuntu instead of the default Alpine, set the [run.os](/zerops-yaml/specification#os--1) attribute.
-
-Additional packages and tools can be installed using [run.prepareCommands](/zerops-yaml/specification#preparecommands--1).
-:::
-
-## Runtime Flow
-
-When the first deploy with a defined `prepareCommands` attribute is triggered, Zerops will
-
-1. Create a prepare runtime container
-2. Optionally: [copy selected folders or files from your build container](/go/how-to/build-pipeline#copy-folders-or-files-from-your-build-container)
-3. Run the run.prepareCommands in the defined order
-
-### Command exit code
-
-If any command fails, it returns an exit code other than 0 and the deploy is canceled. Read the [prepare runtime log](/go/how-to/logs#prepare-runtime-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom runtime environment is ready for the deploy phase.
-
-The prepare runtime container is automatically deleted after the prepare runtime phase has finished or failed.
-
-### Custom runtime environment cache
-
-Some packages or tools can take a long time to install. Therefore, Zerops caches your custom runtime environment after the installation of your custom packages or tools is completed. When the second or following deploy is triggered, Zerops will use the custom runtime cache from the previous deploy if following conditions are met:
-
-1. Content of the <a href="/go/how-to/build-pipeline#copy-folders-or-files-from-your-build-container">build.addToRunPrepare</a> and <a href="/go/how-to/build-pipeline#preparecommands-1">run.prepareCommands</a> attributes didn't change from the previous deploy
-2. The custom runtime cache wasn't invalidated in the Zerops GUI.
-
-To invalidate the Zerops runtime cache go to your service detail in Zerops GUI, choose **Service dashboard & runtime containers** from the left menu and click on the **Open pipeline detail** button. Then click on the **Clear runtime prepare cache** button.
-
-{/* TODO - Screenshot */}
-
-When the custom runtime cache is used, Zerops doesn't create a prepare runtime container and executes the deployment of your application directly.
+<CustomizeRuntimeContent />
