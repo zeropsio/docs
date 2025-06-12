@@ -809,7 +809,7 @@ module.exports = {
         {
           type: 'doc',
           id: 'nodejs/how-to/customize-runtime',
-          label: 'Customize NodeJS runtime',
+          label: 'Customize Node.js runtime',
         },
       ],
     },

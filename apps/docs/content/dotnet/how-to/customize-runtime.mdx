@@ -3,57 +3,36 @@ title: Customize .NET runtime environment
 description: Learn how you can customize your dotnet runtime environment on Zerops.
 ---
 
-import Image from '/src/components/Image';
-
-<p align="center">
-  <Image
-    lightImage="/img/screenshots/build_deploy_pipeline_custom_runtime.png"
-    darkImage="/img/screenshots/build_deploy_pipeline_custom_runtime.png"
-    alt="Build Deploy pipeline"
-    style={{ width: '95%', height: 'auto' }}
-  />
-</p>
-
 import data from '@site/static/data.json';
+import { SetVar } from '@site/src/components/content/var';
+import CustomizeRuntimeContent from '@site/src/components/content/customize-runtime.mdx';
 
-The default .NET runtime environment contains:
+<SetVar name="serviceDisplay" value=".NET" />
+<SetVar name="serviceVersion" value={data.dotnet.base[0][0]} />
+<SetVar name="servicePath" value="dotnet" />
+<SetVar name="defaultEnvironment" value="ASP .NET and Git" />
+<SetVar name="packageManager" value="build tools" />
+<SetVar name="codeLanguage" value="yaml" />
+<SetVar name="customReasons" value={[
+  '<strong>System packages for processing</strong>: When your app processes images, videos, or files (requiring packages like <code>sudo apk add imagemagick</code>)',
+  '<strong>Native libraries</strong>: When your .NET packages require system libraries that aren\'t in the default environment',
+  '<strong>Development tools</strong>: When you need additional debugging or profiling tools',
+  '<strong>Different base OS</strong>: When you need Ubuntu instead of Alpine for specific compatibility requirements'
+]} />
+<SetVar name="basicSetupCode" value={`run:
+  os: ubuntu
+  base: {{serviceVersion}}
+  prepareCommands:
+    - sudo apt-get update
+    - sudo apt-get install -y imagemagick
+    - dotnet tool install -g some-global-tool`} />
+<SetVar name="buildFilesCode" value={`build:
+  addToRunPrepare:
+    - *.csproj
+    - nuget.config
+run:
+  prepareCommands:
+    - sudo apk add imagemagick
+    - dotnet restore`} />
 
-- <span>{data.alpine.default}</span>
-- Selected version of .NET when the runtime service was created.
-- [zCLI](/references/cli)
-- ASP .NET and Git
-
-:::note
-To use Ubuntu instead of the default Alpine, set the [run.os](/zerops-yaml/specification#os--1) attribute.
-
-Additional packages and tools can be installed using [run.prepareCommands](/zerops-yaml/specification#preparecommands--1).
-:::
-
-## Runtime Flow
-
-When the first deploy with a defined `prepareCommands` attribute is triggered, Zerops will
-
-1. Create a prepare runtime container
-2. Optionally: [copy selected folders or files from your build container](/dotnet/how-to/build-pipeline#copy-folders-or-files-from-your-build-container)
-3. Run the `prepareCommands` in the defined order
-
-## Command exit code
-
-If any command fails, it returns an exit code other than 0 and the deploy is canceled. Read the [prepare runtime log](/dotnet/how-to/logs#prepare-runtime-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom runtime environment is ready for the deploy phase.
-
-The prepare runtime container is automatically deleted after the prepare runtime phase has finished or failed.
-
-## Custom runtime environment cache
-
-Some packages or tools can take a long time to install. Therefore, Zerops caches your custom runtime environment after the installation of your custom packages or tools is completed. When the second or following deploy is triggered, Zerops will use the custom runtime cache from the previous deploy if following conditions are met:
-
-1. Content of the <a href="/dotnet/how-to/build-pipeline#copy-folders-or-files-from-your-build-container">build.addToRunPrepare</a> and <a href="/dotnet/how-to/build-pipeline#preparecommands-1">run.prepareCommands</a> attributes didn't change from the previous deploy
-2. The custom runtime cache wasn't invalidated in the Zerops GUI.
-
-:::tip
-To invalidate the Zerops runtime cache go to your service detail in Zerops GUI, choose **Service dashboard & runtime containers** from the left menu and click on the **Open pipeline detail** button. Then click on the **Clear runtime prepare cache** button.
-:::
-
-{/* TODO - Screenshot */}
-
-When the custom runtime cache is used, Zerops doesn't create a prepare runtime container and executes the deployment of your application directly.
+<CustomizeRuntimeContent />

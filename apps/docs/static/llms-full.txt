@@ -1049,29 +1049,11 @@ Maximum size of the import.yaml file is 100 kB.
 
 # Bun > How To > Customize Runtime
 
-  
-The default Bun runtime environment contains:
-- {data.alpine.default}
-- selected version of Bun selected when the runtime service was created.
-- 
-    `zCLI`
-  
-  , Zerops command line tool
-- `npm`, `yarn`, `git` and `npx` tools
-If you prefer the Ubuntu OS instead of Alpine, set the [build.os](/bun/how-to/build-pipeline#os) attribute to `ubuntu`. To install additional packages or tools add one or more `run.prepareCommands` commands to your `zerops.yaml`.
-When the first deploy with a defined `prepareCommands` attribute is triggered, Zerops will
-1. create a prepare runtime container
-2. optionally: [copy selected folders or files from your build container](bun/how-to/build-pipeline#copy-folders-or-files-from-your-build-container)
-3. run the `run.prepareCommands` commands in the defined order
-### Command exit code
-If any command fails, it returns an exit code other than 0 and the deploy is canceled. Read the [prepare runtime log](bun/how-to/logs#prepare-runtime-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom runtime environment is ready for the deploy phase.
-The prepare runtime container is automatically deleted after the prepare runtime phase has finished or failed.
-### Custom runtime environment cache
-Some packages or tools can take a long time to install. Therefore, Zerops caches your custom runtime environment after the installation of your custom packages or tools is completed. When the second or following deploy is triggered, Zerops will use the custom runtime cache from the previous deploy if following conditions are met:
-1. Content of the `build.addToRunPrepare` and `run.prepareCommands` attributes didn't change from the previous deploy
-2. The custom runtime cache wasn't invalidated in the Zerops GUI.
-To invalidate the custom runtime cache go to `yyy`
-When the custom runtime cache is used, Zerops doesn't create a prepare runtime container and executes the deployment of your application directly.
+System packages for processing: When your app processes images, videos, or files (requiring packages like sudo apk add imagemagick)',
+  'Global Bun tools: When you need CLI tools or utilities available system-wide',
+  'Native dependencies: When your Bun packages require system libraries that aren\'t in the default environment',
+  'Different base OS: When you need Ubuntu instead of Alpine for specific compatibility requirements'
+]} />
 
 ----------------------------------------
 
@@ -2788,29 +2770,51 @@ Maximum size of the import.yaml file is 100 kB.
 
 # Deno > How To > Customize Runtime
 
-  
+## Build Custom Runtime Images
+Zerops allows you to build custom runtime images (CRI) when the default base runtime images don't meet your Deno application's requirements. This is an optional phase in the [build and deploy pipeline](/features/pipeline#runtime-prepare-phase-optional).
+:::important
+You should not include your application code in the custom runtime image, as your built/packaged code is deployed automatically into fresh containers.
+:::
+## Configuration
+### Default Deno Runtime Environment
 The default Deno runtime environment contains:
-- {data.alpine.default}
-- selected version of Deno selected when the runtime service was created.
-- 
-    `zCLI`
-  
-  , Zerops command line tool
-- `npm`, `yarn`, `git` and `npx` tools
-If you prefer the Ubuntu OS instead of Alpine, set the [build.os](/deno/how-to/build-pipeline#os) attribute to `ubuntu`. To install additional packages or tools add one or more `run.prepareCommands` commands to your `zerops.yaml`.
-When the first deploy with a defined `prepareCommands` attribute is triggered, Zerops will
-1. create a prepare runtime container
-2. optionally: [copy selected folders or files from your build container](/deno/how-to/build-pipeline#copy-folders-or-files-from-your-build-container)
-3. run the `run.prepareCommands` commands in the defined order
-### Command exit code
-If any command fails, it returns an exit code other than 0 and the deploy is canceled. Read the [prepare runtime log](/deno/how-to/logs#prepare-runtime-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom runtime environment is ready for the deploy phase.
-The prepare runtime container is automatically deleted after the prepare runtime phase has finished or failed.
-### Custom runtime environment cache
-Some packages or tools can take a long time to install. Therefore, Zerops caches your custom runtime environment after the installation of your custom packages or tools is completed. When the second or following deploy is triggered, Zerops will use the custom runtime cache from the previous deploy if following conditions are met:
-1. Content of the `build.addToRunPrepare` and `run.prepareCommands` attributes didn't change from the previous deploy
-2. The custom runtime cache wasn't invalidated in the Zerops GUI.
-To invalidate the custom runtime cache go to `yyy`
-When the custom runtime cache is used, Zerops doesn't create a prepare runtime container and executes the deployment of your application directly.
+- {data.ubuntu.default}
+- Selected version of Deno when the runtime service was created
+- [zCLI](/references/cli)
+- Deno and Git
+### When You Need a Custom Runtime Image
+If your Deno application needs more than what's included in the default environment, you'll need to build a custom runtime image. Common scenarios include:
+- **System packages for processing**: When your app processes images, videos, or files (requiring packages like `sudo apt-get install -y imagemagick`)
+- **Global Deno tools**: When you need CLI tools or utilities available system-wide
+- **Native dependencies**: When your Deno modules require system libraries that aren't in the default environment
+Here are Deno-specific examples of configuring custom runtime images in your `zerops.yml`:
+### Basic Deno Setup
+    
+### Using Build Files in Runtime Preparation
+```yaml
+build:
+  addToRunPrepare:
+    - deno.json
+    - import_map.json
+run:
+  prepareCommands:
+    - sudo apt-get update
+    - sudo apt-get install -y imagemagick
+    - deno cache deps.ts
+```
+For complete configuration details, see the [runtime prepare phase configuration guide](/features/pipeline#configuration).
+## Process and Caching
+### How Runtime Prepare Works
+The runtime prepare process follows the same steps for all runtimes. See [how runtime prepare works](/features/pipeline#how-it-works) for the complete process details.
+### Caching Behavior
+Zerops caches custom runtime images to optimize deployment times. Learn about [custom runtime image caching](/features/pipeline#custom-runtime-image-caching) including when images are cached and reused.
+### Build Management
+For information about managing builds and deployments, see [managing builds and deployments](/features/pipeline#manage-build-and-deploys).
+:::warning
+Shared storage mounts are not available during the runtime prepare phase.
+:::
+## Troubleshooting
+If your `prepareCommands` fail, check the [prepare runtime log](/deno/how-to/logs#prepare-runtime-log) for specific error messages.
 
 ----------------------------------------
 
@@ -4425,32 +4429,11 @@ Maximum size of the import.yaml file is 100 kB.
 
 # Dotnet > How To > Customize Runtime
 
-  
-The default .NET runtime environment contains:
-- {data.alpine.default}
-- Selected version of .NET when the runtime service was created.
-- [zCLI](/references/cli)
-- ASP .NET and Git
-:::note
-To use Ubuntu instead of the default Alpine, set the [run.os](/zerops-yaml/specification#os--1) attribute.
-Additional packages and tools can be installed using [run.prepareCommands](/zerops-yaml/specification#preparecommands--1).
-:::
-## Runtime Flow
-When the first deploy with a defined `prepareCommands` attribute is triggered, Zerops will
-1. Create a prepare runtime container
-2. Optionally: [copy selected folders or files from your build container](/dotnet/how-to/build-pipeline#copy-folders-or-files-from-your-build-container)
-3. Run the `prepareCommands` in the defined order
-## Command exit code
-If any command fails, it returns an exit code other than 0 and the deploy is canceled. Read the [prepare runtime log](/dotnet/how-to/logs#prepare-runtime-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom runtime environment is ready for the deploy phase.
-The prepare runtime container is automatically deleted after the prepare runtime phase has finished or failed.
-## Custom runtime environment cache
-Some packages or tools can take a long time to install. Therefore, Zerops caches your custom runtime environment after the installation of your custom packages or tools is completed. When the second or following deploy is triggered, Zerops will use the custom runtime cache from the previous deploy if following conditions are met:
-1. Content of the build.addToRunPrepare and run.prepareCommands attributes didn't change from the previous deploy
-2. The custom runtime cache wasn't invalidated in the Zerops GUI.
-:::tip
-To invalidate the Zerops runtime cache go to your service detail in Zerops GUI, choose **Service dashboard & runtime containers** from the left menu and click on the **Open pipeline detail** button. Then click on the **Clear runtime prepare cache** button.
-:::
-When the custom runtime cache is used, Zerops doesn't create a prepare runtime container and executes the deployment of your application directly.
+System packages for processing: When your app processes images, videos, or files (requiring packages like sudo apk add imagemagick)',
+  'Native libraries: When your .NET packages require system libraries that aren\'t in the default environment',
+  'Development tools: When you need additional debugging or profiling tools',
+  'Different base OS: When you need Ubuntu instead of Alpine for specific compatibility requirements'
+]} />
 
 ----------------------------------------
 
@@ -5874,29 +5857,11 @@ Maximum size of the import.yaml file is 100 kB.
 
 # Elixir > How To > Customize Runtime
 
-  
-The default Elixir runtime environment contains:
-- {data.alpine.default}
-- selected version of Elixir selected when the runtime service was created.
-- 
-    `zCLI`
-  
-  , Zerops command line tool
-- `npm`, `yarn`, `git` and `npx` tools
-If you prefer the Ubuntu OS instead of Alpine, set the [build.os](/elixir/how-to/build-pipeline#os) attribute to `ubuntu`. To install additional packages or tools add one or more `run.prepareCommands` commands to your `zerops.yaml`.
-When the first deploy with a defined `prepareCommands` attribute is triggered, Zerops will
-1. create a prepare runtime container
-2. optionally: [copy selected folders or files from your build container](/elixir/how-to/build-pipeline#copy-folders-or-files-from-your-build-container)
-3. run the `run.prepareCommands` commands in the defined order
-### Command exit code
-If any command fails, it returns an exit code other than 0 and the deploy is canceled. Read the [prepare runtime log](/elixir/how-to/logs#prepare-runtime-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom runtime environment is ready for the deploy phase.
-The prepare runtime container is automatically deleted after the prepare runtime phase has finished or failed.
-### Custom runtime environment cache
-Some packages or tools can take a long time to install. Therefore, Zerops caches your custom runtime environment after the installation of your custom packages or tools is completed. When the second or following deploy is triggered, Zerops will use the custom runtime cache from the previous deploy if following conditions are met:
-1. Content of the `build.addToRunPrepare` and `run.prepareCommands` attributes didn't change from the previous deploy
-2. The custom runtime cache wasn't invalidated in the Zerops GUI.
-To invalidate the custom runtime cache go to `yyy`
-When the custom runtime cache is used, Zerops doesn't create a prepare runtime container and executes the deployment of your application directly.
+System packages for processing: When your app processes images, videos, or files (requiring packages like sudo apk add imagemagick)',
+  'Erlang libraries: When you need additional Erlang libraries not included by default',
+  'Native dependencies: When your Mix dependencies require system libraries that aren\'t in the default environment',
+  'Different base OS: When you need Ubuntu instead of Alpine for specific compatibility requirements'
+]} />
 
 ----------------------------------------
 
@@ -7707,15 +7672,6 @@ export const languages = [
     { name: ".NET", link: "/dotnet/how-to/env-variables#how-to-read-env-variables-from-your-dotnet-app" },
     { name: "Rust", link: "/rust/how-to/env-variables#how-to-read-env-variables-from-your-rust-app" }
 ]
-export const builds = [
-    { name: "Node.js", link: "/nodejs/how-to/build-process##nodejs-build-hardware-resources" },
-    { name: "PHP", link: "/php/how-to/build-process#php-build-hardware-resources" },
-    { name: "Python", link: "/python/how-to/build-process#python-build-hardware-resources" },
-    { name: "Go", link: "/go/how-to/build-process#go-build-hardware-resources" },
-    { name: ".NET", link: "/dotnet/how-to/build-process#dotnet-build-hardware-resources" },
-    { name: "Rust", link: "/rust/how-to/build-process#rust-build-hardware-resources" },
-    { name: "Java", link: "/java/how-to/build-process#java-build-hardware-resources" },
-]
 export const customizeBuild = [
     { name: "Node.js", link: "/nodejs/how-to/build-process#customize-nodejs-build-environment" },
     { name: "PHP", link: "/php/how-to/build-process#customize-php-build-environment" },
@@ -7735,8 +7691,7 @@ export const customizeRuntime = [
     { name: "Java", link: "/java/how-to/customize-runtime" },
 ]
 ## Configure the pipeline
-Zerops provides a customizable build and runtime environment for your application.
-Start by adding a [zerops.yaml](/zerops-yaml/specification) file to the **root of your repository** and modify it to fit your application.
+Zerops provides a customizable build and runtime environment for your application. Start by adding a [zerops.yaml](/zerops-yaml/specification) file to the **root of your repository** and modify it to fit your application.
 Here is a basic example for a Node.js application:
 ```yaml
 zerops:
@@ -7752,25 +7707,23 @@ zerops:
       base: nodejs@20
       start: npm start
 ```
-The zerops.yaml in your repository tells Zerops how to build and deploy your application.
-Zerops will follow these instruction when the build & deploy pipeline is triggered for the Node.js service named `api`:
-1. Create a standard build environment with the Node.js v.20 preinstalled.
-2. Build your app using these commands: `npm i`, `npm run build`
-3. Create a standard runtime environment with the Node.js v.20 preinstalled.
-4. Deploy the built artefact from the `./dist` folder to the runtime container
-5. Cache the content of the `./node_modules` folder for the next build
-6. Start your application using the `npm start` command
-Learn more about all `zerops.yaml` parameters for your runtime:
+The zerops.yaml in your repository tells Zerops how to build and deploy your application. When the build & deploy pipeline triggers for the Node.js service named `api`, Zerops will:
+1. Create a build environment with Node.js v.20 preinstalled
+2. Run build commands: `npm i`, `npm run build`
+3. Create a runtime environment with Node.js v.20 preinstalled
+4. Deploy the built artifact from the `./dist` folder to runtime containers
+5. Cache the `./node_modules` folder for faster subsequent builds
+6. Start your application using `npm start`
+Learn more about `zerops.yaml` parameters for your runtime:
 ## Trigger the pipeline
   
 ### Automatically
-Trigger the build & deploy pipeline automatically with each push to the selected branch or with a new tag. Create a new runtime service and connect it to your GitHub repository or GitLab repository.
+Trigger the build & deploy pipeline automatically with each push to the selected branch or with a new tag. Create a new runtime service and connect it to your GitHub or GitLab repository.
   
 ### Manually
-To start a new build & deploy pipeline manually, use the [Zerops CLI](/references/cli). zCLI is the Zerops command-line tool.
-The [zcli service push](/references/cli/commands#service-push) command uploads your application code, builds and deploys your application in Zerops.
-The command triggers the build pipeline defined in `zerops.yaml`. `zerops.yaml` must be in the working directory. The working directory is by default the current directory and can be changed using the `--workingDir` flag.
-zCLI uploads all files and subdirectories of the working directory to Zerops and starts the build pipeline. If the `.gitignore` file is found, it is interpreted and the defined files and folders will be ignored.
+Start a new build & deploy pipeline manually using the [Zerops CLI](/references/cli). The [zcli service push](/references/cli/commands#service-push) command uploads your application code, builds and deploys your application in Zerops.
+The command triggers the build pipeline defined in `zerops.yaml`. The `zerops.yaml` file must be in the working directory (current directory by default, changeable with the `--workingDir` flag).
+zCLI uploads all files and subdirectories from the working directory to Zerops and starts the build pipeline. If a `.gitignore` file exists, Zerops interprets it and ignores the defined files and folders.
 #### Push command parameters
 ```sh
 Usage:
@@ -7789,88 +7742,150 @@ Flags:
       --zeropsYamlPath string    Sets a custom path to the zerops.yaml file relative to the working directory. By default zCLI
                                  looks for zerops.yaml in the working directory.
 ```
-If you just want to [deploy](#deploy-phase) your already built application to Zerops, use the zcli service deploy command instead.
+If you want to [deploy](#deploy-phase) your already built application to Zerops, use the zcli service deploy command instead.
 ## Build phase
   
-Zerops starts a temporary build container and performs following actions:
-1. Installs the build environment.
-2. Downloads your application source code from [GitHub ↗](https://www.github.com), [GitLab ↗](https://www.gitlab.com) or via [Zerops CLI].
-3. Optionally customizes the build environment.
-4. Runs the build commands.
-5. Uploads the application artefact to the internal Zerops storage and prepares it for the deploy.
-6. Optionally [caches](/features/build-cache) the selected files for the next build.
-The build container is automatically deleted after the build has finished or failed.
+Zerops starts a temporary build container and executes these steps:
+1. **Install build environment** - Sets up the runtime and tools
+2. **Download source code** - From [GitHub ↗](https://www.github.com), [GitLab ↗](https://www.gitlab.com) or via [Zerops CLI](/references/cli)
+3. **Customize environment** - Runs optional preparation commands
+4. **Execute build commands** - Compiles and packages your application
+5. **Upload artifacts** - Stores build output in internal Zerops storage
+6. **Cache files** - Optionally [caches](/features/build-cache) selected files for faster future builds
+Zerops automatically deletes the build container after the build finishes or fails.
 ### Build hardware resources
-Each runtime service have different HW resources for build containers:
-The build container is always started with the minimum hardware resources and scales vertically up to the maximum resources.
+All runtime services use the same hardware resources for build containers:
+  
+      HW resource
+      Minimum
+      Maximum
+    
+      CPU cores
+      1
+      5
+    
+      RAM
+      8 GB
+      8 GB
+    
+      Disk
+      1 GB
+      100 GB
+    
+Build containers start with minimum resources and scale vertically up to maximum capacity as needed.
 :::info
-Hardware resources of the build containers are not charged. The build costs are covered by the standard Zerops [project fee](https://zerops.io/#pricing).
+Build container resources are not charged. Build costs are covered by the standard Zerops [project fee](https://zerops.io/#pricing).
 :::
 ### Build time limit
-The time limit for the whole build pipeline is **1 hour**. After 1 hour, Zerops terminates the build pipeline and deletes the build container.
+The entire build pipeline has a **1 hour** time limit. After 1 hour, Zerops terminates the build pipeline and deletes the build container.
 ### Customize the build environment
-Each runtime service in Zerops has a default build environment with a major version based on the [build.base](/zerops-yaml/specification#base-) attribute in `zerops.yaml`.
-To install additional packages or tools add one or more [build.prepareCommands](/zerops-yaml/specification#preparecommands-) commands to your `zerops.yaml`.
-Learn more about what is included in the default build environment:
+All runtime services start with a default build environment based on the [build.base](/zerops-yaml/specification#base-) attribute in `zerops.yaml`. Install additional packages or tools by adding [build.prepareCommands](/zerops-yaml/specification#preparecommands-) to your configuration.
+Learn more about customizing build environments:
+## Runtime prepare phase (optional)
+  
+When your application requires additional system packages, libraries, or tools in the runtime environment, Zerops allows you to build a custom runtime image. This optional phase occurs after the build phase and before deployment.
+### When to use custom runtime images
+Build custom runtime images when you need:
+- System packages or libraries for runtime operations (e.g., `apk add imagemagick` for image processing)
+- Library dependencies for interpreted languages or dynamically linked binaries
+- System-level tools or utilities your application requires
+- Customized base operating system or additional software layers
+### Configuration
+Configure custom runtime images in your `zerops.yml` file using these fields:
+#### `run.os` + `run.base`
+Specify the operating system and base packages for your custom runtime image:
+```yaml
+run:
+  os: alpine # or ubuntu
+  base: nodejs@20 # specify your runtime and version
+```
+#### `run.prepareCommands`
+Define commands that customize your runtime image. These commands run inside a fresh base container:
+```yaml
+run:
+  prepareCommands:
+    - sudo apk add --no-cache imagemagick
+    - sudo apt-get update && apt-get install -y some-package  # for Ubuntu
+```
+Zerops creates the custom runtime image from this container after all commands complete successfully.
+#### `build.addToRunPrepare`
+Copy specific files from the build phase to the runtime prepare phase. This is useful when you need source files during runtime preparation:
+```yaml
+build:
+  addToRunPrepare:
+    - package.json
+    - requirements.txt
+    - config/runtime-setup.sh
+```
+These files are packed immediately after `build.buildCommands` finish and become available during the runtime prepare phase.
+### How it works
+When you trigger the first deploy with defined [run.prepareCommands](/zerops-yaml/specification#preparecommands--1), Zerops:
+1. **Creates prepare container** - Based on `run.os` and `run.base`
+2. **Copies build files** - Files specified in [build.addToRunPrepare](/zerops-yaml/specification#addtorunprepare-) (if any)
+3. **Runs prepare commands** - Executes [run.prepareCommands](/zerops-yaml/specification#preparecommands--1) in order
+4. **Creates runtime image** - Builds custom runtime image from the prepared container
+5. **Uses for deployment** - Deploys your application using this custom runtime image
+### Custom runtime image caching
+Zerops caches custom runtime images to optimize deployment times. The runtime prepare phase is skipped and cached images are reused when:
+- It is not the first deployment of your service
+- None of these `zerops.yaml` fields changed since the last deployment:
+  - `run.os` or `run.base`
+  - `run.prepareCommands`
+  - `build.addToRunPrepare`
+- File contents specified in `build.addToRunPrepare` remain unchanged
+- The custom runtime image cache hasn't been manually invalidated
+#### Manual cache invalidation
+To invalidate the custom runtime image cache, go to your service detail in the Zerops GUI, choose **Service dashboard & runtime containers** from the left menu, and click on the **Open pipeline detail** button. Then click on the **Clear runtime prepare image** button.
+Learn more about building custom runtime images:
+:::warning
+Do not include your application code in the custom runtime image, as your built application code is deployed automatically into fresh containers.
+Shared storage mounts are also not available during the runtime prepare phase.
+:::
 ## Deploy phase
   
-### Application artefact
-When the [build phase](/dotnet/how-to/build-process) is finished, the application artefact is stored in the internal Zerops storage and the build container is deleted.
-If you triggered the deploy pipeline [manually](/dotnet/how-to/trigger-pipeline#manual-deploy-using-zerops-cli) using Zerops CLI, the application artefact is also uploaded to the internal Zerops storage.
-Zerops uses the stored artefact to deploy the identical version of your application each time a new container is started:
-- when a new application version is deployed
-- when the application [scales horizontally](/dotnet/how-to/create#horizontal-auto-scaling)
-- when a runtime container fails and a new container is started automatically
+### Application artifacts
+After the [build phase](#build-phase) completes, Zerops stores the application artifact in internal storage and deletes the build container.
+For [manual deployments](#manual-deploy-using-zerops-cli) using Zerops CLI, the application artifact is also uploaded to internal storage.
+Zerops uses the stored artifact to deploy identical versions of your application whenever a new container starts:
+- During new application version deployments
+- When applications [scale horizontally](/features/scaling-ha#vertical-and-horizontal-auto-scaling)
+- When runtime containers fail and new containers start automatically
 ### First deploy
-When your application is deployed for the first time, Zerops will start one or more runtime containers based on the service [auto scaling settings](/go/how-to/scaling).
-Zerops performs following actions for each new container:
-1. Installs the runtime environment
-2. Downloads the application artefact from the internal storage
-3. Optionally runs the [init commands](/go/how-to/build-pipeline#initcommands)
-4. Starts your application using the [start command](/go/how-to/build-pipeline#start)
-5. Optionally waits until the [readiness check](/go/how-to/build-pipeline#readiness-check) succeeds
-6. The container is now active and receives incoming requests.
-Services with multiple containers are deployed in parallel.
+For initial deployments, Zerops starts one or more runtime containers based on your service [auto scaling settings](/features/scaling-ha).
+Zerops executes these steps for each new container:
+1. **Install runtime environment** - Sets up the runtime (or uses a custom runtime image if configured)
+2. **Download application artifact** - Retrieves build output from internal storage
+3. **Run initialization** - Executes optional [init commands](/zerops-yaml/specification#initcommands-)
+4. **Start application** - Launches your app using the [start command](/zerops-yaml/specification#startcommands-)
+5. **Check readiness** - Waits for [readiness check](/zerops-yaml/specification#readinesscheck-) to succeed (if configured)
+6. **Activate container** - Container becomes active and receives incoming requests
+Services with multiple containers deploy in parallel.
 :::info
-If your application needs to be initialized in each runtime container, add [init commands](/go/how-to/build-pipeline#initcommands) to `zerops.yaml`.
+If your application needs initialization in each runtime container, add [init commands](/zerops-yaml/specification#initcommands-) to `zerops.yaml`.
 :::
 :::caution
-Do not use the `initCommands` for customising your runtime environment. See [how to customize the runtime environment](/go/how-to/customize-runtime).
+Do not use `initCommands` for runtime environment customization. See [how to build custom runtime images](#runtime-prepare-phase-optional).
 :::
-### Further deploys
-When a previous version of your application is already running, Zerops will start new containers. The count of new containers will be the same as the count of existing containers.
-Zerops performs the identical actions for each new container as the first deployment.
-When all new containers are started your service contains both new and old versions for a short period of time.
-The old containers are then removed from the project balancer so they don't receive new requests. The PHP process inside each of the old containers is terminated and all old containers are gradually deleted.
+### Subsequent deploys
+For applications with existing running versions, Zerops starts new containers matching the count of existing containers.
+Zerops executes the same steps as the first deployment for each new container. Your service briefly contains both new and old versions during this process.
+Old containers are then removed from the project balancer to stop receiving new requests. The processes inside old containers terminate and Zerops gradually deletes all old containers.
 ### Readiness checks
-If your application isn't ready to handle requests right after it is started via the [start command](/nodejs/how-to/build-pipeline#start), configure a [readiness check](/nodejs/how-to/build-pipeline#readiness-check) in your `zerops.yaml`.
-If the readiness check is defined, Zerops will:
-1. Start your application
-2. Perform a readiness check
-3. If the readiness check fails, wait 5 seconds and repeat step 2.
-4. If the readiness check succeeds, set the container as active.
-Application in the runtime container with a pending readiness check won't receive any incoming requests. Only active containers receive incoming requests to your Node.js service.
-If the readiness check is still failing after 5 minutes, the specific runtime container is marked as failed and Zerops will delete it, create a new runtime container and perform the deploy.
-The `httpGet` readiness check is successful when the URL returns HTTP status code `2xx`. The timeout is 5 seconds. When the URL returns a `3xx` HTTP status, the readiness check HTTP client will follow the redirect.
-The `exec.command` readiness check is successful when the command returns status code 0. The timeout is 5 seconds.
+If your application is not ready to handle requests immediately after starting via the [start command](/zerops-yaml/specification#startcommands-), configure a [readiness check](/zerops-yaml/specification#readinesscheck-) in your `zerops.yaml`.
+When readiness checks are defined, Zerops:
+1. **Starts your application**
+2. **Performs readiness check**
+3. **Waits and retries** - If check fails, waits 5 seconds and repeats step 2
+4. **Activates container** - If check succeeds, marks container as active
+Runtime containers with pending readiness checks do not receive incoming requests - only active containers handle traffic.
+If readiness checks fail for 5 minutes, Zerops marks the container as failed, deletes it, creates a new container, and repeats the deployment process.
+**Readiness check types:**
+- `httpGet` - Succeeds when URL returns HTTP `2xx` status (5-second timeout, follows `3xx` redirects)
+- `exec.command` - Succeeds when command returns status code 0 (5-second timeout)
 Read the [runtime log](/nodejs/how-to/logs#runtime-log) to troubleshoot failed readiness checks.
-## Customize the runtime environment
-Each runtime service in Zerops has a default runtime environment with a major version based on the [run.base](/zerops-yaml/specification#base--1) attribute in `zerops.yaml`.
-To install additional packages or tools add one or more [run.prepareCommands](/zerops-yaml/specification#preparecommands--1) commands to your `zerops.yaml`.
-Learn more about what is included in the default runtime environment:
-  
-When the first deploy with a defined [prepareCommands](/zerops-yaml/specification#preparecommands--1) attribute is triggered, Zerops will
-1. create a prepare runtime container
-2. optionally: [copy selected folders or files from your build container]
-3. run the [run.prepareCommands](/zerops-yaml/specification#preparecommands--1) commands in the defined order
-Some packages or tools can take a long time to install. Therefore, Zerops caches your custom runtime environment after the installation of your custom packages or tools is completed. When the second or following deploy is triggered, Zerops will use the custom runtime cache from the previous deploy if following conditions are met:
-1. Content of the [build.addToRunPrepare](/zerops-yaml/specification#addtorunprepare-) and [run.prepareCommands](/zerops-yaml/specification#preparecommands--1) attributes didn't change from the previous deploy
-2. The custom runtime cache wasn't invalidated in the Zerops GUI.
-When the custom runtime cache is used, Zerops doesn't create a prepare runtime container and executes the deployment of your application directly.
 ## Manual deploy using Zerops CLI
   
-To start only a deploy pipeline, use the [Zerops CLI](/references/cli). zCLI is the Zerops command-line tool.
-The `zcli service deploy` command uploads your application and deploys it in Zerops. Use this tool if you have your own build process. If you want to build your application in Zerops, use an [automatic](#automatically) or [manual](#manually) build process.
+Start deploy-only pipelines using the [Zerops CLI](/references/cli). The `zcli service deploy` command uploads and deploys your application in Zerops. Use this when you have your own build process. For building applications in Zerops, use [automatic](#automatically) or [manual](#manually) build processes instead.
 ```sh
 Usage:
   zcli service deploy pathToFileOrDir [flags]
@@ -7889,32 +7904,30 @@ Flags:
       --zeropsYamlPath string    Sets a custom path to the zerops.yaml file relative to the working directory. By default zCLI
                                  looks for zerops.yaml in the working directory.
 ```
-`pathToFileOrDir` defines a path to one or more directories and/or files relative to the working directory. The working directory is by default the current directory and can be changed using the 
-`--workingDir` flag.
-`zerops.yaml` must be placed in the working directory.
+`pathToFileOrDir` defines paths to directories and/or files relative to the working directory. The working directory defaults to the current directory and can be changed using the `--workingDir` flag.
+Place `zerops.yaml` in the working directory.
 :::info
-You can change the deploy pipeline when you need to. Just simply modify the `zerops.yaml` in your working directory.
+You can modify the deploy pipeline anytime by updating the `zerops.yaml` in your working directory.
 :::
 ## Manage build and deploys
 ### Cancel running build
-When you know that the running build is not correct and you want to cancel it, you can do it in Zerops GUI. Go to the service detail, open the list of running processes and click on the **Open pipeline detail** button. Then click on the **Cancel build** button.
+When you need to cancel an incorrect running build, use the Zerops GUI. Go to the service detail, open the running processes list, and click **Open pipeline detail**. Then click **Cancel build**.
   
 :::caution
-The build cancellation is available before the build pipeline is finished. When the build is finished, the deployment cannot be cancelled.
+Build cancellation is only available before the build pipeline finishes. Once the build completes, deployment cannot be cancelled.
 :::
 ### Application versions
-Zerops keeps 10 last versions of your application in the internal storage.
-The list of application versions is available in Zerops GUI. Go to the service detail and choose **Service dashboard & runtime containers** from the left menu. The active version is highlighted, show all archived version by clicking on the button below.
+Zerops keeps the 10 most recent versions of your application in internal storage.
+Access the application versions list in Zerops GUI by going to service detail and choosing **Service dashboard & runtime containers** from the left menu. The active version is highlighted - click the button below to show all archived versions.
   
-The pipeline detail is accessible from the additional menu. The pipeline detail contains
-- The pipeline config (`zerops.yaml`) that was used for the selected version
-- The build log (if available)
-- The prepare runtime log (if available)
-You can download the build artefact of the selected version or delete an inactive version manually.
+Access pipeline details from the additional menu. Pipeline details contain:
+- Pipeline configuration (`zerops.yaml`) used for the selected version
+- Build log (if available)
+- Prepare runtime log (if available)
+You can download the build artifact for selected versions or manually delete inactive versions.
 ### Restore an archived version
-You can restore an archived version by choosing the **Activate** item from the additional menu.
-Zerops will deploy the selected version and the active version will be archived.
-The environment variables will be restored to the latest moment when the selected version was active.
+Restore archived versions by choosing **Activate** from the additional menu. Zerops will deploy the selected version and archive the currently active version.
+Environment variables restore to their state from the last moment when the selected version was active.
 
 ----------------------------------------
 
@@ -11067,29 +11080,11 @@ Maximum size of the import.yaml file is 100 kB.
 
 # Gleam > How To > Customize Runtime
 
-  
-The default Gleam runtime environment contains:
-- {data.alpine.default}
-- selected version of Gleam selected when the runtime service was created.
-- 
-    `zCLI`
-  
-  , Zerops command line tool
-- `npm`, `yarn`, `git` and `npx` tools
-If you prefer the Ubuntu OS instead of Alpine, set the [build.os](/gleam/how-to/build-pipeline#os) attribute to `ubuntu`. To install additional packages or tools add one or more `run.prepareCommands` commands to your `zerops.yaml`.
-When the first deploy with a defined `prepareCommands` attribute is triggered, Zerops will
-1. create a prepare runtime container
-2. optionally: [copy selected folders or files from your build container](/gleam/how-to/build-pipeline#copy-folders-or-files-from-your-build-container)
-3. run the `run.prepareCommands` commands in the defined order
-### Command exit code
-If any command fails, it returns an exit code other than 0 and the deploy is canceled. Read the [prepare runtime log](/gleam/how-to/logs#prepare-runtime-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom runtime environment is ready for the deploy phase.
-The prepare runtime container is automatically deleted after the prepare runtime phase has finished or failed.
-### Custom runtime environment cache
-Some packages or tools can take a long time to install. Therefore, Zerops caches your custom runtime environment after the installation of your custom packages or tools is completed. When the second or following deploy is triggered, Zerops will use the custom runtime cache from the previous deploy if following conditions are met:
-1. Content of the `build.addToRunPrepare` and `run.prepareCommands` attributes didn't change from the previous deploy
-2. The custom runtime cache wasn't invalidated in the Zerops GUI.
-To invalidate the custom runtime cache go to `yyy`
-When the custom runtime cache is used, Zerops doesn't create a prepare runtime container and executes the deployment of your application directly.
+System packages for processing: When your app processes images, videos, or files (requiring packages like sudo apk add imagemagick)',
+  'Erlang libraries: When you need additional Erlang libraries for your Gleam application',
+  'Native dependencies: When your Gleam dependencies require system libraries that aren\'t in the default environment',
+  'Different base OS: When you need Ubuntu instead of Alpine for specific compatibility requirements'
+]} />
 
 ----------------------------------------
 
@@ -12475,30 +12470,11 @@ Maximum size of the import.yaml file is 100 kB.
 
 # Go > How To > Customize Runtime
 
-  
-The default Go runtime environment contains:
-- {data.alpine.default}
-- Selected version of Go when the runtime service was created.
-- [zCLI](/references/cli)
-- Git
-:::note
-To use Ubuntu instead of the default Alpine, set the [run.os](/zerops-yaml/specification#os--1) attribute.
-Additional packages and tools can be installed using [run.prepareCommands](/zerops-yaml/specification#preparecommands--1).
-:::
-## Runtime Flow
-When the first deploy with a defined `prepareCommands` attribute is triggered, Zerops will
-1. Create a prepare runtime container
-2. Optionally: [copy selected folders or files from your build container](/go/how-to/build-pipeline#copy-folders-or-files-from-your-build-container)
-3. Run the run.prepareCommands in the defined order
-### Command exit code
-If any command fails, it returns an exit code other than 0 and the deploy is canceled. Read the [prepare runtime log](/go/how-to/logs#prepare-runtime-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom runtime environment is ready for the deploy phase.
-The prepare runtime container is automatically deleted after the prepare runtime phase has finished or failed.
-### Custom runtime environment cache
-Some packages or tools can take a long time to install. Therefore, Zerops caches your custom runtime environment after the installation of your custom packages or tools is completed. When the second or following deploy is triggered, Zerops will use the custom runtime cache from the previous deploy if following conditions are met:
-1. Content of the build.addToRunPrepare and run.prepareCommands attributes didn't change from the previous deploy
-2. The custom runtime cache wasn't invalidated in the Zerops GUI.
-To invalidate the Zerops runtime cache go to your service detail in Zerops GUI, choose **Service dashboard & runtime containers** from the left menu and click on the **Open pipeline detail** button. Then click on the **Clear runtime prepare cache** button.
-When the custom runtime cache is used, Zerops doesn't create a prepare runtime container and executes the deployment of your application directly.
+System packages for processing: When your app processes images, videos, or files (requiring packages like sudo apk add imagemagick)',
+  'CGO dependencies: When you use CGO and need C libraries not included in the default environment',
+  'Development tools: When you need debugging tools, profilers, or other development utilities',
+  'Different base OS: When you need Ubuntu instead of Alpine for specific compatibility requirements'
+]} />
 
 ----------------------------------------
 
@@ -14142,30 +14118,11 @@ Maximum size of the import.yaml file is 100 kB.
 
 # Java > How To > Customize Runtime
 
-  
-The default Java runtime environment contains:
-- {data.alpine.default}
-- Selected version of Java when the runtime service was created.
-- [zCLI](/references/cli)
-- Git
-:::note
-To use Ubuntu instead of the default Alpine, set the [run.os](/zerops-yaml/specification#os--1) attribute.
-Additional packages and tools can be installed using [run.prepareCommands](/zerops-yaml/specification#preparecommands--1).
-:::
-## Runtime Flow
-When the first deploy with a defined `prepareCommands` attribute is triggered, Zerops will
-1. Create a prepare runtime container
-2. Optionally: [copy selected folders or files from your build container](/java/how-to/build-pipeline#copy-folders-or-files-from-your-build-container)
-3. Run the run.prepareCommands in the defined order
-### Command exit code
-If any command fails, it returns an exit code other than 0 and the deploy is canceled. Read the [prepare runtime log](/java/how-to/logs#prepare-runtime-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom runtime environment is ready for the deploy phase.
-The prepare runtime container is automatically deleted after the prepare runtime phase has finished or failed.
-### Custom runtime environment cache
-Some packages or tools can take a long time to install. Therefore, Zerops caches your custom runtime environment after the installation of your custom packages or tools is completed. When the second or following deploy is triggered, Zerops will use the custom runtime cache from the previous deploy if following conditions are met:
-1. Content of the build.addToRunPrepare and run.prepareCommands attributes didn't change from the previous deploy
-2. The custom runtime cache wasn't invalidated in the Zerops GUI.
-To invalidate the Zerops runtime cache go to your service detail in Zerops GUI, choose **Service dashboard & runtime containers** from the left menu and click on the **Open pipeline detail** button. Then click on the **Clear runtime prepare cache** button.
-When the custom runtime cache is used, Zerops doesn't create a prepare runtime container and executes the deployment of your application directly.
+Build tools: When you need Maven, Gradle, or other build tools not included by default',
+  'Native libraries: When your Java dependencies require system libraries that aren\'t in the default environment',
+  'Application servers: When you need Tomcat, Jetty, or other application servers',
+  'Different base OS: When you need Ubuntu instead of Alpine for specific compatibility requirements'
+]} />
 
 ----------------------------------------
 
@@ -16858,30 +16815,36 @@ Maximum size of the import.yaml file is 100 kB.
 
 # Nginx > How To > Customize Runtime
 
-  
-The default Nginx runtime environment contains:
-- {data.alpine.default}
-- Selected version of Nginx when the runtime service was created.
-- [zCLI](/references/cli)
-- Git and Composer
-:::note
-To use Ubuntu instead of the default Alpine, set the [run.os](/zerops-yaml/specification#os--1) attribute.
-Additional packages and tools can be installed using [run.prepareCommands](/zerops-yaml/specification#preparecommands--1).
+## Build Custom Runtime Images
+Zerops allows you to build custom runtime images (CRI) when the default base runtime images don't meet your Nginx Static application's requirements. This is an optional phase in the [build and deploy pipeline](/features/pipeline#runtime-prepare-phase-optional).
+:::important
+You should not include your application code in the custom runtime image, as your built/packaged code is deployed automatically into fresh containers.
 :::
-### Runtime Flow
-When the first deploy with a defined `prepareCommands` attribute is triggered, Zerops will
-1. create a prepare runtime container
-2. optionally: [copy selected folders or files from your build container](/nginx/how-to/build-pipeline#copy-folders-or-files-from-your-build-container)
-3. run the run.prepareCommands commands in the defined order
-### Command exit code
-If any command fails, it returns an exit code other than 0 and the deploy is canceled. Read the [prepare runtime log](/nginx/how-to/logs#prepare-runtime-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom runtime environment is ready for the deploy phase.
-The prepare runtime container is automatically deleted after the prepare runtime phase has finished or failed.
-### Custom runtime environment cache
-Some packages or tools can take a long time to install. Therefore, Zerops caches your custom runtime environment after the installation of your custom packages or tools is completed. When the second or following deploy is triggered, Zerops will use the custom runtime cache from the previous deploy if following conditions are met:
-1. Content of the build.addToRunPrepare and run.prepareCommands attributes didn't change from the previous deploy
-2. The custom runtime cache wasn't invalidated in the Zerops GUI.
-To invalidate the Zerops runtime cache go to your service detail in Zerops GUI, choose **Service dashboard & runtime containers** from the left menu and click on the **Open pipeline detail** button. Then click on the **Clear runtime prepare cache** button.
-When the custom runtime cache is used, Zerops doesn't create a prepare runtime container and executes the deployment of your application directly.
+## Configuration
+### Default Nginx Static Runtime Environment
+The default Nginx Static runtime environment contains:
+- {data.alpine.default}
+- Selected version of Nginx when the runtime service was created
+- [zCLI](/references/cli)
+- Git
+### When You Need a Custom Runtime Image
+If your Nginx Static service needs additional tools beyond the default environment (SSL management, monitoring, security tools, etc.), you'll need to build a custom runtime image.
+Here are Nginx Static-specific examples of configuring custom runtime images in your `zerops.yml`:
+### Basic Nginx Static Setup
+    
+For complete configuration details, see the [runtime prepare phase configuration guide](/features/pipeline#configuration).
+## Process and Caching
+### How Runtime Prepare Works
+The runtime prepare process follows the same steps for all runtimes. See [how runtime prepare works](/features/pipeline#how-it-works) for the complete process details.
+### Caching Behavior
+Zerops caches custom runtime images to optimize deployment times. Learn about [custom runtime image caching](/features/pipeline#custom-runtime-image-caching) including when images are cached and reused.
+### Build Management
+For information about managing builds and deployments, see [managing builds and deployments](/features/pipeline#manage-build-and-deploys).
+:::warning
+Shared storage mounts are not available during the runtime prepare phase.
+:::
+## Troubleshooting
+If your `prepareCommands` fail, check the [prepare runtime log](/nginx/how-to/logs#prepare-runtime-log) for specific error messages.
 
 ----------------------------------------
 
@@ -18263,7 +18226,7 @@ The application code is available in the `/var/www` folder in your build contain
 Build of your Node.js application is run in a separate build container with following resource configuration:
 | HW resource   | Minimum | Maximum |
 | ------------- | ------- | ------- |
-| **CPU cores** | 6       | 20      |
+| **CPU cores** | 1       | 5       |
 | **RAM**       | 8 GB    | 8 GB    |
 | **Disk**      | 1 GB    | 100 GB  |
 | **Disk**      | 1 GB    | 100 GB  |
@@ -18601,30 +18564,11 @@ Maximum size of the import.yaml file is 100 kB.
 
 # Nodejs > How To > Customize Runtime
 
-  
-### Runtime Environment
-The default Node.js runtime environment contains:
-- {data.alpine.default}
-- Selected version of Node.js when the runtime service was created.
-- [zCLI](/references/cli)
-- NPM, Yarn, Git and NPX tools
-:::note
-To use Ubuntu instead of the default Alpine, set the [run.os](/zerops-yaml/specification#os--1) attribute.
-Additional packages and tools can be installed using [run.prepareCommands](/zerops-yaml/specification#preparecommands--1).
-:::
-When the first deploy with a defined `prepareCommands` attribute is triggered, Zerops will
-1. Create a prepare runtime container
-2. Optionally: [copy selected folders or files from your build container](/nodejs/how-to/build-pipeline#copy-folders-or-files-from-your-build-container)
-3. Run the run.prepareCommands in the defined order
-### Command exit code
-If any command fails, it returns an exit code other than 0 and the deploy is canceled. Read the [prepare runtime log](/nodejs/how-to/logs#prepare-runtime-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom runtime environment is ready for the deploy phase.
-The prepare runtime container is automatically deleted after the prepare runtime phase has finished or failed.
-### Custom runtime environment cache
-Some packages or tools can take a long time to install. Therefore, Zerops caches your custom runtime environment after the installation of your custom packages or tools is completed. When the second or following deploy is triggered, Zerops will use the custom runtime cache from the previous deploy if following conditions are met:
-1. Content of the build.addToRunPrepare and run.prepareCommands attributes didn't change from the previous deploy
-2. The custom runtime cache wasn't invalidated in the Zerops GUI.
-To invalidate the Zerops runtime cache go to your service detail in Zerops GUI, choose **Service dashboard & runtime containers** from the left menu and click on the **Open pipeline detail** button. Then click on the **Clear runtime prepare cache** button.
-When the custom runtime cache is used, Zerops doesn't create a prepare runtime container and executes the deployment of your application directly.
+System packages for processing: When your app processes images, videos, or files (requiring packages like sudo apk add imagemagick, sudo apk add ffmpeg)',
+  'Global Node.js tools: When you need CLI tools or utilities available system-wide (like pm2 for process management)',
+  'Native dependencies: When your npm packages require system libraries that aren\'t in the default environment',
+  'Different base OS: When you need Ubuntu instead of Alpine for specific compatibility requirements'
+]} />
 
 ----------------------------------------
 
@@ -20477,36 +20421,12 @@ Maximum size of the import.yaml file is 100 kB.
 
 # Php > How To > Customize Runtime
 
-The default PHP runtime environment contains:
-- {data.alpine.default}
-- Selected version of PHP when the runtime service was created
-- [zCLI](/references/cli)
-- Git and Composer
-:::note
-To use Ubuntu instead of the default Alpine, set the [run.os](/zerops-yaml/specification#os--1) attribute.
-Additional packages and tools can be installed using [run.prepareCommands](/zerops-yaml/specification#preparecommands--1).
-:::
-## Runtime Flow
-  
-When the first deploy with a defined `prepareCommands` attribute is triggered, Zerops will
-1. Create a prepare runtime container
-2. Optionally: [copy selected folders or files from your build container](/php/how-to/build-pipeline#copy-folders-or-files-from-your-build-container)
-3. Run the [run.prepareCommands](/zerops-yaml/specification#preparecommands--1) commands in the defined order
-## Command exit code
-Failed commands return non-zero exit codes and cancel deployment. Check [prepare runtime logs](/php/how-to/logs#prepare-runtime-log) for errors.
-Successful commands return exit code 0, triggering the next command. After all prepareCommands complete, the runtime environment is ready for deployment.
-The prepare runtime container is deleted once the phase completes or fails.
-## Custom runtime environment cache
-Some packages or tools can take a long time to install. Therefore, Zerops caches your custom runtime environment after the installation of your custom packages or tools is completed. When the second or following deploy is triggered, Zerops will use the custom runtime cache from the previous deploy if following conditions are met:
-1. Content of the build.addToRunPrepare and run.prepareCommands attributes didn't change from the previous deploy
-2. The custom runtime cache wasn't invalidated in the Zerops GUI.
-### Clearing Zerops runtime cache
-1. Go to service detail
-2. Select "Service dashboard & runtime containers"
-3. Click "Open pipeline detail"
-4. Click "Clear runtime prepare cache"
-When the custom runtime cache is used, Zerops doesn't create a prepare runtime container and executes the deployment of your application directly.
-### Overwrite php.ini files
+System packages for processing: When your app processes images, videos, or files (requiring packages like sudo apk add --no-cache imagemagick)',
+  'PHP extensions: When you need additional PHP extensions not included by default',
+  'Native dependencies: When your Composer packages require system libraries that aren\'t in the default environment',
+  'Different base OS: When you need Ubuntu instead of Alpine for specific compatibility requirements'
+]} />
+## Overwrite php.ini files
 You can override PHP configuration directives by setting environment variables in your `zerops.yaml` file.
 Here's an example of how to adjust PHP's `post_max_size` directive:
 ```yaml
@@ -22704,30 +22624,11 @@ Maximum size of the import.yaml file is 100 kB.
 
 # Python > How To > Customize Runtime
 
-  
-The default Python runtime environment contains:
-- {data.alpine.default}
-- Selected version of Python when the runtime service was created.
-- [zCLI](/references/cli)
-- Git and PIP
-:::note
-To use Ubuntu instead of the default Alpine, set the [run.os](/zerops-yaml/specification#os--1) attribute.
-Additional packages and tools can be installed using [run.prepareCommands](/zerops-yaml/specification#preparecommands--1).
-:::
-## Runtime Flow
-When the first deploy with a defined `prepareCommands` attribute is triggered, Zerops will
-1. Create a prepare runtime container
-2. Optionally: [copy selected folders or files from your build container](/python/how-to/build-pipeline#copy-folders-or-files-from-your-build-container)
-3. Run the run.prepareCommands in the defined order
-### Command exit code
-If any command fails, it returns an exit code other than 0 and the deploy is canceled. Read the [prepare runtime log](/python/how-to/logs#prepare-runtime-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom runtime environment is ready for the deploy phase.
-The prepare runtime container is automatically deleted after the prepare runtime phase has finished or failed.
-### Custom runtime environment cache
-Some packages or tools can take a long time to install. Therefore, Zerops caches your custom runtime environment after the installation of your custom packages or tools is completed. When the second or following deploy is triggered, Zerops will use the custom runtime cache from the previous deploy if following conditions are met:
-1. Content of the build.addToRunPrepare and run.prepareCommands attributes didn't change from the previous deploy
-2. The custom runtime cache wasn't invalidated in the Zerops GUI.
-To invalidate the Zerops runtime cache go to your service detail in Zerops GUI, choose **Service dashboard & runtime containers** from the left menu and click on the **Open pipeline detail** button. Then click on the **Clear runtime prepare cache** button.
-When the custom runtime cache is used, Zerops doesn't create a prepare runtime container and executes the deployment of your application directly.
+System packages for processing: When your app processes images, videos, or files (requiring packages like sudo apk add --no-cache imagemagick)',
+  'Python build tools: When you need setuptools, or other tools not included by default',
+  'Scientific libraries: When you need NumPy, SciPy, or other packages requiring system dependencies',
+  'Different base OS: When you need Ubuntu instead of Alpine for specific compatibility requirements'
+]} />
 
 ----------------------------------------
 
@@ -27631,30 +27532,11 @@ Maximum size of the import.yaml file is 100 kB.
 
 # Rust > How To > Customize Runtime
 
-  
-The default Rust runtime environment contains:
-- {data.alpine.default}
-- Selected version of Rust when the runtime service was created.
-- [zCLI](/references/cli)
-- Git
-:::note
-To use Ubuntu instead of the default Alpine, set the [run.os](/zerops-yaml/specification#os--1) attribute.
-Additional packages and tools can be installed using [run.prepareCommands](/zerops-yaml/specification#preparecommands--1).
-:::
-### Runtime Flow
-When the first deploy with a defined `prepareCommands` attribute is triggered, Zerops will
-1. create a prepare runtime container
-2. optionally: [copy selected folders or files from your build container](/rust/how-to/build-pipeline#copy-folders-or-files-from-your-build-container)
-3. run the run.prepareCommands commands in the defined order
-### Command exit code
-If any command fails, it returns an exit code other than 0 and the deploy is canceled. Read the [prepare runtime log](/rust/how-to/logs#prepare-runtime-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom runtime environment is ready for the deploy phase.
-The prepare runtime container is automatically deleted after the prepare runtime phase has finished or failed.
-### Custom runtime environment cache
-Some packages or tools can take a long time to install. Therefore, Zerops caches your custom runtime environment after the installation of your custom packages or tools is completed. When the second or following deploy is triggered, Zerops will use the custom runtime cache from the previous deploy if following conditions are met:
-1. Content of the build.addToRunPrepare and run.prepareCommands attributes didn't change from the previous deploy
-2. The custom runtime cache wasn't invalidated in the Zerops GUI.
-To invalidate the Zerops runtime cache go to your service detail in Zerops GUI, choose **Service dashboard & runtime containers** from the left menu and click on the **Open pipeline detail** button. Then click on the **Clear runtime prepare cache** button.
-When the custom runtime cache is used, Zerops doesn't create a prepare runtime container and executes the deployment of your application directly.
+System packages for processing: When your app processes images, videos, or files (requiring packages like sudo apk add --no-cache imagemagick)',
+  'Native dependencies: When your Cargo dependencies require system libraries that aren\'t in the default environment',
+  'Development tools: When you need debugging tools, profilers, or other development utilities',
+  'Different base OS: When you need Ubuntu instead of Alpine for specific compatibility requirements'
+]} />
 
 ----------------------------------------
 
