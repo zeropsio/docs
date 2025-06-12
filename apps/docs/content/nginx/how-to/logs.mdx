@@ -3,69 +3,9 @@ title: Setup & access Nginx logs
 description: Learn how you can setup & access nginx logs on Zerops.
 ---
 
-Zerops provides 3 different logs:
+import { SetVar } from '@site/src/components/content/var';
+import LogsContent from '@site/src/components/content/logs.mdx';
 
-- [build log](#build-log)
-- [prepare runtime log](#prepare-runtime-log)
-- [runtime log](#runtime-log)
+<SetVar name="servicePath" value="nginx" />
 
-## How to access logs
-
-### Build log
-
-#### Zerops GUI
-
-To access a build log in Zerops GUI, go to the service detail and choose **Service dashboard & runtime containers** in the left menu. Then open the pipeline detail of an application version and click on **Build log**. The build log button is available only if the [build pipeline](/nginx/how-to/trigger-pipeline) was triggered for the selected deploy.
-
-#### zCLI
-
-To access a build log in Zerops CLI use
-
-```sh
-zcli service log --showBuildLogs
-```
-
-Read more about the [zcli service log](/references/cli/access-logs) command.
-
-### Prepare runtime log
-
-#### Zerops GUI
-
-To access a prepare runtime log in Zerops GUI, go to the service detail and choose **Service dashboard & runtime containers** in the left menu. Then open the pipeline detail of an application version and click on **Prepare runtime log**. The prepare runtime log button is available only if the [prepare runtime pipeline](/nginx/how-to/build-pipeline#preparecommands) was triggered for the selected deploy.
-
-#### zCLI
-
-_Prepare runtime log is currently not supported in zCLI._
-
-### Runtime log
-
-#### Zerops GUI
-
-To access a runtime log in Zerops GUI, go to the service detail and choose **Runtime log** in the left menu.
-
-{/* TODO screenshot** */}
-
-Each runtime container has its own log. If your service has multiple containers, select the container in the log header.
-
-You can filter log records by minimum severity or by time.
-
-#### zCLI
-
-To access the log of the runtime containers in Zerops CLI use
-
-```sh
-zcli service log
-```
-
-Read more about the [zcli service log](/references/cli/access-logs) command.
-
-## Nginx logging configuration
-
-By default Nginx static containers logs the content of Nginx access log and error log to syslog:
-
-```
-    access_log syslog:server=unix:/dev/log,facility=local1,tag=nginx,severity=info default_short;
-    error_log syslog:server=unix:/dev/log,facility=local1,tag=nginx,severity=error;
-```
-
-The syslog messages are stored and are accessible as a runtime log in Zerops GUI or zCLI.
+<LogsContent />
