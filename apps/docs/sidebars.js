@@ -526,148 +526,197 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'zCLI',
-      link: {
-        type: 'doc',
-        id: 'references/cli',
-      },
+      label: 'Command Line Tools',
+      collapsible: false,
       customProps: {
-        sidebar_icon: 'window',
+        sidebar_is_group_headline: true,
       },
-      className: 'homepage-sidebar-item',
       items: [
         {
-          type: 'doc',
-          id: 'references/cli/configuration',
-          label: 'Configuration',
-          customProps: {
-            exclude_from_doc_list: false,
+          type: 'category',
+          label: 'zCLI',
+          link: {
+            type: 'doc',
+            id: 'references/cli',
           },
+          customProps: {
+            sidebar_icon: 'window',
+          },
+          className: 'homepage-sidebar-item',
+          items: [
+            {
+              type: 'doc',
+              id: 'references/cli/configuration',
+              label: 'Configuration',
+              customProps: {
+                exclude_from_doc_list: false,
+              },
+            },
+            {
+              type: 'doc',
+              id: 'references/cli/commands',
+              label: 'Commands',
+              customProps: {
+                exclude_from_doc_list: false,
+              },
+            },
+          ],
         },
         {
           type: 'doc',
-          id: 'references/cli/commands',
-          label: 'Commands',
+          label: 'zsc',
+          id: 'references/zsc',
           customProps: {
-            exclude_from_doc_list: false,
+            sidebar_icon: 'window',
           },
+          className: 'homepage-sidebar-item',
         },
-      ],
-    },
-    {
-      type: 'doc',
-      id: 'references/ssh',
-      label: 'SSH',
-      customProps: {
-        sidebar_icon: 'command-line',
-      },
-      className: 'homepage-sidebar-item',
-    },
-    {
-      type: 'doc',
-      label: 'Zsc',
-      id: 'references/zsc',
-      customProps: {
-        sidebar_icon: 'window',
-      },
-      className: 'homepage-sidebar-item',
+      ]
     },
     {
       type: 'category',
-      label: 'VPN',
-      link: {
-        type: 'doc',
-        id: 'references/vpn',
-      },
+      label: 'Access & Connectivity',
+      collapsible: false,
       customProps: {
-        sidebar_icon: 'globe-europe',
+        sidebar_is_group_headline: true,
       },
-      className: 'homepage-sidebar-item',
       items: [
         {
           type: 'doc',
-          id: 'references/vpn/troubleshooting',
-          label: 'Troubleshooting',
+          id: 'references/ssh',
+          label: 'SSH',
           customProps: {
-            exclude_from_doc_list: false,
+            sidebar_icon: 'command-line',
           },
+          className: 'homepage-sidebar-item',
         },
-      ],
+        {
+          type: 'category',
+          label: 'VPN',
+          link: {
+            type: 'doc',
+            id: 'references/vpn',
+          },
+          customProps: {
+            sidebar_icon: 'globe-europe',
+          },
+          className: 'homepage-sidebar-item',
+          items: [
+            {
+              type: 'doc',
+              id: 'references/vpn/troubleshooting',
+              label: 'Troubleshooting',
+              customProps: {
+                exclude_from_doc_list: false,
+              },
+            },
+          ],
+        },
+        {
+          type: 'doc',
+          id: 'references/firewall',
+          label: 'Firewall',
+          customProps: {
+            sidebar_icon: 'firewall',
+          },
+          className: 'homepage-sidebar-item',
+        },
+        {
+          type: 'doc',
+          id: 'references/smtp',
+          label: 'SMTP',
+          customProps: {
+            sidebar_icon: 'envelope',
+          },
+          className: 'homepage-sidebar-item',
+        },
+      ]
     },
     {
       type: 'category',
-      label: 'Import & Export File',
-      link: {
-        type: 'doc',
-        id: 'references/import',
-      },
+      label: 'Deployment & Integration',
+      collapsible: false,
       customProps: {
-        sidebar_icon: 'cloud-arrow-up',
+        sidebar_is_group_headline: true,
       },
-      className: 'homepage-sidebar-item',
+      items: [
+        {
+          type: 'category',
+          label: 'Import & Export File',
+          link: {
+            type: 'doc',
+            id: 'references/import',
+          },
+          customProps: {
+            sidebar_icon: 'cloud-arrow-up',
+          },
+          className: 'homepage-sidebar-item',
+          items: [
+            {
+              type: 'doc',
+              id: 'references/import-yaml/pre-processor',
+              label: 'Yaml Preprocessing',
+              customProps: {
+                exclude_from_doc_list: false,
+              },
+            },
+            {
+              type: 'doc',
+              id: 'references/import-yaml/type-list',
+              label: 'Service Types',
+              customProps: {
+                exclude_from_doc_list: false,
+              },
+            },
+          ],
+        },
+        {
+          type: 'doc',
+          id: 'references/github-integration',
+          label: 'Github Integration',
+          customProps: {
+            sidebar_icon: 'github',
+          },
+          className: 'homepage-sidebar-item',
+        },
+        {
+          type: 'doc',
+          id: 'references/gitlab-integration',
+          label: 'Gitlab Integration',
+          customProps: {
+            sidebar_icon: 'gitlab',
+          },
+          className: 'homepage-sidebar-item',
+        },
+        {
+          type: 'doc',
+          id: 'references/api',
+          label: 'API',
+          customProps: {
+            sidebar_icon: 'curly-braces',
+          },
+          className: 'homepage-sidebar-item',
+        },
+      ]
+    },
+    {
+      type: 'category',
+      label: 'Observability',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
       items: [
         {
           type: 'doc',
-          id: 'references/import-yaml/pre-processor',
-          label: 'Yaml Preprocessing',
+          id: 'references/logging',
+          label: 'Logging & Log Forwarding',
           customProps: {
-            exclude_from_doc_list: false,
+            sidebar_icon: 'list-bullet',
           },
+          className: 'homepage-sidebar-item',
         },
-        {
-          type: 'doc',
-          id: 'references/import-yaml/type-list',
-          label: 'Service Types',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-      ],
-    },
-    {
-      type: 'doc',
-      id: 'references/github-integration',
-      label: 'Github Integration',
-      customProps: {
-        sidebar_icon: 'github',
-      },
-      className: 'homepage-sidebar-item',
-    },
-    {
-      type: 'doc',
-      id: 'references/gitlab-integration',
-      label: 'Gitlab Integration',
-      customProps: {
-        sidebar_icon: 'gitlab',
-      },
-      className: 'homepage-sidebar-item',
-    },
-    {
-      type: 'doc',
-      id: 'references/firewall',
-      label: 'Firewall',
-      customProps: {
-        sidebar_icon: 'firewall',
-      },
-      className: 'homepage-sidebar-item',
-    },
-    {
-      type: 'doc',
-      id: 'references/smtp',
-      label: 'SMTP',
-      customProps: {
-        sidebar_icon: 'envelope',
-      },
-      className: 'homepage-sidebar-item',
-    },
-    {
-      type: 'doc',
-      id: 'references/api',
-      label: 'API',
-      customProps: {
-        sidebar_icon: 'curly-braces',
-      },
-      className: 'homepage-sidebar-item',
+      ]
     },
     {
       type: 'html',
