@@ -1,103 +1,17 @@
 ---
 title: Rust build process
-description: Learn more about rust's build process.
+description: Learn more about build process of Rust application
 ---
 
-import data from '@site/static/data.json';
+import { SetVar } from '@site/src/components/content/var';
+import BuildProcessContent from '@site/src/components/content/build-process.mdx';
 
-<p align="center">
-  <img
-    src="/img/screenshots/build_deploy_pipeline-step2.png"
-    alt="image"
-    width="100%"
-    height="auto"
-  />
-</p>
+<SetVar name="servicePath" value="rust" />
+<SetVar name="serviceDisplay" value="Rust" />
+<SetVar name="defaultEnvironment" value="Git and Rust toolchain" />
+<SetVar name="buildCommandExample" value={`buildCommands:
+  - cargo build --release --verbose
+  - cargo test --verbose`} />
+<SetVar name="codeLanguage" value="yaml" />
 
-## Description of the build process
-
-Zerops starts a temporary build container and performs following actions:
-
-1. Installs the build environment:
-   - Sets up base system and Go runtime
-   - Restores cached files if available (based on `build.cache` configuration)
-   - Validates cache against current `build.os`, `build.base`, and `build.prepareCommands`
-2. Downloads your application source code from [GitHub ↗](https://www.github.com), [GitLab ↗](https://www.gitlab.com) or via [Zerops CLI](/references/cli)
-3. Optionally [customizes the build environment](#customize-rust-build-environment)
-4. Runs the build commands
-5. Uploads the application artefact to the internal Zerops storage
-6. Preserves specified files for future builds (based on `build.cache` configuration)
-7. Optionally [customizes the runtime environment](/rust/how-to/customize-runtime)
-8. [Deploys your application](/rust/how-to/deploy-process)
-
-The build container is automatically deleted after the build has finished or failed.
-
-## Cancel running build
-
-When you know that the running build is not correct and you want to cancel it, you can do it in Zerops GUI. Go to the service detail, select **Service dashboard & runtime containers** from the left menu and click on the **Open pipeline detail** button. Then click on the **Cancel build** button.
-
-{/*TODO screenshot of a running build pipeline*/}
-
-The build cancellation is available before the build pipeline is finished. When the build is finished, the deployment cannot be cancelled.
-
-## Customize Rust build environment
-
-The default Rust build environment contains:
-
-- <span>{data.alpine.default}</span>
-- selected version of Rust defined in `zerops.yaml` [build.base](/rust/how-to/build-pipeline#base) parameter
-- [zCLI](/references/cli), Zerops command line tool
-- `npm`, `yarn`, `git` and `npx` tools
-
-If you prefer the Ubuntu OS instead of Alpine, set the [build.os](/rust/how-to/build-pipeline#os) attribute to `ubuntu`. To install additional packages or tools add one or more [build.prepareCommands](/rust/how-to/build-pipeline#preparecommands) commands to your `zerops.yaml`.
-
-:::info
-The application code is available in the `/var/www` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
-:::
-
-## Rust build hardware resources
-
-Build of your Rust application is run in a separate build container with following resource configuration:
-
-| HW resource   | Minimum | Maximum |
-| ------------- | ------- | ------- |
-| **CPU cores** | 6       | 20      |
-| **RAM**       | 8 GB    | 8 GB    |
-| **Disk**      | 1 GB    | 100 GB  |
-
-The build container is always started with the minimum hardware resources and scales vertically up to the maximum resources.
-
-:::info
-Hardware resources of the build containers are not charged. The build costs are covered by the standard Zerops [project fee](https://zerops.io/#pricing).
-:::
-
-## Build time limit
-
-The time limit for the whole build pipeline is **1 hour**. After 1 hour, Zerops will terminate the build pipeline and delete the build container.
-
-## Troubleshooting build-related problems
-
-### Failure of a build prepare command
-
-If any [prepare command](/rust/how-to/build-pipeline#preparecommands) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/rust/how-to/logs#build-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom build environment is ready for the build phase.
-
-### Invalidate the build cache
-If you encounter unexpected build behavior or dependency issues, the problem might be related to [cached build data](/features/build-cache). While Zerops maintains the build cache to speed up deployments, sometimes you may need to start fresh.
-To invalidate the build cache:
-
-1. Go to your service detail in Zerops GUI
-2. Choose **Pipelines & CI/CD Settings** from the left menu
-3. Click on the **Invalidate build cache** button
-
-This will force Zerops to run the next build clean, including all prepare commands, which can help resolve cache-related issues. After invalidation, your next build will also create a fresh cache.
-
-### Failure of a build command
-
-If any [build command](/rust/how-to/build-pipeline#buildcommands) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/rust/how-to/logs#build-log) to troubleshoot the error. If the error log doesn't contain any specific error message, try to run your build with the `--verbose` option.
-
-```yaml
-buildCommands:
-  - cargo build --release -v
-```
-
-If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `buildCommands` are finished, the application build is completed and ready for the [deploy](/rust/how-to/deploy-process) phase.
+<BuildProcessContent />

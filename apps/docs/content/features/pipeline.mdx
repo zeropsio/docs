@@ -7,22 +7,33 @@ import GroupCards from '../../src/components/GroupCards';
 import Image from '/src/components/Image';
 
 export const languages = [
-    { name: "Node.js", link: "/nodejs/how-to/env-variables#how-to-read-env-variables-from-your-nodejs-app" },
-    { name: "PHP", link: "/php/how-to/env-variables#how-to-read-env-variables-from-your-php-app" },
-    { name: "Python", link: "/python/how-to/env-variables#how-to-read-env-variables-from-your-python-app" },
-    { name: "Go", link: "/go/how-to/env-variables#how-to-read-env-variables-from-your-go-app" },
-    { name: ".NET", link: "/dotnet/how-to/env-variables#how-to-read-env-variables-from-your-dotnet-app" },
-    { name: "Rust", link: "/rust/how-to/env-variables#how-to-read-env-variables-from-your-rust-app" }
+    { name: "Node.js", link: "/nodejs/how-to/build-pipeline" },
+    { name: "PHP", link: "/php/how-to/build-pipeline" },
+    { name: "Python", link: "/python/how-to/build-pipeline" },
+    { name: "Go", link: "/go/how-to/build-pipeline" },
+    { name: ".NET", link: "/dotnet/how-to/build-pipeline" },
+    { name: "Rust", link: "/rust/how-to/build-pipeline" },
+    { name: "Java", link: "/java/how-to/build-pipeline" },
+    { name: "Elixir", link: "/elixir/how-to/build-pipeline" },
+    { name: "Deno", link: "/deno/how-to/build-pipeline" },
+    { name: "Bun", link: "/bun/how-to/build-pipeline" },
+    { name: "Gleam", link: "/gleam/how-to/build-pipeline" },
+    { name: "Nginx", link: "/nginx/how-to/build-pipeline" }
 ]
 
 export const customizeBuild = [
-    { name: "Node.js", link: "/nodejs/how-to/build-process#customize-nodejs-build-environment" },
-    { name: "PHP", link: "/php/how-to/build-process#customize-php-build-environment" },
-    { name: "Python", link: "/python/how-to/build-process#customize-python-build-environment" },
-    { name: "Go", link: "/go/how-to/build-process#customize-go-build-environment" },
-    { name: ".NET", link: "/dotnet/how-to/build-process#customize-net-build-environment" },
-    { name: "Rust", link: "/rust/how-to/build-process#customize-rust-build-environment" },
-    { name: "Java", link: "/java/how-to/build-process#customize-java-build-environment" },
+    { name: "Node.js", link: "/nodejs/how-to/build-process#build-environment" },
+    { name: "PHP", link: "/php/how-to/build-process#build-environment" },
+    { name: "Python", link: "/python/how-to/build-process#build-environment" },
+    { name: "Go", link: "/go/how-to/build-process#build-environment" },
+    { name: ".NET", link: "/dotnet/how-to/build-process#build-environment" },
+    { name: "Rust", link: "/rust/how-to/build-process#build-environment" },
+    { name: "Java", link: "/java/how-to/build-process#build-environment" },
+    { name: "Elixir", link: "/elixir/how-to/build-process#build-environment" },
+    { name: "Deno", link: "/deno/how-to/build-process#build-environment" },
+    { name: "Bun", link: "/bun/how-to/build-process#build-environment" },
+    { name: "Gleam", link: "/gleam/how-to/build-process#build-environment" },
+    { name: "Nginx", link: "/nginx/how-to/build-process#build-environment" }
 ]
 
 export const customizeRuntime = [
@@ -33,6 +44,11 @@ export const customizeRuntime = [
     { name: ".NET", link: "/dotnet/how-to/customize-runtime" },
     { name: "Rust", link: "/rust/how-to/customize-runtime" },
     { name: "Java", link: "/java/how-to/customize-runtime" },
+    { name: "Elixir", link: "/elixir/how-to/customize-runtime" },
+    { name: "Deno", link: "/deno/how-to/customize-runtime" },
+    { name: "Bun", link: "/bun/how-to/customize-runtime" },
+    { name: "Gleam", link: "/gleam/how-to/customize-runtime" },
+    { name: "Nginx", link: "/nginx/how-to/customize-runtime" }
 ]
 
 ## Configure the pipeline
@@ -80,9 +96,14 @@ Learn more about `zerops.yaml` parameters for your runtime:
   />
 </p>
 
-### Automatically
+### Continuous deployment
 
-Trigger the build & deploy pipeline automatically with each push to the selected branch or with a new tag. Create a new runtime service and connect it to your GitHub or GitLab repository.
+Set up automatic builds triggered by Git events. You can establish continuous deployment in two ways:
+
+* **New Service:** Create a new runtime service and connect it to your GitHub or GitLab repository during the service creation process.
+* **Existing Services:** Go to the service detail and choose **Pipelines & CI/CD settings** from the left menu. Click **Connect with a GitHub repository** or **Connect with a GitLab repository** to link your repository.
+
+Once connected, Zerops will automatically build and deploy your application with each push to the selected branch or when you create a new tag.
 
 <p align="center">
   <Image
@@ -94,43 +115,33 @@ Trigger the build & deploy pipeline automatically with each push to the selected
   />
 </p>
 
-### Manually
+### On-demand deployment
 
-Start a new build & deploy pipeline manually using the [Zerops CLI](/references/cli). The [zcli service push](/references/cli/commands#service-push) command uploads your application code, builds and deploys your application in Zerops.
+Trigger builds and deployments manually when needed using either the CLI or GUI.
 
-The command triggers the build pipeline defined in `zerops.yaml`. The `zerops.yaml` file must be in the working directory (current directory by default, changeable with the `--workingDir` flag).
+#### Using Zerops CLI
 
-zCLI uploads all files and subdirectories from the working directory to Zerops and starts the build pipeline. If a `.gitignore` file exists, Zerops interprets it and ignores the defined files and folders.
+- **Build and deploy:** `zcli service push` - Uploads code and triggers the full pipeline
+- **Deploy only:** `zcli service deploy` - Skips build, deploys pre-built artifacts
 
-#### Push command parameters
+See [CLI commands documentation](/references/cli/commands#service-operations) for all parameters.
 
-```sh
-Usage:
-  zcli push [flags]
+#### Using Zerops GUI
 
-Flags:
-      --archiveFilePath string   If set, zCLI creates a tar.gz archive with the application code in the required path relative
-                                 to the working directory. By default, no archive is created.
-      --deployGitFolder          If set, zCLI the .git folder is also uploaded. By default, the .git folder is ignored.
-  -h, --help                     the service push command.
-      --projectId string         If you have access to more than one project, you must specify the project ID for which the
-                                 command is to be executed.
-      --serviceId string         If you have access to more than one service, you must specify the service ID for which the
-                                 command is to be executed.
-      --versionName string       Adds a custom version name. Automatically filled if the VERSIONNAME environment variable exists.
-      --workingDir string        Sets a custom working directory. Default working directory is the current directory. (default "./")
-      --zeropsYamlPath string    Sets a custom path to the zerops.yaml file relative to the working directory. By default zCLI
-                                 looks for zerops.yaml in the working directory.
-```
+In **Pipelines & CI/CD settings** section of your service detail:
 
-If you want to [deploy](#deploy-phase) your already built application to Zerops, use the <a href="/references/cli/commands#service"><code>zcli service deploy</code></a> command instead.
+- **Re-deploy last pipeline** - With optional secret env variable updates
+- **Trigger new pipeline** - From git repo or with custom configuration
+
+#### Using import YAML
+
+Add `buildFromGit: <repo-url>` to your service configuration for one-time build during import. See [import documentation](/references/import#service-basic-configuration).
 
 ## Build phase
 
 <p align="center">
   <Image
     lightImage="/img/mind-maps/build-deploy/step-2.webp"
-    invertColors={true}
     alt="build deploy pipeline step 2"
     style={{ width: '95%', height: 'auto' }}
   />
@@ -201,7 +212,6 @@ Learn more about customizing build environments:
 <p align="center">
   <Image
     lightImage="/img/mind-maps/build-deploy/custom-runtime.webp"
-    invertColors={true}
     alt="Custom Runtime Image Pipeline"
     style={{ width: '95%', height: 'auto' }}
   />
@@ -299,7 +309,6 @@ Shared storage mounts are also not available during the runtime prepare phase.
 <p align="center">
   <Image
     lightImage="/img/mind-maps/build-deploy/step-3.webp"
-    invertColors={true}
     alt="Build Deploy Pipeline"
     style={{ width: '95%', height: 'auto' }}
   />
@@ -375,13 +384,12 @@ Read the [runtime log](/nodejs/how-to/logs#runtime-log) to troubleshoot failed r
 <p align="center">
   <Image
     lightImage="/img/mind-maps/build-deploy/manual-deploy.webp"
-    invertColors={true}
     alt="Manual Deploy Pipeline"
     style={{ width: '95%', height: 'auto' }}
   />
 </p>
 
-Start deploy-only pipelines using the [Zerops CLI](/references/cli). The <a href="/references/cli/commands#deploy">`zcli service deploy`</a> command uploads and deploys your application in Zerops. Use this when you have your own build process. For building applications in Zerops, use [automatic](#automatically) or [manual](#manually) build processes instead.
+Start deploy-only pipelines using the [Zerops CLI](/references/cli). The <a href="/references/cli/commands#deploy">`zcli service deploy`</a> command uploads and deploys your application in Zerops. Use this when you have your own build process. For building applications in Zerops, use [continuous](#continuous-deployment) or [on-demand](#on-demand-deployment) deployment instead.
 
 ```sh
 Usage:
@@ -411,7 +419,7 @@ Place `zerops.yaml` in the working directory.
 You can modify the deploy pipeline anytime by updating the `zerops.yaml` in your working directory.
 :::
 
-## Manage build and deploys
+## Manage builds and deployments
 
 ### Cancel running build
 
@@ -439,7 +447,6 @@ Access the application versions list in Zerops GUI by going to service detail an
 <p align="center">
   <Image
     lightImage="/img/gui/pipeline-history.webp"
-    invertColors={true}
     alt="Pipeline history"
     style={{ width: '100%', height: 'auto' }}
   />
