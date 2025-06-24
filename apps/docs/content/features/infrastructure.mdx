@@ -6,35 +6,33 @@ import Image from '/src/components/Image';
 import { CheckCircleSolid } from "@medusajs/icons";
 import { Dropdown, DropdownItem } from '/src/components/Dropdown';
 
-Zerops organizes your infrastructure into three hierarchical levels: **projects**, **services**, and **containers**.
+Zerops organizes your infrastructure into three hierarchical levels: **projects**, **services**, and **containers**. This structure provides secure networking, resource isolation, and scalable application deployment.
 
 ## Projects
 
 A project is the top-level entity in Zerops, functioning as a private network where services can communicate internally and share environment variables. Each project provides essential infrastructure including load balancing, routing, and container orchestration.
 
-:::tip
-Consider your project organization strategy carefully. You can create separate projects for different environments or consolidate multiple applications in a single project to optimize resource usage.
-:::
-
 ### Key Project Features
 
-Projects provide several important capabilities:
 - **Private Networking**: All services within a project share a secure network
 - **Environment Variables**: Services can access shared environment variables
 - **IPv6/IPv4 Addressing**: Each project receives an IPv6 address, with optional IPv4 addressing
+- **Integrated Security**: Built-in firewall and SSL certificate management
 
-### Project Core
+:::tip Project Organization
+Consider your project strategy carefully. Create separate projects for different environments (dev/staging/prod) or consolidate related applications in a single project to optimize resources and simplify networking.
+:::
 
-When you create a project, it requires a functioning **core** that includes:
-- Logger and statistics services
-- HTTP routing with automatic SSL certificate management
-- IP routing with integrated firewall
+### Project Core Options
+
+When you create a project, it requires a functioning **core** that includes logger and statistics services, HTTP routing with automatic SSL certificate management, and IP routing with integrated firewall.
 
 Zerops offers two core types to match different needs and budgets:
 
-### Lightweight Core
+#### Lightweight Core
 
-Our single-container solution that packs everything you need to get started quickly. Includes a project controller, L3 balancer, firewall, logger, statistics, and HTTP handling—all in one efficient package. Perfect for development projects and smaller production workloads where simplicity matters. Automatically handles SSL certificates and load balancing without complex setup.
+Single-container solution perfect for development projects and smaller production workloads. Includes project controller, L3 balancer, firewall, logger, statistics, and HTTP handling in one efficient package.
+
 <br/>
 <Image
   lightImage="/img/mind-maps/lightweight.svg"
@@ -43,14 +41,19 @@ Our single-container solution that packs everything you need to get started quic
     width: '44%',
     height: 'auto',
     display: 'block',
-    margin: '0 auto 0 0' /* top right bottom left */
+    margin: '0 auto 0 10'
   }}
   alt="Lightweight Core"
 />
+<br/>
+:::tip Ideal For
+Development environments, low-traffic applications, personal projects, budget-conscious teams.
+:::
 
-### Serious Core
+#### Serious Core
 
-Enterprise-grade infrastructure designed for mission-critical applications. Separates core services across multiple containers for true redundancy and high availability. Includes redundant project controllers and balancers, dedicated statistics and logging services, and advanced HTTP management. Ideal when your production workloads demand maximum reliability and scalability without compromise.
+Enterprise-grade infrastructure with separated core services across multiple containers for true redundancy and high availability.
+
 <br/>
 <Image
   lightImage="/img/mind-maps/serious.svg"
@@ -58,10 +61,12 @@ Enterprise-grade infrastructure designed for mission-critical applications. Sepa
   style={{ width: '100%', height: 'auto' }}
   alt="Serious Core"
 />
+<br/>
+:::tip Ideal For
+Production applications, high-traffic websites, mission-critical business applications, teams requiring maximum uptime.
+:::
 
-### Features Comparison
-
-Compare our core infrastructure options side-by-side to find the right fit for your project needs, from resource allocations to available features:
+#### Features Comparison
 
 <br/>
 <table className="w-full">
@@ -121,23 +126,52 @@ Compare our core infrastructure options side-by-side to find the right fit for y
   </tbody>
 </table>
 
-For detailed pricing information on both core types, visit our [pricing page](/features/pricing#project-core-plans).
+For detailed pricing information on both core types, visit our [pricing page](/features/pricing#project-core-options-plans).
+
+#### Project Core Upgrade
+
+You can upgrade from Lightweight Core to Serious Core for enhanced reliability and increased resources.
+
+:::warning Important
+The core upgrade is a **partially destructive process** that will temporarily disrupt your project's operations. Plan upgrades during maintenance windows.
+:::
+
+**What happens during upgrade:**
+- All project logs and statistics will be lost (forwarded logs/statistics are not affected)
+- Services will be network-unavailable during the process (avg. 35 seconds but can take longer)
+- $10 project core fee will be charged upon upgrade
+- Free project resources will reset to Serious Core limits
+- Project IP addresses remain unchanged
+
+:::important
+If you encounter issues, **contact support immediately** and try running the process again.
+:::
 
 ## Services
 
-Services encapsulate your containers and provide specific functionality. A project can contain unlimited services, each with its own purpose.
+Services encapsulate your containers and provide specific functionality within a project. A project can contain unlimited services, each with its own purpose.
 
-Services in Zerops can be:
-- **Fully managed**: Zerops handles scaling, routing, and repairs automatically
-- **Partially managed**: You maintain control over certain management aspects
+**Service types include:**
+- Runtimes, Linux Containers & Docker
+- Databases, Search Engines & Messages Brokers
+- Storages
+- *System services (needed for fully functioning project core)*
+
+**Management options:**
+- **Fully managed**: Zerops handles scaling, routing, and repairs automatically (Databases and Storages)
+- **Partially managed**: You maintain control over certain management aspects (Runtimes)
+
+Services within a project communicate via internal hostnames and can share environment variables for seamless integration.
 
 ## Containers
 
 Containers are the most granular level of the Zerops architecture. Each service consists of one or more containers that work together to deliver functionality.
 
-In High Availability (HA) mode, a service may utilize multiple containers with different roles. For example, a fully managed MariaDB service might use 5 containers: 3 for the database and 2 for proxies.
+**Container deployment:**
+- Single containers for simple applications
+- Multiple containers for High Availability (HA) mode (e.g. fully managed MariaDB service in HA mode uses 3 containers for the database cluster and 2 for proxies)
 
-Containers in Zerops:
-- Use predefined images ranging from fully managed databases to customizable Ubuntu environments
-- Can be exposed to the public via Zerops subdomains, custom domains, or public ports (for applicable service types only)
-- Operate within the service's resource constraints
+**Container capabilities:**
+- Use predefined images or custom configurations
+- Can be exposed publicly via Zerops subdomains, custom domains, or public ports
+- Operate within service resource constraints with automatic scaling
