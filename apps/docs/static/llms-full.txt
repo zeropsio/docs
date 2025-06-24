@@ -4451,33 +4451,43 @@ Have you build something that others might find useful? Don't hesitate to share 
 
 # Elasticsearch > Overview
 
-Deploy [Elasticsearch](https://www.elastic.co/elasticsearch) instances in Zerops with flexible scaling options, from standalone to highly available clusters.
-## Connection
+Deploy [Elasticsearch](https://www.elastic.co/elasticsearch/) instances in Zerops with flexible scaling options, from standalone nodes to highly available clusters.
+## Supported Versions
+Currently supported Elasticsearch versions:
+Import configuration version:
+## Connection Details
 - **Port**: 9200
 - **Protocol**: HTTP only
-- **Internal Access**: `http://hostname:9200`
-- **Note**: When accessing from another service within the same project, use the service hostname 
-## Configuration
-### How to install/uninstall plugins
-Configure Elasticsearch plugins using a comma-separated list:
+- **Internal Access**: `http://{hostname}:9200`
+:::note
+When accessing from another service within the same project, use the service hostname as the connection address.
+:::
+## Configuration Options
+### Plugin Management
+You can configure Elasticsearch plugins using a comma-separated list in your environment secrets:
 ```yaml
 envSecrets:
   PLUGINS: "analysis-icu,ingest-attachment"
 ```
-- **Description**: Defines plugins to install at startup
+**Plugin Configuration Details:**
+- Defines plugins to install at service startup
 - **Format**: `plugin1,plugin2,...`
-- **Note**: Removing a plugin from this list triggers uninstallation on service restart
-### How to adjust JVM heap allocation
-Control JVM heap size as a percentage of container memory:
+- Service automatically installs specified plugins during initialization
+- Removing a plugin from this list triggers uninstallation on service restart
+### JVM Heap Allocation
+Control the JVM heap size as a percentage of container memory:
 ```yaml
 envSecrets:
   HEAP_PERCENT: "75"
 ```
-- **Description**: Percentage of container memory allocated to JVM heap
-- **Default**: 50
-- **Range**: 1-100
-- **Note**: To increase available memory, adjust the service's RAM allocation in scaling configuration 
-- **Important**: Changes to HEAP_PERCENT require a service restart to take effect
+**Heap Configuration Details:**
+- Value represents the percentage of container memory allocated to JVM heap
+- **Default**: 50% of available container memory
+- **Valid range**: 1-100
+- To increase available memory, adjust the service's RAM allocation in scaling configuration
+:::note Requires Restart
+Changes to HEAP_PERCENT require a service restart to take effect.
+:::
 ## Backup
 Elasticsearch backups are created using `elasticdump`:
 - **Format**: `.gz` (per index/component dump)

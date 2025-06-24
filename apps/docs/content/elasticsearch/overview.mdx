@@ -2,44 +2,73 @@
 title: Elasticsearch
 ---
 
-Deploy [Elasticsearch](https://www.elastic.co/elasticsearch) instances in Zerops with flexible scaling options, from standalone to highly available clusters.
+import UnorderedList from '@site/src/components/UnorderedList';
+import UnorderedCodeList from '@site/src/components/UnorderedCodeList';
+import data from '@site/static/data.json';
+import ResourceTable from '/src/components/ResourceTable';
 
-## Connection
+Deploy [Elasticsearch](https://www.elastic.co/elasticsearch/) instances in Zerops with flexible scaling options, from standalone nodes to highly available clusters.
+
+## Supported Versions
+
+Currently supported Elasticsearch versions:
+<UnorderedList data={data.elasticsearch.readable}/>
+
+Import configuration version:
+<UnorderedCodeList data={data.elasticsearch.import}/>
+
+
+<ResourceTable resources={{
+  ram: {
+    min: '0.25 GB',
+  }
+}} />
+
+## Connection Details
 
 - **Port**: 9200
 - **Protocol**: HTTP only
-- **Internal Access**: `http://hostname:9200`
-- **Note**: When accessing from another service within the same project, use the service hostname <!-- fixme (js) add link to generic DNS page -->
+- **Internal Access**: `http://{hostname}:9200`
 
-## Configuration
+:::note
+When accessing from another service within the same project, use the service hostname as the connection address.
+:::
 
-### How to install/uninstall plugins
+## Configuration Options
 
-Configure Elasticsearch plugins using a comma-separated list:
+### Plugin Management
+
+You can configure Elasticsearch plugins using a comma-separated list in your environment secrets:
 
 ```yaml
 envSecrets:
   PLUGINS: "analysis-icu,ingest-attachment"
 ```
 
-- **Description**: Defines plugins to install at startup
+**Plugin Configuration Details:**
+- Defines plugins to install at service startup
 - **Format**: `plugin1,plugin2,...`
-- **Note**: Removing a plugin from this list triggers uninstallation on service restart
+- Service automatically installs specified plugins during initialization
+- Removing a plugin from this list triggers uninstallation on service restart
 
-### How to adjust JVM heap allocation
+### JVM Heap Allocation
 
-Control JVM heap size as a percentage of container memory:
+Control the JVM heap size as a percentage of container memory:
 
 ```yaml
 envSecrets:
   HEAP_PERCENT: "75"
 ```
 
-- **Description**: Percentage of container memory allocated to JVM heap
-- **Default**: 50
-- **Range**: 1-100
-- **Note**: To increase available memory, adjust the service's RAM allocation in scaling configuration <!-- fixme (js) add link to generic scaling page -->
-- **Important**: Changes to HEAP_PERCENT require a service restart to take effect
+**Heap Configuration Details:**
+- Value represents the percentage of container memory allocated to JVM heap
+- **Default**: 50% of available container memory
+- **Valid range**: 1-100
+- To increase available memory, adjust the service's RAM allocation in scaling configuration
+
+:::note Requires Restart
+Changes to HEAP_PERCENT require a service restart to take effect.
+:::
 
 ## Backup
 
