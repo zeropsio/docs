@@ -1,6 +1,6 @@
 ---
 title: Deno build process
-description: Learn more about deno' build process.
+description: Learn more about build process of Deno application
 ---
 
 import data from '@site/static/data.json';
@@ -14,100 +14,127 @@ import data from '@site/static/data.json';
   />
 </p>
 
-## Description of the build process
+## Build process overview
 
-Zerops starts a temporary build container and performs following actions:
+Zerops starts a temporary build container and performs the following actions:
 
-1. Installs the build environment:
-   - Sets up base system and Go runtime
-   - Restores cached files if available (based on `build.cache` configuration)
-   - Validates cache against current `build.os`, `build.base`, and `build.prepareCommands`
-2. Downloads your application source code from [GitHub ↗](https://www.github.com), [GitLab ↗](https://www.gitlab.com) or via [Zerops CLI](/references/cli)
-3. Optionally [customizes the build environment](#customize-deno-build-environment)
-4. Runs the build commands
-5. Uploads the application artefact to the internal Zerops storage
-6. Preserves specified files for future builds (based on `build.cache` configuration)
-7. Optionally [customizes the runtime environment](/deno/how-to/customize-runtime)
-8. [Deploys your application](/deno/how-to/deploy-process)
+1. **Installs the build environment** - Sets up base system and Deno runtime
+2. **Downloads your application source code** - From [GitHub ↗](https://www.github.com), [GitLab ↗](https://www.gitlab.com) or via [Zerops CLI](/references/cli)
+3. **Optionally customizes the build environment** - Runs prepare commands if configured
+4. **Runs the build commands** - Executes your build process
+5. **Uploads the application artifact** - Stores build output to internal Zerops storage
+6. **Caches selected files** - Preserves specified files for faster future builds
 
 The build container is automatically deleted after the build has finished or failed.
 
-## Cancel running build
+## Build configuration
 
-When you know that the running build is not correct and you want to cancel it, you can do it in Zerops GUI. Go to the service detail, open the list of running processes and click on the **Open pipeline detail** button. Then click on the **Cancel build** button.
+Configure your Deno build process in your `zerops.yaml` file according to the [full build & deploy Deno pipeline guide](/deno/how-to/build-pipeline).
 
-<p align="center">
-  <img
-    src="/img/screenshots/cancel_running_build.png"
-    alt="image"
-    width="100%"
-    height="auto"
-  />
-</p>
+## Build environment
 
-:::caution
-The build cancellation is available before the build pipeline is finished. When the build is finished, the deployment cannot be cancelled.
-:::
-
-## Customize Deno build environment
+### Default Deno build environment
 
 The default Deno build environment contains:
 
-- <span>{data.alpine.default}</span>
-- selected version of Deno defined in `zerops.yaml` [build.base](/deno/how-to/build-pipeline#base) parameter
+- <span>{data.ubuntu.default}</span>
+- Selected version of Deno defined in `zerops.yaml` [build.base](/deno/how-to/build-pipeline#base) parameter
 - [zCLI](/references/cli), Zerops command line tool
-- `npm`, `yarn`, `git` and `npx` tools
+- Deno and Git
 
-If you prefer the Ubuntu OS instead of Alpine, set the [build.os](/deno/how-to/build-pipeline#os) attribute to `ubuntu`. To install additional packages or tools add one or more [build.prepareCommands](/deno/how-to/build-pipeline#preparecommands) commands to your `zerops.yaml`.
+### Customize build environment
+
+To install additional packages or tools, add one or more [build.prepareCommands](/deno/how-to/build-pipeline#preparecommands) to your `zerops.yaml`.
 
 :::info
 The application code is available in the `/var/www` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
 :::
 
-## Deno build hardware resources
+### Build hardware resources
 
-Build of your Deno application is run in a separate build container with following resource configuration:
+All runtime services use the same hardware resources for build containers:
 
-| HW resource   | Minimum | Maximum |
-| ------------- | ------- | ------- |
-| **CPU cores** | 6       | 20      |
-| **RAM**       | 8 GB    | 8 GB    |
-| **Disk**      | 1 GB    | 100 GB  |
+<table className="w-fit my-1.5">
+  <thead>
+    <tr className="text-center rounded-lg">
+      <th className="w-fit"><strong>HW resource</strong></th>
+      <th className="w-fit"><strong>Minimum</strong></th>
+      <th className="w-fit"><strong>Maximum</strong></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit font-semibold">CPU cores</td>
+      <td className="w-fit">1</td>
+      <td className="w-fit">5</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">RAM</td>
+      <td className="w-fit">8 GB</td>
+      <td className="w-fit">8 GB</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">Disk</td>
+      <td className="w-fit">1 GB</td>
+      <td className="w-fit">100 GB</td>
+    </tr>
+  </tbody>
+</table>
 
-The build container is always started with the minimum hardware resources and scales vertically up to the maximum resources.
+Build containers start with minimum resources and scale vertically up to maximum capacity as needed.
 
 :::info
-Hardware resources of the build containers are not charged. The build costs are covered by the standard Zerops [project fee](https://zerops.io/#pricing).
+Build container resources are not charged separately. Limited build time is included in your [project core plan](/company/pricing#project-core-plans), with additional build time available if needed.
 :::
 
-## Build time limit
+### Build time limit
 
 The time limit for the whole build pipeline is **1 hour**. After 1 hour, Zerops will terminate the build pipeline and delete the build container.
 
-## Troubleshooting build-related problems
+## Troubleshooting Deno builds
 
-### Failure of a build prepare command
+### Build command failures
 
-If any [prepare command](/deno/how-to/build-pipeline#preparecommands) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/deno/how-to/logs#build-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom build environment is ready for the build phase.
+If any [build command](/deno/how-to/build-pipeline#buildcommands) fails (returns non-zero exit code), the build is canceled. Check the [build log](/deno/how-to/logs#build-log) to troubleshoot the error.
 
-### Invalidate the build cache
+For Deno, if the error log doesn't contain specific error messages, try running your build with verbose output:
+
+```yaml
+buildCommands:
+  - deno cache main.ts
+  - deno compile --allow-net --allow-read main.ts
+```
+
+### Prepare command failures
+
+If any [prepare command](/deno/how-to/build-pipeline#preparecommands) fails, check the [build log](/deno/how-to/logs#build-log) for specific error messages. Common issues include:
+
+- Missing permissions in Deno commands (add --allow-net, --allow-read, etc.)
+- Ubuntu package installation failures (use apt-get update first)
+- Deno cache directory permissions
+
+### Build cache issues
+
 If you encounter unexpected build behavior or dependency issues, the problem might be related to [cached build data](/features/build-cache). While Zerops maintains the build cache to speed up deployments, sometimes you may need to start fresh.
+
 To invalidate the build cache:
 
 1. Go to your service detail in Zerops GUI
 2. Choose **Pipelines & CI/CD Settings** from the left menu
 3. Click on the **Invalidate build cache** button
 
-This will force Zerops to run the next build clean, including all prepare commands, which can help resolve cache-related issues. After invalidation, your next build will also create a fresh cache.
+This will force Zerops to run the next build clean, including all prepare commands. Learn more about [build cache behavior](/features/build-cache).
 
-### Failure of a build command
+:::tip Advanced troubleshooting
+For complex build issues that require investigation, you can enable [debug mode](/features/debug-mode) to pause the build process at specific points and inspect the build container state interactively.
+:::
 
-If any [build command](/deno/how-to/build-pipeline#buildcommands) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/deno/how-to/logs#build-log) to troubleshoot the error. If the error log doesn't contain any specific error message, try to run your build with the `--verbose` option.
+## More resources
 
-```yaml
-buildCommands:
-  - npm i --verbose
-  - npm run build
-```
+For more details about the build and deploy pipeline, including how to cancel builds and manage application versions, see the [general pipeline documentation](/features/pipeline).
 
-If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `buildCommands` are finished, the application build is completed and ready for the [deploy](/deno/how-to/deploy-process) phase.
+## Next steps
+
+- Understand the [deployment process](/deno/how-to/deploy-process)
+- Learn how to [customize the runtime environment](/deno/how-to/customize-runtime)
+- Explore [build and runtime logs](/deno/how-to/logs)

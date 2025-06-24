@@ -1,118 +1,17 @@
 ---
 title: Java build process
-description: Learn more about java's build process.
+description: Learn more about build process of Java application
 ---
 
-import data from '@site/static/data.json';
+import { SetVar } from '@site/src/components/content/var';
+import BuildProcessContent from '@site/src/components/content/build-process.mdx';
 
-<p align="center">
-  <img
-    src="/img/screenshots/build_deploy_pipeline-step2.png"
-    alt="image"
-    width="100%"
-    height="auto"
-  />
-</p>
+<SetVar name="servicePath" value="java" />
+<SetVar name="serviceDisplay" value="Java" />
+<SetVar name="defaultEnvironment" value="Git" />
+<SetVar name="buildCommandExample" value={`buildCommands:
+  - mvn clean compile --debug
+  - mvn package`} />
+<SetVar name="codeLanguage" value="yaml" />
 
-## Customize Java build environment
-
-The default Java build environment contains:
-
-- <span>{data.alpine.default}</span>
-- Selected version of Java when the runtime service was created.
-- [zCLI](/references/cli)
-- Git
-
-:::note
-To use Ubuntu instead of the default Alpine, set the [build.os](/zerops-yaml/specification#os-) attribute.
-
-Additional packages and tools can be installed using [build.prepareCommands](/zerops-yaml/specification#preparecommands-).
-:::
-
-## Description of the build process
-
-Zerops starts a temporary build container and performs following actions:
-
-1. Installs the build environment:
-   - Sets up base system and Go runtime
-   - Restores cached files if available (based on `build.cache` configuration)
-   - Validates cache against current `build.os`, `build.base`, and `build.prepareCommands`
-2. Downloads your application source code from [GitHub ↗](https://www.github.com), [GitLab ↗](https://www.gitlab.com) or via [Zerops CLI](/references/cli)
-3. Optionally [customizes the build environment](#customize-java-build-environment)
-4. Runs the build commands
-5. Uploads the application artefact to the internal Zerops storage
-6. Preserves specified files for future builds (based on `build.cache` configuration)
-7. Optionally [customizes the runtime environment](/java/how-to/customize-runtime)
-8. [Deploys your application](/java/how-to/deploy-process)
-
-The build container is automatically deleted after the build has finished or failed.
-
-## Cancel running build
-
-When you know that the running build is not correct and you want to cancel it, you can do it in Zerops GUI. Go to the service detail, select **Service dashboard & runtime containers** from the left menu and click on the **Open pipeline detail** button. Then click on the **Cancel build** button.
-
-{/* ** TODO screenshot of a running build pipeline** */}
-
-The build cancellation is available before the build pipeline is finished. When the build is finished, the deployment cannot be cancelled.
-
-## Customize Java build environment
-
-The default Java build environment contains:
-
-- <span>{data.alpine.default}</span>
-- selected version of Java defined in `zerops.yaml` [build.base](/java/how-to/build-pipeline#base) parameter
-- [zCLI](/references/cli), Zerops command line tool
-- `git` and `wget`
-
-If you prefer the Ubuntu OS instead of Alpine, set the [build.os](/java/how-to/build-pipeline#os) attribute to `ubuntu`. To install additional packages or tools add one or more [build.prepareCommands](/java/how-to/build-pipeline#preparecommands) commands to your `zerops.yaml`.
-
-:::info
-The application code is available in the `/var/www` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
-:::
-
-## Java build hardware resources
-
-Build of your Java application is run in a separate build container with following resource configuration:
-
-| HW resource   | Minimum | Maximum |
-| ------------- | ------- | ------- |
-| **CPU cores** | 6       | 20      |
-| **RAM**       | 8 GB    | 8 GB    |
-| **Disk**      | 1 GB    | 100 GB  |
-
-The build container is always started with the minimum hardware resources and scales vertically up to the maximum resources.
-
-:::info
-Hardware resources of the build containers are not charged. The build costs are covered by the standard Zerops [project fee](https://zerops.io/#pricing).
-:::
-
-## Build time limit
-
-The time limit for the whole build pipeline is **1 hour**. After 1 hour, Zerops will terminate the build pipeline and delete the build container.
-
-## Troubleshooting build-related problems
-
-### Failure of a build prepare command
-
-If any [prepare command](/java/how-to/build-pipeline#preparecommands) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/java/how-to/logs#build-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom build environment is ready for the build phase.
-
-### Invalidate the build cache
-If you encounter unexpected build behavior or dependency issues, the problem might be related to [cached build data](/features/build-cache). While Zerops maintains the build cache to speed up deployments, sometimes you may need to start fresh.
-To invalidate the build cache:
-
-1. Go to your service detail in Zerops GUI
-2. Choose **Pipelines & CI/CD Settings** from the left menu
-3. Click on the **Invalidate build cache** button
-
-This will force Zerops to run the next build clean, including all prepare commands, which can help resolve cache-related issues. After invalidation, your next build will also create a fresh cache.
-
-### Failure of a build command
-
-If any [build command](/java/how-to/build-pipeline#buildcommands) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/java/how-to/logs#build-log) to troubleshoot the error. If the error log doesn't contain any specific error message, try to run your build with the verbose `-X` debug option.
-
-```yaml
-build:
-  - ./mvnw -X clean install
-```
-
-If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `buildCommands` are finished, the application build is completed and ready for the [deploy](/java/how-to/deploy-process) phase.
+<BuildProcessContent />

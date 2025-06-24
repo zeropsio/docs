@@ -689,69 +689,7 @@ Read more about how the [readiness check works](bun/how-to/deploy-process#readin
 
 # Bun > How To > Build Process
 
-  
-## Description of the build process
-Zerops starts a temporary build container and performs following actions:
-1. Installs the build environment:
-   - Sets up base system and Go runtime
-   - Restores cached files if available (based on `build.cache` configuration)
-   - Validates cache against current `build.os`, `build.base`, and `build.prepareCommands`
-2. Downloads your application source code from [GitHub ↗](https://www.github.com), [GitLab ↗](https://www.gitlab.com) or via [Zerops CLI](/references/cli)
-3. Optionally [customizes the build environment](#customize-bun-build-environment)
-4. Runs the build commands
-5. Uploads the application artefact to the internal Zerops storage
-6. Preserves specified files for future builds (based on `build.cache` configuration)
-7. Optionally [customizes the runtime environment](/bun/how-to/customize-runtime)
-8. [Deploys your application](/bun/how-to/deploy-process)
-The build container is automatically deleted after the build has finished or failed.
-## Cancel running build
-When you know that the running build is not correct and you want to cancel it, you can do it in Zerops GUI. Go to the service detail, open the list of running processes and click on the **Open pipeline detail** button. Then click on the **Cancel build** button.
-  
-:::caution
-The build cancellation is available before the build pipeline is finished. When the build is finished, the deployment cannot be cancelled.
-:::
-## Customize Bun build environment
-The default Bun build environment contains:
-- {data.alpine.default}
-- selected version of Bun defined in `zerops.yaml` [build.base](bun/how-to/build-pipeline#base) parameter
-- [zCLI](/references/cli), Zerops command line tool
-- `npm`, `yarn`, `git` and `npx` tools
-If you prefer the Ubuntu OS instead of Alpine, set the [build.os](/bun/how-to/build-pipeline#os) attribute to `ubuntu`. To install additional packages or tools add one or more [build.prepareCommands](bun/how-to/build-pipeline#preparecommands) commands to your `zerops.yaml`.
-:::info
-The application code is available in the `/var/www` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
-:::
-## Bun build hardware resources
-Build of your Bun application is run in a separate build container with following resource configuration:
-| HW resource   | Minimum | Maximum |
-| ------------- | ------- | ------- |
-| **CPU cores** | 6       | 20      |
-| **RAM**       | 8 GB    | 8 GB    |
-| **Disk**      | 1 GB    | 100 GB  |
-| **Disk**      | 1 GB    | 100 GB  |
-The build container is always started with the minimum hardware resources and scales vertically up to the maximum resources.
-:::info
-Hardware resources of the build containers are not charged. The build costs are covered by the standard Zerops [project fee](https://zerops.io/#pricing).
-:::
-## Build time limit
-The time limit for the whole build pipeline is **1 hour**. After 1 hour, Zerops will terminate the build pipeline and delete the build container.
-## Troubleshooting build-related problems
-### Failure of a build prepare command
-If any [prepare command](bun/how-to/build-pipeline#preparecommands) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](bun/how-to/logs#build-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom build environment is ready for the build phase.
-### Invalidate the build cache
-If you encounter unexpected build behavior or dependency issues, the problem might be related to [cached build data](/features/build-cache). While Zerops maintains the build cache to speed up deployments, sometimes you may need to start fresh.
-To invalidate the build cache:
-1. Go to your service detail in Zerops GUI
-2. Choose **Pipelines & CI/CD Settings** from the left menu
-3. Click on the **Invalidate build cache** button
-This will force Zerops to run the next build clean, including all prepare commands, which can help resolve cache-related issues. After invalidation, your next build will also create a fresh cache.
-### Failure of a build command
-If any [build command](bun/how-to/build-pipeline#buildcommands) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](bun/how-to/logs#build-log) to troubleshoot the error. If the error log doesn't contain any specific error message, try to run your build with the `--verbose` option.
-```yaml
-buildCommands:
-  - npm i --verbose
-  - npm run build
-```
-If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `buildCommands` are finished, the application build is completed and ready for the [deploy](bun/how-to/deploy-process) phase.
+
 
 ----------------------------------------
 
@@ -1077,15 +1015,7 @@ System packages for processing: When your app processes images, videos, or files
 
 # Bun > How To > Filebrowser
 
-## Zerops GUI
-In Zerops GUI, go to the service detail page and choose **Service containers & resources overview** and scroll down to the list of containers.
-  
-Then click on the file browser icon and the file browser opens:
-  
-If your service is in the [HA mode], you can switch between containers in the top left corner.
-## zCLI & SSH
-You can connect to the container via SSH with the Zerops CLI and browse its files.
-How to [connect to your service via SSH](/references/ssh).
+
 
 ----------------------------------------
 
@@ -2354,68 +2284,84 @@ Read more about how the [readiness check works](/deno/how-to/deploy-process#read
 # Deno > How To > Build Process
 
   
-## Description of the build process
-Zerops starts a temporary build container and performs following actions:
-1. Installs the build environment:
-   - Sets up base system and Go runtime
-   - Restores cached files if available (based on `build.cache` configuration)
-   - Validates cache against current `build.os`, `build.base`, and `build.prepareCommands`
-2. Downloads your application source code from [GitHub ↗](https://www.github.com), [GitLab ↗](https://www.gitlab.com) or via [Zerops CLI](/references/cli)
-3. Optionally [customizes the build environment](#customize-deno-build-environment)
-4. Runs the build commands
-5. Uploads the application artefact to the internal Zerops storage
-6. Preserves specified files for future builds (based on `build.cache` configuration)
-7. Optionally [customizes the runtime environment](/deno/how-to/customize-runtime)
-8. [Deploys your application](/deno/how-to/deploy-process)
+## Build process overview
+Zerops starts a temporary build container and performs the following actions:
+1. **Installs the build environment** - Sets up base system and Deno runtime
+2. **Downloads your application source code** - From [GitHub ↗](https://www.github.com), [GitLab ↗](https://www.gitlab.com) or via [Zerops CLI](/references/cli)
+3. **Optionally customizes the build environment** - Runs prepare commands if configured
+4. **Runs the build commands** - Executes your build process
+5. **Uploads the application artifact** - Stores build output to internal Zerops storage
+6. **Caches selected files** - Preserves specified files for faster future builds
 The build container is automatically deleted after the build has finished or failed.
-## Cancel running build
-When you know that the running build is not correct and you want to cancel it, you can do it in Zerops GUI. Go to the service detail, open the list of running processes and click on the **Open pipeline detail** button. Then click on the **Cancel build** button.
-  
-:::caution
-The build cancellation is available before the build pipeline is finished. When the build is finished, the deployment cannot be cancelled.
-:::
-## Customize Deno build environment
+## Build configuration
+Configure your Deno build process in your `zerops.yaml` file according to the [full build & deploy Deno pipeline guide](/deno/how-to/build-pipeline).
+## Build environment
+### Default Deno build environment
 The default Deno build environment contains:
-- {data.alpine.default}
-- selected version of Deno defined in `zerops.yaml` [build.base](/deno/how-to/build-pipeline#base) parameter
+- {data.ubuntu.default}
+- Selected version of Deno defined in `zerops.yaml` [build.base](/deno/how-to/build-pipeline#base) parameter
 - [zCLI](/references/cli), Zerops command line tool
-- `npm`, `yarn`, `git` and `npx` tools
-If you prefer the Ubuntu OS instead of Alpine, set the [build.os](/deno/how-to/build-pipeline#os) attribute to `ubuntu`. To install additional packages or tools add one or more [build.prepareCommands](/deno/how-to/build-pipeline#preparecommands) commands to your `zerops.yaml`.
+- Deno and Git
+### Customize build environment
+To install additional packages or tools, add one or more [build.prepareCommands](/deno/how-to/build-pipeline#preparecommands) to your `zerops.yaml`.
 :::info
 The application code is available in the `/var/www` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
 :::
-## Deno build hardware resources
-Build of your Deno application is run in a separate build container with following resource configuration:
-| HW resource   | Minimum | Maximum |
-| ------------- | ------- | ------- |
-| **CPU cores** | 6       | 20      |
-| **RAM**       | 8 GB    | 8 GB    |
-| **Disk**      | 1 GB    | 100 GB  |
-| **Disk**      | 1 GB    | 100 GB  |
-The build container is always started with the minimum hardware resources and scales vertically up to the maximum resources.
+### Build hardware resources
+All runtime services use the same hardware resources for build containers:
+  
+      HW resource
+      Minimum
+      Maximum
+    
+      CPU cores
+      1
+      5
+    
+      RAM
+      8 GB
+      8 GB
+    
+      Disk
+      1 GB
+      100 GB
+    
+Build containers start with minimum resources and scale vertically up to maximum capacity as needed.
 :::info
-Hardware resources of the build containers are not charged. The build costs are covered by the standard Zerops [project fee](https://zerops.io/#pricing).
+Build container resources are not charged separately. Limited build time is included in your [project core plan](/company/pricing#project-core-plans), with additional build time available if needed.
 :::
-## Build time limit
+### Build time limit
 The time limit for the whole build pipeline is **1 hour**. After 1 hour, Zerops will terminate the build pipeline and delete the build container.
-## Troubleshooting build-related problems
-### Failure of a build prepare command
-If any [prepare command](/deno/how-to/build-pipeline#preparecommands) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/deno/how-to/logs#build-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom build environment is ready for the build phase.
-### Invalidate the build cache
+## Troubleshooting Deno builds
+### Build command failures
+If any [build command](/deno/how-to/build-pipeline#buildcommands) fails (returns non-zero exit code), the build is canceled. Check the [build log](/deno/how-to/logs#build-log) to troubleshoot the error.
+For Deno, if the error log doesn't contain specific error messages, try running your build with verbose output:
+```yaml
+buildCommands:
+  - deno cache main.ts
+  - deno compile --allow-net --allow-read main.ts
+```
+### Prepare command failures
+If any [prepare command](/deno/how-to/build-pipeline#preparecommands) fails, check the [build log](/deno/how-to/logs#build-log) for specific error messages. Common issues include:
+- Missing permissions in Deno commands (add --allow-net, --allow-read, etc.)
+- Ubuntu package installation failures (use apt-get update first)
+- Deno cache directory permissions
+### Build cache issues
 If you encounter unexpected build behavior or dependency issues, the problem might be related to [cached build data](/features/build-cache). While Zerops maintains the build cache to speed up deployments, sometimes you may need to start fresh.
 To invalidate the build cache:
 1. Go to your service detail in Zerops GUI
 2. Choose **Pipelines & CI/CD Settings** from the left menu
 3. Click on the **Invalidate build cache** button
-This will force Zerops to run the next build clean, including all prepare commands, which can help resolve cache-related issues. After invalidation, your next build will also create a fresh cache.
-### Failure of a build command
-If any [build command](/deno/how-to/build-pipeline#buildcommands) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/deno/how-to/logs#build-log) to troubleshoot the error. If the error log doesn't contain any specific error message, try to run your build with the `--verbose` option.
-```yaml
-buildCommands:
-  - npm i --verbose
-  - npm run build
-```
-If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `buildCommands` are finished, the application build is completed and ready for the [deploy](/deno/how-to/deploy-process) phase.
+This will force Zerops to run the next build clean, including all prepare commands. Learn more about [build cache behavior](/features/build-cache).
+:::tip Advanced troubleshooting
+For complex build issues that require investigation, you can enable [debug mode](/features/debug-mode) to pause the build process at specific points and inspect the build container state interactively.
+:::
+## More resources
+For more details about the build and deploy pipeline, including how to cancel builds and manage application versions, see the [general pipeline documentation](/features/pipeline).
+## Next steps
+- Understand the [deployment process](/deno/how-to/deploy-process)
+- Learn how to [customize the runtime environment](/deno/how-to/customize-runtime)
+- Explore [build and runtime logs](/deno/how-to/logs)
 
 ----------------------------------------
 
@@ -2753,7 +2699,7 @@ The runtime prepare process follows the same steps for all runtimes. See [how ru
 ### Caching Behavior
 Zerops caches custom runtime images to optimize deployment times. Learn about [custom runtime image caching](/features/pipeline#custom-runtime-image-caching) including when images are cached and reused.
 ### Build Management
-For information about managing builds and deployments, see [managing builds and deployments](/features/pipeline#manage-build-and-deploys).
+For information about managing builds and deployments, see [managing builds and deployments](/features/pipeline#manage-builds-and-deployments).
 :::warning
 Shared storage mounts are not available during the runtime prepare phase.
 :::
@@ -2782,15 +2728,7 @@ If your `prepareCommands` fail, check the [prepare runtime log](/deno/how-to/log
 
 # Deno > How To > Filebrowser
 
-## Zerops GUI
-In Zerops GUI, go to the service detail page and choose **Service containers & resources overview** and scroll down to the list of containers.
-  
-Then click on the file browser icon and the file browser opens:
-  
-If your service is in the [HA mode], you can switch between containers in the top left corner.
-## zCLI & SSH
-You can connect to the container via SSH with the Zerops CLI and browse its files.
-How to [connect to your service via SSH](/references/ssh).
+
 
 ----------------------------------------
 
@@ -3947,68 +3885,7 @@ Read more about how the [readiness check works](/dotnet/how-to/deploy-process#re
 
 # Dotnet > How To > Build Process
 
-  
-## Description of the build process
-Zerops starts a temporary build container and performs following actions:
-1. Installs the build environment:
-   - Sets up base system and Go runtime
-   - Restores cached files if available (based on `build.cache` configuration)
-   - Validates cache against current `build.os`, `build.base`, and `build.prepareCommands`
-2. Downloads your application source code from [GitHub ↗](https://www.github.com), [GitLab ↗](https://www.gitlab.com) or via [Zerops CLI](/references/cli)
-3. Optionally [customizes the build environment](#customize-net-build-environment)
-4. Runs the build commands
-5. Uploads the application artefact to the internal Zerops storage
-6. Preserves specified files for future builds (based on `build.cache` configuration)
-7. Optionally [customizes the runtime environment](/dotnet/how-to/customize-runtime)
-8. [Deploys your application](/dotnet/how-to/deploy-process)
-The build container is automatically deleted after the build has finished or failed.
-## Cancel running build
-When you know that the running build is not correct and you want to cancel it, you can do it in Zerops GUI. Go to the service detail, select **Service dashboard & runtime containers** from the left menu and click on the **Open pipeline detail** button. Then click on the **Cancel build** button.
-The build cancellation is available before the build pipeline is finished. When the build is finished, the deployment cannot be cancelled.
-## Customize .NET build environment
-The default .NET build environment contains:
-- {data.alpine.default}
-- selected version of .NET defined in `zerops.yaml` [build.base](/dotnet/how-to/build-pipeline#base) parameter
-- [zCLI](/references/cli)
-- ASP .NET and Git
-:::note
-To use Ubuntu instead of the default Alpine, set the [build.os](/zerops-yaml/specification#os-) attribute.
-Additional packages and tools can be installed using [build.prepareCommands](/zerops-yaml/specification#preparecommands-).
-:::
-:::info
-The application code is available in the `/var/www` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
-:::
-## .NET build hardware resources
-Build of your .NET application is run in a separate build container with following resource configuration:
-| HW resource   | Minimum | Maximum |
-| ------------- | ------- | ------- |
-| **CPU cores** | 6       | 20      |
-| **RAM**       | 8 GB    | 8 GB    |
-| **Disk**      | 1 GB    | 100 GB  |
-| **Disk**      | 1 GB    | 100 GB  |
-The build container is always started with the minimum hardware resources and scales vertically up to the maximum resources.
-:::info
-Hardware resources of the build containers are not charged. The build costs are covered by the standard Zerops [project fee](https://zerops.io/#pricing).
-:::
-## Build time limit
-The time limit for the whole build pipeline is **1 hour**. After 1 hour, Zerops will terminate the build pipeline and delete the build container.
-## Troubleshooting build-related problems
-### Failure of a build prepare command
-If any [prepare command](/dotnet/how-to/build-pipeline#preparecommands) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/dotnet/how-to/logs#build-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom build environment is ready for the build phase.
-### Invalidate the build cache
-If you encounter unexpected build behavior or dependency issues, the problem might be related to [cached build data](/features/build-cache). While Zerops maintains the build cache to speed up deployments, sometimes you may need to start fresh.
-To invalidate the build cache:
-1. Go to your service detail in Zerops GUI
-2. Choose **Pipelines & CI/CD Settings** from the left menu
-3. Click on the **Invalidate build cache** button
-This will force Zerops to run the next build clean, including all prepare commands, which can help resolve cache-related issues. After invalidation, your next build will also create a fresh cache.
-### Failure of a build command
-If any [build command](/dotnet/how-to/build-pipeline#buildcommands) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/dotnet/how-to/logs#build-log) to troubleshoot the error. If the error log doesn't contain any specific error message, try to run your build with the `--verbosity ` option.
-```yaml
-buildCommands:
-  - dotnet build --verbosity detailed
-```
-If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `buildCommands` are finished, the application build is completed and ready for the [deploy](/dotnet/how-to/deploy-process) phase.
+
 
 ----------------------------------------
 
@@ -4345,15 +4222,7 @@ System packages for processing: When your app processes images, videos, or files
 
 # Dotnet > How To > Filebrowser
 
-## Zerops GUI
-In Zerops GUI, go to the service detail page and choose **Service containers & resources overview** and scroll down to the list of containers.
-  
-Then click on the file browser icon and the file browser opens:
-  
-If your service is in the [HA mode], you can switch between containers in the top left corner.
-## zCLI & SSH
-You can connect to the container via SSH with the Zerops CLI and browse its files.
-How to [connect to your service via SSH](/references/ssh).
+
 
 ----------------------------------------
 
@@ -5325,69 +5194,7 @@ Read more about how the [readiness check works](/elixir/how-to/deploy-process#re
 
 # Elixir > How To > Build Process
 
-  
-## Description of the build process
-Zerops starts a temporary build container and performs following actions:
-1. Installs the build environment:
-   - Sets up base system and Go runtime
-   - Restores cached files if available (based on `build.cache` configuration)
-   - Validates cache against current `build.os`, `build.base`, and `build.prepareCommands`
-2. Downloads your application source code from [GitHub ↗](https://www.github.com), [GitLab ↗](https://www.gitlab.com) or via [Zerops CLI](/references/cli)
-3. Optionally [customizes the build environment](#customize-elixir-build-environment)
-4. Runs the build commands
-5. Uploads the application artefact to the internal Zerops storage
-6. Preserves specified files for future builds (based on `build.cache` configuration)
-7. Optionally [customizes the runtime environment](/elixir/how-to/customize-runtime)
-8. [Deploys your application](/elixir/how-to/deploy-process)
-The build container is automatically deleted after the build has finished or failed.
-## Cancel running build
-When you know that the running build is not correct and you want to cancel it, you can do it in Zerops GUI. Go to the service detail, open the list of running processes and click on the **Open pipeline detail** button. Then click on the **Cancel build** button.
-  
-:::caution
-The build cancellation is available before the build pipeline is finished. When the build is finished, the deployment cannot be cancelled.
-:::
-## Customize Elixir build environment
-The default Elixir build environment contains:
-- {data.alpine.default}
-- selected version of Elixir defined in `zerops.yaml` [build.base](/elixir/how-to/build-pipeline#base) parameter
-- [zCLI](/references/cli), Zerops command line tool
-- `npm`, `yarn`, `git` and `npx` tools
-If you prefer the Ubuntu OS instead of Alpine, set the [build.os](/elixir/how-to/build-pipeline#os) attribute to `ubuntu`. To install additional packages or tools add one or more [build.prepareCommands](/elixir/how-to/build-pipeline#preparecommands) commands to your `zerops.yaml`.
-:::info
-The application code is available in the `/var/www` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
-:::
-## Elixir build hardware resources
-Build of your Elixir application is run in a separate build container with following resource configuration:
-| HW resource   | Minimum | Maximum |
-| ------------- | ------- | ------- |
-| **CPU cores** | 6       | 20      |
-| **RAM**       | 8 GB    | 8 GB    |
-| **Disk**      | 1 GB    | 100 GB  |
-| **Disk**      | 1 GB    | 100 GB  |
-The build container is always started with the minimum hardware resources and scales vertically up to the maximum resources.
-:::info
-Hardware resources of the build containers are not charged. The build costs are covered by the standard Zerops [project fee](https://zerops.io/#pricing).
-:::
-## Build time limit
-The time limit for the whole build pipeline is **1 hour**. After 1 hour, Zerops will terminate the build pipeline and delete the build container.
-## Troubleshooting build-related problems
-### Failure of a build prepare command
-If any [prepare command](/elixir/how-to/build-pipeline#preparecommands) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/elixir/how-to/logs#build-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom build environment is ready for the build phase.
-### Invalidate the build cache
-If you encounter unexpected build behavior or dependency issues, the problem might be related to [cached build data](/features/build-cache). While Zerops maintains the build cache to speed up deployments, sometimes you may need to start fresh.
-To invalidate the build cache:
-1. Go to your service detail in Zerops GUI
-2. Choose **Pipelines & CI/CD Settings** from the left menu
-3. Click on the **Invalidate build cache** button
-This will force Zerops to run the next build clean, including all prepare commands, which can help resolve cache-related issues. After invalidation, your next build will also create a fresh cache.
-### Failure of a build command
-If any [build command](/elixir/how-to/build-pipeline#buildcommands) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/elixir/how-to/logs#build-log) to troubleshoot the error. If the error log doesn't contain any specific error message, try to run your build with the `--verbose` option.
-```yaml
-buildCommands:
-  - npm i --verbose
-  - npm run build
-```
-If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `buildCommands` are finished, the application build is completed and ready for the [deploy](/elixir/how-to/deploy-process) phase.
+
 
 ----------------------------------------
 
@@ -5714,15 +5521,7 @@ System packages for processing: When your app processes images, videos, or files
 
 # Elixir > How To > Filebrowser
 
-## Zerops GUI
-In Zerops GUI, go to the service detail page and choose **Service containers & resources overview** and scroll down to the list of containers.
-  
-Then click on the file browser icon and the file browser opens:
-  
-If your service is in the [HA mode], you can switch between containers in the top left corner.
-## zCLI & SSH
-You can connect to the container via SSH with the Zerops CLI and browse its files.
-How to [connect to your service via SSH](/references/ssh).
+
 
 ----------------------------------------
 
@@ -6258,7 +6057,6 @@ When a project is deleted, the encryption key is permanently destroyed after 7 d
 
 # Features > Build Cache
 
-# Understanding Zerops Build Cache
 > Zerops implements a sophisticated two-layer caching strategy that optimizes build times while maintaining complete control over the build environment. This documentation explores the architecture, configuration patterns, and practical implementation of the build cache system.
 ## Architecture Overview
 The build cache operates through two distinct layers:
@@ -6966,6 +6764,136 @@ Not sure which to choose? Start with containers. You can always switch to VMs if
 
 ----------------------------------------
 
+# Features > Debug Mode
+
+This document describes the debug mode configuration capabilities for service stacks in Zerops, allowing developers to pause execution at specific points during build and runtime processes for debugging purposes.
+## Overview
+Debug mode introduces control over two distinct phases of deployment:
+- **Build phase** - When the `buildCommands` are executed
+- **Runtime prepare phase** - When the `prepareCommands` are executed
+For each phase, you can choose when to pause the execution:
+- **Disable** - No pausing, execution proceeds normally
+- **Before first command** - Execution stops before running any commands
+- **After last command** - Execution stops after all commands complete
+- **On command fail** - Execution stops when a command fails
+Each phase can be configured with its own debug settings without affecting the other phase.
+:::warning Important
+The entire build process, including any time spent in debug mode, has a maximum duration of 60 minutes. After this time limit is reached, the build process is automatically cancelled.
+:::
+## Configuration
+The debug mode configuration can be found in your service detail under the **Pipelines & CI/CD settings**.
+  
+## Debug Control
+When execution is paused in debug mode, you have several commands available to control the debugging process. Each command serves a specific purpose and affects the deployment process differently.
+### Debug Pause Points
+There are three key points where execution can pause during deployment:
+- ➠ **Disable** - Do not pause
+- ↪ **Before First Command** - Paused before any commands run
+- ✖ **On Command Failure** - Paused when a command fails
+- ✔ **After Last Command** - Paused after all commands complete
+### Available Commands
+#### Continuing Execution
+To proceed with the normal deployment process, use:
+```bash
+zsc debug continue
+```
+  
+      Pause Point
+      Behavior
+    
+      ↪ Before First Command
+      Begins running commands for the current phase until next possible pause point
+    
+      ✖ On Command Failure
+      Skips the failed command and continues deployment
+    
+      ✔ After Last Command
+      Moves to the next phase (from build to runtime prepare) or completes deployment
+    
+#### Marking Success
+To force a successful deployment status, use:
+```bash
+zsc debug success
+```
+  
+      Pause Point
+      Behavior
+    
+      ↪ Before First Command
+      Ends current phase without running any commands
+    
+      ✖ On Command Failure
+      Ignores the failure and ends current phase with success
+    
+      ✔ After Last Command
+      Concludes current phase with a successful status
+    
+:::note
+Requires valid `deployFiles` to work properly (fails otherwise).
+:::
+#### Forcing Failure
+To terminate the deployment with a failure status, use:
+```bash
+zsc debug fail
+```
+  
+      Pause Point
+      Behavior
+    
+      ↪ Before First Command
+      Marks current phase as failed without running commands
+    
+      ✖ On Command Failure
+      Ends deployment with original error
+    
+      ✔ After Last Command
+      Overwrites successful execution with failed status and ends deployment
+    
+Each phase can be configured independently to pause at any of the points described above, giving you precise control over your debugging workflow. The 60-minute timeout ensures deployments don't remain blocked indefinitely.
+## Usage Examples
+### Example 1: Debugging Build Failures
+  
+      Build phase
+      ✖ On Command Failure
+    
+      Prepare runtime phase
+      ➠ Disable
+    
+This configuration allows you to:
+1. Inspect the container state after a failure
+2. Make necessary adjustments
+3. Use `zsc debug continue` to resume or `zsc debug fail` to abort
+### Example 2: Validating Runtime Setup
+  
+      Build phase
+      ➠ Disable
+    
+      Prepare runtime phase
+      ✔ After Last Command
+    
+## Best Practices
+#### Targeted Debugging
+- Enable debug mode only for the specific phase you need to investigate
+- This minimizes disruption to the deployment process
+- Helps maintain clear debugging sessions
+#### Clean Up
+- Always remember to disable debug mode after completing your debugging session
+- Set both phases to **Disable**
+- Prevents unexpected pauses in future deployments
+#### Production Consideration
+- Be cautious when using debug mode in production environments
+- Paused executions can block deployments
+- Consider using separate development services for extended debugging sessions
+#### Timeout Awareness
+- Be mindful of the 60-minute maximum debug pause time (p)lan debugging sessions accordingly)
+## Technical Considerations
+- Debug mode settings persist until explicitly changed
+- Build phase and runtime prepare phase operate independently
+- Debug commands are only available when execution is paused
+- Success signals require valid `deployFiles` to proceed
+
+----------------------------------------
+
 # Features > Dns
 
 This guide will show you how to configure DNS records and proxy settings to work with your Zerops applications.
@@ -7438,21 +7366,32 @@ Containers in Zerops:
 # Features > Pipeline
 
 export const languages = [
-    { name: "Node.js", link: "/nodejs/how-to/env-variables#how-to-read-env-variables-from-your-nodejs-app" },
-    { name: "PHP", link: "/php/how-to/env-variables#how-to-read-env-variables-from-your-php-app" },
-    { name: "Python", link: "/python/how-to/env-variables#how-to-read-env-variables-from-your-python-app" },
-    { name: "Go", link: "/go/how-to/env-variables#how-to-read-env-variables-from-your-go-app" },
-    { name: ".NET", link: "/dotnet/how-to/env-variables#how-to-read-env-variables-from-your-dotnet-app" },
-    { name: "Rust", link: "/rust/how-to/env-variables#how-to-read-env-variables-from-your-rust-app" }
+    { name: "Node.js", link: "/nodejs/how-to/build-pipeline" },
+    { name: "PHP", link: "/php/how-to/build-pipeline" },
+    { name: "Python", link: "/python/how-to/build-pipeline" },
+    { name: "Go", link: "/go/how-to/build-pipeline" },
+    { name: ".NET", link: "/dotnet/how-to/build-pipeline" },
+    { name: "Rust", link: "/rust/how-to/build-pipeline" },
+    { name: "Java", link: "/java/how-to/build-pipeline" },
+    { name: "Elixir", link: "/elixir/how-to/build-pipeline" },
+    { name: "Deno", link: "/deno/how-to/build-pipeline" },
+    { name: "Bun", link: "/bun/how-to/build-pipeline" },
+    { name: "Gleam", link: "/gleam/how-to/build-pipeline" },
+    { name: "Nginx", link: "/nginx/how-to/build-pipeline" }
 ]
 export const customizeBuild = [
-    { name: "Node.js", link: "/nodejs/how-to/build-process#customize-nodejs-build-environment" },
-    { name: "PHP", link: "/php/how-to/build-process#customize-php-build-environment" },
-    { name: "Python", link: "/python/how-to/build-process#customize-python-build-environment" },
-    { name: "Go", link: "/go/how-to/build-process#customize-go-build-environment" },
-    { name: ".NET", link: "/dotnet/how-to/build-process#customize-net-build-environment" },
-    { name: "Rust", link: "/rust/how-to/build-process#customize-rust-build-environment" },
-    { name: "Java", link: "/java/how-to/build-process#customize-java-build-environment" },
+    { name: "Node.js", link: "/nodejs/how-to/build-process#build-environment" },
+    { name: "PHP", link: "/php/how-to/build-process#build-environment" },
+    { name: "Python", link: "/python/how-to/build-process#build-environment" },
+    { name: "Go", link: "/go/how-to/build-process#build-environment" },
+    { name: ".NET", link: "/dotnet/how-to/build-process#build-environment" },
+    { name: "Rust", link: "/rust/how-to/build-process#build-environment" },
+    { name: "Java", link: "/java/how-to/build-process#build-environment" },
+    { name: "Elixir", link: "/elixir/how-to/build-process#build-environment" },
+    { name: "Deno", link: "/deno/how-to/build-process#build-environment" },
+    { name: "Bun", link: "/bun/how-to/build-process#build-environment" },
+    { name: "Gleam", link: "/gleam/how-to/build-process#build-environment" },
+    { name: "Nginx", link: "/nginx/how-to/build-process#build-environment" }
 ]
 export const customizeRuntime = [
     { name: "Node.js", link: "/nodejs/how-to/customize-runtime" },
@@ -7462,6 +7401,11 @@ export const customizeRuntime = [
     { name: ".NET", link: "/dotnet/how-to/customize-runtime" },
     { name: "Rust", link: "/rust/how-to/customize-runtime" },
     { name: "Java", link: "/java/how-to/customize-runtime" },
+    { name: "Elixir", link: "/elixir/how-to/customize-runtime" },
+    { name: "Deno", link: "/deno/how-to/customize-runtime" },
+    { name: "Bun", link: "/bun/how-to/customize-runtime" },
+    { name: "Gleam", link: "/gleam/how-to/customize-runtime" },
+    { name: "Nginx", link: "/nginx/how-to/customize-runtime" }
 ]
 ## Configure the pipeline
 Zerops provides a customizable build and runtime environment for your application. Start by adding a [zerops.yaml](/zerops-yaml/specification) file to the **root of your repository** and modify it to fit your application.
@@ -7490,32 +7434,24 @@ The zerops.yaml in your repository tells Zerops how to build and deploy your app
 Learn more about `zerops.yaml` parameters for your runtime:
 ## Trigger the pipeline
   
-### Automatically
-Trigger the build & deploy pipeline automatically with each push to the selected branch or with a new tag. Create a new runtime service and connect it to your GitHub or GitLab repository.
+### Continuous deployment
+Set up automatic builds triggered by Git events. You can establish continuous deployment in two ways:
+* **New Service:** Create a new runtime service and connect it to your GitHub or GitLab repository during the service creation process.
+* **Existing Services:** Go to the service detail and choose **Pipelines & CI/CD settings** from the left menu. Click **Connect with a GitHub repository** or **Connect with a GitLab repository** to link your repository.
+Once connected, Zerops will automatically build and deploy your application with each push to the selected branch or when you create a new tag.
   
-### Manually
-Start a new build & deploy pipeline manually using the [Zerops CLI](/references/cli). The [zcli service push](/references/cli/commands#service-push) command uploads your application code, builds and deploys your application in Zerops.
-The command triggers the build pipeline defined in `zerops.yaml`. The `zerops.yaml` file must be in the working directory (current directory by default, changeable with the `--workingDir` flag).
-zCLI uploads all files and subdirectories from the working directory to Zerops and starts the build pipeline. If a `.gitignore` file exists, Zerops interprets it and ignores the defined files and folders.
-#### Push command parameters
-```sh
-Usage:
-  zcli push [flags]
-Flags:
-      --archiveFilePath string   If set, zCLI creates a tar.gz archive with the application code in the required path relative
-                                 to the working directory. By default, no archive is created.
-      --deployGitFolder          If set, zCLI the .git folder is also uploaded. By default, the .git folder is ignored.
-  -h, --help                     the service push command.
-      --projectId string         If you have access to more than one project, you must specify the project ID for which the
-                                 command is to be executed.
-      --serviceId string         If you have access to more than one service, you must specify the service ID for which the
-                                 command is to be executed.
-      --versionName string       Adds a custom version name. Automatically filled if the VERSIONNAME environment variable exists.
-      --workingDir string        Sets a custom working directory. Default working directory is the current directory. (default "./")
-      --zeropsYamlPath string    Sets a custom path to the zerops.yaml file relative to the working directory. By default zCLI
-                                 looks for zerops.yaml in the working directory.
-```
-If you want to [deploy](#deploy-phase) your already built application to Zerops, use the zcli service deploy command instead.
+### On-demand deployment
+Trigger builds and deployments manually when needed using either the CLI or GUI.
+#### Using Zerops CLI
+- **Build and deploy:** `zcli service push` - Uploads code and triggers the full pipeline
+- **Deploy only:** `zcli service deploy` - Skips build, deploys pre-built artifacts
+See [CLI commands documentation](/references/cli/commands#service-operations) for all parameters.
+#### Using Zerops GUI
+In **Pipelines & CI/CD settings** section of your service detail:
+- **Re-deploy last pipeline** - With optional secret env variable updates
+- **Trigger new pipeline** - From git repo or with custom configuration
+#### Using import YAML
+Add `buildFromGit: ` to your service configuration for one-time build during import. See [import documentation](/references/import#service-basic-configuration).
 ## Build phase
   
 Zerops starts a temporary build container and executes these steps:
@@ -7658,7 +7594,7 @@ If readiness checks fail for 5 minutes, Zerops marks the container as failed, de
 Read the [runtime log](/nodejs/how-to/logs#runtime-log) to troubleshoot failed readiness checks.
 ## Manual deploy using Zerops CLI
   
-Start deploy-only pipelines using the [Zerops CLI](/references/cli). The `zcli service deploy` command uploads and deploys your application in Zerops. Use this when you have your own build process. For building applications in Zerops, use [automatic](#automatically) or [manual](#manually) build processes instead.
+Start deploy-only pipelines using the [Zerops CLI](/references/cli). The `zcli service deploy` command uploads and deploys your application in Zerops. Use this when you have your own build process. For building applications in Zerops, use [continuous](#continuous-deployment) or [on-demand](#on-demand-deployment) deployment instead.
 ```sh
 Usage:
   zcli service deploy pathToFileOrDir [flags]
@@ -7682,7 +7618,7 @@ Place `zerops.yaml` in the working directory.
 :::info
 You can modify the deploy pipeline anytime by updating the `zerops.yaml` in your working directory.
 :::
-## Manage build and deploys
+## Manage builds and deployments
 ### Cancel running build
 When you need to cancel an incorrect running build, use the Zerops GUI. Go to the service detail, open the running processes list, and click **Open pipeline detail**. Then click **Cancel build**.
   
@@ -10492,69 +10428,7 @@ Read more about how the [readiness check works](/gleam/how-to/deploy-process#rea
 
 # Gleam > How To > Build Process
 
-  
-## Description of the build process
-Zerops starts a temporary build container and performs following actions:
-1. Installs the build environment:
-   - Sets up base system and Go runtime
-   - Restores cached files if available (based on `build.cache` configuration)
-   - Validates cache against current `build.os`, `build.base`, and `build.prepareCommands`
-2. Downloads your application source code from [GitHub ↗](https://www.github.com), [GitLab ↗](https://www.gitlab.com) or via [Zerops CLI](/references/cli)
-3. Optionally [customizes the build environment](#customize-gleam-build-environment)
-4. Runs the build commands
-5. Uploads the application artefact to the internal Zerops storage
-6. Preserves specified files for future builds (based on `build.cache` configuration)
-7. Optionally [customizes the runtime environment](/gleam/how-to/customize-runtime)
-8. [Deploys your application](/gleam/how-to/deploy-process)
-The build container is automatically deleted after the build has finished or failed.
-## Cancel running build
-When you know that the running build is not correct and you want to cancel it, you can do it in Zerops GUI. Go to the service detail, open the list of running processes and click on the **Open pipeline detail** button. Then click on the **Cancel build** button.
-  
-:::caution
-The build cancellation is available before the build pipeline is finished. When the build is finished, the deployment cannot be cancelled.
-:::
-## Customize Gleam build environment
-The default Gleam build environment contains:
-- {data.alpine.default}
-- selected version of Gleam defined in `zerops.yaml` [build.base](/gleam/how-to/build-pipeline#base) parameter
-- [zCLI](/references/cli), Zerops command line tool
-- `npm`, `yarn`, `git` and `npx` tools
-If you prefer the Ubuntu OS instead of Alpine, set the [build.os](/gleam/how-to/build-pipeline#os) attribute to `ubuntu`. To install additional packages or tools add one or more [build.prepareCommands](/gleam/how-to/build-pipeline#preparecommands) commands to your `zerops.yaml`.
-:::info
-The application code is available in the `/var/www` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
-:::
-## Gleam build hardware resources
-Build of your Gleam application is run in a separate build container with following resource configuration:
-| HW resource   | Minimum | Maximum |
-| ------------- | ------- | ------- |
-| **CPU cores** | 6       | 20      |
-| **RAM**       | 8 GB    | 8 GB    |
-| **Disk**      | 1 GB    | 100 GB  |
-| **Disk**      | 1 GB    | 100 GB  |
-The build container is always started with the minimum hardware resources and scales vertically up to the maximum resources.
-:::info
-Hardware resources of the build containers are not charged. The build costs are covered by the standard Zerops [project fee](https://zerops.io/#pricing).
-:::
-## Build time limit
-The time limit for the whole build pipeline is **1 hour**. After 1 hour, Zerops will terminate the build pipeline and delete the build container.
-## Troubleshooting build-related problems
-### Failure of a build prepare command
-If any [prepare command](/gleam/how-to/build-pipeline#preparecommands) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/gleam/how-to/logs#build-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom build environment is ready for the build phase.
-### Invalidate the build cache
-If you encounter unexpected build behavior or dependency issues, the problem might be related to [cached build data](/features/build-cache). While Zerops maintains the build cache to speed up deployments, sometimes you may need to start fresh.
-To invalidate the build cache:
-1. Go to your service detail in Zerops GUI
-2. Choose **Pipelines & CI/CD Settings** from the left menu
-3. Click on the **Invalidate build cache** button
-This will force Zerops to run the next build clean, including all prepare commands, which can help resolve cache-related issues. After invalidation, your next build will also create a fresh cache.
-### Failure of a build command
-If any [build command](/gleam/how-to/build-pipeline#buildcommands) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/gleam/how-to/logs#build-log) to troubleshoot the error. If the error log doesn't contain any specific error message, try to run your build with the `--verbose` option.
-```yaml
-buildCommands:
-  - npm i --verbose
-  - npm run build
-```
-If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `buildCommands` are finished, the application build is completed and ready for the [deploy](/gleam/how-to/deploy-process) phase.
+
 
 ----------------------------------------
 
@@ -10881,15 +10755,7 @@ System packages for processing: When your app processes images, videos, or files
 
 # Gleam > How To > Filebrowser
 
-## Zerops GUI
-In Zerops GUI, go to the service detail page and choose **Service containers & resources overview** and scroll down to the list of containers.
-  
-Then click on the file browser icon and the file browser opens:
-  
-If your service is in the [HA mode], you can switch between containers in the top left corner.
-## zCLI & SSH
-You can connect to the container via SSH with the Zerops CLI and browse its files.
-How to [connect to your service via SSH](/references/ssh).
+
 
 ----------------------------------------
 
@@ -11832,68 +11698,7 @@ Read more about how the [readiness check works](/go/how-to/deploy-process#readin
 
 # Go > How To > Build Process
 
-  
-## Description of the build process
-Zerops starts a temporary build container and performs following actions:
-1. Installs the build environment:
-   - Sets up base system and Go runtime
-   - Restores cached files if available (based on `build.cache` configuration)
-   - Validates cache against current `build.os`, `build.base`, and `build.prepareCommands`
-2. Downloads your application source code from [GitHub ↗](https://www.github.com), [GitLab ↗](https://www.gitlab.com) or via [Zerops CLI](/references/cli)
-3. Optionally [customizes the build environment](#customize-go-build-environment)
-4. Runs the build commands
-5. Uploads the application artefact to the internal Zerops storage
-6. Preserves specified files for future builds (based on `build.cache` configuration)
-7. Optionally [customizes the runtime environment](/go/how-to/customize-runtime)
-8. [Deploys your application](/go/how-to/deploy-process)
-The build container is automatically deleted after the build has finished or failed.
-## Cancel running build
-When you know that the running build is not correct and you want to cancel it, you can do it in Zerops GUI. Go to the service detail, select **Service dashboard & runtime containers** from the left menu and click on the **Open pipeline detail** button. Then click on the **Cancel build** button.
-The build cancellation is available before the build pipeline is finished. When the build is finished, the deployment cannot be cancelled.
-## Customize Go build environment
-The default Go build environment contains:
-- {data.alpine.default}
-- selected version of Go defined in `zerops.yaml` [build.base](/go/how-to/build-pipeline#base) parameter
-- [zCLI](/references/cli), Zerops command line tool
-- `git` and `wget`
-:::note
-To use Ubuntu instead of the default Alpine, set the [build.os](/zerops-yaml/specification#os-) attribute.
-Additional packages and tools can be installed using [build.prepareCommands](/zerops-yaml/specification#preparecommands-).
-:::
-:::info
-The application code is available in the `/var/www` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
-:::
-## Go build hardware resources
-Build of your Go application is run in a separate build container with following resource configuration:
-| HW resource   | Minimum | Maximum |
-| ------------- | ------- | ------- |
-| **CPU cores** | 6       | 20      |
-| **RAM**       | 8 GB    | 8 GB    |
-| **Disk**      | 1 GB    | 100 GB  |
-| **Disk**      | 1 GB    | 100 GB  |
-The build container is always started with the minimum hardware resources and scales vertically up to the maximum resources.
-:::info
-Hardware resources of the build containers are not charged. The build costs are covered by the standard Zerops [project fee](https://zerops.io/#pricing).
-:::
-## Build time limit
-The time limit for the whole build pipeline is **1 hour**. After 1 hour, Zerops will terminate the build pipeline and delete the build container.
-## Troubleshooting build-related problems
-### Failure of a build prepare command
-If any [prepare command](/go/how-to/build-pipeline#preparecommands) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/go/how-to/logs#build-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom build environment is ready for the build phase.
-### Invalidate the build cache
-If you encounter unexpected build behavior or dependency issues, the problem might be related to [cached build data](/features/build-cache). While Zerops maintains the build cache to speed up deployments, sometimes you may need to start fresh.
-To invalidate the build cache:
-1. Go to your service detail in Zerops GUI
-2. Choose **Pipelines & CI/CD Settings** from the left menu
-3. Click on the **Invalidate build cache** button
-This will force Zerops to run the next build clean, including all prepare commands, which can help resolve cache-related issues. After invalidation, your next build will also create a fresh cache.
-### Failure of a build command
-If any [build command](/go/how-to/build-pipeline#buildcommands) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/go/how-to/logs#build-log) to troubleshoot the error. If the error log doesn't contain any specific error message, try to run your build with the verbose `-v` option.
-```yaml
-build:
-  - go build -v
-```
-If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `buildCommands` are finished, the application build is completed and ready for the [deploy](/go/how-to/deploy-process) phase.
+
 
 ----------------------------------------
 
@@ -12215,15 +12020,7 @@ System packages for processing: When your app processes images, videos, or files
 
 # Go > How To > Filebrowser
 
-## Zerops GUI
-In Zerops GUI, go to the service detail page and choose **Service containers & resources overview** and scroll down to the list of containers.
-  
-Then click on the file browser icon and the file browser opens:
-  
-If your service is in the [HA mode], you can switch between containers in the top left corner.
-## zCLI & SSH
-You can connect to the container via SSH with the Zerops CLI and browse its files.
-How to [connect to your service via SSH](/references/ssh).
+
 
 ----------------------------------------
 
@@ -13419,75 +13216,7 @@ Read more about how the [readiness check works](/java/how-to/deploy-process#read
 
 # Java > How To > Build Process
 
-  
-## Customize Java build environment
-The default Java build environment contains:
-- {data.alpine.default}
-- Selected version of Java when the runtime service was created.
-- [zCLI](/references/cli)
-- Git
-:::note
-To use Ubuntu instead of the default Alpine, set the [build.os](/zerops-yaml/specification#os-) attribute.
-Additional packages and tools can be installed using [build.prepareCommands](/zerops-yaml/specification#preparecommands-).
-:::
-## Description of the build process
-Zerops starts a temporary build container and performs following actions:
-1. Installs the build environment:
-   - Sets up base system and Go runtime
-   - Restores cached files if available (based on `build.cache` configuration)
-   - Validates cache against current `build.os`, `build.base`, and `build.prepareCommands`
-2. Downloads your application source code from [GitHub ↗](https://www.github.com), [GitLab ↗](https://www.gitlab.com) or via [Zerops CLI](/references/cli)
-3. Optionally [customizes the build environment](#customize-java-build-environment)
-4. Runs the build commands
-5. Uploads the application artefact to the internal Zerops storage
-6. Preserves specified files for future builds (based on `build.cache` configuration)
-7. Optionally [customizes the runtime environment](/java/how-to/customize-runtime)
-8. [Deploys your application](/java/how-to/deploy-process)
-The build container is automatically deleted after the build has finished or failed.
-## Cancel running build
-When you know that the running build is not correct and you want to cancel it, you can do it in Zerops GUI. Go to the service detail, select **Service dashboard & runtime containers** from the left menu and click on the **Open pipeline detail** button. Then click on the **Cancel build** button.
-The build cancellation is available before the build pipeline is finished. When the build is finished, the deployment cannot be cancelled.
-## Customize Java build environment
-The default Java build environment contains:
-- {data.alpine.default}
-- selected version of Java defined in `zerops.yaml` [build.base](/java/how-to/build-pipeline#base) parameter
-- [zCLI](/references/cli), Zerops command line tool
-- `git` and `wget`
-If you prefer the Ubuntu OS instead of Alpine, set the [build.os](/java/how-to/build-pipeline#os) attribute to `ubuntu`. To install additional packages or tools add one or more [build.prepareCommands](/java/how-to/build-pipeline#preparecommands) commands to your `zerops.yaml`.
-:::info
-The application code is available in the `/var/www` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
-:::
-## Java build hardware resources
-Build of your Java application is run in a separate build container with following resource configuration:
-| HW resource   | Minimum | Maximum |
-| ------------- | ------- | ------- |
-| **CPU cores** | 6       | 20      |
-| **RAM**       | 8 GB    | 8 GB    |
-| **Disk**      | 1 GB    | 100 GB  |
-| **Disk**      | 1 GB    | 100 GB  |
-The build container is always started with the minimum hardware resources and scales vertically up to the maximum resources.
-:::info
-Hardware resources of the build containers are not charged. The build costs are covered by the standard Zerops [project fee](https://zerops.io/#pricing).
-:::
-## Build time limit
-The time limit for the whole build pipeline is **1 hour**. After 1 hour, Zerops will terminate the build pipeline and delete the build container.
-## Troubleshooting build-related problems
-### Failure of a build prepare command
-If any [prepare command](/java/how-to/build-pipeline#preparecommands) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/java/how-to/logs#build-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom build environment is ready for the build phase.
-### Invalidate the build cache
-If you encounter unexpected build behavior or dependency issues, the problem might be related to [cached build data](/features/build-cache). While Zerops maintains the build cache to speed up deployments, sometimes you may need to start fresh.
-To invalidate the build cache:
-1. Go to your service detail in Zerops GUI
-2. Choose **Pipelines & CI/CD Settings** from the left menu
-3. Click on the **Invalidate build cache** button
-This will force Zerops to run the next build clean, including all prepare commands, which can help resolve cache-related issues. After invalidation, your next build will also create a fresh cache.
-### Failure of a build command
-If any [build command](/java/how-to/build-pipeline#buildcommands) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/java/how-to/logs#build-log) to troubleshoot the error. If the error log doesn't contain any specific error message, try to run your build with the verbose `-X` debug option.
-```yaml
-build:
-  - ./mvnw -X clean install
-```
-If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `buildCommands` are finished, the application build is completed and ready for the [deploy](/java/how-to/deploy-process) phase.
+
 
 ----------------------------------------
 
@@ -13809,15 +13538,7 @@ Build tools: When you need Maven, Gradle, or other build tools not included by d
 
 # Java > How To > Filebrowser
 
-## Zerops GUI
-In Zerops GUI, go to the service detail page and choose **Service containers & resources overview** and scroll down to the list of containers.
-  
-Then click on the file browser icon and the file browser opens:
-  
-If your service is in the [HA mode], you can switch between containers in the top left corner.
-## zCLI & SSH
-You can connect to the container via SSH with the Zerops CLI and browse its files.
-How to [connect to your service via SSH](/references/ssh).
+
 
 ----------------------------------------
 
@@ -16443,7 +16164,7 @@ The runtime prepare process follows the same steps for all runtimes. See [how ru
 ### Caching Behavior
 Zerops caches custom runtime images to optimize deployment times. Learn about [custom runtime image caching](/features/pipeline#custom-runtime-image-caching) including when images are cached and reused.
 ### Build Management
-For information about managing builds and deployments, see [managing builds and deployments](/features/pipeline#manage-build-and-deploys).
+For information about managing builds and deployments, see [managing builds and deployments](/features/pipeline#manage-builds-and-deployments).
 :::warning
 Shared storage mounts are not available during the runtime prepare phase.
 :::
@@ -16676,15 +16397,7 @@ zerops:
 
 # Nginx > How To > Filebrowser
 
-## Zerops GUI
-In Zerops GUI, go to the service detail page and choose **Service containers & resources overview** and scroll down to the list of containers.
-  
-Then click on the file browser icon and the file browser opens:
-  
-If your service is in the [HA mode], you can switch between containers in the top left corner.
-## zCLI & SSH
-You can connect to the container via SSH with the Zerops CLI and browse its files.
-How to [connect to your service via SSH](/references/ssh).
+
 
 ----------------------------------------
 
@@ -17749,79 +17462,7 @@ Read more about how the [readiness check works](/nodejs/how-to/deploy-process#re
 
 # Nodejs > How To > Build Process
 
-  
-## Customize NodeJS build environment
-The default NodeJS build environment contains:
-- {data.alpine.default}
-- Selected version of Node.js when the runtime service was created.
-- [zCLI](/references/cli)
-- NPM, Yarn, Git and NPX tools
-:::note
-To use Ubuntu instead of the default Alpine, set the [build.os](/zerops-yaml/specification#os-) attribute.
-Additional packages and tools can be installed using [build.prepareCommands](/zerops-yaml/specification#preparecommands-).
-:::
-## Description of the build process
-Zerops starts a temporary build container and performs following actions:
-1. Installs the build environment:
-   - Sets up base system and Go runtime
-   - Restores cached files if available (based on `build.cache` configuration)
-   - Validates cache against current `build.os`, `build.base`, and `build.prepareCommands`
-2. Downloads your application source code from [GitHub ↗](https://www.github.com), [GitLab ↗](https://www.gitlab.com) or via [Zerops CLI](/references/cli)
-3. Optionally [customizes the build environment](#customize-nodejs-build-environment)
-4. Runs the build commands
-5. Uploads the application artefact to the internal Zerops storage
-6. Preserves specified files for future builds (based on `build.cache` configuration)
-7. Optionally [customizes the runtime environment](/nodejs/how-to/customize-runtime)
-8. [Deploys your application](/nodejs/how-to/deploy-process)
-The build container is automatically deleted after the build has finished or failed.
-## Cancel running build
-When you know that the running build is not correct and you want to cancel it, you can do it in Zerops GUI. Go to the service detail, open the list of running processes and click on the **Open pipeline detail** button. Then click on the **Cancel build** button.
-  
-:::caution
-The build cancellation is available before the build pipeline is finished. When the build is finished, the deployment cannot be cancelled.
-:::
-## Customize Node.js build environment
-The default Node.js build environment contains:
-- {data.alpine.default}
-- selected version of Node.js defined in `zerops.yaml` [build.base](/nodejs/how-to/build-pipeline#base) parameter
-- [zCLI](/references/cli), Zerops command line tool
-- `npm`, `yarn`, `git` and `npx` tools
-If you prefer the Ubuntu OS instead of Alpine, set the [build.os](/nodejs/how-to/build-pipeline#os) attribute to `ubuntu`. To install additional packages or tools add one or more [build.prepareCommands](/nodejs/how-to/build-pipeline#preparecommands) commands to your `zerops.yaml`.
-:::info
-The application code is available in the `/var/www` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
-:::
-## Node.js build hardware resources
-Build of your Node.js application is run in a separate build container with following resource configuration:
-| HW resource   | Minimum | Maximum |
-| ------------- | ------- | ------- |
-| **CPU cores** | 1       | 5       |
-| **RAM**       | 8 GB    | 8 GB    |
-| **Disk**      | 1 GB    | 100 GB  |
-| **Disk**      | 1 GB    | 100 GB  |
-The build container is always started with the minimum hardware resources and scales vertically up to the maximum resources.
-:::info
-Hardware resources of the build containers are not charged. The build costs are covered by the standard Zerops [project fee](https://zerops.io/#pricing).
-:::
-## Build time limit
-The time limit for the whole build pipeline is **1 hour**. After 1 hour, Zerops will terminate the build pipeline and delete the build container.
-## Troubleshooting build-related problems
-### Failure of a build prepare command
-If any [prepare command](/nodejs/how-to/build-pipeline#preparecommands) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/nodejs/how-to/logs#build-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom build environment is ready for the build phase.
-### Invalidate the build cache
-If you encounter unexpected build behavior or dependency issues, the problem might be related to [cached build data](/features/build-cache). While Zerops maintains the build cache to speed up deployments, sometimes you may need to start fresh.
-To invalidate the build cache:
-1. Go to your service detail in Zerops GUI
-2. Choose **Pipelines & CI/CD Settings** from the left menu
-3. Click on the **Invalidate build cache** button
-This will force Zerops to run the next build clean, including all prepare commands, which can help resolve cache-related issues. After invalidation, your next build will also create a fresh cache.
-### Failure of a build command
-If any [build command](/nodejs/how-to/build-pipeline#buildcommands) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/nodejs/how-to/logs#build-log) to troubleshoot the error. If the error log doesn't contain any specific error message, try to run your build with the `--verbose` option.
-```yaml
-buildCommands:
-  - npm i --verbose
-  - npm run build
-```
-If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `buildCommands` are finished, the application build is completed and ready for the [deploy](/nodejs/how-to/deploy-process) phase.
+
 
 ----------------------------------------
 
@@ -18160,15 +17801,7 @@ System packages for processing: When your app processes images, videos, or files
 
 # Nodejs > How To > Filebrowser
 
-## Zerops GUI
-In Zerops GUI, go to the service detail page and choose **Service containers & resources overview** and scroll down to the list of containers.
-  
-Then click on the file browser icon and the file browser opens:
-  
-If your service is in the [HA mode], you can switch between containers in the top left corner.
-## zCLI & SSH
-You can connect to the container via SSH with the Zerops CLI and browse its files.
-How to [connect to your service via SSH](/references/ssh).
+
 
 ----------------------------------------
 
@@ -19570,59 +19203,7 @@ Read more about how the [readiness check works](/php/how-to/deploy-process#readi
 
 # Php > How To > Build Process
 
-  
-The build container is automatically deleted after the build has finished or failed.
-:::info
-The application code is available in the `/var/www` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
-:::
-## Cancel running build
-To cancel an ongoing build:
-1. Go to service detail
-2. Select "Service dashboard & runtime containers"
-3. Click "Open pipeline detail"
-4. Click "Cancel build"
-The build cancellation is available before the build pipeline is finished. When the build is finished, the deployment cannot be cancelled.
-## Customize PHP build environment
-The default PHP build environment contains:
-- {data.alpine.default}
-- selected version of PHP defined in `zerops.yaml` [build.base](/php/how-to/build-pipeline#base) parameter
-- Git and Composer
-- [zCLI](/references/cli)
-:::note
-To use Ubuntu instead of the default Alpine, set the [build.os](/zerops-yaml/specification#os-) attribute.
-Additional packages and tools can be installed using [build.prepareCommands](/zerops-yaml/specification#preparecommands-).
-:::
-## PHP build hardware resources
-Build of your PHP application is run in a separate build container with following resource configuration:
-| HW resource   | Minimum | Maximum |
-| ------------- | ------- | ------- |
-| **CPU cores** | 6       | 20      |
-| **RAM**       | 8 GB    | 8 GB    |
-| **Disk**      | 1 GB    | 100 GB  |
-| **Disk**      | 1 GB    | 100 GB  |
-The build container is always started with the minimum hardware resources and scales vertically up to the maximum resources.
-:::info
-Hardware resources of the build containers are not charged. The build costs are covered by the standard Zerops [project fee](https://zerops.io/#pricing).
-:::
-## Build time limit
-The time limit for the whole build pipeline is **1 hour**. After 1 hour, Zerops will terminate the build pipeline and delete the build container.
-## Troubleshooting build-related problems
-### Failure of a build prepare command
-If any [prepare command](/php/how-to/build-pipeline#preparecommands) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/php/how-to/logs#build-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom build environment is ready for the build phase.
-### Invalidate the build cache
-If you encounter unexpected build behavior or dependency issues, the problem might be related to [cached build data](/features/build-cache). While Zerops maintains the build cache to speed up deployments, sometimes you may need to start fresh.
-To invalidate the build cache:
-1. Go to your service detail in Zerops GUI
-2. Choose **Pipelines & CI/CD Settings** from the left menu
-3. Click on the **Invalidate build cache** button
-This will force Zerops to run the next build clean, including all prepare commands, which can help resolve cache-related issues. After invalidation, your next build will also create a fresh cache.
-### Failure of a build command
-If any [build command](/php/how-to/build-pipeline#buildcommands) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/php/how-to/logs#build-log) to troubleshoot the error. If the error log doesn't contain any specific error message, try to run your build with the `-v` verbose option.
-```yaml
-buildCommands:
-  - composer install -v
-```
-If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `buildCommands` are finished, the application build is completed and ready for the [deploy](/php/how-to/deploy-process) phase.
+
 
 ----------------------------------------
 
@@ -20122,15 +19703,7 @@ zerops:
 
 # Php > How To > Filebrowser
 
-## Zerops GUI
-In Zerops GUI, go to the service detail page and choose **Service containers & resources overview** and scroll down to the list of containers.
-  
-Then click on the file browser icon and the file browser opens:
-  
-If your service is in the [HA mode], you can switch between containers in the top left corner.
-## zCLI & SSH
-You can connect to the container via SSH with the Zerops CLI and browse its files.
-How to [connect to your service via SSH](/references/ssh).
+
 
 ----------------------------------------
 
@@ -21719,57 +21292,7 @@ Read more about how the [readiness check works](/python/how-to/deploy-process#re
 
 # Python > How To > Build Process
 
-  
-## Description of the build process
-Zerops starts a temporary build container and performs following actions:
-1. Installs the build environment:
-   - Sets up base system and Go runtime
-   - Restores cached files if available (based on `build.cache` configuration)
-   - Validates cache against current `build.os`, `build.base`, and `build.prepareCommands`
-2. Downloads your application source code from [GitHub ↗](https://www.github.com), [GitLab ↗](https://www.gitlab.com) or via [Zerops CLI](/references/cli)
-3. Optionally [customizes the build environment](#customize-python-build-environment)
-4. Uploads the application artefact to the internal Zerops storage
-5. Preserves specified files for future builds (based on `build.cache` configuration)
-6. Optionally [customizes the runtime environment](/python/how-to/customize-runtime)
-7. [Deploys your application](/python/how-to/deploy-process)
-The build container is automatically deleted after the build has finished or failed.
-## Cancel running build
-When you know that the running build is not correct and you want to cancel it, you can do it in Zerops GUI. Go to the service detail, select **Service dashboard & runtime containers** from the left menu and click on the **Open pipeline detail** button. Then click on the **Cancel build** button.
-The build cancellation is available before the build pipeline is finished. When the build is finished, the deployment cannot be cancelled.
-## Customize Python build environment
-The default Python build environment contains:
-- {data.alpine.default}
-- selected version of Python defined in `zerops.yaml` [build.base](/python/how-to/build-pipeline#base) parameter
-- [zCLI](/references/cli), Zerops command line tool
-- `pip` and `git`
-If you prefer the Ubuntu OS instead of Alpine, set the [build.os](/python/how-to/build-pipeline#os) attribute to `ubuntu`. To install additional packages or tools add one or more [build.prepareCommands](/python/how-to/build-pipeline#preparecommands) commands to your `zerops.yaml`.
-:::info
-The application code is available in the `/var/www` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
-:::
-## Python build hardware resources
-Build of your Python application is run in a separate build container with following resource configuration:
-| HW resource   | Minimum | Maximum |
-| ------------- | ------- | ------- |
-| **CPU cores** | 6       | 20      |
-| **RAM**       | 8 GB    | 8 GB    |
-| **Disk**      | 1 GB    | 100 GB  |
-| **Disk**      | 1 GB    | 100 GB  |
-The build container is always started with the minimum hardware resources and scales vertically up to the maximum resources.
-:::info
-Hardware resources of the build containers are not charged. The build costs are covered by the standard Zerops [project fee](https://zerops.io/#pricing).
-:::
-## Build time limit
-The time limit for the whole build pipeline is **1 hour**. After 1 hour, Zerops will terminate the build pipeline and delete the build container.
-## Troubleshooting build-related problems
-### Failure of a build prepare command
-If any [prepare command](/python/how-to/build-pipeline#preparecommands) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/python/how-to/logs#build-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom build environment is ready for the build phase.
-### Invalidate the build cache
-If you encounter unexpected build behavior or dependency issues, the problem might be related to [cached build data](/features/build-cache). While Zerops maintains the build cache to speed up deployments, sometimes you may need to start fresh.
-To invalidate the build cache:
-1. Go to your service detail in Zerops GUI
-2. Choose **Pipelines & CI/CD Settings** from the left menu
-3. Click on the **Invalidate build cache** button
-This will force Zerops to run the next build clean, including all prepare commands, which can help resolve cache-related issues. After invalidation, your next build will also create a fresh cache.
+
 
 ----------------------------------------
 
@@ -22108,15 +21631,7 @@ System packages for processing: When your app processes images, videos, or files
 
 # Python > How To > Filebrowser
 
-## Zerops GUI
-In Zerops GUI, go to the service detail page and choose **Service containers & resources overview** and scroll down to the list of containers.
-  
-Then click on the file browser icon and the file browser opens:
-  
-If your service is in the [HA mode], you can switch between containers in the top left corner.
-## zCLI & SSH
-You can connect to the container via SSH with the Zerops CLI and browse its files.
-How to [connect to your service via SSH](/references/ssh).
+
 
 ----------------------------------------
 
@@ -22960,136 +22475,6 @@ cat ~/.config/zerops/zerops.log
 # Stream new log entries
 tail -f ~/.config/zerops/zerops.log
 ```
-
-----------------------------------------
-
-# References > Debug Mode
-
-This document describes the debug mode configuration capabilities for service stacks in Zerops, allowing developers to pause execution at specific points during build and runtime processes for debugging purposes.
-## Overview
-Debug mode introduces control over two distinct phases of deployment:
-- **Build phase** - When the `buildCommands` are executed
-- **Runtime prepare phase** - When the `prepareCommands` are executed
-For each phase, you can choose when to pause the execution:
-- **Disable** - No pausing, execution proceeds normally
-- **Before first command** - Execution stops before running any commands
-- **After last command** - Execution stops after all commands complete
-- **On command fail** - Execution stops when a command fails
-Each phase can be configured with its own debug settings without affecting the other phase.
-:::warning Important
-The entire build process, including any time spent in debug mode, has a maximum duration of 60 minutes. After this time limit is reached, the build process is automatically cancelled.
-:::
-## Configuration
-The debug mode configuration can be found in your service detail under the **Pipelines & CI/CD settings**.
-  
-## Debug Control
-When execution is paused in debug mode, you have several commands available to control the debugging process. Each command serves a specific purpose and affects the deployment process differently.
-### Debug Pause Points
-There are three key points where execution can pause during deployment:
-- ➠ **Disable** - Do not pause
-- ↪ **Before First Command** - Paused before any commands run
-- ✖ **On Command Failure** - Paused when a command fails
-- ✔ **After Last Command** - Paused after all commands complete
-### Available Commands
-#### Continuing Execution
-To proceed with the normal deployment process, use:
-```bash
-zsc debug continue
-```
-  
-      Pause Point
-      Behavior
-    
-      ↪ Before First Command
-      Begins running commands for the current phase until next possible pause point
-    
-      ✖ On Command Failure
-      Skips the failed command and continues deployment
-    
-      ✔ After Last Command
-      Moves to the next phase (from build to runtime prepare) or completes deployment
-    
-#### Marking Success
-To force a successful deployment status, use:
-```bash
-zsc debug success
-```
-  
-      Pause Point
-      Behavior
-    
-      ↪ Before First Command
-      Ends current phase without running any commands
-    
-      ✖ On Command Failure
-      Ignores the failure and ends current phase with success
-    
-      ✔ After Last Command
-      Concludes current phase with a successful status
-    
-:::note
-Requires valid `deployFiles` to work properly (fails otherwise).
-:::
-#### Forcing Failure
-To terminate the deployment with a failure status, use:
-```bash
-zsc debug fail
-```
-  
-      Pause Point
-      Behavior
-    
-      ↪ Before First Command
-      Marks current phase as failed without running commands
-    
-      ✖ On Command Failure
-      Ends deployment with original error
-    
-      ✔ After Last Command
-      Overwrites successful execution with failed status and ends deployment
-    
-Each phase can be configured independently to pause at any of the points described above, giving you precise control over your debugging workflow. The 60-minute timeout ensures deployments don't remain blocked indefinitely.
-## Usage Examples
-### Example 1: Debugging Build Failures
-  
-      Build phase
-      ✖ On Command Failure
-    
-      Prepare runtime phase
-      ➠ Disable
-    
-This configuration allows you to:
-1. Inspect the container state after a failure
-2. Make necessary adjustments
-3. Use `zsc debug continue` to resume or `zsc debug fail` to abort
-### Example 2: Validating Runtime Setup
-  
-      Build phase
-      ➠ Disable
-    
-      Prepare runtime phase
-      ✔ After Last Command
-    
-## Best Practices
-#### Targeted Debugging
-- Enable debug mode only for the specific phase you need to investigate
-- This minimizes disruption to the deployment process
-- Helps maintain clear debugging sessions
-#### Clean Up
-- Always remember to disable debug mode after completing your debugging session
-- Set both phases to **Disable**
-- Prevents unexpected pauses in future deployments
-#### Production Consideration
-- Be cautious when using debug mode in production environments
-- Paused executions can block deployments
-- Consider using separate development services for extended debugging sessions
-#### Timeout Awareness
-- Be mindful of the 60-minute maximum debug pause time (p)lan debugging sessions accordingly)
-## Technical Considerations
-- Debug mode settings persist until explicitly changed
-- Build phase and runtime prepare phase operate independently
-- Debug commands are only available when execution is paused
-- Success signals require valid `deployFiles` to proceed
 
 ----------------------------------------
 
@@ -26620,65 +26005,7 @@ Read more about how the [readiness check works](/rust/how-to/deploy-process#read
 
 # Rust > How To > Build Process
 
-  
-## Description of the build process
-Zerops starts a temporary build container and performs following actions:
-1. Installs the build environment:
-   - Sets up base system and Go runtime
-   - Restores cached files if available (based on `build.cache` configuration)
-   - Validates cache against current `build.os`, `build.base`, and `build.prepareCommands`
-2. Downloads your application source code from [GitHub ↗](https://www.github.com), [GitLab ↗](https://www.gitlab.com) or via [Zerops CLI](/references/cli)
-3. Optionally [customizes the build environment](#customize-rust-build-environment)
-4. Runs the build commands
-5. Uploads the application artefact to the internal Zerops storage
-6. Preserves specified files for future builds (based on `build.cache` configuration)
-7. Optionally [customizes the runtime environment](/rust/how-to/customize-runtime)
-8. [Deploys your application](/rust/how-to/deploy-process)
-The build container is automatically deleted after the build has finished or failed.
-## Cancel running build
-When you know that the running build is not correct and you want to cancel it, you can do it in Zerops GUI. Go to the service detail, select **Service dashboard & runtime containers** from the left menu and click on the **Open pipeline detail** button. Then click on the **Cancel build** button.
-The build cancellation is available before the build pipeline is finished. When the build is finished, the deployment cannot be cancelled.
-## Customize Rust build environment
-The default Rust build environment contains:
-- {data.alpine.default}
-- selected version of Rust defined in `zerops.yaml` [build.base](/rust/how-to/build-pipeline#base) parameter
-- [zCLI](/references/cli), Zerops command line tool
-- `npm`, `yarn`, `git` and `npx` tools
-If you prefer the Ubuntu OS instead of Alpine, set the [build.os](/rust/how-to/build-pipeline#os) attribute to `ubuntu`. To install additional packages or tools add one or more [build.prepareCommands](/rust/how-to/build-pipeline#preparecommands) commands to your `zerops.yaml`.
-:::info
-The application code is available in the `/var/www` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
-:::
-## Rust build hardware resources
-Build of your Rust application is run in a separate build container with following resource configuration:
-| HW resource   | Minimum | Maximum |
-| ------------- | ------- | ------- |
-| **CPU cores** | 6       | 20      |
-| **RAM**       | 8 GB    | 8 GB    |
-| **Disk**      | 1 GB    | 100 GB  |
-| **Disk**      | 1 GB    | 100 GB  |
-The build container is always started with the minimum hardware resources and scales vertically up to the maximum resources.
-:::info
-Hardware resources of the build containers are not charged. The build costs are covered by the standard Zerops [project fee](https://zerops.io/#pricing).
-:::
-## Build time limit
-The time limit for the whole build pipeline is **1 hour**. After 1 hour, Zerops will terminate the build pipeline and delete the build container.
-## Troubleshooting build-related problems
-### Failure of a build prepare command
-If any [prepare command](/rust/how-to/build-pipeline#preparecommands) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/rust/how-to/logs#build-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom build environment is ready for the build phase.
-### Invalidate the build cache
-If you encounter unexpected build behavior or dependency issues, the problem might be related to [cached build data](/features/build-cache). While Zerops maintains the build cache to speed up deployments, sometimes you may need to start fresh.
-To invalidate the build cache:
-1. Go to your service detail in Zerops GUI
-2. Choose **Pipelines & CI/CD Settings** from the left menu
-3. Click on the **Invalidate build cache** button
-This will force Zerops to run the next build clean, including all prepare commands, which can help resolve cache-related issues. After invalidation, your next build will also create a fresh cache.
-### Failure of a build command
-If any [build command](/rust/how-to/build-pipeline#buildcommands) fails, it returns an exit code other than 0 and the build is canceled. Read the [build log](/rust/how-to/logs#build-log) to troubleshoot the error. If the error log doesn't contain any specific error message, try to run your build with the `--verbose` option.
-```yaml
-buildCommands:
-  - cargo build --release -v
-```
-If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `buildCommands` are finished, the application build is completed and ready for the [deploy](/rust/how-to/deploy-process) phase.
+
 
 ----------------------------------------
 
@@ -27015,15 +26342,7 @@ System packages for processing: When your app processes images, videos, or files
 
 # Rust > How To > Filebrowser
 
-## Zerops GUI
-In Zerops GUI, go to the service detail page and choose **Service containers & resources overview** and scroll down to the list of containers.
-  
-Then click on the file browser icon and the file browser opens:
-  
-If your service is in the [HA mode], you can switch between containers in the top left corner.
-## zCLI & SSH
-You can connect to the container via SSH with the Zerops CLI and browse its files.
-How to [connect to your service via SSH](/references/ssh).
+
 
 ----------------------------------------
 
