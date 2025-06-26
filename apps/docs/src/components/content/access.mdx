@@ -1,0 +1,65 @@
+import { Var, VarLink } from '/src/components/content/var';
+
+## Private internal access
+
+Projects in Zerops represent a group of one or more services.
+Services can be of different types (runtime services, databases, message brokers, object storage, etc.). All services of the same project share a **dedicated private network**. To connect to a service within the same project, just use the service hostname and its <VarLink name="servicePath" path="/{{VAR}}/how-to/build-pipeline#ports">internal port</VarLink>.
+
+:::tip Connect from another project
+To connect to a <Var name="serviceDisplay" /> service from **another Zerops project**, you'll need to use [public access](#public-access) since different projects don't share private networks.
+:::
+
+To connect to your application with `app` hostname running on <VarLink name="servicePath" path="/{{VAR}}/how-to/build-pipeline#ports">internal port</VarLink> <Var name="defaultPort" />, simply use <code>http<snap>:</snap>//app:<Var name="defaultPort" /></code>.
+
+:::info
+Do not use `https://` when communicating with <Var name="serviceDisplay" /> from other runtime services in the same project. The internal communication is done over a private network and is isolated from other projects.
+:::
+
+### Use <Var name="serviceDisplay" /> environment variables
+
+Zerops creates default environment variables for each <Var name="serviceDisplay" /> service to help you with connection within the same project. To avoid the need to copy the access parameters manually, use <VarLink name="servicePath" path="/{{VAR}}/how-to/env-variables#generated-env-variables">generated environment variables</VarLink> of the <Var name="serviceDisplay" /> service.
+
+#### Prefix the environment variable key
+
+All services of the same project can reference environment variables from other services. To use an environment variable from one service in another service in the same project, you must prefix the environment variable key with the service hostname and underscore.
+
+#### Example:
+
+To access the `API_TOKEN` env variable of the `app` service, use `app_API_TOKEN` as the env variable key.
+
+Read more about <VarLink name="servicePath" path="/{{VAR}}/how-to/env-variables"><Var name="serviceDisplay" /> environment variables</VarLink>.
+
+## Private access via VPN
+
+### Start VPN connection
+
+You can securely connect to your <Var name="serviceDisplay" /> application from your local workspace via Zerops VPN. Zerops VPN client is included into zCLI, the Zerops command-line tool. To start a VPN connection to the selected Zerops project, follow these steps:
+
+1. [Install & setup zCLI](/references/cli)
+2. [Start the Zerops VPN](/references/vpn#start-vpn)
+
+### Access <Var name="serviceDisplay" /> application through VPN
+
+Once the VPN session is established, you have the secured connection to the project's private network in Zerops. You can access all project services locally by using their hostname. The only difference is that no <VarLink name="servicePath" path="/{{VAR}}/how-to/env-variables">environment variables</VarLink> are available when connected through VPN. To connect to your <Var name="serviceDisplay" /> application in Zerops set the hostname and <VarLink name="servicePath" path="/{{VAR}}/how-to/build-pipeline#ports">internal port</VarLink> e.g. http://app:<Var name="defaultPort" />
+
+:::info
+Do not use `https://` when communicating with <Var name="serviceDisplay" /> over the VPN. The security is assured by the VPN. The internal communication is done over a private network and is isolated from other projects.
+:::
+
+### Connect via SSH
+
+Use the <a href="/references/ssh">`ssh` command</a> to connect to your service via SSH.
+
+### Stop VPN connection
+
+[Stop the Zerops VPN](/references/vpn#stop-vpn) in zCLI.
+
+## Public access
+
+By default, your <Var name="serviceDisplay" /> service is not publicly accessible. Zerops offers multiple ways to make your application available from the internet:
+
+- **[Zerops subdomain](/features/access#public-access-through-zerops-subdomain)** - Quick setup with `.zerops.app` subdomain, ideal for development and testing. Provides instant HTTPS access without DNS configuration.
+- **[Custom domain](/features/access#public-access-through-your-domain)** - Production-ready access through your own domain with SSL management
+- **[Direct port access](/features/access#opening-public-ports)** - For non-HTTP protocols and specialized use cases
+
+For detailed configuration steps and technical considerations, see the complete [Domain & Access Configuration guide](/features/access).

@@ -1,94 +1,14 @@
 ---
-title: Create shared storage service in Zerops
+title: Create shared storage service for Elixir
 description: Learn how to create shared storage which you can use with your Elixir service on Zerops.
 ---
 
-Zerops provides [shared storage service](/shared-storage/overview) that can be connected to runtime services. Shared storage enables your runtime service to share files between all containers of the same service or even among containers of different runtime services.
+import data from '@site/static/data.json';
+import { SetVar } from '/src/components/content/var';
+import SharedStorageContent from '/src/components/content/shared-storage.mdx';
 
-## Connect a shared storage in Zerops GUI
+<SetVar name="serviceDisplay" value="Elixir" />
+<SetVar name="servicePath" value="elixir" />
+<SetVar name="serviceVersion" value={data.elixir.import[0][0]} />
 
-Connect your Elixir service directly when creating a new shared storage service. Just select your Elixir service in the **Share with Services** block on the **Add new shared storage service** page.
-
-![connect_shared_storage_1](/img/screenshots/connect_shared_storage_1.png)
-
-To connect the existing shared storage to the Elixir service, go to the shared storage service detail and select **Shared storage connections**. A list of all your current runtime services will be shown. Select a runtime service and the shared storage will be connected to the selected runtime.
-
-![connect_shared_storage_1](/img/screenshots/connect_shared_storage_2.png)
-
-Zerops will create a new folder `/mnt/[shared storage name]`` in the runtime root folder. E.g. `/mnt/teststorage`for a`teststorage` shared storage. The content of this folder is shared among all containers of the runtime service you've selected. If you select multiple runtimes, the content of the folder will be shared among all containers of selected services.
-
-## Disconnect a shared storage in Zerops GUI
-
-Go to the shared storage service detail and select **Shared storage connections**. A list of all your current runtime services will be shown. Switch off the toggle to disconnect the shared storage from the selected runtime.
-
-:::note
-Your runtime service will be automatically restarted when a shared storage is disconnected.
-:::
-
-## Create Elixir service with a shared storage using zCLI
-
-zCLI is the Zerops command-line tool. To create a new Elixir service via the command-line, follow these steps:
-
-1. [Install & setup zCLI](/references/cli)
-2. [Create a project description file](/elixir/how-to/shared-storage#create-a-project-description-file)
-3. [Create a project with a Elixir service and a shared storage](/elixir/how-to/shared-storage#create-a-project-with-a-elixir-service-and-a-shared-storage)
-
-### Create a project description file
-
-Zerops uses a yaml format to describe the project infrastructure.
-
-#### description.yaml format
-
-[Read the basics](/elixir/how-to/create#create-a-project-description-file) how to define the Elixir service using the description.yaml.
-
-#### Example with a shared storage
-
-Create a directory `my-project`. Create an `description.yaml` file inside the `my-project` directory with following content:
-
-```yaml
-# basic project data
-project:
-  # project name
-  name: my-project
-
-  # optional: project description
-  description: A project with a Elixir and a shared storage
-
-  # optional: project tags
-  tags:
-    - DEMO
-    - ZEROPS
-
-# array of project services
-services:
-  - # service name
-    hostname: teststorage
-
-    # shared storage service has no version
-    type: shared-storage
-
-    # mode: HA / NON_HA
-    mode: NON_HA
-
-  - # service name
-    hostname: app
-
-    # service type and version number in elixir@{version} format
-    type: elixir@latest
-
-    # defines the minimum number of containers for horizontal autoscaling. Max value = 6.
-    minContainers: 2
-
-    # defines the maximum number of containers for horizontal autoscaling. Max value = 6.
-    maxContainers: 4
-
-    # Mount the shared storage to the Elixir service
-    mount:
-      - teststorage
-```
-
-The mount attribute accepts an array of shared storage names you want to mount to your runtime service.
-
-### Create a project with a Elixir service and a shared storage
-
-Follow the article [How to create a project based on the description.yaml](/elixir/how-to/create#create-a-project-based-on-the-descriptionyaml).
+<SharedStorageContent />

@@ -15,40 +15,7 @@ Did none of these Guides fit your needs? Join our **[Discord](https://discord.co
 
 # Bun > How To > Access
 
-## Private internal access
-Projects in Zerops represent a group of one or more services.
-Services can be of different types (runtime services, databases, message brokers, object storage, etc.). All services of the same project share a **dedicated private network**. To connect to a service within the same project, just use the service hostname and its [internal port](bun/how-to/build-pipeline#ports).
-To connect to your application with `app` hostname running on [internal port](bun/how-to/build-pipeline#ports) `3000`, simply use `http://app:3000`
-:::info
-Do not use `https://` when communicating with Bun from other runtime services in the same project. The internal communication is done over a private network and is isolated from other projects.
-:::
-### Use Bun environment variables
-Zerops creates default environment variables for each Bun service to help you with connection within the same project. To avoid the need to copy the access parameters manually, use [generated environment variables](bun/how-to/env-variables#generated-env-variables) of the Bun service.
-#### Prefix the environment variable key
-All services of the same project can reference environment variables from other services. To use an environment variable from one service in another service in the same project, you must prefix the environment variable key with the service hostname and underscore.
-#### Example:
-To access the `API_TOKEN` env variable of the `app` service, use `app_API_TOKEN` as the env variable key.
-Read more about [env variables](bun/how-to/env-variables).
-## Private access via VPN
-### Start VPN connection
-You can securely connect to your Bun application from your local workspace via Zerops VPN. Zerops VPN client is included into zCLI, the Zerops command-line tool. To start a VPN connection to the selected Zerops project, follow these steps:
-1. [Install & setup zCLI](/references/cli)
-2. [Start the Zerops VPN](/references/vpn#start-vpn)
-### Access Bun application through VPN
-Once the VPN session is established, you have the secured connection to the project's private network in Zerops. You can access all project services locally by using their hostname. The only difference is that no [environment variables](bun/how-to/env-variables) are available when connected through VPN. To connect to your Bun application in Zerops set the hostname and [internal port](bun/how-to/build-pipeline#ports) e.g. http://app:3000
-:::info
-Do not use `https://` when communicating with Bun over the VPN. The security is assured by the VPN. The internal communication is done over a private network and is isolated from other projects.
-:::
-### Connect via SSH
-Use the `ssh` command to connect to your service via SSH.
-### Stop VPN connection
-[Stop the Zerops VPN](/references/vpn#stop-vpn) in zCLI.
-## Public access through zerops.io subdomain
-By default, your Bun service is not publicly accessible. To test your application, enable the [public access through zerops.io subdomain](/features/access#public-access-through-zerops-subdomain).
-## Public access through your domain
-By default, your Bun service is not publicly accessible. When your application is ready for production or if you want to test it on the production domain, [configure the public access through your domain](/features/access#public-access-through-your-domain).
-## Public access from another Zerops project
-All services of the same project share a dedicated private network. To connect to a service within the same project, just use the service hostname and its [internal port](bun/how-to/build-pipeline#ports). Different projects are not connected inside Zerops. To connect to a runtime service from another Zerops project, you need to use public access either [through zerops.io subdomain](/features/access#public-access-through-zerops-subdomain) or [through your domain](/features/access#public-access-through-your-domain).
+
 
 ----------------------------------------
 
@@ -70,7 +37,7 @@ zerops:
       # OPTIONAL. Customise the build environment by installing additional packages
       # or tools to the base build environment.
       # prepareCommands:
-      #   - apt-get something
+      #   - sudo apt-get something
       #   - curl something else
       # REQUIRED. Build your application
       buildCommands:
@@ -96,7 +63,7 @@ zerops:
       # OPTIONAL. Customise the runtime Bun environment by installing additional
       # dependencies to the base Bun runtime environment.
       # prepareCommands:
-      #   - apt-get something
+      #   - sudo apt-get something
       #   - curl something else
       # OPTIONAL. Run one or more commands each time a new runtime container
       # is started or restarted. These commands are triggered before
@@ -196,7 +163,7 @@ zerops:
       # OPTIONAL. Customise the build environment by installing additional packages
       # or tools to the base build environment.
       prepareCommands:
-        - apt-get something
+        - sudo apt-get something
         - curl something else
       ...
 ```
@@ -446,7 +413,7 @@ zerops:
       # OPTIONAL. Customise the runtime environment by installing additional packages
       # or tools to the base Bun runtime environment.
       prepareCommands:
-        - apt-get something
+        - sudo apt-get something
         - curl something else
       ...
 ```
@@ -481,7 +448,7 @@ zerops:
       # OPTIONAL. Customise the runtime environment by installing additional packages
       # or tools to the base Bun runtime environment.
       prepareCommands:
-        - apt-get something
+        - sudo apt-get something
         - curl something else
       ...
 ```
@@ -1131,61 +1098,7 @@ Zerops provides information about how much hardware resources the Bun service is
 
 # Bun > How To > Shared Storage
 
-Zerops provides [shared storage service](/shared-storage/overview) that can be connected to runtime services. Shared storage enables your runtime service to share files between all containers of the same service or even among containers of different runtime services.
-## Connect a shared storage in Zerops GUI
-Connect your Bun service directly when creating a new shared storage service. Just select your Bun service in the **Share with Services** block on the **Add new shared storage service** page.
-To connect the existing shared storage to the Bun service, go to the shared storage service detail and select **Shared storage connections**. A list of all your current runtime services will be shown. Select a runtime service and the shared storage will be connected to the selected runtime.
-Zerops will create a new folder `/mnt/[shared storage name]`` in the runtime root folder. E.g. `/mnt/teststorage`for a`teststorage` shared storage. The content of this folder is shared among all containers of the runtime service you've selected. If you select multiple runtimes, the content of the folder will be shared among all containers of selected services.
-## Disconnect a shared storage in Zerops GUI
-Go to the shared storage service detail and select **Shared storage connections**. A list of all your current runtime services will be shown. Switch off the toggle to disconnect the shared storage from the selected runtime.
-:::note
-Your runtime service will be automatically restarted when a shared storage is disconnected.
-:::
-## Create Bun service with a shared storage using zCLI
-zCLI is the Zerops command-line tool. To create a new Bun service via the command-line, follow these steps:
-1. [Install & setup zCLI](/references/cli)
-2. [Create a project description file](bun/how-to/shared-storage#create-a-project-description-file)
-3. [Create a project with a Bun service and a shared storage](bun/how-to/shared-storage#create-a-project-with-a-bun-service-and-a-shared-storage)
-### Create a project description file
-Zerops uses a yaml format to describe the project infrastructure.
-#### description.yaml format
-[Read the basics](bun/how-to/create#create-a-project-description-file) how to define the Bun service using the description.yaml.
-#### Example with a shared storage
-Create a directory `my-project`. Create an `description.yaml` file inside the `my-project` directory with following content:
-```yaml
-# basic project data
-project:
-  # project name
-  name: my-project
-  # optional: project description
-  description: A project with a Bun and a shared storage
-  # optional: project tags
-  tags:
-    - DEMO
-    - ZEROPS
-# array of project services
-services:
-  - # service name
-    hostname: teststorage
-    # shared storage service has no version
-    type: shared-storage
-    # mode: HA / NON_HA
-    mode: NON_HA
-  - # service name
-    hostname: app
-    # service type and version number in Bun@{version} format
-    type: bun@latest
-    # defines the minimum number of containers for horizontal autoscaling. Max value = 6.
-    minContainers: 2
-    # defines the maximum number of containers for horizontal autoscaling. Max value = 6.
-    maxContainers: 4
-    # Mount the shared storage to the Bun service
-    mount:
-      - teststorage
-```
-The mount attribute accepts an array of shared storage names you want to mount to your runtime service.
-### Create a project with a Bun service and a shared storage
-Follow the article [How to create a project based on the description.yaml](bun/how-to/create#create-a-project-based-on-the-descriptionyaml).
+
 
 ----------------------------------------
 
@@ -1423,40 +1336,7 @@ Did none of these Guides fit your needs? Join our **[Discord](https://discord.co
 
 # Deno > How To > Access
 
-## Private internal access
-Projects in Zerops represent a group of one or more services.
-Services can be of different types (runtime services, databases, message brokers, object storage, etc.). All services of the same project share a **dedicated private network**. To connect to a service within the same project, just use the service hostname and its [internal port](/deno/how-to/build-pipeline#ports).
-To connect to your application with `app` hostname running on [internal port](/deno/how-to/build-pipeline#ports) `3000`, simply use `http://app:3000`
-:::info
-Do not use `https://` when communicating with Deno from other runtime services in the same project. The internal communication is done over a private network and is isolated from other projects.
-:::
-### Use Deno environment variables
-Zerops creates default environment variables for each Deno service to help you with connection within the same project. To avoid the need to copy the access parameters manually, use [generated environment variables](/deno/how-to/env-variables#generated-env-variables) of the Deno service.
-#### Prefix the environment variable key
-All services of the same project can reference environment variables from other services. To use an environment variable from one service in another service in the same project, you must prefix the environment variable key with the service hostname and underscore.
-#### Example:
-To access the `API_TOKEN` env variable of the `app` service, use `app_API_TOKEN` as the env variable key.
-Read more about [env variables](/deno/how-to/env-variables).
-## Private access via VPN
-### Start VPN connection
-You can securely connect to your Deno application from your local workspace via Zerops VPN. Zerops VPN client is included into zCLI, the Zerops command-line tool. To start a VPN connection to the selected Zerops project, follow these steps:
-1. [Install & setup zCLI](/references/cli)
-2. [Start the Zerops VPN](/references/vpn#start-vpn)
-### Access Deno application through VPN
-Once the VPN session is established, you have the secured connection to the project's private network in Zerops. You can access all project services locally by using their hostname. The only difference is that no [environment variables](/deno/how-to/env-variables) are available when connected through VPN. To connect to your Deno application in Zerops set the hostname and [internal port](/deno/how-to/build-pipeline#ports) e.g. http://app:3000
-:::info
-Do not use `https://` when communicating with Deno over the VPN. The security is assured by the VPN. The internal communication is done over a private network and is isolated from other projects.
-:::
-### Connect via SSH
-Use the `ssh` command to connect to your service via SSH.
-### Stop VPN connection
-[Stop the Zerops VPN](/references/vpn#stop-vpn) in zCLI.
-## Public access through zerops.io subdomain
-By default, your Deno service is not publicly accessible. To test your application, enable the [public access through zerops.io subdomain](/features/access#public-access-through-zerops-subdomain).
-## Public access through your domain
-By default, your Deno service is not publicly accessible. When your application is ready for production or if you want to test it on the production domain, [configure the public access through your domain](/features/access#public-access-through-your-domain).
-## Public access from another Zerops project
-All services of the same project share a dedicated private network. To connect to a service within the same project, just use the service hostname and its [internal port](/deno/how-to/build-pipeline#ports). Different projects are not connected inside Zerops. To connect to a runtime service from another Zerops project, you need to use public access either [through zerops.io subdomain](/features/access#public-access-through-zerops-subdomain) or [through your domain](/features/access#public-access-through-your-domain).
+
 
 ----------------------------------------
 
@@ -1478,7 +1358,7 @@ zerops:
       # OPTIONAL. Customise the build environment by installing additional packages
       # or tools to the base build environment.
       # prepareCommands:
-      #   - apt-get something
+      #   - sudo apt-get something
       #   - curl something else
       # REQUIRED. Build your application
       buildCommands:
@@ -1502,7 +1382,7 @@ zerops:
       # OPTIONAL. Customise the runtime Deno environment by installing additional
       # dependencies to the base Deno runtime environment.
       # prepareCommands:
-      #   - apt-get something
+      #   - sudo apt-get something
       #   - curl something else
       # OPTIONAL. Run one or more commands each time a new runtime container
       # is started or restarted. These commands are triggered before
@@ -1600,7 +1480,7 @@ zerops:
       # OPTIONAL. Customise the build environment by installing additional packages
       # or tools to the base build environment.
       prepareCommands:
-        - apt-get something
+        - sudo apt-get something
         - curl something else
       ...
 ```
@@ -1848,7 +1728,7 @@ zerops:
       # OPTIONAL. Customise the runtime environment by installing additional packages
       # or tools to the base Deno runtime environment.
       prepareCommands:
-        - apt-get something
+        - sudo apt-get something
         - curl something else
       ...
 ```
@@ -1883,7 +1763,7 @@ zerops:
       # OPTIONAL. Customise the runtime environment by installing additional packages
       # or tools to the base Deno runtime environment.
       prepareCommands:
-        - apt-get something
+        - sudo apt-get something
         - curl something else
       ...
 ```
@@ -2152,7 +2032,7 @@ buildCommands:
 ### Prepare command failures
 If any [prepare command](/deno/how-to/build-pipeline#preparecommands) fails, check the [build log](/deno/how-to/logs#build-log) for specific error messages. Common issues include:
 - Missing permissions in Deno commands (add --allow-net, --allow-read, etc.)
-- Ubuntu package installation failures (use apt-get update first)
+- Ubuntu package installation failures (use sudo apt-get update first)
 - Deno cache directory permissions
 ### Build cache issues
 If you encounter unexpected build behavior or dependency issues, the problem might be related to [cached build data](/features/build-cache). While Zerops maintains the build cache to speed up deployments, sometimes you may need to start fresh.
@@ -2652,61 +2532,7 @@ Zerops provides information about how much hardware resources the Deno service i
 
 # Deno > How To > Shared Storage
 
-Zerops provides [shared storage service](/shared-storage/overview) that can be connected to runtime services. Shared storage enables your runtime service to share files between all containers of the same service or even among containers of different runtime services.
-## Connect a shared storage in Zerops GUI
-Connect your Deno service directly when creating a new shared storage service. Just select your Deno service in the **Share with Services** block on the **Add new shared storage service** page.
-To connect the existing shared storage to the Deno service, go to the shared storage service detail and select **Shared storage connections**. A list of all your current runtime services will be shown. Select a runtime service and the shared storage will be connected to the selected runtime.
-Zerops will create a new folder `/mnt/[shared storage name]`` in the runtime root folder. E.g. `/mnt/teststorage`for a`teststorage` shared storage. The content of this folder is shared among all containers of the runtime service you've selected. If you select multiple runtimes, the content of the folder will be shared among all containers of selected services.
-## Disconnect a shared storage in Zerops GUI
-Go to the shared storage service detail and select **Shared storage connections**. A list of all your current runtime services will be shown. Switch off the toggle to disconnect the shared storage from the selected runtime.
-:::note
-Your runtime service will be automatically restarted when a shared storage is disconnected.
-:::
-## Create Deno service with a shared storage using zCLI
-zCLI is the Zerops command-line tool. To create a new Deno service via the command-line, follow these steps:
-1. [Install & setup zCLI](/references/cli)
-2. [Create a project description file](/deno/how-to/shared-storage#create-a-project-description-file)
-3. [Create a project with a Deno service and a shared storage](/deno/how-to/shared-storage#create-a-project-with-a-deno-service-and-a-shared-storage)
-### Create a project description file
-Zerops uses a yaml format to describe the project infrastructure.
-#### description.yaml format
-[Read the basics](/deno/how-to/create#create-a-project-description-file) how to define the Deno service using the description.yaml.
-#### Example with a shared storage
-Create a directory `my-project`. Create an `description.yaml` file inside the `my-project` directory with following content:
-```yaml
-# basic project data
-project:
-  # project name
-  name: my-project
-  # optional: project description
-  description: A project with a Deno and a shared storage
-  # optional: project tags
-  tags:
-    - DEMO
-    - ZEROPS
-# array of project services
-services:
-  - # service name
-    hostname: teststorage
-    # shared storage service has no version
-    type: shared-storage
-    # mode: HA / NON_HA
-    mode: NON_HA
-  - # service name
-    hostname: app
-    # service type and version number in deno@{version} format
-    type: deno@latest
-    # defines the minimum number of containers for horizontal autoscaling. Max value = 6.
-    minContainers: 2
-    # defines the maximum number of containers for horizontal autoscaling. Max value = 6.
-    maxContainers: 4
-    # Mount the shared storage to the Deno service
-    mount:
-      - teststorage
-```
-The mount attribute accepts an array of shared storage names you want to mount to your runtime service.
-### Create a project with a Deno service and a shared storage
-Follow the article [How to create a project based on the description.yaml](/deno/how-to/create#create-a-project-based-on-the-descriptionyaml).
+
 
 ----------------------------------------
 
@@ -2990,40 +2816,7 @@ Did none of these Guides fit your needs? Join our **[Discord](https://discord.co
 
 # Dotnet > How To > Access
 
-## Private internal access
-Projects in Zerops represent a group of one or more services.
-Services can be of different types (runtime services, databases, message brokers, object storage, etc.). All services of the same project share a **dedicated private network**. To connect to a service within the same project, just use the service hostname and its [internal port](/dotnet/how-to/build-pipeline#ports).
-To connect to your application with `app` hostname running on [internal port](/dotnet/how-to/build-pipeline#ports) `5000`, simply use `http://app:5000`
-:::info
-Do not use `https://` when communicating with .NET from other runtime services in the same project. The internal communication is done over a private network and is isolated from other projects.
-:::
-### Use .NET environment variables
-Zerops creates default environment variables for each .NET service to help you with connection within the same project. To avoid the need to copy the access parameters manually, use [generated environment variables](/dotnet/how-to/env-variables#generated-env-variables) of the .NET service.
-#### Prefix the environment variable key
-All services of the same project can reference environment variables from other services. To use an environment variable from one service in another service in the same project, you must prefix the environment variable key with the service hostname and underscore.
-#### Example:
-To access the `API_TOKEN` env variable of the `app` service, use `app_API_TOKEN` as the env variable key.
-Read more about [env variables](/dotnet/how-to/env-variables).
-## Private access via VPN
-### Start VPN connection
-You can securely connect to your .NET application from your local workspace via Zerops VPN. Zerops VPN client is included into zCLI, the Zerops command-line tool. To start a VPN connection to the selected Zerops project, follow these steps:
-1. [Install & setup zCLI](/references/cli)
-2. [Start the Zerops VPN](/references/vpn#start-vpn)
-### Access .NET application through VPN
-Once the VPN session is established, you have the secured connection to the project's private network in Zerops. You can access all project services locally by using their hostname. The only difference is that no [environment variables](/dotnet/how-to/env-variables) are available when connected through VPN. To connect to your .NET application in Zerops set the hostname and [internal port](/dotnet/how-to/build-pipeline#ports) e.g. http://app:5000
-:::info
-Do not use `https://` when communicating with .NET over the VPN. The security is assured by the VPN. The internal communication is done over a private network and is isolated from other projects.
-:::
-### Connect via SSH
-Use the `ssh` command to connect to your service via SSH.
-### Stop VPN connection
-[Stop the Zerops VPN](/references/vpn#stop-vpn) in zCLI.
-## Public access through zerops.io subdomain
-By default, your .NET service is not publicly accessible. To test your application, enable the [public access through zerops.io subdomain](/features/access#public-access-through-zerops-subdomain).
-## Public access through your domain
-By default, your .NET service is not publicly accessible. When your application is ready for production or if you want to test it on the production domain, [configure the public access through your domain](/features/access#public-access-through-your-domain).
-## Public access from another Zerops project
-All services of the same project share a dedicated private network. To connect to a service within the same project, just use the service hostname and its [internal port](/dotnet/how-to/build-pipeline#ports). Different projects are not connected inside Zerops. To connect to a runtime service from another Zerops project, you need to use public access either [through zerops.io subdomain](/features/access#public-access-through-zerops-subdomain) or [through your domain](/features/access#public-access-through-your-domain).
+
 
 ----------------------------------------
 
@@ -3045,7 +2838,7 @@ zerops:
       # OPTIONAL. Customize the build environment by installing additional packages
       # or tools to the base build environment.
       # prepareCommands:
-      #   - apt-get something
+      #   - sudo apt-get something
       #   - curl something else
       # REQUIRED. Build your application
       buildCommands:
@@ -3071,7 +2864,7 @@ zerops:
       # OPTIONAL. Customize the runtime .NET environment by installing additional
       # dependencies to the base .NET runtime environment.
       # prepareCommands:
-      #   - apt-get something
+      #   - sudo apt-get something
       #   - curl something else
       # OPTIONAL. Run one or more commands each time a new runtime container
       # is started or restarted. These commands are triggered before
@@ -3169,7 +2962,7 @@ zerops:
       # OPTIONAL. Customize the build environment by installing additional packages
       # or tools to the base build environment.
       prepareCommands:
-        - apt-get something
+        - sudo apt-get something
         - curl something else
       ...
 ```
@@ -3210,14 +3003,14 @@ Use following syntax to run all commands in the same environment context. For ex
 ```yaml
 buildCommands:
   - |
-    apt-get -y install dotnet-runtime-6.0 aspnetcore-runtime-6.0 dotnet-sdk-6.0 # already installed for .NET service
+    sudo apt-get -y install dotnet-runtime-6.0 aspnetcore-runtime-6.0 dotnet-sdk-6.0 # already installed for .NET service
     dotnet build -o app
 ```
 #### Run build commands as a separate shell instances
 When the following syntax is used, each command is triggered in a separate environment context. For example, each shell instance starts in the home directory again. When one command creates an environment variable, it won't be available for the next command.
 ```yaml
 buildCommands:
-  - apt-get -y install dotnet-runtime-6.0 aspnetcore-runtime-6.0 dotnet-sdk-6.0 # already installed for .NET service
+  - sudo apt-get -y install dotnet-runtime-6.0 aspnetcore-runtime-6.0 dotnet-sdk-6.0 # already installed for .NET service
   - dotnet build -o app
 ```
 #### Command exit code
@@ -3422,7 +3215,7 @@ zerops:
       # OPTIONAL. Customise the runtime environment by installing additional packages
       # or tools to the base .NET runtime environment.
       prepareCommands:
-        - apt-get something
+        - sudo apt-get something
         - curl something else
       ...
 ```
@@ -3459,7 +3252,7 @@ zerops:
       # OPTIONAL. Customise the runtime environment by installing additional packages
       # or tools to the base .NET runtime environment.
       prepareCommands:
-        - apt-get something
+        - sudo apt-get something
         - curl something else
       ...
 ```
@@ -4146,61 +3939,7 @@ Zerops provides information about how much hardware resources the .NET service i
 
 # Dotnet > How To > Shared Storage
 
-Zerops provides [shared storage service](/shared-storage/overview) that can be connected to runtime services. Shared storage enables your runtime service to share files between all containers of the same service or even among containers of different runtime services.
-## Connect a shared storage in Zerops GUI
-Connect your .NET service directly when creating a new shared storage service. Just select your .NET service in the **Share with Services** block on the **Add new shared storage service** page.
-To connect the existing shared storage to the .NET service, go to the shared storage service detail and select **Shared storage connections**. A list of all your current runtime services will be shown. Select a runtime service and the shared storage will be connected to the selected runtime.
-Zerops will create a new folder `/mnt/[shared storage name]`` in the runtime root folder. E.g. `/mnt/teststorage`for a`teststorage` shared storage. The content of this folder is shared among all containers of the runtime service you've selected. If you select multiple runtimes, the content of the folder will be shared among all containers of selected services.
-## Disconnect a shared storage in Zerops GUI
-Go to the shared storage service detail and select **Shared storage connections**. A list of all your current runtime services will be shown. Switch off the toggle to disconnect the shared storage from the selected runtime.
-:::note
-Your runtime service will be automatically restarted when a shared storage is disconnected.
-:::
-## Create .NET service with a shared storage using zCLI
-zCLI is the Zerops command-line tool. To create a new .NET service via the command-line, follow these steps:
-1. [Install & setup zCLI](/references/cli)
-2. [Create a project description file](/dotnet/how-to/shared-storage#create-a-project-description-file)
-3. [Create a project with a .NET service and a shared storage](/dotnet/how-to/shared-storage#create-a-project-with-a-net-service-and-a-shared-storage)
-### Create a project description file
-Zerops uses a yaml format to describe the project infrastructure.
-#### description.yaml format
-[Read the basics](/dotnet/how-to/create#create-a-project-description-file) how to define the .NET service using the description.yaml.
-#### Example with a shared storage
-Create a directory `my-project`. Create an `description.yaml` file inside the `my-project` directory with following content:
-```yaml
-# basic project data
-project:
-  # project name
-  name: my-project
-  # optional: project description
-  description: A project with a .NET and a shared storage
-  # optional: project tags
-  tags:
-    - DEMO
-    - ZEROPS
-# array of project services
-services:
-  - # service name
-    hostname: teststorage
-    # shared storage service has no version
-    type: shared-storage
-    # mode: HA / NON_HA
-    mode: NON_HA
-  - # service name
-    hostname: app
-    # service type and version number in dotnet@6 format
-    type: dotnet@6
-    # defines the minimum number of containers for horizontal autoscaling. Max value = 6.
-    minContainers: 2
-    # defines the maximum number of containers for horizontal autoscaling. Max value = 6.
-    maxContainers: 4
-    # Mount the shared storage to the .NET service
-    mount:
-      - teststorage
-```
-The mount attribute accepts an array of shared storage names you want to mount to your runtime service.
-### Create a project with a .NET service and a shared storage
-Follow the article [How to create a project based on the description.yaml](/dotnet/how-to/create#create-a-project-based-on-the-descriptionyaml).
+
 
 ----------------------------------------
 
@@ -4342,40 +4081,7 @@ Did none of these Guides fit your needs? Join our **[Discord](https://discord.co
 
 # Elixir > How To > Access
 
-## Private internal access
-Projects in Zerops represent a group of one or more services.
-Services can be of different types (runtime services, databases, message brokers, object storage, etc.). All services of the same project share a **dedicated private network**. To connect to a service within the same project, just use the service hostname and its [internal port](/elixir/how-to/build-pipeline#ports).
-To connect to your application with `app` hostname running on [internal port](/elixir/how-to/build-pipeline#ports) `3000`, simply use `http://app:3000`
-:::info
-Do not use `https://` when communicating with Elixir from other runtime services in the same project. The internal communication is done over a private network and is isolated from other projects.
-:::
-### Use Elixir environment variables
-Zerops creates default environment variables for each Elixir service to help you with connection within the same project. To avoid the need to copy the access parameters manually, use [generated environment variables](/elixir/how-to/env-variables#generated-env-variables) of the Elixir service.
-#### Prefix the environment variable key
-All services of the same project can reference environment variables from other services. To use an environment variable from one service in another service in the same project, you must prefix the environment variable key with the service hostname and underscore.
-#### Example:
-To access the `API_TOKEN` env variable of the `app` service, use `app_API_TOKEN` as the env variable key.
-Read more about [env variables](/elixir/how-to/env-variables).
-## Private access via VPN
-### Start VPN connection
-You can securely connect to your Elixir application from your local workspace via Zerops VPN. Zerops VPN client is included into zCLI, the Zerops command-line tool. To start a VPN connection to the selected Zerops project, follow these steps:
-1. [Install & setup zCLI](/references/cli)
-2. [Start the Zerops VPN](/references/vpn#start-vpn)
-### Access Elixir application through VPN
-Once the VPN session is established, you have the secured connection to the project's private network in Zerops. You can access all project services locally by using their hostname. The only difference is that no [environment variables](/elixir/how-to/env-variables) are available when connected through VPN. To connect to your Elixir application in Zerops set the hostname and [internal port](/elixir/how-to/build-pipeline#ports) e.g. http://app:3000
-:::info
-Do not use `https://` when communicating with Elixir over the VPN. The security is assured by the VPN. The internal communication is done over a private network and is isolated from other projects.
-:::
-### Connect via SSH
-Use the `ssh` command to connect to your service via SSH.
-### Stop VPN connection
-[Stop the Zerops VPN](/references/vpn#stop-vpn) in zCLI.
-## Public access through zerops.io subdomain
-By default, your Elixir service is not publicly accessible. To test your application, enable the [public access through zerops.io subdomain](/features/access#public-access-through-zerops-subdomain).
-## Public access through your domain
-By default, your Elixir service is not publicly accessible. When your application is ready for production or if you want to test it on the production domain, [configure the public access through your domain](/features/access#public-access-through-your-domain).
-## Public access from another Zerops project
-All services of the same project share a dedicated private network. To connect to a service within the same project, just use the service hostname and its [internal port](/elixir/how-to/build-pipeline#ports). Different projects are not connected inside Zerops. To connect to a runtime service from another Zerops project, you need to use public access either [through zerops.io subdomain](/features/access#public-access-through-zerops-subdomain) or [through your domain](/features/access#public-access-through-your-domain).
+
 
 ----------------------------------------
 
@@ -4397,7 +4103,7 @@ zerops:
       # OPTIONAL. Customise the build environment by installing additional packages
       # or tools to the base build environment.
       # prepareCommands:
-      #   - apt-get something
+      #   - sudo apt-get something
       #   - curl something else
       # REQUIRED. Build your application
       buildCommands:
@@ -4421,7 +4127,7 @@ zerops:
       # OPTIONAL. Customise the runtime Elixir environment by installing additional
       # dependencies to the base Elixir runtime environment.
       # prepareCommands:
-      #   - apt-get something
+      #   - sudo apt-get something
       #   - curl something else
       # OPTIONAL. Run one or more commands each time a new runtime container
       # is started or restarted. These commands are triggered before
@@ -4519,7 +4225,7 @@ zerops:
       # OPTIONAL. Customise the build environment by installing additional packages
       # or tools to the base build environment.
       prepareCommands:
-        - apt-get something
+        - sudo apt-get something
         - curl something else
       ...
 ```
@@ -4769,7 +4475,7 @@ zerops:
       # OPTIONAL. Customise the runtime environment by installing additional packages
       # or tools to the base Elixir runtime environment.
       prepareCommands:
-        - apt-get something
+        - sudo apt-get something
         - curl something else
       ...
 ```
@@ -4804,7 +4510,7 @@ zerops:
       # OPTIONAL. Customise the runtime environment by installing additional packages
       # or tools to the base Elixir runtime environment.
       prepareCommands:
-        - apt-get something
+        - sudo apt-get something
         - curl something else
       ...
 ```
@@ -5455,61 +5161,7 @@ Zerops provides information about how much hardware resources the Elixir service
 
 # Elixir > How To > Shared Storage
 
-Zerops provides [shared storage service](/shared-storage/overview) that can be connected to runtime services. Shared storage enables your runtime service to share files between all containers of the same service or even among containers of different runtime services.
-## Connect a shared storage in Zerops GUI
-Connect your Elixir service directly when creating a new shared storage service. Just select your Elixir service in the **Share with Services** block on the **Add new shared storage service** page.
-To connect the existing shared storage to the Elixir service, go to the shared storage service detail and select **Shared storage connections**. A list of all your current runtime services will be shown. Select a runtime service and the shared storage will be connected to the selected runtime.
-Zerops will create a new folder `/mnt/[shared storage name]`` in the runtime root folder. E.g. `/mnt/teststorage`for a`teststorage` shared storage. The content of this folder is shared among all containers of the runtime service you've selected. If you select multiple runtimes, the content of the folder will be shared among all containers of selected services.
-## Disconnect a shared storage in Zerops GUI
-Go to the shared storage service detail and select **Shared storage connections**. A list of all your current runtime services will be shown. Switch off the toggle to disconnect the shared storage from the selected runtime.
-:::note
-Your runtime service will be automatically restarted when a shared storage is disconnected.
-:::
-## Create Elixir service with a shared storage using zCLI
-zCLI is the Zerops command-line tool. To create a new Elixir service via the command-line, follow these steps:
-1. [Install & setup zCLI](/references/cli)
-2. [Create a project description file](/elixir/how-to/shared-storage#create-a-project-description-file)
-3. [Create a project with a Elixir service and a shared storage](/elixir/how-to/shared-storage#create-a-project-with-a-elixir-service-and-a-shared-storage)
-### Create a project description file
-Zerops uses a yaml format to describe the project infrastructure.
-#### description.yaml format
-[Read the basics](/elixir/how-to/create#create-a-project-description-file) how to define the Elixir service using the description.yaml.
-#### Example with a shared storage
-Create a directory `my-project`. Create an `description.yaml` file inside the `my-project` directory with following content:
-```yaml
-# basic project data
-project:
-  # project name
-  name: my-project
-  # optional: project description
-  description: A project with a Elixir and a shared storage
-  # optional: project tags
-  tags:
-    - DEMO
-    - ZEROPS
-# array of project services
-services:
-  - # service name
-    hostname: teststorage
-    # shared storage service has no version
-    type: shared-storage
-    # mode: HA / NON_HA
-    mode: NON_HA
-  - # service name
-    hostname: app
-    # service type and version number in elixir@{version} format
-    type: elixir@latest
-    # defines the minimum number of containers for horizontal autoscaling. Max value = 6.
-    minContainers: 2
-    # defines the maximum number of containers for horizontal autoscaling. Max value = 6.
-    maxContainers: 4
-    # Mount the shared storage to the Elixir service
-    mount:
-      - teststorage
-```
-The mount attribute accepts an array of shared storage names you want to mount to your runtime service.
-### Create a project with a Elixir service and a shared storage
-Follow the article [How to create a project based on the description.yaml](/elixir/how-to/create#create-a-project-based-on-the-descriptionyaml).
+
 
 ----------------------------------------
 
@@ -9813,40 +9465,7 @@ Did none of these Guides fit your needs? Join our **[Discord](https://discord.co
 
 # Gleam > How To > Access
 
-## Private internal access
-Projects in Zerops represent a group of one or more services.
-Services can be of different types (runtime services, databases, message brokers, object storage, etc.). All services of the same project share a **dedicated private network**. To connect to a service within the same project, just use the service hostname and its [internal port](/gleam/how-to/build-pipeline#ports).
-To connect to your application with `app` hostname running on [internal port](/gleam/how-to/build-pipeline#ports) `3000`, simply use `http://app:3000`
-:::info
-Do not use `https://` when communicating with Gleam from other runtime services in the same project. The internal communication is done over a private network and is isolated from other projects.
-:::
-### Use Gleam environment variables
-Zerops creates default environment variables for each Gleam service to help you with connection within the same project. To avoid the need to copy the access parameters manually, use [generated environment variables](/gleam/how-to/env-variables#generated-env-variables) of the Gleam service.
-#### Prefix the environment variable key
-All services of the same project can reference environment variables from other services. To use an environment variable from one service in another service in the same project, you must prefix the environment variable key with the service hostname and underscore.
-#### Example:
-To access the `API_TOKEN` env variable of the `app` service, use `app_API_TOKEN` as the env variable key.
-Read more about [env variables](/gleam/how-to/env-variables).
-## Private access via VPN
-### Start VPN connection
-You can securely connect to your Gleam application from your local workspace via Zerops VPN. Zerops VPN client is included into zCLI, the Zerops command-line tool. To start a VPN connection to the selected Zerops project, follow these steps:
-1. [Install & setup zCLI](/references/cli)
-2. [Start the Zerops VPN](/references/vpn#start-vpn)
-### Access Gleam application through VPN
-Once the VPN session is established, you have the secured connection to the project's private network in Zerops. You can access all project services locally by using their hostname. The only difference is that no [environment variables](/gleam/how-to/env-variables) are available when connected through VPN. To connect to your Gleam application in Zerops set the hostname and [internal port](/gleam/how-to/build-pipeline#ports) e.g. http://app:3000
-:::info
-Do not use `https://` when communicating with Gleam over the VPN. The security is assured by the VPN. The internal communication is done over a private network and is isolated from other projects.
-:::
-### Connect via SSH
-Use the `ssh` command to connect to your service via SSH.
-### Stop VPN connection
-[Stop the Zerops VPN](/references/vpn#stop-vpn) in zCLI.
-## Public access through zerops.io subdomain
-By default, your Gleam service is not publicly accessible. To test your application, enable the [public access through zerops.io subdomain](/features/access#public-access-through-zerops-subdomain).
-## Public access through your domain
-By default, your Gleam service is not publicly accessible. When your application is ready for production or if you want to test it on the production domain, [configure the public access through your domain](/features/access#public-access-through-your-domain).
-## Public access from another Zerops project
-All services of the same project share a dedicated private network. To connect to a service within the same project, just use the service hostname and its [internal port](/gleam/how-to/build-pipeline#ports). Different projects are not connected inside Zerops. To connect to a runtime service from another Zerops project, you need to use public access either [through zerops.io subdomain](/features/access#public-access-through-zerops-subdomain) or [through your domain](/features/access#public-access-through-your-domain).
+
 
 ----------------------------------------
 
@@ -9868,7 +9487,7 @@ zerops:
       # OPTIONAL. Customise the build environment by installing additional packages
       # or tools to the base build environment.
       # prepareCommands:
-      #   - apt-get something
+      #   - sudo apt-get something
       #   - curl something else
       # REQUIRED. Build your application
       buildCommands:
@@ -9894,7 +9513,7 @@ zerops:
       # OPTIONAL. Customise the runtime Gleam environment by installing additional
       # dependencies to the base Gleam runtime environment.
       # prepareCommands:
-      #   - apt-get something
+      #   - sudo apt-get something
       #   - curl something else
       # OPTIONAL. Run one or more commands each time a new runtime container
       # is started or restarted. These commands are triggered before
@@ -9992,7 +9611,7 @@ zerops:
       # OPTIONAL. Customise the build environment by installing additional packages
       # or tools to the base build environment.
       prepareCommands:
-        - apt-get something
+        - sudo apt-get something
         - curl something else
       ...
 ```
@@ -10242,7 +9861,7 @@ zerops:
       # OPTIONAL. Customise the runtime environment by installing additional packages
       # or tools to the base Gleam runtime environment.
       prepareCommands:
-        - apt-get something
+        - sudo apt-get something
         - curl something else
       ...
 ```
@@ -10277,7 +9896,7 @@ zerops:
       # OPTIONAL. Customise the runtime environment by installing additional packages
       # or tools to the base Gleam runtime environment.
       prepareCommands:
-        - apt-get something
+        - sudo apt-get something
         - curl something else
       ...
 ```
@@ -10928,61 +10547,7 @@ Zerops provides information about how much hardware resources the Gleam service 
 
 # Gleam > How To > Shared Storage
 
-Zerops provides [shared storage service](/shared-storage/overview) that can be connected to runtime services. Shared storage enables your runtime service to share files between all containers of the same service or even among containers of different runtime services.
-## Connect a shared storage in Zerops GUI
-Connect your Gleam service directly when creating a new shared storage service. Just select your Gleam service in the **Share with Services** block on the **Add new shared storage service** page.
-To connect the existing shared storage to the Gleam service, go to the shared storage service detail and select **Shared storage connections**. A list of all your current runtime services will be shown. Select a runtime service and the shared storage will be connected to the selected runtime.
-Zerops will create a new folder `/mnt/[shared storage name]`` in the runtime root folder. E.g. `/mnt/teststorage`for a`teststorage` shared storage. The content of this folder is shared among all containers of the runtime service you've selected. If you select multiple runtimes, the content of the folder will be shared among all containers of selected services.
-## Disconnect a shared storage in Zerops GUI
-Go to the shared storage service detail and select **Shared storage connections**. A list of all your current runtime services will be shown. Switch off the toggle to disconnect the shared storage from the selected runtime.
-:::note
-Your runtime service will be automatically restarted when a shared storage is disconnected.
-:::
-## Create Gleam service with a shared storage using zCLI
-zCLI is the Zerops command-line tool. To create a new Gleam service via the command-line, follow these steps:
-1. [Install & setup zCLI](/references/cli)
-2. [Create a project description file](/gleam/how-to/shared-storage#create-a-project-description-file)
-3. [Create a project with a Gleam service and a shared storage](/gleam/how-to/shared-storage#create-a-project-with-a-gleam-service-and-a-shared-storage)
-### Create a project description file
-Zerops uses a yaml format to describe the project infrastructure.
-#### description.yaml format
-[Read the basics](/gleam/how-to/create#create-a-project-description-file) how to define the Gleam service using the description.yaml.
-#### Example with a shared storage
-Create a directory `my-project`. Create an `description.yaml` file inside the `my-project` directory with following content:
-```yaml
-# basic project data
-project:
-  # project name
-  name: my-project
-  # optional: project description
-  description: A project with a Gleam and a shared storage
-  # optional: project tags
-  tags:
-    - DEMO
-    - ZEROPS
-# array of project services
-services:
-  - # service name
-    hostname: teststorage
-    # shared storage service has no version
-    type: shared-storage
-    # mode: HA / NON_HA
-    mode: NON_HA
-  - # service name
-    hostname: app
-    # service type and version number in gleam@{version} format
-    type: gleam@latest
-    # defines the minimum number of containers for horizontal autoscaling. Max value = 6.
-    minContainers: 2
-    # defines the maximum number of containers for horizontal autoscaling. Max value = 6.
-    maxContainers: 4
-    # Mount the shared storage to the Gleam service
-    mount:
-      - teststorage
-```
-The mount attribute accepts an array of shared storage names you want to mount to your runtime service.
-### Create a project with a Gleam service and a shared storage
-Follow the article [How to create a project based on the description.yaml](/gleam/how-to/create#create-a-project-based-on-the-descriptionyaml).
+
 
 ----------------------------------------
 
@@ -11059,40 +10624,7 @@ Did none of these Guides fit your needs? Join our **[Discord](https://discord.co
 
 # Go > How To > Access
 
-## Private internal access
-Projects in Zerops represent a group of one or more services.
-Services can be of different types (runtime services, databases, message brokers, object storage, etc.). All services of the same project share a **dedicated private network**. To connect to a service within the same project, just use the service hostname and its [internal port](/go/how-to/build-pipeline#ports).
-To connect to your application with `app` hostname running on [internal port](/go/how-to/build-pipeline#ports) `8080`, simply use `http://app:8080`
-:::info
-Do not use `https://` when communicating with Go from other runtime services in the same project. The internal communication is done over a private network and is isolated from other projects.
-:::
-### Use Go environment variables
-Zerops creates default environment variables for each Go service to help you with connection within the same project. To avoid the need to copy the access parameters manually, use [generated environment variables](/go/how-to/env-variables#generated-env-variables) of the Go service.
-#### Prefix the environment variable key
-All services of the same project can reference environment variables from other services. To use an environment variable from one service in another service in the same project, you must prefix the environment variable key with the service hostname and underscore.
-#### Example:
-To access the `API_TOKEN` env variable of the `app` service, use `app_API_TOKEN` as the env variable key.
-Read more about [env variables](/go/how-to/env-variables).
-## Private access via VPN
-### Start VPN connection
-You can securely connect to your Go application from your local workspace via Zerops VPN. Zerops VPN client is included into zCLI, the Zerops command-line tool. To start a VPN connection to the selected Zerops project, follow these steps:
-1. [Install & setup zCLI](/references/cli)
-2. [Start the Zerops VPN](/references/vpn#start-vpn)
-### Access Go application through VPN
-Once the VPN session is established, you have the secured connection to the project's private network in Zerops. You can access all project services locally by using their hostname. The only difference is that no [environment variables](/go/how-to/env-variables) are available when connected through VPN. To connect to your Go application in Zerops set the hostname and [internal port](/go/how-to/build-pipeline#ports) e.g. http://app:8080
-:::info
-Do not use `https://` when communicating with Go over the VPN. The security is assured by the VPN. The internal communication is done over a private network and is isolated from other projects.
-:::
-### Connect via SSH
-Use the `ssh` command to connect to your service via SSH.
-### Stop VPN connection
-[Stop the Zerops VPN](/references/vpn#stop-vpn) in zCLI.
-## Public access through zerops.io subdomain
-By default, your Go service is not publicly accessible. To test your application, enable the [public access through zerops.io subdomain](/features/access#public-access-through-zerops-subdomain).
-## Public access through your domain
-By default, your Go service is not publicly accessible. When your application is ready for production or if you want to test it on the production domain, [configure the public access through your domain](/features/access#public-access-through-your-domain).
-## Public access from another Zerops project
-All services of the same project share a dedicated private network. To connect to a service within the same project, just use the service hostname and its [internal port](/go/how-to/build-pipeline#ports). Different projects are not connected inside Zerops. To connect to a runtime service from another Zerops project, you need to use public access either [through zerops.io subdomain](/features/access#public-access-through-zerops-subdomain) or [through your domain](/features/access#public-access-through-your-domain).
+
 
 ----------------------------------------
 
@@ -11114,7 +10646,7 @@ zerops:
       # OPTIONAL. Customize the build environment by installing additional packages
       # or tools to the base build environment.
       # prepareCommands:
-      #   - apt-get something
+      #   - sudo apt-get something
       #   - curl something else
       # REQUIRED. Build your application
       buildCommands:
@@ -11136,7 +10668,7 @@ zerops:
       # OPTIONAL. Customize the runtime Go environment by installing additional
       # dependencies to the base Go runtime environment.
       # prepareCommands:
-      #   - apt-get something
+      #   - sudo apt-get something
       #   - curl something else
       # OPTIONAL. Run one or more commands each time a new runtime container
       # is started or restarted. These commands are triggered before
@@ -11234,7 +10766,7 @@ zerops:
       # OPTIONAL. Customize the build environment by installing additional packages
       # or tools to the base build environment.
       prepareCommands:
-        - apt-get something
+        - sudo apt-get something
         - curl something else
       ...
 ```
@@ -11486,7 +11018,7 @@ zerops:
       # OPTIONAL. Customise the runtime environment by installing additional packages
       # or tools to the base Go runtime environment.
       prepareCommands:
-        - apt-get something
+        - sudo apt-get something
         - curl something else
       ...
 ```
@@ -11521,7 +11053,7 @@ zerops:
       # OPTIONAL. Customise the runtime environment by installing additional packages
       # or tools to the base Go runtime environment.
       prepareCommands:
-        - apt-get something
+        - sudo apt-get something
         - curl something else
       ...
 ```
@@ -12193,61 +11725,7 @@ Zerops provides information about how much hardware resources the Go service is 
 
 # Go > How To > Shared Storage
 
-Zerops provides [shared storage service](/shared-storage/overview) that can be connected to runtime services. Shared storage enables your runtime service to share files between all containers of the same service or even among containers of different runtime services.
-## Connect a shared storage in Zerops GUI
-Connect your Go service directly when creating a new shared storage service. Just select your Go service in the **Share with Services** block on the **Add new shared storage service** page.
-To connect the existing shared storage to the Go service, go to the shared storage service detail and select **Shared storage connections**. A list of all your current runtime services will be shown. Select a runtime service and the shared storage will be connected to the selected runtime.
-Zerops will create a new folder `/mnt/[shared storage name]`` in the runtime root folder. E.g. `/mnt/teststorage`for a`teststorage` shared storage. The content of this folder is shared among all containers of the runtime service you've selected. If you select multiple runtimes, the content of the folder will be shared among all containers of selected services.
-## Disconnect a shared storage in Zerops GUI
-Go to the shared storage service detail and select **Shared storage connections**. A list of all your current runtime services will be shown. Switch off the toggle to disconnect the shared storage from the selected runtime.
-:::note
-Your runtime service will be automatically restarted when a shared storage is disconnected.
-:::
-## Create Go service with a shared storage using zCLI
-zCLI is the Zerops command-line tool. To create a new Go service via the command-line, follow these steps:
-1. [Install & setup zCLI](/references/cli)
-2. [Create a project description file](/go/how-to/shared-storage#create-a-project-description-file)
-3. [Create a project with a Go service and a shared storage](/go/how-to/shared-storage#create-a-project-with-a-go-service-and-a-shared-storage)
-### Create a project description file
-Zerops uses a yaml format to describe the project infrastructure.
-#### description.yaml format
-[Read the basics](/go/how-to/create#create-a-project-description-file) how to define the Go service using the description.yaml.
-#### Example with a shared storage
-Create a directory `my-project`. Create an `description.yaml` file inside the `my-project` directory with following content:
-```yaml
-# basic project data
-project:
-  # project name
-  name: my-project
-  # optional: project description
-  description: A project with a Go and a shared storage
-  # optional: project tags
-  tags:
-    - DEMO
-    - ZEROPS
-# array of project services
-services:
-  - # service name
-    hostname: teststorage
-    # shared storage service has no version
-    type: shared-storage
-    # mode: HA / NON_HA
-    mode: NON_HA
-  - # service name
-    hostname: app
-    # service type and version number in go@{version} format
-    type: go@latest
-    # defines the minimum number of containers for horizontal autoscaling. Max value = 6.
-    minContainers: 2
-    # defines the maximum number of containers for horizontal autoscaling. Max value = 6.
-    maxContainers: 4
-    # Mount the shared storage to the Go service
-    mount:
-      - teststorage
-```
-The mount attribute accepts an array of shared storage names you want to mount to your runtime service.
-### Create a project with a Go service and a shared storage
-Follow the article [How to create a project based on the description.yaml](/go/how-to/create#create-a-project-based-on-the-descriptionyaml).
+
 
 ----------------------------------------
 
@@ -12530,40 +12008,7 @@ Did none of these Guides fit your needs? Join our **[Discord](https://discord.co
 
 # Java > How To > Access
 
-## Private internal access
-Projects in Zerops represent a group of one or more services.
-Services can be of different types (runtime services, databases, message brokers, object storage, etc.). All services of the same project share a **dedicated private network**. To connect to a service within the same project, just use the service hostname and its [internal port](/java/how-to/build-pipeline#ports).
-To connect to your application with `app` hostname running on [internal port](/java/how-to/build-pipeline#ports) `8080`, simply use `http://app:8080`
-:::info
-Do not use `https://` when communicating with Java from other runtime services in the same project. The internal communication is done over a private network and is isolated from other projects.
-:::
-### Use Java environment variables
-Zerops creates default environment variables for each Java service to help you with connection within the same project. To avoid the need to copy the access parameters manually, use [generated environment variables](/java/how-to/env-variables#generated-env-variables) of the Java service.
-#### Prefix the environment variable key
-All services of the same project can reference environment variables from other services. To use an environment variable from one service in another service in the same project, you must prefix the environment variable key with the service hostname and underscore.
-#### Example:
-To access the `API_TOKEN` env variable of the `app` service, use `app_API_TOKEN` as the env variable key.
-Read more about [env variables](/java/how-to/env-variables).
-## Private access via VPN
-### Start VPN connection
-You can securely connect to your Java application from your local workspace via Zerops VPN. Zerops VPN client is included into zCLI, the Zerops command-line tool. To start a VPN connection to the selected Zerops project, follow these steps:
-1. [Install & setup zCLI](/references/cli)
-2. [Start the Zerops VPN](/references/vpn#start-vpn)
-### Access Java application through VPN
-Once the VPN session is established, you have the secured connection to the project's private network in Zerops. You can access all project services locally by using their hostname. The only difference is that no [environment variables](/java/how-to/env-variables) are available when connected through VPN. To connect to your Java application in Zerops set the hostname and [internal port](/java/how-to/build-pipeline#ports) e.g. http://app:8080
-:::info
-Do not use `https://` when communicating with Java over the VPN. The security is assured by the VPN. The internal communication is done over a private network and is isolated from other projects.
-:::
-### Connect via SSH
-Use the `ssh` command to connect to your service via SSH.
-### Stop VPN connection
-[Stop the Zerops VPN](/references/vpn#stop-vpn) in zCLI.
-## Public access through zerops.io subdomain
-By default, your Java service is not publicly accessible. To test your application, enable the [public access through zerops.io subdomain](/features/access#public-access-through-zerops-subdomain).
-## Public access through your domain
-By default, your Java service is not publicly accessible. When your application is ready for production or if you want to test it on the production domain, [configure the public access through your domain](/features/access#public-access-through-your-domain).
-## Public access from another Zerops project
-All services of the same project share a dedicated private network. To connect to a service within the same project, just use the service hostname and its [internal port](/java/how-to/build-pipeline#ports). Different projects are not connected inside Zerops. To connect to a runtime service from another Zerops project, you need to use public access either [through zerops.io subdomain](/features/access#public-access-through-zerops-subdomain) or [through your domain](/features/access#public-access-through-your-domain).
+
 
 ----------------------------------------
 
@@ -12585,7 +12030,7 @@ zerops:
       # OPTIONAL. Customize the build environment by installing additional packages
       # or tools to the base build environment.
       # prepareCommands:
-      #   - apt-get something
+      #   - sudo apt-get something
       #   - curl something else
       # REQUIRED. Build your application
       buildCommands:
@@ -12607,7 +12052,7 @@ zerops:
       # OPTIONAL. Customize the runtime Java environment by installing additional
       # dependencies to the base Java runtime environment.
       # prepareCommands:
-      #   - apt-get something
+      #   - sudo apt-get something
       #   - curl something else
       # OPTIONAL. Run one or more commands each time a new runtime container
       # is started or restarted. These commands are triggered before
@@ -12706,7 +12151,7 @@ zerops:
       # OPTIONAL. Customize the build environment by installing additional packages
       # or tools to the base build environment.
       prepareCommands:
-        - apt-get something
+        - sudo apt-get something
         - curl something else
       ...
 ```
@@ -12959,7 +12404,7 @@ zerops:
       # OPTIONAL. Customise the runtime environment by installing additional packages
       # or tools to the base Java runtime environment.
       prepareCommands:
-        - apt-get something
+        - sudo apt-get something
         - curl something else
       ...
 ```
@@ -12994,7 +12439,7 @@ zerops:
       # OPTIONAL. Customise the runtime environment by installing additional packages
       # or tools to the base Java runtime environment.
       prepareCommands:
-        - apt-get something
+        - sudo apt-get something
         - curl something else
       ...
 ```
@@ -13665,61 +13110,7 @@ Zerops provides information about how much hardware resources the Java service i
 
 # Java > How To > Shared Storage
 
-Zerops provides [shared storage service](/shared-storage/overview) that can be connected to runtime services. Shared storage enables your runtime service to share files between all containers of the same service or even among containers of different runtime services.
-## Connect a shared storage in Zerops GUI
-Connect your Java service directly when creating a new shared storage service. Just select your Java service in the **Share with Services** block on the **Add new shared storage service** page.
-To connect the existing shared storage to the Java service, go to the shared storage service detail and select **Shared storage connections**. A list of all your current runtime services will be shown. Select a runtime service and the shared storage will be connected to the selected runtime.
-Zerops will create a new folder `/mnt/[shared storage name]`` in the runtime root folder. E.g. `/mnt/teststorage`for a`teststorage` shared storage. The content of this folder is shared among all containers of the runtime service you've selected. If you select multiple runtimes, the content of the folder will be shared among all containers of selected services.
-## Disconnect a shared storage in Zerops GUI
-Go to the shared storage service detail and select **Shared storage connections**. A list of all your current runtime services will be shown. Switch off the toggle to disconnect the shared storage from the selected runtime.
-:::note
-Your runtime service will be automatically restarted when a shared storage is disconnected.
-:::
-## Create Java service with a shared storage using zCLI
-zCLI is the Zerops command-line tool. To create a new Java service via the command-line, follow these steps:
-1. [Install & setup zCLI](/references/cli)
-2. [Create a project description file](/java/how-to/shared-storage#create-a-project-description-file)
-3. [Create a project with a Java service and a shared storage](/java/how-to/shared-storage#create-a-project-with-a-java-service-and-a-shared-storage)
-### Create a project description file
-Zerops uses a yaml format to describe the project infrastructure.
-#### description.yaml format
-[Read the basics](/java/how-to/create#create-a-project-description-file) how to define the Java service using the description.yaml.
-#### Example with a shared storage
-Create a directory `my-project`. Create an `description.yaml` file inside the `my-project` directory with following content:
-```yaml
-# basic project data
-project:
-  # project name
-  name: my-project
-  # optional: project description
-  description: A project with a Java and a shared storage
-  # optional: project tags
-  tags:
-    - DEMO
-    - ZEROPS
-# array of project services
-services:
-  - # service name
-    hostname: teststorage
-    # shared storage service has no version
-    type: shared-storage
-    # mode: HA / NON_HA
-    mode: NON_HA
-  - # service name
-    hostname: app
-    # service type and version number in java@{version} format
-    type: java@latest
-    # defines the minimum number of containers for horizontal autoscaling. Max value = 6.
-    minContainers: 2
-    # defines the maximum number of containers for horizontal autoscaling. Max value = 6.
-    maxContainers: 4
-    # Mount the shared storage to the Java service
-    mount:
-      - teststorage
-```
-The mount attribute accepts an array of shared storage names you want to mount to your runtime service.
-### Create a project with a Java service and a shared storage
-Follow the article [How to create a project based on the description.yaml](/java/how-to/create#create-a-project-based-on-the-descriptionyaml).
+
 
 ----------------------------------------
 
@@ -15370,40 +14761,7 @@ Did none of these Guides fit your needs? Join our **[Discord](https://discord.co
 
 # Nginx > How To > Access
 
-## Private internal access
-Projects in Zerops represent a group of one or more services.
-Services can be of different types (runtime services, databases, message brokers, object storage, etc.). All services of the same project share a **dedicated private network**. To connect to a service within the same project, just use the service hostname and its [internal port](/nginx/how-to/build-pipeline#ports).
-To connect to your application with `app` hostname running on [internal port](/nginx/how-to/build-pipeline#ports) `80`, simply use `http://app:80`
-:::info
-Do not use `https://` when communicating with Nginx from other runtime services in the same project. The internal communication is done over a private network and is isolated from other projects.
-:::
-### Use Nginx environment variables
-Zerops creates default environment variables for each Nginx static service to help you with connection within the same project. To avoid the need to copy the access parameters manually, use [generated environment variables](/nginx/how-to/env-variables#generated-env-variables) of the Nginx static service.
-#### Prefix the environment variable key
-All services of the same project can reference environment variables from other services. To use an environment variable from one service in another service in the same project, you must prefix the environment variable key with the service hostname and underscore.
-#### Example:
-To access the `API_TOKEN` env variable of the `app` service, use `app_API_TOKEN` as the env variable key.
-Read more about [env variables](/nginx/how-to/env-variables).
-## Private access via VPN
-### Start VPN connection
-You can securely connect to your Nginx application from your local workspace via Zerops VPN. Zerops VPN client is included into zCLI, the Zerops command-line tool. To start a VPN connection to the selected Zerops project, follow these steps:
-1. [Install & setup zCLI](/references/cli)
-2. [Start the Zerops VPN](/references/vpn#start-vpn)
-### Access Nginx application through VPN
-Once the VPN session is established, you have the secured connection to the project's private network in Zerops. You can access all project services locally by using their hostname. The only difference is that no [environment variables](/nginx/how-to/env-variables) are available when connected through VPN. To connect to your Nginx application in Zerops set the hostname and [internal port](/nginx/how-to/build-pipeline#ports) e.g. http://app:80
-:::info
-Do not use `https://` when communicating with Nginx over the VPN. The security is assured by the VPN. The internal communication is done over a private network and is isolated from other projects.
-:::
-### Connect via SSH
-Use the `ssh` command to connect to your service via SSH.
-### Stop VPN connection
-[Stop the Zerops VPN](/references/vpn#stop-vpn) in zCLI.
-## Public access through zerops.io subdomain
-By default, your Nginx static service is not publicly accessible. To test your application, enable the [public access through zerops.io subdomain](/features/access#public-access-through-zerops-subdomain).
-## Public access through your domain
-By default, your Nginx static service is not publicly accessible. When your application is ready for production or if you want to test it on the production domain, [configure the public access through your domain](/features/access#public-access-through-your-domain).
-## Public access from another Zerops project
-All services of the same project share a dedicated private network. To connect to a service within the same project, just use the service hostname and its [internal port](/nginx/how-to/build-pipeline#ports). Different projects are not connected inside Zerops. To connect to a runtime service from another Zerops project, you need to use public access either [through zerops.io subdomain](/features/access#public-access-through-zerops-subdomain) or [through your domain](/features/access#public-access-through-your-domain).
+
 
 ----------------------------------------
 
@@ -15436,7 +14794,7 @@ zerops:
       # OPTIONAL. Customize the build environment by installing additional packages
       # or tools to the base build environment.
       # prepareCommands:
-      #   - apt-get something
+      #   - sudo apt-get something
       #   - curl something else
       # REQUIRED. Build your application
       buildCommands:
@@ -15458,7 +14816,7 @@ zerops:
       # OPTIONAL. Customize the runtime Nginx environment by installing additional
       # dependencies to the base Nginx runtime environment.
       # prepareCommands:
-      #   - apt-get something
+      #   - sudo apt-get something
       #   - curl something else
       # OPTIONAL. Run one or more commands each time a new runtime container
       # is started or restarted. These commands are triggered before
@@ -15590,7 +14948,7 @@ zerops:
       # OPTIONAL. Customise the runtime environment by installing additional packages
       # or tools to the base Nginx runtime environment.
       prepareCommands:
-        - apt-get something
+        - sudo apt-get something
         - curl something else
       ...
 ```
@@ -15626,7 +14984,7 @@ zerops:
       # OPTIONAL. Customise the runtime environment by installing additional packages
       # or tools to the base Nginx runtime environment.
       prepareCommands:
-        - apt-get something
+        - sudo apt-get something
         - curl something else
       ...
 ```
@@ -16524,61 +15882,7 @@ Zerops provides information about how much hardware resources the Nginx static s
 
 # Nginx > How To > Shared Storage
 
-Zerops provides [shared storage service](/shared-storage/overview) that can be connected to runtime services. Shared storage enables your runtime service to share files between all containers of the same service or even among containers of different runtime services.
-## Connect a shared storage in Zerops GUI
-Connect your Nginx static service directly when creating a new shared storage service. Just select your Nginx static service in the **Share with Services** block on the **Add new shared storage service** page.
-To connect the existing shared storage to the Nginx static service, go to the shared storage service detail and select **Shared storage connections**. A list of all your current runtime services will be shown. Select a runtime service and the shared storage will be connected to the selected runtime.
-Zerops will create a new folder `/mnt/[shared storage name]`` in the runtime root folder. E.g. `/mnt/teststorage`for a`teststorage` shared storage. The content of this folder is shared among all containers of the runtime service you've selected. If you select multiple runtimes, the content of the folder will be shared among all containers of selected services.
-## Disconnect a shared storage in Zerops GUI
-Go to the shared storage service detail and select **Shared storage connections**. A list of all your current runtime services will be shown. Switch off the toggle to disconnect the shared storage from the selected runtime.
-:::note
-Your runtime service will be automatically restarted when a shared storage is disconnected.
-:::
-## Create Nginx static service with a shared storage using zCLI
-zCLI is the Zerops command-line tool. To create a new Nginx static service via the command-line, follow these steps:
-1. [Install & setup zCLI](/references/cli)
-2. [Create a project description file](#create-a-project-description-file)
-3. [Create a project with a Nginx static service and a shared storage](#create-a-project-with-nginx-static-service-and-a-shared-storage)
-### Create a project description file
-Zerops uses a yaml format to describe the project infrastructure.
-#### description.yaml format
-[Read the basics](/nginx/how-to/create#create-a-project-description-file) how to define the Nginx static service using the description.yaml.
-#### Example with a shared storage
-Create a directory `my-project`. Create an `description.yaml` file inside the `my-project` directory with following content:
-```yaml
-# basic project data
-project:
-  # project name
-  name: my-project
-  # optional: project description
-  description: A project with a Nginx and a shared storage
-  # optional: project tags
-  tags:
-    - DEMO
-    - ZEROPS
-# array of project services
-services:
-  - # service name
-    hostname: teststorage
-    # shared storage service has no version
-    type: shared-storage
-    # mode: HA / NON_HA
-    mode: NON_HA
-  - # service name
-    hostname: app
-    # service type and version number in nginx@{version} or nginx@latest format
-    type: nginx@latest
-    # defines the minimum number of containers for horizontal autoscaling. Max value = 6.
-    minContainers: 2
-    # defines the maximum number of containers for horizontal autoscaling. Max value = 6.
-    maxContainers: 4
-    # Mount the shared storage to the Nginx static service
-    mount:
-      - teststorage
-```
-The mount attribute accepts an array of shared storage names you want to mount to your runtime service.
-### Create a project with Nginx static service and a shared storage
-Follow the article [How to create a project based on the description.yaml](/nginx/how-to/create#create-a-project-based-on-the-descriptionyaml).
+
 
 ----------------------------------------
 
@@ -16768,40 +16072,7 @@ Did none of these Guides fit your needs? Join our **[Discord](https://discord.co
 
 # Nodejs > How To > Access
 
-## Private internal access
-Projects in Zerops represent a group of one or more services.
-Services can be of different types (runtime services, databases, message brokers, object storage, etc.). All services of the same project share a **dedicated private network**. To connect to a service within the same project, just use the service hostname and its [internal port](/nodejs/how-to/build-pipeline#ports).
-To connect to your application with `app` hostname running on [internal port](/nodejs/how-to/build-pipeline#ports) `3000`, simply use `http://app:3000`
-:::info
-Do not use `https://` when communicating with Node.js from other runtime services in the same project. The internal communication is done over a private network and is isolated from other projects.
-:::
-### Use Node.js environment variables
-Zerops creates default environment variables for each Node.js service to help you with connection within the same project. To avoid the need to copy the access parameters manually, use [generated environment variables](/nodejs/how-to/env-variables#generated-env-variables) of the Node.js service.
-#### Prefix the environment variable key
-All services of the same project can reference environment variables from other services. To use an environment variable from one service in another service in the same project, you must prefix the environment variable key with the service hostname and underscore.
-#### Example:
-To access the `API_TOKEN` env variable of the `app` service, use `app_API_TOKEN` as the env variable key.
-Read more about [env variables](/nodejs/how-to/env-variables).
-## Private access via VPN
-### Start VPN connection
-You can securely connect to your Node.js application from your local workspace via Zerops VPN. Zerops VPN client is included into zCLI, the Zerops command-line tool. To start a VPN connection to the selected Zerops project, follow these steps:
-1. [Install & setup zCLI](/references/cli)
-2. [Start the Zerops VPN](/references/vpn#start-vpn)
-### Access Node.js application through VPN
-Once the VPN session is established, you have the secured connection to the project's private network in Zerops. You can access all project services locally by using their hostname. The only difference is that no [environment variables](/nodejs/how-to/env-variables) are available when connected through VPN. To connect to your Node.js application in Zerops set the hostname and [internal port](/nodejs/how-to/build-pipeline#ports) e.g. http://app:3000
-:::info
-Do not use `https://` when communicating with Node.js over the VPN. The security is assured by the VPN. The internal communication is done over a private network and is isolated from other projects.
-:::
-### Connect via SSH
-Use the `ssh` command to connect to your service via SSH.
-### Stop VPN connection
-[Stop the Zerops VPN](/references/vpn#stop-vpn) in zCLI.
-## Public access through zerops.io subdomain
-By default, your Node.js service is not publicly accessible. To test your application, enable the [public access through zerops.io subdomain](/features/access#public-access-through-zerops-subdomain).
-## Public access through your domain
-By default, your Node.js service is not publicly accessible. When your application is ready for production or if you want to test it on the production domain, [configure the public access through your domain](/features/access#public-access-through-your-domain).
-## Public access from another Zerops project
-All services of the same project share a dedicated private network. To connect to a service within the same project, just use the service hostname and its [internal port](/nodejs/how-to/build-pipeline#ports). Different projects are not connected inside Zerops. To connect to a runtime service from another Zerops project, you need to use public access either [through zerops.io subdomain](/features/access#public-access-through-zerops-subdomain) or [through your domain](/features/access#public-access-through-your-domain).
+
 
 ----------------------------------------
 
@@ -16823,7 +16094,7 @@ zerops:
       # OPTIONAL. Customize the build environment by installing additional packages
       # or tools to the base build environment.
       # prepareCommands:
-      #   - apt-get something
+      #   - sudo apt-get something
       #   - curl something else
       # REQUIRED. Build your application
       buildCommands:
@@ -16849,7 +16120,7 @@ zerops:
       # OPTIONAL. Customize the runtime Node.js environment by installing additional
       # dependencies to the base Node.js runtime environment.
       # prepareCommands:
-      #   - apt-get something
+      #   - sudo apt-get something
       #   - curl something else
       # OPTIONAL. Run one or more commands each time a new runtime container
       # is started or restarted. These commands are triggered before
@@ -16947,7 +16218,7 @@ zerops:
       # OPTIONAL. Customize the build environment by installing additional packages
       # or tools to the base build environment.
       prepareCommands:
-        - apt-get something
+        - sudo apt-get something
         - curl something else
       ...
 ```
@@ -17204,7 +16475,7 @@ zerops:
       # OPTIONAL. Customise the runtime environment by installing additional packages
       # or tools to the base Node.js runtime environment.
       prepareCommands:
-        - apt-get something
+        - sudo apt-get something
         - curl something else
       ...
 ```
@@ -17239,7 +16510,7 @@ zerops:
       # OPTIONAL. Customise the runtime environment by installing additional packages
       # or tools to the base Node.js runtime environment.
       prepareCommands:
-        - apt-get something
+        - sudo apt-get something
         - curl something else
       ...
 ```
@@ -17928,61 +17199,7 @@ Zerops provides information about how much hardware resources the Node.js servic
 
 # Nodejs > How To > Shared Storage
 
-Zerops provides [shared storage service](/shared-storage/overview) that can be connected to runtime services. Shared storage enables your runtime service to share files between all containers of the same service or even among containers of different runtime services.
-## Connect a shared storage in Zerops GUI
-Connect your Node.js service directly when creating a new shared storage service. Just select your Node.js service in the **Share with Services** block on the **Add new shared storage service** page.
-To connect the existing shared storage to the Node.js service, go to the shared storage service detail and select **Shared storage connections**. A list of all your current runtime services will be shown. Select a runtime service and the shared storage will be connected to the selected runtime.
-Zerops will create a new folder `/mnt/[shared storage name]`` in the runtime root folder. E.g. `/mnt/teststorage`for a`teststorage` shared storage. The content of this folder is shared among all containers of the runtime service you've selected. If you select multiple runtimes, the content of the folder will be shared among all containers of selected services.
-## Disconnect a shared storage in Zerops GUI
-Go to the shared storage service detail and select **Shared storage connections**. A list of all your current runtime services will be shown. Switch off the toggle to disconnect the shared storage from the selected runtime.
-:::note
-Your runtime service will be automatically restarted when a shared storage is disconnected.
-:::
-## Create Node.js service with a shared storage using zCLI
-zCLI is the Zerops command-line tool. To create a new Node.js service via the command-line, follow these steps:
-1. [Install & setup zCLI](/references/cli)
-2. [Create a project description file](/nodejs/how-to/shared-storage#create-a-project-description-file)
-3. [Create a project with a Node.js service and a shared storage](/nodejs/how-to/shared-storage#create-a-project-with-a-nodejs-service-and-a-shared-storage)
-### Create a project description file
-Zerops uses a yaml format to describe the project infrastructure.
-#### description.yaml format
-[Read the basics](/nodejs/how-to/create#create-a-project-description-file) how to define the Node.js service using the description.yaml.
-#### Example with a shared storage
-Create a directory `my-project`. Create an `description.yaml` file inside the `my-project` directory with following content:
-```yaml
-# basic project data
-project:
-  # project name
-  name: my-project
-  # optional: project description
-  description: A project with a Node.js and a shared storage
-  # optional: project tags
-  tags:
-    - DEMO
-    - ZEROPS
-# array of project services
-services:
-  - # service name
-    hostname: teststorage
-    # shared storage service has no version
-    type: shared-storage
-    # mode: HA / NON_HA
-    mode: NON_HA
-  - # service name
-    hostname: app
-    # service type and version number in nodejs@{version} format
-    type: nodejs@latest
-    # defines the minimum number of containers for horizontal autoscaling. Max value = 6.
-    minContainers: 2
-    # defines the maximum number of containers for horizontal autoscaling. Max value = 6.
-    maxContainers: 4
-    # Mount the shared storage to the Node.js service
-    mount:
-      - teststorage
-```
-The mount attribute accepts an array of shared storage names you want to mount to your runtime service.
-### Create a project with a Node.js service and a shared storage
-Follow the article [How to create a project based on the description.yaml](/nodejs/how-to/create#create-a-project-based-on-the-descriptionyaml).
+
 
 ----------------------------------------
 
@@ -18490,40 +17707,7 @@ Did none of these Guides fit your needs? Join our **[Discord](https://discord.co
 
 # Php > How To > Access
 
-## Private internal access
-Projects in Zerops represent a group of one or more services.
-Services can be of different types (runtime services, databases, message brokers, object storage, etc.). All services of the same project share a **dedicated private network**. To connect to a service within the same project, just use the service hostname and its [internal port](/php/how-to/build-pipeline#ports).
-To connect to your application with `app` hostname running on [internal port](/php/how-to/build-pipeline#ports) `80`, simply use `http://app:80`
-:::info
-Do not use `https://` when communicating with PHP from other runtime services in the same project. The internal communication is done over a private network and is isolated from other projects.
-:::
-### Use PHP environment variables
-Zerops creates default environment variables for each PHP service to help you with connection within the same project. To avoid the need to copy the access parameters manually, use [generated environment variables](/php/how-to/env-variables#generated-env-variables) of the PHP service.
-#### Prefix the environment variable key
-All services of the same project can reference environment variables from other services. To use an environment variable from one service in another service in the same project, you must prefix the environment variable key with the service hostname and underscore.
-#### Example:
-To access the `API_TOKEN` env variable of the `app` service, use `app_API_TOKEN` as the env variable key.
-Read more about [env variables](/php/how-to/env-variables).
-## Private access via VPN
-### Start VPN connection
-You can securely connect to your PHP application from your local workspace via Zerops VPN. Zerops VPN client is included into zCLI, the Zerops command-line tool. To start a VPN connection to the selected Zerops project, follow these steps:
-1. [Install & setup zCLI](/references/cli)
-2. [Start the Zerops VPN](/references/vpn#start-vpn)
-### Access PHP application through VPN
-Once the VPN session is established, you have the secured connection to the project's private network in Zerops. You can access all project services locally by using their hostname. The only difference is that no [environment variables](/php/how-to/env-variables) are available when connected through VPN. To connect to your PHP application in Zerops set the hostname and [internal port](/php/how-to/build-pipeline#ports) e.g. http://app:80
-:::info
-Do not use `https://` when communicating with PHP over the VPN. The security is assured by the VPN. The internal communication is done over a private network and is isolated from other projects.
-:::
-### Connect via SSH
-Use the `ssh` command to connect to your service via SSH.
-### Stop VPN connection
-[Stop the Zerops VPN](/references/vpn#stop-vpn) in zCLI.
-## Public access through zerops.io subdomain
-By default, your PHP service is not publicly accessible. To test your application, enable the [public access through zerops.io subdomain](/features/access#public-access-through-zerops-subdomain).
-## Public access through your domain
-By default, your PHP service is not publicly accessible. When your application is ready for production or if you want to test it on the production domain, [configure the public access through your domain](/features/access#public-access-through-your-domain).
-## Public access from another Zerops project
-All services of the same project share a dedicated private network. To connect to a service within the same project, just use the service hostname and its [internal port](/php/how-to/build-pipeline#ports). Different projects are not connected inside Zerops. To connect to a runtime service from another Zerops project, you need to use public access either [through zerops.io subdomain](/features/access#public-access-through-zerops-subdomain) or [through your domain](/features/access#public-access-through-your-domain).
+
 
 ----------------------------------------
 
@@ -18545,7 +17729,7 @@ zerops:
       # OPTIONAL. Customize the build environment by installing additional packages
       # or tools to the base build environment.
       # prepareCommands:
-      #   - apt-get something
+      #   - sudo apt-get something
       #   - curl something else
       # OPTIONAL. Build your application
       buildCommands:
@@ -18565,7 +17749,7 @@ zerops:
       # OPTIONAL. Customize the runtime PHP environment by installing additional
       # dependencies to the base PHP runtime environment.
       # prepareCommands:
-      #   - apt-get something
+      #   - sudo apt-get something
       #   - curl something else
       # OPTIONAL. Run one or more commands each time a new runtime container
       # is started or restarted. These commands are triggered before
@@ -18667,7 +17851,7 @@ zerops:
       # OPTIONAL. Customise the build environment by installing additional packages
       # or tools to the base build environment.
       prepareCommands:
-        - apt-get something
+        - sudo apt-get something
         - curl something else
       ...
 ```
@@ -18930,7 +18114,7 @@ zerops:
       # OPTIONAL. Customise the runtime environment by installing additional packages
       # or tools to the base PHP runtime environment.
       prepareCommands:
-        - apt-get something
+        - sudo apt-get something
         - curl something else
       ...
 ```
@@ -18966,7 +18150,7 @@ zerops:
       # OPTIONAL. Customise the runtime environment by installing additional packages
       # or tools to the base PHP runtime environment.
       prepareCommands:
-        - apt-get something
+        - sudo apt-get something
         - curl something else
       ...
 ```
@@ -19830,61 +19014,7 @@ Zerops provides information about how much hardware resources the PHP service is
 
 # Php > How To > Shared Storage
 
-Zerops provides [shared storage service](/shared-storage/overview) that can be connected to runtime services. Shared storage enables your runtime service to share files between all containers of the same service or even among containers of different runtime services.
-## Connect a shared storage in Zerops GUI
-Connect your PHP service directly when creating a new shared storage service. Just select your PHP service in the **Share with Services** block on the **Add new shared storage service** page.
-To connect the existing shared storage to the PHP service, go to the shared storage service detail and select **Shared storage connections**. A list of all your current runtime services will be shown. Select a runtime service and the shared storage will be connected to the selected runtime.
-Zerops will create a new folder `/mnt/[shared storage name]`` in the runtime root folder. E.g. `/mnt/teststorage`for a`teststorage` shared storage. The content of this folder is shared among all containers of the runtime service you've selected. If you select multiple runtimes, the content of the folder will be shared among all containers of selected services.
-## Disconnect a shared storage in Zerops GUI
-Go to the shared storage service detail and select **Shared storage connections**. A list of all your current runtime services will be shown. Switch off the toggle to disconnect the shared storage from the selected runtime.
-:::note
-Your runtime service will be automatically restarted when a shared storage is disconnected.
-:::
-## Create PHP service with a shared storage using zCLI
-zCLI is the Zerops command-line tool. To create a new PHP service via the command-line, follow these steps:
-1. [Install & setup zCLI](/references/cli)
-2. [Create a project description file](/php/how-to/shared-storage#create-a-project-description-file)
-3. [Create a project with a PHP service and a shared storage](/php/how-to/shared-storage#create-a-project-with-a-php-service-and-a-shared-storage)
-### Create a project description file
-Zerops uses a yaml format to describe the project infrastructure.
-#### description.yaml format
-[Read the basics](/php/how-to/create#create-a-project-description-file) how to define the PHP service using the description.yaml.
-#### Example with a shared storage
-Create a directory `my-project`. Create an `description.yaml` file inside the `my-project` directory with following content:
-```yaml
-# basic project data
-project:
-  # project name
-  name: my-project
-  # optional: project description
-  description: A project with a PHP and a shared storage
-  # optional: project tags
-  tags:
-    - DEMO
-    - ZEROPS
-# array of project services
-services:
-  - # service name
-    hostname: teststorage
-    # shared storage service has no version
-    type: shared-storage
-    # mode: HA / NON_HA
-    mode: NON_HA
-  - # service name
-    hostname: app
-    # service type and version number in php-apache@8.1+2.4 format
-    type: php-apache@8.1+2.4
-    # defines the minimum number of containers for horizontal autoscaling. Max value = 6.
-    minContainers: 2
-    # defines the maximum number of containers for horizontal autoscaling. Max value = 6.
-    maxContainers: 4
-    # Mount the shared storage to the PHP service
-    mount:
-      - teststorage
-```
-The mount attribute accepts an array of shared storage names you want to mount to your runtime service.
-### Create a project with a PHP service and a shared storage
-Follow the article [How to create a project based on the description.yaml](/php/how-to/create#create-a-project-based-on-the-descriptionyaml).
+
 
 ----------------------------------------
 
@@ -20639,40 +19769,7 @@ Did none of these Guides fit your needs? Join our **[Discord](https://discord.co
 
 # Python > How To > Access
 
-## Private internal access
-Projects in Zerops represent a group of one or more services.
-Services can be of different types (runtime services, databases, message brokers, object storage, etc.). All services of the same project share a **dedicated private network**. To connect to a service within the same project, just use the service hostname and its [internal port](/python/how-to/build-pipeline#ports).
-To connect to your application with `app` hostname running on [internal port](/python/how-to/build-pipeline#ports) `8000`, simply use `http://app:8000`
-:::info
-Do not use `https://` when communicating with Python from other runtime services in the same project. The internal communication is done over a private network and is isolated from other projects.
-:::
-### Use Python environment variables
-Zerops creates default environment variables for each Python service to help you with connection within the same project. To avoid the need to copy the access parameters manually, use [generated environment variables](/python/how-to/env-variables#generated-env-variables) of the Python service.
-#### Prefix the environment variable key
-All services of the same project can reference environment variables from other services. To use an environment variable from one service in another service in the same project, you must prefix the environment variable key with the service hostname and underscore.
-#### Example:
-To access the `API_TOKEN` env variable of the `app` service, use `app_API_TOKEN` as the env variable key.
-Read more about [env variables](/python/how-to/env-variables).
-## Private access via VPN
-### Start VPN connection
-You can securely connect to your Python application from your local workspace via Zerops VPN. Zerops VPN client is included into zCLI, the Zerops command-line tool. To start a VPN connection to the selected Zerops project, follow these steps:
-1. [Install & setup zCLI](/references/cli)
-2. [Start the Zerops VPN](/references/vpn#start-vpn)
-### Access Python application through VPN
-Once the VPN session is established, you have the secured connection to the project's private network in Zerops. You can access all project services locally by using their hostname. The only difference is that no [environment variables](/python/how-to/env-variables) are available when connected through VPN. To connect to your Python application in Zerops set the hostname and [internal port](/python/how-to/build-pipeline#ports) e.g. http://app:8000
-:::info
-Do not use `https://` when communicating with Python over the VPN. The security is assured by the VPN. The internal communication is done over a private network and is isolated from other projects.
-:::
-### Connect via SSH
-Use the `ssh` command to connect to your service via SSH.
-### Stop VPN connection
-[Stop the Zerops VPN](/references/vpn#stop-vpn) in zCLI.
-## Public access through zerops.io subdomain
-By default, your Python service is not publicly accessible. To test your application, enable the [public access through zerops.io subdomain](/features/access#public-access-through-zerops-subdomain).
-## Public access through your domain
-By default, your Python service is not publicly accessible. When your application is ready for production or if you want to test it on the production domain, [configure the public access through your domain](/features/access#public-access-through-your-domain).
-## Public access from another Zerops project
-All services of the same project share a dedicated private network. To connect to a service within the same project, just use the service hostname and its [internal port](/python/how-to/build-pipeline#ports). Different projects are not connected inside Zerops. To connect to a runtime service from another Zerops project, you need to use public access either [through zerops.io subdomain](/features/access#public-access-through-zerops-subdomain) or [through your domain](/features/access#public-access-through-your-domain).
+
 
 ----------------------------------------
 
@@ -20694,7 +19791,7 @@ zerops:
       # OPTIONAL. Customize the build environment by installing additional packages
       # or tools to the base build environment.
       # prepareCommands:
-      #   - apt-get something
+      #   - sudo apt-get something
       #   - curl something else
       # REQUIRED. Select which files / folders to deploy after
       # the build has successfully finished
@@ -21758,61 +20855,7 @@ Zerops provides information about how much hardware resources the Python service
 
 # Python > How To > Shared Storage
 
-Zerops provides [shared storage service](/shared-storage/overview) that can be connected to runtime services. Shared storage enables your runtime service to share files between all containers of the same service or even among containers of different runtime services.
-## Connect a shared storage in Zerops GUI
-Connect your Python service directly when creating a new shared storage service. Just select your Python service in the **Share with Services** block on the **Add new shared storage service** page.
-To connect the existing shared storage to the Python service, go to the shared storage service detail and select **Shared storage connections**. A list of all your current runtime services will be shown. Select a runtime service and the shared storage will be connected to the selected runtime.
-Zerops will create a new folder `/mnt/[shared storage name]`` in the runtime root folder. E.g. `/mnt/teststorage`for a`teststorage` shared storage. The content of this folder is shared among all containers of the runtime service you've selected. If you select multiple runtimes, the content of the folder will be shared among all containers of selected services.
-## Disconnect a shared storage in Zerops GUI
-Go to the shared storage service detail and select **Shared storage connections**. A list of all your current runtime services will be shown. Switch off the toggle to disconnect the shared storage from the selected runtime.
-:::note
-Your runtime service will be automatically restarted when a shared storage is disconnected.
-:::
-## Create Python service with a shared storage using zCLI
-zCLI is the Zerops command-line tool. To create a new Python service via the command-line, follow these steps:
-1. [Install & setup zCLI](/references/cli)
-2. [Create a project description file](/python/how-to/shared-storage#create-a-project-description-file)
-3. [Create a project with a Python service and a shared storage](/python/how-to/shared-storage#create-a-project-with-a-python-service-and-a-shared-storage)
-### Create a project description file
-Zerops uses a yaml format to describe the project infrastructure.
-#### description.yaml format
-[Read the basics](/python/how-to/create#create-a-project-description-file) how to define the Python service using the description.yaml.
-#### Example with a shared storage
-Create a directory `my-project`. Create an `description.yaml` file inside the `my-project` directory with following content:
-```yaml
-# basic project data
-project:
-  # project name
-  name: my-project
-  # optional: project description
-  description: A project with a Python and a shared storage
-  # optional: project tags
-  tags:
-    - DEMO
-    - ZEROPS
-# array of project services
-services:
-  - # service name
-    hostname: teststorage
-    # shared storage service has no version
-    type: shared-storage
-    # mode: HA / NON_HA
-    mode: NON_HA
-  - # service name
-    hostname: app
-    # service type and version number in python@{version} format
-    type: python@latest
-    # defines the minimum number of containers for horizontal autoscaling. Max value = 6.
-    minContainers: 2
-    # defines the maximum number of containers for horizontal autoscaling. Max value = 6.
-    maxContainers: 4
-    # Mount the shared storage to the Python service
-    mount:
-      - teststorage
-```
-The mount attribute accepts an array of shared storage names you want to mount to your runtime service.
-### Create a project with a Python service and a shared storage
-Follow the article [How to create a project based on the description.yaml](/python/how-to/create#create-a-project-based-on-the-descriptionyaml).
+
 
 ----------------------------------------
 
@@ -22072,40 +21115,7 @@ Did none of these Guides fit your needs? Join our **[Discord](https://discord.co
 
 # Rust > How To > Access
 
-## Private internal access
-Projects in Zerops represent a group of one or more services.
-Services can be of different types (runtime services, databases, message brokers, object storage, etc.). All services of the same project share a **dedicated private network**. To connect to a service within the same project, just use the service hostname and its [internal port](/rust/how-to/build-pipeline#ports).
-To connect to your application with `app` hostname running on [internal port](/rust/how-to/build-pipeline#ports) `8080`, simply use `http://app:8080`
-:::info
-Do not use `https://` when communicating with Rust from other runtime services in the same project. The internal communication is done over a private network and is isolated from other projects.
-:::
-### Use Rust environment variables
-Zerops creates default environment variables for each Rust service to help you with connection within the same project. To avoid the need to copy the access parameters manually, use [generated environment variables](/rust/how-to/env-variables#generated-env-variables) of the Rust service.
-#### Prefix the environment variable key
-All services of the same project can reference environment variables from other services. To use an environment variable from one service in another service in the same project, you must prefix the environment variable key with the service hostname and underscore.
-#### Example:
-To access the `API_TOKEN` env variable of the `app` service, use `app_API_TOKEN` as the env variable key.
-Read more about [env variables](/rust/how-to/env-variables).
-## Private access via VPN
-### Start VPN connection
-You can securely connect to your Rust application from your local workspace via Zerops VPN. Zerops VPN client is included into zCLI, the Zerops command-line tool. To start a VPN connection to the selected Zerops project, follow these steps:
-1. [Install & setup zCLI](/references/cli)
-2. [Start the Zerops VPN](/references/vpn#start-vpn)
-### Access Rust application through VPN
-Once the VPN session is established, you have the secured connection to the project's private network in Zerops. You can access all project services locally by using their hostname. The only difference is that no [environment variables](/rust/how-to/env-variables) are available when connected through VPN. To connect to your Rust application in Zerops set the hostname and [internal port](/rust/how-to/build-pipeline#ports) e.g. http://app:8080
-:::info
-Do not use `https://` when communicating with Rust over the VPN. The security is assured by the VPN. The internal communication is done over a private network and is isolated from other projects.
-:::
-### Connect via SSH
-Use the `ssh` command to connect to your service via SSH.
-### Stop VPN connection
-[Stop the Zerops VPN](/references/vpn#stop-vpn) in zCLI.
-## Public access through zerops.io subdomain
-By default, your Rust service is not publicly accessible. To test your application, enable the [public access through zerops.io subdomain](/features/access#public-access-through-zerops-subdomain).
-## Public access through your domain
-By default, your Rust service is not publicly accessible. When your application is ready for production or if you want to test it on the production domain, [configure the public access through your domain](/features/access#public-access-through-your-domain).
-## Public access from another Zerops project
-All services of the same project share a dedicated private network. To connect to a service within the same project, just use the service hostname and its [internal port](/rust/how-to/build-pipeline#ports). Different projects are not connected inside Zerops. To connect to a runtime service from another Zerops project, you need to use public access either [through zerops.io subdomain](/features/access#public-access-through-zerops-subdomain) or [through your domain](/features/access#public-access-through-your-domain).
+
 
 ----------------------------------------
 
@@ -22127,7 +21137,7 @@ zerops:
       # OPTIONAL. Customize the build environment by installing additional packages
       # or tools to the base build environment.
       # prepareCommands:
-      #   - apt-get something
+      #   - sudo apt-get something
       #   - curl something else
       # REQUIRED. Build your application
       buildCommands:
@@ -22150,7 +21160,7 @@ zerops:
       # OPTIONAL. Customize the runtime Rust environment by installing additional
       # dependencies to the base Rust runtime environment.
       # prepareCommands:
-      #   - apt-get something
+      #   - sudo apt-get something
       #   - curl something else
       # OPTIONAL. Run one or more commands each time a new runtime container
       # is started or restarted. These commands are triggered before
@@ -22498,7 +21508,7 @@ zerops:
       # OPTIONAL. Customise the runtime environment by installing additional packages
       # or tools to the base Rust runtime environment.
       prepareCommands:
-        - apt-get something
+        - sudo apt-get something
         - curl something else
       ...
 ```
@@ -22534,7 +21544,7 @@ zerops:
       # OPTIONAL. Customise the runtime environment by installing additional packages
       # or tools to the base Rust runtime environment.
       prepareCommands:
-        - apt-get something
+        - sudo apt-get something
         - curl something else
       ...
 ```
@@ -23220,61 +22230,7 @@ Zerops provides information about how much hardware resources the Rust service i
 
 # Rust > How To > Shared Storage
 
-Zerops provides [shared storage service](/shared-storage/overview) that can be connected to runtime services. Shared storage enables your runtime service to share files between all containers of the same service or even among containers of different runtime services.
-## Connect a shared storage in Zerops GUI
-Connect your Rust service directly when creating a new shared storage service. Just select your Rust service in the **Share with Services** block on the **Add new shared storage service** page.
-To connect the existing shared storage to the Rust service, go to the shared storage service detail and select **Shared storage connections**. A list of all your current runtime services will be shown. Select a runtime service and the shared storage will be connected to the selected runtime.
-Zerops will create a new folder `/mnt/[shared storage name]`` in the runtime root folder. E.g. `/mnt/teststorage`for a`teststorage` shared storage. The content of this folder is shared among all containers of the runtime service you've selected. If you select multiple runtimes, the content of the folder will be shared among all containers of selected services.
-## Disconnect a shared storage in Zerops GUI
-Go to the shared storage service detail and select **Shared storage connections**. A list of all your current runtime services will be shown. Switch off the toggle to disconnect the shared storage from the selected runtime.
-:::note
-Your runtime service will be automatically restarted when a shared storage is disconnected.
-:::
-## Create Rust service with a shared storage using zCLI
-zCLI is the Zerops command-line tool. To create a new Rust service via the command-line, follow these steps:
-1. [Install & setup zCLI](/references/cli)
-2. [Create a project description file](/rust/how-to/shared-storage#create-a-project-description-file)
-3. [Create a project with a Rust service and a shared storage](/rust/how-to/shared-storage#create-a-project-with-a-rust-service-and-a-shared-storage)
-### Create a project description file
-Zerops uses a yaml format to describe the project infrastructure.
-#### description.yaml format
-[Read the basics](/rust/how-to/create#create-a-project-description-file) how to define the Rust service using the description.yaml.
-#### Example with a shared storage
-Create a directory `my-project`. Create an `description.yaml` file inside the `my-project` directory with following content:
-```yaml
-# basic project data
-project:
-  # project name
-  name: my-project
-  # optional: project description
-  description: A project with a Rust and a shared storage
-  # optional: project tags
-  tags:
-    - DEMO
-    - ZEROPS
-# array of project services
-services:
-  - # service name
-    hostname: teststorage
-    # shared storage service has no version
-    type: shared-storage
-    # mode: HA / NON_HA
-    mode: NON_HA
-  - # service name
-    hostname: app
-    # service type and version number in rust@{version} format
-    type: rust@latest
-    # defines the minimum number of containers for horizontal autoscaling. Max value = 6.
-    minContainers: 2
-    # defines the maximum number of containers for horizontal autoscaling. Max value = 6.
-    maxContainers: 4
-    # Mount the shared storage to the Rust service
-    mount:
-      - teststorage
-```
-The mount attribute accepts an array of shared storage names you want to mount to your runtime service.
-### Create a project with a Rust service and a shared storage
-Follow the article [How to create a project based on the description.yaml](/rust/how-to/create#create-a-project-based-on-the-descriptionyaml).
+
 
 ----------------------------------------
 
@@ -24329,8 +23285,8 @@ Customizes the build environment by installing additional dependencies or tools.
 ```yaml
 build:
   prepareCommands:
-    - apt-get update
-    - apt-get install -y some-package
+    - sudo apt-get update
+    - sudo apt-get install -y some-package
 ```
 ### buildCommands 
 Defines the commands to build your application.
