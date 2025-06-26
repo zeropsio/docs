@@ -1,0 +1,88 @@
+import { Var, VarLink, VarCodeBlock, SetVar } from '/src/components/content/var';
+
+<SetVar name="yamlLang" value="yaml" />
+<SetVar name="yamlCode" value={`# Basic project data
+project:
+  name: my-project
+  description: A project with {{serviceDisplay}} and shared storage
+  tags:
+    - DEMO
+    - ZEROPS
+
+# Project services
+services:
+  - # Shared storage service
+    hostname: teststorage
+    type: shared-storage
+    mode: NON_HA
+
+  - # {{serviceDisplay}} service
+    hostname: app
+    type: {{serviceVersion}}
+    minContainers: 1
+    maxContainers: 3
+
+    # Mount the shared storage
+    mount:
+      - teststorage`} />
+
+Zerops provides [shared storage service](/shared-storage/overview) that can be connected to runtime services. Shared storage enables your <Var name="serviceDisplay" /> service to share files between all containers of the same service or even among containers of different runtime services.
+
+## Connect shared storage in Zerops GUI
+
+### When creating new shared storage
+
+Connect your <Var name="serviceDisplay" /> service directly when creating a new shared storage service. Select your <Var name="serviceDisplay" /> service in the **Share with Services** block on the **Add new shared storage service** page.
+
+![connect_shared_storage_1](/img/screenshots/connect_shared_storage_1.png)
+
+### Connect existing shared storage
+
+To connect existing shared storage to your <Var name="serviceDisplay" /> service:
+
+1. Go to the shared storage service detail page
+2. Select **Shared storage connections**
+3. Choose your <Var name="serviceDisplay" /> service from the list of runtime services
+4. The shared storage will be connected to your service
+
+![connect_shared_storage_1](/img/screenshots/connect_shared_storage_2.png)
+
+### How it works
+
+Zerops creates a new folder `/mnt/[shared storage name]` in your <Var name="serviceDisplay" /> service's root directory. For example, `/mnt/teststorage` for a `teststorage` shared storage.
+
+The content of this folder is shared among:
+- All containers of your <Var name="serviceDisplay" /> service
+- All containers of other connected runtime services (if you connect multiple services)
+
+## Disconnect shared storage
+
+To disconnect shared storage from your <Var name="serviceDisplay" /> service:
+
+1. Go to the shared storage service detail page
+2. Select **Shared storage connections**
+3. Switch off the toggle next to your <Var name="serviceDisplay" /> service
+
+## Create <Var name="serviceDisplay" /> service with shared storage using zCLI
+
+zCLI is the Zerops command-line tool. To create a new <Var name="serviceDisplay" /> service with shared storage via command-line:
+
+1. [Install & setup zCLI](/references/cli)
+2. [Create a project description file](#create-project-description-file)
+3. [Create the project](#create-project-with-shared-storage)
+
+### Create project description file
+
+Zerops uses YAML format to describe project infrastructure. <VarLink name="servicePath" path="/{{VAR}}/how-to/create#create-a-project-description-file">Read the basics</VarLink> about defining <Var name="serviceDisplay" /> services in `description.yaml`.
+
+#### Example with shared storage
+
+Create a directory `my-project` and add a `description.yaml` file:
+
+<VarCodeBlock codeVar="yamlCode" languageVar="yamlLang" />
+
+The `mount` attribute accepts an array of shared storage names to mount to your <Var name="serviceDisplay" /> service.
+
+### Create project with shared storage
+
+Follow the guide <VarLink name="servicePath" path="/{{VAR}}/how-to/create#create-a-project-based-on-the-descriptionyaml">how to create a project based on description.yaml</VarLink> to deploy your <Var name="serviceDisplay" /> service with shared storage.

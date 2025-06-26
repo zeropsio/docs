@@ -2655,7 +2655,7 @@ module.exports = {
           {
             type: 'doc',
             id: 'deno/how-to/access',
-            label: 'Access Bun runtime service',
+            label: 'Access Deno runtime service',
           },
           {
             type: 'doc',
