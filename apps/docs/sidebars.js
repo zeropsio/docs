@@ -860,6 +860,11 @@ module.exports = {
           id: 'nodejs/how-to/customize-runtime',
           label: 'Customize Node.js runtime',
         },
+        {
+          type: 'doc',
+          id: 'nodejs/how-to/scaling',
+          label: 'Scale Node.js runtime service',
+        },
       ],
     },
     {
@@ -914,11 +919,6 @@ module.exports = {
           type: 'doc',
           id: 'nodejs/how-to/access',
           label: 'Access Node.js runtime service',
-        },
-        {
-          type: 'doc',
-          id: 'nodejs/how-to/scaling',
-          label: 'Scale Node.js runtime service',
         },
         {
           type: 'doc',
@@ -1009,6 +1009,11 @@ module.exports = {
           id: 'php/how-to/customize-web-server',
           label: 'Customize web server',
         },
+        {
+          type: 'doc',
+          id: 'php/how-to/scaling',
+          label: 'Scale PHP runtime service',
+        },
       ],
     },
     {
@@ -1063,11 +1068,6 @@ module.exports = {
           type: 'doc',
           id: 'php/how-to/access',
           label: 'Access PHP runtime service',
-        },
-        {
-          type: 'doc',
-          id: 'php/how-to/scaling',
-          label: 'Scale PHP runtime service',
         },
         {
           type: 'doc',
@@ -1144,6 +1144,11 @@ module.exports = {
           id: 'python/how-to/customize-runtime',
           label: 'Customize Python runtime',
         },
+        {
+          type: 'doc',
+          id: 'python/how-to/scaling',
+          label: 'Scale Python runtime service',
+        },
       ],
     },
     {
@@ -1198,11 +1203,6 @@ module.exports = {
           type: 'doc',
           id: 'python/how-to/access',
           label: 'Access Python runtime service',
-        },
-        {
-          type: 'doc',
-          id: 'python/how-to/scaling',
-          label: 'Scale Python runtime service',
         },
         {
           type: 'doc',
@@ -1279,6 +1279,11 @@ module.exports = {
             id: 'go/how-to/customize-runtime',
             label: 'Customize Go runtime',
           },
+          {
+            type: 'doc',
+            id: 'go/how-to/scaling',
+            label: 'Scale Go runtime service',
+          },
         ],
       },
       {
@@ -1333,11 +1338,6 @@ module.exports = {
             type: 'doc',
             id: 'go/how-to/access',
             label: 'Access Go runtime service',
-          },
-          {
-            type: 'doc',
-            id: 'go/how-to/scaling',
-            label: 'Scale Go runtime service',
           },
           {
             type: 'doc',
@@ -1414,6 +1414,11 @@ module.exports = {
             id: 'rust/how-to/customize-runtime',
             label: 'Customize Rust runtime',
           },
+          {
+            type: 'doc',
+            id: 'rust/how-to/scaling',
+            label: 'Scale Rust runtime service',
+          },
         ],
       },
       {
@@ -1468,11 +1473,6 @@ module.exports = {
             type: 'doc',
             id: 'rust/how-to/access',
             label: 'Access Rust runtime service',
-          },
-          {
-            type: 'doc',
-            id: 'rust/how-to/scaling',
-            label: 'Scale Rust runtime service',
           },
           {
             type: 'doc',
@@ -1549,6 +1549,11 @@ module.exports = {
             id: 'dotnet/how-to/customize-runtime',
             label: 'Customize .NET runtime',
           },
+          {
+            type: 'doc',
+            id: 'dotnet/how-to/scaling',
+            label: 'Scale .NET runtime service',
+          },
         ],
       },
       {
@@ -1603,11 +1608,6 @@ module.exports = {
             type: 'doc',
             id: 'dotnet/how-to/access',
             label: 'Access .NET runtime service',
-          },
-          {
-            type: 'doc',
-            id: 'dotnet/how-to/scaling',
-            label: 'Scale .NET runtime service',
           },
           {
             type: 'doc',
@@ -1684,6 +1684,11 @@ module.exports = {
             id: 'java/how-to/customize-runtime',
             label: 'Customize Java runtime',
           },
+          {
+            type: 'doc',
+            id: 'java/how-to/scaling',
+            label: 'Scale Java runtime service',
+          },
         ],
       },
       {
@@ -1741,11 +1746,6 @@ module.exports = {
           },
           {
             type: 'doc',
-            id: 'java/how-to/scaling',
-            label: 'Scale Java runtime service',
-          },
-          {
-            type: 'doc',
             id: 'java/how-to/shared-storage',
             label: 'Connect / disconnect shared storage',
           },
@@ -1770,37 +1770,6 @@ module.exports = {
           sidebar_is_title: true,
           sidebar_icon: 'nginx',
         },
-      },
-      {
-        type: 'category',
-        label: 'Dive-in',
-        collapsible: false,
-        link: {
-          type: 'doc',
-          id: 'nginx/getting-started',
-        },
-        customProps: {
-          sidebar_icon: 'rocket-launch',
-        },
-        className: 'homepage-sidebar-item',
-        items: [
-          {
-            type: 'doc',
-            id: 'nginx/tutorial/quickstart',
-            label: 'Quickstart',
-            customProps: {
-              exclude_from_doc_list: false,
-            },
-          },
-          {
-            type: 'doc',
-            id: 'nginx/tutorial/step-by-step',
-            label: 'Step-by-step tutorial',
-            customProps: {
-              exclude_from_doc_list: false,
-            },
-          },
-        ],
       },
       {
         type: 'category',
@@ -1855,6 +1824,11 @@ module.exports = {
             id: 'nginx/how-to/customize-web-server',
             label: 'Customize web server',
           },
+          {
+            type: 'doc',
+            id: 'nginx/how-to/scaling',
+            label: 'Scale Nginx static service',
+          },
         ],
       },
       {
@@ -1904,11 +1878,6 @@ module.exports = {
             type: 'doc',
             id: 'nginx/how-to/access',
             label: 'Access Nginx runtime service',
-          },
-          {
-            type: 'doc',
-            id: 'nginx/how-to/scaling',
-            label: 'Scale Nginx static service',
           },
           {
             type: 'doc',
@@ -2165,26 +2134,6 @@ module.exports = {
       },
     },
   ],
-//  mongodb: [
-//    {
-//      type: 'ref',
-//      id: 'homepage',
-//      label: 'Back to home',
-//      customProps: {
-//        sidebar_is_back_link: true,
-//        sidebar_icon: 'back-arrow',
-//      },
-//    },
-  // {
-  //   type: 'doc',
-  //   id: 'mongodb/overview',
-  //   label: 'Zerops MongoDB Service',
-  //   customProps: {
-  //     sidebar_is_title: true,
-  //     sidebar_icon: 'mongodb',
-  //   },
-  // },
-//  ],
   elasticsearch: [
     {
       type: 'ref',
@@ -2548,7 +2497,7 @@ module.exports = {
       {
         type: 'doc',
         id: 'deno/overview',
-        label: 'Getting Started',
+        label: 'Deno',
         customProps: {
           sidebar_is_title: true,
           sidebar_icon: 'deno',
@@ -2601,6 +2550,11 @@ module.exports = {
             type: 'doc',
             id: 'deno/how-to/customize-runtime',
             label: 'Customize Deno runtime',
+          },
+          {
+            type: 'doc',
+            id: 'deno/how-to/scaling',
+            label: 'Scale Deno runtime service',
           },
         ],
       },
@@ -2659,11 +2613,6 @@ module.exports = {
           },
           {
             type: 'doc',
-            id: 'deno/how-to/scaling',
-            label: 'Scale Deno runtime service',
-          },
-          {
-            type: 'doc',
             id: 'deno/how-to/shared-storage',
             label: 'Connect / disconnect shared storage',
           },
@@ -2683,7 +2632,7 @@ module.exports = {
       {
         type: 'doc',
         id: 'bun/overview',
-        label: 'Getting Started',
+        label: 'Bun',
         customProps: {
           sidebar_is_title: true,
           sidebar_icon: 'bun',
@@ -2736,6 +2685,11 @@ module.exports = {
             type: 'doc',
             id: 'bun/how-to/customize-runtime',
             label: 'Customize Bun runtime',
+          },
+          {
+            type: 'doc',
+            id: 'bun/how-to/scaling',
+            label: 'Scale Bun runtime service',
           },
         ],
       },
@@ -2794,11 +2748,6 @@ module.exports = {
           },
           {
             type: 'doc',
-            id: 'bun/how-to/scaling',
-            label: 'Scale Bun runtime service',
-          },
-          {
-            type: 'doc',
             id: 'bun/how-to/shared-storage',
             label: 'Connect / disconnect shared storage',
           },
@@ -2818,7 +2767,7 @@ module.exports = {
       {
         type: 'doc',
         id: 'gleam/overview',
-        label: 'Getting Started',
+        label: 'Gleam',
         customProps: {
           sidebar_is_title: true,
           sidebar_icon: 'gleam',
@@ -2871,6 +2820,11 @@ module.exports = {
             type: 'doc',
             id: 'gleam/how-to/customize-runtime',
             label: 'Customize Gleam runtime',
+          },
+          {
+            type: 'doc',
+            id: 'gleam/how-to/scaling',
+            label: 'Scale Gleam runtime service',
           },
         ],
       },
@@ -2929,11 +2883,6 @@ module.exports = {
           },
           {
             type: 'doc',
-            id: 'gleam/how-to/scaling',
-            label: 'Scale Gleam runtime service',
-          },
-          {
-            type: 'doc',
             id: 'gleam/how-to/shared-storage',
             label: 'Connect / disconnect shared storage',
           },
@@ -2953,7 +2902,7 @@ module.exports = {
       {
         type: 'doc',
         id: 'elixir/overview',
-        label: 'Getting Started',
+        label: 'Elixir',
         customProps: {
           sidebar_is_title: true,
           sidebar_icon: 'elixir',
@@ -3006,6 +2955,11 @@ module.exports = {
             type: 'doc',
             id: 'elixir/how-to/customize-runtime',
             label: 'Customize Elixir runtime',
+          },
+          {
+            type: 'doc',
+            id: 'elixir/how-to/scaling',
+            label: 'Scale Elixir runtime service',
           },
         ],
       },
@@ -3061,11 +3015,6 @@ module.exports = {
             type: 'doc',
             id: 'elixir/how-to/access',
             label: 'Access Elixir runtime service',
-          },
-          {
-            type: 'doc',
-            id: 'elixir/how-to/scaling',
-            label: 'Scale Elixir runtime service',
           },
           {
             type: 'doc',

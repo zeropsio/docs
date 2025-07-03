@@ -1,0 +1,146 @@
+import Image from '/src/components/Image';
+import ResourceTable from '/src/components/ResourceTable';
+import Video from '/src/components/Video';
+import { Var, VarLink } from '/src/components/content/var';
+
+Zerops automatically scales your <Var name="serviceDisplay" /> service based on actual usage. When your application needs more power, resources increase. When demand drops, resources scale down to reduce costs.
+
+:::tip Read More
+For complete scaling details across all services, see [Automatic Scaling and High Availability](/features/scaling-ha).
+:::
+
+## How it works
+
+**Vertical scaling** adds more CPU, RAM, or disk space to existing containers. This approach is tried first because it's faster and more efficient.
+
+**Horizontal scaling** creates entirely new containers when vertical scaling reaches its configured limits.
+
+:::info Read More
+Learn more about [vertical](/features/scaling-ha#part-1-resource-management) and [horizontal scaling](/features/scaling-ha#part-2-container-architecture--service-specific-approaches) and [complete technical details](/features/scaling-ha#resource-scaling-behavior) in our scaling guide.
+:::
+
+## Configure scaling
+
+You can configure scaling settings at different stages:
+
+- **During service creation** - Set initial scaling parameters when <VarLink name="servicePath" path="/{{VAR}}/how-to/create">creating</VarLink> your <Var name="serviceDisplay" /> service in the Zerops GUI.
+
+- **During import** - Define scaling configuration in your YAML import file using the `verticalAutoscaling` and horizontal scaling parameters. See [Import & Export YAML Configuration](/references/import) for complete syntax.
+
+- **After service creation** - Navigate to your <Var name="serviceDisplay" /> service and select **Automatic scaling configuration** from the menu to modify settings.
+
+### Basic settings
+
+<p align="center">
+  <Image
+    lightImage="/img/gui/automatic-scaling.webp"
+    darkImage="/img/gui/automatic-scaling.webp"
+    alt="Automatic Scaling"
+    style={{ width: '95%', height: 'auto' }}
+  />
+</p>
+
+**CPU mode**: Choose between shared (cost-effective, variable performance) or dedicated (consistent performance, higher cost). You can change CPU mode once per hour. See [pricing](https://zerops.io/#pricing) for costs or read more about [CPU options](/features/scaling-ha#cpu-options).
+
+**Resource limits**: Configure minimum and maximum resources for your <Var name="serviceDisplay" /> service:
+
+<ResourceTable />
+
+- **Lower the maximum** to control costs and prevent over-scaling
+- **Raise the minimum** when you need guaranteed baseline performance
+- **Set minimum = maximum** to disable automatic scaling for that specific resource
+
+:::info Read More
+More details on [fine-tuning resource allocation](/features/scaling-ha#fine-tuning-resource-allocation).
+:::
+
+**Container limits**: Set how many containers your <Var name="serviceDisplay" /> service can scale to:
+
+<table>
+  <tbody>
+    <tr>
+      <td className="w-fit my-1.5 font-semibold whitespace-nowrap">Minimum containers</td>
+      <td className="w-fit my-1.5">1</td>
+    </tr>
+    <tr>
+      <td className="w-fit my-1.5 font-semibold whitespace-nowrap">Maximum containers</td>
+      <td className="w-fit my-1.5">10</td>
+    </tr>
+  </tbody>
+</table>
+
+**Single container** (maximum = 1): More cost-effective, but your application will experience downtime if the container fails. This mode is suitable for development and testing environments.
+
+**Multiple containers** (maximum > 1): Can provide high availability for production environments, but only if your <Var name="serviceDisplay" /> application is properly designed for it. Each container runs on a different physical server for redundancy. Your application must be stateless and avoid storing data in local files to work properly across multiple containers.
+
+:::info Read More
+More details on [horizontal scaling](/features/scaling-ha#horizontal-scaling-runtime-services-linux-containers-and-docker).
+:::
+
+### Advanced settings
+
+**Start CPU cores**: Determines how many CPU cores are allocated during application startup. Increase this value if your <Var name="serviceDisplay" /> application starts slowly or requires more processing power during initialization.
+
+For dedicated CPU mode, you can also configure:
+- **Min free CPU %**: Triggers scaling when free CPU drops below this percentage of a single core
+- **Dynamic free total %**: Triggers scaling when total free CPU across all cores drops below this percentage
+
+:::info Read More
+More details on [CPU Scaling Thresholds](/features/scaling-ha#cpu-scaling-thresholds-advanced).
+:::
+
+**RAM thresholds**: Help prevent out-of-memory crashes by maintaining buffer space:
+
+- **Absolute (GB)**: Maintains this amount of free RAM at all times
+- **Percentage**: Keeps this percentage of total RAM free
+
+Consider increasing these values if your application experiences memory-related crashes.
+
+:::info Read More
+More details on [RAM Scaling Thresholds](/features/scaling-ha#ram-scaling-thresholds-advanced).
+:::
+
+<Video
+  width="90%"
+  autoplay="true"
+  loop="loop"
+  muted="muted"
+  preload="none"
+  src="/vids/ram-scaling.webm"
+  plays-inline="true"
+/>
+
+## Monitor usage
+
+Navigate to your service and select **Service dashboard & runtime containers** to view:
+- CPU, RAM, and disk usage over time
+- Number of active containers
+- Historical scaling events
+
+:::info Read More
+Learn about [monitoring your infrastructure](/features/scaling-ha#monitoring-your-infrastructure) in detail.
+:::
+
+## Common issues
+
+**Out of memory crashes**
+- Increase the minimum free RAM settings in your scaling configuration
+- Review your code for potential memory leaks
+
+**Higher than expected costs**
+- Consider lowering your maximum resource limits
+
+**Application issues with multiple containers**
+- Remove dependencies on local file storage (use external storage services instead)
+- Implement session management that works across containers (consider using Redis or external session stores)
+- Ensure your application is designed to be stateless
+
+**Slow application startup**
+- Increase the "Start CPU cores" setting in your scaling configuration
+- Consider switching to dedicated CPU mode for more consistent performance
+
+:::info Read More
+More troubleshooting tips: [Scaling Troubleshooting](/features/scaling-ha#troubleshooting).
+:::
+
+*Have questions? Join our [Discord community](https://discord.gg/zerops) for help!*

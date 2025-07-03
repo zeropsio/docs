@@ -51,99 +51,13 @@ Setting secret environment variables is optional. You can always set them later 
 
 Read more about the [different types of environment variables](/nodejs/how-to/env-variables#types-of-env-variables-in-zerops) in Zerops.
 
-### Configure auto scaling
+import { SetVar } from '/src/components/content/var';
+import AutoScalingSection from '/src/components/content/create-scaling.mdx';
 
-Zerops automatically scales Node.js services both vertically and horizontally. Vertical scaling adjusts the hardware resources (CPU, RAM, and disk) of a Node.js container, while horizontal scaling adds or removes entire containers.
+<SetVar name="serviceDisplay" value="Node.js" />
+<SetVar name="servicePath" value="nodejs" />
 
-<p align="center">
-  <Image
-    lightImage="/img/gui/automatic-scaling.webp"
-    darkImage="/img/gui/automatic-scaling.webp"
-    alt="Automatic Scaling"
-    style={{ width: '95%', height: 'auto' }}
-  />
-</p>
-
-#### CPU Mode
-
-**Shared**
-Your application gets a full physical CPU core, but it is shared with up to 10 other applications. The power your application receives depends on the other applications running on the same CPU core. In the best-case scenario, your application gets 10/10 of the CPU core power, and 1/10 in the worst-case scenario.
-
-**Dedicated**
-The CPU core is dedicated exclusively to your application.
-
-:::info
-See the [pricing](https://zerops.io/#pricing) for the difference between CPU modes.
-:::
-
-You can choose the CPU mode when starting a new service or change it later. The CPU mode doesn't change automatically.
-
-#### Vertical auto scaling
-
-Vertical auto scaling has the following default configuration:
-
-<ResourceTable />
-
-Node.js services always start with the minimal resources.
-
-In most cases, the default parameters will work without issues. If you need to limit the cost of the Node.js service, you can lower the maximum resources. Zerops will never scale above the selected maximums.
-
-If you experience insufficient Node.js performance or capacity, you can increase the minimum resources. Zerops will never scale below the selected minimums.
-
-:::tip
-Learn more about how to [fine-tune](/nodejs/how-to/scaling#fine-tune-the-auto-scaling) the auto scaling to fit your application's needs.
-:::
-
-:::info
-You can change the vertical auto scaling parameters at any time.
-:::
-
-#### Horizontal auto scaling
-
-When a container needs more CPU or RAM but is already consuming the maximum resources defined for vertical auto scaling, Zerops will add a new container to your Node.js service. When your Node.js service doesn't need as much power and all containers are vertically scaled down such that their CPU allocation is near the minimum resources, Zerops will gradually remove entire containers.
-
-Horizontal auto scaling has the following default configuration:
-
-<table className="w-full my-1.5">
-  <thead>
-    <tr>
-      <th className="w-fit"><strong>Parameter</strong></th>
-      <th className="w-fit"><strong>Value</strong></th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td className="w-fit"><strong>Minimum containers</strong></td>
-      <td className="w-fit">1</td>
-    </tr>
-    <tr>
-      <td className="w-fit"><strong>Maximum containers</strong></td>
-      <td className="w-fit">6</td>
-    </tr>
-  </tbody>
-</table>
-
-Node.js services always start with the minimum number of containers.
-
-You can increase the minimum or decrease the maximum number of containers. The horizontal scaling parameters can be changed later.
-
-[Learn more](/nodejs/how-to/scaling) about Node.js auto scaling in Zerops.
-
-#### Single container vs. High Availability
-
-When creating a new runtime service, you can choose the minimum and maximum number of containers. If you set the maximum limit to one, the service will run in a **single container** and no horizontal scaling will occur.
-
-:::caution
-If the single container fails, Zerops will automatically start a new container and deploy your application. However, the application will be unavailable for a short period. This mode is recommended for non-critical applications or development environments.
-:::
-
-By increasing the maximum number of containers for your service, you enable horizontal auto scaling. Zerops will then add containers based on your application's load. An application running on two or more containers is in **High Availability** mode, which we highly recommend for production. When the load drops, containers will be gradually removed down to the defined minimum.
-
-Each container of the same service is strictly installed on a **different server**. This prevents temporary outages in case any of the Zerops servers fail. If the connection to a container is broken, Zerops immediately redirects incoming traffic to other containers. A new container will be started automatically, and the broken container will be deleted.
-
-:::caution
-Make sure your application is designed to run in multiple containers.
-:::
+<AutoScalingSection />
 
 ## Create a Node.js service using zCLI
 
@@ -246,7 +160,7 @@ S3_ACCESS_KEY_ID="P8cX1vVVb"
 S3_ACCESS_SECRET="ogFthuiLYki8XoL73opSCQ"
 ```
 
-The hostname of the PostgreSQL service will be set to "db". The [single container](/postgresql/how-to/create#single-container) mode will be chosen and the default [auto scaling configuration](/postgresql/how-to/create#set-auto-scaling-configuration) will be set.
+The hostname of the PostgreSQL service will be set to "db". The [single container](/features/scaling-ha#single-container-mode)(/features/scaling-ha#deployment-modes-databases-and-shared-storage) mode will be chosen and the default auto [scaling configuration](/postgresql/how-to/scale#configure-scaling) will be set.
 
 #### Description of description.yaml parameters
 
