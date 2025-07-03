@@ -1,6 +1,6 @@
 ---
 title: Create a KeyDB service
-description: Learn how you can create a keydb service in Zerops.
+description: Learn how you can create a KeyDB service in Zerops.
 ---
 
 import data from '@site/static/data.json';
@@ -15,109 +15,47 @@ First, set up a project in Zerops GUI. Then go to the project dashboard page and
 
 {/*TODO screenshot (add a new service page)*/}
 
-<table className="w-full my-1.5">
-  <thead>
-    <tr>
-      <th className="w-fit"><strong>Parameter</strong></th>
-      <th className="w-fit"><strong>Description</strong></th>
-      <th className="w-fit"><strong>Limitations</strong></th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td className="w-fit"><strong>hostname</strong></td>
-      <td className="w-fit">A unique service identifier like `keydb`, `db` etc.</td>
-      <td className="w-fit">
-        <br />- duplicate services with the same name in the same project are forbidden
-        <br />- maximum 25 characters
-        <br />- must contain only lowercase ASCII letters (a-z) or numbers (0-9)
-      </td>
-    </tr>
-  </tbody>
-</table>
-
-:::caution
-The hostname is fixed after the service is created. It can't be changed later.
-:::
-
-### Choose KeyDB service mode
-
-Zerops provides KeyDB service in two modes: **Highly available** and **Single container**.
-
-<p align="center">
-  <img
-    src="/img/screenshots/keydb_autoscaling.png"
-    alt="image"
-    width="100%"
-    height="auto"
-  />
-</p>
-
-#### Highly available
-
-Creates a KeyDB cluster with **2 database containers**.
-This mode is suited for production.
-
-Zerops always keeps the 2 database containers on different physical machines. All your data is stored redundantly in 2 identical copies. In case of a failure of a container or the underlying physical machine, Zerops automatically disconnects the failed container from the cluster, creates a new container and syncs all data from the remaining copy. Finally the broken container is automatically deleted.
-
-[Learn more] about specific behaviour and technical limitations of the KeyDB cluster.
-
-#### Single container
-
-A KeyDB database installed in a single container is created. Useful for non-essential data or dev environments.
-
-:::caution
-Your data is stored only in a single container. If the container or the underlying physical machine fails, your data since the last backup are lost. Zerops doesn't provide any automatic repairs of single node KeyDB services.
-:::
-
-:::info
-The KeyDB service mode is fixed after the service is created. It can't be changed later.
-:::
-
 ### Choose KeyDB version
 
 Following KeyDB versions are currently supported:
 
 <UnorderedList data={data.keydb.readable} />
 
-### Set auto scaling configuration
+### Set a hostname
 
-Zerops scales the KeyDB services automatically by raising or lowering the hardware resources of each database container.
+Enter a unique service identifier like `keydb`, `db` etc.
 
-#### CPU Mode
+#### Limitations:
 
-**Shared**
-Your application gets a full physical CPU core, but it is shared with up to 10 other applications. In this mode the power your application gets is depended on other applications running on the same CPU core. At best case scenario your application gets 10/10 of CPU core power and 1/10 at worst case scenario.
+- Duplicate services with the same name within the same project are not allowed
+- Maximum 25 characters
+- Must contain only lowercase ASCII letters (a-z) or numbers (0-9)
 
-**Dedicated**
-The CPU core is dedicated to your application.
-
-:::info
-See the [pricing](https://zerops.io/#pricing) for the difference between CPU modes.
+:::caution
+The hostname is fixed after the service is created and cannot be changed later.
 :::
 
-Choose the CPU mode when starting a new service or change it later. The CPU mode doesn't change automatically.
+### Configure auto scaling
 
-#### Vertical auto scaling
+Zerops automatically scales KeyDB services based on actual database usage. Configure the scaling parameters to match your database needs and control costs.
 
-Vertical auto scaling has following default configuration:
+**CPU Mode**: Choose between shared (cost-effective) or dedicated (consistent performance).
 
-<ResourceTable />
+**Resource Limits**: Set minimum and maximum resources for CPU, RAM, and disk to control costs and ensure performance.
 
-For most cases, the default parameters will work without issues. If you need to limit the cost of the KeyDB service, lower the maximal resources. Zerops will never scale above the selected maximums.
+**Deployment Mode**: Choose the reliability configuration for your KeyDB service:
 
-When you are experiencing problems with insufficient KeyDB performance or capacity, increase the minimal resources. Zerops will never scale below the selected minimums.
+- **Highly Available**: Multiple containers with redundancy across different physical machines. Recommended for production environments.
+- **Single Container**: One container suitable for development and non-critical environments.
 
-:::tip
-Learn more about how to [fine tune](/keydb/how-to/scaling#fine-tune-the-auto-scaling) the auto scaling to fit your application needs.
+:::warning
+Deployment mode cannot be changed after service creation.
 :::
 
-:::info
-You can change the auto scaling parameters later.
-:::
-
-:::tip
-[Learn more](/keydb/how-to/scale) about KeyDB auto scaling.
+:::tip Learn More
+For detailed scaling configuration, deployment mode details, and troubleshooting, see:
+- [How Zerops scales KeyDB](/keydb/how-to/scale) - Database-specific scaling guide
+- [Automatic Scaling and High Availability](/features/scaling-ha) - Complete technical details
 :::
 
 ## Create KeyDB using zCLI
@@ -151,7 +89,7 @@ services:
     mode: NON_HA
 ```
 
-The yaml file describes your future project infrastructure. The project will contain one KeyDB service in the [single container](#single-container) mode with default [auto scaling](/keydb/how-to/scale) configuration. Hostname will be set to `keydb1`.
+The yaml file describes your future project infrastructure. The project will contain one KeyDB service in single container mode with default [auto scaling](/keydb/how-to/scale) configuration. Hostname will be set to `keydb1`.
 
 #### Full example
 
@@ -198,9 +136,9 @@ services:
 
 The yaml file describes your future project infrastructure. The project will contain two KeyDB services.
 
-The hostname of the first service will be set to `keydb1`. The [high availability](#highly-available) mode will be chosen and the custom [auto scaling configuration](/keydb/how-to/scale) will be set.
+The hostname of the first service will be set to `keydb1`. The highly available mode will be chosen and the custom [auto scaling configuration](/keydb/how-to/scale) will be set.
 
-The hostname of the second service will be set to `keydb2`. The [single container](#single-container) mode will be chosen and the default [auto scaling configuration](/keydb/how-to/scale) will be set.
+The hostname of the second service will be set to `keydb2`. The single container mode will be chosen and the default [auto scaling configuration](/keydb/how-to/scale) will be set.
 
 #### Description of description.yaml parameters
 
@@ -233,7 +171,6 @@ The `project:` section is required. Only one project can be defined.
   </tbody>
 </table>
 
-
 At least one service in `services:` section is required. You can create a project with multiple services. The example above contains only KeyDB services but you can create a `description.yaml` with [different types] of services.
 
 <table className="w-full my-1.5">
@@ -248,9 +185,9 @@ At least one service in `services:` section is required. You can create a projec
       <td className="w-fit"><strong>hostname</strong></td>
       <td className="w-fit">
         The unique service identifier.
-         
+
         The hostname of the new database will be set to the `hostname` value.
-         
+
         <strong>Limitations:</strong>
         <ul>
         <li>duplicate services with the same name in the same project are forbidden</li>
@@ -271,24 +208,24 @@ At least one service in `services:` section is required. You can create a projec
       <td className="w-fit"><strong>mode</strong></td>
       <td className="w-fit">
         Defines the operation mode of KeyDB service.
-         
+
         <strong>HA</strong>
         <br />
         Creates a KeyDB cluster with 2 database containers. This mode is suited for production.
-         
+
         Zerops always keeps the 2 database containers on different physical machines. All your data is stored redundantly in 2 identical copies. In case of a failure of a container or the underlying physical machine, Zerops automatically disconnects the failed container from the cluster, creates a new container and syncs all data from the remaining copy. Finally the broken container is automatically deleted.
-         
+
         <strong>NON_HA</strong>
         <br />
         Zerops will create a KeyDB database installed in a single container. Useful for non-essential data or dev environments.
-         
+
         Your data is stored only in a single container. If the container or the underlying physical machine fails, your data since the last backup are lost. Zerops doesn't provide any automatic repairs of single node KeyDB services.
       </td>
     </tr>
     <tr>
       <td className="w-fit"><strong>verticalAutoscaling</strong></td>
       <td className="w-fit">
-        <strong>Optional.</strong> Defines <a href="/keydb/how-to/create#set-auto-scaling-configuration">custom vertical auto scaling parameters</a>.
+        <strong>Optional.</strong> Defines <a href="/keydb/how-to/scaling#configure-scaling">custom vertical auto scaling parameters</a>.
         <br />
         All verticalAutoscaling attributes are optional. Not specified attributes will be set to their default values.
       </td>
@@ -355,6 +292,7 @@ If you have access to more than one client, you must specify the client ID for w
     height="auto"
   />
 </p>
+
 ### Add KeyDB service to an existing project
 
 #### Example
@@ -373,7 +311,7 @@ services:
     mode: NON_HA
 ```
 
-The yaml file describes the list of one or more services that you want to add to your existing project. In the example above, one KeyDB service in the [single container mode](#single-container) with default [auto scaling](/keydb/how-to/scale) configuration will be added to your project. Hostname of the new service will be set to `keydb1`.
+The yaml file describes the list of one or more services that you want to add to your existing project. In the example above, one KeyDB service in single container mode with default [auto scaling](/keydb/how-to/scale) configuration will be added to your project. Hostname of the new service will be set to `keydb1`.
 
 The content of the `services:` section of `import.yaml` is identical to the [project description file](#create-a-project-description-file). The `import.yaml` never contains the `project:` section because the project already exists.
 

@@ -4,17 +4,17 @@ const DEFAULT_RESOURCES = {
   cpu: {
     name: 'CPU cores',
     min: '1',
-    max: '5'
+    max: '8'
   },
   ram: {
     name: 'RAM',
     min: '0.125 GB',
-    max: '32 GB'
+    max: '48 GB'
   },
   disk: {
     name: 'Disk',
     min: '1 GB',
-    max: '100 GB'
+    max: '250 GB'
   }
 };
 

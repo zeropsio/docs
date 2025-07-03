@@ -1,6 +1,6 @@
 ---
 title: Create a MariaDB service
-description: Learn how you can create a mariadb service in Zerops.
+description: Learn how you can create a MariaDB service in Zerops.
 ---
 
 import Image from '/src/components/Image';
@@ -24,114 +24,47 @@ First, set up a project in Zerops GUI. Then go to the project dashboard page and
   type="video/webm"
 />
 
-<table className="w-full my-1.5">
-  <thead>
-    <tr>
-      <th className="w-fit"><strong>Parameter</strong></th>
-      <th className="w-fit"><strong>Description</strong></th>
-      <th className="w-fit"><strong>Limitations</strong></th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td className="w-fit"><strong>hostname</strong></td>
-      <td className="w-fit">A unique service identifier like `mariadb`,`sql`, `db` etc.</td>
-      <td className="w-fit">
-        <br />- duplicate services with the same name in the same project are forbidden
-        <br />- maximum 25 characters
-        <br />- must contain only lowercase ASCII letters (a-z) or numbers (0-9)
-      </td>
-    </tr>
-  </tbody>
-</table>
-
-
-:::caution
-The hostname is fixed after the service is created. It can't be changed later.
-:::
-
-### Choose MariaDB service mode
-
-Zerops provides MariaDB service in two modes: **Highly available** and **Single container**.
-
-<p align="center">
-  <Image
-    lightImage="/img/screenshots/scaling7.png"
-    darkImage="/img/screenshots/scaling7.png"
-    alt="Scaling"
-    style={{ width: '95%', height: 'auto' }}
-  />
-</p>
-
-#### Highly available
-
-Creates a MariaDB cluster with **3 database containers** and **2 free database proxies**.
-This mode is suited for production.
-
-Zerops always keeps the 3 database containers on different physical machines. All your data is stored redundantly in 3 identical copies. In case of a failure of a container or the underlying physical machine, Zerops automatically disconnects the failed container from the cluster, creates a new container and syncs all data from the remaining 2 copies. Finally the broken container is automatically deleted.
-
-[Learn more](/mariadb/tech-details/cluster) about specific behaviour and technical limitations of the MariaDB cluster.
-
-#### Single container
-
-A MariaDB database installed in a single container is created. Useful for non-essential data or dev environments.
-
-:::caution
-Your data is stored only in a single container. If the container or the underlying physical machine fails, your data since the last backup are lost. Zerops doesn't provide any automatic repairs of single node MariaDB services.
-:::
-
-:::info
-The MariaDB service mode is fixed after the service is created. It can't be changed later.
-:::
-
 ### Choose MariaDB version
 
 Following MariaDB versions are currently supported:
 
 <UnorderedList data={data.mariadb.readable} />
 
-### Set auto scaling configuration
+### Set a hostname
 
-Zerops scales the MariaDB services automatically by raising or lowering the hardware resources of each database container.
+Enter a unique service identifier like `mariadb`, `sql`, `db` etc.
 
-#### CPU Mode
+#### Limitations:
 
-**Shared**
-Your application gets a full physical CPU core, but it is shared with up to 10 other applications. In this mode the power your application gets is depended on other applications running on the same CPU core. At best case scenario your application gets 10/10 of CPU core power and 1/10 at worst case scenario.
+- Duplicate services with the same name within the same project are not allowed
+- Maximum 25 characters
+- Must contain only lowercase ASCII letters (a-z) or numbers (0-9)
 
-**Dedicated**
-The CPU core is dedicated to your application.
-
-:::info
-See the [pricing](https://zerops.io/#pricing) for the difference between CPU modes.
+:::caution
+The hostname is fixed after the service is created and cannot be changed later.
 :::
 
-Choose the CPU mode when starting a new service or change it later. The CPU mode doesn't change automatically.
+### Configure auto scaling
 
-#### Vertical auto scaling
+Zerops automatically scales MariaDB services based on actual database usage. Configure the scaling parameters to match your database needs and control costs.
 
-Vertical auto scaling has following default configuration:
+**CPU Mode**: Choose between shared (cost-effective) or dedicated (consistent performance).
 
-<ResourceTable resources={{
-  ram: {
-    min: '0.25 GB',
-  }
-}} />
+**Resource Limits**: Set minimum and maximum resources for CPU, RAM, and disk to control costs and ensure performance.
 
-For most cases, the default parameters will work without issues. If you need to limit the cost of the MariaDB service, lower the maximal resources. Zerops will never scale above the selected maximums.
+**Deployment Mode**: Choose the reliability configuration for your MariaDB service:
 
-When you are experiencing problems with insufficient MariaDB performance or capacity, increase the minimal resources. Zerops will never scale below the selected minimums.
+- **Highly Available**: Multiple containers with redundancy across different physical machines. Recommended for production environments.
+- **Single Container**: One container suitable for development and non-critical environments.
 
-:::tip
-Learn more about how to [fine tune](/mariadb/how-to/scaling#fine-tune-the-auto-scaling) the auto scaling to fit your application needs.
+:::warning
+Deployment mode cannot be changed after service creation.
 :::
 
-:::info
-You can change the auto scaling parameters later.
-:::
-
-:::tip
-[Learn more](/mariadb/how-to/scale) about MariaDB auto scaling.
+:::tip Learn More
+For detailed scaling configuration, deployment mode details, and troubleshooting, see:
+- [How Zerops scales MariaDB](/mariadb/how-to/scale) - Database-specific scaling guide
+- [Automatic Scaling and High Availability](/features/scaling-ha) - Complete technical details
 :::
 
 ## Create MariaDB using zCLI
@@ -169,7 +102,7 @@ services:
     mode: NON_HA
 ```
 
-The yaml file describes your future project infrastructure. The project will contain one MariaDB 10.4 service in the [single container](#single-container) mode with default [auto scaling](/mariadb/how-to/scale) configuration. Hostname will be set to `mariadb1`.
+The yaml file describes your future project infrastructure. The project will contain one MariaDB 10.4 service in single container mode with default [auto scaling](/mariadb/how-to/scale) configuration. Hostname will be set to `mariadb1`.
 
 #### Full example
 
@@ -219,9 +152,9 @@ services:
 
 The yaml file describes your future project infrastructure. The project will contain two MariaDB 10.4 services.
 
-The hostname of the first service will be set to `mariadb1`. The [high availability](#highly-available) mode will be chosen and the custom [auto scaling configuration](/mariadb/how-to/scale) will be set. The `lower_case_table_names` system variable will be set to "1".
+The hostname of the first service will be set to `mariadb1`. The highly available mode will be chosen and the custom [auto scaling configuration](/mariadb/how-to/scale) will be set. The `lower_case_table_names` system variable will be set to "1".
 
-The hostname of the second service will be set to `mariadb2`. The [single container](#single-container) mode will be chosen and the default [auto scaling configuration](/mariadb/how-to/scale) will be set.
+The hostname of the second service will be set to `mariadb2`. The single container mode will be chosen and the default [auto scaling configuration](/mariadb/how-to/scale) will be set.
 
 #### Description of description.yaml parameters
 
@@ -253,7 +186,6 @@ The `project:` section is required. Only one project can be defined.
     </tr>
   </tbody>
 </table>
-
 
 At least one service in `services:` section is required. You can create a project with multiple services. The example above contains only MariaDB services but you can create a `description.yaml` with [different types] of services.
 
@@ -316,7 +248,7 @@ At least one service in `services:` section is required. You can create a projec
     </tr>
     <tr>
       <td className="w-fit"><strong>verticalAutoscaling</strong></td>
-      <td className="w-fit">Defines <a href="/mariadb/how-to/create#set-auto-scaling-configuration">custom vertical auto scaling parameters</a></td>
+      <td className="w-fit">Defines <a href="/mariadb/how-to/scaling#configure-scaling">custom vertical auto scaling parameters</a></td>
       <td className="w-fit">
         All verticalAutoscaling attributes are optional. Not specified
         attributes will be set to their default values.
@@ -407,7 +339,7 @@ services:
       lower_case_table_names: "1"
 ```
 
-The yaml file describes the list of one or more services that you want to add to your existing project. In the example above, one MariaDB 10.4 service in the [single container mode](#single-container) with default [auto scaling](/mariadb/how-to/scale) configuration will be added to your project. Hostname of the new service will be set to `mariadb1`. The `lower_case_table_names` system variable will be set to "1".
+The yaml file describes the list of one or more services that you want to add to your existing project. In the example above, one MariaDB 10.4 service in single container mode with default [auto scaling](/mariadb/how-to/scale) configuration will be added to your project. Hostname of the new service will be set to `mariadb1`. The `lower_case_table_names` system variable will be set to "1".
 
 The content of the `services:` section of `import.yaml` is identical to the [project description file](#create-a-project-description-file). The `import.yaml` never contains the `project:` section because the project already exists.
 

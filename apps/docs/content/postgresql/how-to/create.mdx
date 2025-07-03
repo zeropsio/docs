@@ -18,115 +18,47 @@ First, set up a project in Zerops GUI. Then go to the project dashboard page and
   type="video/webm"
 />
 
-<table className="w-full my-1.5">
-  <thead>
-    <tr>
-      <th className="w-fit"><strong>Parameter</strong></th>
-      <th className="w-fit"><strong>Description</strong></th>
-      <th className="w-fit"><strong>Limitations</strong></th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td className="w-fit"><strong>hostname</strong></td>
-      <td className="w-fit">A unique service identifier like `postgresql`,`sql`, `db` etc.</td>
-      <td className="w-fit">
-        <ul>
-        <li>duplicate services with the same name in the same project are forbidden</li>
-        <li>maximum 25 characters</li>
-        <li>must contain only lowercase ASCII letters (a-z) or numbers (0-9)</li>
-        </ul>
-      </td>
-    </tr>
-  </tbody>
-</table>
-
-:::caution
-The hostname is fixed after the service is created. It can't be changed later.
-:::
-
-### Choose PostgreSQL service mode
-
-Zerops provides PostgreSQL service in two modes: **Highly available** and **Single container**.
-
-<p align="center">
-  <Image
-    lightImage="/img/screenshots/scaling7.png"
-    darkImage="/img/screenshots/scaling7.png"
-    alt="Scaling"
-    style={{ width: '95%', height: 'auto' }}
-  />
-</p>
-
-#### Highly available
-
-Creates a PostgreSQL cluster with **3 database containers** and **2 free database proxies**.
-This mode is suited for production.
-
-Zerops always keeps the 3 database containers on different physical machines. All your data is stored redundantly in 3 identical copies. In case of a container or the underlying physical machine failure, Zerops automatically disconnects the failed container from the cluster, creates a new container, and syncs all data from the remaining 2 copies. Finally, the broken container is automatically deleted.
-
-[Learn more](/postgresql/tech-details/cluster) about specific behaviour and technical limitations of the PostgreSQL cluster.
-
-#### Single container
-
-A PostgreSQL database installed in a single container is created. Useful for non-essential data or dev environments.
-
-:::caution
-Your data is stored only in a single container. If the container or the underlying physical machine fails, your data since the last backup is lost. Zerops doesn't provide any automatic repairs of single-node PostgreSQL services.
-:::
-
-:::info
-The PostgreSQL service mode is fixed after the service is created. It can't be changed later.
-:::
-
 ### Choose PostgreSQL version
 
 Following PostgreSQL versions are currently supported:
 
 <UnorderedList data={data.postgresql.readable} />
 
-### Set auto-scaling configuration
+### Set a hostname
 
-Zerops scales the PostgreSQL services automatically by raising or lowering the hardware resources of each database container.
+Enter a unique service identifier like `postgresql`, `sql`, `db` etc.
 
-#### CPU Mode
+#### Limitations:
 
-**Shared**
-Your application gets a full physical CPU core, but it is shared with up to 10 other applications. In this mode, the power your application gets is dependent on other applications running on the same CPU core. In best case scenario your application gets 10/10 of CPU core power and 1/10 in the worst-case scenario.
+- Duplicate services with the same name within the same project are not allowed
+- Maximum 25 characters
+- Must contain only lowercase ASCII letters (a-z) or numbers (0-9)
 
-**Dedicated**
-The CPU core is dedicated to your application.
-
-:::info
-See the [pricing](https://zerops.io/#pricing) for the difference between CPU modes.
+:::caution
+The hostname is fixed after the service is created and cannot be changed later.
 :::
 
-Choose the CPU mode when starting a new service or change it later. The CPU mode doesn't change automatically.
+### Configure auto scaling
 
-#### Vertical auto-scaling
+Zerops automatically scales PostgreSQL services based on actual database usage. Configure the scaling parameters to match your database needs and control costs.
 
-Vertical auto-scaling has the following default configuration:
+**CPU Mode**: Choose between shared (cost-effective) or dedicated (consistent performance).
 
-<ResourceTable resources={{
-  ram: {
-    min: '0.25 GB',
-  }
-}} />
+**Resource Limits**: Set minimum and maximum resources for CPU, RAM, and disk to control costs and ensure performance.
 
-For most cases, the default parameters will work without issues. If you need to limit the cost of the PostgreSQL service, lower the maximal resources. Zerops will never scale above the selected maximums.
+**Deployment Mode**: Choose the reliability configuration for your PostgreSQL service:
 
-When you are experiencing problems with insufficient PostgreSQL performance or capacity, increase the minimal resources. Zerops will never scale below the selected minimums.
+- **Highly Available**: Multiple containers with redundancy across different physical machines. Recommended for production environments.
+- **Single Container**: One container suitable for development and non-critical environments.
 
-:::tip
-Learn more about how to [fine tune](/postgresql/how-to/scaling#fine-tune-the-auto-scaling) the auto-scaling to fit your application needs.
+:::warning
+Deployment mode cannot be changed after service creation.
 :::
 
-:::info
-You can change the auto-scaling parameters later.
-:::
-
-:::tip
-[Learn more](/postgresql/how-to/scale) about PostgreSQL auto-scaling.
+:::tip Learn More
+For detailed scaling configuration, deployment mode details, and troubleshooting, see:
+- [How Zerops scales PostgreSQL](/postgresql/how-to/scale) - Database-specific scaling guide
+- [Automatic Scaling and High Availability](/features/scaling-ha) - Complete technical details
 :::
 
 ## Create PostgreSQL using zCLI
@@ -160,7 +92,7 @@ services:
     mode: NON_HA
 ```
 
-The YAML file describes your future project infrastructure. The project will contain one PostgreSQL service in the [single container](#single-container) mode with default [auto scaling](/postgresql/how-to/scale) configuration. The hostname will be set to `postgresql1`.
+The YAML file describes your future project infrastructure. The project will contain one PostgreSQL service in the single container mode with default [auto scaling](/postgresql/how-to/scale) configuration. The hostname will be set to `postgresql1`.
 
 #### Full example
 
@@ -207,9 +139,9 @@ services:
 
 The YAML file describes your future project infrastructure. The project will contain two PostgreSQL services.
 
-The hostname of the first service will be set to `postgresql1`. The [high availability](#highly-available) mode will be chosen and the custom [auto scaling configuration](/postgresql/how-to/scale) will be set.
+The hostname of the first service will be set to `postgresql1`. The [high availability](/features/scaling-ha#highly-available-ha-mode) mode will be chosen and the custom [auto scaling configuration](/postgresql/how-to/scale) will be set.
 
-The hostname of the second service will be set to `postgresql2`. The [single container](#single-container) mode will be chosen and the default [auto scaling configuration](/postgresql/how-to/scale) will be set.
+The hostname of the second service will be set to `postgresql2`. The [single container](/features/scaling-ha#single-container-mode) mode will be chosen and the default [auto scaling configuration](/postgresql/how-to/scale) will be set.
 
 #### Description of description.yaml parameters
 
@@ -320,7 +252,7 @@ At least one service in the `services:` section is required. You can create a pr
         <b>verticalAutoscaling</b>
       </td>
       <td className="w-fit">
-        <b>Optional.</b> Defines <a href="/postgresql/how-to/create#set-auto-scaling-configuration">custom vertical auto-scaling parameters</a>.<br />
+        <b>Optional.</b> Defines <a href="/postgresql/how-to/scale#configure-scaling">custom vertical auto-scaling parameters</a>.<br />
         All verticalAutoscaling attributes are optional. Not specified
         attributes will be set to their default values.
       </td>
@@ -395,6 +327,7 @@ If you have access to more than one client, you must specify the client ID for w
     height="auto"
   />
 </p>
+
 ### Add PostgreSQL service to an existing project
 
 #### Example
@@ -413,7 +346,7 @@ services:
     mode: NON_HA
 ```
 
-The YAML file describes the list of one or more services that you want to add to your existing project. In the example above, one PostgreSQL service in the [single container mode](#single-container) with default [auto scaling](/postgresql/how-to/scale) configuration will be added to your project. The hostname of the new service will be set to `postgresql1`.
+The YAML file describes the list of one or more services that you want to add to your existing project. In the example above, one PostgreSQL service in the [single container](/features/scaling-ha#single-container-mode) with default [auto scaling](/postgresql/how-to/scale) configuration will be added to your project. The hostname of the new service will be set to `postgresql1`.
 
 The content of the `services:` section of `import.yaml` is identical to the [project description file](#create-a-project-description-file). The `import.yaml` never contains the `project:` section because the project already exists.
 
