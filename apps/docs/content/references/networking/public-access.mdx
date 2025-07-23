@@ -1,0 +1,264 @@
+---
+title: Public Access Configuration
+description: Detailed guide for configuring public internet access to your Zerops services through subdomains, custom domains, and direct port access.
+---
+
+import Image from '/src/components/Image';
+import GroupCards from '/src/components/GroupCards'
+import Video from '/src/components/Video';
+
+export const languages = [
+    { name: "Bun", link: "/java/how-to/build-pipeline#ports" },
+    { name: "Deno", link: "/go/how-to/build-pipeline#ports" },
+    { name: ".NET", link: "/dotnet/how-to/build-pipeline#ports" },
+    { name: "Elixir", link: "/php/how-to/build-pipeline#ports" },
+    { name: "Gleam", link: "/dotnet/how-to/build-pipeline#ports" },
+    { name: "Go", link: "/go/how-to/build-pipeline#ports" },
+    { name: "Java", link: "/java/how-to/build-pipeline#ports" },
+    { name: "Node.js", link: "/nodejs/how-to/build-pipeline#ports" },
+    { name: "PHP", link: "/php/how-to/build-pipeline#ports" },
+    { name: "Python", link: "/python/how-to/build-pipeline#ports" },
+    { name: "Rust", link: "/rust/how-to/build-pipeline#ports" },
+]
+
+This guide provides detailed configuration instructions for making your Zerops services publicly accessible from the internet. For an overview of all access methods, see the [Access & Networking guide](/features/access).
+
+## Public Access Methods
+
+Choose the access method that best fits your needs:
+
+- **[Zerops Subdomain Access](#zerops-subdomain-access)** - Quick setup with `.zerops.app` domains, ideal for development and testing
+- **[Custom Domain Access](#custom-domain-access)** - Production-ready access through your own domains with full SSL support
+- **[Direct Port Access](#direct-port-access)** - Direct port routing for non-HTTP protocols and specialized applications
+
+## Zerops Subdomain Access
+
+Zerops subdomains provide quick public access through `.zerops.app` addresses, ideal for development and testing environments.
+
+### Configuration
+
+1. Navigate to your service detail page in Zerops GUI
+2. Select **Subdomain & domain & IP access** from the left menu (for runtime services)
+3. Toggle the **Zerops subdomain access** switch
+
+<p align="center">
+  <Image
+    lightImage="/img/gui/public-access.webp"
+    darkImage="/img/gui/public-access.webp"
+    alt="Public Access"
+    style={{ width: '90%', height: 'auto' }}
+  />
+</p>
+
+Once enabled, Zerops assigns a unique subdomain for your application. If you've defined multiple [internal ports](/zerops-yaml/specification#ports-) with HTTP support in your `zerops.yaml`, each port receives its own unique `.zerops.app` subdomain.
+
+<GroupCards heading="Configure internal ports for your Runtime" items={languages} />
+
+### Technical Implementation
+
+When using Zerops subdomains:
+- Access your application using the `https://` protocol (Zerops automatically manages SSL certificates)
+- Traffic flows through a central HTTP balancer that:
+  - Terminates SSL connections
+  - Forwards requests to your application via HTTP
+  - Handles all security certificates
+
+### Limitations
+
+:::warning Production Considerations
+- The central HTTPS balancer is shared across all Zerops projects, which creates a scalability bottleneck
+- Maximum upload size is limited to 50MB
+- Not recommended for production traffic due to scalability bottleneck
+- Better suited for development and testing environments
+:::
+
+## Custom Domain Access
+
+Custom domain access provides production-ready public access through your own domain names, offering better performance and full control over domain settings.
+
+<p align="center">
+  <Image
+    lightImage="/img/gui/public-access-domain.webp"
+    darkImage="/img/gui/public-access-domain.webp"
+    alt="Public Access"
+    style={{ width: '65%', height: 'auto' }}
+  />
+</p>
+
+### IP Address Configuration
+
+Before setting up domain access, you need to configure public IP addresses. Zerops offers the following options:
+
+#### IPv4 Configuration
+
+**Dedicated IPv4 Address ($3/30 days)**
+- Dedicated to your project and shared across all project services
+- One IPv4 address per project limit
+- Protects against blacklisting risks associated with shared IPs
+- Subscription automatically renews every 30 days *(cannot be purchased with promo credit)*
+- Fee is non-refundable but address can be reused in another project until subscription ends
+- **Recommended for production workloads**
+
+**Shared IPv4 Address (Free)**
+- Available at no cost
+- Shared across all Zerops users and their projects
+- Limitations:
+  - For HTTP/HTTPS traffic only
+  - Restricted number of open connections
+  - Shorter connection timeouts
+- **Not recommended for production use**
+
+#### IPv6 Configuration
+
+**IPv6 Address (Free)**
+- Dedicated to your project and shared across all project services
+- One IPv6 address per project limit
+- Automatically activated with first domain setup
+- Available for all projects at no additional cost
+
+:::tip Dual Stack Recommendation
+Since IPv6 support is not universal, using both IPv4 and IPv6 is recommended for maximum accessibility.
+:::
+
+### HTTP Routing Setup
+
+To configure domain access:
+
+1. Go to your service detail page in Zerops GUI and select **Subdomain & domain & IP access** (or access from project's **Project & Services Access Overview** section → **HTTP Balancer (L7) Configuration & Public Access Through Domains**)
+   - For advanced L7 balancer settings (connection handling, buffers, performance optimization), click **Advanced balancer configuration**
+2. Click **Setup first domain access**
+3. Configure domain settings:
+   - Enter domain names (e.g., `mydomain.com`, `app.mydomain.com`)
+   - Add multiple domains if needed (useful for multi-language sites)
+   - Choose SSL certificate management
+4. Define routing rules:
+   - **Source:** The public path (the part of URL after your domain)
+   - **Destination:** Choose which application and internal port receives the traffic
+   - Add multiple routing configurations as needed
+
+:::tip Alternative Access
+Domain configuration can also be accessed from individual service pages under **Subdomain & domain & IP access**.
+:::
+
+All settings can be modified later as your needs change.
+
+<Video
+  width="80%"
+  autoplay="true"
+  loop="loop"
+  muted="muted"
+  preload="none"
+  src="/vids/routes.webm"
+  plays-inline="true"
+/>
+
+### DNS Configuration
+
+After setting up domain access in Zerops, configure your DNS records with your domain registrar:
+
+:::tip DNS Configuration Guides
+- **Cloudflare users:** Follow the [Cloudflare DNS Configuration Guide](/references/networking/cloudflare) for step-by-step Cloudflare-specific instructions
+- **Other providers:** Use the [DNS and Proxy Configuration Guide](/references/networking/dns) for universal DNS setup instructions
+:::
+
+### HTTPS & SSL Configuration
+
+When using Let's Encrypt certificates (recommended):
+
+**Certificate Management:**
+- Zerops handles all certificate installation and renewal automatically
+- Certificates are provided free of charge
+- No manual certificate management required
+
+**Traffic Flow:**
+1. Traffic arrives at your public IPv4/IPv6 addresses
+2. Requests route through your project's dedicated HTTPS balancer
+3. SSL termination occurs at the balancer level
+4. Internal traffic uses HTTP protocol for optimal performance
+
+**Balancer Architecture:**
+- Deployed in two containers for high availability
+- Scales vertically based on traffic demands
+- Cannot be directly modified by users
+- Included free of charge with custom domain setup
+
+**Load Balancing:**
+- **Round-robin load balancing** across multiple service instances
+- **Health checks** to route traffic only to healthy instances
+- **Connection pooling** for improved performance
+
+**Performance Considerations:**
+- Use dedicated IPv4 addresses instead of shared ones for high-traffic applications
+- Consider the [L7 Balancer advanced configuration options](/references/networking/l7-balancer-config) for production optimization
+
+## Direct Port Access
+
+Direct port access enables public access to specific ports on your services, supporting any protocol and specialized use cases beyond HTTP.
+
+:::important Service Compatibility
+Currently, direct public port access is only available for runtime services and PostgreSQL databases.
+:::
+
+<p align="center">
+  <Image
+    src="/img/gui/ipv6-public-port.webp"
+    alt="Public Access Port"
+    style={{ width: '90%', height: 'auto' }}
+  />
+</p>
+
+### Port Configuration
+
+1. Navigate to your service detail page in Zerops GUI:
+   - For runtime services: Select **Subdomain & domain & IP access**
+   - For PostgreSQL services: Select **Direct access through IP address**
+   - Or access from project's **Project & Services Access Overview** section → **Direct IP Accesses to Services**
+2. Configure port settings:
+   - Either **Setup first access through IPv6** or activate **Unique IPv4 add-on** (if needed)
+   - Choose any port from 10-65435 (ports 80 and 443 are reserved)
+   - Select destination service and internal port
+   - Each public port can be mapped to any internal service port
+   - Multiple public ports can point to the same internal port if needed
+   - Port configurations can be set independently for IPv4 and IPv6
+
+:::tip Service-Level Access
+For runtime services, you can also access port configuration from the service detail page under **Subdomain & domain & IP access**.
+:::
+
+### Firewall Configuration
+
+Secure your public ports with optional firewall rules:
+
+1. **Enable firewall** for specific ports
+2. **Choose policy type:**
+   - **Blacklist:** Block specific IPs/ranges (allow all others)
+   - **Whitelist:** Allow only specific IPs/ranges (block all others)
+3. **Configure IP rules:**
+   - **Single IP format:** Affects only the specific IP address
+   - **IP range format:** Affects all IPs in the specified CIDR range
+
+<p align="center">
+ <Image
+   src="/img/gui/enable-firewall.webp"
+   alt="Enable Firewall"
+   style={{ width: '90%', height: 'auto' }}
+ />
+</p>
+
+For information about Zerops' platform-wide firewall and port restrictions, see the [Firewall Reference Guide](/references/networking/firewall).
+
+### Protocol Support
+
+Direct port access supports:
+- **TCP protocols:** HTTP, HTTPS, database connections, custom TCP services
+- **UDP protocols:** DNS, gaming protocols, custom UDP services
+- **Any port-based protocol** your application requires
+
+## Next Steps
+
+- **DNS Configuration:** [DNS and Proxy Configuration Guide](/references/networking/dns) or [Cloudflare Guide](/references/networking/cloudflare)
+- **Advanced Routing:** [L7 Balancer Configuration & Advanced Routing Guide](/references/networking/l7-balancer-config)
+- **Wildcard Domains:** [Wildcard Domain Configuration](/references/networking/dns#wildcard-domain-configuration)
+- **Internal Access:** [Internal Access Configuration Guide](/references/networking/internal-access)
+
+*Need help? Join our [Discord community](https://discord.gg/zeropsio).*

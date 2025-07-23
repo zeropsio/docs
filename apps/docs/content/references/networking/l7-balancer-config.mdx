@@ -1,0 +1,481 @@
+---
+title: L7 Balancer Configuration & Advanced Routing
+description: Complete reference guide to Zerops L7 HTTP balancer settings, advanced routing features, and networking infrastructure.
+---
+
+import Image from '/src/components/Image';
+
+This guide provides comprehensive documentation for Zerops L7 HTTP balancer configuration and advanced routing features. For basic setup instructions, see the [Domain & Access Configuration](/features/access) guide.
+
+The L7 HTTP Balancer handles all HTTP/HTTPS traffic and provides advanced application-layer capabilities:
+
+**Functions:**
+- SSL/TLS termination with automatic certificate management
+- Domain routing and virtual host management
+- Load balancing across multiple service instances
+- Advanced routing features (redirects, access policies, rate limiting)
+- Performance optimization through caching and compression
+
+**Architecture:**
+- Deployed in two containers for high availability
+- Scales automatically based on traffic patterns
+- Integrated with Let's Encrypt for SSL certificates
+- Configurable through advanced balancer settings
+
+## L7 HTTP Balancer Configuration
+
+Access the advanced balancer configuration through your project's HTTP Balancer section → **Advanced balancer configuration**.
+
+### Connection Handling
+
+Configure how the balancer manages client connections:
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit whitespace-nowrap">Setting</th>
+      <th className="w-fit whitespace-nowrap">Default</th>
+      <th className="w-fit whitespace-nowrap">Range</th>
+      <th className="w-fit whitespace-nowrap">Parameter</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">Maximum simultaneous connections per worker</td>
+      <td className="w-fit whitespace-nowrap">4000</td>
+      <td className="w-fit whitespace-nowrap">1024-65535</td>
+      <td className="w-fit whitespace-nowrap">worker_connections</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">Accept multiple connections at once</td>
+      <td className="w-fit whitespace-nowrap">on</td>
+      <td className="w-fit whitespace-nowrap">on/off</td>
+      <td className="w-fit whitespace-nowrap">multi_accept</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">How long to keep idle connections open</td>
+      <td className="w-fit whitespace-nowrap">30s</td>
+      <td className="w-fit whitespace-nowrap">1s-300s</td>
+      <td className="w-fit whitespace-nowrap">keepalive_timeout</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">Maximum number of requests per connection</td>
+      <td className="w-fit whitespace-nowrap">100000</td>
+      <td className="w-fit whitespace-nowrap">1-1000000</td>
+      <td className="w-fit whitespace-nowrap">keepalive_requests</td>
+    </tr>
+  </tbody>
+</table>
+
+:::tip Recommendations
+- **High-traffic websites**: Increase `worker_connections` to 8000 or higher
+- **API services**: Adjust `keepalive_timeout` to 60 for longer connections
+- **WebSocket applications**: Increase `keepalive_timeout` for persistent connections
+:::
+
+### Client Request Settings
+
+Control how the balancer handles incoming requests:
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit whitespace-nowrap">Setting</th>
+      <th className="w-fit whitespace-nowrap">Default</th>
+      <th className="w-fit whitespace-nowrap">Range</th>
+      <th className="w-fit whitespace-nowrap">Parameter</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">Timeout for receiving client request header</td>
+      <td className="w-fit whitespace-nowrap">10s</td>
+      <td className="w-fit whitespace-nowrap">1s-300s</td>
+      <td className="w-fit whitespace-nowrap">client_header_timeout</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">Timeout for receiving client request body</td>
+      <td className="w-fit whitespace-nowrap">10s</td>
+      <td className="w-fit whitespace-nowrap">1s-300s</td>
+      <td className="w-fit whitespace-nowrap">client_body_timeout</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">Maximum allowed size of client request body</td>
+      <td className="w-fit whitespace-nowrap">512m</td>
+      <td className="w-fit whitespace-nowrap">1k-2048m</td>
+      <td className="w-fit whitespace-nowrap">client_max_body_size</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">Reset connections that have timed out</td>
+      <td className="w-fit whitespace-nowrap">on</td>
+      <td className="w-fit whitespace-nowrap">on/off</td>
+      <td className="w-fit whitespace-nowrap">reset_timedout_connection</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">Timeout for transmitting response to client</td>
+      <td className="w-fit whitespace-nowrap">2s</td>
+      <td className="w-fit whitespace-nowrap">1s-300s</td>
+      <td className="w-fit whitespace-nowrap">send_timeout</td>
+    </tr>
+  </tbody>
+</table>
+
+:::tip Recommendations
+- **File upload services**: Increase `client_body_timeout` and `client_max_body_size` to accommodate large files
+- **Slow clients**: Increase header and body timeouts
+- **API endpoints**: Set `client_max_body_size` according to your API payload requirements
+:::
+
+### Buffer Settings
+
+Optimize memory usage for request and response handling:
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit whitespace-nowrap">Setting</th>
+      <th className="w-fit whitespace-nowrap">Default</th>
+      <th className="w-fit whitespace-nowrap">Range</th>
+      <th className="w-fit whitespace-nowrap">Parameter</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">Size of buffer for client request header</td>
+      <td className="w-fit whitespace-nowrap">1k</td>
+      <td className="w-fit whitespace-nowrap">1k-64k</td>
+      <td className="w-fit whitespace-nowrap">client_header_buffer_size</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">Number of buffers for large client headers</td>
+      <td className="w-fit whitespace-nowrap">4</td>
+      <td className="w-fit whitespace-nowrap">1-16</td>
+      <td className="w-fit whitespace-nowrap">large_client_header_buffers_number</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">Size of buffers for large client headers</td>
+      <td className="w-fit whitespace-nowrap">8k</td>
+      <td className="w-fit whitespace-nowrap">1k-64k</td>
+      <td className="w-fit whitespace-nowrap">large_client_header_buffers_size</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">Size of buffer for client request body</td>
+      <td className="w-fit whitespace-nowrap">16k</td>
+      <td className="w-fit whitespace-nowrap">1k-1m</td>
+      <td className="w-fit whitespace-nowrap">client_body_buffer_size</td>
+    </tr>
+  </tbody>
+</table>
+
+:::tip Recommendations
+- **Large headers**: Increase header buffer sizes for applications with extensive headers
+- **File uploads**: Optimize `client_body_buffer_size` based on typical upload sizes
+- **Memory optimization**: Tune based on available memory and connection patterns
+:::
+
+### Proxy Settings
+
+Configure how the balancer communicates with backend services:
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit whitespace-nowrap">Setting</th>
+      <th className="w-fit whitespace-nowrap">Parameter</th>
+      <th className="w-fit whitespace-nowrap">Default</th>
+      <th className="w-fit whitespace-nowrap">Range</th>
+      <th className="w-full">Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">Enable buffering of client request body</td>
+      <td className="w-fit whitespace-nowrap">proxy_request_buffering</td>
+      <td className="w-fit whitespace-nowrap">off</td>
+      <td className="w-fit whitespace-nowrap">on/off</td>
+      <td className="w-full">Buffer client request bodies before forwarding</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">Enable buffering of responses from proxied server</td>
+      <td className="w-fit whitespace-nowrap">proxy_buffering</td>
+      <td className="w-fit whitespace-nowrap">on</td>
+      <td className="w-fit whitespace-nowrap">on/off</td>
+      <td className="w-full">Buffer responses from backend services</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">Size of the buffer used for reading the first part of the response</td>
+      <td className="w-fit whitespace-nowrap">proxy_buffer_size</td>
+      <td className="w-fit whitespace-nowrap">32k</td>
+      <td className="w-fit whitespace-nowrap">1k-256k</td>
+      <td className="w-full">Buffer size for first part of backend response</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">Number of buffers used for reading a response from the proxied server</td>
+      <td className="w-fit whitespace-nowrap">proxy_buffers_number</td>
+      <td className="w-fit whitespace-nowrap">4</td>
+      <td className="w-fit whitespace-nowrap">1-16</td>
+      <td className="w-full">Number of buffers for reading backend responses</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">Size of buffers for reading a response from the proxied server</td>
+      <td className="w-fit whitespace-nowrap">proxy_buffers_size</td>
+      <td className="w-fit whitespace-nowrap">256k</td>
+      <td className="w-fit whitespace-nowrap">1k-1m</td>
+      <td className="w-full">Size of buffers for reading backend responses</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">Size of buffers that can be busy sending response to the client</td>
+      <td className="w-fit whitespace-nowrap">proxy_busy_buffers_size</td>
+      <td className="w-fit whitespace-nowrap">256k</td>
+      <td className="w-fit whitespace-nowrap">1k-1m</td>
+      <td className="w-full">Size of buffers for sending response to client</td>
+    </tr>
+  </tbody>
+</table>
+
+:::tip Recommendations
+- **Real-time APIs**: Set `proxy_buffering` to off for lower latency
+- **Large responses**: Increase `proxy_buffer_size` for handling larger API responses
+- **Multimedia streaming**: Increase `proxy_buffers_size` and `proxy_buffers_number` for larger content
+:::
+
+### Performance Optimization
+
+Enable various performance enhancements:
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit whitespace-nowrap">Setting</th>
+      <th className="w-fit whitespace-nowrap">Default</th>
+      <th className="w-fit whitespace-nowrap">Range</th>
+      <th className="w-fit whitespace-nowrap">Parameter</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">Use sendfile() for file transfers</td>
+      <td className="w-fit whitespace-nowrap">on</td>
+      <td className="w-fit whitespace-nowrap">on/off</td>
+      <td className="w-fit whitespace-nowrap">sendfile</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">Enable TCP_NOPUSH socket option</td>
+      <td className="w-fit whitespace-nowrap">on</td>
+      <td className="w-fit whitespace-nowrap">on/off</td>
+      <td className="w-fit whitespace-nowrap">tcp_nopush</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">Enable TCP_NODELAY socket option</td>
+      <td className="w-fit whitespace-nowrap">on</td>
+      <td className="w-fit whitespace-nowrap">on/off</td>
+      <td className="w-fit whitespace-nowrap">tcp_nodelay</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">Enable gzip compression</td>
+      <td className="w-fit whitespace-nowrap">on</td>
+      <td className="w-fit whitespace-nowrap">on/off</td>
+      <td className="w-fit whitespace-nowrap">gzip</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">Rate limit for response transmission (0 = no limit)</td>
+      <td className="w-fit whitespace-nowrap">0</td>
+      <td className="w-fit whitespace-nowrap">0-1000m</td>
+      <td className="w-fit whitespace-nowrap">limit_rate</td>
+    </tr>
+  </tbody>
+</table>
+
+:::tip Recommendations
+- **File serving**: Ensure `sendfile` and `tcp_nopush` are enabled for static content
+- **Real-time applications**: Verify `tcp_nodelay` is enabled
+- **Bandwidth control**: Use `limit_rate` for traffic shaping
+- **Multimedia streaming**: Enable `sendfile` and `tcp_nopush` for optimal streaming performance
+:::
+
+### File Cache Settings
+
+Optimize file system operations:
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit whitespace-nowrap">Setting</th>
+      <th className="w-fit whitespace-nowrap">Default</th>
+      <th className="w-fit whitespace-nowrap">Range</th>
+      <th className="w-fit whitespace-nowrap">Parameter</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">Cache open file descriptors</td>
+      <td className="w-fit whitespace-nowrap">on</td>
+      <td className="w-fit whitespace-nowrap">on/off</td>
+      <td className="w-fit whitespace-nowrap">open_file_cache</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">Maximum number of elements in file cache</td>
+      <td className="w-fit whitespace-nowrap">200000</td>
+      <td className="w-fit whitespace-nowrap">1000-1000000</td>
+      <td className="w-fit whitespace-nowrap">open_file_cache_max</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">Time after which unused cache elements are removed</td>
+      <td className="w-fit whitespace-nowrap">20s</td>
+      <td className="w-fit whitespace-nowrap">1s-300s</td>
+      <td className="w-fit whitespace-nowrap">open_file_cache_inactive</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">Time interval for checking cached elements validity</td>
+      <td className="w-fit whitespace-nowrap">30s</td>
+      <td className="w-fit whitespace-nowrap">1s-300s</td>
+      <td className="w-fit whitespace-nowrap">open_file_cache_valid</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">Minimum file uses to remain in cache</td>
+      <td className="w-fit whitespace-nowrap">2</td>
+      <td className="w-fit whitespace-nowrap">1-100</td>
+      <td className="w-fit whitespace-nowrap">open_file_cache_min_uses</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">Cache file lookup errors</td>
+      <td className="w-fit whitespace-nowrap">on</td>
+      <td className="w-fit whitespace-nowrap">on/off</td>
+      <td className="w-fit whitespace-nowrap">open_file_cache_errors</td>
+    </tr>
+  </tbody>
+</table>
+
+:::tip Recommendations
+- **Static file serving**: Increase cache size and adjust timeouts
+- **Development**: Reduce validation timeout for faster file updates
+- **High I/O applications**: Optimize based on file access patterns
+:::
+
+### Security Settings
+
+Configure security-related options:
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit whitespace-nowrap">Setting</th>
+      <th className="w-fit whitespace-nowrap">Default</th>
+      <th className="w-fit whitespace-nowrap">Parameter</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">Emit nginx version in error messages and headers</td>
+      <td className="w-fit whitespace-nowrap">off</td>
+      <td className="w-fit whitespace-nowrap">server_tokens</td>
+    </tr>
+  </tbody>
+</table>
+
+**Best Practice:** Keep `server_tokens` disabled to avoid revealing server information.
+
+## Advanced Routing Features
+
+The L7 HTTP Balancer supports sophisticated routing beyond basic domain mapping.
+
+Access the advanced location configuration through your project's HTTP Balancer section → click the **gear/settings icon** next to any domain location to open the **Advanced Location Configuration** dialog.
+
+### Redirect Configuration
+
+Redirect requests to different URLs with full control:
+
+**Configuration Options:**
+- **Redirect URL**: Destination for redirected requests
+- **Redirect Code**: HTTP status code for redirection (e.g., 301, 302, 307, 308)
+- **Preserve Path**: Keep original path in redirect URL
+- **Preserve Query**: Keep original query parameters in redirect URL
+
+<p align="center">
+  <img
+    src="/img/screenshots/redirect.png"
+    alt="Redirect Configuration"
+    width="50%"
+    height="auto"
+  />
+</p>
+
+### Access Policy Configuration
+
+Implement IP-based access control. If the request fails the check, a 403 Forbidden error is returned:
+
+**Policy Types:**
+- **Default Policy**: `allow` or `deny`
+- **CIDR Blocks**: List of IP addresses/ranges that will have the opposite policy than the default
+
+**Supported Formats:**
+- IPv4 address: `192.168.1.1`
+- IPv4 range: `192.168.1.0/24`
+- IPv6 address: `2001:db8::1`
+- IPv6 range: `2001:db8::/32`
+
+<p align="center">
+  <img
+    src="/img/screenshots/access_policy.png"
+    alt="Access Policy Configuration"
+    width="50%"
+    height="auto"
+  />
+</p>
+
+### Rate Limiting Configuration
+
+Protect against abuse and ensure fair resource usage. When the rate limit is exceeded, requests are delayed (burst). If they cannot be processed in time, a 503 Service Temporarily Unavailable error is returned:
+
+**Configuration Parameters:**
+- **Rate Limit Key**: `binary_remote_addr` (per IP) or `server_name` (per domain)
+- **Rate**: Requests per second to allow
+- **Burst**: Number of requests to queue when rate exceeded
+- **Zone Name**: Memory zone for storing rate limiting state
+- **Zone Size**: Memory allocated for rate limiting data (in MB)
+
+<p align="center">
+  <img
+    src="/img/screenshots/rate_limiting.png"
+    alt="Rate Limiting Configuration"
+    width="50%"
+    height="auto"
+  />
+</p>
+
+### Basic Authentication
+
+Add HTTP Basic Authentication to protected resources:
+
+**Configuration:**
+- **Realm**: Authentication realm name
+- **Users**: Username and password combinations
+
+<p align="center">
+  <img
+    src="/img/screenshots/basic_auth.png"
+    alt="Basic Auth Configuration"
+    width="50%"
+    height="auto"
+  />
+</p>
+
+### Custom Content Responses
+
+Return custom content for specific conditions:
+
+**Configuration:**
+- **HTTP Status Code**: Any valid status code (200, 404, 503, etc.)
+- **Content**: Response body content
+- **Content Type**: MIME type (default: text/plain)
+
+<p align="center">
+  <img
+    src="/img/screenshots/custom_content.png"
+    alt="Custom Content Configuration"
+    width="50%"
+    height="auto"
+  />
+</p>
+
+*Need help? Join our [Discord community](https://discord.gg/zeropsio).*

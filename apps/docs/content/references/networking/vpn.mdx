@@ -70,6 +70,50 @@ Flags:
       --help   Display help for the vpn down command
 ```
 
+## Troubleshooting
+
+#### 1. Interface Already Exists
+**Problem**: When running `zcli vpn up`, you get an error like:
+```
+ERR /opt/homebrew/bin/wg-quick up /opt/homebrew/etc/wireguard/zerops.conf: [+] Interface for zerops is utun6 wg-quick: 'zerops' already exists as 'utun6'
+```
+
+**Solution**: Reset the VPN connection by running:
+```bash
+zcli vpn down
+zcli vpn up
+```
+
+#### 2. Hostname Resolution
+**Problem**: Even with VPN successfully connected, hostname resolution fails with errors like:
+```
+could not translate host name "hostname" to address: nodename nor servname provided, or not known
+```
+
+* The issue is known to happen rarely on Windows
+
+**Solution**: Append `.zerops` to the hostname, even when VPN shows as connected:
+```bash
+# Instead of
+psql -h [hostname] -U [user]
+
+# Use
+psql -h [hostname].zerops -U [user]
+```
+
+:::tip Windows OS tip
+In the Advanced TCP/IP Settings dialog, navigate to the DNS tab and confirm that "zerops" appears in the "Append these DNS suffixes (in order)" list. If missing, add it using the Add button.
+:::
+
+#### 3. WSL2 VPN Connection
+**Problem**: VPN not running in WSL2
+
+**Solution**: This might occur because `systemd` is not running in WSL2 by default. To fix:
+1. Run `sudo -e /etc/wsl.conf`
+2. Add `system=true` to `[boot]` section
+3. Comment out the first line `LABEL=cloudimg-rootfs / ext4 defaults 0 1`
+4. In `cmd.exe/PowerShell` run `wsl --shutdown` to restart WSL2
+
 ## How do we provide better security?
 
 We are using WireGuard under the hood for VPN to establish a secure tunnel

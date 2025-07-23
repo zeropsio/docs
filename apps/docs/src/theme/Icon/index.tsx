@@ -158,6 +158,11 @@ import IconDocker from './Docker';
 import IconCurlyBraces from './CurlyBraces';
 import IconCdn from './Cdn';
 import IconClickhouse from './Clickhouse';
+import IconCloudflare from './Cloudflare';
+import IconVPN from './Vpn';
+import IconBalancer from './Balancer';
+import IconDns from './Dns';
+import IconInternalAccess from './InternalAccess';
 
 export default {
   'academic-cap-solid': AcademicCapSolid,
@@ -320,4 +325,9 @@ export default {
   'curly-braces': IconCurlyBraces,
   cdn: IconCdn,
   clickhouse: IconClickhouse,
+  cloudflare: IconCloudflare,
+  vpn: IconVPN,
+  balancer: IconBalancer,
+  dns: IconDns,
+  'internal-access': IconInternalAccess,
 };
