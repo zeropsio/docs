@@ -95,7 +95,7 @@ function PricingCalculatorContent() {
   const price = {
     cpu: resources.cpuType === 'shared' ? 0.6 : 6,
     ram: 3,
-    disk: 0.05,
+    disk: 0.1,
     storage: 0.01,
     ipv4_addr: 3,
     backup: 0.1,
