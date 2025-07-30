@@ -24147,17 +24147,18 @@ export const languages = [
 ]
 The `zerops.yaml` file is crucial for defining how Zerops should [build and deploy](/features/pipeline) your application.
 Add the `zerops.yaml` file to the **root of your repository** and customize it to suit your application's needs.
+:::note Parameter Availability
+Not all parameters are available for every service type. Most parameters work across different runtime services, but some are specific to certain service types (e.g., documentRoot for webserver services, routing for Static services). This documentation covers zerops.yaml configuration for runtime services.
+:::
 ---
 ## Basic Structure
 ```yaml title="zerops.yaml"
 zerops:
-  - setup: 
+  - setup: app
     build: ...
     run: ...
 ```
-- The top-level element is always `zerops`.
-- `setup` contains the **hostname** of your service (must exist in Zerops).
-- Multiple services can be defined in a single `zerops.yaml` (useful for monorepos):
+Multiple services can be defined in a single `zerops.yaml` (useful for monorepos):
 ```yaml
 zerops:
   - setup: app
@@ -24168,7 +24169,12 @@ zerops:
     run: ...
 ```
 Each service configuration requires `build` and `run` sections. An optional `deploy` section can be added for readiness checks.
-## Service Inheritance
+## Service Configuration
+### setup 
+Contains the hostname of your service (must exist in Zerops).
+```yaml
+setup: app
+```
 ### extends 
 The `extends` key allows you to inherit configuration from another service defined in the same `zerops.yaml` file. This is useful for creating environment-specific configurations while maintaining a common base.
 ```yaml
@@ -24176,24 +24182,20 @@ zerops:
   - setup: base
     build:
       buildCommands:
-        - echo "hello"
-      deployFiles: ./
+        - npm run build
+      deployFiles: ./dist
     run:
-      start: server run
+      start: npm start
   - setup: prod
     extends: base
     run:
-      crontab:
-        - command: xyz
-          allContainers: false
-          timing: "* * * * *"
+      envVariables:
+        NODE_ENV: production
   - setup: dev
     extends: base
     run:
-      crontab:
-        - command: different command
-          allContainers: false
-          timing: "* * * * *"
+      envVariables:
+        NODE_ENV: development
 ```
 When using `extends`:
 - The `extends` value must refer to another service's `setup` value in the same file
@@ -24344,8 +24346,8 @@ Specifies the network protocol to use:
 - Allowed values: `TCP` *(default)* or `UDP`
 #### httpSupport 
 Indicates whether the port is running a web server:
-- Default value: `true`
-- Set to `false` if a web server isn't running on the port
+- Default value: `false`
+- Set to `true` if a web server is running on the port
 - Only available with TCP protocol
 - Used by Zerops for [public access](/features/access) configuration
 ### prepareCommands 
@@ -24366,7 +24368,7 @@ run:
   start: npm start
 ```
 ### startCommands 
-Defines start commands 
+Defines start commands.
 Unlike `start`, you can define multiple commands that starts their own processes.
 ```yaml
 run:
@@ -24375,7 +24377,6 @@ run:
     - command: npm run start:prod
       name: server
     # start the replication
-    
     - command: litestream replicate -config=litestream.yaml
       name: replication
       # restore the database on container init
@@ -24397,6 +24398,117 @@ Defines environment variables for the runtime environment.
         DB_HOST: db
         DB_USER: db
         DB_PASS: ${db_password}
+```
+### envReplace 
+Automatically replaces environment variable placeholders in your static files with their actual values during deployment.
+```yaml
+run:
+  envReplace:
+    delimiter: "%%"
+    target:
+      - config/jwt/public.pem
+      - config/jwt/private.pem
+      - ./config/
+```
+Available parameters:
+#### delimiter 
+Characters that wrap your variable names in placeholders (e.g., `%%` means placeholders look like `%%VARIABLE%%`).
+- Type: `string` or `array of strings`
+- Supports multiple delimiters simultaneously
+#### target 
+Files or directories to process for variable replacement.
+- Type: `string` or `array of strings`
+- Can be specific files or directories
+- **Important**: Directory paths like `./` only process files in that directory, not subdirectories. For recursive processing, specify each subdirectory explicitly
+**How it works:**
+1. Define placeholders in your files using the specified delimiters
+2. Set environment variables with matching names
+3. During deployment, Zerops finds and replaces placeholders with actual values
+**Example usage:**
+```yaml
+run:
+  envReplace:
+    delimiter: "%%"
+    target:
+      - ./config/
+      - ./templates/
+      - ./              # Only processes files in root, not subdirectories
+```
+File content before replacement:
+```
+# config/jwt/public.pem
+%%JWT_PUBLIC_KEY_CONTENT%%
+```
+Environment variable:
+```
+JWT_PUBLIC_KEY_CONTENT=-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...
+-----END PUBLIC KEY-----
+```
+The placeholder gets replaced with the actual JWT public key during deployment.
+:::warning
+When using `./` as target, only files directly in the root directory are processed. Subdirectories are ignored for performance reasons. To process subdirectories, specify each one explicitly in the target array.
+:::
+### routing 
+Configures URL routing, redirects, and HTTP headers (only for Static services).
+```yaml
+run:
+  routing:
+    root: /custom/root
+    cors: "'*' always"
+    redirects:
+      - from: /old-path
+        to: /new-path
+        status: 301
+    headers:
+      - for: "/*"
+        values:
+          X-Frame-Options: "'DENY'"
+```
+Available parameters:
+#### root 
+Sets a custom root directory for the service.
+- Type: `string`
+#### cors 
+Enables CORS headers for cross-origin requests.
+- Type: `string`
+- Sets `Access-Control-Allow-Origin`, `Access-Control-Allow-Methods`, `Access-Control-Allow-Headers`, and `Access-Control-Expose-Headers`
+- Special case: `"*"` is automatically converted to `'*'`
+#### redirects 
+Defines URL redirects and rewrites.
+- Type: `array of objects`
+- Each redirect object supports:
+  - **from**  - Source path to match ([supports wildcards](/static/overview#wildcard-matching) with `*`)
+  - **to**  - Destination path
+  - **status**  - HTTP status code (required for absolute URLs)
+  - **preservePath**  - Preserve path after wildcard match
+  - **preserveQuery**  - Preserve query parameters
+#### headers 
+Sets custom HTTP headers for specific paths.
+- Type: `array of objects`
+- Each header object supports:
+  - **for**  - Path pattern to match
+  - **values**  - Object with header name/value pairs
+**Example usage:**
+```yaml
+run:
+  routing:
+    cors: "'*' always"
+    redirects:
+      # Permanent redirect
+      - from: /old-page
+        to: /new-page
+        status: 301
+      # Wildcard redirect with path preservation
+      - from: /blog/*
+        to: /articles/
+        preservePath: true
+        status: 302
+    headers:
+      - for: "/*"
+        values:
+          X-Frame-Options: "'DENY'"
+          Content-Security-Policy: '"default-src ''self''"'
 ```
 ### healthCheck 
 Defines a health check for your application.
@@ -24440,15 +24552,26 @@ The following parameters can be used with either `httpGet` or `exec` health chec
 Health checks continuously monitor your running application, while readiness checks verify if a new deployment is ready to receive traffic. For readiness checks, see the [readinessCheck section](#readinesscheck-).
 :::
 ### crontab 
-  Defines scheduled commands to run as cron jobs within a service.
-  ```yaml
-  run:
-    crontab:
-      - command: "date >> /var/log/cron.log"
-        timing: "0 * * * *"
-  ```
+Defines scheduled commands to run as cron jobs within a service.
+```yaml
+run:
+  crontab:
+    - command: "date >> /var/log/cron.log"
+      timing: "0 * * * *"
+      allContainers: false
+```
 Setup cron jobs. See [examples](/zerops-yaml/cron).
 ## Deploy Configuration
+### temporaryShutdown 
+Controls the container replacement order during deployment.
+```yaml
+deploy:
+  temporaryShutdown: true
+```
+- Type: `boolean`
+- Default: `false`
+**When `false` (default):** New containers are started before old containers are removed, ensuring zero-downtime deployment.
+**When `true`:** Old containers are removed before new containers are started, causing temporary downtime but using fewer resources during deployment.
 ### readinessCheck 
 Defines a readiness check for your application. Requires either `httpGet` object or `exec` object.
 ```yaml
@@ -24478,7 +24601,7 @@ Unlike health checks which run continuously, readiness checks only run during de
 :::note
 For more detailed information on specific configurations, refer to the runtime-specific guides linked at the beginning of this document.
 :::
----
+*Need help? Join our [Discord community](https://discord.gg/zeropsio).*
 
 ----------------------------------------
 
