@@ -46,13 +46,13 @@ zcli logout
 Connects to the Zerops VPN.
 
 ```sh
-zcli vpn up [projectId] [flags]
+zcli vpn up [project-id] [flags]
 ```
 
 **Flags:**
 - `--auto-disconnect` - Automatically disconnect from VPN if already connected
 - `--mtu int` - Set custom MTU value for Wireguard interface (default: 1420)
-- `--projectId string` - Required when you have access to multiple projects
+- `-P, --project-id string` - Required when you have access to multiple projects
 
 :::note
 You can set a default project ID for VPN connections in a `.zcli.yml` file or via the `ZEROPS_PROJECTID` environment variable. See the [Configuration](/references/cli/configuration) page for details.
@@ -80,47 +80,64 @@ Lists all projects you have access to.
 zcli project list
 ```
 
+### project create
+
+Creates a new project for specified organization.
+
+```sh
+zcli project create [flags]
+```
+
+**Flags:**
+- `--env-isolation string` - Environment isolation rule [service, none] (default: "service")
+- `--mode string` - Project mode [light, serious] (default: "light")
+- `--name string` - Project name
+- `--org-id string` - Organization ID to create project for
+- `--out string` - Output format using Go template syntax
+- `--ssh-isolation string` - SSH isolation rules (default: "vpn")
+- `--tags strings` - Project tags (comma-separated list or repeated flag)
+
 ### project delete
 
 Deletes a project and all its services.
 
 ```sh
-zcli project delete [projectId] [flags]
+zcli project delete [project-id] [flags]
 ```
 
 **Flags:**
 - `--confirm` - Skip confirmation prompts for destructive operations
-- `--projectId string` - Required when you have access to multiple projects
+- `-P, --project-id string` - Required when you have access to multiple projects
 
 ### project project-import
 
 Creates a new project with one or more services from a YAML definition.
 
 ```sh
-zcli project project-import <importYamlPath> [flags]
+zcli project project-import importYamlPath [flags]
 ```
 
 **Flags:**
-- `--orgId string` - Organization ID where the project should be created (required for multiple organizations)
-- `--workingDir string` - Sets a custom working directory (default: "./")
+- `--org-id string` - Organization ID where the project should be created (required for multiple organizations)
+- `--working-dir string` - Sets a custom working directory (default: "./")
 
 ### project service-import
 
 Creates one or more services in an existing project from a YAML definition.
 
 ```sh
-zcli project service-import <importYamlPath> [flags]
+zcli project service-import importYamlPath [flags]
 ```
 
 **Flags:**
-- `--projectId string` - Required when you have access to multiple projects
+- `-P, --project-id string` - Required when you have access to multiple projects
 
 ### scope project
 
 Sets the default project for commands that require a project ID.
 
 ```sh
-zcli scope project [projectId]
+zcli scope project [project-id]
 ```
 
 :::tip
@@ -146,36 +163,59 @@ zcli service list [flags]
 ```
 
 **Flags:**
-- `--projectId string` - Required when you have access to multiple projects
+- `-P, --project-id string` - Required when you have access to multiple projects
+
+### service create
+
+Creates a new service for specified project.
+
+```sh
+zcli service create [flags]
+```
+
+**Flags:**
+- `--env strings` - Environment variables to be set as secrets (comma-separated or repeated flag)
+- `--env-file string` - File with environment variables (max 1.0 MiB)
+- `--env-isolation string` - Environment isolation rule [service, none] (default: "service")
+- `--mode string` - Service mode [ha, non_ha] (default: "non_ha")
+- `--name string` - Service name
+- `--noop` - Creates service only if none with the same name exists
+- `--out string` - Output format using Go template syntax
+- `-P, --project-id string` - Required when you have access to multiple projects
+- `--ssh-isolation string` - SSH isolation rules (default: "vpn")
+- `--start-without-code` - Start service immediately without deploy
+- `--working-dir string` - Sets custom working directory (default: "./")
+- `--zerops-yaml-path string` - Sets custom path to zerops.yml file
 
 ### service push
 
 Builds your application in Zerops and deploys it. This is the recommended way to deploy your code.
 
 ```sh
-zcli service push [serviceIdOrName] [flags]
+zcli service push [service-id-or-name] [flags]
 ```
 
 **Flags:**
-- `--archiveFilePath string` - Creates a tar.gz archive with application code
-- `-g, --deployGitFolder` - Include the .git folder in the upload
-- `--disableLogs` - Disable logs during push
-- `-v, --verbose` - Log additional debug data to the zCLI [debug log file](/references/cli/configuration#logging-configuration)
-- `--projectId string` - Required when you have access to multiple projects
-- `--serviceId string` - Required when you have access to multiple services
+- `--archive-file-path string` - Creates a tar.gz archive with application code
+- `-g, --deploy-git-folder` - Include the .git folder in the upload
+- `--disable-logs` - Disable logs during push
+- `--no-git` - Upload entire working directory as-is (cannot be combined with --workspace-state or --deploy-git-folder)
+- `-P, --project-id string` - Required when you have access to multiple projects
+- `-S, --service-id string` - Required when you have access to multiple services
 - `--setup string` - Choose setup to use from zerops.yml
-- `--versionName string` - Adds a custom version name
-- `--workingDir string` - Sets a custom working directory (default: "./")
-- `-w, --workspaceState string` - Defines version of workspace to push:
+- `-v, --verbose` - Log additional debug data to the zCLI [debug log file](/references/cli/configuration#logging-configuration)
+- `--version-name string` - Adds a custom version name
+- `--working-dir string` - Sets a custom working directory (default: "./")
+- `-w, --workspace-state string` - Defines version of workspace to push:
   - `clean` - pushes the HEAD without local changes
   - `staged` - pushes only staged files
   - `all` - pushes all staged and unstaged files (default)
-- `--zeropsYamlPath string` - Sets a custom path to the zerops.yml file
+- `--zerops-yaml-path string` - Sets a custom path to the zerops.yml file
 
 :::tip
 You can also use `zcli push` as a shorthand for `zcli service push`.
 
-To avoid specifying `--projectId` and `--serviceId` flags repeatedly, you can set default values in a `.zcli.yml` file or via environment variables. See the [Configuration](/references/cli/configuration) page for details.
+To avoid specifying `--project-id` and `--service-id` flags repeatedly, you can set default values in a `.zcli.yml` file or via environment variables. See the [Configuration](/references/cli/configuration) page for details.
 :::
 
 ### service deploy
@@ -183,7 +223,7 @@ To avoid specifying `--projectId` and `--serviceId` flags repeatedly, you can se
 Deploys your application to Zerops. Similar to `push` but focuses on deployment only.
 
 ```sh
-zcli service deploy [serviceIdOrName]
+zcli service deploy [service-id-or-name]
 ```
 
 **Flags:**
@@ -194,38 +234,38 @@ Same as <a href="#service-push"><code>service push</code></a> command.
 Commands to start or stop a Zerops service.
 
 ```sh
-zcli service start [serviceIdOrName] [flags]
-zcli service stop [serviceIdOrName] [flags]
+zcli service start [service-id-or-name] [flags]
+zcli service stop [service-id-or-name] [flags]
 ```
 
 **Flags for both commands:**
-- `--projectId string` - Required when you have access to multiple projects
-- `--serviceId string` - Required when you have access to multiple services
+- `-P, --project-id string` - Required when you have access to multiple projects
+- `-S, --service-id string` - Required when you have access to multiple services
 
 ### service delete
 
 Deletes a Zerops service.
 
 ```sh
-zcli service delete [serviceIdOrName] [flags]
+zcli service delete [service-id-or-name] [flags]
 ```
 
 **Flags:**
 - `--confirm` - Skip confirmation prompts for destructive operations
-- `--projectId string` - Required when you have access to multiple projects
-- `--serviceId string` - Required when you have access to multiple services
+- `-P, --project-id string` - Required when you have access to multiple projects
+- `-S, --service-id string` - Required when you have access to multiple services
 
 ### service enable-subdomain
 
 Enables access to your service through a Zerops subdomain.
 
 ```sh
-zcli service enable-subdomain [serviceIdOrName] [flags]
+zcli service enable-subdomain [service-id-or-name] [flags]
 ```
 
 **Flags:**
-- `--projectId string` - Required when you have access to multiple projects
-- `--serviceId string` - Required when you have access to multiple services
+- `-P, --project-id string` - Required when you have access to multiple projects
+- `-S, --service-id string` - Required when you have access to multiple services
 
 ### service log
 
@@ -237,14 +277,14 @@ zcli service log [flags]
 
 **Flags:**
 - `--follow` - Continuously poll for new log messages
-- `--format <format>` - Log output format (FULL, SHORT, JSON, JSONSTREAM)
-- `--formatTemplate <template>` - Custom log format
-- `--limit <number>` - Number of recent log messages to return (1-1000, default: 100)
-- `--messageType <type>` - Select APPLICATION or WEBSERVER log messages
-- `--minimumSeverity <severity>` - Filter by severity level
-- `--projectId string` - Required when you have access to multiple projects
-- `--serviceId string` - Required when you have access to multiple services
-- `--showBuildLogs` - Show build logs instead of runtime logs
+- `--format string` - Log output format (FULL, SHORT, JSON, JSONSTREAM) (default: "FULL")
+- `--format-template string` - Custom log format
+- `--limit int` - Number of recent log messages to return (1-1000, default: 100)
+- `--message-type string` - Select APPLICATION or WEBSERVER log messages (default: "APPLICATION")
+- `--minimum-severity string` - Filter by severity level
+- `-P, --project-id string` - Required when you have access to multiple projects
+- `-S, --service-id string` - Required when you have access to multiple services
+- `--show-build-logs` - Show build logs instead of runtime logs
 
 ## Utility Commands
 
