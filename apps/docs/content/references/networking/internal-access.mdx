@@ -1,0 +1,131 @@
+---
+title: Internal Access Configuration
+description: Guide for internal service communication and accessing your project's private network within Zerops.
+---
+
+This guide covers internal communication between services and methods for accessing your project's private network. For an overview of all access methods, see the [Access & Networking guide](/features/access).
+
+## Internal Access Methods
+
+Choose the access method that fits your needs:
+
+- **[Service-to-Service Communication](#service-to-service-communication)** - Direct communication between services in the same project
+- **[Environment Variables](#environment-variables)** - Share configuration and credentials between services
+- **[External Access to Private Network](#external-access-to-private-network)** - Connect from outside the project using VPN or SSH
+
+## Service-to-Service Communication
+
+Every Zerops project includes a dedicated private network that automatically connects all services within the project.
+
+### Network Architecture
+
+**Automatic Service Discovery:**
+- All services communicate directly using service hostnames
+- No manual network configuration required
+- Traffic stays isolated within your project's private network
+
+### Basic Service Communication
+
+Connect to any service within the same project using the service hostname and internal port, e.g.:
+
+```bash
+# Connect to 'api' service on port 3000
+http://api:3000/health
+```
+
+:::note
+Do not use `https://` when communicating between runtime services in the same project. The internal communication is done over a private network and is isolated from other projects.
+:::
+
+### Internal Ports Configuration
+
+Services expose internal ports for communication within the project:
+
+- **Define ports** in your service's `zerops.yaml` [configuration](/zerops-yaml/specification#ports-)
+- **HTTP ports** are accessible for web traffic between services
+- **TCP/UDP ports** support database connections and custom protocols
+- **Multiple ports** can be exposed per service for different purposes
+
+:::tip Connect from another project
+To connect to a service from **another Zerops project**, you'll need to use [public access methods](/references/networking/public-access) since different projects don't share private networks.
+:::
+
+### Environment Variables
+
+Zerops creates default environment variables for each service to help you with connection within the same project. To avoid the need to copy the access parameters manually, use generated environment variables of the service.
+
+#### Generated Environment Variables
+
+Each service automatically receives environment variables containing connection details for other services in the project:
+
+```bash
+# Database connection variables
+DATABASE_HOST=postgres
+DATABASE_PORT=5432
+DATABASE_URL=postgresql://app_user:secure_password@postgres:5432/myapp
+```
+
+#### Prefix the environment variable key
+
+All services of the same project can reference environment variables from other services. To use an environment variable from one service in another service in the same project, you must prefix the environment variable key with the service hostname and underscore.
+
+**Example:**
+
+To access the `API_TOKEN` env variable of the `app` service, use `app_API_TOKEN` as the env variable key.
+
+:::tip Environment Variables Guide
+For complete information on environment variable types, isolation, and management, see the [Environment Variables Reference](/features/env-variables).
+:::
+
+## External Access to Private Network
+
+Access your project's private network from external locations for development and administration.
+
+### VPN Access
+
+You can securely connect to your application from your local workspace via Zerops VPN. Zerops VPN client is included into zCLI, the Zerops command-line tool.
+
+#### Start VPN connection
+
+To start a VPN connection to the selected Zerops project, follow these steps:
+
+1. [Install & setup zCLI](/references/cli)
+2. [Start the Zerops VPN](/references/networking/vpn#start-vpn)
+
+#### Access application through VPN
+
+Once the VPN session is established, you have the secured connection to the project's private network in Zerops. You can access all project services locally by using their hostname. The only difference is that no environment variables are available when connected through VPN. To connect to your application in Zerops set the hostname and internal port e.g. `http://app:3000`
+
+:::info
+Do not use `https://` when communicating over the VPN. The security is assured by the VPN. The internal communication is done over a private network and is isolated from other projects.
+:::
+
+:::tip VPN Setup
+For complete VPN setup, configuration, and troubleshooting, see the [VPN Reference Guide](/references/networking/vpn).
+:::
+
+### SSH Access
+
+Use [SSH](/references/networking/ssh) to connect to your service for debugging and system administration.
+
+```bash
+# Connect to a specific service
+ssh <service-name>
+```
+
+**Important:** SSH access is temporary and changes are not persistent across deployments.
+
+:::tip SSH Configuration
+For complete SSH documentation, access control, and advanced usage, see the [SSH Reference Guide].
+:::
+
+:::note
+When you're finished working with internal access over VPN, [stop the Zerops VPN](/references/networking/vpn#stop-vpn) in zCLI.
+:::
+
+## Next Steps
+
+- **Public access configuration:** [Public Access Reference Guide](/references/networking/public-access)
+- **Environment variables:** [Environment Variables Reference](/features/env-variables)
+- **VPN setup:** [VPN Reference Guide](/references/networking/vpn)
+- **SSH access:** [SSH Reference Guide](/references/networking/ssh)

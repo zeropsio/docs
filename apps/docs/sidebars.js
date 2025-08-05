@@ -96,34 +96,13 @@ module.exports = {
       className: 'homepage-sidebar-item',
     },
     {
-      type: 'category',
-      link: {
-        type: 'doc',
-        id: 'features/access',
-      },
-      label: 'Custom Domains & IP Access',
+      type: 'doc',
+      id: 'features/access',
+      label: 'Access & Networking',
       customProps: {
         sidebar_icon: 'globe-europe',
       },
       className: 'homepage-sidebar-item',
-      items: [
-        {
-          type: 'doc',
-          id: 'features/cloudflare',
-          label: 'Cloudflare Setup',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-        {
-          type: 'doc',
-          id: 'features/dns',
-          label: 'General DNS & Proxy Setup',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-      ],
     },
     {
       type: 'doc',
@@ -567,7 +546,7 @@ module.exports = {
           label: 'zsc',
           id: 'references/zsc',
           customProps: {
-            sidebar_icon: 'window',
+            sidebar_icon: 'command-line',
           },
           className: 'homepage-sidebar-item',
         },
@@ -575,7 +554,7 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'Access & Connectivity',
+      label: 'Networking',
       collapsible: false,
       customProps: {
         sidebar_is_group_headline: true,
@@ -583,50 +562,73 @@ module.exports = {
       items: [
         {
           type: 'doc',
-          id: 'references/ssh',
-          label: 'SSH',
-          customProps: {
-            sidebar_icon: 'command-line',
-          },
-          className: 'homepage-sidebar-item',
-        },
-        {
-          type: 'category',
-          label: 'VPN',
-          link: {
-            type: 'doc',
-            id: 'references/vpn',
-          },
+          id: 'references/networking/public-access',
+          label: 'Public Access',
           customProps: {
             sidebar_icon: 'globe-europe',
           },
           className: 'homepage-sidebar-item',
-          items: [
-            {
-              type: 'doc',
-              id: 'references/vpn/troubleshooting',
-              label: 'Troubleshooting',
-              customProps: {
-                exclude_from_doc_list: false,
-              },
-            },
-          ],
         },
         {
           type: 'doc',
-          id: 'references/firewall',
-          label: 'Firewall',
+          id: 'references/networking/internal-access',
+          label: 'Internal Access',
           customProps: {
-            sidebar_icon: 'firewall',
+            sidebar_icon: 'internal-access',
           },
           className: 'homepage-sidebar-item',
         },
         {
           type: 'doc',
-          id: 'references/smtp',
-          label: 'SMTP',
+          id: 'references/networking/dns',
+          label: 'DNS and Proxy',
           customProps: {
-            sidebar_icon: 'envelope',
+            sidebar_icon: 'dns',
+          },
+          className: 'homepage-sidebar-item',
+        },
+        {
+          type: 'doc',
+          id: 'references/networking/cloudflare',
+          label: 'Cloudflare',
+          customProps: {
+            sidebar_icon: 'cloudflare',
+          },
+          className: 'homepage-sidebar-item',
+        },
+        {
+          type: 'doc',
+          id: 'references/networking/vpn',
+          label: 'VPN',
+          customProps: {
+            sidebar_icon: 'vpn',
+          },
+          className: 'homepage-sidebar-item',
+        },
+        {
+          type: 'doc',
+          id: 'references/networking/ssh',
+          label: 'SSH',
+          customProps: {
+            sidebar_icon: 'command-line-solid',
+          },
+          className: 'homepage-sidebar-item',
+        },
+        {
+          type: 'doc',
+          id: 'references/networking/l7-balancer-config',
+          label: 'L7 Balancer',
+          customProps: {
+            sidebar_icon: 'balancer',
+          },
+          className: 'homepage-sidebar-item',
+        },
+        {
+          type: 'doc',
+          id: 'references/networking/firewall',
+          label: 'Firewall',
+          customProps: {
+            sidebar_icon: 'firewall',
           },
           className: 'homepage-sidebar-item',
         },
@@ -694,6 +696,15 @@ module.exports = {
           label: 'API',
           customProps: {
             sidebar_icon: 'curly-braces',
+          },
+          className: 'homepage-sidebar-item',
+        },
+        {
+          type: 'doc',
+          id: 'references/smtp',
+          label: 'SMTP',
+          customProps: {
+            sidebar_icon: 'envelope',
           },
           className: 'homepage-sidebar-item',
         },
@@ -917,11 +928,6 @@ module.exports = {
         },
         {
           type: 'doc',
-          id: 'nodejs/how-to/access',
-          label: 'Access Node.js runtime service',
-        },
-        {
-          type: 'doc',
           id: 'nodejs/how-to/shared-storage',
           label: 'Connect / disconnect shared storage',
         },
@@ -1066,11 +1072,6 @@ module.exports = {
         },
         {
           type: 'doc',
-          id: 'php/how-to/access',
-          label: 'Access PHP runtime service',
-        },
-        {
-          type: 'doc',
           id: 'php/how-to/shared-storage',
           label: 'Connect / disconnect shared storage',
         },
@@ -1198,11 +1199,6 @@ module.exports = {
           type: 'doc',
           id: 'python/how-to/filebrowser',
           label: 'Browse container files',
-        },
-        {
-          type: 'doc',
-          id: 'python/how-to/access',
-          label: 'Access Python runtime service',
         },
         {
           type: 'doc',
@@ -1336,11 +1332,6 @@ module.exports = {
           },
           {
             type: 'doc',
-            id: 'go/how-to/access',
-            label: 'Access Go runtime service',
-          },
-          {
-            type: 'doc',
             id: 'go/how-to/shared-storage',
             label: 'Connect / disconnect shared storage',
           },
@@ -1468,11 +1459,6 @@ module.exports = {
             type: 'doc',
             id: 'rust/how-to/filebrowser',
             label: 'Browse container files',
-          },
-          {
-            type: 'doc',
-            id: 'rust/how-to/access',
-            label: 'Access Rust runtime service',
           },
           {
             type: 'doc',
@@ -1606,11 +1592,6 @@ module.exports = {
           },
           {
             type: 'doc',
-            id: 'dotnet/how-to/access',
-            label: 'Access .NET runtime service',
-          },
-          {
-            type: 'doc',
             id: 'dotnet/how-to/shared-storage',
             label: 'Connect / disconnect shared storage',
           },
@@ -1741,11 +1722,6 @@ module.exports = {
           },
           {
             type: 'doc',
-            id: 'java/how-to/access',
-            label: 'Access Java runtime service',
-          },
-          {
-            type: 'doc',
             id: 'java/how-to/shared-storage',
             label: 'Connect / disconnect shared storage',
           },
@@ -1873,11 +1849,6 @@ module.exports = {
             type: 'doc',
             id: 'nginx/how-to/filebrowser',
             label: 'Browse container files',
-          },
-          {
-            type: 'doc',
-            id: 'nginx/how-to/access',
-            label: 'Access Nginx runtime service',
           },
           {
             type: 'doc',
@@ -2608,11 +2579,6 @@ module.exports = {
           },
           {
             type: 'doc',
-            id: 'deno/how-to/access',
-            label: 'Access Deno runtime service',
-          },
-          {
-            type: 'doc',
             id: 'deno/how-to/shared-storage',
             label: 'Connect / disconnect shared storage',
           },
@@ -2740,11 +2706,6 @@ module.exports = {
             type: 'doc',
             id: 'bun/how-to/filebrowser',
             label: 'Browse container files',
-          },
-          {
-            type: 'doc',
-            id: 'bun/how-to/access',
-            label: 'Access Bun runtime service',
           },
           {
             type: 'doc',
@@ -2878,11 +2839,6 @@ module.exports = {
           },
           {
             type: 'doc',
-            id: 'gleam/how-to/access',
-            label: 'Access Gleam runtime service',
-          },
-          {
-            type: 'doc',
             id: 'gleam/how-to/shared-storage',
             label: 'Connect / disconnect shared storage',
           },
@@ -3010,11 +2966,6 @@ module.exports = {
             type: 'doc',
             id: 'elixir/how-to/filebrowser',
             label: 'Browse container files',
-          },
-          {
-            type: 'doc',
-            id: 'elixir/how-to/access',
-            label: 'Access Elixir runtime service',
           },
           {
             type: 'doc',
