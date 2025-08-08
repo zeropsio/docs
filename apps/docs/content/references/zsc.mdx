@@ -113,6 +113,95 @@ zsc cdn purge example.com "/images/"
 :::
 ---
 
+### object-storage
+
+Manages object storage operations for backups and restores.
+
+```sh
+zsc object-storage [command]
+```
+
+#### Available flags
+- `-h, --help`: Help for the object-storage command
+
+When using `--storage objectstorage`, the command requires the following environment variables to be defined:
+
+* `objectstorage_apiUrl` - API URL of the object storage service
+* `objectstorage_accessKeyId` - Access key ID for authentication
+* `objectstorage_secretAccessKey` - Secret access key for authentication
+* `objectstorage_bucketName` - Name of the bucket to use
+
+These environment variables will be automatically available if the object storage service has `envIsolation: none` configured, or if the entire project has `envIsolation: none` set. Otherwise, you need to explicitly reference these environment variables in your `zerops.yaml` file.
+
+#### Sub-commands
+
+#### Common parameters
+All sub-commands share these parameters:
+- `--storage`: Name of the object storage service
+- `--name`: Name of the backup in storage
+- `--silent`, `-s`: Suppresses command output (default: false)
+- `--no-fail`: Prevents command failure with exit code 1 (default: false)
+
+**list** - Lists all available backups in the specified storage
+```sh
+zsc object-storage list --storage <storage-name> --name <backup-name>
+```
+
+**backup** - Creates a backup of specified directories to object storage
+```sh
+zsc object-storage backup <directory1> [<directory2>...] --storage <storage-name> --name <backup-name> [options]
+```
+Additional options:
+- `--truncateCount`: If greater than 0, truncate operation is performed after successful backup, keeping the specified number of most recent backups (default: 0)
+
+**restore** - Restores a backup from object storage
+```sh
+zsc object-storage restore [<directory>] --storage <storage-name> --name <backup-name> [options]
+```
+Additional options:
+- `--dryRun`: Simulates restore operation without performing actual changes
+- `--overwrite`: Allows overwriting existing files during restore
+- `--index`:  Specifies which backup to restore. Non-negative values count from newest (0 = newest, 1 = second newest), negative values count from oldest (-1 = oldest, -2 = second oldest) (default: 0)
+- `--ignore-non-existing`: Prevents command failure if backup doesn't exist
+
+**truncate** - Removes old backups, keeping only the most recent ones
+```sh
+zsc object-storage truncate --storage <storage-name> --name <backup-name> [options]
+```
+Additional options:
+- `--dryRun`: Simulates truncate operation without performing actual deletions (default: false)
+- `--truncateCount`: Number of most recent backups to keep (default: 5)
+
+#### Examples
+```sh
+# List all backups
+zsc object-storage list --storage objectstorage --name daily-backup
+
+# Create a backup with retention
+zsc object-storage backup /var/www --storage objectstorage --name web-backup --truncateCount 5
+
+# Restore with dry run preview
+zsc object-storage restore --storage objectstorage --name database-backup --dryRun
+
+# Clean up old backups
+zsc object-storage truncate --storage objectstorage --name logs-backup --truncateCount 3
+```
+
+#### Example usage in `zerops.yaml`
+```yaml
+zerops:
+  - setup: app
+    run:
+      initCommands:
+        - "zsc object-storage restore --storage objectstorage --name $ZEROPS_StackName --ignore-non-existing ./data/"
+      crontab:
+        - timing: "*/10 * * * *"
+          command: "zsc object-storage backup --storage objectstorage --name $ZEROPS_StackName --truncateCount 5 ./data/"
+          allContainers: false
+```
+
+---
+
 ### shared-storage
 
 Manages shared storage volumes for persistent data storage.
