@@ -20,23 +20,17 @@ You can interact with services within your project and even establish SSH connec
 
 ### Start VPN
 
-To start a VPN session:
+Connects to the Zerops VPN.
 
 ```bash
-zcli vpn up
+zcli vpn up [project-id] [flags]
 ```
 
-Select your project when prompted.
-
-```bash
-Usage:
-  zcli vpn up [project-id] [flags]
-
-Flags:
-      --auto-disconnect    Automatically disconnects existing VPN connections
-      --help              Display help for the vpn up command
-      --project-id string  Project ID for command execution (required for multiple projects)
-```
+**Flags:**
+- `--auto-disconnect` - Automatically disconnect from VPN if already connected
+- `--help` - Display help for the vpn up command
+- `--mtu int` - Set custom MTU value for Wireguard interface (default: 1420)
+- `-P, --project-id string` - Required when you have access to multiple projects
 
 To connect to a specific project without using the interactive mode, use the project ID from your Zerops dashboard:
 
@@ -58,17 +52,14 @@ Upon connection, you'll have secure access to your project's private network wit
 
 ### Stop VPN
 
-To stop the VPN session:
+Disconnects from the Zerops VPN.
 
 ```bash
-zcli vpn down
-
-Usage:
-  zcli vpn down [flags]
-
-Flags:
-      --help   Display help for the vpn down command
+zcli vpn down [flags]
 ```
+
+**Flags:**
+- `--help` - Display help for the vpn down command
 
 ## Troubleshooting
 
@@ -114,18 +105,22 @@ In the Advanced TCP/IP Settings dialog, navigate to the DNS tab and confirm that
 3. Comment out the first line `LABEL=cloudimg-rootfs / ext4 defaults 0 1`
 4. In `cmd.exe/PowerShell` run `wsl --shutdown` to restart WSL2
 
-## How do we provide better security?
+#### 4. VPN Connection Conflicts
+**Problem**: When another VPN connection is active concurrently with Zerops VPN, users may experience degraded network performance or connection timeouts due to packet fragmentation issues.
 
-We are using WireGuard under the hood for VPN to establish a secure tunnel
-connection to a private network of a Zerops project. This approach provides a safer connection
-compared to SSH.
+**Solution**: Run the VPN with a reduced MTU (Maximum Transmission Unit) size:
+```bash
+zcli vpn up --mtu 1350
+```
 
-Additionally, you won't need to add any passwords or IP addresses for SSH access.
-WireGuard is a free, lightweight, open-source software—technically a communication protocol—that 
-utilizes cryptography.
+This resolves packet size conflicts that can occur when multiple VPN connections are active simultaneously.
 
-It helps us create a secure tunnel that uses UDP for transmitting traffic. We use public/private key pairs
-for authorization.
+## Enhanced Security with WireGuard
 
-Inside Zerops project runs a Wireguard server and zCLI (Zerops Command Line Interface) works as
-a Wireguard client which helps you to interact with your zerops project if you're authorized.
+Zerops uses **WireGuard** to create secure VPN tunnel connections to your project's private network. This provides enhanced security compared to traditional **SSH** connections.
+
+WireGuard eliminates the need for **passwords** or **IP address management** that SSH typically requires. As a free, lightweight, **open-source** communication protocol, WireGuard employs advanced **cryptography** to establish secure connections.
+
+The system creates encrypted tunnels using **UDP** for traffic transmission and relies on **public/private key pairs** for user authorization.
+
+Each Zerops project runs a **WireGuard server**, while the **zCLI** (Zerops Command Line Interface) functions as a **WireGuard client**. This architecture enables authorized users to securely interact with their Zerops projects through the command line interface.
