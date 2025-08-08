@@ -69,7 +69,7 @@ zsc backup-create <stackName>
 ```
 
 #### Required parameters
-- `stackName`: Name of the stack to backup
+- `<stackName>`: Name of the stack to backup
 
 #### Available flags
 - `-h, --help`: Help for the backup-create command
@@ -111,128 +111,6 @@ zsc cdn purge example.com "/images/"
 - This command must be executed in any container within the project that has the CDN-enabled domain active
 - Currently, the purge command only works for the [Static Mode](/features/cdn#static-mode) CDN
 :::
----
-
-### object-storage
-
-Manages object storage operations for backups and restores.
-
-```sh
-zsc object-storage [command]
-```
-
-#### Available flags
-- `-h, --help`: Help for the object-storage command
-
-When using `--storage objectstorage`, the command requires the following environment variables to be defined:
-
-* `objectstorage_apiUrl` - API URL of the object storage service
-* `objectstorage_accessKeyId` - Access key ID for authentication
-* `objectstorage_secretAccessKey` - Secret access key for authentication
-* `objectstorage_bucketName` - Name of the bucket to use
-
-These environment variables will be automatically available if the object storage service has `envIsolation: none` configured, or if the entire project has `envIsolation: none` set. Otherwise, you need to explicitly reference these environment variables in your `zerops.yaml` file.
-
-#### Sub-commands
-
-#### Common parameters
-All sub-commands share these parameters:
-- `--storage`: Name of the object storage service
-- `--name`: Name of the backup in storage
-- `--silent`, `-s`: Suppresses command output (default: false)
-- `--no-fail`: Prevents command failure with exit code 1 (default: false)
-
-**list** - Lists all available backups in the specified storage
-```sh
-zsc object-storage list --storage <storage-name> --name <backup-name>
-```
-
-**backup** - Creates a backup of specified directories to object storage
-```sh
-zsc object-storage backup <directory1> [<directory2>...] --storage <storage-name> --name <backup-name> [options]
-```
-Additional options:
-- `--truncateCount`: If greater than 0, truncate operation is performed after successful backup, keeping the specified number of most recent backups (default: 0)
-
-**restore** - Restores a backup from object storage
-```sh
-zsc object-storage restore [<directory>] --storage <storage-name> --name <backup-name> [options]
-```
-Additional options:
-- `--dryRun`: Simulates restore operation without performing actual changes
-- `--overwrite`: Allows overwriting existing files during restore
-- `--index`:  Specifies which backup to restore. Non-negative values count from newest (0 = newest, 1 = second newest), negative values count from oldest (-1 = oldest, -2 = second oldest) (default: 0)
-- `--ignore-non-existing`: Prevents command failure if backup doesn't exist
-
-**truncate** - Removes old backups, keeping only the most recent ones
-```sh
-zsc object-storage truncate --storage <storage-name> --name <backup-name> [options]
-```
-Additional options:
-- `--dryRun`: Simulates truncate operation without performing actual deletions (default: false)
-- `--truncateCount`: Number of most recent backups to keep (default: 5)
-
-#### Examples
-```sh
-# List all backups
-zsc object-storage list --storage objectstorage --name daily-backup
-
-# Create a backup with retention
-zsc object-storage backup /var/www --storage objectstorage --name web-backup --truncateCount 5
-
-# Restore with dry run preview
-zsc object-storage restore --storage objectstorage --name database-backup --dryRun
-
-# Clean up old backups
-zsc object-storage truncate --storage objectstorage --name logs-backup --truncateCount 3
-```
-
-#### Example usage in `zerops.yaml`
-```yaml
-zerops:
-  - setup: app
-    run:
-      initCommands:
-        - "zsc object-storage restore --storage objectstorage --name $ZEROPS_StackName --ignore-non-existing ./data/"
-      crontab:
-        - timing: "*/10 * * * *"
-          command: "zsc object-storage backup --storage objectstorage --name $ZEROPS_StackName --truncateCount 5 ./data/"
-          allContainers: false
-```
-
----
-
-### shared-storage
-
-Manages shared storage volumes for persistent data storage.
-
-```sh
-zsc shared-storage [command]
-```
-
-#### Available sub-commands
-- `mount`: Mounts the shared storage
-- `unmount`: Unmounts the shared storage
-- `wait`: Waits for readiness of the storage mount
-
-#### Available flags
-- `-h, --help`: Help for the shared-storage command
-
-#### Examples
-```sh
-# View shared-storage help
-zsc shared-storage --help
-
-# Mount a shared storage volume
-zsc shared-storage mount <storage-name>
-
-# Unmount a shared storage volume
-zsc shared-storage unmount <storage-name>
-
-# Wait for a storage mount to be ready
-zsc shared-storage wait <storage-name>
-```
-
 ---
 
 ### crontab
@@ -312,7 +190,7 @@ zsc install <baseName> [flags]
 ```
 
 #### Required parameters
-- `baseName`: The technology and version to install - see the full list of supported [base environments](/zerops-yaml/base-list).
+- `<baseName>`: The technology and version to install - see the full list of supported [base environments](/zerops-yaml/base-list).
 
 #### Available flags
 - `--buildBase <string>`: Build base (default "php@8.4")
@@ -382,6 +260,103 @@ zerops:
       ports:
         - port: 8080
           http: true
+```
+
+---
+
+### object-storage
+
+Manages object storage operations for backups and restores.
+
+```sh
+zsc object-storage [command]
+```
+
+#### Available flags
+- `-h, --help`: Help for the object-storage command
+
+When using an object storage service, the command requires the following environment variables to be defined:
+
+* `objectstorage_apiUrl` - API URL of the object storage service
+* `objectstorage_accessKeyId` - Access key ID for authentication
+* `objectstorage_secretAccessKey` - Secret access key for authentication
+* `objectstorage_bucketName` - Name of the bucket to use
+
+These environment variables will be automatically available if the object storage service has `envIsolation: none` configured, or if the entire project has `envIsolation: none` set. Otherwise, you need to explicitly reference these environment variables in your `zerops.yaml` file.
+
+#### Sub-commands
+
+#### Common parameters
+All sub-commands share these parameters:
+- `--storage <string>`: Name of the object storage service
+- `--name <string>`: Name of the backup in storage
+- `--silent`, `-s`: Suppresses command output (default: false)
+- `--no-fail`: Prevents command failure with exit code 1 (default: false)
+
+**list** - Lists all available backups in the specified storage
+```sh
+zsc object-storage list --storage <storage-name> --name <backup-name>
+```
+
+**backup** - Creates a backup of specified directories to object storage
+```sh
+zsc object-storage backup <directory1> [<directory2>...] --storage <storage-name> --name <backup-name> [options]
+```
+Arguments:
+- `<directory>`: One or more directories to back up (at least one required)
+
+Additional options:
+- `--truncate-count <number>`: Number of most recent backups to keep after successful backup (default: 0)
+- `-C, --change-directory <directory>`: Change to directory before operation
+
+**restore** - Restores a backup from object storage to specified or original locations
+```sh
+zsc object-storage restore <directory> --storage <storage-name> --name <backup-name> [options]
+```
+Arguments:
+- `<directory>`: Directory to restore to. If omitted, files are restored to their original locations
+
+Additional options:
+- `--dryRun`: Simulates restore operation without performing actual changes
+- `--overwrite`: Allows overwriting existing files during restore
+- `--index <number>`: Specifies which backup to restore. Non-negative values count from newest (0 = newest, 1 = second newest), negative values count from oldest (-1 = oldest, -2 = second oldest) (default: 0)
+- `--ignore-non-existing`: Prevents command failure if backup does not exist
+- `--strip-components <number>`: Strip NUMBER leading components from file names on extraction
+
+**truncate** - Removes old backups, keeping only the most recent ones
+```sh
+zsc object-storage truncate --storage <storage-name> --name <backup-name> [options]
+```
+Additional options:
+- `--dryRun`: Simulates truncate operation without performing actual deletions (default: false)
+- `--truncate-count <number>`: Number of most recent backups to keep (default: 5)
+
+#### Examples
+```sh
+# List all backups
+zsc object-storage list --storage objectstorage --name daily-backup
+
+# Create a backup with retention
+zsc object-storage backup /var/www --storage objectstorage --name web-backup --truncate-count 5
+
+# Restore with dry run preview
+zsc object-storage restore --storage objectstorage --name database-backup --dryRun
+
+# Clean up old backups
+zsc object-storage truncate --storage objectstorage --name logs-backup --truncate-count 3
+```
+
+#### Example usage in `zerops.yaml`
+```yaml
+zerops:
+  - setup: app
+    run:
+      initCommands:
+        - "zsc object-storage restore --storage objectstorage --name $ZEROPS_StackName --ignore-non-existing ./data/"
+      crontab:
+        - timing: "*/10 * * * *"
+          command: "zsc object-storage backup --storage objectstorage --name $ZEROPS_StackName --truncate-count 5 ./data/"
+          allContainers: false
 ```
 
 ---
@@ -461,6 +436,72 @@ The container will scale down automatically if resources are not utilized, or if
 
 ---
 
+### setSecretEnv
+
+Securely update environment variables containing sensitive information.
+
+```sh
+zsc setSecretEnv <key> <content>
+```
+
+#### Arguments
+- `<key>`: The name of the environment variable to set
+- `<content>`: The new value for the variable, or `-` to read from stdin
+
+#### Available flags
+- `-h, --help`: Help for the setSecretEnv command
+
+#### Examples
+```sh
+# Set a secret environment variable directly
+zsc setSecretEnv SECRET_KEY "new_value"
+
+# Set a secret environment variable from stdin (useful for multi-line values or piping)
+echo "new_value" | zsc setSecretEnv SECRET_KEY -
+
+# Set a secret API key from a file
+cat api_key.txt | zsc setSecretEnv API_KEY -
+```
+
+:::info
+Secret environment variables are encrypted at rest and securely distributed to your containers. Use this command for storing sensitive configuration like API keys, tokens, and passwords.
+:::
+
+---
+
+### shared-storage
+
+Manages shared storage volumes for persistent data storage.
+
+```sh
+zsc shared-storage [command]
+```
+
+#### Available sub-commands
+- `mount`: Mounts the shared storage
+- `unmount`: Unmounts the shared storage
+- `wait`: Waits for readiness of the storage mount
+
+#### Available flags
+- `-h, --help`: Help for the shared-storage command
+
+#### Examples
+```sh
+# View shared-storage help
+zsc shared-storage --help
+
+# Mount a shared storage volume
+zsc shared-storage mount <storage-name>
+
+# Unmount a shared storage volume
+zsc shared-storage unmount <storage-name>
+
+# Wait for a storage mount to be ready
+zsc shared-storage wait <storage-name>
+```
+
+---
+
 ### test
 
 Run diagnostic tests to verify connectivity and service availability.
@@ -485,39 +526,6 @@ zsc test tcp <host>:<port> [flags]
 zsc test tcp api.zerops:80
 zsc test tcp database:5432 --timeout 1m
 ```
-
----
-
-### setSecretEnv
-
-Securely update environment variables containing sensitive information.
-
-```sh
-zsc setSecretEnv <key> <content>
-```
-
-#### Arguments
-- `key`: The name of the environment variable to set
-- `content`: The new value for the variable, or `-` to read from stdin
-
-#### Available flags
-- `-h, --help`: Help for the setSecretEnv command
-
-#### Examples
-```sh
-# Set a secret environment variable directly
-zsc setSecretEnv SECRET_KEY "new_value"
-
-# Set a secret environment variable from stdin (useful for multi-line values or piping)
-echo "new_value" | zsc setSecretEnv SECRET_KEY -
-
-# Set a secret API key from a file
-cat api_key.txt | zsc setSecretEnv API_KEY -
-```
-
-:::info
-Secret environment variables are encrypted at rest and securely distributed to your containers. Use this command for storing sensitive configuration like API keys, tokens, and passwords.
-:::
 
 ---
 
