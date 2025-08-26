@@ -1309,6 +1309,9 @@ Services in Zerops require computing resources that are billed separately from y
       $0.05 per 0.5 GB / 30 days
       Storage space for your applications and data
     
+:::note Daily Spending Control
+You can set daily spending limits in GUI for your project to control costs and avoid unexpected charges. This provides an alternative to configuring automatic resource scaling ranges while keeping your services running optimally.
+:::
 ## Additional Services
 Enhance your deployment with these optional services to meet specific requirements for networking, storage, and data transfer.
   
@@ -3703,9 +3706,13 @@ Import configuration version:
 - **Port**: 9200
 - **Protocol**: HTTP only
 - **Internal Access**: `http://{hostname}:9200`
-:::note
-When accessing from another service within the same project, use the service hostname as the connection address.
-:::
+- **Basic auth security**
+    - **User**: `elastic`
+    - **Password**: randomly generated during service creation, find under **Access Details** in service detail
+#### Example
+```sh
+curl -u elastic:generatedpassword http://elasticsearch:9200
+```
 ## Configuration Options
 ### Plugin Management
 You can configure Elasticsearch plugins using a comma-separated list in your environment secrets:
@@ -5637,7 +5644,7 @@ Variables that are specific to individual [services](/features/infrastructure#se
 ### User-Defined Variables
 You can define service-level variables in two ways:
 #### 1. Build & Runtime Variables
-These variables are defined with `envVariables` attribute in the `build` or `run` section of your [zerops.yaml](/zerops-yaml/specification) file and are accessible within their respective containers.
+These variables are defined with `envVariables` attribute in the [build](/zerops-yaml/specification#envvariables-) or [run](/zerops-yaml/specification#envvariables--1) section of your `zerops.yaml` file and are accessible within their respective containers.
 ```yaml title="zerops.yaml"
 ...
   build:
@@ -18583,6 +18590,7 @@ curl -L https://zerops.io/zcli/install.sh | sh
 ```
 zCLI will be installed inside `/usr/bin` or `/usr/local/bin`.
 ### Windows
+Execute following command in PowerShell:
 ```powershell
 irm https://zerops.io/zcli/install.ps1 | iex
 ```
@@ -21556,43 +21564,36 @@ Configure how the balancer communicates with backend services:
       Parameter
       Default
       Range
-      Description
     
       Enable buffering of client request body
       proxy_request_buffering
       off
       on/off
-      Buffer client request bodies before forwarding
     
       Enable buffering of responses from proxied server
       proxy_buffering
       on
       on/off
-      Buffer responses from backend services
     
       Size of the buffer used for reading the first part of the response
       proxy_buffer_size
       32k
       1k-256k
-      Buffer size for first part of backend response
     
       Number of buffers used for reading a response from the proxied server
       proxy_buffers_number
       4
       1-16
-      Number of buffers for reading backend responses
     
       Size of buffers for reading a response from the proxied server
       proxy_buffers_size
       256k
       1k-1m
-      Size of buffers for reading backend responses
     
       Size of buffers that can be busy sending response to the client
       proxy_busy_buffers_size
       256k
       1k-1m
-      Size of buffers for sending response to client
     
 :::tip Recommendations
 - **Real-time APIs**: Set `proxy_buffering` to off for lower latency
