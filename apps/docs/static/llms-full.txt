@@ -20867,13 +20867,49 @@ This allows you to easily move configurations between environments or create new
 
 ----------------------------------------
 
+# References > Log Forwarding
+
+For more advanced [log](/references/logging) analysis and centralized logging, you can forward all your Zerops logs to external logging services. The Zerops logger service uses **syslog-ng** to enable this functionality.
+## Ready-Made Configurations
+Zerops provides pre-configured setups for popular logging services:
+- **[Better Stack](https://betterstack.com/)**
+- **[Papertrail](https://www.papertrail.com/)**
+- **Self-hosted [ELK Stack](https://www.elastic.co/elastic-stack) (Logstash)**
+To set up one of these integrations, go to your project detail, select **Advanced Observability**, choose your preferred service, and follow the guided steps in the interface.
+## Self-Hosted Logstash
+To collect logs in a self-hosted ELK stack, a Logstash instance (deployed as the `logstash` service) is required. Logstash listens for incoming UDP syslog packets and indexes them to Elasticsearch.
+The one-click GUI integration setup is all you need to get started. After setup completes, logs will appear in Kibana's "Logs > Explorer" section. You can find access information in the **Advanced Observability** section of your project in the GUI.
+:::warning
+Setting up log forwarding to ELK will override any previously configured log forwarding.
+:::
+### What Happens Behind the Scenes
+1. The `elkstorage`, `kibana`, and `logstash` services are deployed and configured in the target project (if not already present)
+2. If logging is required across different projects, the `logstash` service is made publicly accessible through port routing with firewall whitelisting for source project IPs
+3. Log forwarding is configured on source projects to forward logs to the target Logstash instance
+:::tip
+For the complete ELK stack setup including tracing capabilities, see the [Self-Hosted Observability](/references/metrics) guide.
+:::
+## Custom Log Forwarding Configuration
+You can set up forwarding to any syslog-ng compatible software. To do this, navigate to your project detail's **Advanced Observability** section, and choose the "Setup forwarding to any syslog-ng compatible software" option.
+When configuring your custom syslog-ng setup, note the following important details:
+### Certificate Configuration
+- Certificates are located in `/etc/ssl/certs`
+- If your configuration references `/etc/syslog-ng/ca.d` or `/etc/syslog-ng/cert.d`, change these paths to `/etc/ssl/certs`
+- For custom certificates, you can use: `ca-file("/etc/syslog-ng/user.crt")`
+- You can combine custom certificates with standard certificates using: `ca-dir("/etc/ssl/certs")`
+  (This will verify both your custom certificate and standard certificates like those from LetsEncrypt)
+### Source Configuration
+- Zerops uses `s_src` as the source configuration name
+- This differs from Papertrail, which might instruct you to "replace 's_sys' with the name you found" - in Zerops, always use `s_src` instead
+
+----------------------------------------
+
 # References > Logging
 
-## Overview
 Zerops automatically collects logs from all services in your project through a built-in logger service. These logs include runtime operations, database activities, build processes, and more.
 ## Project-Wide Logs
-To view all project logs, navigate to your project detail and select the **Log Forwarding & Logs Overview** page. In the **Project logs overview** section, you'll find a consolidated view of all logging activity from all services with multiple filtering options.
-Additionally, from the same page, you can set up [log forwarding](#log-forwarding) to external logging services for more advanced analysis and long-term storage.
+To view all project logs, navigate to your project detail and select the **Logs overview** section, where you'll find a consolidated view of all logging activity from all services with multiple filtering options.
+Additionally, in the **Advanced Observability** section, you can set up [log forwarding](/references/log-forwarding) to external logging services for more advanced analysis and long-term storage.
 ## Service-Specific Logs
 Zerops provides different log types depending on the service:
 ### Build Logs
@@ -20903,25 +20939,94 @@ To view logs from all containers of a service combined, you can either use the P
 :::important
 For severity levels to work properly in Zerops, your application must log to syslog.
 :::
-## Log Forwarding
-For more advanced log analysis and centralized logging, you can forward all your Zerops logs to external logging services. The Zerops logger service uses **syslog-ng** to enable this functionality.
-### Ready-Made Configurations
-Zerops provides pre-configured setups for popular logging services:
-- **[Better Stack](https://betterstack.com/)**
-- **[Papertrail](https://www.papertrail.com/)**
-To set up one of these integrations, go to your project detail, select **Log Forwarding & Logs Overview**, choose your preferred service, and follow the guided steps in the interface.
-### Custom Log Forwarding Configuration
-You can set up forwarding to any syslog-ng compatible software. To do this, navigate to your project detail, select **Log Forwarding & Logs Overview**, and choose the "Setup forwarding to any syslog-ng compatible software" option.
-When configuring your custom syslog-ng setup, note the following important details:
-#### Certificate Configuration
-- Certificates are located in `/etc/ssl/certs`
-- If your configuration references `/etc/syslog-ng/ca.d` or `/etc/syslog-ng/cert.d`, change these paths to `/etc/ssl/certs`
-- For custom certificates, you can use: `ca-file("/etc/syslog-ng/user.crt")`
-- You can combine custom certificates with standard certificates using: `ca-dir("/etc/ssl/certs")`
-  (This will verify both your custom certificate and standard certificates like those from LetsEncrypt)
-#### Source Configuration
-- Zerops uses `s_src` as the source configuration name
-- This differs from Papertrail, which might instruct you to "replace 's_sys' with the name you found" - in Zerops, always use `s_src` instead
+
+----------------------------------------
+
+# References > Metrics
+
+Zerops Advanced Observability provides one-click, self-hosted, pre-configured deployments of the **[ELK stack](#elk-stack)** or **[Prometheus with Grafana](#prometheus-with-grafana)**. This enables comprehensive observability for your deployments while maintaining full control over your data and infrastructure.
+## Deployment Modes
+Both ELK and Prometheus can be deployed in two ways:
+- **Local deployment**: Services are deployed within your target project
+- **Global deployment**: A dedicated project is created specifically for observability
+## ELK Stack
+The ELK observability setup deploys and configures two base services:
+- **Elasticsearch** (as `elkstorage`)
+- **Kibana** (as `kibana`) - the observability access point
+### Logging
+For log collection with ELK, see the [Log Forwarding](/references/log-forwarding#self-hosted-logstash) guide which covers the Logstash setup and configuration.
+### Tracing
+To collect traces in the ELK stack, an APM Server instance (deployed as the `apmserver` service) is required. APM Server listens for incoming traces securely over HTTPS and indexes them to Elasticsearch.
+First, follow the one-click GUI integration setup to deploy the required infrastructure. Then configure your application to send traces to APM Server.
+#### Setting Up APM Agents
+1. Update your code according to the [APM documentation](https://www.elastic.co/guide/en/apm/agent/index.html) for your application's language. See this [simple Go application](https://github.com/zerops-recipe-apps/go-hello-world-app/tree/with-apm-and-metrics) using APM libraries for reference.
+2. Add the following environment variables to your application service (these are specific to the official Go APM Agent library and may differ for other agents):
+```
+ELASTIC_APM_ACTIVE=true
+ELASTIC_APM_SERVICE_NAME=recipe-go
+ELASTIC_APM_SERVER_URL=https://apmserver.url.copy.from.gui
+ELASTIC_APM_SECRET_TOKEN=secret_token_copy_from_gui
+```
+:::note
+The `ELASTIC_APM_ACTIVE` variable is set to `false` by default on Zerops, so you must explicitly set it to `true` to enable APM for the official Go APM agent.
+:::
+3. Restart or reload your application service.
+You should start seeing traces appear in Kibana's "Applications > Traces" section.
+#### What Happens Behind the Scenes
+1. The `elkstorage`, `kibana`, and `apmserver` services are deployed and configured in the target project (if not already present)
+2. The `apmserver` is made publicly accessible over HTTPS via a Zerops subdomain and configured with a secret token for secure access
+Access information for both Kibana and APM Server can be found in the **Advanced Observability** section of your project in the GUI.
+### Next Steps
+- **Security**: Set up custom domains for Kibana and APM Server
+- **Optimization**: Connect to APM Server locally via HTTP for improved performance
+- **Customization**: Fork the [ELK recipe](https://github.com/zeropsio/recipe-elk), customize the Logstash configuration, and redeploy the `logstash` service via `zcli`
+## Prometheus with Grafana
+The full Prometheus setup consists of:
+- **Prometheus** (as `prometheus`)
+- **Grafana** (as `grafana`) - the observability access point
+- **PostgreSQL database** (as `grafanadb`) - for Grafana data storage
+- **S3 bucket** (as `prometheusbackups`) - for storing Prometheus backups
+Metrics can be forwarded to the target project via a Prometheus exporter (single `prometheuslight` service configured [with remote write](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.remote_write/#prometheusremote_write)). When present in a source project, it collects metrics and forwards them to Prometheus in the target project.
+Since Prometheus supports only filesystem storage and non-HA (single instance) setup, the `prometheus` service is configured to run a backup cron job that stores metric data snapshots in object storage.
+### Metrics
+After deploying the full or forwarder Prometheus setup, metrics are automatically scraped by Prometheus. After setup completes, log in to Grafana using the credentials found in the **Advanced Observability** section of your project in the GUI, then navigate to `/dashboards` to start exploring your metrics.
+Zerops provides several metrics out of the box:
+- Service scaling and resource metrics
+- PostgreSQL database service metrics (with HAProxy balancer metrics in HA setups)
+- MariaDB database service metrics
+- Valkey database metrics
+:::note
+Some PostgreSQL database metrics are available only after enabling the `pg_stat_statements` extension. Run `CREATE EXTENSION IF NOT EXISTS pg_stat_statements;` as a superuser and restart the database service.
+:::
+You can also expose custom metrics from your applications.
+#### Exposing Custom Metrics
+1. Configure your application to expose an HTTP `/metrics` endpoint on an arbitrary port. See this [simple Go application using `promauto`](https://github.com/zerops-recipe-apps/go-hello-world-app/tree/with-apm-and-metrics) for reference.
+   :::note
+   Only the `/metrics` path is scraped and cannot currently be configured otherwise.
+   :::
+2. Add and commit the `ZEROPS_PROMETHEUS_PORT` environment variable to your application service with the port where you exposed the `/metrics` endpoint:
+```
+Single port:
+9090
+Multiple ports can be defined using commas:
+9090,9091
+```
+For example: `ZEROPS_PROMETHEUS_PORT=9090`. After setting the environment variable, your service's ports will be automatically added to metrics discovery and scraped by Prometheus.
+#### What Happens Behind the Scenes
+**Full setup:**
+1. The `prometheus`, `grafana`, `grafanadb`, and `prometheusbackups` services are deployed and configured (if not already present)
+2. `grafana` is made publicly accessible over HTTPS, securely accessible via a generated password
+After that, metrics are scraped and available for visualization in Grafana.
+**Forwarder setup:**
+1. The `prometheuslight` forwarder service is deployed in the source project
+2. The `prometheus`, `grafana`, `grafanadb`, and `prometheusbackups` services are deployed and configured in the target project (if not already present)
+3. `grafana` is made publicly accessible over HTTPS, securely accessible via a generated password
+4. `prometheus` is made publicly accessible over HTTPS via a Zerops zone domain and secured with basic access authentication (username and password)
+5. `prometheuslight` is configured to forward metrics to the target `prometheus` using the generated credentials over secure HTTPS
+### Next Steps
+- **Security**: Set up custom domains for Grafana and Prometheus
+- **Customization**: Fork the [Prometheus recipe](https://github.com/zeropsio/recipe-prometheus), customize dashboards and alerting rules, and redeploy via `zcli`
+- **Advanced monitoring**: Explore Grafana's alerting capabilities and create custom dashboards for your specific use cases
 
 ----------------------------------------
 
