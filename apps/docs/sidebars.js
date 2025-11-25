@@ -721,9 +721,27 @@ module.exports = {
         {
           type: 'doc',
           id: 'references/logging',
-          label: 'Logging & Log Forwarding',
+          label: 'Logs',
           customProps: {
             sidebar_icon: 'list-bullet',
+          },
+          className: 'homepage-sidebar-item',
+        },
+        {
+          type: 'doc',
+          id: 'references/log-forwarding',
+          label: 'Log Forwarding',
+          customProps: {
+            sidebar_icon: 'arrow-right-on-rectangle',
+          },
+          className: 'homepage-sidebar-item',
+        },
+        {
+          type: 'doc',
+          id: 'references/metrics',
+          label: 'Metrics & Tracing',
+          customProps: {
+            sidebar_icon: 'chart-bar',
           },
           className: 'homepage-sidebar-item',
         },

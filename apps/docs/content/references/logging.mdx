@@ -1,17 +1,15 @@
 ---
-title: Logging & Log Forwarding
-description: Learn how to access logs and set up log forwarding in Zerops.
+title: Logging
+description: Learn how to access logs in Zerops.
 ---
-
-## Overview
 
 Zerops automatically collects logs from all services in your project through a built-in logger service. These logs include runtime operations, database activities, build processes, and more.
 
 ## Project-Wide Logs
 
-To view all project logs, navigate to your project detail and select the **Log Forwarding & Logs Overview** page. In the **Project logs overview** section, you'll find a consolidated view of all logging activity from all services with multiple filtering options.
+To view all project logs, navigate to your project detail and select the **Logs overview** section, where you'll find a consolidated view of all logging activity from all services with multiple filtering options.
 
-Additionally, from the same page, you can set up [log forwarding](#log-forwarding) to external logging services for more advanced analysis and long-term storage.
+Additionally, in the **Advanced Observability** section, you can set up [log forwarding](/references/log-forwarding) to external logging services for more advanced analysis and long-term storage.
 
 ## Service-Specific Logs
 
@@ -52,33 +50,3 @@ To view logs from all containers of a service combined, you can either use the P
 :::important
 For severity levels to work properly in Zerops, your application must log to syslog.
 :::
-
-## Log Forwarding
-
-For more advanced log analysis and centralized logging, you can forward all your Zerops logs to external logging services. The Zerops logger service uses **syslog-ng** to enable this functionality.
-
-### Ready-Made Configurations
-
-Zerops provides pre-configured setups for popular logging services:
-
-- **[Better Stack](https://betterstack.com/)**
-- **[Papertrail](https://www.papertrail.com/)**
-
-To set up one of these integrations, go to your project detail, select **Log Forwarding & Logs Overview**, choose your preferred service, and follow the guided steps in the interface.
-
-### Custom Log Forwarding Configuration
-
-You can set up forwarding to any syslog-ng compatible software. To do this, navigate to your project detail, select **Log Forwarding & Logs Overview**, and choose the "Setup forwarding to any syslog-ng compatible software" option.
-
-When configuring your custom syslog-ng setup, note the following important details:
-
-#### Certificate Configuration
-- Certificates are located in `/etc/ssl/certs`
-- If your configuration references `/etc/syslog-ng/ca.d` or `/etc/syslog-ng/cert.d`, change these paths to `/etc/ssl/certs`
-- For custom certificates, you can use: `ca-file("/etc/syslog-ng/user.crt")`
-- You can combine custom certificates with standard certificates using: `ca-dir("/etc/ssl/certs")`
-  (This will verify both your custom certificate and standard certificates like those from LetsEncrypt)
-
-#### Source Configuration
-- Zerops uses `s_src` as the source configuration name
-- This differs from Papertrail, which might instruct you to "replace 's_sys' with the name you found" - in Zerops, always use `s_src` instead

@@ -1,0 +1,53 @@
+---
+title: Log Forwarding
+description: Learn how to set up log forwarding in Zerops.
+---
+
+For more advanced [log](/references/logging) analysis and centralized logging, you can forward all your Zerops logs to external logging services. The Zerops logger service uses **syslog-ng** to enable this functionality.
+
+## Ready-Made Configurations
+
+Zerops provides pre-configured setups for popular logging services:
+
+- **[Better Stack](https://betterstack.com/)**
+- **[Papertrail](https://www.papertrail.com/)**
+- **Self-hosted [ELK Stack](https://www.elastic.co/elastic-stack) (Logstash)**
+
+To set up one of these integrations, go to your project detail, select **Advanced Observability**, choose your preferred service, and follow the guided steps in the interface.
+
+## Self-Hosted Logstash
+
+To collect logs in a self-hosted ELK stack, a Logstash instance (deployed as the `logstash` service) is required. Logstash listens for incoming UDP syslog packets and indexes them to Elasticsearch.
+
+The one-click GUI integration setup is all you need to get started. After setup completes, logs will appear in Kibana's "Logs > Explorer" section. You can find access information in the **Advanced Observability** section of your project in the GUI.
+
+:::warning
+Setting up log forwarding to ELK will override any previously configured log forwarding.
+:::
+
+### What Happens Behind the Scenes
+
+1. The `elkstorage`, `kibana`, and `logstash` services are deployed and configured in the target project (if not already present)
+2. If logging is required across different projects, the `logstash` service is made publicly accessible through port routing with firewall whitelisting for source project IPs
+3. Log forwarding is configured on source projects to forward logs to the target Logstash instance
+
+:::tip
+For the complete ELK stack setup including tracing capabilities, see the [Self-Hosted Observability](/references/metrics) guide.
+:::
+
+## Custom Log Forwarding Configuration
+
+You can set up forwarding to any syslog-ng compatible software. To do this, navigate to your project detail's **Advanced Observability** section, and choose the "Setup forwarding to any syslog-ng compatible software" option.
+
+When configuring your custom syslog-ng setup, note the following important details:
+
+### Certificate Configuration
+- Certificates are located in `/etc/ssl/certs`
+- If your configuration references `/etc/syslog-ng/ca.d` or `/etc/syslog-ng/cert.d`, change these paths to `/etc/ssl/certs`
+- For custom certificates, you can use: `ca-file("/etc/syslog-ng/user.crt")`
+- You can combine custom certificates with standard certificates using: `ca-dir("/etc/ssl/certs")`
+  (This will verify both your custom certificate and standard certificates like those from LetsEncrypt)
+
+### Source Configuration
+- Zerops uses `s_src` as the source configuration name
+- This differs from Papertrail, which might instruct you to "replace 's_sys' with the name you found" - in Zerops, always use `s_src` instead
