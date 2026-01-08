@@ -1,0 +1,137 @@
+---
+title: Ubuntu build process
+description: Learn more about build process of Ubuntu application
+---
+
+import { SetVar } from '@site/src/components/content/var';
+import BuildProcessContent from '@site/src/components/content/build-process.mdx';
+
+<SetVar name="servicePath" value="ubuntu" />
+<SetVar name="serviceDisplay" value="Ubuntu" />
+<SetVar name="defaultEnvironment" value="Git" />
+<SetVar name="buildCommandExample" value={`buildCommands:
+  - go mod download -x
+  - go build -v -o app`} />
+<SetVar name="codeLanguage" value="yaml" />
+
+import { Var, VarLink, VarCodeBlock } from '@site/src/components/content/var';
+import data from '@site/static/data.json';
+
+<p align="center">
+  <img
+    src="/img/screenshots/build_deploy_pipeline-step2.png"
+    alt="image"
+    width="100%"
+    height="auto"
+  />
+</p>
+
+## Build process overview
+
+Zerops starts a temporary build container and performs the following actions:
+
+1. **Installs the build environment** - Sets up base system and <Var name="serviceDisplay" /> runtime
+2. **Downloads your application source code** - From [GitHub ↗](https://www.github.com), [GitLab ↗](https://www.gitlab.com) or via [Zerops CLI](/references/cli)
+3. **Optionally customizes the build environment** - Runs prepare commands if configured
+4. **Runs the build commands** - Executes your build process
+5. **Uploads the application artifact** - Stores build output to internal Zerops storage
+6. **Caches selected files** - Preserves specified files for faster future builds
+
+The build container is automatically deleted after the build has finished or failed.
+
+## Build configuration
+
+Configure your <Var name="serviceDisplay" /> build process in your `zerops.yaml` file according to the <VarLink name="servicePath" path="/{{VAR}}/how-to/build-pipeline">full build & deploy <Var name="serviceDisplay" /> pipeline guide</VarLink>.
+
+## Build environment
+
+### Default <Var name="serviceDisplay" /> build environment
+
+The default <Var name="serviceDisplay" /> build environment contains:
+
+- <span>{data.ubuntu.default}</span>
+- [zCLI](/references/cli), Zerops command line tool
+- <Var name="defaultEnvironment" />
+
+### Customize build environment
+
+To install additional packages or tools, add one or more <VarLink name="servicePath" path="/{{VAR}}/how-to/build-pipeline#preparecommands">build.prepareCommands</VarLink> to your `zerops.yaml`.
+
+:::info
+The application code is available in the `/var/www` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
+:::
+
+### Build hardware resources
+
+All runtime services use the same hardware resources for build containers:
+
+<table className="w-fit my-1.5">
+  <thead>
+    <tr className="text-center rounded-lg">
+      <th className="w-fit"><strong>HW resource</strong></th>
+      <th className="w-fit"><strong>Minimum</strong></th>
+      <th className="w-fit"><strong>Maximum</strong></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit font-semibold">CPU cores</td>
+      <td className="w-fit">1</td>
+      <td className="w-fit">5</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">RAM</td>
+      <td className="w-fit">8 GB</td>
+      <td className="w-fit">8 GB</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">Disk</td>
+      <td className="w-fit">1 GB</td>
+      <td className="w-fit">100 GB</td>
+    </tr>
+  </tbody>
+</table>
+
+Build containers start with minimum resources and scale vertically up to maximum capacity as needed.
+
+### Build time limit
+
+The time limit for the whole build pipeline is **1 hour**. After 1 hour, Zerops will terminate the build pipeline and delete the build container.
+
+:::info
+Build container resources are not charged separately. Limited build time is included in your [project core plan](/company/pricing#project-core-plans), with additional build time available if needed.
+:::
+
+## Troubleshooting <Var name="serviceDisplay" /> builds
+
+:::tip Advanced troubleshooting
+For complex build issues that require investigation, you can enable [debug mode](/features/debug-mode) to pause the build process at specific points and inspect the build container state interactively.
+:::
+
+### Build and prepare command failures
+
+If any <VarLink name="servicePath" path="/{{VAR}}/how-to/build-pipeline#buildcommands">build command</VarLink> or <VarLink name="servicePath" path="/{{VAR}}/how-to/build-pipeline#preparecommands">prepare command</VarLink> fails (returns non-zero exit code), the build is canceled. Check the <VarLink name="servicePath" path="/{{VAR}}/how-to/logs#build-log">build log</VarLink> to troubleshoot the error.
+
+### Build cache issues
+
+If you encounter unexpected build behavior or dependency issues, the problem might be related to cached build data. While Zerops maintains the build cache to speed up deployments, sometimes you may need to start fresh.
+
+To invalidate the build cache:
+
+1. Go to your service detail in Zerops GUI
+2. Choose **Pipelines & CI/CD Settings** from the left menu
+3. Click on the **Invalidate build cache** button
+
+This will force Zerops to run the next build clean, including all prepare commands.
+
+Learn more about [build cache behavior](/features/build-cache).
+
+## More resources
+
+For more details about the build and deploy pipeline, including how to cancel builds and manage application versions, see the [general pipeline documentation](/features/pipeline).
+
+## Next steps
+
+- Understand the <VarLink name="servicePath" path="/{{VAR}}/how-to/deploy-process">deployment process</VarLink>
+- Learn how to <VarLink name="servicePath" path="/{{VAR}}/how-to/customize-runtime">customize the runtime environment</VarLink>
+- Explore <VarLink name="servicePath" path="/{{VAR}}/how-to/logs">build and runtime logs</VarLink>
