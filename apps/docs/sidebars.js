@@ -131,23 +131,23 @@ module.exports = {
       },
       className: 'homepage-sidebar-item',
     },
-    {
-      type: 'html',
-      value: 'Perfectly suited for',
-      customProps: {
-        sidebar_is_group_divider: true,
-      },
-      className: 'homepage-sidebar-item',
-    },
-    {
-      type: 'ref',
-      id: 'frameworks/laravel',
-      label: 'Laravel',
-      customProps: {
-        sidebar_icon: 'laravel',
-      },
-      className: 'homepage-sidebar-item  service-sidebar-item',
-    },
+//    {
+//      type: 'html',
+//      value: 'Perfectly suited for',
+//      customProps: {
+//        sidebar_is_group_divider: true,
+//      },
+//      className: 'homepage-sidebar-item',
+//    },
+//    {
+//      type: 'ref',
+//      id: 'frameworks/laravel',
+//      label: 'Laravel',
+//      customProps: {
+//        sidebar_icon: 'laravel',
+//      },
+//      className: 'homepage-sidebar-item  service-sidebar-item',
+//    },
     {
       type: 'html',
       value: 'All Supported Services',
@@ -292,35 +292,33 @@ module.exports = {
         sidebar_is_group_headline: true,
       },
       items: [
-//        {
-//          type: 'ref',
-//          id: 'ubuntu/overview',
-//          label: 'Ubuntu',
-//          customProps: {
-//            sidebar_icon: 'ubuntu',
-//            sidebar_is_soon: true,
-//          },
-//          className: 'homepage-sidebar-item  service-sidebar-item',
-//        },
-//        {
-//          type: 'ref',
-//          id: 'alpine/overview',
-//          label: 'Alpine',
-//          customProps: {
-//            sidebar_icon: 'alpine',
-//            sidebar_is_soon: true,
-//          },
-//          className: 'homepage-sidebar-item  service-sidebar-item',
-//        },
-            {
-              type: 'ref',
-              id: 'docker/overview',
-              label: 'Docker',
-              customProps: {
-                sidebar_icon: 'docker',
-              },
-              className: 'homepage-sidebar-item  service-sidebar-item',
-            },
+        {
+          type: 'ref',
+          id: 'ubuntu/overview',
+          label: 'Ubuntu',
+          customProps: {
+            sidebar_icon: 'ubuntu',
+          },
+          className: 'homepage-sidebar-item  service-sidebar-item',
+        },
+        {
+          type: 'ref',
+          id: 'alpine/overview',
+          label: 'Alpine',
+          customProps: {
+            sidebar_icon: 'alpine',
+          },
+          className: 'homepage-sidebar-item  service-sidebar-item',
+        },
+        {
+          type: 'ref',
+          id: 'docker/overview',
+          label: 'Docker',
+          customProps: {
+            sidebar_icon: 'docker',
+          },
+          className: 'homepage-sidebar-item  service-sidebar-item',
+        },
       ],
     },
     {
@@ -1905,6 +1903,266 @@ module.exports = {
       },
     },
   ],
+    ubuntu: [
+        {
+          type: 'ref',
+          id: 'homepage',
+          label: 'Back to home',
+          customProps: {
+            sidebar_is_back_link: true,
+            sidebar_icon: 'back-arrow',
+          },
+        },
+        {
+          type: 'doc',
+          id: 'ubuntu/overview',
+          label: 'Ubuntu',
+          customProps: {
+            sidebar_is_title: true,
+            sidebar_icon: 'ubuntu',
+          },
+        },
+        {
+          type: 'category',
+          label: 'Management',
+          collapsible: false,
+          customProps: {
+            sidebar_is_group_headline: true,
+          },
+          items: [
+            {
+              type: 'doc',
+              id: 'ubuntu/how-to/create',
+              label: 'Create Ubuntu service',
+            },
+            {
+              type: 'doc',
+              id: 'ubuntu/how-to/upgrade',
+              label: 'Upgrade Ubuntu service',
+            },
+            {
+              type: 'doc',
+              id: 'ubuntu/how-to/delete',
+              label: 'Delete Ubuntu service',
+            },
+            {
+              type: 'doc',
+              id: 'ubuntu/how-to/controls',
+              label: 'Stop & start Ubuntu runtime service',
+            },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Configuration & Environment',
+          collapsible: false,
+          customProps: {
+            sidebar_is_group_headline: true,
+          },
+          items: [
+            {
+              type: 'doc',
+              id: 'ubuntu/how-to/env-variables',
+              label: 'Manage environment variables',
+            },
+            {
+              type: 'doc',
+              id: 'ubuntu/how-to/customize-runtime',
+              label: 'Customize Ubuntu runtime',
+            },
+            {
+              type: 'doc',
+              id: 'ubuntu/how-to/scaling',
+              label: 'Scale Ubuntu runtime service',
+            },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Build & Deployment',
+          collapsible: false,
+          customProps: {
+            sidebar_is_group_headline: true,
+          },
+          items: [
+            {
+              type: 'doc',
+              id: 'ubuntu/how-to/build-pipeline',
+              label: 'Configure build & deploy pipeline',
+            },
+            {
+              type: 'doc',
+              id: 'ubuntu/how-to/trigger-pipeline',
+              label: 'Trigger build pipeline',
+            },
+            {
+              type: 'doc',
+              id: 'ubuntu/how-to/build-process',
+              label: 'Build process',
+            },
+            {
+              type: 'doc',
+              id: 'ubuntu/how-to/deploy-process',
+              label: 'Deploy process',
+            },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Maintenance & Monitoring',
+          collapsible: false,
+          customProps: {
+            sidebar_is_group_headline: true,
+          },
+          items: [
+            {
+              type: 'doc',
+              id: 'ubuntu/how-to/logs',
+              label: 'Setup & access logs',
+            },
+            {
+              type: 'doc',
+              id: 'ubuntu/how-to/filebrowser',
+              label: 'Browse container files',
+            },
+            {
+              type: 'doc',
+              id: 'ubuntu/how-to/shared-storage',
+              label: 'Connect / disconnect shared storage',
+            },
+          ],
+        },
+      ],
+      alpine: [
+          {
+            type: 'ref',
+            id: 'homepage',
+            label: 'Back to home',
+            customProps: {
+              sidebar_is_back_link: true,
+              sidebar_icon: 'back-arrow',
+            },
+          },
+          {
+            type: 'doc',
+            id: 'alpine/overview',
+            label: 'Alpine',
+            customProps: {
+              sidebar_is_title: true,
+              sidebar_icon: 'alpine',
+            },
+          },
+          {
+            type: 'category',
+            label: 'Management',
+            collapsible: false,
+            customProps: {
+              sidebar_is_group_headline: true,
+            },
+            items: [
+              {
+                type: 'doc',
+                id: 'alpine/how-to/create',
+                label: 'Create Alpine service',
+              },
+              {
+                type: 'doc',
+                id: 'alpine/how-to/upgrade',
+                label: 'Upgrade Alpine service',
+              },
+              {
+                type: 'doc',
+                id: 'alpine/how-to/delete',
+                label: 'Delete Alpine service',
+              },
+              {
+                type: 'doc',
+                id: 'alpine/how-to/controls',
+                label: 'Stop & start Alpine runtime service',
+              },
+            ],
+          },
+          {
+            type: 'category',
+            label: 'Configuration & Environment',
+            collapsible: false,
+            customProps: {
+              sidebar_is_group_headline: true,
+            },
+            items: [
+              {
+                type: 'doc',
+                id: 'alpine/how-to/env-variables',
+                label: 'Manage environment variables',
+              },
+              {
+                type: 'doc',
+                id: 'alpine/how-to/customize-runtime',
+                label: 'Customize Alpine runtime',
+              },
+              {
+                type: 'doc',
+                id: 'alpine/how-to/scaling',
+                label: 'Scale Alpine runtime service',
+              },
+            ],
+          },
+          {
+            type: 'category',
+            label: 'Build & Deployment',
+            collapsible: false,
+            customProps: {
+              sidebar_is_group_headline: true,
+            },
+            items: [
+              {
+                type: 'doc',
+                id: 'alpine/how-to/build-pipeline',
+                label: 'Configure build & deploy pipeline',
+              },
+              {
+                type: 'doc',
+                id: 'alpine/how-to/trigger-pipeline',
+                label: 'Trigger build pipeline',
+              },
+              {
+                type: 'doc',
+                id: 'alpine/how-to/build-process',
+                label: 'Build process',
+              },
+              {
+                type: 'doc',
+                id: 'alpine/how-to/deploy-process',
+                label: 'Deploy process',
+              },
+            ],
+          },
+          {
+            type: 'category',
+            label: 'Maintenance & Monitoring',
+            collapsible: false,
+            customProps: {
+              sidebar_is_group_headline: true,
+            },
+            items: [
+              {
+                type: 'doc',
+                id: 'alpine/how-to/logs',
+                label: 'Setup & access logs',
+              },
+              {
+                type: 'doc',
+                id: 'alpine/how-to/filebrowser',
+                label: 'Browse container files',
+              },
+              {
+                type: 'doc',
+                id: 'alpine/how-to/shared-storage',
+                label: 'Connect / disconnect shared storage',
+              },
+            ],
+          },
+        ],
   docker: [
     {
       type: 'ref',
@@ -2993,194 +3251,194 @@ module.exports = {
         ],
       },
     ],
-  laravel: [
-    {
-      type: 'ref',
-      id: 'homepage',
-      label: 'Back to home',
-      customProps: {
-        sidebar_is_back_link: true,
-        sidebar_icon: 'back-arrow',
-      },
-    },
-    {
-      type: 'doc',
-      id: 'frameworks/laravel',
-      label: 'Laravel',
-      customProps: {
-        sidebar_is_title: true,
-        sidebar_icon: 'laravel',
-      },
-    },
-    {
-      type: 'doc',
-      id: 'frameworks/laravel/introduction',
-      label: 'Quickstart Guide',
-      customProps: {
-        sidebar_icon: 'rocket-launch',
-      },
-    },
-    {
-      type: 'category',
-      label: 'Features',
-      collapsible: false,
-      customProps: {
-        sidebar_is_group_headline: true,
-      },
-      items: [
-        {
-          type: 'doc',
-          id: 'frameworks/laravel/env-variables',
-          label: 'Environment Variables',
-        },
+//  laravel: [
+//    {
+//      type: 'ref',
+//      id: 'homepage',
+//      label: 'Back to home',
+//      customProps: {
+//        sidebar_is_back_link: true,
+//        sidebar_icon: 'back-arrow',
+//      },
+//    },
+//    {
+//      type: 'doc',
+//      id: 'frameworks/laravel',
+//      label: 'Laravel',
+//      customProps: {
+//        sidebar_is_title: true,
+//        sidebar_icon: 'laravel',
+//      },
+//    },
+//    {
+//      type: 'doc',
+//      id: 'frameworks/laravel/introduction',
+//      label: 'Quickstart Guide',
+//      customProps: {
+//        sidebar_icon: 'rocket-launch',
+//      },
+//    },
+//    {
+//      type: 'category',
+//      label: 'Features',
+//      collapsible: false,
+//      customProps: {
+//        sidebar_is_group_headline: true,
+//      },
+//      items: [
 //        {
 //          type: 'doc',
-//          id: 'frameworks/laravel/local-development',
+//          id: 'frameworks/laravel/env-variables',
+//          label: 'Environment Variables',
+//        },
+////        {
+////          type: 'doc',
+////          id: 'frameworks/laravel/local-development',
+////          label: 'Local Development',
+////        },
+//        {
+//          type: 'doc',
+//          id: 'frameworks/laravel/migrations',
+//          label: 'Database Migrations',
+//        },
+//        {
+//          type: 'doc',
+//          id: 'frameworks/laravel/redis',
+//          label: 'Cache & Queue with Redis',
+//        },
+//        {
+//          type: 'doc',
+//          id: 'frameworks/laravel/cron',
+//          label: 'Schedule Jobs & CRON',
+//        },
+//        {
+//          type: 'doc',
+//          id: 'frameworks/laravel/smtp',
+//          label: 'SMTP Configuration',
+//        },
+//        {
+//          type: 'doc',
+//          id: 'frameworks/laravel/logs',
+//          label: 'Logs',
+//        },
+//      ],
+//    },
+//      {
+//        type: 'html',
+//        value: 'Recipes',
+//        customProps: {
+//          sidebar_is_group_divider: true,
+//        },
+//        className: 'homepage-sidebar-item',
+//      },
+//    {
+//      type: 'category',
+//      label: 'Minimal',
+//      collapsible: true,
+//      customProps: {
+//        sidebar_is_group_headline: true,
+//      },
+//      items: [
+//        {
+//          type: 'doc',
+//          id: 'frameworks/laravel/recipes/minimal-local',
 //          label: 'Local Development',
 //        },
-        {
-          type: 'doc',
-          id: 'frameworks/laravel/migrations',
-          label: 'Database Migrations',
-        },
-        {
-          type: 'doc',
-          id: 'frameworks/laravel/redis',
-          label: 'Cache & Queue with Redis',
-        },
-        {
-          type: 'doc',
-          id: 'frameworks/laravel/cron',
-          label: 'Schedule Jobs & CRON',
-        },
-        {
-          type: 'doc',
-          id: 'frameworks/laravel/smtp',
-          label: 'SMTP Configuration',
-        },
-        {
-          type: 'doc',
-          id: 'frameworks/laravel/logs',
-          label: 'Logs',
-        },
-      ],
-    },
-      {
-        type: 'html',
-        value: 'Recipes',
-        customProps: {
-          sidebar_is_group_divider: true,
-        },
-        className: 'homepage-sidebar-item',
-      },
-    {
-      type: 'category',
-      label: 'Minimal',
-      collapsible: true,
-      customProps: {
-        sidebar_is_group_headline: true,
-      },
-      items: [
-        {
-          type: 'doc',
-          id: 'frameworks/laravel/recipes/minimal-local',
-          label: 'Local Development',
-        },
-        {
-          type: 'doc',
-          id: 'frameworks/laravel/recipes/minimal-devel',
-          label: 'Stage Environment',
-        },
-        {
-          type: 'doc',
-          id: 'frameworks/laravel/recipes/minimal-prod',
-          label: 'Production',
-        },
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Jetstream',
-      collapsible: true,
-      customProps: {
-        sidebar_is_group_headline: true,
-      },
-      items: [
-        {
-          type: 'doc',
-          id: 'frameworks/laravel/recipes/jetstream-local',
-          label: 'Local Development',
-        },
-        {
-          type: 'doc',
-          id: 'frameworks/laravel/recipes/jetstream-devel',
-          label: 'Stage Environment',
-        },
-        {
-          type: 'doc',
-          id: 'frameworks/laravel/recipes/jetstream-prod',
-          label: 'Production',
-        },
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Filament',
-      collapsible: true,
-      customProps: {
-        sidebar_is_group_headline: true,
-      },
-      items: [
-        {
-          type: 'doc',
-          id: 'frameworks/laravel/recipes/filament-local',
-          label: 'Local Development',
-        },
-        {
-          type: 'doc',
-          id: 'frameworks/laravel/recipes/filament-devel',
-          label: 'Stage Environment',
-        },
-        {
-          type: 'doc',
-          id: 'frameworks/laravel/recipes/filament-prod',
-          label: 'Production',
-        },
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Twill CMS',
-      collapsible: true,
-      customProps: {
-        sidebar_is_group_headline: true,
-      },
-      items: [
-        {
-          type: 'doc',
-          id: 'frameworks/laravel/recipes/twill-local',
-          label: 'Local Development',
-        },
-        {
-          type: 'doc',
-          id: 'frameworks/laravel/recipes/twill-devel',
-          label: 'Stage Environment',
-        },
-        {
-          type: 'doc',
-          id: 'frameworks/laravel/recipes/twill-prod',
-          label: 'Production',
-        },
-      ],
-    },
-    {
-      type: 'doc',
-      id: 'frameworks/laravel/faq',
-      label: 'FAQ',
-      customProps: {
-        sidebar_is_title: true,
-        sidebar_icon: 'chat-bubble-left-right',
-      },
-    },
-  ],
+//        {
+//          type: 'doc',
+//          id: 'frameworks/laravel/recipes/minimal-devel',
+//          label: 'Stage Environment',
+//        },
+//        {
+//          type: 'doc',
+//          id: 'frameworks/laravel/recipes/minimal-prod',
+//          label: 'Production',
+//        },
+//      ],
+//    },
+//    {
+//      type: 'category',
+//      label: 'Jetstream',
+//      collapsible: true,
+//      customProps: {
+//        sidebar_is_group_headline: true,
+//      },
+//      items: [
+//        {
+//          type: 'doc',
+//          id: 'frameworks/laravel/recipes/jetstream-local',
+//          label: 'Local Development',
+//        },
+//        {
+//          type: 'doc',
+//          id: 'frameworks/laravel/recipes/jetstream-devel',
+//          label: 'Stage Environment',
+//        },
+//        {
+//          type: 'doc',
+//          id: 'frameworks/laravel/recipes/jetstream-prod',
+//          label: 'Production',
+//        },
+//      ],
+//    },
+//    {
+//      type: 'category',
+//      label: 'Filament',
+//      collapsible: true,
+//      customProps: {
+//        sidebar_is_group_headline: true,
+//      },
+//      items: [
+//        {
+//          type: 'doc',
+//          id: 'frameworks/laravel/recipes/filament-local',
+//          label: 'Local Development',
+//        },
+//        {
+//          type: 'doc',
+//          id: 'frameworks/laravel/recipes/filament-devel',
+//          label: 'Stage Environment',
+//        },
+//        {
+//          type: 'doc',
+//          id: 'frameworks/laravel/recipes/filament-prod',
+//          label: 'Production',
+//        },
+//      ],
+//    },
+//    {
+//      type: 'category',
+//      label: 'Twill CMS',
+//      collapsible: true,
+//      customProps: {
+//        sidebar_is_group_headline: true,
+//      },
+//      items: [
+//        {
+//          type: 'doc',
+//          id: 'frameworks/laravel/recipes/twill-local',
+//          label: 'Local Development',
+//        },
+//        {
+//          type: 'doc',
+//          id: 'frameworks/laravel/recipes/twill-devel',
+//          label: 'Stage Environment',
+//        },
+//        {
+//          type: 'doc',
+//          id: 'frameworks/laravel/recipes/twill-prod',
+//          label: 'Production',
+//        },
+//      ],
+//    },
+//    {
+//      type: 'doc',
+//      id: 'frameworks/laravel/faq',
+//      label: 'FAQ',
+//      customProps: {
+//        sidebar_is_title: true,
+//        sidebar_icon: 'chat-bubble-left-right',
+//      },
+//    },
+//  ],
 };

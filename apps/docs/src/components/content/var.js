@@ -12,6 +12,10 @@ export const Var = ({ name }) => {
   return <>{variables[name] || ''}</>;
 };
 
+export const IfVar = ({ name, children }) => {
+  return variables[name] ? children : null;
+};
+
 export const VarLink = ({ name, path, children }) => {
   const value = variables[name] || '';
   const href = path.replace('{{VAR}}', value);

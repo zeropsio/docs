@@ -34,8 +34,8 @@ export default function BrandAssets() {
 
   const badges: AssetType[] = [
     {
-      name: "Deploy on Zerops",
-      description: "Badge for projects that can be deployed on Zerops",
+      name: "Deploy in Zerops",
+      description: "Badge for projects that can be deployed in Zerops",
       preview: "/img/brand/deploy-badge-preview.png"
     },
     {

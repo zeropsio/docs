@@ -1,0 +1,343 @@
+---
+title: Create a Ubuntu service in Zerops
+description: Learn how you can create a Ubuntu service in Zerops.
+---
+
+import Image from '/src/components/Image';
+import data from '@site/static/data.json';
+import UnorderedList from '@site/src/components/UnorderedList';
+import Video from '@site/src/components/Video';
+import ResourceTable from '/src/components/ResourceTable';
+
+Zerops provides a Ubuntu runtime service with extensive build support. Ubuntu runtime is highly scalable and customisable to suit both development and production.
+
+## Create Ubuntu service using Zerops GUI
+
+First, set up a project in Zerops GUI. Then go to the project dashboard page and choose **Add new service** in the left menu in the **Services** block. Then add a new Ubuntu service:
+
+<Video
+  src="/vids/services/golang.webm"
+  type="video/webm"
+/>
+
+### Choose Ubuntu version
+
+Following Ubuntu versions are currently supported:
+
+<UnorderedList data={data.ubuntu.readable} />
+
+:::info
+You can [change](/ubuntu/how-to/upgrade) the major version at any time later.
+:::
+
+### Set a hostname
+
+Enter a unique service identifier like "app","cache", "gui" etc. Duplicate services with the same name in the same project are forbidden.
+
+#### Limitations:
+
+- maximum 25 characters
+- must contain only lowercase ASCII letters (a-z) or numbers (0-9)
+
+:::caution
+The hostname is fixed after the service is created. It can't be changed later.
+:::
+
+### Set secret environment variables
+
+Add environment variables with sensitive data, such as password, tokens, salts, certificates etc. These will be securely saved inside Zerops and added to your runtime service upon start.
+
+Setting the secret environment variables is optional. You can set them later in Zerops GUI.
+
+Read more about [different types of env variables](/ubuntu/how-to/env-variables#service-env-variables) in Zerops.
+
+import { SetVar } from '/src/components/content/var';
+import AutoScalingSection from '/src/components/content/create-scaling.mdx';
+
+<SetVar name="serviceDisplay" value="Ubuntu" />
+<SetVar name="servicePath" value="ubuntu" />
+
+<AutoScalingSection />
+
+## Create Ubuntu service using zCLI
+
+zCLI is the Zerops command-line tool. To create a new Ubuntu service via the command-line, follow these steps:
+
+1. [Install & setup zCLI](/references/cli)
+2. [Create a project description file](/ubuntu/how-to/create#create-a-project-description-file)
+3. [Create a project with a Ubuntu and PostgreSQL service](#full-example)
+
+### Create a project description file
+
+Zerops uses a yaml format to describe the project infrastructure.
+
+#### Basic example:
+
+Create a directory `my-project`. Create an `description.yaml` file inside the `my-project` directory with following content:
+
+```yaml
+# basic project data
+project:
+  # project name
+  name: my-project
+# array of project services
+services:
+  - # service name
+    hostname: app
+    # service type and version number in ubuntu@{version} format
+    type: ubuntu@24.04
+    # defines the minimum number of containers for horizontal autoscaling
+    minContainers: 1
+    # defines the maximum number of containers for horizontal autoscaling. Max value = 6.
+    maxContainers: 6
+    # optional: create env variables
+    envSecrets:
+      S3_ACCESS_KEY_ID: 'P8cX1vVVb'
+      S3_ACCESS_SECRET: 'ogFthuiLYki8XoL73opSCQ'
+```
+
+The yaml file describes your future project infrastructure. The project will contain one Ubuntu service with default [auto scaling](/ubuntu/how-to/scaling) configuration. Hostname will be set to "app", the internal port(s) the service listens on will be defined later in the [zerops.yaml](/ubuntu/how-to/build-pipeline#ports). Following secret env variables will be configured:
+
+```env
+S3_ACCESS_KEY_ID="P8cX1vVVb"
+S3_ACCESS_SECRET="ogFthuiLYki8XoL73opSCQ"
+```
+
+#### Full example:
+
+Create a directory my-project. Create an description.yaml file inside the my-project directory with following content:
+
+```yaml
+# basic project data
+project:
+  # project name
+  name: my-project
+  # optional: project description
+  description: A project with a Ubuntu and PostgreSQL database
+  # optional: project tags
+  tags:
+    - DEMO
+    - ZEROPS
+# array of project services
+services:
+  - # service name
+    hostname: app
+    # service type and version number in ubuntu@{version} format
+    type: ubuntu@24.04
+    # optional: vertical auto scaling customization
+    verticalAutoscaling:
+      cpuMode: DEDICATED
+      minCpu: 2
+      maxCpu: 5
+      minRam: 2
+      maxRam: 24
+      minDisk: 6
+      maxDisk: 50
+      startCpuCoreCount: 3
+      minFreeRamGB: 0.5
+      minFreeRamPercent: 20
+    # defines the minimum number of containers for horizontal autoscaling. Max value = 6.
+    minContainers: 2
+    # defines the maximum number of containers for horizontal autoscaling. Max value = 6.
+    maxContainers: 4
+    # optional: create secret env variables
+    envSecrets:
+      S3_ACCESS_KEY_ID: 'P8cX1vVVb'
+      S3_ACCESS_SECRET: 'ogFthuiLYki8XoL73opSCQ'
+  - # second service hostname
+    hostname: db
+    # service type and version number in postgresql@{version} format
+    type: postgresql@12
+    # mode of operation "HA"/"non_HA"
+    mode: NON_HA
+```
+
+The yaml file describes your future project infrastructure. The project will contain a Ubuntu service and a [PostgreSQL](/postgresql/overview) service.
+
+Ubuntu service with "app" hostname, the internal port(s) the service listens on will be defined later in the zerops.yaml. Ubuntu service will run with a custom vertical and horizontal scaling. Following secret env variables will be configured:
+
+```env
+S3_ACCESS_KEY_ID="P8cX1vVVb"
+S3_ACCESS_SECRET="ogFthuiLYki8XoL73opSCQ"
+```
+
+The hostname of the PostgreSQL service will be set to "db". The [single container](/features/scaling-ha#single-container-mode)(/features/scaling-ha#deployment-modes-databases-and-shared-storage) mode will be chosen and the default auto [scaling configuration](/postgresql/how-to/scale#configure-scaling) will be set.
+
+#### Description of description.yaml parameters
+
+The `project:` section is required. Only one project can be defined.
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit"><strong>Parameter</strong></th>
+      <th className="w-fit"><strong>Description</strong></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit"><strong>hostname</strong></td>
+      <td className="w-fit">
+        The unique service identifier.
+         
+        The hostname of the new database will be set to the `hostname` value.
+         
+        <strong>Limitations:</strong>
+        <ul>
+        <li>duplicate services with the same name in the same project are forbidden</li>
+        <li>maximum 25 characters</li>
+        <li>must contain only lowercase ASCII letters (a-z) or numbers (0-9)</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit"><strong>type</strong></td>
+      <td className="w-fit">
+        Specifies the service type and version.
+        <br />
+        See what [Ubuntu service types](/references/import-yaml/type-list#runtime-services) are currently supported.
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit"><strong>verticalAutoscaling</strong></td>
+      <td className="w-fit">
+        <strong>Optional.</strong> Defines <a href="/ubuntu/how-to/create#set-auto-scaling-configuration">custom vertical auto scaling parameters</a>.
+        <br />
+        All verticalAutoscaling attributes are optional. Not specified attributes will be set to their default values.
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit"><strong>- cpuMode</strong></td>
+      <td className="w-fit">
+        <strong>Optional.</strong> Accepts `SHARED`, `DEDICATED` values. Default is `SHARED`
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit"><strong>- minCpu/maxCpu</strong></td>
+      <td className="w-fit">
+        <strong>Optional.</strong> Set the minCpu or maxCpu in CPU cores (integer).
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit"><strong>- minRam/maxRam</strong></td>
+      <td className="w-fit">
+        <strong>Optional.</strong> Set the minRam or maxRam in GB (float).
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit"><strong>- minDisk/maxDisk</strong></td>
+      <td className="w-fit">
+        <strong>Optional.</strong> Set the minDisk or maxDisk in GB (float).
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit"><strong>minContainers</strong></td>
+      <td className="w-fit">
+        <strong>Optional.</strong> Default = 1. Defines the minimum number of containers for <a href="/ubuntu/how-to/create#horizontal-auto-scaling">horizontal autoscaling</a>.
+         
+        <strong>Limitations:</strong>
+        <br />
+        Current maximum value = 10.
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit"><strong>maxContainers</strong></td>
+      <td className="w-fit">
+        Defines the maximum number of containers for <a href="/ubuntu/how-to/create#horizontal-auto-scaling">horizontal autoscaling</a>.
+         
+        <strong>Limitations:</strong>
+        <br />
+        Current maximum value = 10.
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit"><strong>envSecrets</strong></td>
+      <td className="w-fit">
+        <strong>Optional.</strong> Defines one or more secret env variables as a key value map. See env variable <a href="/ubuntu/how-to/env-variables#env-variable-restrictions">restrictions</a>.
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+### Create a project based on the description.yaml
+
+When you have your `description.yaml` ready, use the `zcli project project-import` command to create a new project and the service infrastructure.
+
+```sh
+Usage:
+  zcli project project-import importYamlPath [flags]
+
+Flags:
+  -h, --help                Help for the project import command.
+      --org-id string        If you have access to more than one organization, you must specify the org ID for which the
+                            project is to be created.
+      --working-dir string   Sets a custom working directory. Default working directory is the current directory. (default "./")
+```
+
+Zerops will create a project and one or more services based on the `description.yaml` content.
+
+Maximum size of the `description.yaml` file is 100 kB.
+
+You don't specify the project name in the `zcli project project-import` command, because the project name is defined in the `description.yaml`.
+
+If you have access to more than one client, you must specify the client ID for which the project is to be created. The `clientID` is located in the Zerops GUI under the client name on the project dashboard page.
+
+<p align="center">
+  <img
+    src="/img/screenshots/client_id.png"
+    alt="image"
+    width="70%"
+    height="auto"
+  />
+</p>
+### Add Ubuntu service to an existing project
+
+#### Example:
+
+Create a directory `my-project` if it doesn't exist. Create an `import.yaml` file inside the `my-project` directory with following content:
+
+```yaml
+# basic project data
+project:
+  # project name
+  name: my-project
+# array of project services
+services:
+  - # service name
+    hostname: app
+    # service type and version number in ubuntu@{version} format
+    type: ubuntu@24.04
+    # defines the minimum number of containers for horizontal autoscaling
+    minContainers: 1
+    # defines the maximum number of containers for horizontal autoscaling. Max value = 6.
+    maxContainers: 6
+    # optional: create env variables
+    envSecrets:
+      S3_ACCESS_KEY_ID: 'P8cX1vVVb'
+      S3_ACCESS_SECRET: 'ogFthuiLYki8XoL73opSCQ'
+```
+
+The yaml file describes the list of one or more services that you want to add to your existing project. In the example above, one Ubuntu service version 1 with default [auto scaling](/ubuntu/how-to/scaling) configuration will be added to your project. Hostname of the new service will be set to `app`. Following secret env variables will be configured:
+
+```env
+S3_ACCESS_KEY_ID="P8cX1vVVb"
+S3_ACCESS_SECRET="ogFthuiLYki8XoL73opSCQ"
+```
+
+The content of the `services:` section of `import.yaml` is identical to the project description file. The `import.yaml` never contains the `project:` section because the project already exists.
+
+When you have your `import.yaml` ready, use the `zcli project service-import` command to add one or more services to your existing Zerops project.
+
+```sh
+Usage:
+  zcli project service-import importYamlPath [flags]
+
+Flags:
+  -h, --help                Help for the project service import command.
+  -P, --project-id string   If you have access to more than one project, you must specify the project ID for which the
+                           command is to be executed.
+```
+
+zCLI commands are interactive, when you press enter after `zcli project service-import importYamlPath`, you will be given a list of your projects to choose from.
+
+Maximum size of the import.yaml file is 100 kB.

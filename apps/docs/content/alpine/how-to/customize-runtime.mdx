@@ -1,0 +1,98 @@
+---
+title: Customize Alpine runtime environment
+description: Learn how you can customize your Alpine runtime environment on Zerops.
+---
+
+import data from '@site/static/data.json';
+import { SetVar, Var, VarLink, VarCodeBlock, VarReasons } from '@site/src/components/content/var';
+
+<SetVar name="serviceDisplay" value="Alpine" />
+<SetVar name="serviceVersion" value={data.alpine.base[0][0]} />
+<SetVar name="servicePath" value="alpine" />
+<SetVar name="defaultEnvironment" value="Git" />
+<SetVar name="codeLanguage" value="yaml" />
+<SetVar name="customReasons" value={[
+  '<strong>System packages</strong>: Install any packages you need via <code>apk</code>, such as <code>imagemagick</code>, <code>ffmpeg</code>, or <code>chromium</code>',
+  '<strong>Specific language versions</strong>: Install versions of Go, Node.js, PHP, Python, or other runtimes that are not available as dedicated Zerops services (e.g., older or cutting-edge versions)',
+  '<strong>Custom binaries</strong>: Add compiled binaries or tools not available in the default repositories',
+  '<strong>Development tools</strong>: Include debugging tools, profilers, or other utilities',
+  '<strong>Specific libraries</strong>: Install dependencies required by your application'
+]} />
+<SetVar name="basicSetupCode" value={
+`...
+  run:
+    base: {{serviceVersion}}
+    prepareCommands:
+      - apk update
+      - apk add --no-cache imagemagick ffmpeg`} />
+<SetVar name="buildFilesCode" value={
+`...
+  build:
+    ...
+    addToRunPrepare:
+      - requirements.txt
+  run:
+    ...
+    prepareCommands:
+      - apk update
+      - apk add --no-cache libpq-dev py3-pip
+      - pip install -r requirements.txt`} />
+
+## Build Custom Runtime Images
+
+Zerops allows you to build custom runtime images (CRI) when the default base runtime images don't meet your application's requirements. This is an optional phase in the [build and deploy pipeline](/features/pipeline#runtime-prepare-phase-optional).
+
+Alpine is a versatile base for running anything not explicitly offered as a dedicated Zerops runtime. You can install any packages and tools you need, treating it as a clean OS to customize however you want.
+
+It is also a great option when you need a specific version of a technology (like Go, Node.js, or PHP) that Zerops doesn't support by default—whether it's an older version for legacy projects or a newer release not yet available.
+
+## Configuration
+
+### Default <Var name="serviceDisplay" /> Runtime Environment
+
+The default <Var name="serviceDisplay" /> runtime environment contains:
+
+- <span>{data.alpine.default}</span>
+- [zCLI](/references/cli)
+- <Var name="defaultEnvironment" />
+
+### When You Need a Custom Runtime Image
+
+Since Alpine serves as a general-purpose base, you'll likely want to customize it for your specific use case. Common scenarios include:
+
+<VarReasons name="customReasons" />
+
+:::important
+You should not include your application code in the custom runtime image, as your built/packaged code is deployed automatically into fresh containers.
+:::
+
+Here are examples of configuring custom runtime images in your `zerops.yml`:
+
+### Basic <Var name="serviceDisplay" /> Setup
+
+<VarCodeBlock codeVar="basicSetupCode" languageVar="codeLanguage" />
+
+### Using Build Files in Runtime Preparation
+
+<VarCodeBlock codeVar="buildFilesCode" languageVar="codeLanguage" />
+
+For complete configuration details, see the [runtime prepare phase configuration guide](/features/pipeline#configuration).
+
+## Process and Caching
+
+### How Runtime Prepare Works
+The runtime prepare process follows the same steps for all runtimes. See [how runtime prepare works](/features/pipeline#how-it-works) for the complete process details.
+
+### Caching Behavior
+Zerops caches custom runtime images to optimize deployment times. Learn about [custom runtime image caching](/features/pipeline#custom-runtime-image-caching) including when images are cached and reused.
+
+### Build Management
+For information about managing builds and deployments, see [managing builds and deployments](/features/pipeline#manage-builds-and-deployments).
+
+:::warning
+Shared storage mounts are not available during the runtime prepare phase.
+:::
+
+## Troubleshooting
+
+If your `prepareCommands` fail, check the <VarLink name="servicePath" path="/{{VAR}}/how-to/logs#prepare-runtime-log">prepare runtime log</VarLink> for specific error messages.

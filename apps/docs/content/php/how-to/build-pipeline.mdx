@@ -82,16 +82,24 @@ Zerops supports the definition of multiple runtime services in a single `zerops.
 zerops:
   # definition for app service
   - setup: app
+    # optional
     build: ...
+    # optional
+    deploy: ...
+    # required
     run: ...
 
   # definition for api service
   - setup: api
+    # optional
     build: ...
+    # optional
+    deploy: ...
+    # required
     run: ...
 ```
 
-Each service configuration contains at least two sections: **build** and **run**. Both sections are required to build and deploy your PHP application in Zerops. If you'd like to use a readiness check, add an optional **deploy** section.
+Each service configuration contains at least the `run` section. Optional `build` and `deploy` sections can be added to further customize your process.
 
 ## Build pipeline configuration
 
@@ -223,7 +231,7 @@ You can configure your prepare commands to be run in a single shell instance or 
 
 ### buildCommands
 
-_REQUIRED._ Defines build commands.
+_OPTIONAL._ Defines build commands.
 
 ```yaml
 zerops:
@@ -234,13 +242,13 @@ zerops:
       # REQUIRED. Set the base technology for the build environment:
       base: php-apache@latest
 
-      # REQUIRED. Build your application
+      # OPTIONAL. Build your application
       buildCommands:
         - composer install
       ...
 ```
 
-At least one command is required. Zerops triggers each command in the defined order in a dedicated build container.
+Build commands are optional. Zerops triggers each command in the defined order in a dedicated build container.
 
 Before the build commands are triggered the build container contains:
 
@@ -643,7 +651,7 @@ zerops:
       ...
 ```
 
-In the example above Zerops will copy the `runtime-config.yaml` file from your build container **after the build has finished** into the new **prepare runtime** container. The copied files and folders will be available in the `xxx` folder in the new prepare runtime container before the prepare commands are triggered.
+In the example above Zerops will copy the `runtime-config.yaml` file from your build container **after the build has finished** into the new **prepare runtime** container. The copied files and folders will be available in the `/home/zerops` folder in the new prepare runtime container before the prepare commands are triggered.
 
 ### initCommands
 
@@ -754,12 +762,32 @@ Configures the health check to request a local URL using a HTTP GET method.
 
 Following attributes are available:
 
-| Parameter  | Description                                                                                                                                                                                                                |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **port**   | Defines the port of the HTTP GET request.<br/>The readiness check will trigger a GET request on `http://127.0.0.1:{port}/{path}`                                                                                           |
-| **path**   | Defines the URL path of the HTTP GET request.<br/>The readiness check will trigger a GET request on `http://127.0.0.1:{port}/{path}`                                                                                       |
-| **host**   | **Optional.** The readiness check is triggered from inside of your runtime container so it always uses the localhost (`127.0.0.1`). If you need to add a `host` to the request header, specify it in the `host` attribute. |
-| **scheme** | **Optional.** The readiness check is triggered from inside of your runtime container so no https is required.<br/>If your application requires a https request, set `scheme: https`                                        |
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit whitespace-nowrap">Parameter</th>
+      <th className="w-fit whitespace-nowrap">Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit whitespace-nowrap font-semibold">port</td>
+      <td>Defines the port of the HTTP GET request.<br/>The readiness check will trigger a GET request on <code>{'http://127.0.0.1:{port}/{path}'}</code></td>
+    </tr>
+    <tr>
+      <td className="w-fit whitespace-nowrap font-semibold">path</td>
+      <td>Defines the URL path of the HTTP GET request.<br/>The readiness check will trigger a GET request on <code>{'http://127.0.0.1:{port}/{path}'}</code></td>
+    </tr>
+    <tr>
+      <td className="w-fit whitespace-nowrap font-semibold">host</td>
+      <td><strong>Optional.</strong> The readiness check is triggered from inside of your runtime container so it always uses the localhost <code>127.0.0.1</code>. If you need to add a <code>host</code> to the request header, specify it in the <code>host</code> attribute.</td>
+    </tr>
+    <tr>
+      <td className="w-fit whitespace-nowrap font-semibold">scheme</td>
+      <td><strong>Optional.</strong> The readiness check is triggered from inside of your runtime container so no https is required.<br/>If your application requires a https request, set <code>scheme: https</code></td>
+    </tr>
+  </tbody>
+</table>
 
 **Example:**
 
@@ -784,7 +812,7 @@ zerops:
           path: /status
 ```
 
-Read more about how the [health check works] in Zerops.
+
 
 #### exec
 
@@ -834,7 +862,7 @@ zerops:
             mv /outside/user /home/user
 ```
 
-Read more about how the [health check works] in Zerops.
+
 
 ### crontab
 
@@ -872,12 +900,32 @@ Configures the readiness check to request a local URL using a http GET method.
 
 Following attributes are available:
 
-| Parameter  | Description                                                                                                                                                                                                                |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **port**   | Defines the port of the HTTP GET request.<br/>The readiness check will trigger a GET request on `http://127.0.0.1:{port}/{path}`                                                                                           |
-| **path**   | Defines the URL path of the HTTP GET request.<br/>The readiness check will trigger a GET request on `http://127.0.0.1:{port}/{path}`                                                                                       |
-| **host**   | **Optional.** The readiness check is triggered from inside of your runtime container so it always uses the localhost (`127.0.0.1`). If you need to add a `host` to the request header, specify it in the `host` attribute. |
-| **scheme** | **Optional.** The readiness check is triggered from inside of your runtime container so no https is required.<br/>If your application requires a https request, set `scheme: https`                                        |
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit whitespace-nowrap">Parameter</th>
+      <th className="w-fit whitespace-nowrap">Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit whitespace-nowrap font-semibold">port</td>
+      <td>Defines the port of the HTTP GET request.<br/>The readiness check will trigger a GET request on <code>{'http://127.0.0.1:{port}/{path}'}</code></td>
+    </tr>
+    <tr>
+      <td className="w-fit whitespace-nowrap font-semibold">path</td>
+      <td>Defines the URL path of the HTTP GET request.<br/>The readiness check will trigger a GET request on <code>{'http://127.0.0.1:{port}/{path}'}</code></td>
+    </tr>
+    <tr>
+      <td className="w-fit whitespace-nowrap font-semibold">host</td>
+      <td><strong>Optional.</strong> The readiness check is triggered from inside of your runtime container so it always uses the localhost <code>127.0.0.1</code>. If you need to add a <code>host</code> to the request header, specify it in the <code>host</code> attribute.</td>
+    </tr>
+    <tr>
+      <td className="w-fit whitespace-nowrap font-semibold">scheme</td>
+      <td><strong>Optional.</strong> The readiness check is triggered from inside of your runtime container so no https is required.<br/>If your application requires a https request, set <code>scheme: https</code></td>
+    </tr>
+  </tbody>
+</table>
 
 **Example:**
 
