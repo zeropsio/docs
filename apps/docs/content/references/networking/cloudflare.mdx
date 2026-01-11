@@ -17,6 +17,24 @@ Before starting, ensure you have:
 
 Configure your DNS records in Cloudflare using one of these approaches based on your needs:
 
+### Using CNAME Records
+
+CNAME can be used for non-apex domains (subdomains) or with DNS providers that support CNAME flattening at the apex (like Cloudflare). When you set up a CNAME in Zerops, it internally creates A and AAAA records pointing to your project.
+
+To find your CNAME target value, go to your service in the Zerops GUI, navigate to **Public access & internal ports**, and select the **CNAME** option when adding a domain.
+```bash
+Type    Name              Content                         Proxy status       TTL
+CNAME   <your-domain>     <your-project-cname-target>     Proxied/DNS Only   Auto
+```
+
+:::warning Cloudflare Proxy with Shared IPv4
+When using Cloudflare's proxy with CNAME records, you **must exclude the shared IPv4**. Toggle off "Shared IPv4 included in the CNAME" in the Zerops GUI.
+
+Zerops does a reverse lookup of the AAAA record of the domain for requests to our shared IPv4 address. If you use a shared IPv4 and also enable a proxy for the AAAA record, Zerops will not be able to correctly route the request.
+
+This setting affects all domains in your project.
+:::
+
 ### With Cloudflare Proxy
 
 #### IPv6 only
@@ -48,12 +66,14 @@ Adding the AAAA record allows visitors with IPv6 support to connect directly via
 #### Shared IPv4 *(not recommended)*
 ```bash
 Type    Name              Content                Proxy status  TTL
-AAAA    <your-domain>     <your-project-ipv6>    DNS only      Auto
-A       <your-domain>     <zerops-shared-ipv4>   Proxied       Auto
+AAAA             DNS only      Auto
+A               Proxied       Auto
 ```
 
 :::tip Why Not?
-Creates inconsistent security posture by mixing direct and proxied connections. Consider using IPv6 only or dedicated IPv4 configurations instead.
+Zerops does a reverse lookup of the AAAA record of the domain for requests to our shared IPv4 address. If you use a shared IPv4 and also enable a proxy for the AAAA record, Zerops will not be able to correctly route the request.
+
+Consider using IPv6 only or dedicated IPv4 configurations instead.
 :::
 
 ### DNS-Only Configuration (Without Cloudflare Proxy)

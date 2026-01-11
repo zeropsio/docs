@@ -8,6 +8,7 @@ import MDXCode from './Code';
 import MDXDetails from './Details';
 import DocCard from '@theme/DocCard';
 import DocCardList from '@theme/DocCardList';
+import ExpandableTable from '@site/src/components/ExpandableTable';
 
 const components = {
   // Re-use the default mapping
@@ -23,6 +24,7 @@ const components = {
   DocCard,
   DocCardList,
   Note,
+  ExpandableTable,
 };
 
 export default components;

@@ -13452,14 +13452,47 @@ MariaDB backups are created using `mariabackup` and stored in `.xb.gz` format:
 - **Compression**: Uses `xbstream` format, gzip compressed
 - **Storage**: Encrypted and stored in isolated object storage
 ## Restoring MariaDB Backups
-To restore a MariaDB backup:
-1. **Download** the backup file (`.xb.gz`) from the Zerops UI
-2. **Prepare** your target environment (clean existing data or use a new instance)
-3. **Extract** the backup file to access the database contents
-4. **Restore** using either:
-   - **MariaDB native tools**: Follow the [official MariaDB backup documentation](https://mariadb.com/kb/en/mariabackup/) for detailed restore procedures
-   - **Third-party management tools**: Use web-based tools like phpMyAdmin or Adminer as described in [MariaDB Management Tools](/mariadb/how-to/manage)
-For assistance with the restoration process, contact Zerops support.
+To restore a MariaDB backup, follow these steps:
+:::tip
+If the backup is large and the export/import has higher demands, consider scaling up the RAM in the container before starting. You can use [zsc](/references/zsc) to temporarily scale up:
+```bash
+zsc scale ram +2GB 10m
+```
+:::
+### Step 1: Deploy the restore helper service
+Import the [MariaDB restore recipe](https://github.com/zeropsio/recipe-mariadb-restore) as a service into the project where your MariaDB service is located.
+Use the `zerops-import.yaml` file from the repository to import the service. See the [import documentation](/references/import) for details, or follow the steps in the [recipe README](https://github.com/zeropsio/recipe-mariadb-restore?tab=readme-ov-file#deploy-on-zerops).
+### Step 2: Get the backup download URL
+1. Navigate to your MariaDB service in the Zerops GUI
+2. Go to the **Backups List & Configuration** section
+3. Find the backup you want to restore
+4. Click the **three dots menu** (⋮) on that backup
+5. Select **Copy download link**
+### Step 3: Run the backup script
+Connect to the `mariadbrestore` service using the GUI terminal or via [VPN](/references/networking/vpn) and [SSH](/references/networking/ssh).
+:::note
+To use environment variables from your MariaDB service in the backup and restore commands, make sure the `envIsolation` project variable is set to `none`. See [Environment Variable Isolation](/features/env-variables#environment-variable-isolation) and [Referencing Variables](/features/env-variables#referencing-variables) for details.
+:::
+Run the backup script:
+```bash
+backup.sh -d  -u ""
+```
+Verify the backup was created:
+```bash
+ls -lh backup.sql
+```
+:::note
+You can also verify the backup file exists by checking the **File browser** in the `mariadbrestore` service.
+:::
+:::info
+After the export completes, the terminal may become unresponsive. If this happens, refresh the terminal.
+:::
+### Step 4: Import data to the target database
+Import the data to your target MariaDB database:
+```bash
+mariadb -u  -h  -p  < backup.sql
+```
+Alternatively, you can download the `backup.sql` dump file for later use or to restore to a database outside of Zerops.
 ## High Availability
 For MariaDB services running in High Availability mode:
 - Backups are created on a randomly selected healthy node
@@ -18003,6 +18036,14 @@ Have you build something that others might find useful? Don't hesitate to share 
 
 # Postgresql > Faq
 
+  Question: How do I properly use PostgreSQL in HA mode?
+Answer: 
+    In High Availability (HA) mode, PostgreSQL runs on multiple containers with a primary node and replicas. To get the most out of this setup:
+    - Use port `5432` for all write operations (INSERT, UPDATE, DELETE) — this always routes to the primary node
+    - Use port `5433` for read operations (SELECT) — this distributes queries across all replicas, improving performance
+    The read replica port (`5433`) is only available in HA mode. If you're running PostgreSQL in single container (NON_HA) mode, only port `5432` is available.
+    See [Connection Parameters](/postgresql/how-to/connect#connection-parameters) for all available ports and environment variables.
+  
   Question: Why is my connection to PostgreSQL from third-party software failing?
 Answer: 
     *One possible cause:* 
@@ -18066,39 +18107,58 @@ Zerops provides several ways to connect to PostgreSQL:
    - **VPN access** - From your local machine via Zerops VPN
    - **Direct IP access** - Enables external applications to connect using TLS encryption by opening public ports on IPv6 (available by default) or IPv4 (requires add-on activation if not already enabled)
 ## Connection Details
-You'll find internal PostgreSQL connection details in two places in the Zerops GUI:
-1. Under the **Access details** button in the project dashboard
-2. In the service detail page under the **Peek access details** button
+You'll find PostgreSQL connection details in the service detail page under the **Peek access details** button (shows hostname, port, user, password, and connection string).
+The full list of connection-related environment variables is available in the service detail under **Environment variables**.
 ### Connection Parameters
   
       Parameter
-      Internal Connection
-      Direct IP Access (TLS)
+      Internal
+      External (TLS)
+      Env Variable
     
-      Hostname/IP
+      Hostname
       Service hostname
       Public IP address
+      `hostname`
     
-      Port
+      Port (primary)
       5432
-      6432
+      6432 (via pgBouncer)
+      `port` / `portTls`
+    
+      Port (replicas, HA only)
+      5433
+      N/A
+      `portReplicas`
     
       User
-      Identical to the service hostname
+      Identical to hostname
       Same as internal
+      `user`
     
       Password
-      Randomly generated during service creation
+      Generated at creation
       Same as internal
+      `password`
     
-      Port env variable
-      `port`
-      `portTls`
+      Connection string (primary)
+      `postgresql://${user}:${password}@${hostname}:5432/${dbName}`
+      Same format with TLS port
+      `connectionString` / `connectionTlsString`
     
-      Connection string env variable
-      `connectionString`
-      `connectionTlsString`
+      Connection string (replicas, HA only)
+      `postgresql://${user}:${password}@${hostname}:5433/${dbName}`
+      N/A
+      `connectionStringReplicas`
     
+      Database name
+      db
+      Same as internal
+      `dbName`
+    
+:::tip
+If you're running PostgreSQL in High Availability (HA) mode, configure your application to route read queries to port **5433**. This distributes the load across all replicas, reducing pressure on the primary node and improving overall throughput.
+:::
 :::warning
 Zerops creates a system user named `zps` with full privileges for maintenance purposes. Do not delete, change the password, or remove privileges from this user, as it will disrupt Zerops' ability to maintain the database cluster.
 :::
@@ -18108,16 +18168,18 @@ For more information about default PostgreSQL setup, users, and databases, see [
 ## Connect from Services in the Same Project
 All services within a Zerops project share a dedicated private network. There are two ways to implement connections between services in the same project:
 ### Method 1: Direct Connection Parameters
-You can directly use the connection parameters from Access Details:
+You can directly use the connection parameters from Peek Access Details:
 ```
 host = database1
 port = 5432
 user = database1
-password = ********** (find under Access Details)
+password = ********** (find under Peek Access Details)
 ```
+For read operations in HA mode, use port `5433` instead of `5432` with the same credentials.
 ### Method 2: Environment Variables (Recommended)
 For better maintainability, Zerops creates environment variables for each PostgreSQL service that you can use in your application configuration. List of service environment variables is available in Zerops GUI. Go to a PostgreSQL service detail and choose **Environment variables**.
 To use variables from one service in another, prefix the variable name with the service hostname and underscore - to access the `connectionString` variable of `postgresql1`, use `postgresql1_connectionString`.
+For read-only connections (HA mode only), use the `connectionStringReplicas` variable instead.
 For more details on how to use environment variables, and instructions for adding your own custom variables, see the [Environment Variables](/features/env-variables) documentation.
 :::caution Important notes
 - When changing passwords, update both the database user password and the environment variable separately - they don't automatically synchronize.
@@ -18138,7 +18200,7 @@ You can securely connect to PostgreSQL from your local workstation via Zerops VP
 :::
 ### Method 2: Connect via Direct IP Access
 Direct IP Access uses [pgBouncer](https://www.pgbouncer.org/) for connection pooling and TLS termination.
-Internally, port `5432` is available without SSL. Externally, connections are secured with TLS through pgBouncer (port `6432`) before being routed to your PostgreSQL service.
+Internally, port `5432` is available without SSL (and port `5433` for reads in HA mode). Externally, connections are secured with TLS through pgBouncer (port `6432`) before being routed to your PostgreSQL service. The read replica port is not available for external connections.
 #### Enable external access
 1. Navigate to your PostgreSQL service in the Zerops GUI and choose the **Public Access through IP Addresses** section
 2. Choose either IPv6 (available by default) or IPv4 (requires the [unique IPv4](/references/networking/public-access#ipv4-configuration) add-on)
@@ -18300,32 +18362,34 @@ At least one service in the `services:` section is required. You can create a pr
         
         See what [PostgreSQL service types](/references/import-yaml/type-list#database-services) are currently supported.
       
-        mode
-      
-        Defines the operation mode of the PostgreSQL service.
-        
-        HA
-        
-        Creates a PostgreSQL cluster with 3 database containers and 2 free
-        database proxies. This mode is suited for production.
-        
-        Zerops always keeps the 3 database containers on different physical
-        machines. All your data is stored redundantly in 3 identical copies. In
-        case of a failure of a container or the underlying physical machine,
-        Zerops automatically disconnects the failed container from the cluster,
-        creates a new container and syncs all data from the remaining 2 copies.
-        Finally, the broken container is automatically deleted.
-        
-        NON_HA
-        
-        Zerops will create a PostgreSQL database installed in a single
-        container. Useful for non-essential data or dev environments.
-        
-        Your data is stored only in a single container. If the container or the
-        the underlying physical machine fails, your data since the last backup are
-        lost. Zerops doesn't provide any automatic repairs of a single node
-        PostgreSQL services.
-      
+    mode
+  
+    Defines the operation mode of the PostgreSQL service.
+    
+    HA
+    
+    Creates a PostgreSQL cluster with 3 database containers and 2 free
+    database proxies. This mode is suited for production.
+    
+    Zerops always keeps the 3 database containers on different physical
+    machines. All your data is stored redundantly in 3 identical copies. In
+    case of a failure of a container or the underlying physical machine,
+    Zerops automatically disconnects the failed container from the cluster,
+    creates a new container and syncs all data from the remaining 2 copies.
+    Finally, the broken container is automatically deleted.
+    
+    In HA mode, a dedicated read replica port (5433) is available, allowing you to route read queries to replicas for better performance. See Connection Parameters for details.
+    
+    NON_HA
+    
+    Zerops will create a PostgreSQL database installed in a single
+    container. Useful for non-essential data or dev environments.
+    
+    Your data is stored only in a single container. If the container or the
+    the underlying physical machine fails, your data since the last backup are
+    lost. Zerops doesn't provide any automatic repairs of a single node
+    PostgreSQL services.
+  
         verticalAutoscaling
       
         Optional. Defines custom vertical auto-scaling parameters.
@@ -18579,6 +18643,9 @@ You can configure scaling settings:
 :::warning
 Deployment mode cannot be changed after service creation.
 :::
+:::tip HA Mode
+In HA mode, a dedicated read replica port (`5433`) is available for routing read queries to replicas. This improves performance by distributing load across all database containers. See [Connection Parameters](/postgresql/how-to/connect#connection-parameters) for details.
+:::
 When a container fails in HA mode, Zerops automatically replaces it with a new container on a different physical machine and synchronizes data from healthy copies.
 ### Advanced settings
 **Start CPU cores**: Determines how many CPU cores are allocated during database startup. Increase this value if your PostgreSQL service starts slowly or requires more processing power during initialization.
@@ -18614,6 +18681,10 @@ See [Resource Scaling Behavior](/features/scaling-ha#resource-scaling-behavior) 
 **Slow database startup**
 - Increase the "Start CPU cores" setting
 - Consider switching to dedicated CPU mode for consistent performance
+**Not utilizing HA mode effectively**
+- Use port `5432` for write operations (INSERT, UPDATE, DELETE)
+- Use port `5433` for read operations (SELECT) to distribute load across replicas
+- See [Connection Parameters](/postgresql/how-to/connect#connection-parameters) for details
 *Need help? Join our [Discord community](https://discord.gg/zerops) for assistance!*
 
 ----------------------------------------
@@ -22230,6 +22301,18 @@ Before starting, ensure you have:
 - Your Zerops IP addresses (IPv4 and/or IPv6) from the Zerops GUI
 ## DNS Record Configuration
 Configure your DNS records in Cloudflare using one of these approaches based on your needs:
+### Using CNAME Records
+CNAME can be used for non-apex domains (subdomains) or with DNS providers that support CNAME flattening at the apex (like Cloudflare). When you set up a CNAME in Zerops, it internally creates A and AAAA records pointing to your project.
+To find your CNAME target value, go to your service in the Zerops GUI, navigate to **Public access & internal ports**, and select the **CNAME** option when adding a domain.
+```bash
+Type    Name              Content                         Proxy status       TTL
+CNAME             Proxied/DNS Only   Auto
+```
+:::warning Cloudflare Proxy with Shared IPv4
+When using Cloudflare's proxy with CNAME records, you **must exclude the shared IPv4**. Toggle off "Shared IPv4 included in the CNAME" in the Zerops GUI.
+Zerops does a reverse lookup of the AAAA record of the domain for requests to our shared IPv4 address. If you use a shared IPv4 and also enable a proxy for the AAAA record, Zerops will not be able to correctly route the request.
+This setting affects all domains in your project.
+:::
 ### With Cloudflare Proxy
 #### IPv6 only
 ```bash
@@ -22258,7 +22341,8 @@ AAAA             DNS only      Auto
 A               Proxied       Auto
 ```
 :::tip Why Not?
-Creates inconsistent security posture by mixing direct and proxied connections. Consider using IPv6 only or dedicated IPv4 configurations instead.
+Zerops does a reverse lookup of the AAAA record of the domain for requests to our shared IPv4 address. If you use a shared IPv4 and also enable a proxy for the AAAA record, Zerops will not be able to correctly route the request.
+Consider using IPv6 only or dedicated IPv4 configurations instead.
 :::
 ### DNS-Only Configuration (Without Cloudflare Proxy)
 If you prefer direct connections without Cloudflare's proxy features:
@@ -22445,6 +22529,18 @@ DNS records for Zerops services can be configured in two main ways:
 DNS allows you to set two records based on IP address type:
 * **A** record for **IPv4** - Zerops offers either a free **shared** IPv4 or a paid **dedicated** IPv4
 * **AAAA** record for **IPv6** - Zerops provides a free **dedicated** IPv6
+### Using CNAME Records
+CNAME can be used for non-apex domains (subdomains) or with DNS providers that support CNAME flattening at the apex. When you set up a CNAME in Zerops, it internally creates A and AAAA records pointing to your project.
+To find your CNAME target value, go to your service in the Zerops GUI, navigate to **Public access & internal ports**, and select the **CNAME** option when adding a domain.
+```
+Type    Name              Content                         Proxy status       TTL
+CNAME             DNS only/Proxied   Auto
+```
+:::warning Using Proxy with Shared IPv4
+When using any CDN or proxy service with CNAME records, you should **exclude the shared IPv4**. Toggle off "Shared IPv4 included in the CNAME" in the Zerops GUI.
+Zerops does a reverse lookup of the AAAA record of the domain for requests to our shared IPv4 address. If you use a shared IPv4 and also enable a proxy for the AAAA record, Zerops will not be able to correctly route the request because it sees the proxy's IP instead of your project's IPv6.
+This setting affects all domains in your project.
+:::
 ### With Proxy
 #### IPv6 only
 ```bash
@@ -22465,14 +22561,15 @@ AAAA             Proxied        Auto
 :::tip
 Adding also AAAA record can be beneficial as visitors with IPv6 support will connect directly via IPv6.
 :::
-#### Shared IPv4 *(valid but NOT recommended)*
+#### Shared IPv4 *(not recommended)*
 ```bash
 Type    Name              Content                Proxy status  TTL
 AAAA             DNS only      Auto
 A               Proxied       Auto
 ```
-:::tip Why not?
-It does not make sense to expose your IPv6 address while proxying the shared IPv4. Use [IPv6 only](#ipv6-only) setup instead.
+:::tip Why Not?
+Zerops does a reverse lookup of the AAAA record of the domain for requests to our shared IPv4 address. If you use a shared IPv4 and also enable a proxy for the AAAA record, Zerops will not be able to correctly route the request.
+Use [IPv6 only](#ipv6-only) or dedicated IPv4 configurations instead.
 :::
 ### Without Proxy
 #### Shared IPv4

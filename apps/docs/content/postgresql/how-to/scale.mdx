@@ -58,6 +58,10 @@ You can configure scaling settings:
 Deployment mode cannot be changed after service creation.
 :::
 
+:::tip HA Mode
+In HA mode, a dedicated read replica port (`5433`) is available for routing read queries to replicas. This improves performance by distributing load across all database containers. See [Connection Parameters](/postgresql/how-to/connect#connection-parameters) for details.
+:::
+
 When a container fails in HA mode, Zerops automatically replaces it with a new container on a different physical machine and synchronizes data from healthy copies.
 
 ### Advanced settings
@@ -117,5 +121,10 @@ See [Resource Scaling Behavior](/features/scaling-ha#resource-scaling-behavior) 
 **Slow database startup**
 - Increase the "Start CPU cores" setting
 - Consider switching to dedicated CPU mode for consistent performance
+
+**Not utilizing HA mode effectively**
+- Use port `5432` for write operations (INSERT, UPDATE, DELETE)
+- Use port `5433` for read operations (SELECT) to distribute load across replicas
+- See [Connection Parameters](/postgresql/how-to/connect#connection-parameters) for details
 
 *Need help? Join our [Discord community](https://discord.gg/zerops) for assistance!*
