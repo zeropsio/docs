@@ -7194,7 +7194,7 @@ Trigger builds and deployments manually when needed using either the CLI or GUI.
 #### Using Zerops CLI
 - **Build and deploy:** `zcli service push` - Uploads code and triggers the full pipeline
 - **Deploy only:** `zcli service deploy` - Skips build, deploys pre-built artifacts
-See [CLI commands documentation](/references/cli/commands#service-operations) for all parameters.
+See [CLI commands documentation](/references/zcli/commands#service-operations) for all parameters.
 #### Using Zerops GUI
 In **Pipelines & CI/CD settings** section of your service detail:
 - **Re-deploy last pipeline** - With optional secret env variable updates
@@ -17681,7 +17681,7 @@ View the [full Swagger documentation](https://api.app-prg1.zerops.io/api/rest/pu
 # References > Cli
 
 zCLI is the command-line tool for Zerops that allows users to manage services, simplify interactions, and configure infrastructure directly from the terminal.
-For detailed information, see the [Configuration](/references/cli/configuration) and [Commands Reference](/references/cli/commands) pages.
+For detailed information, see the [Configuration](/references/zcli/configuration) and [Commands Reference](/references/zcli/commands) pages.
 ## Platforms
 zCLI currently supports:
 - Linux (x86 & x64)
@@ -17737,335 +17737,6 @@ You may delete an access token anytime.
 You may use an access token to access Zerops using this command:
 ```sh
 zcli login 
-```
-
-----------------------------------------
-
-# References > Cli > Commands
-
-## Basic Usage
-```sh
-zcli  [flags]
-```
-:::note Tip
-All commands support the `-h, --help` flag which displays help information about the command.
-:::
-:::tip Configuration
-For detailed information about configuration options, environment variables, and logging, see the [Zerops CLI Configuration](/references/cli/configuration) page.
-:::
-## Command Groups
-- [Account & VPN](#account--vpn)
-- [Project Management](#project-management)
-- [Service Operations](#service-operations)
-- [Utility Commands](#utility-commands)
-## Account & VPN
-### login
-Logs you into Zerops using a generated token or your login credentials.
-```sh
-zcli login 
-```
-### logout
-Disconnects from VPN and logs out from your Zerops account.
-```sh
-zcli logout
-```
-### vpn up
-Connects to the Zerops VPN.
-```sh
-zcli vpn up [project-id] [flags]
-```
-**Flags:**
-- `--auto-disconnect` - Automatically disconnect from VPN if already connected
-- `--mtu int` - Set custom MTU value for Wireguard interface (default: 1420)
-- `-P, --project-id string` - Required when you have access to multiple projects
-:::note
-You can set a default project ID for VPN connections in a `.zcli.yml` file or via the `ZEROPS_PROJECTID` environment variable. See the [Configuration](/references/cli/configuration) page for details.
-:::
-### vpn down
-Disconnects from the Zerops VPN.
-```sh
-zcli vpn down
-```
-:::note
-For more detailed information about Zerops VPN configuration and troubleshooting, visit the [VPN Documentation](/references/networking/vpn).
-:::
-## Project Management
-### project list
-Lists all projects you have access to.
-```sh
-zcli project list
-```
-### project create
-Creates a new project for specified organization.
-```sh
-zcli project create [flags]
-```
-**Flags:**
-- `--env-isolation string` - Environment isolation rule [service, none] (default: "service")
-- `--mode string` - Project mode [light, serious] (default: "light")
-- `--name string` - Project name
-- `--org-id string` - Organization ID to create project for
-- `--out string` - Output format using Go template syntax
-- `--ssh-isolation string` - SSH isolation rules (default: "vpn")
-- `--tags strings` - Project tags (comma-separated list or repeated flag)
-### project delete
-Deletes a project and all its services.
-```sh
-zcli project delete [project-id] [flags]
-```
-**Flags:**
-- `--confirm` - Skip confirmation prompts for destructive operations
-- `-P, --project-id string` - Required when you have access to multiple projects
-### project env
-Displays environment variables for the current project scope.
-```sh
-zcli project env [flags]
-```
-**Flags:**
-- `--export` - Prepends export keyword to each env in output: `export {{.Key}}={{.Value}}`
-- `-P, --project-id string` - Required when you have access to multiple projects
-- `--service string` - Service name, in which context the environment variables are output
-- `--template string` - Output template (default: "`{{.Key}}={{.Value}}`")
-- `--user-only` - Exclude all non user env variables
-### project project-import
-Creates a new project with one or more services from a YAML definition.
-```sh
-zcli project project-import importYamlPath [flags]
-```
-**Flags:**
-- `--org-id string` - Organization ID where the project should be created (required for multiple organizations)
-- `--working-dir string` - Sets a custom working directory (default: "./")
-### project service-import
-Creates one or more services in an existing project from a YAML definition.
-```sh
-zcli project service-import importYamlPath [flags]
-```
-**Flags:**
-- `-P, --project-id string` - Required when you have access to multiple projects
-### project scope
-Sets or clears the default project scope for commands that require a project ID.
-```sh
-zcli project scope [project-id] [flags]
-```
-**Flags:**
-- `--clear` - Clear project scope
-- `-P, --project-id string` - Required when you have access to multiple projects
-## Service Operations
-### service list
-Lists all services in a project.
-```sh
-zcli service list [flags]
-```
-**Flags:**
-- `-P, --project-id string` - Required when you have access to multiple projects
-### service create
-Creates a new service for specified project.
-```sh
-zcli service create [flags]
-```
-**Flags:**
-- `--env strings` - Environment variables to be set as secrets (comma-separated or repeated flag)
-- `--env-file string` - File with environment variables (max 1.0 MiB)
-- `--env-isolation string` - Environment isolation rule [service, none] (default: "service")
-- `--mode string` - Service mode [ha, non_ha] (default: "non_ha")
-- `--name string` - Service name
-- `--noop` - Creates service only if none with the same name exists
-- `--out string` - Output format using Go template syntax
-- `-P, --project-id string` - Required when you have access to multiple projects
-- `--ssh-isolation string` - SSH isolation rules (default: "vpn")
-- `--start-without-code` - Start service immediately without deploy
-- `--working-dir string` - Sets custom working directory (default: "./")
-- `--zerops-yaml-path string` - Sets custom path to zerops.yml file
-### service push
-Builds your application in Zerops and deploys it. This is the recommended way to deploy your code.
-```sh
-zcli service push [service-id-or-name] [flags]
-```
-**Flags:**
-- `--archive-file-path string` - Creates a tar.gz archive with application code
-- `-g, --deploy-git-folder` - Include the .git folder in the upload
-- `--disable-logs` - Disable logs during push
-- `--no-git` - Upload entire working directory as-is (cannot be combined with --workspace-state or --deploy-git-folder)
-- `-P, --project-id string` - Required when you have access to multiple projects
-- `-S, --service-id string` - Required when you have access to multiple services
-- `--setup string` - Choose setup to use from zerops.yml
-- `-v, --verbose` - Log additional debug data to the zCLI [debug log file](/references/cli/configuration#logging-configuration)
-- `--version-name string` - Adds a custom version name
-- `--working-dir string` - Sets a custom working directory (default: "./")
-- `-w, --workspace-state string` - Defines version of workspace to push:
-  - `clean` - pushes the HEAD without local changes
-  - `staged` - pushes only staged files
-  - `all` - pushes all staged and unstaged files (default)
-- `--zerops-yaml-path string` - Sets a custom path to the zerops.yml file
-:::tip
-You can also use `zcli push` as a shorthand for `zcli service push`.
-To avoid specifying `--project-id` and `--service-id` flags repeatedly, you can set default values in a `.zcli.yml` file or via environment variables. See the [Configuration](/references/cli/configuration) page for details.
-:::
-### service deploy
-Deploys your application to Zerops. Similar to `push` but focuses on deployment only.
-```sh
-zcli service deploy [service-id-or-name]
-```
-**Flags:**
-Same as service push command.
-### service start/stop
-Commands to start or stop a Zerops service.
-```sh
-zcli service start [service-id-or-name] [flags]
-zcli service stop [service-id-or-name] [flags]
-```
-**Flags for both commands:**
-- `-P, --project-id string` - Required when you have access to multiple projects
-- `-S, --service-id string` - Required when you have access to multiple services
-### service delete
-Deletes a Zerops service.
-```sh
-zcli service delete [service-id-or-name] [flags]
-```
-**Flags:**
-- `--confirm` - Skip confirmation prompts for destructive operations
-- `-P, --project-id string` - Required when you have access to multiple projects
-- `-S, --service-id string` - Required when you have access to multiple services
-### service enable-subdomain
-Enables access to your service through a Zerops subdomain.
-```sh
-zcli service enable-subdomain [service-id-or-name] [flags]
-```
-**Flags:**
-- `-P, --project-id string` - Required when you have access to multiple projects
-- `-S, --service-id string` - Required when you have access to multiple services
-### service log
-Gets service runtime or build logs to stdout.
-```sh
-zcli service log [flags]
-```
-**Flags:**
-- `--follow` - Continuously poll for new log messages
-- `--format string` - Log output format (FULL, SHORT, JSON, JSONSTREAM) (default: "FULL")
-- `--format-template string` - Custom log format
-- `--limit int` - Number of recent log messages to return (1-1000, default: 100)
-- `--message-type string` - Select APPLICATION or WEBSERVER log messages (default: "APPLICATION")
-- `--minimum-severity string` - Filter by severity level
-- `-P, --project-id string` - Required when you have access to multiple projects
-- `-S, --service-id string` - Required when you have access to multiple services
-- `--show-build-logs` - Show build logs instead of runtime logs
-## Utility Commands
-### env
-Displays global environment variables and their paths.
-```sh
-zcli env
-```
-### version
-Shows the current zCLI version.
-```sh
-zcli version
-```
-### show-debug-logs
-Displays debug logs for troubleshooting.
-```sh
-zcli show-debug-logs
-```
-### support
-Displays information about how to contact Zerops support.
-```sh
-zcli support
-```
-### completion
-Generates shell autocompletion scripts.
-```sh
-zcli completion {bash|fish|powershell|zsh}
-```
-**Available Shells:**
-- `bash` - Generate autocompletion script for Bash
-- `fish` - Generate autocompletion script for Fish
-- `powershell` - Generate autocompletion script for PowerShell
-- `zsh` - Generate autocompletion script for Zsh
-**Example:**
-```sh
-zcli completion bash > ~/.zerops-completion.bash
-echo 'source ~/.zerops-completion.bash' >> ~/.bashrc
-```
-
-----------------------------------------
-
-# References > Cli > Configuration
-
-:::tip Commands Reference
-For a comprehensive reference of all available commands, see the [Commands Reference](/references/cli/commands) page.
-:::
-## Configuration Overview
-You can configure default values for zCLI commands using the following methods (in order of increasing precedence):
-1. [Configuration files](#configuration-files)
-2. [Environment variables](#environment-variables)
-3. [Command-line flags](/references/cli/commands)
-:::note Precedence
-This precedence order means that command-line flags will override environment variables, which will override settings in configuration files.
-:::
-## Configuration Files
-zCLI supports configuration via YAML files in the following locations:
-1. Global config (user home): `~/.config/zerops/zcli.yaml` or `~/zerops/zcli.yaml`
-2. Project-specific config: `./.zcli.yaml` in the root of your application repository
-The system first loads the global config file, then merges in the project-specific config if it exists:
-- Settings unique to the global config are preserved
-- Settings in the project-specific config will override any duplicate keys from the global config
-### Configuration File Examples
-**Global config file:**
-```yaml
-# Set organization-wide defaults
-workspaceState: "all"
-```
-**Project-specific file:**
-```yaml
-# Set project-specific settings
-projectId: "your-project-id"
-serviceId: "your-service-id"
-# Override global workspace state for this project
-workspaceState: "clean"
-```
-## Environment Variables
-### Standard Environment Variables
-Any flag can be set via environment variables by:
-- Using the `ZEROPS_` prefix
-- Converting the flag name to uppercase
-- Using the full flag name (not shorthand)
-**Example:**
-```sh
-export ZEROPS_WORKSPACESTATE=clean
-export ZEROPS_PROJECTID=your-project-id
-```
-### Special Environment Variables
-zCLI also recognizes special environment variables that control its behavior:
-#### Terminal Mode Configuration
-The `ZEROPS_CLI_TERMINAL_MODE` environment variable controls the interactive mode of zCLI:
-```sh
-export ZEROPS_CLI_TERMINAL_MODE=
-```
-Available modes:
-- `auto` (default): Automatically detects if interactive mode can be used and enables it when possible
-- `enabled`: Forces interactive mode to be enabled
-- `disabled`: Forces interactive mode to be disabled
-This setting affects interactive prompts, progress indicators, and other terminal-based user interface elements.
-#### Logging Configuration
-zCLI maintains a debug log file for the `service push` and `service deploy` commands. This logging feature is designed specifically for debugging purposes. The log file can be found in one of these locations:
-**1. Default locations** (checked in this order):
-  - `/var/log/zcli.log` (if zCLI has write permissions)
-  - `~/.config/zerops/zerops.log` (as fallback)
-**2. Custom location** (if specified):
-  - Set with `ZEROPS_CLI_LOG_FILE_PATH` environment variable
-:::note
-zCLI must have write permissions for the specified log file locations.
-:::
-To enable verbose logging with additional debug information, use the `--verbose` flag (or its shorthand `-v`):
-```sh
-zcli service push --verbose
-zcli service push -v
-```
-To troubleshoot deployment issues, you can check these log files using commands like `cat` or `tail`:
-```sh
-# View the entire log file
-cat ~/.config/zerops/zerops.log
-# Stream new log entries
-tail -f ~/.config/zerops/zerops.log
 ```
 
 ----------------------------------------
@@ -21591,6 +21262,335 @@ When implementing email functionality in your applications:
 - Use queue systems for bulk sending to prevent rate limits
 - Monitor delivery status and bounce rates
 - Keep SMTP libraries and configurations up to date
+
+----------------------------------------
+
+# References > Zcli > Commands
+
+## Basic Usage
+```sh
+zcli  [flags]
+```
+:::note Tip
+All commands support the `-h, --help` flag which displays help information about the command.
+:::
+:::tip Configuration
+For detailed information about configuration options, environment variables, and logging, see the [Zerops CLI Configuration](/references/zcli/configuration) page.
+:::
+## Command Groups
+- [Account & VPN](#account--vpn)
+- [Project Management](#project-management)
+- [Service Operations](#service-operations)
+- [Utility Commands](#utility-commands)
+## Account & VPN
+### login
+Logs you into Zerops using a generated token or your login credentials.
+```sh
+zcli login 
+```
+### logout
+Disconnects from VPN and logs out from your Zerops account.
+```sh
+zcli logout
+```
+### vpn up
+Connects to the Zerops VPN.
+```sh
+zcli vpn up [project-id] [flags]
+```
+**Flags:**
+- `--auto-disconnect` - Automatically disconnect from VPN if already connected
+- `--mtu int` - Set custom MTU value for Wireguard interface (default: 1420)
+- `-P, --project-id string` - Required when you have access to multiple projects
+:::note
+You can set a default project ID for VPN connections in a `.zcli.yml` file or via the `ZEROPS_PROJECTID` environment variable. See the [Configuration](/references/zcli/configuration) page for details.
+:::
+### vpn down
+Disconnects from the Zerops VPN.
+```sh
+zcli vpn down
+```
+:::note
+For more detailed information about Zerops VPN configuration and troubleshooting, visit the [VPN Documentation](/references/networking/vpn).
+:::
+## Project Management
+### project list
+Lists all projects you have access to.
+```sh
+zcli project list
+```
+### project create
+Creates a new project for specified organization.
+```sh
+zcli project create [flags]
+```
+**Flags:**
+- `--env-isolation string` - Environment isolation rule [service, none] (default: "service")
+- `--mode string` - Project mode [light, serious] (default: "light")
+- `--name string` - Project name
+- `--org-id string` - Organization ID to create project for
+- `--out string` - Output format using Go template syntax
+- `--ssh-isolation string` - SSH isolation rules (default: "vpn")
+- `--tags strings` - Project tags (comma-separated list or repeated flag)
+### project delete
+Deletes a project and all its services.
+```sh
+zcli project delete [project-id] [flags]
+```
+**Flags:**
+- `--confirm` - Skip confirmation prompts for destructive operations
+- `-P, --project-id string` - Required when you have access to multiple projects
+### project env
+Displays environment variables for the current project scope.
+```sh
+zcli project env [flags]
+```
+**Flags:**
+- `--export` - Prepends export keyword to each env in output: `export {{.Key}}={{.Value}}`
+- `-P, --project-id string` - Required when you have access to multiple projects
+- `--service string` - Service name, in which context the environment variables are output
+- `--template string` - Output template (default: "`{{.Key}}={{.Value}}`")
+- `--user-only` - Exclude all non user env variables
+### project project-import
+Creates a new project with one or more services from a YAML definition.
+```sh
+zcli project project-import importYamlPath [flags]
+```
+**Flags:**
+- `--org-id string` - Organization ID where the project should be created (required for multiple organizations)
+- `--working-dir string` - Sets a custom working directory (default: "./")
+### project service-import
+Creates one or more services in an existing project from a YAML definition.
+```sh
+zcli project service-import importYamlPath [flags]
+```
+**Flags:**
+- `-P, --project-id string` - Required when you have access to multiple projects
+### project scope
+Sets or clears the default project scope for commands that require a project ID.
+```sh
+zcli project scope [project-id] [flags]
+```
+**Flags:**
+- `--clear` - Clear project scope
+- `-P, --project-id string` - Required when you have access to multiple projects
+## Service Operations
+### service list
+Lists all services in a project.
+```sh
+zcli service list [flags]
+```
+**Flags:**
+- `-P, --project-id string` - Required when you have access to multiple projects
+### service create
+Creates a new service for specified project.
+```sh
+zcli service create [flags]
+```
+**Flags:**
+- `--env strings` - Environment variables to be set as secrets (comma-separated or repeated flag)
+- `--env-file string` - File with environment variables (max 1.0 MiB)
+- `--env-isolation string` - Environment isolation rule [service, none] (default: "service")
+- `--mode string` - Service mode [ha, non_ha] (default: "non_ha")
+- `--name string` - Service name
+- `--noop` - Creates service only if none with the same name exists
+- `--out string` - Output format using Go template syntax
+- `-P, --project-id string` - Required when you have access to multiple projects
+- `--ssh-isolation string` - SSH isolation rules (default: "vpn")
+- `--start-without-code` - Start service immediately without deploy
+- `--working-dir string` - Sets custom working directory (default: "./")
+- `--zerops-yaml-path string` - Sets custom path to zerops.yml file
+### service push
+Builds your application in Zerops and deploys it. This is the recommended way to deploy your code.
+```sh
+zcli service push [service-id-or-name] [flags]
+```
+**Flags:**
+- `--archive-file-path string` - Creates a tar.gz archive with application code
+- `-g, --deploy-git-folder` - Include the .git folder in the upload
+- `--disable-logs` - Disable logs during push
+- `--no-git` - Upload entire working directory as-is (cannot be combined with --workspace-state or --deploy-git-folder)
+- `-P, --project-id string` - Required when you have access to multiple projects
+- `-S, --service-id string` - Required when you have access to multiple services
+- `--setup string` - Choose setup to use from zerops.yml
+- `-v, --verbose` - Log additional debug data to the zCLI [debug log file](/references/zcli/configuration#logging-configuration)
+- `--version-name string` - Adds a custom version name
+- `--working-dir string` - Sets a custom working directory (default: "./")
+- `-w, --workspace-state string` - Defines version of workspace to push:
+  - `clean` - pushes the HEAD without local changes
+  - `staged` - pushes only staged files
+  - `all` - pushes all staged and unstaged files (default)
+- `--zerops-yaml-path string` - Sets a custom path to the zerops.yml file
+:::tip
+You can also use `zcli push` as a shorthand for `zcli service push`.
+To avoid specifying `--project-id` and `--service-id` flags repeatedly, you can set default values in a `.zcli.yml` file or via environment variables. See the [Configuration](/references/zcli/configuration) page for details.
+:::
+### service deploy
+Deploys your application to Zerops. Similar to `push` but focuses on deployment only.
+```sh
+zcli service deploy [service-id-or-name]
+```
+**Flags:**
+Same as service push command.
+### service start/stop
+Commands to start or stop a Zerops service.
+```sh
+zcli service start [service-id-or-name] [flags]
+zcli service stop [service-id-or-name] [flags]
+```
+**Flags for both commands:**
+- `-P, --project-id string` - Required when you have access to multiple projects
+- `-S, --service-id string` - Required when you have access to multiple services
+### service delete
+Deletes a Zerops service.
+```sh
+zcli service delete [service-id-or-name] [flags]
+```
+**Flags:**
+- `--confirm` - Skip confirmation prompts for destructive operations
+- `-P, --project-id string` - Required when you have access to multiple projects
+- `-S, --service-id string` - Required when you have access to multiple services
+### service enable-subdomain
+Enables access to your service through a Zerops subdomain.
+```sh
+zcli service enable-subdomain [service-id-or-name] [flags]
+```
+**Flags:**
+- `-P, --project-id string` - Required when you have access to multiple projects
+- `-S, --service-id string` - Required when you have access to multiple services
+### service log
+Gets service runtime or build logs to stdout.
+```sh
+zcli service log [flags]
+```
+**Flags:**
+- `--follow` - Continuously poll for new log messages
+- `--format string` - Log output format (FULL, SHORT, JSON, JSONSTREAM) (default: "FULL")
+- `--format-template string` - Custom log format
+- `--limit int` - Number of recent log messages to return (1-1000, default: 100)
+- `--message-type string` - Select APPLICATION or WEBSERVER log messages (default: "APPLICATION")
+- `--minimum-severity string` - Filter by severity level
+- `-P, --project-id string` - Required when you have access to multiple projects
+- `-S, --service-id string` - Required when you have access to multiple services
+- `--show-build-logs` - Show build logs instead of runtime logs
+## Utility Commands
+### env
+Displays global environment variables and their paths.
+```sh
+zcli env
+```
+### version
+Shows the current zCLI version.
+```sh
+zcli version
+```
+### show-debug-logs
+Displays debug logs for troubleshooting.
+```sh
+zcli show-debug-logs
+```
+### support
+Displays information about how to contact Zerops support.
+```sh
+zcli support
+```
+### completion
+Generates shell autocompletion scripts.
+```sh
+zcli completion {bash|fish|powershell|zsh}
+```
+**Available Shells:**
+- `bash` - Generate autocompletion script for Bash
+- `fish` - Generate autocompletion script for Fish
+- `powershell` - Generate autocompletion script for PowerShell
+- `zsh` - Generate autocompletion script for Zsh
+**Example:**
+```sh
+zcli completion bash > ~/.zerops-completion.bash
+echo 'source ~/.zerops-completion.bash' >> ~/.bashrc
+```
+
+----------------------------------------
+
+# References > Zcli > Configuration
+
+:::tip Commands Reference
+For a comprehensive reference of all available commands, see the [Commands Reference](/references/zcli/commands) page.
+:::
+## Configuration Overview
+You can configure default values for zCLI commands using the following methods (in order of increasing precedence):
+1. [Configuration files](#configuration-files)
+2. [Environment variables](#environment-variables)
+3. [Command-line flags](/references/zcli/commands)
+:::note Precedence
+This precedence order means that command-line flags will override environment variables, which will override settings in configuration files.
+:::
+## Configuration Files
+zCLI supports configuration via YAML files in the following locations:
+1. Global config (user home): `~/.config/zerops/zcli.yaml` or `~/zerops/zcli.yaml`
+2. Project-specific config: `./.zcli.yaml` in the root of your application repository
+The system first loads the global config file, then merges in the project-specific config if it exists:
+- Settings unique to the global config are preserved
+- Settings in the project-specific config will override any duplicate keys from the global config
+### Configuration File Examples
+**Global config file:**
+```yaml
+# Set organization-wide defaults
+workspaceState: "all"
+```
+**Project-specific file:**
+```yaml
+# Set project-specific settings
+projectId: "your-project-id"
+serviceId: "your-service-id"
+# Override global workspace state for this project
+workspaceState: "clean"
+```
+## Environment Variables
+### Standard Environment Variables
+Any flag can be set via environment variables by:
+- Using the `ZEROPS_` prefix
+- Converting the flag name to uppercase
+- Using the full flag name (not shorthand)
+**Example:**
+```sh
+export ZEROPS_WORKSPACESTATE=clean
+export ZEROPS_PROJECTID=your-project-id
+```
+### Special Environment Variables
+zCLI also recognizes special environment variables that control its behavior:
+#### Terminal Mode Configuration
+The `ZEROPS_CLI_TERMINAL_MODE` environment variable controls the interactive mode of zCLI:
+```sh
+export ZEROPS_CLI_TERMINAL_MODE=
+```
+Available modes:
+- `auto` (default): Automatically detects if interactive mode can be used and enables it when possible
+- `enabled`: Forces interactive mode to be enabled
+- `disabled`: Forces interactive mode to be disabled
+This setting affects interactive prompts, progress indicators, and other terminal-based user interface elements.
+#### Logging Configuration
+zCLI maintains a debug log file for the `service push` and `service deploy` commands. This logging feature is designed specifically for debugging purposes. The log file can be found in one of these locations:
+**1. Default locations** (checked in this order):
+  - `/var/log/zcli.log` (if zCLI has write permissions)
+  - `~/.config/zerops/zerops.log` (as fallback)
+**2. Custom location** (if specified):
+  - Set with `ZEROPS_CLI_LOG_FILE_PATH` environment variable
+:::note
+zCLI must have write permissions for the specified log file locations.
+:::
+To enable verbose logging with additional debug information, use the `--verbose` flag (or its shorthand `-v`):
+```sh
+zcli service push --verbose
+zcli service push -v
+```
+To troubleshoot deployment issues, you can check these log files using commands like `cat` or `tail`:
+```sh
+# View the entire log file
+cat ~/.config/zerops/zerops.log
+# Stream new log entries
+tail -f ~/.config/zerops/zerops.log
+```
 
 ----------------------------------------
 
