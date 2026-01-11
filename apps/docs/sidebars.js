@@ -523,7 +523,7 @@ module.exports = {
           items: [
             {
               type: 'doc',
-              id: 'references/cli/configuration',
+              id: 'references/zcli/configuration',
               label: 'Configuration',
               customProps: {
                 exclude_from_doc_list: false,
@@ -531,7 +531,7 @@ module.exports = {
             },
             {
               type: 'doc',
-              id: 'references/cli/commands',
+              id: 'references/zcli/commands',
               label: 'Commands',
               customProps: {
                 exclude_from_doc_list: false,
