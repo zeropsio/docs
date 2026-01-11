@@ -96,15 +96,27 @@ This flexibility lets you plan scaling strategies upfront or adapt them as requi
 
 Resource management in Zerops focuses on efficiently allocating and adjusting CPU, RAM, and disk resources within individual containers based on actual usage patterns.
 
-### CPU Options
+These resource management capabilities apply to **runtime** services, **databases**, **shared storage**, and **Linux containers** (Alpine and Ubuntu).
+
+:::note
+Docker services do not support automatic vertical scaling. Resources for Docker services are fixed at the values set manually and do not automatically adjust based on usage.
+:::
+
+:::tip Disable Scaling for Specific Resources
+To prevent automatic scaling of specific resources, simply set identical minimum and maximum values for CPU, RAM, or Disk.
+:::
+
+### CPU Settings
+
+#### CPU Mode
 
 Two CPU allocation modes are available for any service:
 
-#### Shared CPU
+**Shared CPU**
 
 Shared CPU provides a physical CPU core shared with up to 10 other applications. Performance varies depending on neighbors, ranging from 1/10 to 10/10 power. This option is cost-effective for non-critical workloads, development, and testing environments.
 
-#### Dedicated CPU
+**Dedicated CPU**
 
 Dedicated CPU gives exclusive access to a full physical CPU core(s), ensuring consistent and predictable performance. This option is ideal for production environments and CPU-intensive applications.
 
@@ -114,39 +126,42 @@ CPU mode can be changed (once per hour) as needed.
 
 See the [pricing](/company/pricing#resource-pricing) for the difference between CPU modes.
 
-### Vertical Scaling
+#### Minimum and Maximum CPU Cores
 
-Vertical scaling adjusts individual resources (CPU, RAM, Disk) within existing containers. When a container needs more/less power, allocated resources are increased/decreased instead of creating a new/removing container.
+Set boundaries for CPU core allocation. Zerops will scale CPU resources within these limits based on actual usage.
 
-This is the preferred scaling method and is attempted first before horizontal scaling.
+#### Start CPU Core Count
 
-These resource management capabilities apply to **runtime** services, **databases**, **shared storage**, and **Linux containers** (Alpine and Ubuntu).
-
-:::note
-Docker services do not support vertical scaling. Resources for Docker services are fixed at the values set manually and do not automatically adjust based on usage.
-:::
-
-### Fine-Tuning Resource Allocation
-
-Resource allocation can be configured through basic and advanced settings:
-
-#### Minimum and Maximum Resources (Basic)
-
-Boundaries for CPU cores, RAM, and disk space can be established.
-
-:::tip Resource Scaling Control
-To prevent scaling of specific resources, simply set identical minimum and maximum values for CPU, RAM, or Disk.
-:::
-
-#### Start CPU Core Count (Advanced)
-
-How many CPU cores should be allocated when containers start to ensure reliable and fast startup:
+Determines how many CPU cores are allocated when containers start:
 - Default: 2 cores
 - Applies to both dedicated and shared CPU modes
 - Higher values provide more processing power during application initialization
 - After startup, resources are automatically adjusted based on actual usage and limits
 
-#### RAM Scaling Thresholds (Advanced)
+#### CPU Scaling Thresholds
+
+For services using [dedicated CPU](#cpu-mode) only, CPU scaling is controlled by:
+
+**Min. Free CPU Cores (%)**
+- Scale-up is triggered when free capacity drops below a fixed fraction of a single CPU core
+- Default: 10%
+- Set as a percentage of a single core's capacity
+- Example: Setting to 20% means that with one core, at least 20% of that core should remain free
+
+**Dynamic Min. Free Total Core Percent**
+- Scale-up is triggered when total free capacity across all cores falls below a percentage of total capacity
+- Default: 0% (disabled)
+- Dynamically adjusts as the number of cores changes
+- Ideal for accommodating varying load distributions
+- Example: 20% setting ensures at least 20% of the combined capacity of all cores remains free
+
+### RAM Settings
+
+#### Minimum and Maximum RAM
+
+Set boundaries for RAM allocation. Zerops will scale RAM within these limits based on actual usage.
+
+#### RAM Scaling Thresholds
 
 RAM usage is monitored every 10 seconds to ensure optimal performance. The minimum free RAM settings serve multiple important purposes: they prevent Out of Memory (OOM) errors, provide space for kernel disk caching (which improves application performance), and maintain a buffer for sudden memory demands.
 
@@ -154,17 +169,17 @@ Swap is enabled for all containers to help prevent OOM errors, but proper minimu
 
 Two threshold types determine RAM scaling:
 
-1. **Minimum Free RAM (absolute value in GB)**
-   - Specifies an absolute threshold for free RAM
-   - Additional memory is triggered when available RAM falls below this fixed amount
-   - Default: 0.0625 GB (64 MB) for most services
-   - Ideal for maintaining system stability and responsiveness
+**Minimum Free RAM (absolute value in GB)**
+- Specifies an absolute threshold for free RAM
+- Additional memory is triggered when available RAM falls below this fixed amount
+- Default: 0.0625 GB (64 MB) for most services
+- Ideal for maintaining system stability and responsiveness
 
-2. **Minimum Free RAM (% of Granted)**
-   - Establishes a dynamic threshold based on a percentage of total granted memory
-   - Default: 0% (disabled)
-   - The buffer scales proportionally as total memory increases
-   - Particularly useful for handling varying loads
+**Minimum Free RAM (% of Granted)**
+- Establishes a dynamic threshold based on a percentage of total granted memory
+- Default: 0% (disabled)
+- The buffer scales proportionally as total memory increases
+- Particularly useful for handling varying loads
 
 :::note
 Whichever setting provides more free memory is used.
@@ -180,22 +195,11 @@ Whichever setting provides more free memory is used.
   plays-inline="true"
 />
 
-#### CPU Scaling Thresholds (Advanced)
+### Disk Settings
 
-For services using [dedicated CPU](#dedicated-cpu) cores only, CPU scaling is controlled by:
+#### Minimum and Maximum Disk
 
-1. **Min. Free CPU Cores (%)**
-   - Scale-up is triggered when free capacity drops below a fixed fraction of a single CPU core
-   - Default: 10%
-   - Set as a percentage of a single core's capacity
-   - Example: Setting to 20% means that with one core, at least 20% of that core should remain free
-
-2. **Dynamic Min. Free Total Core Percent**
-   - Scale-up is triggered when total free capacity across all cores falls below a percentage of total capacity
-   - Default: 0% (disabled)
-   - Dynamically adjusts as the number of cores changes
-   - Ideal for accommodating varying load distributions
-   - Example: 20% setting ensures at least 20% of the combined capacity of all cores remains free
+Set boundaries for disk space allocation. Zerops will scale disk space within these limits based on actual usage.
 
 ### Resource Scaling Behavior
 

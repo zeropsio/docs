@@ -859,13 +859,8 @@ module.exports = {
         },
         {
           type: 'doc',
-          id: 'nodejs/how-to/delete',
-          label: 'Delete Node.js service',
-        },
-        {
-          type: 'doc',
           id: 'nodejs/how-to/controls',
-          label: 'Stop & start Node.js runtime service',
+          label: 'Stop, start & delete Node.js runtime service',
         },
       ],
     },
@@ -998,13 +993,8 @@ module.exports = {
         },
         {
           type: 'doc',
-          id: 'php/how-to/delete',
-          label: 'Delete PHP service',
-        },
-        {
-          type: 'doc',
           id: 'php/how-to/controls',
-          label: 'Stop & start PHP runtime service',
+          label: 'Stop, start & delete PHP runtime service',
         },
       ],
     },
@@ -1133,13 +1123,8 @@ module.exports = {
         },
         {
           type: 'doc',
-          id: 'python/how-to/delete',
-          label: 'Delete Python service',
-        },
-        {
-          type: 'doc',
           id: 'python/how-to/controls',
-          label: 'Stop & start Python runtime service',
+          label: 'Stop, start & delete Python runtime service',
         },
       ],
     },
@@ -1263,13 +1248,8 @@ module.exports = {
           },
           {
             type: 'doc',
-            id: 'go/how-to/delete',
-            label: 'Delete Go service',
-          },
-          {
-            type: 'doc',
             id: 'go/how-to/controls',
-            label: 'Stop & start Go runtime service',
+            label: 'Stop, start & delete Go runtime service',
           },
         ],
       },
@@ -1393,13 +1373,8 @@ module.exports = {
           },
           {
             type: 'doc',
-            id: 'rust/how-to/delete',
-            label: 'Delete Rust service',
-          },
-          {
-            type: 'doc',
             id: 'rust/how-to/controls',
-            label: 'Stop & start Rust runtime service',
+            label: 'Stop, start & delete Rust runtime service',
           },
         ],
       },
@@ -1523,13 +1498,8 @@ module.exports = {
           },
           {
             type: 'doc',
-            id: 'dotnet/how-to/delete',
-            label: 'Delete .NET service',
-          },
-          {
-            type: 'doc',
             id: 'dotnet/how-to/controls',
-            label: 'Stop & start .NET runtime service',
+            label: 'Stop, start & delete .NET runtime service',
           },
         ],
       },
@@ -1653,13 +1623,8 @@ module.exports = {
           },
           {
             type: 'doc',
-            id: 'java/how-to/delete',
-            label: 'Delete Java service',
-          },
-          {
-            type: 'doc',
             id: 'java/how-to/controls',
-            label: 'Stop & start Java runtime service',
+            label: 'Stop, start & delete Java runtime service',
           },
         ],
       },
@@ -1783,13 +1748,8 @@ module.exports = {
           },
           {
             type: 'doc',
-            id: 'nginx/how-to/delete',
-            label: 'Delete Nginx static service',
-          },
-          {
-            type: 'doc',
             id: 'nginx/how-to/controls',
-            label: 'Stop & start Nginx static service',
+            label: 'Stop, start & delete Nginx static service',
           },
         ],
       },
@@ -1942,13 +1902,8 @@ module.exports = {
             },
             {
               type: 'doc',
-              id: 'ubuntu/how-to/delete',
-              label: 'Delete Ubuntu service',
-            },
-            {
-              type: 'doc',
               id: 'ubuntu/how-to/controls',
-              label: 'Stop & start Ubuntu runtime service',
+              label: 'Stop, start & delete Ubuntu runtime service',
             },
           ],
         },
@@ -2072,13 +2027,8 @@ module.exports = {
               },
               {
                 type: 'doc',
-                id: 'alpine/how-to/delete',
-                label: 'Delete Alpine service',
-              },
-              {
-                type: 'doc',
                 id: 'alpine/how-to/controls',
-                label: 'Stop & start Alpine runtime service',
+                label: 'Stop, start & delete Alpine runtime service',
               },
             ],
           },
@@ -2243,12 +2193,7 @@ module.exports = {
         {
           type: 'doc',
           id: 'mariadb/how-to/control',
-          label: 'Stop and start MariaDB service',
-        },
-        {
-          type: 'doc',
-          id: 'mariadb/how-to/delete',
-          label: 'Delete MariaDB service',
+          label: 'Stop, start and delete MariaDB service',
         },
       ],
     },
@@ -2342,12 +2287,7 @@ module.exports = {
         {
           type: 'doc',
           id: 'postgresql/how-to/control',
-          label: 'Stop and start PostgreSQL service',
-        },
-        {
-          type: 'doc',
-          id: 'postgresql/how-to/delete',
-          label: 'Delete PostgreSQL service',
+          label: 'Stop, start and delete PostgreSQL service',
         },
       ],
     },
@@ -2451,12 +2391,7 @@ module.exports = {
         {
           type: 'doc',
           id: 'keydb/how-to/control',
-          label: 'Stop and start KeyDB service',
-        },
-        {
-          type: 'doc',
-          id: 'keydb/how-to/delete',
-          label: 'Delete KeyDB service',
+          label: 'Stop, start and delete KeyDB service',
         },
       ],
     },
@@ -2720,8 +2655,8 @@ module.exports = {
         },
         {
           type: 'doc',
-          id: 'object-storage/how-to/delete',
-          label: 'Delete object storage service',
+          id: 'object-storage/how-to/controls',
+          label: 'Stop, start & delete object storage service',
         },
         {
           type: 'doc',
@@ -2770,13 +2705,8 @@ module.exports = {
           },
           {
             type: 'doc',
-            id: 'deno/how-to/delete',
-            label: 'Delete Deno service',
-          },
-          {
-            type: 'doc',
             id: 'deno/how-to/controls',
-            label: 'Stop & start Deno runtime service',
+            label: 'Stop, start & delete Deno runtime service',
           },
         ],
       },
@@ -2900,13 +2830,8 @@ module.exports = {
           },
           {
             type: 'doc',
-            id: 'bun/how-to/delete',
-            label: 'Delete Bun service',
-          },
-          {
-            type: 'doc',
             id: 'bun/how-to/controls',
-            label: 'Stop & start Bun runtime service',
+            label: 'Stop, start & delete Bun runtime service',
           },
         ],
       },
@@ -3030,13 +2955,8 @@ module.exports = {
           },
           {
             type: 'doc',
-            id: 'gleam/how-to/delete',
-            label: 'Delete Gleam service',
-          },
-          {
-            type: 'doc',
             id: 'gleam/how-to/controls',
-            label: 'Stop & start Gleam runtime service',
+            label: 'Stop, start & delete Gleam runtime service',
           },
         ],
       },
@@ -3160,13 +3080,8 @@ module.exports = {
           },
           {
             type: 'doc',
-            id: 'elixir/how-to/delete',
-            label: 'Delete Elixir service',
-          },
-          {
-            type: 'doc',
             id: 'elixir/how-to/controls',
-            label: 'Stop & start Elixir runtime service',
+            label: 'Stop, start & delete Elixir runtime service',
           },
         ],
       },

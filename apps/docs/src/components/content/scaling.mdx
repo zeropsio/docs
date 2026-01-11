@@ -29,8 +29,6 @@ You can configure scaling settings at different stages:
 
 - **After service creation** - Navigate to your <Var name="serviceDisplay" /> service and select **Automatic scaling configuration** from the menu to modify settings.
 
-### Basic settings
-
 <p align="center">
   <Image
     lightImage="/img/gui/automatic-scaling.webp"
@@ -40,19 +38,107 @@ You can configure scaling settings at different stages:
   />
 </p>
 
-**CPU mode**: Choose between shared (cost-effective, variable performance) or dedicated (consistent performance, higher cost). You can change CPU mode once per hour. See [pricing](https://zerops.io/#pricing) for costs or read more about [CPU options](/features/scaling-ha#cpu-options).
+### CPU Settings
 
-**Resource limits**: Configure minimum and maximum resources for your <Var name="serviceDisplay" /> service:
+**CPU mode**: Choose between shared (cost-effective, variable performance) or dedicated (consistent performance, higher cost). You can change CPU mode once per hour. See [pricing](https://zerops.io/#pricing) for costs or read more about [CPU mode](/features/scaling-ha#cpu-mode).
 
-<ResourceTable />
+**Minimum and Maximum CPU**: Configure the boundaries for CPU core allocation. Zerops will scale CPU resources within these limits based on actual usage.
 
-- **Lower the maximum** to control costs and prevent over-scaling
-- **Raise the minimum** when you need guaranteed baseline performance
-- **Set minimum = maximum** to disable automatic scaling for that specific resource
+<table>
+  <tbody>
+    <tr>
+      <td className="w-fit my-1.5 font-semibold whitespace-nowrap">Minimum CPU cores</td>
+      <td className="w-fit my-1.5">1</td>
+    </tr>
+    <tr>
+      <td className="w-fit my-1.5 font-semibold whitespace-nowrap">Maximum CPU cores</td>
+      <td className="w-fit my-1.5">8</td>
+    </tr>
+  </tbody>
+</table>
+
+:::tip
+Set minimum = maximum to disable automatic CPU scaling.
+:::
+
+**Start CPU cores**: Determines how many CPU cores are allocated during application startup. Increase this value if your <Var name="serviceDisplay" /> application starts slowly or requires more processing power during initialization.
+- Default: 2 cores
+
+**CPU Scaling Thresholds** (for dedicated CPU mode only):
+- **Min free CPU %**: Triggers scaling when free CPU drops below this percentage of a single core
+- **Dynamic free total %**: Triggers scaling when total free CPU across all cores drops below this percentage
 
 :::info Read More
-More details on [fine-tuning resource allocation](/features/scaling-ha#fine-tuning-resource-allocation).
+More details on [CPU Settings](/features/scaling-ha#cpu-settings).
 :::
+
+### RAM Settings
+
+**Minimum and Maximum RAM**: Configure the boundaries for RAM allocation. Zerops will scale RAM within these limits based on actual usage.
+
+<table>
+  <tbody>
+    <tr>
+      <td className="w-fit my-1.5 font-semibold whitespace-nowrap">Minimum RAM</td>
+      <td className="w-fit my-1.5">0.125 GB</td>
+    </tr>
+    <tr>
+      <td className="w-fit my-1.5 font-semibold whitespace-nowrap">Maximum RAM</td>
+      <td className="w-fit my-1.5">48 GB</td>
+    </tr>
+  </tbody>
+</table>
+
+:::tip
+Set minimum = maximum to disable automatic RAM scaling.
+:::
+
+**RAM Scaling Thresholds**: Help prevent out-of-memory crashes by maintaining buffer space:
+- **Absolute (GB)**: Maintains this amount of free RAM at all times
+- **Percentage**: Keeps this percentage of total RAM free
+
+Consider increasing these values if your application experiences memory-related crashes.
+
+:::info Read More
+More details on [RAM Settings](/features/scaling-ha#ram-settings).
+:::
+
+<Video
+  width="90%"
+  autoplay="true"
+  loop="loop"
+  muted="muted"
+  preload="none"
+  src="/vids/ram-scaling.webm"
+  plays-inline="true"
+/>
+
+### Disk Settings
+
+**Minimum and Maximum Disk**: Configure the boundaries for disk space allocation. Zerops will scale disk space within these limits based on actual usage.
+
+<table>
+  <tbody>
+    <tr>
+      <td className="w-fit my-1.5 font-semibold whitespace-nowrap">Minimum disk</td>
+      <td className="w-fit my-1.5">1 GB</td>
+    </tr>
+    <tr>
+      <td className="w-fit my-1.5 font-semibold whitespace-nowrap">Maximum disk</td>
+      <td className="w-fit my-1.5">250 GB</td>
+    </tr>
+  </tbody>
+</table>
+
+:::tip
+Set minimum = maximum to disable automatic disk scaling.
+:::
+
+:::info Read More
+More details on [Disk Settings](/features/scaling-ha#disk-settings).
+:::
+
+### Container Settings
 
 **Container limits**: Set how many containers your <Var name="serviceDisplay" /> service can scale to:
 
@@ -74,41 +160,8 @@ More details on [fine-tuning resource allocation](/features/scaling-ha#fine-tuni
 **Multiple containers** (maximum > 1): Can provide high availability for production environments, but only if your <Var name="serviceDisplay" /> application is properly designed for it. Each container runs on a different physical server for redundancy. Your application must be stateless and avoid storing data in local files to work properly across multiple containers.
 
 :::info Read More
-More details on [horizontal scaling](/features/scaling-ha#horizontal-scaling-runtime-services-linux-containers-and-docker).
+More details on [Horizontal Scaling](/features/scaling-ha#horizontal-scaling-runtime-services-linux-containers-and-docker).
 :::
-
-### Advanced settings
-
-**Start CPU cores**: Determines how many CPU cores are allocated during application startup. Increase this value if your <Var name="serviceDisplay" /> application starts slowly or requires more processing power during initialization.
-
-For dedicated CPU mode, you can also configure:
-- **Min free CPU %**: Triggers scaling when free CPU drops below this percentage of a single core
-- **Dynamic free total %**: Triggers scaling when total free CPU across all cores drops below this percentage
-
-:::info Read More
-More details on [CPU Scaling Thresholds](/features/scaling-ha#cpu-scaling-thresholds-advanced).
-:::
-
-**RAM thresholds**: Help prevent out-of-memory crashes by maintaining buffer space:
-
-- **Absolute (GB)**: Maintains this amount of free RAM at all times
-- **Percentage**: Keeps this percentage of total RAM free
-
-Consider increasing these values if your application experiences memory-related crashes.
-
-:::info Read More
-More details on [RAM Scaling Thresholds](/features/scaling-ha#ram-scaling-thresholds-advanced).
-:::
-
-<Video
-  width="90%"
-  autoplay="true"
-  loop="loop"
-  muted="muted"
-  preload="none"
-  src="/vids/ram-scaling.webm"
-  plays-inline="true"
-/>
 
 ## Monitor usage
 
