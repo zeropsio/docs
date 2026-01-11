@@ -19,6 +19,25 @@ DNS allows you to set two records based on IP address type:
 * **A** record for **IPv4** - Zerops offers either a free **shared** IPv4 or a paid **dedicated** IPv4
 * **AAAA** record for **IPv6** - Zerops provides a free **dedicated** IPv6
 
+### Using CNAME Records
+
+CNAME can be used for non-apex domains (subdomains) or with DNS providers that support CNAME flattening at the apex. When you set up a CNAME in Zerops, it internally creates A and AAAA records pointing to your project.
+
+To find your CNAME target value, go to your service in the Zerops GUI, navigate to **Public access & internal ports**, and select the **CNAME** option when adding a domain.
+
+```
+Type    Name              Content                         Proxy status       TTL
+CNAME   <your-domain>     <your-project-cname-target>     DNS only/Proxied   Auto
+```
+
+:::warning Using Proxy with Shared IPv4
+When using any CDN or proxy service with CNAME records, you should **exclude the shared IPv4**. Toggle off "Shared IPv4 included in the CNAME" in the Zerops GUI.
+
+Zerops does a reverse lookup of the AAAA record of the domain for requests to our shared IPv4 address. If you use a shared IPv4 and also enable a proxy for the AAAA record, Zerops will not be able to correctly route the request because it sees the proxy's IP instead of your project's IPv6.
+
+This setting affects all domains in your project.
+:::
+
 ### With Proxy
 
 #### IPv6 only
@@ -45,15 +64,17 @@ AAAA    <your-domain>     <your-project-ipv6>    Proxied        Auto
 Adding also AAAA record can be beneficial as visitors with IPv6 support will connect directly via IPv6.
 :::
 
-#### Shared IPv4 *(valid but NOT recommended)*
+#### Shared IPv4 *(not recommended)*
 ```bash
 Type    Name              Content                Proxy status  TTL
 AAAA    <your-domain>     <your-project-ipv6>    DNS only      Auto
 A       <your-domain>     <zerops-shared-ipv4>   Proxied       Auto
 ```
 
-:::tip Why not?
-It does not make sense to expose your IPv6 address while proxying the shared IPv4. Use [IPv6 only](#ipv6-only) setup instead.
+:::tip Why Not?
+Zerops does a reverse lookup of the AAAA record of the domain for requests to our shared IPv4 address. If you use a shared IPv4 and also enable a proxy for the AAAA record, Zerops will not be able to correctly route the request.
+
+Use [IPv6 only](#ipv6-only) or dedicated IPv4 configurations instead.
 :::
 
 ### Without Proxy

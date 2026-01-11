@@ -1,5 +1,5 @@
 ---
-title: Backup in MariaDB
+title: Backup & Restore MariaDB
 description: Learn how you can work with backups in MariaDB service in Zerops.
 ---
 
@@ -24,16 +24,66 @@ MariaDB backups are created using `mariabackup` and stored in `.xb.gz` format:
 
 ## Restoring MariaDB Backups
 
-To restore a MariaDB backup:
+To restore a MariaDB backup, follow these steps:
 
-1. **Download** the backup file (`.xb.gz`) from the Zerops UI
-2. **Prepare** your target environment (clean existing data or use a new instance)
-3. **Extract** the backup file to access the database contents
-4. **Restore** using either:
-   - **MariaDB native tools**: Follow the [official MariaDB backup documentation](https://mariadb.com/kb/en/mariabackup/) for detailed restore procedures
-   - **Third-party management tools**: Use web-based tools like phpMyAdmin or Adminer as described in [MariaDB Management Tools](/mariadb/how-to/manage)
+:::tip
+If the backup is large and the export/import has higher demands, consider scaling up the RAM in the container before starting. You can use [zsc](/references/zsc) to temporarily scale up:
+```bash
+zsc scale ram +2GB 10m
+```
+:::
 
-For assistance with the restoration process, contact Zerops support.
+### Step 1: Deploy the restore helper service
+
+Import the [MariaDB restore recipe](https://github.com/zeropsio/recipe-mariadb-restore) as a service into the project where your MariaDB service is located.
+
+Use the `zerops-import.yaml` file from the repository to import the service. See the [import documentation](/references/import) for details, or follow the steps in the [recipe README](https://github.com/zeropsio/recipe-mariadb-restore?tab=readme-ov-file#deploy-on-zerops).
+
+### Step 2: Get the backup download URL
+
+1. Navigate to your MariaDB service in the Zerops GUI
+2. Go to the **Backups List & Configuration** section
+3. Find the backup you want to restore
+4. Click the **three dots menu** (⋮) on that backup
+5. Select **Copy download link**
+
+### Step 3: Run the backup script
+
+Connect to the `mariadbrestore` service using the GUI terminal or via [VPN](/references/networking/vpn) and [SSH](/references/networking/ssh).
+
+:::note
+To use environment variables from your MariaDB service in the backup and restore commands, make sure the `envIsolation` project variable is set to `none`. See [Environment Variable Isolation](/features/env-variables#environment-variable-isolation) and [Referencing Variables](/features/env-variables#referencing-variables) for details.
+:::
+
+Run the backup script:
+
+```bash
+backup.sh -d <source_database_name> -u "<backup_download_url>"
+```
+
+Verify the backup was created:
+
+```bash
+ls -lh backup.sql
+```
+
+:::note
+You can also verify the backup file exists by checking the **File browser** in the `mariadbrestore` service.
+:::
+
+:::info
+After the export completes, the terminal may become unresponsive. If this happens, refresh the terminal.
+:::
+
+### Step 4: Import data to the target database
+
+Import the data to your target MariaDB database:
+
+```bash
+mariadb -u <target_user> -h <target_host> -p<target_password> <target_database_name> < backup.sql
+```
+
+Alternatively, you can download the `backup.sql` dump file for later use or to restore to a database outside of Zerops.
 
 ## High Availability
 

@@ -16,54 +16,78 @@ Zerops provides several ways to connect to PostgreSQL:
 
 ## Connection Details
 
-You'll find internal PostgreSQL connection details in two places in the Zerops GUI:
+You'll find PostgreSQL connection details in the service detail page under the **Peek access details** button (shows hostname, port, user, password, and connection string).
 
-1. Under the **Access details** button in the project dashboard
-2. In the service detail page under the **Peek access details** button
+The full list of connection-related environment variables is available in the service detail under **Environment variables**.
 
 ### Connection Parameters
 
+<ExpandableTable>
 <table className="w-full my-1.5">
   <thead>
     <tr>
       <th className="w-fit">Parameter</th>
-      <th className="w-fit">Internal Connection</th>
-      <th className="w-fit">Direct IP Access (TLS)</th>
+      <th className="w-fit">Internal</th>
+      <th className="w-fit">External (TLS)</th>
+      <th className="w-fit">Env Variable</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td className="w-fit font-semibold whitespace-nowrap">Hostname/IP</td>
+      <td className="w-fit font-semibold whitespace-nowrap">Hostname</td>
       <td className="w-fit">Service hostname</td>
-      <td className="w-full">Public IP address</td>
+      <td className="w-fit">Public IP address</td>
+      <td className="w-fit">`hostname`</td>
     </tr>
     <tr>
-      <td className="w-fit font-semibold whitespace-nowrap">Port</td>
+      <td className="w-fit font-semibold whitespace-nowrap">Port (primary)</td>
       <td className="w-fit">5432</td>
-      <td className="w-full">6432</td>
+      <td className="w-fit">6432 (via pgBouncer)</td>
+      <td className="w-fit">`port` / `portTls`</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">Port (replicas, HA only)</td>
+      <td className="w-fit">5433</td>
+      <td className="w-fit">N/A</td>
+      <td className="w-fit">`portReplicas`</td>
     </tr>
     <tr>
       <td className="w-fit font-semibold whitespace-nowrap">User</td>
-      <td className="w-fit">Identical to the service hostname</td>
-      <td className="w-full">Same as internal</td>
+      <td className="w-fit">Identical to hostname</td>
+      <td className="w-fit">Same as internal</td>
+      <td className="w-fit">`user`</td>
     </tr>
     <tr>
       <td className="w-fit font-semibold whitespace-nowrap">Password</td>
-      <td className="w-fit">Randomly generated during service creation</td>
-      <td className="w-full">Same as internal</td>
+      <td className="w-fit">Generated at creation</td>
+      <td className="w-fit">Same as internal</td>
+      <td className="w-fit">`password`</td>
     </tr>
     <tr>
-      <td className="w-fit font-semibold whitespace-nowrap">Port env variable</td>
-      <td className="w-fit">`port`</td>
-      <td className="w-full">`portTls`</td>
+      <td className="w-fit font-semibold whitespace-nowrap">Connection string (primary)</td>
+      <td className="w-fit">`postgresql://${user}:${password}@${hostname}:5432/${dbName}`</td>
+      <td className="w-fit">Same format with TLS port</td>
+      <td className="w-fit">`connectionString` / `connectionTlsString`</td>
     </tr>
     <tr>
-      <td className="w-fit font-semibold whitespace-nowrap">Connection string env variable</td>
-      <td className="w-fit">`connectionString`</td>
-      <td className="w-full">`connectionTlsString`</td>
+      <td className="w-fit font-semibold whitespace-nowrap">Connection string (replicas, HA only)</td>
+      <td className="w-fit">`postgresql://${user}:${password}@${hostname}:5433/${dbName}`</td>
+      <td className="w-fit">N/A</td>
+      <td className="w-fit">`connectionStringReplicas`</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">Database name</td>
+      <td className="w-fit">db</td>
+      <td className="w-fit">Same as internal</td>
+      <td className="w-fit">`dbName`</td>
     </tr>
   </tbody>
 </table>
+</ExpandableTable>
+
+:::tip
+If you're running PostgreSQL in High Availability (HA) mode, configure your application to route read queries to port **5433**. This distributes the load across all replicas, reducing pressure on the primary node and improving overall throughput.
+:::
 
 :::warning
 Zerops creates a system user named `zps` with full privileges for maintenance purposes. Do not delete, change the password, or remove privileges from this user, as it will disrupt Zerops' ability to maintain the database cluster.
@@ -79,20 +103,24 @@ All services within a Zerops project share a dedicated private network. There ar
 
 ### Method 1: Direct Connection Parameters
 
-You can directly use the connection parameters from Access Details:
+You can directly use the connection parameters from Peek Access Details:
 
 ```
 host = database1
 port = 5432
 user = database1
-password = ********** (find under Access Details)
+password = ********** (find under Peek Access Details)
 ```
+
+For read operations in HA mode, use port `5433` instead of `5432` with the same credentials.
 
 ### Method 2: Environment Variables (Recommended)
 
 For better maintainability, Zerops creates environment variables for each PostgreSQL service that you can use in your application configuration. List of service environment variables is available in Zerops GUI. Go to a PostgreSQL service detail and choose **Environment variables**.
 
 To use variables from one service in another, prefix the variable name with the service hostname and underscore - to access the `connectionString` variable of `postgresql1`, use `postgresql1_connectionString`.
+
+For read-only connections (HA mode only), use the `connectionStringReplicas` variable instead.
 
 For more details on how to use environment variables, and instructions for adding your own custom variables, see the [Environment Variables](/features/env-variables) documentation.
 
@@ -124,7 +152,7 @@ You can securely connect to PostgreSQL from your local workstation via Zerops VP
 
 Direct IP Access uses [pgBouncer](https://www.pgbouncer.org/) for connection pooling and TLS termination.
 
-Internally, port `5432` is available without SSL. Externally, connections are secured with TLS through pgBouncer (port `6432`) before being routed to your PostgreSQL service.
+Internally, port `5432` is available without SSL (and port `5433` for reads in HA mode). Externally, connections are secured with TLS through pgBouncer (port `6432`) before being routed to your PostgreSQL service. The read replica port is not available for external connections.
 
 #### Enable external access
 

@@ -2233,7 +2233,7 @@ module.exports = {
         {
           type: 'doc',
           id: 'mariadb/how-to/backup',
-          label: 'Backup data',
+          label: 'Backup & restore data',
         },
         {
           type: 'doc',

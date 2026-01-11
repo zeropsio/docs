@@ -6,6 +6,16 @@ description: Get quick answers to your related questions about PostgreSql from f
 import { FAQ, FAQItem } from '/src/components/Faq';
 
 <FAQ>
+  <FAQItem question="How do I properly use PostgreSQL in HA mode?">
+    In High Availability (HA) mode, PostgreSQL runs on multiple containers with a primary node and replicas. To get the most out of this setup:
+
+    - Use port `5432` for all write operations (INSERT, UPDATE, DELETE) — this always routes to the primary node
+    - Use port `5433` for read operations (SELECT) — this distributes queries across all replicas, improving performance
+
+    The read replica port (`5433`) is only available in HA mode. If you're running PostgreSQL in single container (NON_HA) mode, only port `5432` is available.
+
+    See [Connection Parameters](/postgresql/how-to/connect#connection-parameters) for all available ports and environment variables.
+  </FAQItem>
   <FAQItem question="Why is my connection to PostgreSQL from third-party software failing?">
     *One possible cause:* <br />
     The connection string in Zerops always starts with `postgresql://`. While the official PostgreSQL documentation
@@ -19,4 +29,3 @@ import { FAQ, FAQItem } from '/src/components/Faq';
     ```
   </FAQItem>
 </FAQ>
-
