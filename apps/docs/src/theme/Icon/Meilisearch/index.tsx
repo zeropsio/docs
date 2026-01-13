@@ -13,16 +13,16 @@ const IconMeilisearch = (props: IconProps) => {
         className={clsx('text-ui-fg-subtle', props.className)}>
         <defs>
             <linearGradient id="logosMeilisearch0" x1="153.821%" x2="19.172%" y1="-7.638%" y2="89.239%">
-                <stop offset="0%" stop-color="#ff5caa"/>
-                <stop offset="100%" stop-color="#ff4e62"/>
+                <stop offset="0%" stopColor="#ff5caa"/>
+                <stop offset="100%" stopColor="#ff4e62"/>
             </linearGradient>
             <linearGradient id="logosMeilisearch1" x1="117.325%" x2="-17.323%" y1="-7.638%" y2="89.238%">
-                <stop offset="0%" stop-color="#ff5caa"/>
-                <stop offset="100%" stop-color="#ff4e62"/>
+                <stop offset="0%" stopColor="#ff5caa"/>
+                <stop offset="100%" stopColor="#ff4e62"/>
             </linearGradient>
             <linearGradient id="logosMeilisearch2" x1="80.828%" x2="-53.821%" y1="-7.638%" y2="89.238%">
-                <stop offset="0%" stop-color="#ff5caa"/>
-                <stop offset="100%" stop-color="#ff4e62"/>
+                <stop offset="0%" stopColor="#ff5caa"/>
+                <stop offset="100%" stopColor="#ff4e62"/>
             </linearGradient>
         </defs>
         <path fill="url(#logosMeilisearch0)" d="M0 149.288L47.297 28.277A44.46 44.46 0 0 1 88.708 0h28.515L69.926 121.012a44.46 44.46 0 0 1-41.411 28.276z"/>

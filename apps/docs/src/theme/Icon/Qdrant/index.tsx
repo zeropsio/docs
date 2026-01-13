@@ -13,8 +13,8 @@ const IconQdrant = (props: IconProps) => {
         className={clsx('text-ui-fg-subtle', props.className)}>
         <defs>
             <linearGradient id="logosQdrantIcon0" x1="81.562%" x2="-18.086%" y1="44.842%" y2="44.842%">
-                <stop offset="0%" stop-color="#ff3364"/>
-                <stop offset="100%" stop-color="#c91540" stop-opacity="0"/>
+                <stop offset="0%" stopColor="#ff3364"/>
+                <stop offset="100%" stopColor="#c91540" stopOpacity="0"/>
             </linearGradient>
         </defs>
         <path fill="#24386c" d="m201.317 271.722l-5.894-162.509l-10.675-42.845L256 73.911v196.582l-43.525 25.12z"/>
