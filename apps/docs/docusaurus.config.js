@@ -213,7 +213,8 @@ const config = {
           remarkPlugins: [
             [require("@docusaurus/remark-plugin-npm2yarn"), { sync: true }],
           ],
-          showLastUpdateTime: true,
+          showLastUpdateTime: false,
+          showLastUpdateAuthor: false,
           // breadcrumbs: false,
           async sidebarItemsGenerator({
             defaultSidebarItemsGenerator,
@@ -225,6 +226,10 @@ const config = {
               args.item
             )
           },
+        },
+        blog: {
+          showLastUpdateTime: false,
+          showLastUpdateAuthor: false,
         },
         theme: {
           customCss: require.resolve("./src/css/custom.css"),
