@@ -18,6 +18,7 @@ const config = {
   organizationName: "zerops",
   projectName: "zerops/docs",
   plugins: [
+    './src/plugins/markdown-source',
     require.resolve("docusaurus-plugin-image-zoom"),
     async function tailwindPlugin() {
       return {
