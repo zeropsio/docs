@@ -257,33 +257,120 @@ curl -6 -v https://<your-domain>
 
 ### SSL Certificate Problems
 
-**Symptom:** "Too many redirects" or SSL errors
-**Solutions:**
-- Verify SSL/TLS mode is set to **Full** or **Full (strict)**, not **Flexible**
-- Check that both Zerops and Cloudflare have valid certificates
-- Ensure **Always Use HTTPS** is properly configured
-- For new domains, refresh the Cloudflare SSL/TLS page as settings may display incorrectly initially
+#### Too Many Redirects or SSL Errors
 
-**Symptom:** Certificate validation fails for wildcard domains
+**Possible causes:**
+- Incorrect SSL/TLS mode in Cloudflare
+- Invalid or missing certificates
+- Misconfigured HTTPS settings
+
 **Solutions:**
-- Verify the `_acme-challenge` CNAME record is correctly configured
-- Ensure DNS propagation is complete (check with `dig` command)
-- Check that the CNAME points to `<your-domain>.zerops.zone`
+1. Verify SSL/TLS mode is set to **Full** or **Full (strict)**, not **Flexible**
+2. Check that both Zerops and Cloudflare have valid certificates
+3. Ensure **Always Use HTTPS** is properly configured
+4. For new domains, refresh the Cloudflare SSL/TLS page as settings may display incorrectly initially
+
+#### Certificate Validation Fails for Wildcard Domains
+
+**Possible causes:**
+- Missing or incorrect `_acme-challenge` CNAME record
+- DNS propagation not complete
+- Incorrect CNAME target
+
+**Solutions:**
+1. Verify the `_acme-challenge` CNAME record is correctly configured
+2. Ensure DNS propagation is complete (check with `dig` command)
+3. Confirm the CNAME points to `<your-domain>.zerops.zone`
+
+#### Domain Verification Failed (DNS Warning in Zerops)
+
+**Possible causes:**
+- Cloudflare's WAF or security features blocking the `/.well-known/acme-challenge/` path
+- Let's Encrypt HTTP-01 validation being prevented
+
+**Solutions:**
+
+**Option 1: Create a WAF Skip Rule (Recommended)**
+
+1. Navigate to **Security** → **WAF** → **Custom rules** in Cloudflare
+2. Click **Create rule** and configure:
+   - **Rule name:** "Allow ACME Challenge"
+   - **Field:** URI Path
+   - **Operator:** starts with
+   - **Value:** `/.well-known/acme-challenge/`
+   - **Choose action:** Skip
+   - **Which rules to skip:** Select all WAF components
+3. Move this rule to the **top** of your Custom rules list
+4. Wait a few minutes and check if the warning disappears in Zerops
+
+**Option 2: Modify Existing WAF Rules**
+
+1. Edit your existing WAF rule
+2. Add an additional condition:
+   - **Field:** URI Path
+   - **Operator:** does not start with
+   - **Value:** `/.well-known/acme-challenge/`
+
+:::tip CNAME Flattening and DNS Verification
+Cloudflare uses CNAME flattening, which converts CNAME records to A/AAAA records in DNS responses. This is normal behavior and doesn't affect Zerops' domain verification. However, if WAF or other security features block the ACME challenge endpoint, Zerops cannot complete the HTTP-01 validation required for certificate issuance.
+:::
+
+**Symptom:** Certificate validation fails with "Domain verification failed" or Zerops shows DNS warning
+**Solutions:**
+This issue often occurs when Cloudflare's WAF (Web Application Firewall) or security features block access to the `/.well-known/acme-challenge/` path, which Zerops uses for Let's Encrypt HTTP-01 certificate validation.
+
+To fix this, you need to allow the ACME challenge path through Cloudflare's security:
+
+1. Navigate to **Security** → **WAF** → **Custom rules** in your Cloudflare dashboard
+2. Create a new rule with these settings:
+   - **Field:** URI Path
+   - **Operator:** starts with
+   - **Value:** `/.well-known/acme-challenge/`
+   - **Choose action:** Skip
+   - **Which rules to skip:** Select all WAF components (WAF managed rules, rate limiting rules, etc.)
+3. Set this rule as the **first rule** in your Custom rules list to ensure it takes precedence
+
+**Alternative approach:** If you have existing WAF rules, you can modify them to exclude the ACME challenge path:
+1. Edit your existing rule
+2. Add an additional condition:
+   - **Field:** URI Path
+   - **Operator:** does not start with
+   - **Value:** `/.well-known/acme-challenge/`
+
+After configuring this rule, wait a few minutes and check if the domain verification warning disappears in Zerops. You may need to trigger a certificate renewal if the issue persists.
+
+:::tip CNAME Flattening and DNS Verification
+Cloudflare uses CNAME flattening, which converts CNAME records to A/AAAA records in DNS responses. This is normal behavior and doesn't affect Zerops' domain verification. However, if WAF or other security features block the ACME challenge endpoint, Zerops cannot complete the HTTP-01 validation required for certificate issuance.
+:::
 
 ### DNS Resolution Issues
 
-**Symptom:** Domain not resolving
-**Solutions:**
-- Confirm DNS records are correctly configured in Cloudflare
-- Verify proxy status matches your intended setup
-- Check for typos in IP addresses
-- Wait for DNS propagation (typically 5-10 minutes)
+#### Domain Not Resolving
 
-**Symptom:** IPv4 traffic not working with IPv6-only setup
+**Possible causes:**
+- Incorrect DNS record configuration
+- DNS propagation delay
+- Typos in IP addresses
+
 **Solutions:**
-- Ensure Cloudflare proxy is enabled (orange cloud)
-- Verify IPv6 address is correct in AAAA record
-- Confirm no conflicting A record with shared IPv4 exists
+1. Confirm DNS records are correctly configured in Cloudflare
+2. Verify proxy status matches your intended setup (orange cloud = proxied)
+3. Check for typos in IP addresses or CNAME targets
+4. Wait for DNS propagation (typically 5-10 minutes, up to 24 hours globally)
+5. Test resolution using: `dig @1.1.1.1 <your-domain>`
+
+#### IPv4 Traffic Not Working with IPv6-Only Setup
+
+**Possible causes:**
+- Cloudflare proxy disabled
+- Incorrect IPv6 address
+- Conflicting DNS records
+
+**Solutions:**
+1. Ensure Cloudflare proxy is **enabled** (orange cloud icon)
+2. Verify IPv6 address is correct in AAAA record
+3. Confirm no conflicting A record with shared IPv4 exists
+4. Test with: `curl -4 -v https://<your-domain>`
 
 ## Security Considerations
 
