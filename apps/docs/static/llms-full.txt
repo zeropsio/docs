@@ -20038,28 +20038,6 @@ curl -6 -v https://
 :::tip CNAME Flattening and DNS Verification
 Cloudflare uses CNAME flattening, which converts CNAME records to A/AAAA records in DNS responses. This is normal behavior and doesn't affect Zerops' domain verification. However, if WAF or other security features block the ACME challenge endpoint, Zerops cannot complete the HTTP-01 validation required for certificate issuance.
 :::
-**Symptom:** Certificate validation fails with "Domain verification failed" or Zerops shows DNS warning
-**Solutions:**
-This issue often occurs when Cloudflare's WAF (Web Application Firewall) or security features block access to the `/.well-known/acme-challenge/` path, which Zerops uses for Let's Encrypt HTTP-01 certificate validation.
-To fix this, you need to allow the ACME challenge path through Cloudflare's security:
-1. Navigate to **Security** → **WAF** → **Custom rules** in your Cloudflare dashboard
-2. Create a new rule with these settings:
-   - **Field:** URI Path
-   - **Operator:** starts with
-   - **Value:** `/.well-known/acme-challenge/`
-   - **Choose action:** Skip
-   - **Which rules to skip:** Select all WAF components (WAF managed rules, rate limiting rules, etc.)
-3. Set this rule as the **first rule** in your Custom rules list to ensure it takes precedence
-**Alternative approach:** If you have existing WAF rules, you can modify them to exclude the ACME challenge path:
-1. Edit your existing rule
-2. Add an additional condition:
-   - **Field:** URI Path
-   - **Operator:** does not start with
-   - **Value:** `/.well-known/acme-challenge/`
-After configuring this rule, wait a few minutes and check if the domain verification warning disappears in Zerops. You may need to trigger a certificate renewal if the issue persists.
-:::tip CNAME Flattening and DNS Verification
-Cloudflare uses CNAME flattening, which converts CNAME records to A/AAAA records in DNS responses. This is normal behavior and doesn't affect Zerops' domain verification. However, if WAF or other security features block the ACME challenge endpoint, Zerops cannot complete the HTTP-01 validation required for certificate issuance.
-:::
 ### DNS Resolution Issues
 #### Domain Not Resolving
 **Possible causes:**
