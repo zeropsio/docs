@@ -42,17 +42,81 @@ run:
 You can override PHP configuration directives by setting environment variables in your `zerops.yaml` file.
 
 Here's an example of how to adjust PHP's `post_max_size` directive:
-
 ```yaml
 zerops:
   # define hostname of your service
   - setup: app
-    # ==== how to build your application ====
+    # ==== how to run your application ====
     run:
-      # REQUIRED. Sets the base technology for the build environment:
+      # REQUIRED. Sets the base technology for the runtime environment:
       base: php-nginx@8.3
 
-      # OPTIONAL. Defines the env variables for the build environment:
+      # OPTIONAL. Defines the env variables for the runtime:
       envVariables:
         PHP_INI_post_max_size: 10M
 ```
+
+:::info
+After updating PHP-FPM configuration in your `zerops.yaml` file, you need to restart or reload the app for the changes to take effect.
+:::
+
+## PHP-FPM
+
+### Default PHP-FPM configuration
+
+PHP-FPM (FastCGI Process Manager) uses the **dynamic** process management mode by default. In this mode, the system automatically adjusts the number of PHP processes based on current load.
+
+The default PHP-FPM configuration uses these values:
+
+- `PHP_FPM_PM` = `dynamic`
+- `PHP_FPM_PM_MAX_CHILDREN` = `20`
+- `PHP_FPM_PM_START_SERVERS` = `2`
+- `PHP_FPM_PM_MIN_SPARE_SERVERS` = `1`
+- `PHP_FPM_PM_MAX_SPARE_SERVERS` = `3`
+- `PHP_FPM_PM_MAX_SPAWN_RATE` = `32`
+- `PHP_FPM_PM_MAX_REQUESTS` = `500`
+
+### Dynamic mode
+
+To adjust the dynamic mode settings, add the desired environment variables to the run section:
+```yaml
+zerops:
+  # define hostname of your service
+  - setup: app
+    # ==== how to run your application ====
+    run:
+      # OPTIONAL. Defines the env variables for the runtime:
+      envVariables:
+        PHP_FPM_PM_MAX_CHILDREN: 30
+        PHP_FPM_PM_START_SERVERS: 5
+        PHP_FPM_PM_MIN_SPARE_SERVERS: 2
+        PHP_FPM_PM_MAX_SPARE_SERVERS: 10
+        PHP_FPM_PM_MAX_REQUESTS: 1000
+```
+
+### Ondemand mode
+
+The **ondemand** mode is ideal for applications with lower traffic, where processes are created only when requests arrive. To enable ondemand mode:
+```yaml
+zerops:
+  # define hostname of your service
+  - setup: app
+    # ==== how to run your application ====
+    run:
+      # OPTIONAL. Defines the env variables for the runtime:
+      envVariables:
+        PHP_FPM_PM: ondemand
+        PHP_FPM_PM_MAX_CHILDREN: 20
+        PHP_FPM_PM_PROCESS_IDLE_TIMEOUT: 60s
+        PHP_FPM_PM_MAX_REQUESTS: 500
+```
+
+**Available parameters for ondemand mode:**
+
+- `PHP_FPM_PM_MAX_CHILDREN` – maximum number of child processes
+- `PHP_FPM_PM_PROCESS_IDLE_TIMEOUT` – time after which idle processes are terminated (default: `60s`)
+- `PHP_FPM_PM_MAX_REQUESTS` – number of requests each process handles before being recycled (default: `500`)
+
+:::info
+After updating PHP-FPM configuration in your `zerops.yaml` file, you need to restart or reload the app for the changes to take effect.
+:::
