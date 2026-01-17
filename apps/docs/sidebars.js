@@ -88,7 +88,7 @@ module.exports = {
     },
     {
       type: 'doc',
-      id: 'features/scaling-ha',
+      id: 'features/scaling',
       label: 'Automatic Scaling & High Availability',
       customProps: {
         sidebar_icon: 'adjustments',
