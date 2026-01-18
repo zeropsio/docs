@@ -6,25 +6,18 @@ description: Learn more about how you can configure your nginx service for build
 import data from '@site/static/data.json';
 import UnorderedCodeList from 'docs/src/components/UnorderedCodeList';
 
-import GroupCards from '@site/src/components/GroupCards';
-
-export const languages = [
-    { name: "Node.js", link: "/nodejs/how-to/build-pipeline" },
-    { name: "PHP", link: "/php/how-to/build-pipeline" },
-    { name: "Python", link: "/python/how-to/build-pipeline" },
-    { name: "Go", link: "/go/how-to/build-pipeline" },
-    { name: ".NET", link: "/dotnet/how-to/build-pipeline" },
-    { name: "Rust", link: "/rust/how-to/build-pipeline" },
-    { name: "Java", link: "/java/how-to/build-pipeline" },
-]
-
 Zerops provides a customizable build and runtime environment for your static content.
 
-Zerops supports different build environments:
+:::tip Two Deployment Approaches
+You can use the Nginx service in two ways:
+- **Runtime only**: Deploy pre-built static files directly (no build phase needed)
+- **Build + Runtime**: Use a frontend framework (Node.js, PHP, Python, etc.) to build your application, then serve it with Nginx
 
-<GroupCards id="build-sections" emoji="🚀" heading="Know more about build environments for your Runtime" items={languages} />
+The build phase is completely optional. If you already have built files, skip the build section and configure only the [runtime](#runtime-configuration).
 
 If you just need to deploy your static content, use the [manual deploy](/nginx/how-to/trigger-pipeline#manual-deploy-using-zerops-cli) via Zerops CLI.
+:::
+
 
 ## Add zerops.yaml to your repository
 
@@ -35,8 +28,11 @@ zerops:
   # define hostname of your service
   - setup: app
     # ==== how to build your application ====
+    # OPTIONAL. If you need to build your static files using a framework,
+    # configure the build environment here. If you already have built files,
+    # you can skip this entire section and deploy directly to the runtime.
     build:
-      # REQUIRED. Set the base technology for the build environment:
+      # REQUIRED (if using build). Set the base technology for the build environment:
       base: nodejs@latest
 
       # OPTIONAL. Set the operating system for the build environment.
@@ -53,7 +49,7 @@ zerops:
         - npm i
         - npm run build
 
-      # REQUIRED. Select which files / folders to deploy after
+      # REQUIRED (if using build). Select which files / folders to deploy after
       # the build has successfully finished
       deployFiles:
         - dist
@@ -137,7 +133,7 @@ zerops:
   - setup: app
     # ==== how to build your application ====
     build:
-      # REQUIRED. Sets the base technology for the build environment:
+      # REQUIRED (if using build). Sets the base technology for the build environment:
       base: nodejs@latest
       ...
 
@@ -165,7 +161,7 @@ zerops:
   - setup: app
     # ==== how to build your application ====
     build:
-      # REQUIRED. Sets the base technology for the build environment:
+      # REQUIRED (if using build). Sets the base technology for the build environment:
       base: nodejs@latest
       ...
 
@@ -227,24 +223,24 @@ Each port has following attributes:
 
 <table className="w-full my-1.5">
   <thead>
-    <tr>
-      <th className="w-fit"><strong>Parameter</strong></th>
-      <th className="w-fit"><strong>Description</strong></th>
-    </tr>
+  <tr>
+    <th className="w-fit"><strong>Parameter</strong></th>
+    <th className="w-fit"><strong>Description</strong></th>
+  </tr>
   </thead>
   <tbody>
-    <tr>
-      <td className="w-fit">port</td>
-      <td className="w-fit">Defines the port number. You can set any port number between <em>10</em> and <em>65435</em>. Ports outside this interval are reserved for internal Zerops systems.</td>
-    </tr>
-    <tr>
-      <td className="w-fit">protocol</td>
-      <td className="w-fit"><strong>Optional.</strong> Defines the protocol. Allowed values are <code>TCP</code> or <code>UDP</code>. Default value is <code>TCP</code>.</td>
-    </tr>
-    <tr>
-      <td className="w-fit">httpSupport</td>
-      <td className="w-fit"><strong>Optional.</strong> <code>httpSupport = true</code> is the default setting for TCP protocol. Set <code>httpSupport = false</code> if a web server isn't running on the port. Zerops uses this information for the configuration of <a href="/features/access">public access</a>. <code>httpSupport = true</code> is available only in combination with the TCP protocol.</td>
-    </tr>
+  <tr>
+    <td className="w-fit">port</td>
+    <td className="w-fit">Defines the port number. You can set any port number between <em>10</em> and <em>65435</em>. Ports outside this interval are reserved for internal Zerops systems.</td>
+  </tr>
+  <tr>
+    <td className="w-fit">protocol</td>
+    <td className="w-fit"><strong>Optional.</strong> Defines the protocol. Allowed values are <code>TCP</code> or <code>UDP</code>. Default value is <code>TCP</code>.</td>
+  </tr>
+  <tr>
+    <td className="w-fit">httpSupport</td>
+    <td className="w-fit"><strong>Optional.</strong> <code>httpSupport = true</code> is the default setting for TCP protocol. Set <code>httpSupport = false</code> if a web server isn't running on the port. Zerops uses this information for the configuration of <a href="/features/access">public access</a>. <code>httpSupport = true</code> is available only in combination with the TCP protocol.</td>
+  </tr>
   </tbody>
 </table>
 
@@ -450,28 +446,28 @@ Following attributes are available:
 
 <table className="w-full my-1.5">
   <thead>
-    <tr>
-      <th className="w-fit whitespace-nowrap">Parameter</th>
-      <th className="w-fit whitespace-nowrap">Description</th>
-    </tr>
+  <tr>
+    <th className="w-fit whitespace-nowrap">Parameter</th>
+    <th className="w-fit whitespace-nowrap">Description</th>
+  </tr>
   </thead>
   <tbody>
-    <tr>
-      <td className="w-fit whitespace-nowrap font-semibold">port</td>
-      <td>Defines the port of the HTTP GET request.<br/>The readiness check will trigger a GET request on <code>{'http://127.0.0.1:{port}/{path}'}</code></td>
-    </tr>
-    <tr>
-      <td className="w-fit whitespace-nowrap font-semibold">path</td>
-      <td>Defines the URL path of the HTTP GET request.<br/>The readiness check will trigger a GET request on <code>{'http://127.0.0.1:{port}/{path}'}</code></td>
-    </tr>
-    <tr>
-      <td className="w-fit whitespace-nowrap font-semibold">host</td>
-      <td><strong>Optional.</strong> The readiness check is triggered from inside of your runtime container so it always uses the localhost <code>127.0.0.1</code>. If you need to add a <code>host</code> to the request header, specify it in the <code>host</code> attribute.</td>
-    </tr>
-    <tr>
-      <td className="w-fit whitespace-nowrap font-semibold">scheme</td>
-      <td><strong>Optional.</strong> The readiness check is triggered from inside of your runtime container so no https is required.<br/>If your application requires a https request, set <code>scheme: https</code></td>
-    </tr>
+  <tr>
+    <td className="w-fit whitespace-nowrap font-semibold">port</td>
+    <td>Defines the port of the HTTP GET request.<br/>The readiness check will trigger a GET request on <code>{'http://127.0.0.1:{port}/{path}'}</code></td>
+  </tr>
+  <tr>
+    <td className="w-fit whitespace-nowrap font-semibold">path</td>
+    <td>Defines the URL path of the HTTP GET request.<br/>The readiness check will trigger a GET request on <code>{'http://127.0.0.1:{port}/{path}'}</code></td>
+  </tr>
+  <tr>
+    <td className="w-fit whitespace-nowrap font-semibold">host</td>
+    <td><strong>Optional.</strong> The readiness check is triggered from inside of your runtime container so it always uses the localhost <code>127.0.0.1</code>. If you need to add a <code>host</code> to the request header, specify it in the <code>host</code> attribute.</td>
+  </tr>
+  <tr>
+    <td className="w-fit whitespace-nowrap font-semibold">scheme</td>
+    <td><strong>Optional.</strong> The readiness check is triggered from inside of your runtime container so no https is required.<br/>If your application requires a https request, set <code>scheme: https</code></td>
+  </tr>
   </tbody>
 </table>
 
@@ -507,20 +503,20 @@ Following attributes are available:
 
 <table className="w-full my-1.5">
   <thead>
-    <tr>
-      <th className="w-fit"><strong>Parameter</strong></th>
-      <th className="w-fit"><strong>Description</strong></th>
-    </tr>
+  <tr>
+    <th className="w-fit"><strong>Parameter</strong></th>
+    <th className="w-fit"><strong>Description</strong></th>
+  </tr>
   </thead>
   <tbody>
-    <tr>
-      <td className="w-fit"><strong>command</strong></td>
-      <td className="w-fit">
-        Defines a local command to be run.<br/>
-        The command has access to the same <a href="/nginx/how-to/create#set-secret-environment-variables">environment variables</a> as your Nginx application.<br/>
-        A single string is required. If you need to run multiple commands create a shell script or, use a multiline format as in the example below.
-      </td>
-    </tr>
+  <tr>
+    <td className="w-fit"><strong>command</strong></td>
+    <td className="w-fit">
+      Defines a local command to be run.<br/>
+      The command has access to the same <a href="/nginx/how-to/create#set-secret-environment-variables">environment variables</a> as your Nginx application.<br/>
+      A single string is required. If you need to run multiple commands create a shell script or, use a multiline format as in the example below.
+    </td>
+  </tr>
   </tbody>
 </table>
 
@@ -566,28 +562,28 @@ Following attributes are available:
 
 <table className="w-full my-1.5">
   <thead>
-    <tr>
-      <th className="w-fit whitespace-nowrap">Parameter</th>
-      <th className="w-fit whitespace-nowrap">Description</th>
-    </tr>
+  <tr>
+    <th className="w-fit whitespace-nowrap">Parameter</th>
+    <th className="w-fit whitespace-nowrap">Description</th>
+  </tr>
   </thead>
   <tbody>
-    <tr>
-      <td className="w-fit whitespace-nowrap font-semibold">port</td>
-      <td>Defines the port of the HTTP GET request.<br/>The readiness check will trigger a GET request on <code>{'http://127.0.0.1:{port}/{path}'}</code></td>
-    </tr>
-    <tr>
-      <td className="w-fit whitespace-nowrap font-semibold">path</td>
-      <td>Defines the URL path of the HTTP GET request.<br/>The readiness check will trigger a GET request on <code>{'http://127.0.0.1:{port}/{path}'}</code></td>
-    </tr>
-    <tr>
-      <td className="w-fit whitespace-nowrap font-semibold">host</td>
-      <td><strong>Optional.</strong> The readiness check is triggered from inside of your runtime container so it always uses the localhost <code>127.0.0.1</code>. If you need to add a <code>host</code> to the request header, specify it in the <code>host</code> attribute.</td>
-    </tr>
-    <tr>
-      <td className="w-fit whitespace-nowrap font-semibold">scheme</td>
-      <td><strong>Optional.</strong> The readiness check is triggered from inside of your runtime container so no https is required.<br/>If your application requires a https request, set <code>scheme: https</code></td>
-    </tr>
+  <tr>
+    <td className="w-fit whitespace-nowrap font-semibold">port</td>
+    <td>Defines the port of the HTTP GET request.<br/>The readiness check will trigger a GET request on <code>{'http://127.0.0.1:{port}/{path}'}</code></td>
+  </tr>
+  <tr>
+    <td className="w-fit whitespace-nowrap font-semibold">path</td>
+    <td>Defines the URL path of the HTTP GET request.<br/>The readiness check will trigger a GET request on <code>{'http://127.0.0.1:{port}/{path}'}</code></td>
+  </tr>
+  <tr>
+    <td className="w-fit whitespace-nowrap font-semibold">host</td>
+    <td><strong>Optional.</strong> The readiness check is triggered from inside of your runtime container so it always uses the localhost <code>127.0.0.1</code>. If you need to add a <code>host</code> to the request header, specify it in the <code>host</code> attribute.</td>
+  </tr>
+  <tr>
+    <td className="w-fit whitespace-nowrap font-semibold">scheme</td>
+    <td><strong>Optional.</strong> The readiness check is triggered from inside of your runtime container so no https is required.<br/>If your application requires a https request, set <code>scheme: https</code></td>
+  </tr>
   </tbody>
 </table>
 
@@ -622,20 +618,20 @@ Following attributes are available:
 
 <table className="w-full my-1.5">
   <thead>
-    <tr>
-      <th className="w-fit"><strong>Parameter</strong></th>
-      <th className="w-fit"><strong>Description</strong></th>
-    </tr>
+  <tr>
+    <th className="w-fit"><strong>Parameter</strong></th>
+    <th className="w-fit"><strong>Description</strong></th>
+  </tr>
   </thead>
   <tbody>
-    <tr>
-      <td className="w-fit"><strong>command</strong></td>
-      <td className="w-fit">
-        Defines a local command to be run.<br/>
-        The command has access to the same <a href="/nginx/how-to/create#set-secret-environment-variables">environment variables</a> as your Nginx application.<br/>
-        A single string is required. If you need to run multiple commands create a shell script or, use a multiline format as in the example below.
-      </td>
-    </tr>
+  <tr>
+    <td className="w-fit"><strong>command</strong></td>
+    <td className="w-fit">
+      Defines a local command to be run.<br/>
+      The command has access to the same <a href="/nginx/how-to/create#set-secret-environment-variables">environment variables</a> as your Nginx application.<br/>
+      A single string is required. If you need to run multiple commands create a shell script or, use a multiline format as in the example below.
+    </td>
+  </tr>
   </tbody>
 </table>
 
