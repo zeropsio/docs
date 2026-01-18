@@ -12031,18 +12031,14 @@ Answer:
 
 # Nginx > How To > Build Pipeline
 
-export const languages = [
-    { name: "Node.js", link: "/nodejs/how-to/build-pipeline" },
-    { name: "PHP", link: "/php/how-to/build-pipeline" },
-    { name: "Python", link: "/python/how-to/build-pipeline" },
-    { name: "Go", link: "/go/how-to/build-pipeline" },
-    { name: ".NET", link: "/dotnet/how-to/build-pipeline" },
-    { name: "Rust", link: "/rust/how-to/build-pipeline" },
-    { name: "Java", link: "/java/how-to/build-pipeline" },
-]
 Zerops provides a customizable build and runtime environment for your static content.
-Zerops supports different build environments:
+:::tip Two Deployment Approaches
+You can use the Nginx service in two ways:
+- **Runtime only**: Deploy pre-built static files directly (no build phase needed)
+- **Build + Runtime**: Use a frontend framework (Node.js, PHP, Python, etc.) to build your application, then serve it with Nginx
+The build phase is completely optional. If you already have built files, skip the build section and configure only the [runtime](#runtime-configuration).
 If you just need to deploy your static content, use the [manual deploy](/nginx/how-to/trigger-pipeline#manual-deploy-using-zerops-cli) via Zerops CLI.
+:::
 ## Add zerops.yaml to your repository
 Start by adding `zerops.yaml` file to the **root of your repository** and modify it to fit your application:
 ```yaml
@@ -12050,8 +12046,11 @@ zerops:
   # define hostname of your service
   - setup: app
     # ==== how to build your application ====
+    # OPTIONAL. If you need to build your static files using a framework,
+    # configure the build environment here. If you already have built files,
+    # you can skip this entire section and deploy directly to the runtime.
     build:
-      # REQUIRED. Set the base technology for the build environment:
+      # REQUIRED (if using build). Set the base technology for the build environment:
       base: nodejs@latest
       # OPTIONAL. Set the operating system for the build environment.
       # os: ubuntu
@@ -12064,7 +12063,7 @@ zerops:
       buildCommands:
         - npm i
         - npm run build
-      # REQUIRED. Select which files / folders to deploy after
+      # REQUIRED (if using build). Select which files / folders to deploy after
       # the build has successfully finished
       deployFiles:
         - dist
@@ -12129,7 +12128,7 @@ zerops:
   - setup: app
     # ==== how to build your application ====
     build:
-      # REQUIRED. Sets the base technology for the build environment:
+      # REQUIRED (if using build). Sets the base technology for the build environment:
       base: nodejs@latest
       ...
     # ==== how to run your application ====
@@ -12150,7 +12149,7 @@ zerops:
   - setup: app
     # ==== how to build your application ====
     build:
-      # REQUIRED. Sets the base technology for the build environment:
+      # REQUIRED (if using build). Sets the base technology for the build environment:
       base: nodejs@latest
       ...
     # ==== how to run your application ====
@@ -12191,18 +12190,18 @@ Do not use the port **:443**. All the incoming traffic is terminated on the Zero
 :::
 Each port has following attributes:
   
-      Parameter
-      Description
-    
-      port
-      Defines the port number. You can set any port number between 10 and 65435. Ports outside this interval are reserved for internal Zerops systems.
-    
-      protocol
-      Optional. Defines the protocol. Allowed values are TCP or UDP. Default value is TCP.
-    
-      httpSupport
-      Optional. httpSupport = true is the default setting for TCP protocol. Set httpSupport = false if a web server isn't running on the port. Zerops uses this information for the configuration of public access. httpSupport = true is available only in combination with the TCP protocol.
-    
+    Parameter
+    Description
+  
+    port
+    Defines the port number. You can set any port number between 10 and 65435. Ports outside this interval are reserved for internal Zerops systems.
+  
+    protocol
+    Optional. Defines the protocol. Allowed values are TCP or UDP. Default value is TCP.
+  
+    httpSupport
+    Optional. httpSupport = true is the default setting for TCP protocol. Set httpSupport = false if a web server isn't running on the port. Zerops uses this information for the configuration of public access. httpSupport = true is available only in combination with the TCP protocol.
+  
 ### prepareCommands
 _OPTIONAL._ Customizes the Nginx runtime environment by installing additional dependencies or tools to the runtime base environment.
   The base Nginx environment contains {data.alpine.default}, the selected
@@ -12337,24 +12336,24 @@ _OPTIONAL._ Defines a health check.
 Configures the health check to request a local URL using a HTTP GET method.
 Following attributes are available:
   
-      Parameter
-      Description
-    
-      port
-      Defines the port of the HTTP GET request.
+    Parameter
+    Description
+  
+    port
+    Defines the port of the HTTP GET request.
 The readiness check will trigger a GET request on {'http://127.0.0.1:{port}/{path}'}
-    
-      path
-      Defines the URL path of the HTTP GET request.
+  
+    path
+    Defines the URL path of the HTTP GET request.
 The readiness check will trigger a GET request on {'http://127.0.0.1:{port}/{path}'}
-    
-      host
-      Optional. The readiness check is triggered from inside of your runtime container so it always uses the localhost 127.0.0.1. If you need to add a host to the request header, specify it in the host attribute.
-    
-      scheme
-      Optional. The readiness check is triggered from inside of your runtime container so no https is required.
+  
+    host
+    Optional. The readiness check is triggered from inside of your runtime container so it always uses the localhost 127.0.0.1. If you need to add a host to the request header, specify it in the host attribute.
+  
+    scheme
+    Optional. The readiness check is triggered from inside of your runtime container so no https is required.
 If your application requires a https request, set scheme: https
-    
+  
 **Example:**
 ```yaml
 zerops:
@@ -12378,15 +12377,15 @@ zerops:
 Configures the health check to run a local command.
 Following attributes are available:
   
-      Parameter
-      Description
+    Parameter
+    Description
+  
+    command
     
-      command
-      
-        Defines a local command to be run.
-        The command has access to the same environment variables as your Nginx application.
-        A single string is required. If you need to run multiple commands create a shell script or, use a multiline format as in the example below.
-      
+      Defines a local command to be run.
+      The command has access to the same environment variables as your Nginx application.
+      A single string is required. If you need to run multiple commands create a shell script or, use a multiline format as in the example below.
+    
 **Example:**
 ```yaml
 zerops:
@@ -12415,24 +12414,24 @@ _OPTIONAL._ Defines a readiness check. Read more about how the [readiness check 
 Configures the readiness check to request a local URL using a http GET method.
 Following attributes are available:
   
-      Parameter
-      Description
-    
-      port
-      Defines the port of the HTTP GET request.
+    Parameter
+    Description
+  
+    port
+    Defines the port of the HTTP GET request.
 The readiness check will trigger a GET request on {'http://127.0.0.1:{port}/{path}'}
-    
-      path
-      Defines the URL path of the HTTP GET request.
+  
+    path
+    Defines the URL path of the HTTP GET request.
 The readiness check will trigger a GET request on {'http://127.0.0.1:{port}/{path}'}
-    
-      host
-      Optional. The readiness check is triggered from inside of your runtime container so it always uses the localhost 127.0.0.1. If you need to add a host to the request header, specify it in the host attribute.
-    
-      scheme
-      Optional. The readiness check is triggered from inside of your runtime container so no https is required.
+  
+    host
+    Optional. The readiness check is triggered from inside of your runtime container so it always uses the localhost 127.0.0.1. If you need to add a host to the request header, specify it in the host attribute.
+  
+    scheme
+    Optional. The readiness check is triggered from inside of your runtime container so no https is required.
 If your application requires a https request, set scheme: https
-    
+  
 **Example:**
 ```yaml
 zerops:
@@ -12456,15 +12455,15 @@ Read more about how the [readiness check works](/nginx/how-to/deploy-process#rea
 Configures the readiness check to run a local command.
 Following attributes are available:
   
-      Parameter
-      Description
+    Parameter
+    Description
+  
+    command
     
-      command
-      
-        Defines a local command to be run.
-        The command has access to the same environment variables as your Nginx application.
-        A single string is required. If you need to run multiple commands create a shell script or, use a multiline format as in the example below.
-      
+      Defines a local command to be run.
+      The command has access to the same environment variables as your Nginx application.
+      A single string is required. If you need to run multiple commands create a shell script or, use a multiline format as in the example below.
+    
 **Example:**
 ```yaml
 zerops:
@@ -12826,9 +12825,15 @@ zerops:
 ```
 5. Ensure that the `build.deployFiles` contains the folder with the `siteConfigPath` or add the path to the Nginx config file to the `deployFiles` list. Zerops will deploy the file to the runtime container(s).
 6. [Trigger](/nginx/how-to/trigger-pipeline) the build & deploy pipeline.
-### Built-in Prerender.io Support
-The default Nginx configuration includes automatic prerender.io support for SEO optimization. When `PRERENDER_TOKEN` is set, Nginx will automatically serve pre-rendered content to search engines and social media crawlers.
-See [environment variables](/nginx/how-to/env-variables#prerenderio-support) for configuration details.
+## SEO & Prerender Support
+Single Page Applications and JavaScript-heavy sites render content client-side, which most crawlers can't process—they see an empty page instead of your content. This affects traditional search engines, social media platforms, and AI tools like ChatGPT, Perplexity, and Claude.
+### Built-in Prerender.io Integration
+The default Nginx configuration includes automatic [Prerender.io](https://prerender.io) support. When enabled, it detects crawler requests (including AI crawlers) and serves them pre-rendered HTML while your users get the full interactive experience.
+### Setup
+To enable prerender support:
+1. Set the `PRERENDER_TOKEN` environment variable with your Prerender.io token (see [environment variables](/nginx/how-to/env-variables#prerenderio-support))
+2. Optionally set `PRERENDER_HOST` if using a custom prerender server
+The Nginx configuration will automatically handle the rest—no additional configuration needed.
 
 ----------------------------------------
 
@@ -18685,7 +18690,8 @@ zerops:
       os: alpine
       base: static
 ```
-## Default Behavior
+## Routing & Configuration
+### Default Behavior
 Every Static service in Zerops comes with built-in defaults optimized for modern web applications, including Single Page Applications. By default, for any incoming request, the service will:
 1. Try to serve the exact path (`$uri`)
 2. Try with .html extension (`$uri.html`)
@@ -18695,9 +18701,8 @@ Every Static service in Zerops comes with built-in defaults optimized for modern
 :::important SPAs
 Single Page Applications work out of the box without any additional configuration. The built-in fallback to `/index.html` ensures that client-side routing functions properly.
 :::
-## Routing Configuration
-The Static service allows you to configure additional URL routing and redirects through simple YAML configuration, abstracting away the complexity of Nginx configuration.
 ### Custom Routing Configuration
+The Static service allows you to configure additional URL routing and redirects through simple YAML configuration, abstracting away the complexity of Nginx configuration.
 Configure custom routing beyond the default behavior in the `run.routing` section of your `zerops.yaml`:
 ```yaml title="zerops.yaml"
 run:
@@ -18708,7 +18713,7 @@ run:
         to: /specific-landing-page
         status: 302
 ```
-### Redirect Types
+### Redirects
 #### Relative Redirects
 :::note
 Remember that SPA routing is already built into the default behavior. You don't need to add any custom redirects for client-side routing to work.
@@ -18755,7 +18760,6 @@ routing:
       status: 301
       preservePath: true
 ```
-### Advanced Routing Features
 #### Wildcard Matching
 Use `*` as a wildcard in your paths:
 - **At the end of a path**: Matches any subsequent content
@@ -18801,6 +18805,34 @@ In this configuration:
 - `/about` will show content from `/about-us` but keep the URL as `/about`
 - `/blog/post-123.html` will redirect to `/articles/post-123.html`
 - Any other path will use the [default behavior](#default-behavior)
+#### Common Redirect Patterns
+**Domain Migration**
+```yaml title="zerops.yaml"
+routing:
+  redirects:
+    - from: https://old-domain.com/*
+      to: https://new-domain.com
+      status: 301
+```
+Use permanent (301) redirects when permanently moving content to maintain SEO value.
+**Multiple Domain Management**
+```yaml title="zerops.yaml"
+run:
+  routing:
+    redirects:
+      # Product-specific domain
+      - from: https://product-promo.com/*
+        to: https://main-site.com/products
+        status: 302
+      # Campaign domain
+      - from: https://special-offer.com/*
+        to: https://main-site.com/campaign
+        status: 302
+      # Legacy domains and subdomains
+      - from: https://*.legacy-domain.com/*
+        to: https://main-site.com
+        status: 302
+```
 ### CORS Configuration
 You can enable CORS for your static service by adding a `cors` directive:
 ```yaml title="zerops.yaml"
@@ -18882,9 +18914,10 @@ The `cors` directive sets default Access-Control headers for all routes, while t
 :::important
 If you specify Access-Control headers in the `headers` directive, they will override the ones set by `cors` for that specific path.
 :::
-## Prerender Integration
-The Static service includes built-in support for Prerender.io for server-side rendering for search engines and social media crawlers.
-### Basic Prerender Setup
+## SEO with Prerender
+Single Page Applications render content with JavaScript, which most crawlers can't process—they see an empty page instead of your content. This affects traditional search engines, social media platforms, and AI tools like ChatGPT, Perplexity, and Claude.
+The Static service includes built-in support for Prerender.io, which automatically detects crawlers and serves them pre-rendered HTML while your users get the full interactive experience.
+### Setup
 1. Set the `PRERENDER_TOKEN` secret variable with your Prerender.io token
 2. The service automatically configures necessary rewrites based on user agents
 ### Custom Prerender Host
@@ -18897,7 +18930,32 @@ run:
 :::note Default
 The default host is `service.prerender.io` if not specified.
 :::
-## Advanced Configuration
+## Framework Integration
+The Static service handles static builds from any modern framework. Here's the typical deployment pattern:
+```yaml title="zerops.yaml"
+zerops:
+  - setup: app
+    build:
+      base: nodejs@20
+      buildCommands:
+        - npm install
+        - npm run build
+      deployFiles:
+        - dist/~  # Your framework's output directory
+    run:
+      base: static
+```
+The key is pointing `deployFiles` to wherever your framework outputs its built files (`dist/`, `build/`, `.output/public/`, etc.).
+This configuration:
+1. Uses Node.js for building the application
+2. Installs dependencies and builds the application
+3. Deploys the resulting static files to the Static service
+You can enhance this basic setup with:
+- Custom redirects for URL management
+- Prerender.io integration for SEO
+- Additional routing rules as needed
+For framework-specific examples, check out our [recipe collection](https://github.com/zeropsio/recipe-analog-static).
+## Advanced Topics
 ### Switching to Full Nginx
 If you need more control over your Nginx configuration:
 1. Go to your Static service overview in the UI
@@ -18908,65 +18966,8 @@ If you need more control over your Nginx configuration:
 :::tip
 This allows you to move to a more customizable setup while maintaining your existing routing logic.
 :::
-## Best Practices
-1. **Domain Migration**
-   ```yaml title="zerops.yaml"
-   routing:
-     redirects:
-       - from: https://old-domain.com/*
-         to: https://new-domain.com
-         status: 301
-   ```
-   Use permanent (301) redirects when permanently moving content to maintain SEO value.
-2. **Complex Redirects**
-   ```yaml title="zerops.yaml"
-   routing:
-     redirects:
-       - from: /specific-path/*
-         to: /specific-landing
-         status: 302
-       # Additional specific redirects go here
-   ```
-3. **Security Headers**
-   Add security headers to protect your application:
-   ```yaml title="zerops.yaml"
-   routing:
-     headers:
-       - for: "/*"
-         values:
-           X-Frame-Options: "'DENY'"
-           X-Content-Type-Options: "'nosniff'"
-           # Note the proper quoting for values with single quotes
-           Content-Security-Policy: '"default-src ''self''"'
-   ```
-## Frontend Framework Integration
-The Static service works with modern frontend frameworks. It can serve built static files from any framework with options for custom routing and Prerender.io integration if needed.
-### Example: Analog App Deployment
-Here's a configuration for deploying an [Analog application](https://github.com/zeropsio/recipe-analog-static):
-```yaml title="zerops.yaml"
-zerops:
-  - setup: app
-    build:
-      base: nodejs@20
-      buildCommands:
-        - pnpm i
-        - pnpm build
-      deployFiles:
-        - dist/analog/public/~
-    run:
-      base: static
-```
-This configuration:
-1. Uses Node.js 20 for building the application
-2. Installs dependencies with pnpm
-3. Builds the application
-4. Deploys the resulting static files to the Static service
-You can enhance this basic setup with:
-- Custom redirects for URL management
-- Prerender.io integration for SEO
-- Additional routing rules as needed
-## Common Configurations
-### Multiple Domain Management
+### Complex Multi-Domain Setups
+For advanced scenarios involving multiple domains and complex routing:
 ```yaml title="zerops.yaml"
 run:
   routing:
@@ -18984,7 +18985,9 @@ run:
         to: https://main-site.com
         status: 302
 ```
+## Complete Examples
 ### Development Setup
+Configuration for local development with CORS and API proxying:
 ```yaml title="zerops.yaml"
 run:
   routing:
@@ -18996,7 +18999,8 @@ run:
         to: https://api.your-domain.com
         status: 302
 ```
-### Security-Enhanced Configuration
+### Production Setup with Security
+Security-enhanced configuration for production environments:
 ```yaml title="zerops.yaml"
 run:
   routing:
@@ -20167,7 +20171,6 @@ Currently supported Valkey versions:
 Import configuration version:
 ## Service Configuration
 Zerops offers Valkey in two deployment configurations to meet different availability requirements.
-## Deployment Options
 ### Non-HA Setup
 - Single node deployment on port `6379` (non-TLS) and `6380` (TLS)
 - No backup mechanism beyond Zerops infrastructure reliability
