@@ -106,6 +106,15 @@ module.exports = {
     },
     {
       type: 'doc',
+      id: 'features/rbac',
+      label: 'Roles & Permissions',
+      customProps: {
+        sidebar_icon: 'users',
+      },
+      className: 'homepage-sidebar-item',
+    },
+    {
+      type: 'doc',
       id: 'features/env-variables',
       label: 'Environment Variables',
       customProps: {
