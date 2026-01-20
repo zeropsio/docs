@@ -7194,6 +7194,316 @@ Environment variables restore to their state from the last moment when the selec
 
 ----------------------------------------
 
+# Features > Rbac
+
+Zerops provides granular access control through a role-based permission system, allowing you to precisely manage who can access and modify your organization's resources. This system operates at two levels: **organization-wide roles** and **per-project role overrides**.
+## Core Concepts
+When a user performs an action on a project or its resources, Zerops first checks for a project-specific role override. If none exists, the organization role applies:
+#### Organization Role
+The primary role assigned to a user, determining their **default permissions** across the entire organization and all its projects.
+#### Project Role Override
+An optional per-project permission that **supersedes the organization role** for that specific project and its resources (services, containers, environment variables, routing, etc.).
+## User Roles
+Zerops supports four user roles, listed from highest to lowest permission level:
+    
+        Role
+        Organization Access
+        Default Project Access
+        Can Create Projects
+        Can Manage Team
+    
+        Owner
+        Full (incl. billing)
+        Full
+        ✓
+        All roles
+    
+        Admin
+        Full (excl. billing)
+        Full
+        ✓
+        Developer, Guest
+    
+        Developer
+        None
+        None (per-project only)
+        ✓
+        ✗
+    
+        Guest
+        None
+        None (per-project only)
+        ✗
+        ✗
+    
+### Owner
+:::note
+Every organization must have at least one Owner at all times.
+:::
+The **Owner** role has unrestricted access to all organization resources:
+- Full access to billing, invoices, and payment management
+- Can invite, edit, and remove users of any role
+- Automatic *Full access* to all projects
+- Can create unlimited projects
+- Minimum access level on any project is *Read only*
+### Admin
+The **Admin** role provides comprehensive access without billing permissions:
+- Cannot view or manage billing information
+- Can invite, edit, and remove users with Developer or Guest roles only
+- Cannot manage other Admins or Owners
+- Automatic *Full access* to all projects
+- Can create unlimited projects
+- Minimum access level on any project is *Read only*
+### Developer
+The **Developer** role is designed for team members who need to work on specific projects:
+- No access to organization-level settings
+- No default access to any projects — access must be granted per-project
+- Can create new projects (automatically receives full access to projects they create)
+- Cannot invite or manage other team members
+### Guest
+The **Guest** role provides the most restricted access:
+- No access to organization-level settings
+- No default access to any projects — access must be granted per-project
+- Cannot create new projects
+- Cannot invite or manage other team members
+## Project Access Levels
+When granting project access (either as a default for Owners/Admins or as an override for any role), two permission levels are available:
+### Full Access
+Users with full access to a project can:
+- Start, stop, and restart services
+- Deploy applications
+- Create, edit, and delete services
+- Manage environment variables (including sensitive variables)
+- Access logs, metrics, and service status
+- Use SSH web terminal and file browser
+- Create and manage VPN key pairs
+- Download backups and deployed code
+- Manage project settings and routing
+- Delete the project
+### Read Only
+Users with read-only access to a project can:
+- View project structure and service status
+- View logs and metrics
+- View deployment history
+- View non-sensitive environment variables
+- View backup existence and metadata
+- View VPN public keys (but not create new key pairs)
+Users with read-only access **cannot**:
+- Make any changes to project configuration
+- Start, stop, or deploy services
+- Access SSH web terminal or file browser
+- Download backups or deployed code
+- View sensitive environment variables (displayed as `REDACTED`)
+- Create VPN key pairs
+:::info Coming Soon
+**Sensitive Environment Variables**: You will soon be able to mark specific environment variables as sensitive. These variables will be stored encrypted and hidden from users with read-only access, providing additional security for credentials and secrets.
+:::
+## Managing Team Members
+Access team management at **Organization → Team**.
+### Inviting New Members
+1. Navigate to the Team section
+2. Click **Invite Member**
+3. Enter the user's email address
+4. Select their organization role (Owner, Admin, Developer, or Guest)
+5. Send the invitation
+If the email belongs to an existing Zerops account, they'll receive an invitation to join your organization. If not, they'll be invited to create an account and will set up their password upon accepting.
+### Editing Member Permissions
+You can modify a team member's permissions in two ways:
+**From the Team section**:
+- Edit the user's organization role
+- Configure their access to all projects at once
+**From Project Settings**:
+- Manage access for all users to that specific project
+- Useful when onboarding a team to a new project
+### Role Change Restrictions
+- Users cannot modify their own role
+- Admins can only modify users with Developer or Guest roles
+- A user cannot be demoted if they have integration tokens with higher permissions — those tokens must be modified or deleted first
+- At least one Owner must exist in the organization at all times
+## Project Role Overrides
+Project role overrides allow you to customize access for specific projects without changing a user's organization-wide role.
+### Common Use Cases
+**Restricting Admin access to production**:
+An Admin who should have full access to development projects but only read-only access to production can have a Read only override set on the production project.
+**Granting Developer access to specific projects**:
+A Developer (who has no default project access) can be granted Full access to the projects they work on, while remaining unable to see other projects.
+**Temporary project access for Guests**:
+A Guest user (perhaps an external contractor) can be granted Read only or Full access to specific projects for the duration of their engagement.
+### How Overrides Work
+:::note
+Owners and Admins cannot be set to "No access" on any project — the minimum override available for these roles is Read only.
+:::
+    
+        Organization Role
+        Without Override
+        With Full Access Override
+        With Read Only Override
+    
+        Owner
+        Full access
+        Full access
+        Read only
+    
+        Admin
+        Full access
+        Full access
+        Read only
+    
+        Developer
+        No access
+        Full access
+        Read only
+    
+        Guest
+        No access
+        Full access
+        Read only
+    
+## Integration Tokens
+Integration tokens provide programmatic access to the Zerops API, ideal for CI/CD pipelines, automation scripts, and third-party integrations.
+### Token Access Levels
+    
+        Token Type
+        Description
+    
+        Full access to all projects
+        Can perform all operations on all current and future projects
+    
+        Read access to all projects
+        Can view all projects and their resources, but cannot make changes
+    
+        Custom access per project
+        No default access; each project must be explicitly added with Full or Read only permission
+    
+### Creating Tokens
+Access token management at **Settings → Access Tokens Management**.
+1. Click **Create Token**
+2. Enter a descriptive name for the token
+3. Select the access level
+4. If using custom per-project access, add each project and set its permission level
+5. Create the token
+:::warning
+The token value is displayed only once upon creation. Store it securely — you cannot retrieve it later.
+:::
+### Token Permission Constraints
+Tokens cannot have higher permissions than the user who creates them:
+    
+        Your Role
+        Available Token Types
+    
+        Owner
+        Full access, Read access, Custom per project
+    
+        Admin
+        Full access, Read access, Custom per project
+    
+        Developer
+        Custom per project only
+    
+        Guest
+        Custom per project only
+    
+### Managing Tokens
+:::note
+Admins can manage tokens created by Developers and Guests, but cannot manage tokens created by other Admins or Owners.
+:::
+- **View**: Owners and Admins can see all tokens; Developers and Guests can only see their own tokens
+- **Edit**: A token's name, access level, or per-project permissions can be modified at any time
+- **Regenerate**: Creates a new token value while preserving all settings (the old token immediately stops working)
+- **Delete**: Permanently removes the token
+---
+## API Access & Advanced Configuration
+The Zerops API provides additional flexibility beyond what's available in the dashboard. This section covers capabilities accessible only through the API.
+:::info
+For complete API documentation, see the [Zerops OpenAPI Specification](/references/api).
+:::
+### Backend Role System
+The API uses a more granular role system than the dashboard interface:
+    
+        Dashboard Role
+        API Role Code
+        Notes
+    
+        Owner
+        OWNER
+        Includes canViewFinances, canEditFinances, and canCreateProjects flags (always enabled)
+    
+        Admin
+        ADMIN
+        Includes canCreateProjects flag (always enabled)
+    
+        Developer
+        NO_ACCESS
+        With canCreateProjects: true
+    
+        Guest
+        NO_ACCESS
+        With canCreateProjects: false
+    
+        —
+        BASIC_USER
+        Available via API only
+    
+        —
+        READ_ONLY
+        Available via API only
+    
+### Additional Roles (API Only)
+**BASIC_USER**
+- Can view all projects (unless overridden to `NO_ACCESS`)
+- Can perform all project operations (start/stop services, deploy, view logs, etc.)
+- Cannot delete projects
+- Cannot create projects without the `canCreateProjects` flag
+- Cannot manage team members
+**READ_ONLY**
+- Can view all projects (unless overridden to `NO_ACCESS`)
+- Cannot make any changes
+- Cannot access SSH terminal, file browser, or VPN key creation
+- Cannot download backups or deployed code
+- Sensitive environment variables displayed as `REDACTED`
+### Permission Flags
+The API supports additional permission flags that can be set on any user regardless of role:
+    
+        Flag
+        Description
+    
+        canViewFinances
+        Allows viewing billing information, invoices, and payment sources
+    
+        canEditFinances
+        Allows modifying billing information and processing payments (automatically enables canViewFinances)
+    
+        canCreateProjects
+        Allows creating new projects (user receives OWNER role on projects they create)
+    
+These flags enable scenarios like:
+- An Admin who needs to view (but not edit) billing information
+- A Developer who should be able to create projects but also view invoices
+- A read-only user who monitors billing status
+### Project Role Overrides via API
+The API allows setting any role as a project override, including `NO_ACCESS`:
+```yaml
+# Example: Set NO_ACCESS override for a user on a specific project
+PUT /api/rest/public/client-user/{id}/roles
+{
+  "projectRoleList": [
+    {
+      "projectId": "{projectId}",
+      "roleCode": "NO_ACCESS"
+    }
+  ]
+}
+```
+This enables scenarios not possible through the dashboard, such as hiding specific projects from users who would otherwise have access based on their organization role.
+### Role Resolution Logic
+When determining a user's effective permissions for a project:
+1. Check if a project-specific role override exists
+2. If yes, use that role for all project-related operations
+3. If no, use the organization role
+For non-project operations (billing, team management), only the organization role applies.
+
+----------------------------------------
+
 # Features > Scaling
 
 Zerops delivers enterprise-grade infrastructure with built-in automatic scaling and high availability. This means applications and databases dynamically adjust to traffic demands—scaling up during peak loads to maintain performance and scaling down during quiet periods to reduce costs.
