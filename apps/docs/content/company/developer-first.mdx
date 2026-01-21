@@ -1,0 +1,196 @@
+---
+title: Developer First
+description: Zerops is designed to support applications from simple to complex architectures, ensuring a seamless development journey from local development to production.
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Image from '@site/src/components/Image';
+
+# Developer First Infrastructure
+
+At Zerops, we prioritize developer experience while providing robust infrastructure capabilities that grow with your needs. Our platform is designed to support applications from simple to complex architectures, ensuring a seamless development journey from local development to production.
+
+:::tip Key Benefits
+- **Zero Infrastructure Management** - Focus on code, not on infrastructure
+- **Environment Parity** - Identical behavior across all environments
+- **Automated Scaling** - Resources that adapt to your needs
+- **Built-in DevOps** - Integrated CI/CD, monitoring, and management tools
+:::
+
+## Development Workflow
+
+Zerops streamlines your development process from initial setup to production deployment:
+
+1. **Local Development** - Use local tools with environment parity
+2. **Version Control Integration** - Push changes to trigger automated builds
+3. **Continuous Deployment** - Automatic builds and deployments across environments
+4. **Production Scaling** - Seamless scaling as your application grows
+
+Each stage maintains consistency through identical infrastructure definitions and environment configurations.
+
+## Project & Service Structure
+
+Zerops organizes your infrastructure into three levels:
+
+- **Projects** - Top-level entities containing multiple services
+- **Services** - Encapsulate your containers with specific roles
+- **Containers** - Individual runtime units within services
+
+:::info Project Features
+- Private network for all services
+- Automatic IPv6 address allocation
+- Optional IPv4 address support
+- Built-in logging and statistics
+- Automated HTTP routing with SSL
+:::
+
+## Adaptive Infrastructure
+
+Our infrastructure adapts to your application's needs, whether you're running a simple website or a complex microservices architecture.
+
+### Intelligent Scaling
+
+Zerops provides enterprise-grade scaling that responds to your application's actual demands:
+
+```yaml title="Example service configuration"
+services:
+  - hostname: app
+    minContainers: 2
+    maxContainers: 6
+    verticalAutoscaling:
+      cpuMode: DEDICATED
+      minCpu: 2
+      maxCpu: 5
+      minRam: 2
+      maxRam: 24
+      minDisk: 6
+      maxDisk: 50
+      startCpuCoreCount: 3
+      minFreeRamGB: 0.5
+      minFreeRamPercent: 20
+```
+
+- **Vertical Scaling** - Automatic CPU and RAM adjustment
+- **Horizontal Scaling** - Dynamic container count management
+- **Cost Optimization** - Pay only for resources you actually use
+- **Dynamic Storage** - Automated disk space management
+
+### High Availability Mode
+
+Every service can run in HA mode with automatic failover:
+
+```yaml title="Example HA configuration"
+services:
+  - hostname: db
+    type: postgresql@16
+    mode: NON_HA  # Non-HA mode
+
+  - hostname: cache
+    type: valkey@7.2
+    mode: HA  # High availability mode
+```
+
+- **Multi-Zone Distribution** - Services run across multiple availability zones
+- **Automated Failover** - Self-healing infrastructure
+- **Data Replication** - Automatic synchronization
+- **Load Distribution** - Enhanced performance through balancing
+
+## Developer Experience & Tooling
+
+### Zero-Config Build Pipeline
+
+Add a `zerops.yml` to your repository root. Here are common deployment patterns:
+
+<Tabs>
+  <TabItem value="monorepo" label="Monorepo Multiple Apps">
+  ```yaml title="zerops.yml"
+      run:
+        base: nodejs@20
+        ports:
+          - port: 3000
+            httpSupport: true
+          - port: 3001
+            httpSupport: true
+        startCommands:
+          - command: pnpm run start:web
+            name: web
+          - command: pnpm run start:docs
+            name: docs
+  ```
+  </TabItem>
+  <TabItem value="standard" label="Single Application">
+  ```yaml title="zerops.yml"
+      run:
+        base: nodejs@20
+        ports:
+          - port: 3000
+            httpSupport: true
+        start: npm start
+  ```
+  </TabItem>
+</Tabs>
+
+:::tip Multiple Start Commands
+For monorepo deployments, use `startCommands` to run multiple applications in a single service:
+- Each command can have a unique name for better monitoring
+- Configure multiple ports with `httpSupport` for web access
+- Use a shared build process for better resource utilization
+:::
+
+### Native Service Discovery
+
+Services within your project communicate seamlessly using internal hostnames:
+
+```env
+DB_HOST: ${db_hostname}
+REDIS_HOST: ${redis_hostname}
+```
+
+Environment variables are automatically injected and synchronized across all containers.
+
+### Built-in Observability
+
+Comprehensive monitoring and logging with zero configuration:
+
+- **Metrics Dashboard** - Real-time performance monitoring
+- **Log Aggregation** - Centralized logging with search
+- **Alert Management** - Customizable notifications
+- **Service Health** - Automatic status monitoring
+
+### Development Tools
+
+Complete toolkit for modern development:
+
+- **CLI Tools** - Powerful command-line interface for quick operations
+- **API Access** - RESTful API for workflow automation
+- **Service Templates** - Pre-configured service definitions
+- **Environment Management** - Secure variable handling across environments
+
+## Environment Consistency
+
+Zerops ensures consistent behavior from development to production:
+
+- **Configuration as Code** - Infrastructure defined in version-controlled YAML
+- **Identical Environments** - Development mirrors staging mirrors production
+- **Dependency Management** - Consistent runtime versions and dependencies
+- **Reproducible Builds** - Deterministic build process with caching
+
+This consistency eliminates "works on my machine" problems and reduces deployment risks.
+
+## Getting Started
+
+Ready to experience developer-first infrastructure? Follow our [quick start guide](/getting-started) to deploy your first application on Zerops.
+
+:::info Need Help?
+Join our [Discord community](https://discord.gg/zerops) for support and discussions with other developers.
+:::
+
+
+
+
+
+
+
+
+

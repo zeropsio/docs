@@ -798,6 +798,15 @@ module.exports = {
       className: 'homepage-sidebar-item',
     },
     {
+      type: 'doc',
+      id: 'company/developer-first',
+      label: 'Dev-First Experience',
+      customProps: {
+        sidebar_icon: 'heart',
+      },
+      className: 'homepage-sidebar-item',
+    },
+    {
       type: 'category',
       link: {
         type: 'doc',
