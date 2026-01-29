@@ -1,0 +1,432 @@
+[
+  {
+    "name": "Prometheus",
+    "url": "https://github.com/zeropsio/recipe-prometheus",
+    "config": "zerops:\n  - setup: prometheus\n    build:\n      deployFiles: \n        - prometheus.yml\n    deploy:\n      temporaryShutdown: true\n    run:\n      os: alpine\n      base: alpine@3.20\n      ports:\n        - port: 9090\n          httpSupport: true\n      envVariables: \n        TSDB_PATH: /mnt/storage/prometheus\n      prepareCommands:\n        - sudo apk update && sudo apk upgrade\n        - wget https://github.com/prometheus/prometheus/releases/download/v3.2.1/prometheus-3.2.1.linux-amd64.tar.gz\n        - tar -xvf prometheus-3.2.1.linux-amd64.tar.gz\n        - mv prometheus-3.2.1.linux-amd64 /var/www/prometheus\n        - rm prometheus-3.2.1.linux-amd64.tar.gz\n      start: bash -c 'mkdir -p $TSDB_PATH && /var/www/prometheus/prometheus --config.file /var/www/prometheus.yml --storage.tsdb.path $TSDB_PATH --log.level=debug'\n  - setup: app\n    build: \n      os: alpine\n      base: go@latest\n      cache: true\n      buildCommands:\n        - go build -o app main.go\n      deployFiles:\n        - app\n    run:\n      os: alpine\n      base: alpine@latest\n      ports:\n        - port: 2112\n          httpSupport: true\n      start: ./app\n"
+  },
+  {
+    "name": "Remix Node.js",
+    "url": "https://github.com/zeropsio/recipe-remix-nodejs",
+    "config": "zerops:\n  - setup: app\n    build:\n      base: nodejs@20\n      buildCommands:\n        - pnpm i\n        - pnpm run build\n      deployFiles:\n        - build\n        - server.js\n        - package.json\n        - node_modules\n    run:\n      base: nodejs@20\n      ports:\n        - port: 3000\n          httpSupport: true\n      start: pnpm start\n"
+  },
+  {
+    "name": "Mailpit",
+    "url": "https://github.com/zeropsio/recipe-mailpit",
+    "config": "zerops:\n  - setup: mailpit\n    build:\n      buildCommands:\n        - sh download-mailpit.sh\n      deployFiles: ./mailpit\n    deploy:\n      readinessCheck:\n        httpGet:\n          port: 8025\n          path: /\n    run:\n      base: alpine@3.20\n      ports:\n        - port: 8025\n          httpSupport: true\n        - port: 1025\n      start: ./mailpit\n"
+  },
+  {
+    "name": "Laravel Jetstream",
+    "url": "https://github.com/zeropsio/recipe-laravel-jetstream",
+    "config": "zerops:\n  - setup: app\n    build:\n      base:\n        - php@8.4\n        - nodejs@18\n      os: ubuntu\n      buildCommands:\n        - composer install --optimize-autoloader --no-dev\n        - npm install\n        - npm run build\n      deployFiles: ./\n      cache:\n        - vendor\n        - composer.lock\n        - node_modules\n        - package-lock.json\n    deploy:\n      readinessCheck:\n        httpGet:\n          port: 80\n          path: /up\n    run:\n      base: php-nginx@8.4\n      os: ubuntu\n      siteConfigPath: site.conf.tmpl\n      envVariables:\n        APP_LOCALE: en\n        APP_FAKER_LOCALE: en_US\n        APP_FALLBACK_LOCALE: en\n        APP_MAINTENANCE_DRIVER: file\n        APP_MAINTENANCE_STORE: database\n        APP_TIMEZONE: UTC\n        APP_URL: ${zeropsSubdomain}\n        ASSET_URL: ${APP_URL}\n        VITE_APP_NAME: ${APP_NAME}\n\n        DB_CONNECTION: pgsql\n        DB_DATABASE: db\n        DB_HOST: db\n        DB_PASSWORD: ${db_password}\n        DB_PORT: 5432\n        DB_USERNAME: ${db_user}\n\n        AWS_ACCESS_KEY_ID: ${storage_accessKeyId}\n        AWS_REGION: us-east-1\n        AWS_BUCKET: ${storage_bucketName}\n        AWS_ENDPOINT: ${storage_apiUrl}\n        AWS_SECRET_ACCESS_KEY: ${storage_secretAccessKey}\n        AWS_URL: ${storage_apiUrl}/${storage_bucketName}\n        AWS_USE_PATH_STYLE_ENDPOINT: true\n\n        LOG_CHANNEL: syslog\n        LOG_LEVEL: debug\n        LOG_STACK: single\n\n        MAIL_FROM_ADDRESS: hello@example.com\n        MAIL_FROM_NAME: ZeropsLaravel\n        MAIL_HOST: mailpit\n        MAIL_MAILER: smtp\n        MAIL_PORT: 1025\n\n        BROADCAST_CONNECTION: redis\n        CACHE_PREFIX: cache\n        CACHE_STORE: redis\n        QUEUE_CONNECTION: redis\n        REDIS_CLIENT: phpredis\n        REDIS_HOST: redis\n        REDIS_PORT: 6379\n        SESSION_DRIVER: redis\n        SESSION_ENCRYPT: false\n        SESSION_LIFETIME: 120\n        SESSION_PATH: /\n\n        BCRYPT_ROUNDS: 12\n        TRUSTED_PROXIES: \"*\"\n        FILESYSTEM_DISK: s3\n      initCommands:\n        - php artisan view:cache\n        - php artisan config:cache\n        - php artisan route:cache\n        - php artisan migrate --isolated --force\n        - php artisan optimize\n      healthCheck:\n        httpGet:\n          port: 80\n          path: /up\n"
+  },
+  {
+    "name": "Astro Node.js",
+    "url": "https://github.com/zeropsio/recipe-astro-nodejs",
+    "config": "zerops:\n  - setup: app\n    build:\n      base: nodejs@20\n      buildCommands:\n        - pnpm i\n        - pnpm run build\n      deployFiles:\n        - dist\n        - package.json\n        - node_modules\n    run:\n      base: nodejs@20\n      ports:\n        - port: 3000\n          httpSupport: true\n      envVariables:\n        PORT: 3000\n        HOST: 0.0.0.0\n      start: pnpm start\n\n"
+  },
+  {
+    "name": "Umami",
+    "url": "https://github.com/zeropsio/recipe-umami",
+    "config": "zerops:\n  - setup: umami\n    build:\n      base: nodejs@20\n      envVariables:\n        DATABASE_URL: ${db_connectionString}/${db_hostname}\n      prepareCommands:\n        - sudo apk add git\n        - npm install -g yarn@1.22.10 --force\n        - yarn global add npm-run-all\n      buildCommands:\n        - git clone https://github.com/umami-software/umami.git\n        - | \n          cd umami\n          git checkout tags/v2.12.1\n          yarn install --frozen-lockfile\n          yarn build-docker\n        - |\n          cd umami\n          mv ./node_modules ./dev_node_modules\n          yarn add npm-run-all dotenv prisma semver --no-lockfile\n      deploy: \n        - umami/~next.config.js\n        - umami/~public/\n        - umami/~package.json\n        - umami/~prisma/\n        - umami/~scripts/\n        - umami/.next/standalone/~\n        - umami/~.next/static/\n        - umami/~node_modules/\n    run:\n      base: nodejs@20\n      prepareCommands:\n        - npm install -g yarn@1.22.10 --force\n      start: yarn start-docker\n      ports: \n        - port: 3000\n          httpSupport: true\n      healthCheck:\n        httpGet:\n          port: 3000\n          path: /api/heartbeat\n      envVariables:\n        NODE_ENV: production\n        DATABASE_URL: ${db_connectionString}/${db_hostname}\n        NEXT_TELEMETRY_DISABLED: \"1\"\n"
+  },
+  {
+    "name": "Qwik Node.js",
+    "url": "https://github.com/zeropsio/recipe-qwik-nodejs",
+    "config": "zerops:\n  - setup: app\n    build:\n      base: nodejs@20\n      buildCommands:\n        - pnpm i\n        - pnpm run build\n      deployFiles:\n        - package.json\n        - public\n        - server\n        - dist\n    run:\n      base: nodejs@20\n      ports:\n        - port: 3000\n          httpSupport: true\n      start: pnpm serve\n\n"
+  },
+  {
+    "name": "Nest.js",
+    "url": "https://github.com/zeropsio/recipe-nestjs",
+    "config": "zerops:\n  - setup: api\n    build:\n      base: nodejs@20\n      buildCommands:\n        - npm i\n        - npm run build\n      deployFiles:\n        - ./dist\n        - node_modules\n        - package.json\n    run:\n      base: nodejs@20\n      ports:\n        - port: 3000\n          httpSupport: true\n      envVariables:\n        DATABASE_HOST: db\n        DATABASE_NAME: db\n        DATABASE_PASSWORD: ${db_password}\n        DATABASE_PORT: \"5432\"\n        DATABASE_USERNAME: db\n        SMTP_EMAIL_FROM: recipe@zerops.io\n        SMTP_HOST: mailpit\n        SMTP_PASS: \"\"\n        SMTP_PORT: \"1025\"\n        SMTP_USER: \"\"\n        STORAGE_ACCESS_KEY_ID: ${storage_accessKeyId}\n        STORAGE_ENDPOINT: ${storage_apiUrl}\n        STORAGE_REGION: us-east-1\n        STORAGE_S3_BUCKET_NAME: ${storage_bucketName}\n        STORAGE_SECRET_ACCESS_KEY: ${storage_secretAccessKey}\n      initCommands:\n        - zsc execOnce $ZEROPS_appVersionId npm run typeorm:migrate\n      start: npm run start:prod\n"
+  },
+  {
+    "name": "Django",
+    "url": "https://github.com/zeropsio/recipe-django",
+    "config": "zerops:\n  - setup: app\n    build:\n      os: alpine\n      base: python@3.12\n      addToRunPrepare:\n        - requirements.txt\n      deployFiles:\n        - files/\n        - recipe/\n        - manage.py\n        - gunicorn.conf.py\n    run:\n      os: alpine\n      base: python@3.12\n      prepareCommands:\n        - sudo apk add tzdata\n        - pip install --no-cache-dir -r requirements.txt\n      envVariables:\n        PYTHONDONTWRITEBYTECODE: \"1\"\n        PYTHONUNBUFFERED: \"1\"\n        APP_SUBDOMAIN_URL: $zeropsSubdomain\n        DB_HOST: $db_hostname\n        DB_PORT: $db_port\n        DB_USER: $db_user\n        DB_PASSWORD: $db_password\n        USE_S3: \"1\"\n        S3_ACCESS_KEY_ID: $storage_accessKeyId\n        S3_SECRET_ACCESS_KEY: $storage_secretAccessKey\n        S3_BUCKET_NAME: $storage_bucketName\n        S3_ENDPOINT_URL: $storage_apiUrl\n        MAIL_HOST: mailpit\n        MAIL_PORT: \"1025\"\n      ports:\n        - port: 8000\n          httpSupport: true\n      initCommands:\n        # Exec everytime we build a new app version.\n        - zsc execOnce migrate-${ZEROPS_appVersionId} -- python manage.py migrate\n        - zsc execOnce collectstatic-${ZEROPS_appVersionId} -- python manage.py collectstatic --no-input --verbosity 3\n        # Exec just once.\n        - zsc execOnce createsuperuser -- python manage.py createsuperuser --no-input --username admin --email admin@example.com || true\n      start: gunicorn recipe.wsgi\n"
+  },
+  {
+    "name": "Node.js",
+    "url": "https://github.com/zeropsio/recipe-nodejs",
+    "config": "zerops:\n  - setup: api\n    build:\n      base: nodejs@20\n      prepareCommands:\n        - npm install -g typescript\n      buildCommands:\n        - npm i --verbose\n        - npm run build\n      deployFiles:\n        - ./dist\n        - ./node_modules\n        - ./package.json\n    run:\n      base: nodejs@20\n      ports:\n        - port: 3000\n          httpSupport: true\n      envVariables:\n        NODE_ENV: production\n        DB_NAME: db\n        DB_HOST: db\n        DB_USER: db\n        DB_PASS: ${db_password}\n      start: npm run start:prod\n      healthCheck:\n        httpGet:\n          port: 3000\n          path: /status\n"
+  },
+  {
+    "name": "PHP",
+    "url": "https://github.com/zeropsio/recipe-php",
+    "config": "zerops:\n  - setup: apacheapi\n    build:\n      base:\n        - php@8.3\n      buildCommands:\n        - composer install --optimize-autoloader --no-dev\n      deployFiles:\n        - ./index.php\n        - ./.htaccess\n        - ./vendor\n    run:\n      base: php-apache@8.3\n      envVariables:\n        DB_NAME: db\n        DB_HOST: db\n        DB_PORT: 5432\n        DB_USER: db\n        DB_PASS: ${db_password}\n      healthCheck:\n        httpGet:\n          port: 80\n          path: /status\n\n  - setup: nginxapi\n    build:\n      base:\n        - php@8.3\n      buildCommands:\n        - composer install --optimize-autoloader --no-dev\n      deployFiles:\n        - ./index.php\n        - ./vendor\n    run:\n      base: php-nginx@8.3\n      envVariables:\n        DB_NAME: db\n        DB_HOST: db\n        DB_PORT: 5432\n        DB_USER: db\n        DB_PASS: ${db_password}\n      healthCheck:\n        httpGet:\n          port: 80\n          path: /status\n"
+  },
+  {
+    "name": "Go",
+    "url": "https://github.com/zeropsio/recipe-go",
+    "config": "zerops:\n  - setup: api\n    build:\n      base: go@1\n      buildCommands:\n        - go build -o app .\n      deployFiles: ./app\n    deploy:\n      readinessCheck:\n        httpGet:\n          port: 8080\n          path: /status\n    run:\n      base: go@1\n      start: ./app\n      ports:\n        - port: 8080\n          httpSupport: true\n      envVariables:\n        DB_NAME: db\n        DB_HOST: ${db_hostname}\n        DB_PORT: ${db_port}\n        DB_USER: ${db_user}\n        DB_PASS: ${db_password}\n      healthCheck:\n        httpGet:\n          port: 8080\n          path: /status"
+  },
+  {
+    "name": "Python",
+    "url": "https://github.com/zeropsio/recipe-python",
+    "config": "zerops:\n  - setup: api\n    build:\n      base: python@3.12\n      deploy:\n        - app.py\n      addToRunPrepare:\n        - requirements.txt\n    run:\n      base: python@3.12\n      prepareCommands:\n        - python3 -m pip install --ignore-installed -r requirements.txt\n      start: python3 app.py\n      ports:\n        - port: 8000\n          httpSupport: true\n      envVariables:\n        DB_NAME: db\n        DB_HOST: ${db_hostname}\n        DB_PORT: ${db_port}\n        DB_USER: ${db_user}\n        DB_PASS: ${db_password}\n      healthCheck:\n        httpGet:\n          port: 8000\n          path: /status\n"
+  },
+  {
+    "name": "Rust",
+    "url": "https://github.com/zeropsio/recipe-rust",
+    "config": "zerops:\n  - setup: api\n    build:\n      base: rust@1.78\n      buildCommands:\n        - cargo build --release\n      deployFiles:\n        - ./target/release/~/rust\n    run:\n      base: rust@1.78\n      start: ./rust\n      ports:\n          - port: 8080\n            httpSupport: true\n      envVariables:\n        DB_NAME: db\n        DB_HOST: ${db_hostname}\n        DB_PORT: ${db_port}\n        DB_USER: ${db_user}\n        DB_PASS: ${db_password}\n      healthCheck:\n        httpGet:\n          port: 8080\n          path: /status\n"
+  },
+  {
+    "name": "Astro Static",
+    "url": "https://github.com/zeropsio/recipe-astro-static",
+    "config": "zerops:\n  - setup: app\n    build:\n      base: nodejs@20\n      buildCommands:\n        - pnpm i\n        - pnpm build\n      deployFiles:\n        - dist/~\n    run:\n      base: static\n\n      \n"
+  },
+  {
+    "name": "Dotnet",
+    "url": "https://github.com/zeropsio/recipe-dotnet",
+    "config": "zerops:\n  - setup: api\n    build:\n#      os: ubuntu\n      base: dotnet@6\n      buildCommands:\n        - dotnet build -o app\n      deployFiles: app/~\n    run:\n#      os: ubuntu\n      base: dotnet@6\n      start: dotnet dotnet.dll\n      ports:\n        - port: 5000\n          httpSupport: true\n      envVariables:\n        DB_NAME: db\n        DB_HOST: ${db_hostname}\n        DB_PORT: ${db_port}\n        DB_USER: ${db_user}\n        DB_PASS: ${db_password}\n      healthCheck:\n        httpGet:\n          port: 5000\n          path: /status"
+  },
+  {
+    "name": "Prerender",
+    "url": "https://github.com/zeropsio/recipe-prerender",
+    "config": "zerops:\n  - setup: prerender\n    build:\n      base: nodejs@20\n      buildCommands:\n        - npm i\n      deploy:\n        - node_modules\n        - server.js\n    run:\n      base: nodejs@20\n      prepareCommands:\n        - apk add --update-cache chromium\n        - rm -rf /var/cache/apk/* /tmp/*\n      envVariables:\n        NODE_ENV: production\n        MEMORY_CACHE: 1\n      ports:\n        - port: 3000\n          httpSupport: true\n      start: node server.js\n"
+  },
+  {
+    "name": "Meilisearch",
+    "url": "https://github.com/zeropsio/recipe-meilisearch",
+    "config": "zerops:\n  - setup: meilisearch\n    build:\n      buildCommands:\n        - curl -L https://install.meilisearch.com | sh\n      deployFiles:\n       - meilisearch\n    run:\n      os: ubuntu\n      base: go@1\n      ports:\n        - protocol: tcp\n          port: 7700\n          httpSupport: true\n      envVariables:\n        MEILI_HTTP_ADDR: \"[::]:7700\"\n      start: ./meilisearch\n      # healthCheck:\n      #   httpGet:\n      #     port: 7700\n      #     path: /health\n"
+  },
+  {
+    "name": "Adminer",
+    "url": "https://github.com/zeropsio/recipe-adminerevo",
+    "config": "zerops:\n  - setup: adminerevo\n    build:\n      base: php@8.3\n      prepareCommands:\n        - sudo apk add wget unzip\n      buildCommands:\n        - |\n          wget https://download.adminerevo.org/latest/adminer/adminer.zip\n          unzip adminer.zip\n          mv adminer.php index.php\n      deployFiles: index.php\n    run:\n      base: php-apache@8.3\n      ports:\n        - port: 80\n          httpSupport: true\n"
+  },
+  {
+    "name": "Ghost",
+    "url": "https://github.com/zeropsio/recipe-ghost",
+    "config": "zerops:\n  - setup: ghost\n    build:\n      base: nodejs@18\n      # os: ubuntu\n      buildCommands:\n        - apk update && apk add git && apk add jq\n        # - apt update && apt install git -y && apt install jq -y\n        - |\n          cd ./current\n          yarn\n          yarn add ghost-storage-adapter-s3\n          mkdir -p ./content/adapters/storage\n          cp -r ./node_modules/ghost-storage-adapter-s3 ./content/adapters/storage/s3\n      deployFiles:\n        - content\n        - current\n        - versions\n        - .ghost-cli\n        - config.production.json\n    run:\n      base: nodejs@18\n      # os: ubuntu\n      envVariables:\n        AWS_DEFAULT_REGION: us-east-1\n        AWS_ACCESS_KEY_ID: ${storage_accessKeyId}\n        AWS_SECRET_ACCESS_KEY: ${storage_secretAccessKey}\n        STORAGE_HOSTNAME: storage\n        GHOST_STORAGE_ADAPTER_S3_PATH_BUCKET: ${storage_bucketName}\n        GHOST_STORAGE_ADAPTER_S3_ASSET_HOST: ${storage_apiUrl}/${GHOST_STORAGE_ADAPTER_S3_PATH_BUCKET}\n        GHOST_STORAGE_ADAPTER_S3_ENDPOINT: ${storage_apiUrl}\n        GHOST_STORAGE_ADAPTER_S3_FORCE_PATH_STYLE: true\n        database__connection__database: ${db_hostname}\n        database__connection__host: ${db_hostname}\n        database__connection__password: ${db_password}\n        database__connection__user: ${db_user}\n        url: ${zeropsSubdomain}\n        REGION: usc1\n      ports:\n        - port: 2368\n          httpSupport: true\n      prepareCommands:\n        - npm install -g ghost-cli\n      start: ghost run"
+  },
+  {
+    "name": "Bun",
+    "url": "https://github.com/zeropsio/recipe-bun",
+    "config": "zerops:\n  - setup: api\n    build:\n      base: bun@1.1\n      buildCommands:\n        - bun install\n        - bun run build\n      deployFiles:\n        - package.json\n        - dist\n    run:\n      base: bun@1.1\n      envVariables:\n        NODE_ENV: production\n        DB_NAME: db\n        DB_HOST: db\n        DB_USER: db\n        DB_PASS: ${db_password}\n      ports:\n        - port: 3000\n          httpSupport: true\n      start: bun run start:prod\n      healthCheck:\n        httpGet:\n          port: 3000\n          path: /status\n"
+  },
+  {
+    "name": "Deno",
+    "url": "https://github.com/zeropsio/recipe-deno",
+    "config": "zerops:\n  - setup: api\n    build:\n      base: deno@1\n      buildCommands:\n        - deno task build\n      deployFiles:\n        - dist\n        - deno.jsonc\n    run:\n      base: deno@1\n      envVariables:\n        DB_NAME: db\n        DB_HOST: db\n        DB_USER: db\n        DB_PASS: ${db_password}\n      ports:\n        - port: 8000\n          httpSupport: true\n      start: deno task start\n      healthCheck:\n        httpGet:\n          port: 8000\n          path: /status\n"
+  },
+  {
+    "name": "Java",
+    "url": "https://github.com/zeropsio/recipe-java",
+    "config": "zerops:\n  - setup: api\n    build:\n      base: java@17\n      buildCommands:\n        - ./mvnw clean install\n      deployFiles:\n        - target/recipe-1.0.0.jar\n    run:\n      base: java@17\n      envVariables:\n        DB_NAME: db\n        DB_HOST: db\n        DB_USER: db\n        DB_PASS: ${db_password}\n      ports:\n        - port: 8080\n          httpSupport: true\n      start: java -jar target/recipe-1.0.0.jar\n      healthCheck:\n        httpGet:\n          port: 8080\n          path: /status\n"
+  },
+  {
+    "name": "Solid.js Node.js",
+    "url": "https://github.com/zeropsio/recipe-solidjs-nodejs",
+    "config": "zerops:\n  - setup: app\n    build:\n      base: nodejs@20\n      buildCommands:\n        - pnpm i\n        - pnpm build\n      deployFiles:\n        - .output\n        - public\n        - node_modules\n        - package.json\n    run:\n      base: nodejs@20\n      ports:\n        - port: 3000\n          httpSupport: true\n      start: pnpm start\n\n"
+  },
+  {
+    "name": "Solid.js Static",
+    "url": "https://github.com/zeropsio/recipe-solidjs-static",
+    "config": "zerops:\n  - setup: app\n    build:\n      base: nodejs@20\n      buildCommands:\n        - pnpm i\n        - pnpm build\n      deployFiles:\n        - dist/~\n    run:\n      base: static\n\n"
+  },
+  {
+    "name": "Discord Bot Node.js",
+    "url": "https://github.com/zeropsio/recipe-discord-nodejs",
+    "config": "zerops:\n  - setup: discordnode\n    build:\n      base: nodejs@20\n      buildCommands:\n        - pnpm i\n        - pnpm run build\n      deployFiles:\n        - dist\n        - package.json\n        - node_modules\n    run:\n      base: nodejs@20\n      start: pnpm start\n  \n"
+  },
+  {
+    "name": "Vue",
+    "url": "https://github.com/zeropsio/recipe-vue",
+    "config": "zerops:\n  - setup: app\n    build:\n      base: nodejs@20\n      buildCommands:\n        - pnpm i\n        - pnpm build\n      deployFiles:\n        - dist/~\n      cache:\n        - node_modules\n        - pnpm-lock.yaml\n    run:\n      base: static"
+  },
+  {
+    "name": "Echo",
+    "url": "https://github.com/zeropsio/recipe-echo",
+    "config": "zerops:\n  - setup: app\n    build:\n      base: go@latest\n      buildCommands:\n        - go build -v -o app main.go\n      deployFiles:\n        - static/\n        - app\n    run:\n      ports:\n        - port: 8080\n          httpSupport: true\n      envVariables:\n        DB_HOST: db\n        DB_PORT: $db_port\n        DB_USER: $db_user\n        DB_PASSWORD: $db_password\n        S3_ENDPOINT: $storage_apiUrl\n        S3_ACCESS_KEY_ID: $storage_accessKeyId\n        S3_SECRET_ACCESS_KEY: $storage_secretAccessKey\n        S3_BUCKET: $storage_bucketName\n        SMTP_HOST: mailpit\n        SMTP_PORT: \"1025\"\n        REDIS_HOST: redis\n        REDIS_PORT: $redis_port\n      initCommands:\n        - zsc execOnce seed -- /var/www/app -seed\n      start: /var/www/app\n"
+  },
+  {
+    "name": "Nette Contributte",
+    "url": "https://github.com/zeropsio/recipe-nette-contributte",
+    "config": "zerops:\n  - setup: app\n    build:\n      base: php@8.3\n      os: alpine\n      buildCommands:\n        - composer install --optimize-autoloader\n      deployFiles: ./\n      cache:\n        - vendor\n        - composer.lock\n\n    deploy:\n      readinessCheck:\n        httpGet:\n          port: 80\n          path: /\n\n    run:\n      base: php-apache@8.3\n      os: alpine\n      documentRoot: www/\n      initCommands:\n        - zsc execOnce ${appVersionId}-migration -- php /var/www/bin/console migrations:migrate --no-interaction --allow-no-migration\n        - zsc execOnce ${appVersionId}-fixtures -- php /var/www/bin/console doctrine:fixtures:load --no-interaction\n        - chown -R zerops:zerops /var/www/var/tmp/\n      healthCheck:\n        httpGet:\n          port: 80\n          path: /\n"
+  },
+  {
+    "name": "Nette",
+    "url": "https://github.com/zeropsio/recipe-nette",
+    "config": "zerops:\n  - setup: app\n    build:\n      base: php@8.3\n      os: alpine\n      buildCommands:\n        - composer install --optimize-autoloader --no-dev\n      deployFiles: ./\n      cache:\n        - vendor\n        - composer.lock\n    deploy:\n      readinessCheck:\n        httpGet:\n          port: 80\n          path: /\n    run:\n      base: php-apache@8.3\n      os: alpine\n      documentRoot: www/\n      initCommands:\n        - zsc execOnce $appVersionId -- php /var/www/bin/console migrations:continue\n        - chown -R zerops:zerops /var/www/temp/\n      healthCheck:\n        httpGet:\n          port: 80\n          path: /\n"
+  },
+  {
+    "name": "Svelte Node.js",
+    "url": "https://github.com/zeropsio/recipe-svelte-nodejs",
+    "config": "zerops:\n  - setup: app\n    build:\n      base: nodejs@20\n      buildCommands:\n        - pnpm i\n        - pnpm run build\n      deployFiles:\n        - build\n        - package.json\n        - node_modules\n    run:\n      base: nodejs@20\n      ports:\n        - port: 3000\n          httpSupport: true\n      start: pnpm start\n\n"
+  },
+  {
+    "name": "Svelte Static",
+    "url": "https://github.com/zeropsio/recipe-svelte-static",
+    "config": "zerops:\n  - setup: app\n    build:\n      base: nodejs@20\n      buildCommands:\n        - pnpm i\n        - pnpm build\n      deployFiles:\n        - build/~\n    run:\n      base: static\n\n      \n"
+  },
+  {
+    "name": "Qwik Static",
+    "url": "https://github.com/zeropsio/recipe-qwik-static",
+    "config": "zerops:\n  - setup: app\n    build:\n      base: nodejs@20\n      buildCommands:\n        - pnpm i\n        - pnpm build\n      deployFiles:\n        - public       \n        - dist/~\n    run:\n      base: static\n\n"
+  },
+  {
+    "name": "Discord Bot Bun",
+    "url": "https://github.com/zeropsio/recipe-discord-bun",
+    "config": "zerops:\n  - setup: discordbun\n    build:\n      base: bun@1.1\n      buildCommands:\n        - bun i\n      deployFiles:\n        - /\n    run:\n      base: bun@1.1\n      start: bun start"
+  },
+  {
+    "name": "Discord Bot Python",
+    "url": "https://github.com/zeropsio/recipe-discord-py",
+    "config": "zerops:\n  - setup: discordpy\n    build:\n      base: python@3.12\n      deployFiles: /~\n      addToRunPrepare:\n        - requirements.txt\n    run:\n      base: python@3.12\n      prepareCommands:\n        - python3 -m pip install --ignore-installed -r requirements.txt\n      start: python3 bot.py"
+  },
+  {
+    "name": "Next.js Node.js",
+    "url": "https://github.com/zeropsio/recipe-nextjs-nodejs",
+    "config": "zerops:\n  - setup: app\n    build:\n      base: nodejs@20\n      buildCommands:\n        - pnpm i\n        - pnpm run build\n      deployFiles: ./\n    run:\n      base: nodejs@20\n      ports:\n        - port: 3000\n          httpSupport: true\n      start: pnpm start\n\n"
+  },
+  {
+    "name": "Next.js Static",
+    "url": "https://github.com/zeropsio/recipe-nextjs-static",
+    "config": "zerops:\n  - setup: app\n    build:\n      base: nodejs@20\n      buildCommands:\n        - pnpm i\n        - pnpm build\n      deployFiles:\n        - out/~\n    run:\n      base: static\n\n"
+  },
+  {
+    "name": "React Node.js",
+    "url": "https://github.com/zeropsio/recipe-react-nodejs",
+    "config": "zerops:\n  - setup: app\n    build:\n      base: nodejs@20\n      buildCommands:\n        - pnpm i\n        - pnpm build\n      deployFiles:\n        - public\n        - node_modules\n        - dist\n        - package.json\n        - server.js\n    run:\n      base: nodejs@20\n      ports:\n        - port: 3000\n          httpSupport: true\n      start: pnpm start\n      \n"
+  },
+  {
+    "name": "React Static",
+    "url": "https://github.com/zeropsio/recipe-react-static",
+    "config": "zerops:\n  - setup: app\n    build:\n      base: nodejs@20\n      buildCommands:\n        - pnpm i\n        - pnpm build\n      deployFiles:\n        - dist/~\n    run:\n      base: static\n\n"
+  },
+  {
+    "name": "Analog Static",
+    "url": "https://github.com/zeropsio/recipe-analog-static",
+    "config": "zerops:\n  - setup: app\n    build:\n      base: nodejs@20\n      buildCommands:\n        - pnpm i\n        - pnpm build\n      deployFiles:\n        - dist/analog/public/~\n    run:\n      base: static\n\n"
+  },
+  {
+    "name": "Analog Node.js",
+    "url": "https://github.com/zeropsio/recipe-analog-nodejs",
+    "config": "zerops:\n  - setup: app\n    build:\n      base: nodejs@20\n      buildCommands:\n        - pnpm i\n        - pnpm build\n      deployFiles:\n        - dist\n    run:\n      base: nodejs@20\n      ports:\n        - port: 3000\n          httpSupport: true\n      start: node dist/analog/server/index.mjs\n\n"
+  },
+  {
+    "name": "Minecraft Server",
+    "url": "https://github.com/zeropsio/recipe-minecraft-server",
+    "config": "zerops:\n  - setup: server\n    build:\n      buildCommands:\n        - wget https://piston-data.mojang.com/v1/objects/450698d1863ab5180c25d7c804ef0fe6369dd1ba/server.jar\n      deployFiles:\n        - server.jar\n        - server.properties\n        - eula.txt\n    run:\n      envReplace:\n        delimiter: $$\n        target:\n          - server.properties\n      ports:\n        - port: 25565\n          protocol: tcp\n          httpSupport: false\n      start: sudo java -Xms1G -Xmx8G -jar server.jar --nogui\n"
+  },
+  {
+    "name": "Spring Java",
+    "url": "https://github.com/zeropsio/recipe-spring",
+    "config": "zerops:\n  - setup: api\n    build:\n      base: java@21\n      buildCommands:\n        - ./mvnw clean install --define maven.test.skip\n      deployFiles:\n        - ./target/api.jar\n    run:\n      base: java@21\n      ports:\n        - port: 8080\n          httpSupport: true\n      envVariables:\n        DB_HOST: db\n        DB_PORT: $db_port\n        DB_USER: $db_user\n        DB_PASSWORD: $db_password\n        S3_ENDPOINT: $storage_apiUrl\n        S3_BUCKET: $storage_bucketName\n        S3_ACCESS_KEY: $storage_accessKeyId\n        S3_SECRET_KEY: $storage_secretAccessKey\n        MAIL_HOST: mailpit\n        MAIL_PORT: \"1025\"\n      start: java -jar target/api.jar\n"
+  },
+  {
+    "name": "Graylog",
+    "url": "https://github.com/zeropsio/recipe-graylog",
+    "config": "zerops:\n  - setup: graylog\n    build:\n      os: ubuntu\n      base:  go@1.22\n      deployFiles: [opensearch.yml, jvm.options, server.conf]\n\n    run:\n      os: ubuntu\n      base:  go@1.22\n      prepareCommands:\n          - curl -fsSL https://pgp.mongodb.com/server-6.0.asc | sudo gpg -o /usr/share/keyrings/mongodb-server-6.0.gpg --dearmor\n          - echo \"deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-6.0.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/6.0 multiverse\" | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list\n          - curl -o- https://artifacts.opensearch.org/publickeys/opensearch.pgp | sudo apt-key add -\n          - echo \"deb https://artifacts.opensearch.org/releases/bundle/opensearch/2.x/apt stable main\" | sudo tee -a /etc/apt/sources.list.d/opensearch-2.x.list\n          - sudo wget https://packages.graylog2.org/repo/packages/graylog-6.0-repository_latest.deb\n          - sudo dpkg -i graylog-6.0-repository_latest.deb\n          - sudo apt-get -y update\n          - sudo apt-get install -y mongodb-org\n          - sudo echo \"OPENSEARCH_INITIAL_ADMIN_PASSWORD=\\\"MyStrongPassword123\\\"\" >> /etc/environment\n          - sudo echo 'vm.max_map_count=262144' | sudo tee -a /etc/sysctl.conf\n          - sudo apt-get install -y opensearch\n          - sudo apt-get -y install graylog-server\n      \n      initCommands:\n        - sudo cp /var/www/opensearch.yml /etc/opensearch/\n        - sudo cp /var/www/jvm.options /etc/opensearch/\n        - sudo cp /var/www/server.conf /etc/graylog/server/\n        - sudo systemctl daemon-reload\n        - sudo systemctl enable mongod.service\n        - sudo systemctl enable opensearch.service\n        - sudo systemctl restart mongod.service\n        - sudo systemctl restart opensearch.service\n\n      ports:\n        - port: 9000\n          httpSupport: true\n  \n      start: sudo /usr/share/graylog-server/bin/graylog-server\n"
+  },
+  {
+    "name": "Angular Static",
+    "url": "https://github.com/zeropsio/recipe-angular-static",
+    "config": "zerops:\n  - setup: app\n    build:\n      base: nodejs@20\n      buildCommands:\n        - npm i\n        - npm run build\n      deployFiles:\n        - dist/recipe-angular-static/browser/~\n    run:\n      base: static\n"
+  },
+  {
+    "name": "Airflow",
+    "url": "https://github.com/zeropsio/recipe-airflow",
+    "config": "zerops:\n  - setup: airflow-production-base\n    build:\n      deployFiles:\n        - wait-mount.sh\n    run:\n      os: ubuntu\n      base: python@3.12\n      envVariables:\n        SHARED_DAGS_FOLDER: /mnt/files/dags\n        AIRFLOW_HOME: /var/www/airflow\n        AIRFLOW__CORE__LOAD_EXAMPLES: \"False\"\n        AIRFLOW__CORE__DAGS_FOLDER: ${SHARED_DAGS_FOLDER}\n        AIRFLOW__CORE__EXECUTOR: CeleryExecutor\n        AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${db_user}:${db_password}@db/db\n        AIRFLOW__CELERY__BROKER_URL: redis://redis:6379/0\n        AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://${db_user}:${db_password}@db/db\n      prepareCommands:\n        - |\n          cd /var/www\n          uv venv\n          source .venv/bin/activate\n          uv pip install --upgrade pip\n          uv pip install \"apache-airflow[celery,postgres,redis]==2.10.5\" --constraint \"https://raw.githubusercontent.com/apache/airflow/constraints-2.10.5/constraints-3.12.txt\"\n      initCommands:\n        - ./wait-mount.sh\n\n  - setup: airflowdags\n    extends: airflow-production-base\n    build:\n      deployFiles:\n        - wait-mount.sh\n        - dags\n    run:\n      initCommands:\n        - |\n          source .venv/bin/activate\n          zsc execOnce migrate -- airflow db migrate\n          zsc execOnce create-user -- airflow users create --username admin --firstname Data --lastname Enjoyer --role Admin --email data.enjoyer@email.com --password ${ADMIN_PASSWORD}\n        - ./wait-mount.sh\n        # FIXME(tikinang): Remove command after permissions of shared storage and prepare commands are fixed, rsync should be enough.\n        - sudo mkdir -p $SHARED_DAGS_FOLDER && sudo chown zerops:zerops -R $SHARED_DAGS_FOLDER\n        - rsync -avzh --delete ./dags/ $SHARED_DAGS_FOLDER\n      start: zsc noop --silent\n\n  - setup: airflowui\n    extends: airflow-production-base\n    run:\n      ports:\n        - port: 8080\n          httpSupport: true\n      start: |\n        source .venv/bin/activate\n        airflow webserver\n\n  - setup: airflowscheduler\n    extends: airflow-production-base\n    run:\n      start: |\n        source .venv/bin/activate\n        airflow scheduler\n\n  - setup: airflowworkers\n    extends: airflow-production-base\n    run:\n      start: |\n        source .venv/bin/activate\n        airflow celery worker\n\n  # STANDALONE\n  - setup: airflowstandalone\n    build:\n      deployFiles:\n        - dags\n    run:\n      os: ubuntu\n      base: python@3.12\n      envVariables:\n        AIRFLOW_HOME: /var/www/airflow\n        AIRFLOW__CORE__LOAD_EXAMPLES: \"False\"\n        AIRFLOW__CORE__DAGS_FOLDER: /var/www/dags\n      prepareCommands:\n        - |\n          cd /var/www\n          uv venv\n          source .venv/bin/activate\n          uv pip install --upgrade pip\n          uv pip install \"apache-airflow==2.10.5\" --constraint \"https://raw.githubusercontent.com/apache/airflow/constraints-2.10.5/constraints-3.12.txt\"\n      ports:\n        - port: 8080\n          httpSupport: true\n      start: |\n        source .venv/bin/activate\n        airflow standalone"
+  },
+  {
+    "name": "Nuxt Static",
+    "url": "https://github.com/zeropsio/recipe-nuxt-static",
+    "config": "zerops:\n  - setup: app\n    build:\n      base: nodejs@20\n      buildCommands:\n        - yarn\n        - yarn nuxi generate\n      deployFiles:\n        - .output/public/~\n    run:\n      base: static\n"
+  },
+  {
+    "name": "Nuxt Node.js",
+    "url": "https://github.com/zeropsio/recipe-nuxt-nodejs",
+    "config": "zerops:\n  - setup: app\n    build:\n      base: nodejs@20\n      prepareCommands:\n        - node -v\n      buildCommands:\n        - yarn\n        - yarn build\n      deployFiles:\n        - .output/~\n    run:\n      base: nodejs@20\n      ports:\n        - port: 3000\n          httpSupport: true\n      start: node server/index.mjs\n      \n"
+  },
+  {
+    "name": "Flask",
+    "url": "https://github.com/zeropsio/recipe-flask",
+    "config": "zerops:\n  - setup: python\n    build:\n      os: alpine\n      base: python@3.12\n      addToRunPrepare:\n        - requirements.txt\n      deployFiles:\n        - /\n    run:\n      os: alpine\n      base: python@3.12\n      prepareCommands:\n        - pip install --no-cache-dir -r requirements.txt\n      ports:\n        - port: 8000\n          httpSupport: true\n      start: python app.py\n"
+  },
+  {
+    "name": "Gleam",
+    "url": "https://github.com/zeropsio/recipe-gleam",
+    "config": "zerops:\n  - setup: api\n    build:\n      base: gleam@1.5\n      buildCommands:\n        - gleam export erlang-shipment\n      deployFiles: build/erlang-shipment/~\n    run:\n      base: gleam@1.5\n      envVariables:\n        DATABASE_URL: ${db_connectionString}/${db_dbName}\n      ports:\n        - port: 3000\n          httpSupport: true\n      start: ./entrypoint.sh run\n"
+  },
+  {
+    "name": "Hono Deno",
+    "url": "https://github.com/zeropsio/recipe-hono-deno",
+    "config": "zerops:\n  - setup: app\n    build:\n      base: deno@1\n      deployFiles:\n        - deno.lock\n        - main.ts\n        - deno.json\n    run:\n      base: deno@1\n      ports:\n        - port: 8000\n          httpSupport: true\n      start: deno task start\n"
+  },
+  {
+    "name": "Mattermost",
+    "url": "https://github.com/zeropsio/recipe-mattermost",
+    "config": "zerops:\n  - setup: mattermost\n    build:\n      os: alpine\n      deployFiles: migrate.sh\n    run:\n      os: ubuntu\n      base: \"22.04\"\n      prepareCommands:\n        - curl -o- https://deb.packages.mattermost.com/repo-setup.sh | sudo bash -s mattermost\n        - sudo apt-get update\n        - sudo apt-get install mattermost postgresql-client -y\n        - sudo systemctl disable mattermost\n        - sudo systemctl stop mattermost\n      initCommands:\n        - ./migrate.sh\n      start: /usr/bin/mattermost server\n      envVariables:\n        connectionString: postgres://${pgdb_user}:${pgdb_password}@${pgdb_hostname}:${pgdb_port}?sslmode=disable&connect_timeout=10&binary_parameters=yes\n        MM_CONFIG: ${connectionString}\n        MM_SQLSETTINGS_DRIVERNAME: postgres\n        MM_SQLSETTINGS_DATASOURCE: ${connectionString}\n        MM_FILESETTINGS_DRIVERNAME: amazons3\n        MM_FILESETTINGS_AMAZONS3ENDPOINT: storage-prg1.zerops.io # needs to be only host\n        MM_FILESETTINGS_AMAZONS3BUCKET: ${s3_bucketName}\n        MM_FILESETTINGS_AMAZONS3ACCESSKEYID: ${s3_accessKeyId}\n        MM_FILESETTINGS_AMAZONS3SECRETACCESSKEY: ${s3_secretAccessKey}\n        MM_LOCALIZATIONSETTINGS_DEFAULTSERVERLOCALE: en\n        MM_LOCALIZATIONSETTINGS_DEFAULTCLIENTLOCALE: en\n        MM_LOGSETTINGS_CONSOLEJSON: 'false'\n        MM_LOGSETTINGS_ENABLEFILE: 'false'\n      ports:\n        - port: 8065\n          httpSupport: true\n      healthCheck:\n        httpGet:\n          scheme: http\n          host: localhost\n          port: 8065\n          path: /api/v4/system/ping\n"
+  },
+  {
+    "name": "Uptime Kuma",
+    "url": "https://github.com/zeropsio/recipe-uptime-kuma",
+    "config": "zerops:\n  - setup: app\n    build:\n      base: nodejs@20\n      buildCommands:\n        - |\n          cd uptime-kuma\n          npm ci\n          npm run build\n      deployFiles:\n        - ./uptime-kuma/~\n    run:\n      base: nodejs@20\n      envVariables:\n        UPTIME_KUMA_DB_TYPE: mariadb\n        UPTIME_KUMA_DB_HOSTNAME: ${db_hostname}\n        UPTIME_KUMA_DB_PORT: ${db_port}\n        UPTIME_KUMA_DB_NAME: ${db_hostname}\n        UPTIME_KUMA_DB_USERNAME: ${db_hostname}\n        UPTIME_KUMA_DB_PASSWORD: ${db_password}\n      ports:\n        - port: 3001\n          httpSupport: true\n      start: sudo -E node server/server.js\n"
+  },
+  {
+    "name": "Phoenix Elixir",
+    "url": "https://github.com/zeropsio/recipe-phoenix",
+    "config": "zerops:\n  - setup: app\n    build:\n      base: elixir@1.16\n      envVariables:\n        MIX_ENV: prod\n        DATABASE_URL: ${db_connectionString}/${db_dbName}\n        SECRET_KEY_BASE: ${RUNTIME_SECRET_KEY_BASE}\n      buildCommands:\n        - mix deps.get --only prod\n        - mix ecto.create\n        - mix ecto.migrate\n        - mix compile\n        - mix assets.deploy\n        - mix phx.digest\n        - mix release --overwrite\n      deployFiles: /\n    run:\n      base: alpine@latest\n      envVariables:\n        DATABASE_URL: ${db_connectionString}/${db_dbName}\n        PORT: 4000\n        PHX_HOST: ${zeropsSubdomain}\n        POOL_SIZE: 10\n        PHX_SERVER: true\n      ports:\n        - port: 4000\n          httpSupport: true\n      start: _build/prod/rel/recipe_phoenix/bin/recipe_phoenix start"
+  },
+  {
+    "name": "Zabbix",
+    "url": "https://github.com/zeropsio/recipe-zabbix",
+    "config": "zerops:\n  - setup: zabbix\n    build:\n      deployFiles: [.]\n\n    run:\n      os: ubuntu\n      base:  ubuntu@22.04\n      prepareCommands:\n        - sudo wget https://repo.zabbix.com/zabbix/7.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_7.0-2+ubuntu22.04_all.deb\n        - sudo dpkg -i zabbix-release_7.0-2+ubuntu22.04_all.deb\n        - sudo apt-get -y update\n        - sudo apt-get -y install zabbix-server-pgsql zabbix-frontend-php php8.1-pgsql zabbix-nginx-conf zabbix-sql-scripts zabbix-agent\n        - sudo apt-get -y install postgresql-client\n\n      initCommands:\n        - sudo chmod +x /var/www/migrate.sh\n        - /var/www/migrate.sh\n        - sudo cp /var/www/zabbix_server.conf /etc/zabbix/\n        - sudo sed -i 's/pgdb_hostname/'\"${pgdb_hostname}\"'/g' /etc/zabbix/zabbix_server.conf\n        - sudo sed -i 's/pgdb_user/'\"${pgdb_user}\"'/g' /etc/zabbix/zabbix_server.conf\n        - sudo sed -i 's/pgdb_password/'\"${pgdb_password}\"'/g' /etc/zabbix/zabbix_server.conf\n        - sudo cp /var/www/nginx.conf /etc/zabbix/\n        - sudo cp /var/www/zabbix.conf.php /etc/zabbix/web/\n        - sudo sed -i 's/pgdb_hostname/'\"${pgdb_hostname}\"'/g' /etc/zabbix/web/zabbix.conf.php\n        - sudo sed -i 's/pgdb_user/'\"${pgdb_user}\"'/g' /etc/zabbix/web/zabbix.conf.php\n        - sudo sed -i 's/pgdb_password/'\"${pgdb_password}\"'/g' /etc/zabbix/web/zabbix.conf.php\n        - sudo systemctl daemon-reload\n        - sudo systemctl restart zabbix-server zabbix-agent nginx php8.1-fpm\n        - sudo systemctl enable zabbix-server zabbix-agent nginx php8.1-fpm\n\n      ports:\n        - port: 8080\n          httpSupport: true\n  \n      start: while true; do sleep 10000; done"
+  },
+  {
+    "name": "Telegram Node.js",
+    "url": "https://github.com/zeropsio/recipe-telegram-nodejs",
+    "config": "zerops:\n  - setup: bot\n    build:\n      base: nodejs@20\n      buildCommands:\n        - pnpm i\n      deployFiles:\n        - /\n    run:\n      base: nodejs@20\n      start: pnpm start\n"
+  },
+  {
+    "name": "Elysia",
+    "url": "https://github.com/zeropsio/recipe-elysia",
+    "config": "zerops:\n  - setup: elysia\n    build:\n      base: bun@1.1\n      prepareCommands:\n        - curl -fsSL https://bun.sh/install | bash\n      buildCommands:\n        - bun i --production\n      deployFiles:\n        - ./\n    run:\n      base: bun@1.1\n      ports:\n        - port: 3000\n          httpSupport: true\n      prepareCommands:\n        - curl -fsSL https://bun.sh/install | bash\n      start: NODE_ENV=production bun src/index.ts\n"
+  },
+  {
+    "name": "Nitro Node.js",
+    "url": "https://github.com/zeropsio/recipe-nitro-nodejs",
+    "config": "zerops:\n  - setup: nitro\n    build:\n      base: nodejs@20\n      envVariables:\n        SERVER_PRESET: zerops\n      buildCommands:\n        - pnpm i\n        - pnpm run build\n      deployFiles:\n        - .output\n        - package.json\n        - node_modules\n    run:\n      base: nodejs@20\n      ports:\n        - port: 3000\n          httpSupport: true\n      start: node .output/server/index.mjs\n"
+  },
+  {
+    "name": "Nitro Static",
+    "url": "https://github.com/zeropsio/recipe-nitro-static",
+    "config": "zerops:\n  - setup: app\n    build:\n      base: nodejs@20\n      envVariables:\n        SERVER_PRESET: zerops-static\n      buildCommands:\n        - pnpm i\n        - pnpm build\n      deployFiles:\n        - .zerops/output/static/~\n    run:\n      base: static\n"
+  },
+  {
+    "name": "Medama",
+    "url": "https://github.com/zeropsio/recipe-medama",
+    "config": "zerops:\n  - setup: app\n    build:\n      deployFiles: [.]\n    run:\n      os: ubuntu\n      base:  go@1\n      prepareCommands:\n        - sudo wget -P /var/www/ https://github.com/medama-io/medama/releases/download/v0.4.4/medama-v0.4.4-linux-amd64.zip\n      initCommands:\n        - yes | sudo unzip -q /var/www/medama-v0.4.4-linux-amd64.zip\n        - sudo chmod +x /var/www/medama_linux_amd64\n\n      ports:\n        - port: 8080\n          httpSupport: true\n  \n      start: sudo /var/www/medama_linux_amd64 start -analyticsdb /mnt/sharedstorage0/me_analytics.db -appdb /mnt/sharedstorage0/me_meta.db"
+  },
+  {
+    "name": "Ember.js",
+    "url": "https://github.com/zeropsio/recipe-ember",
+    "config": "zerops:\n  - setup: app\n    build:\n      base: nodejs@20\n      buildCommands:\n        - pnpm i\n        - pnpm run build\n      deployFiles:\n        - /\n    run:\n      base: nodejs@20\n      ports:\n        - port: 4200\n          httpSupport: true\n      start: pnpm start\n"
+  },
+  {
+    "name": "Scala",
+    "url": "https://github.com/zeropsio/recipe-scala",
+    "config": "zerops:\n  - setup: app\n    build:\n      base: ubuntu@22.04\n      prepareCommands:\n        - sudo apt-get update -y\n        - sudo apt-get install default-jdk -y\n        - sudo apt-get install scala -y\n        - echo \"deb https://repo.scala-sbt.org/scalasbt/debian all main\" | sudo tee /etc/apt/sources.list.d/sbt.list\n        - echo \"deb https://repo.scala-sbt.org/scalasbt/debian /\" | sudo tee /etc/apt/sources.list.d/sbt_old.list\n        - curl -sL \"https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x99E82A75642AC823\" | sudo apt-key add\n        - sudo apt-get update -y\n        - sudo apt-get install sbt -y\n      deployFiles: /\n    run:\n      base: ubuntu@22.04\n      prepareCommands:\n        - sudo apt-get update -y\n        - sudo apt-get install default-jdk -y\n        - sudo apt-get install scala -y\n        - echo \"deb https://repo.scala-sbt.org/scalasbt/debian all main\" | sudo tee /etc/apt/sources.list.d/sbt.list\n        - echo \"deb https://repo.scala-sbt.org/scalasbt/debian /\" | sudo tee /etc/apt/sources.list.d/sbt_old.list\n        - curl -sL \"https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x99E82A75642AC823\" | sudo apt-key add\n        - sudo apt-get update -y\n        - sudo apt-get install sbt -y\n      ports:\n        - port: 9000\n          httpSupport: true\n      start: sbt run\n"
+  },
+  {
+    "name": "Sails",
+    "url": "https://github.com/zeropsio/recipe-sails",
+    "config": "zerops:\n  - setup: app\n    build:\n      base: nodejs@20\n      buildCommands:\n        - pnpm i\n        - pnpm build\n      deployFiles:\n        - /\n    run:\n      base: nodejs@20\n      ports:\n        - port: 1337\n          httpSupport: true\n      start: node app.js\n"
+  },
+  {
+    "name": "Adonis",
+    "url": "https://github.com/zeropsio/recipe-adonis",
+    "config": "zerops:\n  - setup: app\n    build:\n      base: nodejs@20\n      buildCommands:\n        - pnpm i\n        - pnpm run build\n        - cd build & pnpm i --prod\n      deployFiles:\n        - build/~\n    run:\n      base: nodejs@20\n      ports:\n        - port: 3000\n          httpSupport: true\n      envVariables:\n        TZ: UTC\n        PORT: 3333\n        HOST: localhost\n        LOG_LEVEL: info\n        APP_KEY: NTq5-pBUstxNeMhzLRKQazAbawS3suyh\n        NODE_ENV: development\n        DB_HOST: db\n        DB_PORT: 5432\n        DB_USER: db\n        DB_PASSWORD: ${db_password}\n        DB_DATABASE: db\n        SESSION_DRIVER: cookie\n      start: node bin/server.js\n"
+  },
+  {
+    "name": "Wordpress",
+    "url": "https://github.com/zeropsio/recipe-wordpress",
+    "config": "zerops:\n  - setup: base\n    build:\n      os: ubuntu\n      base: php@8.3\n      envVariables:\n        COMPOSER_ALLOW_SUPERUSER: 1\n      prepareCommands:\n        - composer self-update\n      buildCommands:\n        - composer install --no-dev --optimize-autoloader --no-interaction\n      deployFiles:\n        - ./\n    run:\n      os: ubuntu\n      base: php-nginx@8.3\n      envVariables:\n        HTTP_X_FORWARDED_PROTO: https\n\n        WORDPRESS_DB_HOST: ${db_hostname}\n        WORDPRESS_DB_NAME: ${hostname}\n        WORDPRESS_DB_PASSWORD: ${db_password}\n        WORDPRESS_DB_USER: ${db_user}\n        WORDPRESS_TABLE_PREFIX: wp_\n\n        WORDPRESS_STORAGE_ACCESS_KEY: ${storage_secretAccessKey}\n        WORDPRESS_STORAGE_BUCKET: ${storage_bucketName}/${hostname}\n        WORDPRESS_STORAGE_KEY_ID: ${storage_accessKeyId}\n        WORDPRESS_STORAGE_URL: ${storage_apiUrl}\n\n        WORDPRESS_REDIS_USER_SESSION_HOST: ${redis_hostname}\n      initCommands:\n        - sudo -E -u zerops -- zsc execOnce initialize -- sh ./utils/initialize.sh\n        - sudo -E -u zerops -- zsc execOnce ${appVersionId} -- sh ./utils/upgrade.sh\n      prepareCommands:\n        - apt-get update && apt-get install -y mariadb-client\n        - curl -sS https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar -o wp-cli.phar\n        - chmod +x wp-cli.phar\n        - sudo mv wp-cli.phar /usr/local/bin/wp\n      siteConfigPath: site.conf.tmpl\n\n  - setup: app\n    extends: base\n"
+  },
+  {
+    "name": "Symfony",
+    "url": "https://github.com/zeropsio/recipe-symfony",
+    "config": "zerops:\n  - setup: app\n    build:\n      base: php@8.3\n      buildCommands:\n        - composer install --optimize-autoloader --no-dev\n        - php bin/console asset-map:compile\n        - php bin/console cache:warmup\n      deployFiles: ./\n      cache:\n        - vendor\n        - composer.lock\n      envVariables:\n        APP_ENV: prod\n    run:\n      base: php-nginx@8.3\n      initCommands:\n        - php bin/console doctrine:migrations:migrate\n      envVariables:\n        APP_ENV: prod\n        TRUSTED_PROXIES: 127.0.0.1,10.0.0.0/8\n        DATABASE_URL: \"${db_connectionString}/${db_dbName}?serverVersion=16&charset=utf8\"\n        MAILER_DSN: \"smtp://mailpit:1025\"\n      documentRoot: public\n"
+  },
+  {
+    "name": "Filament",
+    "url": "https://github.com/zeropsio/recipe-filament",
+    "config": "zerops:\n  - setup: app\n    build:\n      base:\n        - php@8.3\n      os: alpine\n      buildCommands:\n        - composer install --ignore-platform-reqs\n      deployFiles: ./\n      cache:\n        - vendor\n        - composer.lock\n    deploy:\n      readinessCheck:\n        httpGet:\n          port: 80\n          path: /up\n    run:\n      base: php-nginx@8.3\n      os: alpine\n      siteConfigPath: site.conf.tmpl\n      envVariables:\n        APP_NAME: \"Filament X Zerops\"\n        APP_LOCALE: en\n        APP_FAKER_LOCALE: en_US\n        APP_FALLBACK_LOCALE: en\n        APP_MAINTENANCE_DRIVER: file\n        APP_MAINTENANCE_STORE: database\n        APP_TIMEZONE: UTC\n        APP_URL: ${zeropsSubdomain}\n\n        DB_CONNECTION: pgsql\n        DB_DATABASE: db\n        DB_HOST: db\n        DB_USERNAME: ${db_user}\n        DB_PASSWORD: ${db_password}\n        DB_PORT: 5432\n\n        LOG_CHANNEL: syslog\n        LOG_LEVEL: debug\n        LOG_STACK: single\n\n        MAIL_FROM_ADDRESS: hello@example.com\n        MAIL_FROM_NAME: FilamentZerops\n        MAIL_HOST: mailpit\n        MAIL_MAILER: smtp\n        MAIL_PORT: 1025\n\n        BROADCAST_CONNECTION: redis\n        CACHE_PREFIX: cache\n        CACHE_STORE: redis\n        QUEUE_CONNECTION: redis\n        REDIS_CLIENT: phpredis\n        REDIS_HOST: redis\n        REDIS_PORT: 6379\n        SESSION_DRIVER: redis\n        SESSION_ENCRYPT: false\n        SESSION_LIFETIME: 120\n        SESSION_PATH: /\n\n        AWS_ACCESS_KEY_ID: ${storage_accessKeyId}\n        AWS_REGION: us-east-1\n        AWS_BUCKET: ${storage_bucketName}\n        AWS_ENDPOINT: ${storage_apiUrl}\n        AWS_SECRET_ACCESS_KEY: ${storage_secretAccessKey}\n        AWS_URL: ${storage_apiUrl}/${storage_bucketName}\n        AWS_USE_PATH_STYLE_ENDPOINT: true\n\n        BCRYPT_ROUNDS: 12\n        FILESYSTEM_DISK: s3\n        FILAMENT_FILESYSTEM_DISK: s3\n\n      initCommands:\n        - php artisan view:cache\n        - php artisan config:cache\n        - php artisan route:cache\n        - sudo -E -u zerops -- zsc execOnce ${appVersionId} -- php artisan migrate --isolated --force\n        - sudo -E -u zerops -- zsc execOnce initialize -- php artisan db:seed --force\n        - php artisan optimize\n      healthCheck:\n        httpGet:\n          port: 80\n          path: /up\n"
+  },
+  {
+    "name": "Quake3 Server",
+    "url": "https://github.com/zeropsio/recipe-quake3-server",
+    "config": "zerops:\n  - setup: server\n    build:\n      deployFiles:\n        - q3server.cfg\n    run:\n      os: ubuntu\n      base: ubuntu@22.04\n      prepareCommands:\n        - sudo dpkg --add-architecture i386\n        - sudo apt-get update\n        - sudo apt-get install -y jq\n        - cd /var/www && curl -Lo linuxgsm.sh https://linuxgsm.sh && chmod +x linuxgsm.sh && sudo -u zerops -n bash linuxgsm.sh q3server\n        - cd /var/www && sudo -u zerops -n ./q3server auto-install\n      initCommands:\n        - mv q3server.cfg serverfiles/baseq3/q3server.cfg\n        - ./q3server start\n      start: tail -f log/console/q3server-console.log\n      ports:\n        - port: 27960\n          protocol: udp\n          description: \"game & query port\"\n      envReplace:\n        target: q3server.cfg\n        delimiter: '%'\n      envVariables:\n        SV_HOSTNAME: \"Quake 3: Arena server hosted on zerops.io\"\n        MOTD: \"Welcome to zerops.io Quake 3: Arena\"\n        ENABLE_BOTS: 1\n        MIN_PLAYERS: 8\n        MAX_PLAYERS: 16\n        TIME_LIMIT: 10\n        FRAG_LIMIT: 30"
+  },
+  {
+    "name": "Twill",
+    "url": "https://github.com/zeropsio/recipe-twill",
+    "config": "zerops:\n  - setup: app\n    build:\n      base:\n        - php@8.3\n        - nodejs@18\n      os: alpine\n      buildCommands:\n        - composer install --optimize-autoloader --no-dev\n        - npm install\n        - npm run build\n      deployFiles: ./\n      cache:\n        - vendor\n        - composer.lock\n        - node_modules\n        - package-lock.json\n    deploy:\n      readinessCheck:\n        httpGet:\n          port: 80\n          path: /up\n    run:\n      base: php-nginx@8.3\n      os: ubuntu\n      siteConfigPath: site.conf.tmpl\n      envVariables:\n        APP_NAME: ZeropsTwill\n        APP_LOCALE: en\n        APP_FAKER_LOCALE: en_US\n        APP_FALLBACK_LOCALE: en\n        APP_MAINTENANCE_DRIVER: file\n        APP_MAINTENANCE_STORE: database\n        APP_TIMEZONE: UTC\n        APP_URL: ${zeropsSubdomain}\n\n        DB_CONNECTION: pgsql\n        DB_DATABASE: db\n        DB_HOST: db\n        DB_USERNAME: ${db_user}\n        DB_PASSWORD: ${db_password}\n        DB_PORT: 5432\n\n        LOG_CHANNEL: syslog\n        LOG_LEVEL: debug\n        LOG_STACK: single\n\n        MAIL_FROM_ADDRESS: hello@example.com\n        MAIL_FROM_NAME: ZeropsLaravel\n        MAIL_HOST: mailpit\n        MAIL_MAILER: smtp\n        MAIL_PORT: 1025\n\n        BROADCAST_CONNECTION: redis\n        CACHE_PREFIX: cache\n        CACHE_STORE: redis\n        QUEUE_CONNECTION: redis\n        REDIS_CLIENT: phpredis\n        REDIS_HOST: redis\n        REDIS_PORT: 6379\n        SESSION_DRIVER: redis\n        SESSION_ENCRYPT: false\n        SESSION_LIFETIME: 120\n        SESSION_PATH: /\n\n        BCRYPT_ROUNDS: 12\n\n        MEDIA_LIBRARY_ENDPOINT_TYPE: s3\n        GLIDE_USE_SOURCE_DISK: s3\n\n        AWS_ACCESS_KEY_ID: ${storage_accessKeyId}\n        AWS_REGION: us-east-1\n        AWS_BUCKET: ${storage_bucketName}\n        AWS_ENDPOINT: ${storage_apiUrl}\n        AWS_SECRET_ACCESS_KEY: ${storage_secretAccessKey}\n        AWS_URL: ${storage_apiUrl}/${storage_bucketName}\n        AWS_USE_PATH_STYLE_ENDPOINT: true\n\n      initCommands:\n        - sudo -E -u zerops -- zsc execOnce initialize -- php artisan twill:install -n --env=development\n        - sudo -E -u zerops -- zsc execOnce initializeadmin -- php artisan twill:superadmin twill@zerops.io zerops\n        - sudo -E -u zerops -- zsc execOnce ${appVersionId} -- php artisan migrate --isolated --force\n        - sudo -E -u zerops -- zsc execOnce initializeSeed -- php artisan db:seed --force\n#        - php artisan view:cache\n#        - php artisan config:cache\n#        - php artisan route:cache\n#        - php artisan optimize\n      healthCheck:\n        httpGet:\n          port: 80\n          path: /up\n"
+  },
+  {
+    "name": "Imgproxy",
+    "url": "https://github.com/zeropsio/recipe-imgproxy",
+    "config": "zerops:\n  - setup: imgproxy\n    build:\n      os: ubuntu\n      base: go@latest\n      buildCommands:\n        - echo \"noop\"\n      deployFiles:\n        - ./proxy.conf\n        - ./setup.sh\n    run:\n      os: ubuntu\n      base: ubuntu@latest\n      prepareCommands:\n        - sudo apt-get -y update\n        - sudo apt-get -y install nginx\n        - sudo wget -O imgproxy.deb https://github.com/zeropsio/deb-packages/releases/download/imgproxy-v3.26.1/imgproxy.amd64.deb\n        - sudo dpkg -i imgproxy.deb\n      ports:\n        - port: 80\n          httpSupport: true\n      initCommands:\n        - sudo sh setup.sh\n      start: imgproxy\n"
+  },
+  {
+    "name": "Supertokens",
+    "url": "https://github.com/zeropsio/recipe-supertokens",
+    "config": "zerops:\n  - setup: supertokens\n    build:\n      buildCommands:\n        - echo \"noop\"\n      deployFiles: ./supertokens-core/~\n    run:\n      base: ubuntu@22.04\n      prepareCommands:\n        - curl 'https://api.supertokens.com/0/user/app/download?pluginName=postgresql&os=linux&core=9.3.0&api-version=0' --output supertokens.zip\n        - unzip supertokens.zip\n        - cd supertokens && sudo sh install\n        - rm -rf supertokens\n        - rm supertokens.zip\n      ports:\n        - port: 3567\n          httpSupport: true\n      envVariables:\n        POSTGRESQL_PASSWORD: ${db_password}\n        POSTGRESQL_HOST: ${db_hostname}\n        POSTGRESQL_PORT: ${db_port}\n        POSTGRESQL_DATABASE_NAME: ${db_dbName}\n        POSTGRESQL_USER: ${db_user}\n        SUPERTOKENS_PORT: 3567\n      initCommands:\n        - sh setup-envs.sh\n      start: supertokens start --foreground --with-config=\"/tmp/supertokens-config.yml\"\n      healthCheck:\n        httpGet:\n          port: 3567\n          path: /hello\n    deploy:\n      readinessCheck:\n        httpGet:\n          port: 3567\n          path: /hello\n\n  - setup: nodejsbackend\n    build:\n      base: nodejs@22\n      buildCommands:\n        - |\n          cd supertokens-nodejs-backend\n          npm i\n      deployFiles: ./supertokens-nodejs-backend/~\n    run:\n      base: nodejs@22\n      initCommands:\n        - zsc execOnce INIT_ADMIN_USER -- sh create-admin-user.sh\n        - zsc execOnce INIT_SEED_USER -- sh create-seed-user.sh\n      ports:\n        - port: 3001\n          httpSupport: true\n      start: npm start\n      healthCheck:\n        httpGet:\n          port: 3001\n          path: /health\n    deploy:\n      readinessCheck:\n        httpGet:\n          port: 3001\n          path: /health\n\n  - setup: angularfrontend\n    build:\n      base: nodejs@20\n      buildCommands:\n        - |\n          cd supertokens-angular-frontend\n          npm ci\n          npm run build\n      deployFiles:\n        - ./supertokens-angular-frontend/dist/angular-prebuilt/browser/~\n    run:\n      base: static\n      routing:\n        redirects:\n          - from: /*\n            to: /index.html\n      envReplace:\n        target:\n          - ./\n        delimiter:\n          - \"$$\"\n      healthCheck:\n        httpGet:\n          port: 80\n          path: /\n    deploy:\n      readinessCheck:\n        httpGet:\n          port: 80\n          path: /\n\n\n\n\n\n"
+  },
+  {
+    "name": "Medusa",
+    "url": "https://github.com/zeropsio/recipe-medusa",
+    "config": "zerops:\n  - setup: medusa\n    build:\n      envVariables:\n        BACKEND_URL: ${MEDUSA_INSTANCE_URL}\n      base: nodejs@22\n      buildCommands:\n        - yarn\n        - yarn build\n      deployFiles:\n        - .medusa/server/~\n        - tsconfig.json\n        - node_modules\n        - ./src/scripts/seed-files\n      cache: node_modules\n    deploy:\n      readinessCheck:\n        httpGet:\n          port: 9000\n          path: /health\n    run:\n      base: nodejs@22\n      envVariables:\n        DATABASE_TYPE: postgres\n        NODE_ENV: production\n        BACKEND_URL: ${MEDUSA_INSTANCE_URL}\n        STORE_CORS: ${NEXT_STORE_URL},${ANALOG_STORE_URL},http://localhost:5173,http://localhost:3000\n        DATABASE_URL: postgresql://${db_user}:${db_password}@${db_hostname}:5432/${db_hostname}?ssl_mode=disable\n        MINIO_BUCKET: ${storage_bucketName}\n        MINIO_ENDPOINT: ${storage_apiUrl}\n        MINIO_SECRET_KEY: ${storage_secretAccessKey}\n        MINIO_ACCESS_KEY: ${storage_accessKeyId}\n        REDIS_URL: redis://${redis_hostname}:6379\n        CACHE_REDIS_URL: redis://${redis_hostname}:6379\n        EVENTS_REDIS_URL: redis://${redis_hostname}:6379\n        MEILISEARCH_HOST: http://${search_hostname}:${search_port}\n        MEILISEARCH_API_KEY: ${search_masterKey}\n      initCommands:\n        # with each deploy\n        - zsc execOnce ${appVersionId}_migration -- yarn migrate\n        - zsc execOnce ${appVersionId}_links -- yarn syncLinks\n        # initial setup, happens once in service lifetime\n        - zsc execOnce createInitialSuperadmin -- yarn createInitialSuperadmin\n        - zsc execOnce seedInitialData -- yarn seedInitialData\n        - zsc execOnce setInitialPublishableKey -- yarn setInitialPublishableKey\n        - zsc execOnce addInitialSearchDocuments -- yarn addInitialSearchDocuments\n      ports:\n        - port: 9000\n          httpSupport: true\n      start: yarn start\n      healthCheck:\n        httpGet:\n          port: 9000\n          path: /health\n"
+  },
+  {
+    "name": "Medusa Analogstore",
+    "url": "https://github.com/zeropsio/recipe-medusa-analogstore",
+    "config": "zerops:\n  - setup: analogstore\n    build:\n      base: nodejs@22\n      envVariables:\n        VITE_MEDUSA_BACKEND_URL: ${RUNTIME_VITE_MEDUSA_BACKEND_URL}\n        VITE_MEILISEARCH_API_KEY: ${RUNTIME_VITE_MEILISEARCH_API_KEY}\n        VITE_MEDUSA_INSTANCE_URL: ${RUNTIME_VITE_MEDUSA_INSTANCE_URL}\n        VITE_MEDUSA_CHANNEL_PUBLISHABLE_KEY: ${RUNTIME_VITE_MEDUSA_CHANNEL_PUBLISHABLE_KEY}\n        VITE_PUBLIC_BASE_URL: ${RUNTIME_VITE_PUBLIC_BASE_URL}\n      buildCommands:\n        - npm i\n        - npm run build\n      deployFiles:\n        - dist\n      cache: node_modules\n    run:\n      base: nodejs@22\n      envVariables:\n        VITE_MEDUSA_BACKEND_URL: ${MEDUSA_INSTANCE_URL}\n        VITE_MEDUSA_CHANNEL_PUBLISHABLE_KEY: ${medusa_CHANNEL_PUBLISHABLE_KEY}\n        VITE_PUBLIC_BASE_URL: ${ANALOG_STORE_URL}\n        VITE_MEILISEARCH_HOST: ${SEARCH_URL}\n        VITE_MEILISEARCH_API_KEY: ${search_defaultSearchKey}\n      ports:\n        - port: 3000\n          httpSupport: true\n      start: node dist/analog/server/index.mjs\n"
+  },
+  {
+    "name": "Tegola",
+    "url": "https://github.com/zeropsio/recipe-tegola",
+    "config": "zerops:\n  - setup: tegola\n    build:\n      envVariables:\n        TEGOLA_VERSION: v0.20.0\n      buildCommands:\n        - wget https://github.com/go-spatial/tegola/releases/download/${TEGOLA_VERSION}/tegola_linux_amd64.zip\n        - unzip tegola_linux_amd64.zip\n        - chmod +x tegola\n        - tar -xzf data/bonn_example.tar.gz -C data && rm data/bonn_example.tar.gz\n      deployFiles:\n        - tegola\n        - data/\n        - config/\n    deploy:\n      readinessCheck:\n        httpGet:\n          path: /\n          port: 8080\n    run:\n      os: ubuntu\n      base: ubuntu@24.04\n      envVariables:\n        DB_HOST: $postgis_hostname\n        DB_PORT: $postgis_port\n        DB_USER: $postgis_user\n        DB_PASSWORD: $postgis_password\n        DB_NAME: bonn\n        TEGOLA_POSTGIS_SSL: disable\n        TEGOLA_REDIS_SSL: false\n        REDIS_HOST: redis:6379\n\n        TEGOLA_SQL_DEBUG: LAYER_SQL\n        LOG_LEVEL: INFO\n\n        # For migrations.\n        PGUSER: $postgis_superUser\n        PGPASSWORD: $postgis_superUserPassword\n      ports:\n        - port: 8080\n          httpSupport: true\n      prepareCommands:\n        - sudo apt-get update\n        - sudo apt-get install -y postgresql-client\n      initCommands:\n        - zsc execOnce \"only-once\" -- ./data/init.sh\n      start: ./tegola serve --config=config/config-mvt-postgis.toml --log-level $LOG_LEVEL\n"
+  },
+  {
+    "name": "Elixir",
+    "url": "https://github.com/zeropsio/recipe-elixir",
+    "config": "zerops:\n  - setup: api\n    build:\n      base: elixir@1.16\n      envVariables:\n        MIX_ENV: prod\n        DATABASE_URL: ${db_connectionString}/${db_dbName}\n      buildCommands:\n        - mix deps.get --only prod\n        - mix ecto.create\n        - mix ecto.migrate\n        - mix compile\n        - mix release --overwrite\n      deployFiles: _build/prod/rel/app/~\n    run:\n      base: alpine@latest\n      envVariables:\n        DATABASE_URL: ${db_connectionString}/${db_dbName}\n        PORT: 4000\n        POOL_SIZE: 10\n      ports:\n        - port: 4000\n          httpSupport: true\n      start: bin/app start\n"
+  },
+  {
+    "name": "Laravel Minimal",
+    "url": "https://github.com/zeropsio/recipe-laravel-minimal",
+    "config": "zerops:\n  - setup: app\n    build:\n      base:\n        - php@8.4\n      os: alpine\n      buildCommands:\n        - composer install --ignore-platform-reqs\n      deployFiles: ./\n      cache:\n        - vendor\n        - composer.lock\n    deploy:\n      readinessCheck:\n        httpGet:\n          port: 80\n          path: /up\n    run:\n      base: php-nginx@8.4\n      os: alpine\n      siteConfigPath: site.conf.tmpl\n      envVariables:\n        APP_NAME: \"Laravel Minimal X Zerops\"\n        APP_LOCALE: en\n        APP_FAKER_LOCALE: en_US\n        APP_FALLBACK_LOCALE: en\n        APP_MAINTENANCE_DRIVER: file\n        APP_MAINTENANCE_STORE: database\n        APP_TIMEZONE: UTC\n        APP_URL: ${zeropsSubdomain}\n\n        DB_CONNECTION: pgsql\n        DB_DATABASE: db\n        DB_HOST: db\n        DB_USERNAME: ${db_user}\n        DB_PASSWORD: ${db_password}\n        DB_PORT: 5432\n\n        LOG_CHANNEL: syslog\n        LOG_LEVEL: debug\n        LOG_STACK: single\n\n        MAIL_MAILER: log\n        MAIL_HOST: 127.0.0.1\n        MAIL_PORT: 2525\n        MAIL_USERNAME: null\n        MAIL_PASSWORD: null\n        MAIL_ENCRYPTION: null\n        MAIL_FROM_ADDRESS: \"hello@zerops.io\"\n        MAIL_FROM_NAME: \"${APP_NAME}\"\n\n        SESSION_DRIVER: database\n        SESSION_LIFETIME: 120\n        SESSION_ENCRYPT: false\n        SESSION_PATH: /\n        SESSION_DOMAIN: null\n\n        BROADCAST_CONNECTION: log\n        FILESYSTEM_DISK: local\n        QUEUE_CONNECTION: database\n\n        CACHE_STORE: database\n\n      initCommands:\n        - php artisan view:cache\n        - php artisan config:cache\n        - php artisan route:cache\n        - sudo -E -u zerops -- zsc execOnce ${appVersionId} -- php artisan migrate --force\n        - php artisan optimize\n      healthCheck:\n        httpGet:\n          port: 80\n          path: /up\n"
+  },
+  {
+    "name": "Elastic Stack",
+    "url": "https://github.com/zeropsio/recipe-elastic-stack",
+    "config": "zerops:\n  # Kibana\n  - setup: kibana\n    build:\n      deployFiles:\n        - kibana/kibana.yml\n    deploy:\n      readinessCheck:\n        httpGet:\n          path: /\n          port: 5601\n    run:\n      os: ubuntu\n      base: ubuntu@24.04\n      ports:\n        - port: 5601\n          httpSupport: true\n      prepareCommands:\n        - wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo gpg --dearmor -o /usr/share/keyrings/elasticsearch-keyring.gpg\n        - echo \"deb [signed-by=/usr/share/keyrings/elasticsearch-keyring.gpg] https://artifacts.elastic.co/packages/8.x/apt stable main\" | sudo tee /etc/apt/sources.list.d/elastic-8.x.list\n        - sudo apt-get update && sudo apt-get install kibana=8.16.6\n        - sudo apt-get autoremove && sudo apt-get clean # Make runtime image smaller.\n      envReplace:\n        delimiter: '%%'\n        target:\n          - kibana/kibana.yml\n      initCommands:\n        - sudo cp -f kibana/kibana.yml /etc/kibana/kibana.yml\n        - sudo chown -R kibana /etc/kibana\n        - sudo systemctl start kibana\n      start: zsc noop --silent\n\n  # Logstash\n  - setup: logstash\n    build:\n      deployFiles:\n        - logstash/logstash.yml\n        - logstash/zerops-syslog.conf\n    run:\n      os: ubuntu\n      base: ubuntu@24.04\n      ports:\n        - port: 1514\n          protocol: udp\n        - port: 1514\n          protocol: tcp\n      prepareCommands:\n        - wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo gpg --dearmor -o /usr/share/keyrings/elasticsearch-keyring.gpg\n        - echo \"deb [signed-by=/usr/share/keyrings/elasticsearch-keyring.gpg] https://artifacts.elastic.co/packages/8.x/apt stable main\" | sudo tee /etc/apt/sources.list.d/elastic-8.x.list\n        - sudo apt-get update && sudo apt-get install logstash\n        - sudo apt-get autoremove && sudo apt-get clean # Make runtime image smaller.\n      envReplace:\n        delimiter: '%%'\n        target:\n          - logstash/zerops-syslog.conf\n      initCommands:\n        - sudo cp -f logstash/zerops-syslog.conf /etc/logstash/conf.d/zerops-syslog.conf\n        - sudo cp -f logstash/logstash.yml /etc/logstash/logstash.yml\n        - sudo chown -R logstash /etc/logstash\n        - sudo systemctl start logstash\n      start: zsc noop --silent\n\n  # APM Server\n  - setup: apmserver\n    build:\n      deployFiles:\n        - apm-server/apm-server.yml\n    deploy:\n      readinessCheck:\n        httpGet:\n          path: /\n          port: 8200\n    run:\n      os: ubuntu\n      base: ubuntu@24.04\n      ports:\n        - port: 8200\n          httpSupport: true\n      prepareCommands:\n        - wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo gpg --dearmor -o /usr/share/keyrings/elasticsearch-keyring.gpg\n        - echo \"deb [signed-by=/usr/share/keyrings/elasticsearch-keyring.gpg] https://artifacts.elastic.co/packages/8.x/apt stable main\" | sudo tee /etc/apt/sources.list.d/elastic-8.x.list\n        - sudo apt-get update && sudo apt-get install apm-server\n        - sudo apt-get autoremove && sudo apt-get clean # Make runtime image smaller.\n      envReplace:\n        delimiter: '%%'\n        target:\n          - apm-server/apm-server.yml\n      initCommands:\n        - sudo cp -f apm-server/apm-server.yml /etc/apm-server/apm-server.yml\n        - sudo chown -R apm-server /etc/apm-server\n        - sudo systemctl start apm-server\n      start: zsc noop --silent\n"
+  },
+  {
+    "name": "Odoo",
+    "url": "https://github.com/zeropsio/recipe-odoo",
+    "config": "zerops: \n  - setup: odoo\n    build:\n      os: ubuntu\n      base: python@3.11\n      envVariables:\n        DEBIAN_FRONTEND: noninteractive\n      prepareCommands:\n        - apt-get update\n        - apt-get install -y python3-pip libldap2-dev libpq-dev libsasl2-dev wkhtmltopdf\n      buildCommands:\n        - (mv init.sh /tmp/ && rm -rf * .[!.]* || true)\n        - git clone --depth=1 --branch 18.0 --single-branch https://github.com/odoo/odoo.git .\n        - mv /tmp/init.sh ./\n        - python3 -m pip install --target ./vendor -r requirements.txt\n      deployFiles:\n        - init.sh\n        - addons\n        - odoo\n        - odoo-bin\n        - vendor\n    run:\n      os: ubuntu\n      base: python@3.11  \n      envVariables:\n        DB_HOST: ${db_hostname}\n        DB_PORT: ${db_port}\n        DB_USER: ${db_superUser}\n        DB_PASSWORD: ${db_superUserPassword}\n        PYTHONPATH: /var/www/vendor:/var/www\n        DEBIAN_FRONTEND: noninteractive\n      prepareCommands:\n        - apt-get update\n        - apt-get install -y --no-install-recommends python3-pip libldap2-dev libpq-dev libsasl2-dev wkhtmltopdf postgresql-client\n        - apt-get clean\n        - rm -rf /var/lib/apt/lists/*\n      initCommands:\n        - zsc execOnce INIT -- sh init.sh\n      start: exec python3 odoo-bin --workers=4 --max-cron-threads=2 --db_host=$DB_HOST --db_port=$DB_PORT --db_user=$DB_ODOO_USER --db_password=$DB_ODOO_PASSWORD\n      ports:\n        - port: 8069\n          httpSupport: true\n        - port: 8072\n          httpSupport: true\n          \n"
+  },
+  {
+    "name": "Turborepo",
+    "url": "https://github.com/zeropsio/recipe-turborepo",
+    "config": "zerops:\n  - setup: frontend\n    build:\n      base: nodejs@20\n      buildCommands:\n        - pnpm i\n        - pnpm run build\n      deployFiles: /\n    run:\n      base: nodejs@20\n      ports:\n        - port: 3000\n          httpSupport: true\n        - port: 3001\n          httpSupport: true\n      startCommands:\n        - command: pnpm run start:web\n          name: web\n        - command: pnpm run start:docs\n          name: docs\n\n"
+  },
+  {
+    "name": "Docker",
+    "url": "https://github.com/zeropsio/recipe-docker",
+    "config": "zerops:\n  - setup: app \n    run:\n      base: docker@26.1\n      # download and cache docker image\n      prepareCommands:\n        - docker image pull crccheck/hello-world\n      # start docker, --network=host needed\n      start: docker run --network=host crccheck/hello-world\n\n      # what ports docker exposes\n      # and whether it supports http traffic\n      ports:\n        - port: 8000\n          httpSupport: true\n"
+  },
+  {
+    "name": "Directus",
+    "url": "https://github.com/zeropsio/recipe-directus",
+    "config": "zerops:\n  - setup: directus\n    build:\n      base: nodejs@22\n      buildCommands:\n        - npm i\n      deployFiles:\n        - ./\n      cache: \n        - node_modules\n    run:\n      base: nodejs@22\n      prepareCommands:\n        - npm i -g directus\n      envVariables:\n        PUBLIC_URL: ${zeropsSubdomain}\n        DB_CLIENT: pg\n        DB_CONNECTION_STRING: ${db_connectionString}/${db_dbName}\n        \n        # Fill out the redis configuration for HA deployments.\n        # See: https://docs.directus.io/self-hosted/config-options.html#redis\n        REDIS: ${redis_connectionString}\n        \n        RATE_LIMITER_ENABLED: true\n        RATE_LIMITER_STORE: redis\n        \n        # Adjust accordingly depending on your setup.\n        # https://docs.directus.io/self-hosted/config-options.html#cache\n        CACHE_ENABLED: true\n        CACHE_STORE: redis\n        CACHE_AUTO_PURGE: true\n        CACHE_TTL: 5m\n        \n        STORAGE_LOCATIONS: s3\n        STORAGE_S3_DRIVER: s3\n        STORAGE_S3_KEY: ${storage_accessKeyId}\n        STORAGE_S3_SECRET: ${storage_secretAccessKey}\n        STORAGE_S3_BUCKET: ${storage_bucketName}\n        STORAGE_S3_REGION: us-east-1\n        STORAGE_S3_ENDPOINT: ${storage_apiUrl}\n        STORAGE_S3_FORCE_PATH_STYLE: true\n        \n        EMAIL_FROM: no-reply@example.com\n        EMAIL_TEMPLATES_PATH: ./templates\n        # Adjust accordingly depending on your setup.\n        # https://docs.directus.io/self-hosted/config-options.html#smtp-smtp\n        EMAIL_TRANSPORT: smtp\n        EMAIL_SMTP_HOST: mailpit\n        EMAIL_SMTP_PORT: 1025\n        \n        # Adjust accordingly depending on your setup.\n        # https://docs.directus.io/self-hosted/config-options.html#cors\n        CORS_ENABLED: true\n        CORS_ORIGIN: true\n      ports:\n        - port: 8055\n          httpSupport: true\n      initCommands:\n        - zsc execOnce bootstrap -- directus bootstrap\n        - zsc execOnce schema -- directus schema apply --yes snapshot.yaml\n      start: directus start\n"
+  },
+  {
+    "name": "Medusa Nextstore",
+    "url": "https://github.com/zeropsio/recipe-medusa-nextstore",
+    "config": "zerops:\n  - setup: nextstore\n    build:\n      base: nodejs@22\n      envVariables:\n        MEDUSA_BACKEND_URL: ${MEDUSA_INSTANCE_URL}\n        NEXT_PUBLIC_SEARCH_ENDPOINT: ${SEARCH_URL}\n        NEXT_PUBLIC_SEARCH_API_KEY: ${RUNTIME_NEXT_PUBLIC_SEARCH_API_KEY}\n        NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: ${RUNTIME_NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY}\n        NEXT_PUBLIC_BASE_URL: ${NEXT_STORE_URL}\n        NEXT_PUBLIC_DEFAULT_REGION: ${RUNTIME_NEXT_PUBLIC_DEFAULT_REGION}\n        NEXT_PUBLIC_FEATURE_SEARCH_ENABLED: ${RUNTIME_NEXT_PUBLIC_FEATURE_SEARCH_ENABLED}\n        NEXT_PUBLIC_INDEX_NAME: ${RUNTIME_NEXT_PUBLIC_INDEX_NAME}\n        OBJECT_STORAGE_API_URL: ${RUNTIME_OBJECT_STORAGE_API_URL}\n      buildCommands:\n        - yarn\n        - yarn build\n      deployFiles:\n        - .next\n        - package.json\n        - next.config.js\n        - yarn.lock\n        - .yarnrc.yml\n        - node_modules\n        - public\n        - check-env-variables.js\n      cache: node_modules\n    run:\n      base: nodejs@22\n      start: yarn start\n      ports:\n        - port: 8000\n          httpSupport: true\n      envVariables:\n        MEDUSA_BACKEND_URL: ${MEDUSA_INSTANCE_URL}\n        OBJECT_STORAGE_API_URL: ${storage_apiUrl}\n        NEXT_PUBLIC_BASE_URL: ${NEXT_STORE_URL}\n        NEXT_PUBLIC_SEARCH_ENDPOINT: ${SEARCH_URL}\n        NEXT_PUBLIC_DEFAULT_REGION: de\n        NEXT_PUBLIC_FEATURE_SEARCH_ENABLED: true\n        NEXT_PUBLIC_INDEX_NAME: products\n        NEXT_PUBLIC_SEARCH_API_KEY: ${search_defaultSearchKey}\n        NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: ${medusa_CHANNEL_PUBLISHABLE_KEY}\n"
+  },
+  {
+    "name": "Metabase",
+    "url": "https://github.com/zeropsio/recipe-metabase",
+    "config": "zerops:\n  - setup: metabase\n    run:\n      base: java@21\n      os: ubuntu\n      prepareCommands: \n        - |\n          curl -L \"https://downloads.metabase.com/v${METABASE_VERSION}/metabase.jar\" -o /var/www/metabase.jar\n          chown zerops:zerops /var/www/metabase.jar\n          chmod 644 /var/www/metabase.jar\n      envVariables: \n        METABASE_VERSION: 0.53.1\n        JAVA_OPTS: \"-Xmx3584m -Xms2048m\"\n        MB_DB_TYPE: postgres\n        MB_DB_USER: ${db_user}\n        MB_DB_PORT: ${db_port}\n        MB_DB_HOST: ${db_hostname}\n        MB_DB_PASS: ${db_password}\n        MB_DB_NAME: ${db_dbName}        \n      ports:\n        - port: 3000\n          httpSupport: true\n      start: java ${JAVA_OPTS} --add-opens java.base/java.nio=ALL-UNNAMED -jar /var/www/metabase.jar\n"
+  },
+  {
+    "name": "Payload",
+    "url": "https://github.com/zeropsio/recipe-payload",
+    "config": "zerops:\n  - setup: api\n    build:\n      envVariables:\n        PAYLOAD_SECRET: ${RUNTIME_PAYLOAD_SECRET}\n        DATABASE_URI: ${RUNTIME_DATABASE_URI}\n        NEXT_PUBLIC_SERVER_URL: ${RUNTIME_zeropsSubdomain}\n        S3_ENDPOINT: ${RUNTIME_S3_ENDPOINT}\n        S3_ACCESS_KEY_ID: ${RUNTIME_S3_ACCESS_KEY_ID}\n        S3_SECRET_ACCESS_KEY: ${RUNTIME_S3_SECRET_ACCESS_KEY}\n        S3_BUCKET: ${RUNTIME_S3_BUCKET}\n      base: nodejs@20\n      os: ubuntu\n      buildCommands:\n        - pnpm i\n        - pnpm exec next telemetry disable\n        - zsc test tcp -6 db:5432 --timeout 30s\n        - zsc test tcp -6 mailpit:1025 --timeout 30s\n        # pnpm payload migrate:create initial\n        - pnpm payload generate:importmap\n        - pnpm payload migrate:status\n        - pnpm payload migrate\n        - pnpm build\n      deployFiles:\n        - next.config.js\n        - redirects.js\n        - node_modules\n        - package.json\n        - public\n        - .next\n    run:\n      base: nodejs@20\n      os: ubuntu\n      envVariables:\n        DATABASE_URI: ${db_connectionString}/${db_dbName}\n        NEXT_PUBLIC_SERVER_URL: ${zeropsSubdomain}\n        S3_ENDPOINT: ${storage_apiUrl}\n        S3_ACCESS_KEY_ID: ${storage_accessKeyId}\n        S3_SECRET_ACCESS_KEY: ${storage_secretAccessKey}\n        S3_BUCKET: ${storage_bucketName}\n      ports:\n        - port: 3000\n          httpSupport: true\n      start: pnpm start"
+  },
+  {
+    "name": "Ruby",
+    "url": "https://github.com/zeropsio/recipe-ruby",
+    "config": "zerops:\n  - setup: app\n    build:\n      os: alpine\n      base: ruby@3.4\n      envVariables:\n        RACK_ENV: production\n        BUNDLE_DEPLOYMENT: 1\n        BUNDLE_WITHOUT: development\n      buildCommands:\n        # After permissions fix, use this simple version\n        # - bundle install\n        # - bundle exec rails assets:precompile \n        - sudo chown -R zerops:zerops /build/source\n        - |\n          su zerops << EOF\n          whoami\n          bundle install\n          EOF\n      deployFiles:\n        - .\n    run:\n      os: alpine\n      base: ruby@3.4\n      envVariables:\n        RACK_ENV: production\n        BUNDLE_DEPLOYMENT: 1\n        BUNDLE_WITHOUT: development\n        \n        DB_HOST: $db_hostname\n        DB_PORT: $db_port\n        DB_USER: $db_user\n        DB_PASS: $db_password\n        DB_NAME: $db_dbName\n      ports:\n        - port: 8080\n          httpSupport: true\n      start: bundle exec ruby app.rb\n      "
+  },
+  {
+    "name": "Ruby on Rails",
+    "url": "https://github.com/zeropsio/recipe-rails",
+    "config": "zerops:\n  - setup: app\n    build:\n      os: alpine\n      base: ruby@3.4\n      envVariables:\n        RAILS_ENV: production\n        BUNDLE_DEPLOYMENT: 1\n        BUNDLE_WITHOUT: development\n      buildCommands:\n        # After permissions fix, use this simple version\n        # - bundle install\n        # - bundle exec rails assets:precompile \n        - sudo chown -R zerops:zerops /build/source\n        - |\n          su zerops << EOF\n          whoami\n          bundle install\n          bundle exec rails assets:precompile\n          EOF\n      deployFiles:\n        - .\n    run:\n      os: alpine\n      base: ruby@3.4\n      envVariables:\n        RAILS_ENV: production\n        BUNDLE_DEPLOYMENT: 1\n        BUNDLE_WITHOUT: development\n        \n        DATABASE_HOST: $db_hostname\n        DATABASE_PORT: $db_port\n        DATABASE_USERNAME: $db_user\n        DATABASE_PASSWORD: $db_password\n        DATABASE_NAME: $db_dbName\n      ports:\n        - port: 3000\n          httpSupport: true\n      initCommands:\n        - bin/rails db:migrate\n        - zsc execOnce \"seed\" -- bin/rails db:seed \n      start: bin/rails server\n      "
+  }
+]
