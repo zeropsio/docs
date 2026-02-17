@@ -291,34 +291,77 @@ function cleanMarkdownForDisplay(content, filepath, siteDir, docsDir) {
     // 6. Substitute variables like {data.something}
     content = substituteVariables(content, siteDir);
 
-    // 7. Convert HTML images to markdown
-    // 7a. Convert <Image> React components to markdown (before removing figure tags)
-    content = content.replace(
-        /<Image\s+[^>]*(?:lightImage|src)=["']([^"']+)["'][^>]*alt=["']([^"']+)["'][^>]*\/?>/g,
-        (match, src, alt) => {
-            return `![${alt}](${src})`;
+    // 6b. Resolve Var components (SetVar, Var, VarLink, VarCodeBlock, VarReasons, IfVar)
+    // First, collect all SetVar values
+    const vars = {};
+    content.replace(
+        /<SetVar\s+name=["']([^"']+)["']\s+value=["']([^"']+)["']\s*\/>/g,
+        (match, name, value) => { vars[name] = value; return ''; }
+    );
+    // Also collect SetVar with JSX expression values (simple strings)
+    content.replace(
+        /<SetVar\s+name=["']([^"']+)["']\s+value=\{([^}]+)\}\s*\/>/g,
+        (match, name, expr) => {
+            // Only handle simple string/data references, skip arrays/objects
+            const trimmed = expr.trim();
+            if (!trimmed.startsWith('[') && !trimmed.startsWith('{')) {
+                // Try to resolve data.x.y references
+                const dataMatch = trimmed.match(/^data\.(.+)$/);
+                if (dataMatch) {
+                    const data = getDataJson(siteDir);
+                    const keys = dataMatch[1].split('.');
+                    let val = data;
+                    for (const key of keys) {
+                        if (val && typeof val === 'object' && key in val) {
+                            val = val[key];
+                        } else {
+                            val = null;
+                            break;
+                        }
+                    }
+                    if (val !== null && typeof val !== 'object') {
+                        vars[name] = String(val);
+                    }
+                }
+            }
+            return '';
         }
     );
-
-    // 7b. Convert standard HTML <img> tags to markdown
+    // Remove all SetVar tags
+    content = content.replace(/<SetVar\s+[^>]*\/>/g, '');
+    // Replace <Var name="x" /> with the variable value
     content = content.replace(
-        /<img\s+[^>]*src=["']([^"']+)["'][^>]*alt=["']([^"']*?)["'][^>]*\/?>/g,
-        (match, src, alt) => {
-            return `![${alt || 'image'}](${src})`;
+        /<Var\s+name=["']([^"']+)["']\s*\/>/g,
+        (match, name) => vars[name] || ''
+    );
+    // Replace <VarLink name="x" path="/{{VAR}}/...">children</VarLink> with markdown links
+    content = content.replace(
+        /<VarLink\s+name=["']([^"']+)["']\s+path=["']([^"']+)["']\s*>([\s\S]*?)<\/VarLink>/g,
+        (match, name, path, children) => {
+            const value = vars[name] || '';
+            const href = path.replace(/\{\{VAR\}\}/g, value);
+            // Clean children of any remaining HTML/JSX
+            const cleanChildren = children
+                .replace(/<Var\s+name=["']([^"']+)["']\s*\/>/g, (m, n) => vars[n] || '')
+                .replace(/<code>(.*?)<\/code>/g, '`$1`')
+                .replace(/<[^>]+>/g, '')
+                .trim();
+            return `[${cleanChildren}](${href})`;
         }
     );
+    // Remove VarCodeBlock, VarReasons, IfVar (complex components we can't easily resolve)
+    content = content.replace(/<VarCodeBlock\s+[^>]*\/>/g, '');
+    content = content.replace(/<VarReasons\s+[^>]*\/>/g, '');
+    content = content.replace(/<IfVar\s+[^>]*>([\s\S]*?)<\/IfVar>/g, '$1');
 
-    // 7c. Convert HTML images with require() syntax
-    content = content.replace(
-        /<p align="center">\s*\n?\s*<img src=\{require\(['"]([^'"]+)['"]\)\.default\} alt="([^"]*)"(?:\s+width="[^"]*")?\s*\/>\s*\n?\s*<\/p>/g,
-        (match, imagePath, alt) => {
-            const cleanPath = imagePath.replace('@site/static/', '/');
-            return `![${alt}](${cleanPath})`;
-        }
-    );
+    // 7. Remove all images (HTML and markdown) - sources won't resolve in raw markdown
+    content = content.replace(/<Image\s+[^>]*\/?>/g, '');
+    content = content.replace(/<img\s+[^>]*\/?>/g, '');
+    content = content.replace(/<p align="center">\s*\n?\s*<img[^>]*\/>\s*\n?\s*<\/p>/g, '');
+    content = content.replace(/!\[[^\]]*\]\([^)]+\)/g, '');
 
-    // 8. Remove figure tags but keep any text content inside
-    content = content.replace(/<figure[^>]*>([\s\S]*?)<\/figure>/g, '$1');
+    // 8. Remove figure tags
+    content = content.replace(/<figure[^>]*>([\s\S]*?)<\/figure>/g, '');
 
     // 9. Convert YouTube iframes to text links
     content = content.replace(
@@ -335,28 +378,35 @@ function cleanMarkdownForDisplay(content, filepath, siteDir, docsDir) {
     // 11. Remove <Head> components
     content = content.replace(/<Head>[\s\S]*?<\/Head>/g, '');
 
-    // 12. Convert FAQ components to readable markdown (preserve content)
+    // 12. Convert HTML <a> tags to markdown links
+    content = content.replace(
+        /<a\s+[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/g,
+        (match, href, text) => {
+            // Clean inner HTML tags (like <code>, <strong>) to plain text
+            const cleanText = text
+                .replace(/<code>(.*?)<\/code>/g, '`$1`')
+                .replace(/<strong>(.*?)<\/strong>/g, '**$1**')
+                .replace(/<em>(.*?)<\/em>/g, '*$1*')
+                .replace(/<b>(.*?)<\/b>/g, '**$1**')
+                .replace(/<[^>]+>/g, '')
+                .trim();
+            return `[${cleanText}](${href})`;
+        }
+    );
+
+    // 13. Convert FAQ components to readable markdown (preserve content)
     content = convertFAQToMarkdown(content);
 
-    // 13. Convert Tabs/TabItem components to readable markdown (preserve content)
+    // 14. Convert Tabs/TabItem components to readable markdown (preserve content)
     content = convertTabsToMarkdown(content);
 
-    // 14. Convert details/summary components to readable markdown (preserve content)
+    // 15. Convert details/summary components to readable markdown (preserve content)
     content = convertDetailsToMarkdown(content);
 
-    // 15. Remove custom React/MDX components while preserving tables
+    // 16. Remove custom React/MDX components while preserving tables
     content = preserveTablesWhileProcessing(content, (section) => {
         return section.replace(/<[A-Z][a-zA-Z]*[\s\S]*?(?:\/>|<\/[A-Z][a-zA-Z]*>)/g, '');
     });
-
-    // 16. Convert relative image paths to absolute paths
-    content = content.replace(
-        /!\[([^\]]*)\]\((\.\/)?img\/([^)]+)\)/g,
-        (match, alt, relPrefix, filename) => {
-            // Convert to absolute path: /docs/path/to/file/img/filename
-            return `![${alt}](/${fileDir}img/${filename})`;
-        }
-    );
 
     // 17. Remove consecutive blank lines (keep max 2 newlines = 1 blank line)
     const lines = content.split('\n');

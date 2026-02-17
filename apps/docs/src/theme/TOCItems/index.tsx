@@ -5,6 +5,7 @@ import type { WrapperProps } from '@docusaurus/types';
 import { useDoc } from '@docusaurus/theme-common/internal';
 import { DocContextValue } from '@medusajs/docs';
 import StructuredDataHowTo from '../../components/StructuredData/HowTo';
+import { CopyPageMenu } from '../../components/CopyPageMenu';
 
 type Props = WrapperProps<typeof TOCItemsType>;
 
@@ -17,6 +18,7 @@ export default function TOCItemsWrapper(props: Props): JSX.Element {
       {frontMatter?.addHowToData && (
         <StructuredDataHowTo toc={props.toc} title={contentTitle} />
       )}
+      <CopyPageMenu />
     </>
   );
 }

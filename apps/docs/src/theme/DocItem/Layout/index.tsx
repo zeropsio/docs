@@ -1,5 +1,7 @@
 import React from 'react';
 import clsx from 'clsx';
+import Head from '@docusaurus/Head';
+import { useLocation } from '@docusaurus/router';
 import { useWindowSize } from '@docusaurus/theme-common';
 import { useDoc } from '@docusaurus/theme-common/internal';
 import DocItemPaginator from '@theme/DocItem/Paginator';
@@ -47,8 +49,13 @@ export default function DocItemLayout({ children }: Props): JSX.Element {
     metadata: { unlisted, previous, next },
   } = useDoc();
   const sidebarContext = useSidebar();
+  const location = useLocation();
+  const mdPath = `${location.pathname}.md`;
   return (
     <div className="row m-0">
+      <Head>
+        <link rel="alternate" type="text/markdown" href={mdPath} title="Markdown Version" />
+      </Head>
       <div
         className={clsx(
           'col',
@@ -67,14 +74,18 @@ export default function DocItemLayout({ children }: Props): JSX.Element {
               {docTOC.mobile}
               <DocItemContent>{children}</DocItemContent>
               <NavigationButtons
-                prevPage={previous && {
-                  href: previous.permalink,
-                  title: previous.title
-                }}
-                nextPage={next && {
-                  href: next.permalink,
-                  title: next.title
-                }}
+                prevPage={
+                  previous && {
+                    href: previous.permalink,
+                    title: previous.title,
+                  }
+                }
+                nextPage={
+                  next && {
+                    href: next.permalink,
+                    title: next.title,
+                  }
+                }
               />
               <DocItemFooter />
             </article>

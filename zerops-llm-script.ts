@@ -126,7 +126,7 @@ async function generateLLMDocs() {
 
   for (const file of optionalFiles) {
     optionals.push(
-      `- [${capitalizeDelimiter(extractLabel(file)).replace(/-/, ' ')}](https://docs.zerops.io/${sliceExt(file)})`
+      `- [${capitalizeDelimiter(extractLabel(file)).replace(/-/, ' ')}](https://docs.zerops.io/${sliceExt(file)}.md)`
     )
   }
 
