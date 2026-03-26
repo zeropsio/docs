@@ -135,7 +135,7 @@ When the first build is triggered, Zerops will
 1. create a build container
 2. download your application code from your repository
 3. run the prepare commands in the defined order
-The application code is available in the `/var/www` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
+The application code is available in `/build/source` before the prepare commands are triggered, so you can use any file from your repository in your prepare commands (e.g. a configuration file). The commands themselves run in the `/home/zerops` directory.
 :::note
 These commands are skipped when using cached environment. Modifying `prepareCommands` will invalidate your build cache. See our [Build Cache Documentation](/features/build-cache) for details about cache invalidation.
 :::
@@ -158,7 +158,7 @@ zerops:
         - 
       ...
 ```
-Build commands are optional. Zerops triggers each command in the defined order in a dedicated build container.
+Build commands are optional. Zerops triggers each command in the defined order in a dedicated build container, running from the `/build/source` directory.
 Before the build commands are triggered the build container contains:
 1. base environment defined by the [base](#base) attribute
 2. optional customisation of the base environment defined in the [prepareCommands](#preparecommands) attribute
@@ -370,6 +370,9 @@ When the first deploy with a defined prepare attribute is triggered, Zerops will
 1. create a prepare runtime container
 2. optionally: [copy selected folders or files from your build container](#copy-folders-or-files-from-your-build-container)
 3. run the `prepareCommands` commands in the defined order
+:::note
+`run.prepareCommands` run in the `/home/zerops` directory.
+:::
 #### Command exit code
 If any command fails, it returns an exit code other than 0 and the deploy is canceled. Read the [prepare runtime log](/alpine/how-to/logs#prepare-runtime-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom runtime environment is ready for the deploy phase.
 #### Cache of your custom runtime environment
@@ -418,6 +421,9 @@ zerops:
         - rm -rf ./cache
 ```
 These commands are triggered in the runtime container before your Alpine application is started via the [start command](#start).
+:::note
+`run.initCommands` run in the `/var/www` directory.
+:::
 Use init commands to clean or initialise your application cache or similar operations.
 :::caution
 The init commands will delay the start of your application each time a new runtime container is started (including the horizontal [scaling](/alpine/how-to/scaling) or when a runtime container is restarted).
@@ -652,7 +658,7 @@ The default  build environment contains:
 ### Customize build environment
 To install additional packages or tools, add one or more build.prepareCommands to your `zerops.yaml`.
 :::info
-The application code is available in the `/var/www` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
+The application code is available in the `/build/source` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
 :::
 ### Build hardware resources
 All runtime services use the same hardware resources for build containers:
@@ -1209,7 +1215,7 @@ When the first build is triggered, Zerops will
 1. create a build container
 2. download your application code from your repository
 3. run the prepare commands in the defined order
-The application code is available in the `/var/www` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
+The application code is available in `/build/source` before the prepare commands are triggered, so you can use any file from your repository in your prepare commands (e.g. a configuration file). The commands themselves run in the `/home/zerops` directory.
 :::note
 These commands are skipped when using cached environment. Modifying `prepareCommands` will invalidate your build cache. See our [Build Cache Documentation](/features/build-cache) for details about cache invalidation.
 :::
@@ -1233,7 +1239,7 @@ zerops:
         - bun run build
       ...
 ```
-Build commands are optional. Zerops triggers each command in the defined order in a dedicated build container.
+Build commands are optional. Zerops triggers each command in the defined order in a dedicated build container, running from the `/build/source` directory.
 Before the build commands are triggered the build container contains:
 1. base environment defined by the [base](build-pipeline#base) attribute
 2. optional customisation of the base environment defined in the [prepareCommands](build-pipeline#preparecommands) attribute
@@ -1459,6 +1465,9 @@ When the first deploy with a defined prepare attribute is triggered, Zerops will
 1. create a prepare runtime container
 2. optionally: [copy selected folders or files from your build container](build-pipeline#copy-folders-or-files-from-your-build-container)
 3. run the `prepareCommands` commands in the defined order
+:::note
+`run.prepareCommands` run in the `/home/zerops` directory.
+:::
 #### Command exit code
 If any command fails, it returns an exit code other than 0 and the deploy is canceled. Read the [prepare runtime log](logs#prepare-runtime-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom runtime environment is ready for the deploy phase.
 #### Cache of your custom runtime environment
@@ -1508,6 +1517,9 @@ zerops:
         - rm -rf ./cache
 ```
 These commands are triggered in the runtime container before your Bun application is started via the [start command](build-pipeline#start).
+:::note
+`run.initCommands` run in the `/var/www` directory.
+:::
 Use init commands to clean or initialise your application cache or similar operations.
 :::caution
 The init commands will delay the start of your application each time a new runtime container is started (including the [horizontal scaling](scaling) or when a runtime container is restarted).
@@ -2391,7 +2403,7 @@ When the first build is triggered, Zerops will
 1. create a build container
 2. download your application code from your repository
 3. run the prepare commands in the defined order
-The application code is available in the `/var/www` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
+The application code is available in `/build/source` before the prepare commands are triggered, so you can use any file from your repository in your prepare commands (e.g. a configuration file). The commands themselves run in the `/home/zerops` directory.
 :::note
 These commands are skipped when using cached environment. Modifying `prepareCommands` will invalidate your build cache. See our [Build Cache Documentation](/features/build-cache) for details about cache invalidation.
 :::
@@ -2414,7 +2426,7 @@ zerops:
         - deno task build
       ...
 ```
-Build commands are optional. Zerops triggers each command in the defined order in a dedicated build container.
+Build commands are optional. Zerops triggers each command in the defined order in a dedicated build container, running from the `/build/source` directory.
 Before the build commands are triggered the build container contains:
 1. base environment defined by the [base](#base) attribute
 2. optional customisation of the base environment defined in the [prepareCommands](#preparecommands) attribute
@@ -2639,6 +2651,9 @@ When the first deploy with a defined prepare attribute is triggered, Zerops will
 1. create a prepare runtime container
 2. optionally: [copy selected folders or files from your build container](#copy-folders-or-files-from-your-build-container)
 3. run the `prepareCommands` commands in the defined order
+:::note
+`run.prepareCommands` run in the `/home/zerops` directory.
+:::
 #### Command exit code
 If any command fails, it returns an exit code other than 0 and the deploy is canceled. Read the [prepare runtime log](/deno/how-to/logs#prepare-runtime-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom runtime environment is ready for the deploy phase.
 #### Cache of your custom runtime environment
@@ -2688,6 +2703,9 @@ zerops:
         - rm -rf ./cache
 ```
 These commands are triggered in the runtime container before your Deno application is started via the [start command](#start).
+:::note
+`run.initCommands` run in the `/var/www` directory.
+:::
 Use init commands to clean or initialise your application cache or similar operations.
 :::caution
 The init commands will delay the start of your application each time a new runtime container is started (including the horizontal [scaling](/deno/how-to/scaling) or when a runtime container is restarted).
@@ -2924,7 +2942,7 @@ The default Deno build environment contains:
 ### Customize build environment
 To install additional packages or tools, add one or more [build.prepareCommands](/deno/how-to/build-pipeline#preparecommands) to your `zerops.yaml`.
 :::info
-The application code is available in the `/var/www` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
+The application code is available in the `/build/source` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
 :::
 ### Build hardware resources
 All runtime services use the same hardware resources for build containers:
@@ -3738,7 +3756,7 @@ When the first build is triggered, Zerops will
 1. create a build container
 2. download your application code from your repository
 3. run the prepare commands in the defined order
-The application code is available in the `/var/www` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
+The application code is available in `/build/source` before the prepare commands are triggered, so you can use any file from your repository in your prepare commands (e.g. a configuration file). The commands themselves run in the `/home/zerops` directory.
 :::note
 These commands are skipped when using cached environment. Modifying `prepareCommands` will invalidate your build cache. See our [Build Cache Documentation](/features/build-cache) for details about cache invalidation.
 :::
@@ -3761,7 +3779,7 @@ zerops:
         - dotnet build -o app
       ...
 ```
-Build commands are optional. Zerops triggers each command in the defined order in a dedicated build container.
+Build commands are optional. Zerops triggers each command in the defined order in a dedicated build container, running from the `/build/source` directory.
 Before the build commands are triggered the build container contains:
 1. base environment defined by the [base](#base) attribute
 2. optional customisation of the base environment defined in the [prepareCommands](#preparecommands) attribute
@@ -3991,6 +4009,9 @@ When the first deploy with a defined prepare attribute is triggered, Zerops will
 1. create a prepare runtime container
 2. optionally: [copy selected folders or files from your build container](#copy-folders-or-files-from-your-build-container)
 3. run the `prepareCommands` commands in the defined order
+:::note
+`run.prepareCommands` run in the `/home/zerops` directory.
+:::
 #### Command exit code
 If any command fails, it returns an exit code other than 0 and the deploy is canceled. Read the [prepare runtime log](/dotnet/how-to/logs#prepare-runtime-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom runtime environment is ready for the deploy phase.
 #### Cache of your custom runtime environment
@@ -4042,6 +4063,9 @@ zerops:
         - rm -rf ./cache
 ```
 These commands are triggered in the runtime container before your .NET application is started via the [start command](#start).
+:::note
+`run.initCommands` run in the `/var/www` directory.
+:::
 Use init commands to clean or initialise your application cache or similar operations.
 :::caution
 The init commands will delay the start of your application each time a new runtime container is started (including the horizontal [scaling](/dotnet/how-to/scaling) or when a runtime container is restarted).
@@ -4843,7 +4867,7 @@ When the first build is triggered, Zerops will
 1. create a build container
 2. download your application code from your repository
 3. run the prepare commands in the defined order
-The application code is available in the `/var/www` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
+The application code is available in `/build/source` before the prepare commands are triggered, so you can use any file from your repository in your prepare commands (e.g. a configuration file). The commands themselves run in the `/home/zerops` directory.
 :::note
 These commands are skipped when using cached environment. Modifying `prepareCommands` will invalidate your build cache. See our [Build Cache Documentation](/features/build-cache) for details about cache invalidation.
 :::
@@ -4867,7 +4891,7 @@ zerops:
         - npm run build
       ...
 ```
-Build commands are optional. Zerops triggers each command in the defined order in a dedicated build container.
+Build commands are optional. Zerops triggers each command in the defined order in a dedicated build container, running from the `/build/source` directory.
 Before the build commands are triggered the build container contains:
 1. base environment defined by the [base](#base) attribute
 2. optional customisation of the base environment defined in the [prepareCommands](#preparecommands) attribute
@@ -5093,6 +5117,9 @@ When the first deploy with a defined prepare attribute is triggered, Zerops will
 1. create a prepare runtime container
 2. optionally: [copy selected folders or files from your build container](#copy-folders-or-files-from-your-build-container)
 3. run the `prepareCommands` commands in the defined order
+:::note
+`run.prepareCommands` run in the `/home/zerops` directory.
+:::
 #### Command exit code
 If any command fails, it returns an exit code other than 0 and the deploy is canceled. Read the [prepare runtime log](/elixir/how-to/logs#prepare-runtime-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom runtime environment is ready for the deploy phase.
 #### Cache of your custom runtime environment
@@ -5142,6 +5169,9 @@ zerops:
         - rm -rf ./cache
 ```
 These commands are triggered in the runtime container before your Elixir application is started via the [start command](#start).
+:::note
+`run.initCommands` run in the `/var/www` directory.
+:::
 Use init commands to clean or initialise your application cache or similar operations.
 :::caution
 The init commands will delay the start of your application each time a new runtime container is started (including the horizontal [scaling](/elixir/how-to/scaling) or when a runtime container is restarted).
@@ -7070,6 +7100,9 @@ run:
     - sudo apk add --no-cache imagemagick
     - sudo apt-get update && apt-get install -y some-package  # for Ubuntu
 ```
+:::note
+`run.prepareCommands` run in the `/home/zerops` directory.
+:::
 Zerops creates the custom runtime image from this container after all commands complete successfully.
 #### `build.addToRunPrepare`
 Copy specific files from the build phase to the runtime prepare phase. This is useful when you need source files during runtime preparation:
@@ -7946,7 +7979,7 @@ When the first build is triggered, Zerops will
 1. create a build container
 2. download your application code from your repository
 3. run the prepare commands in the defined order
-The application code is available in the `/var/www` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
+The application code is available in `/build/source` before the prepare commands are triggered, so you can use any file from your repository in your prepare commands (e.g. a configuration file). The commands themselves run in the `/home/zerops` directory.
 :::note
 These commands are skipped when using cached environment. Modifying `prepareCommands` will invalidate your build cache. See our [Build Cache Documentation](/features/build-cache) for details about cache invalidation.
 :::
@@ -7970,7 +8003,7 @@ zerops:
         - npm run build
       ...
 ```
-Build commands are optional. Zerops triggers each command in the defined order in a dedicated build container.
+Build commands are optional. Zerops triggers each command in the defined order in a dedicated build container, running from the `/build/source` directory.
 Before the build commands are triggered the build container contains:
 1. base environment defined by the [base](#base) attribute
 2. optional customisation of the base environment defined in the [prepareCommands](#preparecommands) attribute
@@ -8196,6 +8229,9 @@ When the first deploy with a defined prepare attribute is triggered, Zerops will
 1. create a prepare runtime container
 2. optionally: [copy selected folders or files from your build container](#copy-folders-or-files-from-your-build-container)
 3. run the `prepareCommands` commands in the defined order
+:::note
+`run.prepareCommands` run in the `/home/zerops` directory.
+:::
 #### Command exit code
 If any command fails, it returns an exit code other than 0 and the deploy is canceled. Read the [prepare runtime log](/gleam/how-to/logs#prepare-runtime-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom runtime environment is ready for the deploy phase.
 #### Cache of your custom runtime environment
@@ -8245,6 +8281,9 @@ zerops:
         - rm -rf ./cache
 ```
 These commands are triggered in the runtime container before your Gleam application is started via the [start command](#start).
+:::note
+`run.initCommands` run in the `/var/www` directory.
+:::
 Use init commands to clean or initialise your application cache or similar operations.
 :::caution
 The init commands will delay the start of your application each time a new runtime container is started (including the horizontal [scaling](/gleam/how-to/scaling) or when a runtime container is restarted).
@@ -8966,7 +9005,7 @@ When the first build is triggered, Zerops will
 1. create a build container
 2. download your application code from your repository
 3. run the prepare commands in the defined order
-The application code is available in the `/var/www` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
+The application code is available in `/build/source` before the prepare commands are triggered, so you can use any file from your repository in your prepare commands (e.g. a configuration file). The commands themselves run in the `/home/zerops` directory.
 :::note
 These commands are skipped when using cached environment. Modifying `prepareCommands` will invalidate your build cache. See our [Build Cache Documentation](/features/build-cache) for details about cache invalidation.
 :::
@@ -8989,7 +9028,7 @@ zerops:
         - go build -o app main.go
       ...
 ```
-Build commands are optional. Zerops triggers each command in the defined order in a dedicated build container.
+Build commands are optional. Zerops triggers each command in the defined order in a dedicated build container, running from the `/build/source` directory.
 Before the build commands are triggered the build container contains:
 1. base environment defined by the [base](#base) attribute
 2. optional customisation of the base environment defined in the [prepareCommands](#preparecommands) attribute
@@ -9218,6 +9257,9 @@ When the first deploy with a defined prepare attribute is triggered, Zerops will
 1. create a prepare runtime container
 2. optionally: [copy selected folders or files from your build container](#copy-folders-or-files-from-your-build-container)
 3. run the `prepareCommands` commands in the defined order
+:::note
+`run.prepareCommands` run in the `/home/zerops` directory.
+:::
 #### Command exit code
 If any command fails, it returns an exit code other than 0 and the deploy is canceled. Read the [prepare runtime log](/go/how-to/logs#prepare-runtime-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom runtime environment is ready for the deploy phase.
 #### Cache of your custom runtime environment
@@ -9267,6 +9309,9 @@ zerops:
         - rm -rf ./cache
 ```
 These commands are triggered in the runtime container before your Go application is started via the [start command](#start).
+:::note
+`run.initCommands` run in the `/var/www` directory.
+:::
 Use init commands to clean or initialise your application cache or similar operations.
 :::caution
 The init commands will delay the start of your application each time a new runtime container is started (including the horizontal [scaling](/go/how-to/scaling) or when a runtime container is restarted).
@@ -10061,7 +10106,7 @@ When the first build is triggered, Zerops will
 1. create a build container
 2. download your application code from your repository
 3. run the prepare commands in the defined order
-The application code is available in the `/var/www` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
+The application code is available in `/build/source` before the prepare commands are triggered, so you can use any file from your repository in your prepare commands (e.g. a configuration file). The commands themselves run in the `/home/zerops` directory.
 :::note
 These commands are skipped when using cached environment. Modifying `prepareCommands` will invalidate your build cache. See our [Build Cache Documentation](/features/build-cache) for details about cache invalidation.
 :::
@@ -10084,7 +10129,7 @@ zerops:
         - ./mvnw clean install
       ...
 ```
-Build commands are optional. Zerops triggers each command in the defined order in a dedicated build container.
+Build commands are optional. Zerops triggers each command in the defined order in a dedicated build container, running from the `/build/source` directory.
 Before the build commands are triggered the build container contains:
 1. base environment defined by the [base](#base) attribute
 2. optional customisation of the base environment defined in the [prepareCommands](#preparecommands) attribute
@@ -10314,6 +10359,9 @@ When the first deploy with a defined prepare attribute is triggered, Zerops will
 1. create a prepare runtime container
 2. optionally: [copy selected folders or files from your build container](#copy-folders-or-files-from-your-build-container)
 3. run the `prepareCommands` commands in the defined order
+:::note
+`run.prepareCommands` run in the `/home/zerops` directory.
+:::
 #### Command exit code
 If any command fails, it returns an exit code other than 0 and the deploy is canceled. Read the [prepare runtime log](/java/how-to/logs#prepare-runtime-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom runtime environment is ready for the deploy phase.
 #### Cache of your custom runtime environment
@@ -10363,6 +10411,9 @@ zerops:
         - rm -rf ./cache
 ```
 These commands are triggered in the runtime container before your Java application is started via the [start command](#start).
+:::note
+`run.initCommands` run in the `/var/www` directory.
+:::
 Use init commands to clean or initialise your application cache or similar operations.
 :::caution
 The init commands will delay the start of your application each time a new runtime container is started (including the horizontal [scaling](/java/how-to/scaling) or when a runtime container is restarted).
@@ -12537,6 +12588,9 @@ When the first deploy with a defined prepare attribute is triggered, Zerops will
 1. create a prepare runtime container
 2. optionally: [copy selected folders or files from your build container](#copy-folders-or-files-from-your-build-container)
 3. run the `prepareCommands` commands in the defined order
+:::note
+`run.prepareCommands` run in the `/home/zerops` directory.
+:::
 #### Command exit code
 If any command fails, it returns an exit code other than 0 and the deploy is canceled. Read the [prepare runtime log](/nginx/how-to/logs#prepare-runtime-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom runtime environment is ready for the deploy phase.
 #### Cache of your custom runtime environment
@@ -12587,6 +12641,9 @@ zerops:
         - rm -rf ./cache
 ```
 These commands are triggered in the runtime container before your Nginx application is started.
+:::note
+`run.initCommands` run in the `/var/www` directory.
+:::
 Use init commands to clean or initialise your application cache or similar operations.
 :::caution
 The init commands will delay the start of your application each time a new runtime container is started (including the horizontal [scaling](/nginx/how-to/scaling) or when a runtime container is restarted).
@@ -13408,7 +13465,7 @@ When the first build is triggered, Zerops will
 1. create a build container
 2. download your application code from your repository
 3. run the prepare commands in the defined order
-The application code is available in the `/var/www` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
+The application code is available in `/build/source` before the prepare commands are triggered, so you can use any file from your repository in your prepare commands (e.g. a configuration file). The commands themselves run in the `/home/zerops` directory.
 :::note
 These commands are skipped when using cached environment. Modifying `prepareCommands` will invalidate your build cache. See our [Build Cache Documentation](/features/build-cache) for details about cache invalidation.
 :::
@@ -13432,7 +13489,7 @@ zerops:
         - npm run build
       ...
 ```
-Build commands are optional. Zerops triggers each command in the defined order in a dedicated build container.
+Build commands are optional. Zerops triggers each command in the defined order in a dedicated build container, running from the `/build/source` directory.
 Before the build commands are triggered the build container contains:
 1. base environment defined by the [base](#base) attribute
 2. optional customisation of the base environment defined in the [prepareCommands](#preparecommands) attribute
@@ -13665,6 +13722,9 @@ When the first deploy with a defined prepare attribute is triggered, Zerops will
 1. create a prepare runtime container
 2. optionally: [copy selected folders or files from your build container](#copy-folders-or-files-from-your-build-container)
 3. run the `prepareCommands` commands in the defined order
+:::note
+`run.prepareCommands` run in the `/home/zerops` directory.
+:::
 #### Command exit code
 If any command fails, it returns an exit code other than 0 and the deploy is canceled. Read the [prepare runtime log](/nodejs/how-to/logs#prepare-runtime-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom runtime environment is ready for the deploy phase.
 #### Cache of your custom runtime environment
@@ -13714,6 +13774,9 @@ zerops:
         - rm -rf ./cache
 ```
 These commands are triggered in the runtime container before your Node.js application is started via the [start command](#start).
+:::note
+`run.initCommands` run in the `/var/www` directory.
+:::
 Use init commands to clean or initialise your application cache or similar operations.
 :::caution
 The init commands will delay the start of your application each time a new runtime container is started (including the horizontal [scaling](/nodejs/how-to/scaling) or when a runtime container is restarted).
@@ -14905,7 +14968,7 @@ When the first build is triggered, Zerops will
 1. create a build container
 2. download your application code from your repository
 3. run the prepare commands in the defined order
-The application code is available in the `/var/www` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
+The application code is available in `/build/source` before the prepare commands are triggered, so you can use any file from your repository in your prepare commands (e.g. a configuration file). The commands themselves run in the `/home/zerops` directory.
 :::note
 These commands are skipped when using cached environment. Modifying `prepareCommands` will invalidate your build cache. See our [Build Cache Documentation](/features/build-cache) for details about cache invalidation.
 :::
@@ -14928,7 +14991,7 @@ zerops:
         - composer install
       ...
 ```
-Build commands are optional. Zerops triggers each command in the defined order in a dedicated build container.
+Build commands are optional. Zerops triggers each command in the defined order in a dedicated build container, running from the `/build/source` directory.
 Before the build commands are triggered the build container contains:
 1. base environment defined by the [base](#base) attribute
 2. optional customisation of the base environment defined in the [prepareCommands](#preparecommands) attribute
@@ -15168,6 +15231,9 @@ When the first deploy with a defined prepare attribute is triggered, Zerops will
 1. create a prepare runtime container
 2. optionally: [copy selected folders or files from your build container](#copy-folders-or-files-from-your-build-container)
 3. run the `prepareCommands` commands in the defined order
+:::note
+`run.prepareCommands` run in the `/home/zerops` directory.
+:::
 #### Command exit code
 If any command fails, it returns an exit code other than 0 and the deploy is canceled. Read the [prepare runtime log](/php/how-to/logs#prepare-runtime-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom runtime environment is ready for the deploy phase.
 #### Cache of your custom runtime environment
@@ -15218,6 +15284,9 @@ zerops:
         - rm -rf ./cache
 ```
 These commands are triggered in the runtime container before your PHP application is started.
+:::note
+`run.initCommands` run in the `/var/www` directory.
+:::
 Use init commands to clean or initialise your application cache or similar operations.
 :::caution
 The init commands will delay the start of your application each time a new runtime container is started (including the horizontal [scaling](/php/how-to/scaling) or when a runtime container is restarted).
@@ -16834,7 +16903,7 @@ When the first build is triggered, Zerops will
 1. create a build container
 2. download your application code from your repository
 3. run the prepare commands in the defined order
-The application code is available in the `/var/www` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
+The application code is available in `/build/source` before the prepare commands are triggered, so you can use any file from your repository in your prepare commands (e.g. a configuration file). The commands themselves run in the `/home/zerops` directory.
 :::note
 These commands are skipped when using cached environment. Modifying `prepareCommands` will invalidate your build cache. See our [Build Cache Documentation](/features/build-cache) for details about cache invalidation.
 :::
@@ -17056,6 +17125,9 @@ When the first deploy with a defined prepare attribute is triggered, Zerops will
 1. create a prepare runtime container
 2. optionally: [copy selected folders or files from your build container](#copy-folders-or-files-from-your-build-container)
 3. run the `prepareCommands` commands in the defined order
+:::note
+`run.prepareCommands` run in the `/home/zerops` directory.
+:::
 #### Command exit code
 If any command fails, it returns an exit code other than 0 and the deploy is canceled. Read the [prepare runtime log](/python/how-to/logs#prepare-runtime-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom runtime environment is ready for the deploy phase.
 #### Cache of your custom runtime environment
@@ -17105,6 +17177,9 @@ zerops:
         - rm -rf ./cache
 ```
 These commands are triggered in the runtime container before your Python application is started via the [start command](#start).
+:::note
+`run.initCommands` run in the `/var/www` directory.
+:::
 Use init commands to clean or initialise your application cache or similar operations.
 :::caution
 The init commands will delay the start of your application each time a new runtime container is started (including the horizontal [scaling](/python/how-to/scaling) or when a runtime container is restarted).
@@ -17879,7 +17954,7 @@ When the first build is triggered, Zerops will
 1. create a build container
 2. download your application code from your repository
 3. run the prepare commands in the defined order
-The application code is available in the `/var/www` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
+The application code is available in `/build/source` before the prepare commands are triggered, so you can use any file from your repository in your prepare commands (e.g. a configuration file). The commands themselves run in the `/home/zerops` directory.
 :::note
 These commands are skipped when using cached environment. Modifying `prepareCommands` will invalidate your build cache. See our [Build Cache Documentation](/features/build-cache) for details about cache invalidation.
 :::
@@ -17902,7 +17977,7 @@ zerops:
         - cargo b --release
       ...
 ```
-Build commands are optional. Zerops triggers each command in the defined order in a dedicated build container.
+Build commands are optional. Zerops triggers each command in the defined order in a dedicated build container, running from the `/build/source` directory.
 Before the build commands are triggered the build container contains:
 1. base environment defined by the [base](#base) attribute
 2. optional customisation of the base environment defined in the [prepareCommands](#preparecommands) attribute
@@ -18130,6 +18205,9 @@ When the first deploy with a defined prepare attribute is triggered, Zerops will
 1. create a prepare runtime container
 2. optionally: [copy selected folders or files from your build container](#copy-folders-or-files-from-your-build-container)
 3. run the `prepareCommands` commands in the defined order
+:::note
+`run.prepareCommands` run in the `/home/zerops` directory.
+:::
 #### Command exit code
 If any command fails, it returns an exit code other than 0 and the deploy is canceled. Read the [prepare runtime log](/rust/how-to/logs#prepare-runtime-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom runtime environment is ready for the deploy phase.
 #### Cache of your custom runtime environment
@@ -18180,6 +18258,9 @@ zerops:
         - rm -rf ./cache
 ```
 These commands are triggered in the runtime container before your Rust application is started via the [start command](#start).
+:::note
+`run.initCommands` run in the `/var/www` directory.
+:::
 Use init commands to clean or initialise your application cache or similar operations.
 :::caution
 The init commands will delay the start of your application each time a new runtime container is started (including the horizontal [scaling](/rust/how-to/scaling) or when a runtime container is restarted).
@@ -19574,7 +19655,7 @@ When the first build is triggered, Zerops will
 1. create a build container
 2. download your application code from your repository
 3. run the prepare commands in the defined order
-The application code is available in the `/var/www` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
+The application code is available in `/build/source` before the prepare commands are triggered, so you can use any file from your repository in your prepare commands (e.g. a configuration file). The commands themselves run in the `/home/zerops` directory.
 :::note
 These commands are skipped when using cached environment. Modifying `prepareCommands` will invalidate your build cache. See our [Build Cache Documentation](/features/build-cache) for details about cache invalidation.
 :::
@@ -19597,7 +19678,7 @@ zerops:
         - 
       ...
 ```
-Build commands are optional. Zerops triggers each command in the defined order in a dedicated build container.
+Build commands are optional. Zerops triggers each command in the defined order in a dedicated build container, running from the `/build/source` directory.
 Before the build commands are triggered the build container contains:
 1. base environment defined by the [base](#base) attribute
 2. optional customisation of the base environment defined in the [prepareCommands](#preparecommands) attribute
@@ -19791,6 +19872,9 @@ When the first deploy with a defined prepare attribute is triggered, Zerops will
 1. create a prepare runtime container
 2. optionally: [copy selected folders or files from your build container](#copy-folders-or-files-from-your-build-container)
 3. run the `prepareCommands` commands in the defined order
+:::note
+`run.prepareCommands` run in the `/home/zerops` directory.
+:::
 #### Command exit code
 If any command fails, it returns an exit code other than 0 and the deploy is canceled. Read the [prepare runtime log](/ubuntu/how-to/logs#prepare-runtime-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom runtime environment is ready for the deploy phase.
 #### Cache of your custom runtime environment
@@ -19839,6 +19923,9 @@ zerops:
         - rm -rf ./cache
 ```
 These commands are triggered in the runtime container before your Ubuntu application is started via the [start command](#start).
+:::note
+`run.initCommands` run in the `/var/www` directory.
+:::
 Use init commands to clean or initialise your application cache or similar operations.
 :::caution
 The init commands will delay the start of your application each time a new runtime container is started (including the horizontal [scaling](/ubuntu/how-to/scaling) or when a runtime container is restarted).
@@ -20073,7 +20160,7 @@ The default  build environment contains:
 ### Customize build environment
 To install additional packages or tools, add one or more build.prepareCommands to your `zerops.yaml`.
 :::info
-The application code is available in the `/var/www` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
+The application code is available in the `/build/source` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
 :::
 ### Build hardware resources
 All runtime services use the same hardware resources for build containers:
@@ -20794,6 +20881,9 @@ build:
     - sudo apt-get update
     - sudo apt-get install -y some-package
 ```
+:::note
+`build.prepareCommands` run in the `/home/zerops` directory.
+:::
 ### buildCommands 
 Defines the commands to build your application.
 ```yaml
@@ -20802,6 +20892,9 @@ build:
     - npm install
     - npm run build
 ```
+:::note
+`build.buildCommands` run in the `/build/source` directory.
+:::
 #### Running commands in a single shell instance:
 ```yaml
 buildCommands:
@@ -20946,6 +21039,9 @@ Indicates whether the port is running a web server:
 - Used by Zerops for [public access](/features/access) configuration
 ### prepareCommands 
 Customizes the runtime environment by installing additional dependencies or tools.
+:::note
+`run.prepareCommands` run in the `/home/zerops` directory.
+:::
 ### initCommands 
 Defines commands to run each time a new runtime container starts or restarts.
 ```yaml
@@ -20953,6 +21049,9 @@ run:
   initCommands:
     - rm -rf ./cache
 ```
+:::note
+`run.initCommands` run in the `/var/www` directory.
+:::
 ### start 
 Defines the start command for your application.
 ```yaml

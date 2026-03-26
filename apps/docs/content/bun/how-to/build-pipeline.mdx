@@ -219,7 +219,7 @@ When the first build is triggered, Zerops will
 2. download your application code from your repository
 3. run the prepare commands in the defined order
 
-The application code is available in the `/var/www` folder in your build container before the prepare commands are triggered. This allows you to use any file from your application code in your prepare commands (e.g. a configuration file).
+The application code is available in `/build/source` before the prepare commands are triggered, so you can use any file from your repository in your prepare commands (e.g. a configuration file). The commands themselves run in the `/home/zerops` directory.
 
 :::note
 These commands are skipped when using cached environment. Modifying `prepareCommands` will invalidate your build cache. See our [Build Cache Documentation](/features/build-cache) for details about cache invalidation.
@@ -253,7 +253,7 @@ zerops:
       ...
 ```
 
-Build commands are optional. Zerops triggers each command in the defined order in a dedicated build container.
+Build commands are optional. Zerops triggers each command in the defined order in a dedicated build container, running from the `/build/source` directory.
 
 Before the build commands are triggered the build container contains:
 
@@ -572,6 +572,10 @@ When the first deploy with a defined prepare attribute is triggered, Zerops will
 2. optionally: [copy selected folders or files from your build container](build-pipeline#copy-folders-or-files-from-your-build-container)
 3. run the `prepareCommands` commands in the defined order
 
+:::note
+`run.prepareCommands` run in the `/home/zerops` directory.
+:::
+
 #### Command exit code
 
 If any command fails, it returns an exit code other than 0 and the deploy is canceled. Read the [prepare runtime log](logs#prepare-runtime-log) to troubleshoot the error. If the command ends successfully, it returns the exit code 0 and Zerops triggers the following command. When all `prepareCommands` commands are finished, your custom runtime environment is ready for the deploy phase.
@@ -644,6 +648,10 @@ zerops:
 ```
 
 These commands are triggered in the runtime container before your Bun application is started via the [start command](build-pipeline#start).
+
+:::note
+`run.initCommands` run in the `/var/www` directory.
+:::
 
 Use init commands to clean or initialise your application cache or similar operations.
 
