@@ -149,6 +149,122 @@ function convertFAQToMarkdown(content) {
     return content;
 }
 
+// Convert HTML tables to markdown tables, flattening rowspan/colspan
+function convertHtmlTablesToMarkdown(content, siteDir) {
+    return content.replace(/<table[\s\S]*?<\/table>/g, (tableHtml) => {
+        // Resolve UnorderedCodeList components to comma-separated values
+        tableHtml = tableHtml.replace(
+            /<UnorderedCodeList\s+data=\{([^}]+)\}\s*\/>/g,
+            (match, dataPath) => {
+                try {
+                    const data = getDataJson(siteDir);
+                    const keys = dataPath.trim().replace(/^data\./, '').split('.');
+                    let val = data;
+                    for (const key of keys) {
+                        if (val && typeof val === 'object' && key in val) val = val[key];
+                        else return match;
+                    }
+                    return Array.isArray(val) ? val.join(', ') : String(val);
+                } catch (e) { return match; }
+            }
+        );
+
+        // Separate thead and tbody
+        const theadMatch = tableHtml.match(/<thead[^>]*>([\s\S]*?)<\/thead>/);
+        const tbodyMatch = tableHtml.match(/<tbody[^>]*>([\s\S]*?)<\/tbody>/);
+        const theadHtml = theadMatch ? theadMatch[1] : '';
+        const tbodyHtml = tbodyMatch ? tbodyMatch[1] : (theadMatch ? '' : tableHtml);
+
+        function extractRowHtmls(html) {
+            const rows = [];
+            const rowPattern = /<tr[^>]*>([\s\S]*?)<\/tr>/g;
+            let m;
+            while ((m = rowPattern.exec(html)) !== null) rows.push(m[1]);
+            return rows;
+        }
+
+        function cleanCellContent(raw) {
+            return raw
+                .replace(/<strong>([\s\S]*?)<\/strong>/g, '**$1**')
+                .replace(/<b>([\s\S]*?)<\/b>/g, '**$1**')
+                .replace(/<em>([\s\S]*?)<\/em>/g, '*$1*')
+                .replace(/<i>([\s\S]*?)<\/i>/g, '*$1*')
+                .replace(/<code>([\s\S]*?)<\/code>/g, '`$1`')
+                .replace(/&nbsp;/g, ' ')
+                .replace(/<[^>]+>/g, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        // Build a 2D grid, expanding rowspan/colspan by repeating cell content
+        function buildGrid(rowHtmls, startRow, grid) {
+            for (let ri = 0; ri < rowHtmls.length; ri++) {
+                const absRi = startRow + ri;
+                if (!grid[absRi]) grid[absRi] = [];
+
+                let colIndex = 0;
+                const cellPattern = /<t[dh]([^>]*)>([\s\S]*?)<\/t[dh]>/g;
+                let cellMatch;
+
+                while ((cellMatch = cellPattern.exec(rowHtmls[ri])) !== null) {
+                    while (grid[absRi][colIndex] !== undefined) colIndex++;
+
+                    const attrs = cellMatch[1];
+                    const rowspan = parseInt((attrs.match(/rowspan="?(\d+)"?/) || [, 1])[1]);
+                    const colspan = parseInt((attrs.match(/colspan="?(\d+)"?/) || [, 1])[1]);
+                    const text = cleanCellContent(cellMatch[2]);
+
+                    for (let r = 0; r < rowspan; r++) {
+                        const targetRi = absRi + r;
+                        if (!grid[targetRi]) grid[targetRi] = [];
+                        for (let c = 0; c < colspan; c++) {
+                            grid[targetRi][colIndex + c] = text;
+                        }
+                    }
+
+                    colIndex += colspan;
+                }
+            }
+        }
+
+        const headerRows = extractRowHtmls(theadHtml);
+        const bodyRows = extractRowHtmls(tbodyHtml);
+        const grid = [];
+        buildGrid(headerRows, 0, grid);
+        buildGrid(bodyRows, headerRows.length, grid);
+
+        if (grid.length === 0) return tableHtml;
+
+        const colCount = Math.max(...grid.map(row => row.length));
+
+        function rowToMd(gridRow) {
+            const cells = Array.from({ length: colCount }, (_, i) =>
+                gridRow[i] !== undefined ? gridRow[i] : ''
+            );
+            return '| ' + cells.join(' | ') + ' |';
+        }
+
+        // Merge multiple header rows into one by taking the last value per column
+        let result = '';
+        if (headerRows.length > 0) {
+            const mergedHeader = Array.from({ length: colCount }, (_, i) => {
+                for (let ri = headerRows.length - 1; ri >= 0; ri--) {
+                    const val = grid[ri][i];
+                    if (val !== undefined && val !== '') return val;
+                }
+                return '';
+            });
+            result += '| ' + mergedHeader.join(' | ') + ' |\n';
+            result += '| ' + Array(colCount).fill('---').join(' | ') + ' |\n';
+        }
+        for (let ri = headerRows.length; ri < grid.length; ri++) {
+            result += rowToMd(grid[ri]) + '\n';
+        }
+
+        return result;
+    });
+}
+
 // Preserve markdown tables while processing other content
 function preserveTablesWhileProcessing(content, processingFn) {
     // Split content by tables
@@ -403,12 +519,15 @@ function cleanMarkdownForDisplay(content, filepath, siteDir, docsDir) {
     // 15. Convert details/summary components to readable markdown (preserve content)
     content = convertDetailsToMarkdown(content);
 
-    // 16. Remove custom React/MDX components while preserving tables
+    // 16. Convert HTML tables to markdown tables
+    content = convertHtmlTablesToMarkdown(content, siteDir);
+
+    // 17. Remove custom React/MDX components while preserving tables
     content = preserveTablesWhileProcessing(content, (section) => {
         return section.replace(/<[A-Z][a-zA-Z]*[\s\S]*?(?:\/>|<\/[A-Z][a-zA-Z]*>)/g, '');
     });
 
-    // 17. Remove consecutive blank lines (keep max 2 newlines = 1 blank line)
+    // 18. Remove consecutive blank lines (keep max 2 newlines = 1 blank line)
     const lines = content.split('\n');
     const processedLines = [];
     let lastLineWasEmpty = false;
@@ -426,12 +545,12 @@ function cleanMarkdownForDisplay(content, filepath, siteDir, docsDir) {
 
     content = processedLines.join('\n');
 
-    // 18. Add title as H1 at the beginning if it exists
+    // 19. Add title as H1 at the beginning if it exists
     if (title) {
         content = `# ${title}\n\n${content}`;
     }
 
-    // 19. Remove any leading blank lines
+    // 20. Remove any leading blank lines
     content = content.replace(/^\s*\n/, '');
 
     return content;
