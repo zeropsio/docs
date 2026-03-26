@@ -404,6 +404,10 @@ function cleanMarkdownForDisplay(content, filepath, siteDir, docsDir) {
     // 5. Remove remaining import statements (after inlining MDX imports)
     content = content.replace(/^import\s+.*?from\s+['"].*?['"];?\s*$/gm, '');
 
+    // 5b. Convert HTML tables to markdown tables (must run before substituteVariables
+    // expands {data.x} JSX attributes, which would break UnorderedCodeList matching)
+    content = convertHtmlTablesToMarkdown(content, siteDir);
+
     // 6. Substitute variables like {data.something}
     content = substituteVariables(content, siteDir);
 
@@ -519,15 +523,12 @@ function cleanMarkdownForDisplay(content, filepath, siteDir, docsDir) {
     // 15. Convert details/summary components to readable markdown (preserve content)
     content = convertDetailsToMarkdown(content);
 
-    // 16. Convert HTML tables to markdown tables
-    content = convertHtmlTablesToMarkdown(content, siteDir);
-
-    // 17. Remove custom React/MDX components while preserving tables
+    // 16. Remove custom React/MDX components while preserving tables
     content = preserveTablesWhileProcessing(content, (section) => {
         return section.replace(/<[A-Z][a-zA-Z]*[\s\S]*?(?:\/>|<\/[A-Z][a-zA-Z]*>)/g, '');
     });
 
-    // 18. Remove consecutive blank lines (keep max 2 newlines = 1 blank line)
+    // 17. Remove consecutive blank lines (keep max 2 newlines = 1 blank line)
     const lines = content.split('\n');
     const processedLines = [];
     let lastLineWasEmpty = false;
@@ -545,12 +546,12 @@ function cleanMarkdownForDisplay(content, filepath, siteDir, docsDir) {
 
     content = processedLines.join('\n');
 
-    // 19. Add title as H1 at the beginning if it exists
+    // 18. Add title as H1 at the beginning if it exists
     if (title) {
         content = `# ${title}\n\n${content}`;
     }
 
-    // 20. Remove any leading blank lines
+    // 19. Remove any leading blank lines
     content = content.replace(/^\s*\n/, '');
 
     return content;
