@@ -503,6 +503,15 @@ module.exports = {
       className: 'homepage-sidebar-item',
     },
     {
+      type: 'doc',
+      id: 'zerops-yaml/examples',
+      label: 'Examples',
+      customProps: {
+        sidebar_icon: 'window',
+      },
+      className: 'homepage-sidebar-item',
+    },
+    {
       type: 'html',
       value: 'References',
       customProps: {
