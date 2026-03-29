@@ -1,0 +1,61 @@
+---
+title: "Metrics on Zerops"
+description: "Zerops supports ELK (APM + logs) and Prometheus/Grafana stacks; expose `/metrics` endpoint and set `ZEROPS_PROMETHEUS_PORT` for auto-scraping."
+---
+
+
+## Keywords
+metrics, monitoring, prometheus, grafana, elk, apm, elastic apm, observability, custom metrics, dashboard
+
+## TL;DR
+Zerops supports ELK (APM + logs) and Prometheus/Grafana stacks; expose `/metrics` endpoint and set `ZEROPS_PROMETHEUS_PORT` for auto-scraping.
+
+## Deployment Modes
+- **Local**: Monitoring services in the same project as your app
+- **Global**: Dedicated observability project (recommended for multi-project)
+
+## ELK Stack Services
+| Service | Purpose |
+|---------|---------|
+| `elkstorage` | Elasticsearch (data storage) |
+| `kibana` | Visualization UI |
+| `apmserver` | APM traces (made public via Zerops subdomain) |
+| `logstash` | Log collection |
+
+### APM Configuration
+```yaml
+envVariables:
+  ELASTIC_APM_ACTIVE: "true"
+  ELASTIC_APM_SERVICE_NAME: my-app
+  ELASTIC_APM_SERVER_URL: https://apmserver.zerops.app
+  ELASTIC_APM_SECRET_TOKEN: <your-secret>
+```
+
+## Prometheus + Grafana Stack Services
+| Service | Purpose |
+|---------|---------|
+| `prometheus` | Metrics collection |
+| `grafana` | Visualization UI |
+| `grafanadb` | PostgreSQL for Grafana |
+| `prometheusbackups` | S3 for Prometheus data |
+| `prometheuslight` | Forwarder (in source project for cross-project) |
+
+### Custom Metrics
+1. Expose HTTP `/metrics` endpoint in your app
+2. Set env var: `ZEROPS_PROMETHEUS_PORT=8080` (comma-separated for multiple ports)
+3. Prometheus auto-discovers and scrapes
+
+## Built-in Metrics
+- Service scaling & resource usage
+- PostgreSQL (with `pg_stat_statements` extension)
+- MariaDB
+- Valkey
+
+## Gotchas
+1. **`ZEROPS_PROMETHEUS_PORT` is required**: Without it, Prometheus won't discover your custom metrics endpoint
+2. **APM server must be public**: Use Zerops subdomain to expose apmserver for trace collection
+3. **Cross-project needs forwarder**: Use `prometheuslight` service in source project to forward to global Prometheus
+
+## See Also
+- zerops://guides/logging
+- zerops://themes/services — Elasticsearch, PostgreSQL service cards

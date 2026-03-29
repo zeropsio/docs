@@ -1,0 +1,51 @@
+---
+title: "Choosing a Message Queue on Zerops"
+description: "**Use NATS** for most cases (simple, fast, JetStream persistence). Use **Kafka** only for enterprise event streaming with guaranteed ordering and unlimited retention."
+---
+
+
+## Keywords
+queue, message queue, kafka, nats, event, stream, pub-sub, broker, choose queue, which queue, messaging
+
+## TL;DR
+**Use NATS** for most cases (simple, fast, JetStream persistence). Use **Kafka** only for enterprise event streaming with guaranteed ordering and unlimited retention.
+
+## Decision Matrix
+
+| Need | Choice | Why |
+|------|--------|-----|
+| **General messaging** | **NATS** (default) | Simple auth, JetStream built-in, fast |
+| Enterprise event streaming | Kafka | SASL auth, 3-broker HA, unlimited retention |
+| Lightweight pub/sub | NATS | Low overhead, 8MB default messages |
+| Event sourcing / audit logs | Kafka | Indefinite topic retention, strong ordering |
+
+## NATS (Default Choice)
+
+- Ports: 4222 (client), 8222 (HTTP monitoring)
+- Auth: user `zerops` + auto-generated password
+- Connection: `nats://${user}:${password}@${hostname}:4222`
+- JetStream: Enabled by default (`JET_STREAM_ENABLED=1`)
+- Storage: Up to 40GB memory + 250GB file store
+- Max message: 8MB default, 64MB max (`MAX_PAYLOAD`)
+- Health check: `GET /healthz` on port 8222
+- **Config changes require restart** (no hot-reload)
+
+## Kafka
+
+- Port: 9092 (SASL PLAIN auth)
+- Auth: `user` + `password` env vars (auto-generated)
+- Bootstrap: `${hostname}:9092`
+- HA: 3 brokers, 6 partitions, replication factor 3
+- Storage: Up to 40GB RAM + 250GB persistent
+- Topic retention: **Indefinite** (no time or size limits)
+- Schema Registry: Port 8081 (if enabled)
+
+## Gotchas
+1. **NATS config changes need restart**: No hot-reload — changing env vars requires service restart
+2. **Kafka single-node has no replication**: 1 broker = 3 partitions but zero redundancy
+3. **NATS JetStream HA sync interval**: 1-minute sync across nodes — brief data lag possible
+4. **Kafka SASL only**: No anonymous connections — always use the generated credentials
+
+## See Also
+- zerops://themes/services — NATS, Kafka service cards and wiring
+- zerops://decisions/choose-database

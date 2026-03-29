@@ -1,0 +1,159 @@
+---
+title: "Object Storage Integration on Zerops"
+description: "Zerops Object Storage is S3-compatible (MinIO). Always set `AWS_USE_PATH_STYLE_ENDPOINT: true`. Use env var references `${storage_*}` for credentials. Container filesystem is lost on deploy — use Object Storage for any files that must persist across deployments."
+---
+
+
+## Keywords
+object storage, s3, minio, aws, upload, files, media, storage integration, flysystem, boto3, aws-sdk, path style, bucket, persistent files
+
+## TL;DR
+Zerops Object Storage is S3-compatible (MinIO). Always set `AWS_USE_PATH_STYLE_ENDPOINT: true`. Use env var references `${storage_*}` for credentials. Container filesystem is lost on deploy — use Object Storage for any files that must persist across deployments.
+
+## Environment Variables
+
+When you create an Object Storage service, Zerops auto-generates these env vars (prefix with hostname for cross-service access, e.g. `${storage_apiUrl}`):
+
+| Variable | Description |
+|----------|-------------|
+| `apiUrl` | S3 endpoint URL (accessible from Zerops and remotely) |
+| `accessKeyId` | S3 access key |
+| `secretAccessKey` | S3 secret key |
+| `bucketName` | Auto-generated bucket name (hostname + random prefix, immutable) |
+| `quotaGBytes` | Bucket quota in GB |
+| `projectId` | Project ID (Zerops-generated) |
+| `serviceId` | Service ID (Zerops-generated) |
+| `hostname` | Service hostname |
+
+Reference them in zerops.yml `run.envVariables`:
+```yaml
+# zerops.yml run.envVariables
+S3_ENDPOINT: ${storage_apiUrl}
+S3_ACCESS_KEY: ${storage_accessKeyId}
+S3_SECRET_KEY: ${storage_secretAccessKey}
+S3_BUCKET: ${storage_bucketName}
+S3_REGION: us-east-1
+AWS_USE_PATH_STYLE_ENDPOINT: "true"
+```
+
+## Path Style Endpoint (Required)
+
+Zerops uses MinIO which requires **path-style** URLs (not virtual-hosted):
+
+```
+# Path-style (correct for Zerops):
+https://endpoint.com/bucket-name/object-key
+
+# Virtual-hosted (WRONG for Zerops):
+https://bucket-name.endpoint.com/object-key
+```
+
+**Every S3 client must be configured for path-style access.**
+
+## Framework Integration
+
+### PHP (Laravel — Flysystem)
+```php
+// config/filesystems.php
+'s3' => [
+    'driver' => 's3',
+    'endpoint' => env('S3_ENDPOINT'),
+    'use_path_style_endpoint' => true,  // REQUIRED
+    'key' => env('S3_ACCESS_KEY'),
+    'secret' => env('S3_SECRET_KEY'),
+    'region' => env('S3_REGION', 'us-east-1'),
+    'bucket' => env('S3_BUCKET'),
+],
+```
+Package: `league/flysystem-aws-s3-v3`
+
+### Node.js (AWS SDK v3)
+```javascript
+import { S3Client } from '@aws-sdk/client-s3';
+const s3 = new S3Client({
+  endpoint: process.env.S3_ENDPOINT,
+  forcePathStyle: true,  // REQUIRED
+  credentials: {
+    accessKeyId: process.env.S3_ACCESS_KEY,
+    secretAccessKey: process.env.S3_SECRET_KEY,
+  },
+  region: process.env.S3_REGION || 'us-east-1',
+});
+```
+Package: `@aws-sdk/client-s3`
+
+### Python (boto3)
+```python
+import boto3
+s3 = boto3.client('s3',
+    endpoint_url=os.environ['S3_ENDPOINT'],
+    aws_access_key_id=os.environ['S3_ACCESS_KEY'],
+    aws_secret_access_key=os.environ['S3_SECRET_KEY'],
+    region_name='us-east-1',
+    config=boto3.session.Config(s3={'addressing_style': 'path'}),  # REQUIRED
+)
+```
+Package: `boto3`
+
+### Java (AWS SDK)
+```java
+S3Client s3 = S3Client.builder()
+    .endpointOverride(URI.create(System.getenv("S3_ENDPOINT")))
+    .serviceConfiguration(S3Configuration.builder()
+        .pathStyleAccessEnabled(true)  // REQUIRED
+        .build())
+    .credentialsProvider(StaticCredentialsProvider.create(
+        AwsBasicCredentials.create(
+            System.getenv("S3_ACCESS_KEY"),
+            System.getenv("S3_SECRET_KEY"))))
+    .region(Region.US_EAST_1)
+    .build();
+```
+
+## import.yaml Definition
+
+```yaml
+services:
+  - hostname: storage
+    type: object-storage             # or "objectstorage" (both valid)
+    objectStorageSize: 2              # GB (1-100, changeable in GUI later)
+    objectStoragePolicy: public-read  # predefined policy
+    priority: 10
+```
+
+**Predefined policies** (`objectStoragePolicy`):
+- `private` — no anonymous access (documents, backups)
+- `public-read` — anonymous list + get (media, avatars, static assets)
+- `public-objects-read` — anonymous get only, no listing (direct links only)
+- `public-write` — anonymous put only
+- `public-read-write` — full anonymous access
+
+**Custom policy**: use `objectStorageRawPolicy` with IAM Policy JSON instead (template var `{{ .BucketName }}` available).
+
+Each service = one bucket (auto-named, immutable). Need multiple buckets? Create multiple services.
+
+## When to Use Object Storage
+
+| Scenario | Use Object Storage? |
+|----------|-------------------|
+| User uploads (avatars, documents) | Yes — lost on deploy |
+| Media files (images, videos) | Yes — serve via public URL |
+| Build artifacts | No — deploy via zerops.yaml |
+| Temporary files | No — container disk is fine |
+| Logs | No — use Zerops logging |
+| Database dumps | Yes — for backup storage |
+
+## Gotchas
+1. **`forcePathStyle: true` / `AWS_USE_PATH_STYLE_ENDPOINT: true` is REQUIRED**: Zerops uses MinIO which doesn't support virtual-hosted style
+2. **Container filesystem is replaced on deploy**: Files on disk survive restarts but are lost when a new container is created (deploy, scale-up). Always use Object Storage for persistent data
+3. **Region is required but ignored**: Set `us-east-1` — MinIO ignores it but SDKs require it
+4. **Public URL format**: `{apiUrl}/{bucketName}/path/to/file`
+5. **Independent infrastructure**: Object Storage runs on separate infra from other services — accessible from Zerops and remotely over internet
+6. **One bucket per service**: Bucket name auto-generated (hostname + random prefix), cannot be changed. Need multiple buckets? Add more object-storage services
+7. **No Zerops backup**: Object Storage is not covered by the Zerops backup system
+8. **No autoscaling**: Quota (1-100 GB) must be set manually, changeable in GUI after creation
+
+## See Also
+- zerops://themes/services — managed service reference (Object Storage section)
+- zerops://themes/core — import.yml schema
+- zerops://guides/environment-variables — cross-service env var references

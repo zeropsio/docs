@@ -1,0 +1,50 @@
+---
+title: "Firewall on Zerops"
+description: "Zerops uses nftables with restricted TCP ports 1-1024 (only 22, 53, 80, 123, 443, 587 allowed); UDP and ports 1025-65535 are unrestricted."
+---
+
+
+## Keywords
+firewall, ports, nftables, tcp, udp, blocked ports, smtp port, port restriction, allowed ports
+
+## TL;DR
+Zerops uses nftables with restricted TCP ports 1-1024 (only 22, 53, 80, 123, 443, 587 allowed); UDP and ports 1025-65535 are unrestricted.
+
+## TCP Ports 1-1024 (Restricted)
+
+| Port | Protocol | Status |
+|------|----------|--------|
+| 22 | SSH | Allowed |
+| 25 | SMTP | **Blocked** (spam prevention) |
+| 53 | DNS | Allowed |
+| 80 | HTTP | Allowed |
+| 123 | NTP | Allowed |
+| 443 | HTTPS | Allowed |
+| 465 | SMTPS | **Blocked** (deprecated) |
+| 587 | SMTP/STARTTLS | Allowed |
+| All others | — | **Blocked** |
+
+## UDP Ports
+No restrictions on any UDP port.
+
+## TCP Ports 1025-65535
+No restrictions.
+
+## Direct Port Access Firewall
+For services with direct port access enabled:
+- Configure **blacklist** or **whitelist** rules per port
+- Available on ports 10-65435
+- Protocols: TCP, UDP
+
+## Port Modification
+Contact `support@zerops.io` with Project ID + Organization ID to request changes to restricted ports.
+
+## Gotchas
+1. **Port 25 is permanently blocked**: Use port 587 with STARTTLS for email sending
+2. **Port 465 is blocked**: Legacy SMTPS — use 587 instead
+3. **Cannot self-service unblock**: Must contact Zerops support for port exceptions
+
+## See Also
+- zerops://guides/public-access
+- zerops://guides/smtp
+- zerops://guides/networking

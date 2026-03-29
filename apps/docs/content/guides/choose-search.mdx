@@ -1,0 +1,60 @@
+---
+title: "Choosing a Search Engine on Zerops"
+description: "**Use Meilisearch** for simple full-text search. Use **Elasticsearch** for advanced queries or HA requirements. Use **Qdrant** for vector/AI search."
+---
+
+
+## Keywords
+search, elasticsearch, meilisearch, typesense, qdrant, vector, full-text, choose search, which search engine
+
+## TL;DR
+**Use Meilisearch** for simple full-text search. Use **Elasticsearch** for advanced queries or HA requirements. Use **Qdrant** for vector/AI search.
+
+## Decision Matrix
+
+| Need | Choice | Why |
+|------|--------|-----|
+| **Simple full-text search** | **Meilisearch** (default) | Instant setup, typo-tolerant, frontend-safe keys |
+| Advanced queries / HA | Elasticsearch | Cluster support, plugins, JVM tuning |
+| Autocomplete + typo-tolerance | Typesense | Raft HA, CORS built-in, fast |
+| Vector / AI similarity | Qdrant | gRPC + HTTP, automatic cluster replication |
+
+## Meilisearch (Default for Simple Search)
+
+- Single-node only (no clustering)
+- Port: 7700
+- API keys: `masterKey` (admin), `defaultSearchKey` (frontend-safe), `defaultAdminKey` (backend)
+- Production mode by default (no search preview dashboard)
+
+## Elasticsearch (Advanced / HA)
+
+- Cluster support with multiple nodes
+- Port: 9200 (HTTP only)
+- Auth: `elastic` user with auto-generated password
+- Plugins via `PLUGINS` env var (comma-separated)
+- JVM heap: `HEAP_PERCENT` env var (default 50%)
+- Min RAM: 0.25 GB
+
+## Typesense (Fast Autocomplete)
+
+- HA: 3-node Raft consensus
+- API key via `apiKey` env var (immutable after generation)
+- CORS enabled by default
+- Recovery time: up to 1 minute during failover (503/500 auto-resolves)
+- Data persisted at `/var/lib/typesense`
+
+## Qdrant (Vector Search)
+
+- Ports: 6333 (HTTP), 6334 (gRPC)
+- API keys: `apiKey` (full access), `readOnlyApiKey` (search only)
+- HA: 3 nodes with `automaticClusterReplication=true` by default
+- **Internal access only** — no public access available
+
+## Gotchas
+1. **Meilisearch has no HA**: Single-node only — for HA full-text search, use Elasticsearch or Typesense
+2. **Qdrant is internal-only**: Cannot be exposed publicly — access via your runtime service
+3. **Typesense API key is immutable**: Cannot change `apiKey` after service creation
+4. **Elasticsearch plugins require restart**: Changing `PLUGINS` env var needs service restart
+
+## See Also
+- zerops://themes/services — Meilisearch, Elasticsearch, Typesense, Qdrant service cards and wiring

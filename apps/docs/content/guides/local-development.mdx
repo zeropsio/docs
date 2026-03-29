@@ -1,0 +1,137 @@
+---
+title: "Local Development with Zerops"
+description: "Develop locally with hot reload while connecting to Zerops managed services (DB, cache, storage) via VPN. ZCP generates `.env` with real credentials. Deploy to Zerops with `zerops_deploy` which uses `zcli push` under the hood."
+---
+
+
+## Keywords
+local development, local dev, zcli push, vpn, env file, dotenv, hot reload, dev server, local mode, zcli vpn, local deploy, environment variables local
+
+## TL;DR
+Develop locally with hot reload while connecting to Zerops managed services (DB, cache, storage) via VPN. ZCP generates `.env` with real credentials. Deploy to Zerops with `zerops_deploy` which uses `zcli push` under the hood.
+
+---
+
+## Setup
+
+### Prerequisites
+- **zcli** installed: `npm i -g @zerops/zcli` or [docs.zerops.io/references/cli](https://docs.zerops.io/references/cli)
+- **VPN**: WireGuard (installed by zcli automatically on first `zcli vpn up`)
+- **Project-scoped token**: Create in Zerops GUI → Settings → Access Tokens → Custom access per project
+
+### Configuration
+```json
+// .mcp.json (in project root)
+{
+  "mcpServers": {
+    "zcp": {
+      "command": "zcp",
+      "env": { "ZCP_API_KEY": "<project-scoped-token>" }
+    }
+  }
+}
+```
+
+---
+
+## Workflow
+
+### 1. Connect to Zerops services
+```bash
+zcli vpn up <project-id>
+```
+- All services accessible by hostname (e.g., `db`, `cache`)
+- One project at a time — switching disconnects the current
+- **Env vars NOT available via VPN** — use `.env` file instead
+
+### 2. Load credentials
+ZCP generates `.env` from `zerops_discover`:
+```
+# db (postgresql@16)
+db_host=db
+db_port=5432
+db_password=<actual-password>
+db_connectionString=postgresql://db:<actual>@db:5432/db
+```
+
+How to load:
+| Runtime | Method |
+|---------|--------|
+| Node.js 20+ | `node --env-file .env app.js` |
+| Next.js, Vite, Nuxt | Automatic (reads `.env`) |
+| PHP/Laravel | Automatic (reads `.env`) |
+| Python | `python-dotenv` or `django-environ` |
+| Go | `godotenv.Load()` or `source .env && go run .` |
+| Java/Spring | `spring-dotenv` or `application.properties` |
+
+### 3. Develop locally
+Start your dev server as usual — hot reload works against Zerops managed services over VPN.
+
+### 4. Deploy to Zerops
+```
+zerops_deploy targetService="appstage"
+```
+Uses `zcli push` under the hood. Blocks until build completes.
+
+---
+
+## zerops.yml for Local Mode
+
+The same `zerops.yml` works for both local push and container deploy:
+
+```yaml
+zerops:
+  - setup: appstage
+    build:
+      base: nodejs@22
+      buildCommands:
+        - npm ci
+        - npm run build
+      deployFiles: ./dist
+    run:
+      start: node dist/server.js
+      ports:
+        - port: 3000
+          httpSupport: true
+      envVariables:
+        DB_URL: ${db_connectionString}
+```
+
+`${hostname_varName}` references are resolved by Zerops at container runtime — they work regardless of push source (local or container).
+
+---
+
+## Connection Troubleshooting
+
+| Symptom | Diagnosis | Fix |
+|---------|-----------|-----|
+| `nc -zv db 5432` times out | VPN not connected | `zcli vpn up <project-id>` |
+| VPN connected, still timeout | Wrong project | `zcli vpn up <correct-project-id>` |
+| Connected but auth fails | Stale .env | Regenerate from `zerops_discover includeEnvs=true` |
+| Service unreachable | Service stopped | `zerops_manage action="start" serviceHostname="db"` |
+
+### Diagnostic sequence
+1. `zerops_discover service="db"` — is service RUNNING?
+2. `nc -zv db 5432 -w 3` — network reachable?
+3. Compare `.env` vs `zerops_discover includeEnvs=true` — credentials current?
+
+---
+
+## Multi-Project
+
+Each project directory has its own `.mcp.json` + `.zcp/state/`. VPN is one per machine — switch manually:
+```bash
+zcli vpn up <project-a-id>  # work on project A
+zcli vpn up <project-b-id>  # auto-disconnects A, connects B
+```
+
+---
+
+## Gotchas
+
+1. **VPN = network only**: Env vars must come from `.env` file, not VPN connection
+2. **`.env` contains secrets**: Add to `.gitignore` immediately — never commit
+3. **Deploy = new container**: Local files on Zerops are lost on every deploy. Only `deployFiles` content persists
+4. **One VPN project at a time**: Connecting to project B disconnects project A
+5. **Object storage (S3)**: Uses HTTPS apiUrl — may work without VPN but not fully verified. Include VPN as fallback
+6. **zcli must be installed**: `zerops_deploy` requires zcli in PATH. Error message includes install link if missing

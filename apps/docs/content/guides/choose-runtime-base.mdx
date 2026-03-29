@@ -1,0 +1,54 @@
+---
+title: "Choosing a Runtime Base on Zerops"
+description: "**Use Alpine** as the default base for all services. Use Ubuntu only when you need system packages not available in Alpine. Use Docker only for pre-built images."
+---
+
+
+## Keywords
+alpine, ubuntu, docker, container, base image, linux, runtime base, os, choose base, which container
+
+## TL;DR
+**Use Alpine** as the default base for all services. Use Ubuntu only when you need system packages not available in Alpine. Use Docker only for pre-built images.
+
+## Decision Matrix
+
+| Need | Choice | Why |
+|------|--------|-----|
+| **Any standard app** | **Alpine** (default) | ~5MB, fast, secure, sufficient for 95% of apps |
+| System packages (apt) | Ubuntu | Full Debian ecosystem, ~100MB |
+| Pre-built Docker images | Docker | VM-based, bring your own image |
+| CGO / native libs | Ubuntu | Better glibc compatibility than Alpine's musl |
+
+## Alpine (Default)
+
+- Size: ~5MB base
+- Package manager: `apk add`
+- Best for: All runtimes (Node.js, Python, Go, Rust, Java, PHP, etc.)
+- Zerops uses Alpine as default base for all managed runtimes
+
+## Ubuntu
+
+- Size: ~100MB base
+- Package manager: `apt-get install`
+- Version: 24.04 LTS
+- Use when: You need packages not available in Alpine, or need glibc (not musl)
+- Example: Go apps with CGO, Python packages with C extensions that don't compile on musl
+
+## Docker
+
+- **Runs in a VM** (not a container) — slower boot, higher overhead
+- Network: **Must use `--network=host`** or `network_mode: host` in compose
+- Scaling: Fixed resources only (no min-max auto-scaling), VM restarts on resource change
+- Disk: Can only increase, never decrease without recreation
+- Build phase runs in containers (not VMs)
+- **Always use specific version tags** — `:latest` is cached and won't re-pull
+
+## Gotchas
+1. **Alpine uses musl**: Some C libraries may not compile — use Ubuntu if you hit musl issues
+2. **Docker is VM-based**: Vertical scaling restarts the VM — expect brief downtime
+3. **Docker `:latest` is cached**: Zerops won't re-pull — always use specific tags like `myapp:1.2.3`
+4. **Docker requires host networking**: Without `--network=host`, the container can't receive traffic
+
+## See Also
+- `zerops://runtimes/{name}` — per-runtime guides (e.g. zerops://runtimes/alpine, zerops://runtimes/docker)
+- zerops://themes/core — build environment rules

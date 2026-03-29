@@ -1,0 +1,160 @@
+---
+title: "Networking on Zerops"
+description: "Zerops networking has two layers: a private VXLAN network per project (service-to-service via hostname, plain HTTP) and an L7 balancer for public traffic (SSL termination, round-robin, health checks). Apps must bind `0.0.0.0` — binding localhost causes 502. The L7 balancer is nginx-based with configurable timeouts, buffers, rate limiting, and access policies."
+---
+
+
+## Keywords
+networking, vxlan, l7 balancer, load balancer, ssl termination, 502, bad gateway, internal access, service discovery, hostname, proxy headers, x-forwarded-for, x-real-ip, bind, 0.0.0.0, localhost, round robin, health check, keepalive, nginx, connection timeout, websocket, rate limiting, access policy, basic auth, internal port, http, https
+
+## TL;DR
+Zerops networking has two layers: a private VXLAN network per project (service-to-service via hostname, plain HTTP) and an L7 balancer for public traffic (SSL termination, round-robin, health checks). Apps must bind `0.0.0.0` — binding localhost causes 502. The L7 balancer is nginx-based with configurable timeouts, buffers, rate limiting, and access policies.
+
+---
+
+## Architecture Overview
+
+```
+Internet
+  │
+  ├─ HTTP/HTTPS ──→ L7 Balancer (SSL termination, nginx) ──→ container VXLAN IP:port
+  │
+  └─ Direct port ──→ L3/Core Balancer ──→ container VXLAN IP:port
+```
+
+**Per-project infrastructure:**
+- **Private VXLAN network** — isolated overlay network shared by all services
+- **L7 HTTP Balancer** — 2 HA containers, auto-scales, domain routing + SSL
+- **L3 Core Balancer** — IP addresses and direct port access (TCP/UDP)
+
+---
+
+## Internal Networking (VXLAN)
+
+Services in the same project communicate by **hostname and internal port**:
+
+```
+http://api:3000/health
+http://postgres:5432
+```
+
+**Rules:**
+- Always **`http://`** — never `https://` for internal traffic
+- Isolated per project — no cross-project private networking
+- Service discovery is automatic — no manual network config
+- VPN uses same hostnames: `http://api:3000` from local machine (both `api` and `api.zerops` resolve — VPN sets up DNS search domain)
+
+**Cross-service env vars**: prefix with hostname — e.g., `app_API_TOKEN`. Zerops auto-generates connection vars for managed services.
+
+**DO NOT** use `https://` for service-to-service calls — SSL terminates at the L7 balancer, internal network is already isolated.
+
+---
+
+## L7 Balancer (HTTP/HTTPS)
+
+The L7 balancer is **nginx-based**, deployed as 2 HA containers per project. It handles SSL/TLS termination (Let's Encrypt, auto-renewed), domain routing, round-robin load balancing with health checks, and connection pooling.
+
+### Proxy Headers
+
+The balancer forwards client info via standard headers:
+- **`X-Forwarded-For`** / **`X-Real-IP`** — original client IP
+- **`X-Forwarded-Proto`** — `https` (original protocol)
+
+Your app receives plain HTTP but can inspect these headers for the real client info.
+
+### Key Default Settings
+
+| Parameter | Default | Range | Notes |
+|-----------|---------|-------|-------|
+| `worker_connections` | 4000 | 1024-65535 | Simultaneous connections per worker |
+| `keepalive_timeout` | 30s | 1s-300s | Idle connection lifetime |
+| `keepalive_requests` | 100000 | 1-1000000 | Max requests per connection |
+| `client_max_body_size` | 512m | 1k-2048m | Max upload size (custom domain) |
+| `client_header_timeout` | 10s | 1s-300s | Header receive timeout |
+| `client_body_timeout` | 10s | 1s-300s | Body receive timeout |
+| `send_timeout` | 2s | 1s-300s | Response transmission timeout |
+| `proxy_buffering` | on | on/off | Buffer backend responses |
+
+**Zerops subdomain** balancer: fixed **50 MB** upload limit (not configurable).
+
+### Advanced Routing Features (GUI)
+
+| Feature | Description |
+|---------|-------------|
+| **Redirects** | 301/302/307/308 with `preservePath` and `preserveQuery` options |
+| **Access Policy** | CIDR-based IP allow/deny lists, returns 403 on denied request |
+| **Rate Limiting** | Per-IP or per-domain, configurable burst queue, returns 503 when exceeded |
+| **Basic Auth** | HTTP Basic Authentication per location |
+| **Custom Content** | Return static content with custom status code and MIME type |
+
+---
+
+## 502 Bad Gateway Diagnostic Checklist
+
+Work through these steps **in order**:
+
+1. **Binding address** — App bound to `0.0.0.0`? Binding `127.0.0.1`/`localhost` is the #1 cause
+2. **Port match** — App listening on the port declared in `zerops.yml` `ports[]`?
+3. **App running** — Check runtime logs (`zerops_logs`) for crash/startup errors
+4. **Health check** — If configured, returning 2xx / exit 0? 5-minute retry window
+5. **Readiness check** — If configured, traffic only routes after it passes
+6. **Service status** — Is the service ACTIVE? (check `zerops_discover`)
+7. **Timeout settings** — For slow responses, increase `send_timeout` (default 2s)
+
+**Common framework fixes:**
+```bash
+# Node.js/Express — bind to 0.0.0.0
+app.listen(3000, '0.0.0.0')
+
+# Python/Flask
+flask run --host=0.0.0.0
+
+# Go
+http.ListenAndServe(":8080", handler)  // implicit 0.0.0.0
+
+# Java/Spring Boot — in application.properties
+server.address=0.0.0.0
+```
+
+---
+
+## Shared vs Dedicated IPv4
+
+| Feature | Shared IPv4 | Dedicated IPv4 |
+|---------|-------------|----------------|
+| Cost | Free | $3 / 30 days |
+| Protocol support | HTTP/HTTPS only | All (TCP/UDP/HTTP) |
+| Connections | Limited, shorter timeouts | Full capacity |
+| Blacklist risk | Shared with other users | Isolated |
+| DNS requirement | A + AAAA (both mandatory) | A only (AAAA optional) |
+| SNI routing | AAAA record used for verification | Not needed |
+| Production use | No | Yes |
+
+**Shared IPv4 SNI mechanism**: Zerops reverse-looks-up the domain's AAAA record to verify project ownership. Without it, routing fails silently.
+
+---
+
+## Cloudflare Integration Summary
+
+- **SSL mode**: Always **Full (strict)** — "Flexible" causes redirect loops
+- **Shared IPv4 + proxy**: **DO NOT** — reverse AAAA lookup breaks with Cloudflare proxy
+- **Best setup**: IPv6-only AAAA record, Cloudflare proxied (handles IPv4 translation)
+- **ACME challenge**: WAF skip rule for `/.well-known/acme-challenge/`
+- **Wildcard SSL**: `_acme-challenge.<domain>` CNAME to `<domain>.zerops.zone`
+
+---
+
+## Gotchas
+1. **Binding localhost = 502**: The L7 balancer connects via VXLAN IP, not localhost — always bind `0.0.0.0`
+2. **Internal HTTPS breaks things**: Service-to-service must use `http://` — the VXLAN network is already isolated
+3. **Subdomain 50MB cap**: zerops.app subdomains have a hard 50MB upload limit — use custom domain for larger files
+4. **send_timeout default is 2s**: Slow API responses may be cut off — increase for long-running endpoints
+5. **Cross-project networking impossible**: Each project is an isolated VXLAN — use public access to bridge projects
+6. **Shared IPv4 needs AAAA**: Missing AAAA record = silent routing failure on shared IPv4
+
+## See Also
+- zerops://themes/core — Traffic Flow, Binding & Networking, Port Rules
+- zerops://guides/public-access — IP types, DNS setup, domain configuration
+- zerops://guides/cloudflare — Cloudflare-specific DNS and SSL setup
+- zerops://guides/firewall — port restrictions and outbound rules
+- zerops://guides/vpn — VPN access to private network
