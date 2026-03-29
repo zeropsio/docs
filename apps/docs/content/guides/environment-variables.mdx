@@ -1,0 +1,179 @@
+---
+title: "Environment Variables"
+description: "Zerops manages environment variables at two scopes (project and service) with strict build/runtime isolation. Variables are set via zerops.yml, import.yml, or GUI. Cross-service references use `${hostname_varname}` syntax. Project vars auto-inherit into all services. Secret vars are write-only after creation. Changes require service restart."
+---
+
+
+## Keywords
+environment variables, env, envVariables, envSecrets, dotEnvSecrets, envReplace, secrets, project variables, service variables, cross-service reference, variable precedence, build runtime isolation, RUNTIME_ prefix, BUILD_ prefix, variable shadowing, envIsolation, restart, placeholder replacement
+
+## TL;DR
+Zerops manages environment variables at two scopes (project and service) with strict build/runtime isolation. Variables are set via zerops.yml, import.yml, or GUI. Cross-service references use `${hostname_varname}` syntax. Project vars auto-inherit into all services. Secret vars are write-only after creation. Changes require service restart.
+
+---
+
+## Scope Hierarchy
+
+| Scope | Defined In | Visibility | Editable Without Redeploy |
+|-------|-----------|------------|--------------------------|
+| **Project** | import.yml `project.envVariables`, GUI | All services (auto-inherited) | Yes (restart required) |
+| **Service secret** | import.yml `envSecrets`, GUI | Single service | Yes (restart required) |
+| **Service basic (build)** | zerops.yml `build.envVariables` | Build container only | No (redeploy required) |
+| **Service basic (runtime)** | zerops.yml `run.envVariables` | Runtime container only | No (redeploy required) |
+
+## Variable Precedence
+
+When the same key exists at multiple levels:
+
+1. **Service basic (build/runtime)** wins over service secret
+2. **Service-level** wins over project-level
+3. Build and runtime are **separate environments** -- same key can have different values in each
+
+**DO NOT** create a secret and a basic runtime variable with the same key expecting both to persist. The basic runtime variable from zerops.yml silently overrides the secret.
+
+## Build/Runtime Isolation
+
+Build and runtime run in **separate containers**. Variables from one phase are not visible in the other unless explicitly referenced with prefixes:
+
+| Want to access | From | Use prefix |
+|---------------|------|-----------|
+| Runtime var `API_KEY` | Build container | `${RUNTIME_API_KEY}` |
+| Build var `BUILD_ID` | Runtime container | `${BUILD_BUILD_ID}` |
+
+```yaml
+zerops:
+  - setup: app
+    build:
+      envVariables:
+        API_KEY: ${RUNTIME_API_KEY}   # reads runtime API_KEY during build
+    run:
+      envVariables:
+        API_KEY: "12345-abcde"
+```
+
+## Cross-Service References
+
+Reference another service's variable with `${hostname_varname}`:
+
+```yaml
+run:
+  envVariables:
+    DB_PASS: ${db_password}          # 'password' var from service 'db'
+    DB_CONN: ${dbtest_connectionString}
+```
+
+**Hostname transformation**: dashes become underscores. Service `my-db` variable `port` is `${my_db_port}`.
+
+The referenced variable does **not** need to exist at definition time -- Zerops resolves at container start.
+
+### Cross-Service References in API vs Runtime
+
+Cross-service references (`${hostname_varname}`) are **resolved at container start time**, not at definition time. This means:
+
+- **`zerops_discover` with `includeEnvs=true`** returns the **literal template** (e.g., `${db_password}`), NOT the resolved value. This is expected — the API stores templates, not resolved values.
+- **Inside the running container**, environment variables contain the actual resolved values.
+- **Restarting a service does NOT change** what `zerops_discover` returns — it always shows templates. To verify resolved values, check from inside the container (e.g., via SSH or application endpoint).
+
+### Isolation Modes (envIsolation)
+
+| Mode | Behavior |
+|------|----------|
+| `service` (default) | Variables isolated per service. Must use explicit `${hostname_varname}` references |
+| `none` (legacy) | All service variables auto-shared via `${hostname_varname}` without explicit reference |
+
+Set in import.yml at project or service level:
+```yaml
+project:
+  envIsolation: none       # project-wide: disable isolation
+services:
+  - hostname: db
+    envIsolation: none     # per-service: expose this service's vars to all
+```
+
+## Project Variables -- Auto-Inherited
+
+Project variables are **automatically available** in every service (build and runtime). They do NOT need `${...}` referencing.
+
+**DO NOT** re-reference project variables in service envVariables:
+```yaml
+# WRONG -- creates shadow, may cause circular reference
+envVariables:
+  PROJECT_NAME: ${PROJECT_NAME}
+
+# CORRECT -- just use it in your app code, it's already there
+```
+
+To **override** a project variable for one service, define a service-level variable with the same key:
+```yaml
+run:
+  envVariables:
+    LOG_LEVEL: debug    # overrides project-level LOG_LEVEL for this service
+```
+
+## Secret Variables
+
+- Defined via GUI, import.yml `envSecrets`, or `dotEnvSecrets`
+- **Write-only after creation** -- values masked in GUI, cannot be read back via API
+- Can be updated without redeploy, but service **must be restarted**
+- Overridden by basic (zerops.yml) variables with the same key
+
+### dotEnvSecrets
+
+Import secrets in `.env` format within import.yml:
+```yaml
+services:
+  - hostname: app
+    dotEnvSecrets: |
+      APP_KEY=generated_value
+      DB_PASSWORD=secure123
+```
+All entries become secret variables. Requires `#yamlPreprocessor=on` if using generator functions.
+
+## envReplace -- File-Level Substitution
+
+Replaces placeholders in deployed files with environment variable values **during deployment** (not at runtime).
+
+```yaml
+run:
+  envReplace:
+    delimiter: "%%"
+    target:
+      - ./config/
+      - ./templates/settings.json
+```
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `delimiter` | Yes | Wrapping characters (e.g., `%%` makes `%%VAR%%`). String or array |
+| `target` | Yes | Files or directories to process. String or array |
+
+**DO NOT** expect directory targets to recurse into subdirectories. `./config/` processes only files directly in `config/`, not `config/jwt/`. Specify each subdirectory explicitly.
+
+## Naming Restrictions
+
+**Key**: must match `[a-zA-Z_]+[a-zA-Z0-9_]*`. Case-sensitive. Must be unique within scope regardless of case.
+
+**Value**: ASCII only. No EOL characters.
+
+## Restart Requirement
+
+Env var changes (secret or project) take effect only on container start. The running process does **not** receive updated values.
+
+**DO NOT** expect hot-reload of env vars. After changing secrets or project vars in GUI, **restart the service**. For zerops.yml `envVariables` changes, a **full redeploy** is required.
+
+## System-Generated Variables
+
+Zerops auto-generates variables per service (e.g., `hostname`, `PATH`, DB connection strings). Cannot be deleted. Some read-only (`hostname`), others editable (`PATH`). Can be referenced by other services using `${hostname_varname}`.
+
+## Common Mistakes
+
+- **DO NOT** re-reference project vars in service envVariables (creates shadow/circular)
+- **DO NOT** forget restart after GUI/API env changes -- process won't see new values
+- **DO NOT** expect `envReplace` to recurse subdirectories -- it does not
+- **DO NOT** rely on reading secret values back -- they are write-only after creation
+- **DO NOT** create both secret and basic vars with same key -- basic silently wins
+
+## See Also
+- zerops://themes/core -- schema, build/deploy semantics, variable basics
+- zerops://themes/services -- cross-service wiring patterns using env vars
+- zerops://guides/production-checklist -- pre-launch variable audit

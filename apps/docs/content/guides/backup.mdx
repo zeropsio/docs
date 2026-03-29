@@ -1,0 +1,66 @@
+---
+title: "Backup on Zerops"
+description: "Zerops auto-backs up databases and storage daily (00:00-01:00 UTC) with X25519 encryption; backups are retained for 7 days minimum after service/project deletion."
+---
+
+
+## Keywords
+backup, restore, snapshot, daily backup, cron backup, encryption, retention, backup schedule
+
+## TL;DR
+Zerops auto-backs up databases and storage daily (00:00-01:00 UTC) with X25519 encryption; backups are retained for 7 days minimum after service/project deletion.
+
+## Supported Services
+MariaDB, PostgreSQL, Qdrant, Elasticsearch, NATS, Meilisearch, Shared Storage.
+
+**Not supported**: Runtimes, Object Storage (use S3 lifecycle policies), Valkey/KeyDB (in-memory).
+
+## Schedule Options
+- No backups
+- Once a day (default: 00:00-01:00 UTC)
+- Once a week
+- Once a month
+- Custom CRON: `minute hour day month weekday`
+
+## Tagging
+- Auto tags: `daily` (every backup), `weekly` (first Monday UTC), `monthly` (1st of month UTC)
+- User tags: Up to 24 chars (letters, numbers, `:-_`)
+- **Protected tags**: Exempt from automatic deletion — use for critical snapshots
+
+## Storage Limits
+| Plan | Backup Storage | Egress |
+|------|---------------|--------|
+| Lightweight | 5 GB | 100 GB |
+| Serious | 25 GB | 3 TB |
+| Technical max | 1 TiB per project (shared across all services) |
+
+## Retention Defaults
+- Minimum kept: 7 daily + 4 weekly + 3 monthly
+- Maximum per service: 50 backups
+
+## Encryption
+End-to-end with X25519 per-project keys. Decrypted only on download.
+
+## Grace Period
+7 days after service or project deletion before backups are permanently removed.
+
+## Backup Formats by Service
+| Service | Format |
+|---------|--------|
+| PostgreSQL | pg_dump |
+| MariaDB | mysqldump |
+| Elasticsearch | elasticdump (.gz) |
+| Meilisearch | .dump |
+| Qdrant | .snapshot |
+| NATS | .tar.gz |
+| Shared Storage | filesystem archive |
+
+## Gotchas
+1. **Object Storage has no Zerops backup**: Use S3 lifecycle policies or external backup
+2. **Valkey/KeyDB not backed up**: In-memory data — use persistence or application-level backup
+3. **Backup storage is shared**: All services in a project share the backup quota
+
+## See Also
+- zerops://themes/core — platform infrastructure
+- zerops://themes/services — database service cards
+- zerops://guides/scaling

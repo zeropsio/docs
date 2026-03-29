@@ -1,0 +1,49 @@
+---
+title: "Choosing a Database on Zerops"
+description: "**Use PostgreSQL** for everything unless you have a specific reason not to. It's the best-supported database on Zerops with full HA, read replicas, and pgBouncer."
+---
+
+
+## Keywords
+database, postgresql, mariadb, clickhouse, sql, relational, columnar, analytics, postgres, mysql, choose database, which database
+
+## TL;DR
+**Use PostgreSQL** for everything unless you have a specific reason not to. It's the best-supported database on Zerops with full HA, read replicas, and pgBouncer.
+
+## Decision Matrix
+
+| Need | Choice | Why |
+|------|--------|-----|
+| **General-purpose** | **PostgreSQL** (default) | Full HA, read replicas, pgBouncer, best Zerops support |
+| MySQL compatibility | MariaDB | MaxScale routing, async replication |
+| Analytics / OLAP | ClickHouse | Columnar storage, ReplicatedMergeTree, 4 protocol ports |
+
+## PostgreSQL (Default Choice)
+
+- HA: 3 nodes (1 primary + 2 replicas)
+- Ports: 5432 (primary), 5433 (read replicas), 6432 (external TLS via pgBouncer)
+- Connection: `postgresql://${user}:${password}@${hostname}:5432/${db}`
+- Read scaling: Use port 5433 for read-heavy workloads
+
+## MariaDB
+
+- HA: MaxScale routing with async replication
+- Port: 3306
+- Connection: `mysql://${user}:${password}@${hostname}:3306/${db}`
+- Use when: Application requires MySQL wire protocol
+
+## ClickHouse
+
+- HA: 3 data nodes, replication factor 3
+- Ports: 9000 (native), 8123 (HTTP), 9004 (MySQL), 9005 (PostgreSQL)
+- Requires `ReplicatedMergeTree` engine in HA mode
+- Use when: Analytics, time-series, OLAP workloads
+
+## Gotchas
+1. **HA mode is immutable**: Cannot switch HA/NON_HA after creation — delete and recreate
+2. **No internal TLS**: Use `http://hostname:port` internally — VPN provides encryption
+3. **PostgreSQL URI scheme**: Some libraries need `postgres://` not `postgresql://` — create a custom env var
+
+## See Also
+- zerops://themes/services — PostgreSQL, MariaDB, ClickHouse service cards and wiring
+- zerops://decisions/choose-cache

@@ -1,0 +1,41 @@
+---
+title: "Choosing a Cache on Zerops"
+description: "**Use Valkey.** KeyDB development has stalled and is effectively deprecated on Zerops."
+---
+
+
+## Keywords
+cache, redis, valkey, keydb, in-memory, session, key-value, choose cache, which cache
+
+## TL;DR
+**Use Valkey.** KeyDB development has stalled and is effectively deprecated on Zerops.
+
+## Decision Matrix
+
+| Need | Choice | Why |
+|------|--------|-----|
+| **Any caching need** | **Valkey** (default) | Active development, full HA, Redis-compatible |
+| Legacy KeyDB apps | KeyDB | Only if migrating existing KeyDB deployment |
+
+## Valkey (Default Choice)
+
+- Redis-compatible drop-in replacement
+- HA: 3 nodes (1 master + 2 replicas) with automatic failover
+- Ports: 6379 (non-TLS), 6380 (TLS), 7000 (read replica non-TLS), 7001 (read replica TLS)
+- Connection: `redis://${user}:${password}@${hostname}:6379`
+- HA detail: Ports 6379/6380 on replicas forward traffic to current master (Zerops-specific, not native Valkey)
+
+## KeyDB (Deprecated)
+
+- Development activity has slowed significantly
+- Port: 6379
+- **Do not use for new projects**
+
+## Gotchas
+1. **HA replication is async**: Brief data loss possible during master failover
+2. **Port forwarding is Zerops-specific**: Replicas forward 6379/6380 to master — this is not standard Redis/Valkey behavior
+3. **Read replicas use different ports**: 7000/7001 for direct replica reads
+
+## See Also
+- zerops://themes/services — Valkey, KeyDB service cards and wiring
+- zerops://decisions/choose-database

@@ -1,0 +1,71 @@
+---
+title: "Logging on Zerops"
+description: "Zerops captures stdout/stderr as logs; use syslog output format for severity filtering. Supports forwarding to Better Stack, Papertrail, or self-hosted ELK via syslog."
+---
+
+
+## Keywords
+logging, logs, syslog, build logs, runtime logs, service log, log access, log severity, log forwarding, better stack, papertrail, elk, logstash, syslog-ng, external logging, log aggregation
+
+## TL;DR
+Zerops captures stdout/stderr as logs; use syslog output format for severity filtering. Supports forwarding to Better Stack, Papertrail, or self-hosted ELK via syslog.
+
+## Log Types
+1. **Build logs** — output from build pipeline
+2. **Prepare runtime logs** — output from custom runtime image creation
+3. **Runtime/Database logs** — operational output (stdout/stderr)
+
+## Access Methods
+
+### GUI
+- Project detail → service → Logs section
+- Filter by severity, time range, container
+
+### CLI
+```bash
+zcli service log <service-name>                  # Runtime logs
+zcli service log <service-name> --showBuildLogs  # Build logs
+```
+
+## Severity Filtering
+Logs must output to **syslog format** for severity filtering to work. Plain stdout/stderr logs appear as "info" level.
+
+## Log Forwarding
+
+### Ready-Made Integrations
+- **Better Stack** — cloud log management
+- **Papertrail** — cloud log aggregation
+- **ELK Stack** — self-hosted (Elasticsearch + Logstash + Kibana)
+
+### ELK Stack Setup (Self-Hosted on Zerops)
+
+Services needed:
+- `elkstorage` — Elasticsearch
+- `kibana` — UI
+- `logstash` — Log collection (UDP syslog)
+
+Multi-project forwarding: make Logstash public with firewall whitelist rules.
+
+### Custom syslog-ng Configuration
+
+**Critical**: Use source name `s_src` (not `s_sys`):
+```
+source s_src {
+    system();
+    internal();
+};
+```
+
+Certificate paths:
+- System certs: `/etc/ssl/certs`
+- Custom certs: `ca-file("/etc/syslog-ng/user.crt")`
+
+## Gotchas
+1. **Syslog format required**: Without syslog formatting, all logs appear as same severity — no filtering possible
+2. **Build logs separate**: Use `--showBuildLogs` flag in CLI — not shown by default
+3. **Source name must be `s_src`**: Using `s_sys` (common default) will not capture Zerops logs
+4. **UDP for Logstash**: Zerops forwards logs via UDP syslog — ensure Logstash listens on UDP
+5. **Custom certs path**: Place custom CA certs in `/etc/syslog-ng/user.crt`
+
+## See Also
+- zerops://guides/metrics

@@ -1,0 +1,195 @@
+---
+title: "zerops.yml Advanced Behavioral Reference"
+description: "Behavioral semantics for advanced zerops.yml features: health/readiness checks, deploy strategies, cron, background processes, runtime init, envReplace, routing, and `extends`. Schema is in grammar.md -- this file covers what the schema cannot express."
+---
+
+
+## Keywords
+zerops.yml, health check, healthCheck, readiness check, readinessCheck, routing, cors, redirects, headers, crontab, cron, startCommands, initCommands, prepareCommands, envReplace, temporaryShutdown, zero downtime, rolling deploy, base image, extends, container lifecycle
+
+## TL;DR
+Behavioral semantics for advanced zerops.yml features: health/readiness checks, deploy strategies, cron, background processes, runtime init, envReplace, routing, and `extends`. Schema is in grammar.md -- this file covers what the schema cannot express.
+
+---
+
+## Health Check Behavior
+
+Health checks run **continuously** on every container after startup. Two types (mutually exclusive):
+
+- **`httpGet`**: GET to `localhost:{port}{path}`. Success = 2xx. Runs **inside** the container. Use `host` for custom Host header, `scheme: https` only if app requires TLS.
+- **`exec`**: Shell command, success = exit 0. Has access to all env vars. Use YAML `|` for multi-command scripts.
+
+| Parameter | Purpose |
+|-----------|---------|
+| `failureTimeout` | Seconds of consecutive failures before container restart |
+| `disconnectTimeout` | Seconds before failing container is removed from load balancer |
+| `recoveryTimeout` | Seconds of success before restarted container receives traffic again |
+| `execPeriod` | Interval in seconds between check attempts |
+
+**Failure sequence**: repeated failures -> `disconnectTimeout` removes from LB -> `failureTimeout` triggers restart -> `recoveryTimeout` gates traffic reconnection.
+
+**DO NOT** configure both `httpGet` and `exec` in the same block.
+
+---
+
+## Readiness Check Behavior
+
+Runs **only during deployments** to gate traffic switch to a new container.
+
+```yaml
+deploy:
+  readinessCheck:
+    httpGet: { port: 3000, path: /health }
+    failureTimeout: 60
+    retryPeriod: 10
+```
+
+**How it works**: Checks the **new** container at `localhost`. Until it passes, traffic stays on the old container. After `failureTimeout`, deploy fails and the old container remains active.
+
+**DO NOT** confuse with healthCheck -- readiness gates a deploy; healthCheck monitors continuously after.
+
+> **Dev/stage distinction**: In dev+stage pairs, healthCheck and readinessCheck belong ONLY on the stage entry. Dev services use `start: zsc noop --silent` — the agent controls server lifecycle via SSH. Adding healthCheck to dev causes unwanted container restarts during iteration.
+
+---
+
+## temporaryShutdown
+
+| Value | Behavior | Downtime |
+|-------|----------|----------|
+| `false` (default) | New containers start first, old removed after readiness | None (zero-downtime) |
+| `true` | All old containers stop, then new ones start | Yes |
+
+Use `true` when: exclusive DB migration access needed, or brief downtime acceptable. Use `false` for: production web services, APIs, user-facing apps.
+
+---
+
+## Crontab Execution
+
+```yaml
+run:
+  crontab:
+    - command: "php artisan schedule:run"
+      timing: "* * * * *"
+      workingDir: /var/www/html
+      allContainers: false
+```
+
+Parameters: `command` (required), `timing` (required, 5-field cron: `min hour dom mon dow`), `workingDir` (default `/var/www`), `allContainers` (`false` = one container, `true` = all containers).
+
+Cron runs inside the runtime container with full env var access. When `allContainers: false`, Zerops picks **one** container (good for DB jobs). Use `true` for cache clearing or log rotation everywhere. Minimum granularity is 1 minute.
+
+---
+
+## startCommands (Background Processes)
+
+Runs **multiple named processes** in parallel. **Mutually exclusive** with `start`.
+
+```yaml
+run:
+  startCommands:
+    - command: npm run start:prod
+      name: server
+    - command: litestream replicate -config=litestream.yaml
+      name: replication
+      initCommands:
+        - litestream restore -if-replica-exists -if-db-not-exists $DB_NAME
+```
+
+Each entry: `command` (required), `name` (required), `workingDir` (optional), `initCommands` (optional, per-process init). **DO NOT** use both `start` and `startCommands`.
+
+---
+
+## initCommands vs prepareCommands
+
+| Feature | `run.initCommands` | `run.prepareCommands` |
+|---------|-------------------|----------------------|
+| **When** | Every container start/restart | Only when building runtime image |
+| **Cached** | Never | Yes (base layer cache) |
+| **Use for** | Migrations, cache warming, cleanup | OS packages, system deps |
+| **Deploy files** | Present in `/var/www` | **Not available** -- DO NOT reference app files |
+| **Reruns on** | Restart, scaling, deploy | Only when commands change |
+
+---
+
+## envReplace (Variable Substitution)
+
+Replaces placeholders in deployed files with env var values at deploy time.
+
+```yaml
+run:
+  envReplace:
+    delimiter: "%%"
+    target: [./config/, ./templates/settings.json]
+```
+
+File containing `%%DATABASE_URL%%` gets the placeholder replaced with the actual value. Multiple delimiters supported: `delimiter: ["%%", "##"]`. Use for: secrets in config files, PEM certificates, frontend configs.
+
+**Directory targets are NOT recursive** -- `./config/` processes only files directly in that directory. Specify subdirectories explicitly.
+
+---
+
+## routing (Static Services Only)
+
+```yaml
+run:
+  routing:
+    cors: "'*' always"
+    redirects:
+      - { from: /old, to: /new, status: 301 }
+      - { from: /blog/*, to: /articles/, preservePath: true, status: 302 }
+    headers:
+      - for: "/*"
+        values: { X-Frame-Options: "'DENY'" }
+```
+
+- **`cors`**: Sets Access-Control-Allow-Origin. `"*"` auto-converted to `'*'`
+- **`redirects[]`**: `from` (wildcards `*`), `to`, `status`, `preservePath`, `preserveQuery`
+- **`headers[]`**: `for` (path pattern), `values` (header key-value pairs)
+- **`root`**: Custom root directory
+
+**DO NOT** use on non-static services -- silently ignored.
+
+---
+
+## extends (Configuration Inheritance)
+
+```yaml
+zerops:
+  - setup: base
+    build: { buildCommands: [npm run build], deployFiles: ./dist }
+    run: { start: npm start }
+  - setup: prod
+    extends: base
+    run: { envVariables: { NODE_ENV: production } }
+```
+
+Supports single parent (`extends: base`) or multiple parents (`extends: [base, logging]`) -- later parents override earlier ones:
+
+```yaml
+zerops:
+  - setup: base
+    build: { buildCommands: [npm run build], deployFiles: ./dist }
+  - setup: logging
+    run: { envVariables: { LOG_LEVEL: info } }
+  - setup: prod
+    extends: [base, logging]
+    run: { envVariables: { NODE_ENV: production } }
+```
+
+Configuration is **merged at the section level** -- child values override parent values within each section (build, run, deploy), but unspecified sections inherit from parent. Must reference another `setup` name in the same file.
+
+## Base Images
+
+Available runtimes and versions are listed in **Service Stacks (live)** -- injected by `zerops_knowledge` and workflow responses. Some key rules:
+
+- PHP: build `php@X`, run `php-nginx@X` or `php-apache@X` (different bases)
+- Deno, Gleam: REQUIRES `os: ubuntu` (not available on Alpine)
+- Static sites: build `nodejs@latest`, run `static`
+- `@latest` = newest stable version
+
+---
+
+## See Also
+- zerops://themes/core -- zerops.yml schema reference and platform rules
+- `zerops://runtimes/{name}` -- per-runtime configuration guides (e.g. zerops://runtimes/nodejs)
+- zerops://guides/production-checklist -- production readiness including health check setup

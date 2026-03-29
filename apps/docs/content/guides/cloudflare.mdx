@@ -1,0 +1,77 @@
+---
+title: "Cloudflare Integration with Zerops"
+description: "Always use **Full (strict)** SSL mode in Cloudflare — \"Flexible\" causes redirect loops. Shared IPv4 with Cloudflare proxy is not recommended."
+---
+
+
+## Keywords
+cloudflare, dns, ssl, tls, proxy, cname, aaaa, redirect loop, full strict, acme, wildcard domain, cloudflare ssl
+
+## TL;DR
+Always use **Full (strict)** SSL mode in Cloudflare — "Flexible" causes redirect loops. Shared IPv4 with Cloudflare proxy is not recommended.
+
+## DNS Configuration
+
+### CNAME (non-apex or with CNAME flattening)
+```
+CNAME <domain> <project-cname-target>
+```
+
+### With Cloudflare Proxy (orange cloud)
+| IP Type | Record | Proxy |
+|---------|--------|-------|
+| IPv6 only | `AAAA <domain> <ipv6>` | Proxied |
+| Dedicated IPv4 | `A <domain> <ipv4>` | Proxied |
+| Shared IPv4 | **Not recommended** | Reverse AAAA lookup issues |
+
+### DNS-Only (gray cloud)
+| IP Type | Records Required |
+|---------|-----------------|
+| Shared IPv4 | `A + AAAA` (both required for SNI) |
+| Dedicated IPv4 | `A` (AAAA optional) |
+| IPv6 only | `AAAA` |
+
+## Wildcard Domains
+```
+Method A: A *.<domain> + AAAA *.<domain>
+Method B: CNAME *.<domain> <domain>
+ACME:     CNAME _acme-challenge.<domain> <domain>.zerops.zone
+```
+
+## SSL/TLS Settings (Cloudflare Dashboard)
+- **Encryption mode: Full (strict)** — mandatory
+- **Never use "Flexible"** — causes infinite redirect loops
+- Enable "Always Use HTTPS"
+- WAF exception: Skip rule for `/.well-known/acme-challenge/` (ACME validation)
+
+## Preparing a Service for Cloudflare
+
+Any runtime service (nodejs, go, python, etc.) can be put behind Cloudflare. Steps:
+
+1. **Create the service** with `enableSubdomainAccess: true` in import YAML:
+   ```yaml
+   services:
+     - hostname: myapp
+       type: nodejs@22
+       enableSubdomainAccess: true
+       minContainers: 1
+   ```
+2. **Deploy code** to the service (via `zcli push` or `buildFromGit`)
+3. **Configure Cloudflare DNS** to point to your Zerops project IP
+4. **Set SSL mode to "Full (strict)"** in Cloudflare dashboard
+
+**Important**: The `zerops_subdomain enable` tool only works on deployed (ACTIVE) services. For new services, use `enableSubdomainAccess: true` in import YAML.
+
+Internal service-to-service communication must always use `http://` — never `https://`. SSL terminates at the Zerops L7 balancer.
+
+## Gotchas
+1. **Flexible SSL = redirect loop**: Zerops forces HTTPS, Cloudflare Flexible sends HTTP → infinite redirect
+2. **Shared IPv4 + proxy is broken**: Reverse AAAA lookup doesn't work with Cloudflare proxy on shared IPv4
+3. **ACME challenge needs WAF exception**: Without it, Cloudflare blocks Let's Encrypt validation
+4. **Wildcard SSL on Cloudflare Free**: Free plan doesn't proxy wildcard subdomains — use DNS-only or upgrade
+5. **Subdomain on undeployed service**: `zerops_subdomain enable` returns "Service stack is not http or https" on READY_TO_DEPLOY services — deploy code first or use `enableSubdomainAccess` in import YAML
+
+## See Also
+- zerops://guides/public-access
+- zerops://guides/firewall
+- zerops://guides/networking

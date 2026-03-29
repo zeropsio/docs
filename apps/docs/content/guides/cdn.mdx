@@ -1,0 +1,69 @@
+---
+title: "CDN on Zerops"
+description: "Zerops CDN has 6 global regions with a **fixed 30-day cache TTL** (HTTP Cache-Control headers are ignored by CDN but still affect browsers). Built on Nginx + Cloudflare geo-steering."
+---
+
+
+## Keywords
+cdn, cache, edge, content delivery, static assets, object storage cdn, geo-steering, purge, cache invalidation
+
+## TL;DR
+Zerops CDN has 6 global regions with a **fixed 30-day cache TTL** (HTTP Cache-Control headers are ignored by CDN but still affect browsers). Built on Nginx + Cloudflare geo-steering.
+
+## Regions
+1. **EU (Prague, CZ)** — Primary + all-region failover
+2. **EU (Falkenstein, DE)** — Secondary European
+3. **UK (London)**
+4. **AU (Sydney)**
+5. **SG (Singapore)**
+6. **CA (Beauharnois, Canada)**
+
+DNS TTL: 30 seconds. Geo-steering routes to nearest node. EU Prague is fallback if all others down.
+
+## CDN Modes
+
+### Object Storage CDN
+- URL: `https://storage.cdn.zerops.app/bucket/path`
+- Env var: `${storageCdnUrl}`
+- Direct from Object Storage through CDN
+
+### Static CDN
+- URL: `https://static.cdn.zerops.app/domain.com/path`
+- Env var: `${staticCdnUrl}`
+- For custom domains on static/nginx services
+- **Wildcard domains NOT supported**
+
+### API CDN
+- Coming soon
+- Env var: `${apiCdnUrl}`
+
+## Cache Behavior
+- TTL: **Fixed 30 days** (not configurable)
+- HTTP `Cache-Control` headers: Affect browser caching, **NOT CDN caching**
+- Eviction: LRU when storage capacity reached
+- First request: Fetched from origin and cached
+
+## Purge Patterns
+```
+/*            # All content
+/dir/*        # Directory contents
+/file$        # Specific file (exact match)
+/prefix*      # Pattern prefix match
+```
+Wildcard must be at end. Use `$` suffix for exact file match.
+
+### Purge via zsc
+```bash
+zsc cdn purge /*              # Purge all cached content
+zsc cdn purge /images/*       # Purge directory
+zsc cdn purge /style.css$     # Purge exact file
+```
+
+## Gotchas
+1. **30-day fixed TTL**: Cannot be changed — `Cache-Control: max-age=3600` has no effect on CDN
+2. **No wildcard domains on static CDN**: `*.domain.com` is not supported
+3. **Purge wildcards at end only**: `/images/*.jpg` is invalid — use `/images/*`
+
+## See Also
+- zerops://themes/services — Object Storage service card
+- zerops://guides/public-access

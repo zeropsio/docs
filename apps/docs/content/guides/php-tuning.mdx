@@ -1,0 +1,113 @@
+---
+title: "PHP Runtime Tuning on Zerops"
+description: "Override php.ini via `PHP_INI_*` env vars, FPM via `PHP_FPM_*`. Both require **restart** (not reload). Zerops defaults: upload/post = 1024M, FPM dynamic 20/2/1/3. Upload bottleneck is L7 balancer (50MB subdomain), not PHP."
+---
+
+
+## Keywords
+PHP_INI, PHP_FPM, php.ini, fpm, upload_max_filesize, post_max_size, memory_limit, max_execution_time, max_children, ondemand, dynamic, php tuning, upload limit, file upload
+
+## TL;DR
+Override php.ini via `PHP_INI_*` env vars, FPM via `PHP_FPM_*`. Both require **restart** (not reload). Zerops defaults: upload/post = 1024M, FPM dynamic 20/2/1/3. Upload bottleneck is L7 balancer (50MB subdomain), not PHP.
+
+## PHP Configuration (`PHP_INI_*`)
+
+Override any php.ini directive via `PHP_INI_{directive}` env vars in `run.envVariables` or via `zerops_env` API.
+
+**Requires restart** to take effect. Reload writes config files (`/etc/php*/conf.d/overwrite.ini`) but FPM master does not re-read INI on reload.
+
+### Zerops Platform Defaults
+
+Zerops overrides several stock PHP values for production use:
+
+| Directive | Zerops default | Stock PHP | Why |
+|-----------|---------------|-----------|-----|
+| `upload_max_filesize` | **1024M** | 2M | Generous upload limit (L7 balancer is the real gate) |
+| `post_max_size` | **1024M** | 8M | Matches upload limit |
+| `display_errors` | **off** | on | Production: errors to logs, not browser |
+| `error_reporting` | **22527** | 32767 | E_ALL & ~E_DEPRECATED & ~E_STRICT |
+| `log_errors` | **1** | 0 | Errors go to log files |
+| `output_buffering` | **4096** | 0 | Buffered output for performance |
+| `date.timezone` | **UTC** | (empty) | Consistent timezone |
+| `sendmail_path` | `/usr/sbin/sendmail -t -i` | (empty) | System sendmail wired |
+
+### Example
+
+```yaml
+zerops:
+  - setup: app
+    run:
+      base: php-nginx@8.4
+      envVariables:
+        PHP_INI_upload_max_filesize: 10M
+        PHP_INI_post_max_size: 12M
+        PHP_INI_memory_limit: 256M
+        PHP_INI_max_execution_time: 60
+        PHP_INI_max_input_vars: 5000
+```
+
+## PHP-FPM (`PHP_FPM_*`)
+
+Configure FPM process management via `PHP_FPM_*` env vars. **Requires restart** — same as PHP_INI.
+
+Config files are written to `/etc/php*/php-fpm.d/www.conf` by `zerops-zenv` at container startup.
+
+### Dynamic Mode (default)
+
+Pre-forks a pool of workers. Good for consistent traffic.
+
+| Variable | Default |
+|----------|---------|
+| `PHP_FPM_PM` | `dynamic` |
+| `PHP_FPM_PM_MAX_CHILDREN` | `20` |
+| `PHP_FPM_PM_START_SERVERS` | `2` |
+| `PHP_FPM_PM_MIN_SPARE_SERVERS` | `1` |
+| `PHP_FPM_PM_MAX_SPARE_SERVERS` | `3` |
+| `PHP_FPM_PM_MAX_SPAWN_RATE` | `32` |
+| `PHP_FPM_PM_MAX_REQUESTS` | `500` |
+
+High-traffic example:
+
+```yaml
+envVariables:
+  PHP_FPM_PM_MAX_CHILDREN: 50
+  PHP_FPM_PM_START_SERVERS: 10
+  PHP_FPM_PM_MIN_SPARE_SERVERS: 5
+  PHP_FPM_PM_MAX_SPARE_SERVERS: 15
+  PHP_FPM_PM_MAX_REQUESTS: 1000
+```
+
+### Ondemand Mode
+
+Spawns workers only when requests arrive. Saves memory for low-traffic sites.
+
+```yaml
+envVariables:
+  PHP_FPM_PM: ondemand
+  PHP_FPM_PM_MAX_CHILDREN: 20
+  PHP_FPM_PM_PROCESS_IDLE_TIMEOUT: 60s
+  PHP_FPM_PM_MAX_REQUESTS: 500
+```
+
+Available parameters for ondemand:
+- `PHP_FPM_PM_MAX_CHILDREN` -- maximum child processes
+- `PHP_FPM_PM_PROCESS_IDLE_TIMEOUT` -- idle timeout before termination (default: 60s)
+- `PHP_FPM_PM_MAX_REQUESTS` -- requests per process before recycling (default: 500)
+
+## Upload Limits (3-layer chain)
+
+File uploads pass through three layers -- ALL must allow the size:
+
+1. **L7 Balancer**: `client_max_body_size` = 512m (custom domain) / **50MB fixed** (subdomain)
+2. **PHP**: `upload_max_filesize` = 1024M (Zerops default)
+3. **PHP**: `post_max_size` = 1024M (Zerops default)
+
+Zerops pre-configures generous PHP limits, so the **L7 balancer is typically the bottleneck**:
+- Subdomain (zerops.app): hard 50MB cap, cannot be changed
+- Custom domain: 512m default, configurable via custom Nginx template
+
+## Gotchas
+
+- **Reload does NOT apply changes** -- `PHP_INI_*` and `PHP_FPM_*` both require restart. Zerops reload rewrites config files via `zerops-zenv` but does not signal FPM to re-read them.
+- **Upload fails at 50MB on subdomain** -- this is the L7 balancer limit, not PHP. Use a custom domain for larger uploads.
+- **`post_max_size` must be >= `upload_max_filesize`** -- PHP silently drops the POST body if it exceeds `post_max_size`, even if the file itself is under `upload_max_filesize`.

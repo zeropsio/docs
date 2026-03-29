@@ -1,0 +1,103 @@
+---
+title: "Build Cache"
+description: "Zerops uses a two-layer build cache: base layer (OS + prepareCommands) and build layer (buildCommands output). The `cache:` attribute in zerops.yml controls which files persist between builds. Changing `build.os`, `build.base`, `build.prepareCommands`, or `build.cache` invalidates both layers (cascade)."
+---
+
+
+## Keywords
+build cache, cache, invalidation, prepareCommands, buildCommands, base layer, build layer, node_modules, vendor, cache paths, cache true, cache false, build speed, build optimization, two-layer cache, cascade invalidation
+
+## TL;DR
+Zerops uses a two-layer build cache: base layer (OS + prepareCommands) and build layer (buildCommands output). The `cache:` attribute in zerops.yml controls which files persist between builds. Changing `build.os`, `build.base`, `build.prepareCommands`, or `build.cache` invalidates both layers (cascade).
+
+---
+
+## Two-Layer Architecture
+
+| Layer | Contains | Cached when |
+|-------|----------|-------------|
+| **Base layer** | OS, installed packages, prepareCommands output | prepareCommands unchanged |
+| **Build layer** | Files from `cache:` attribute after buildCommands | cache config unchanged |
+
+Both layers are currently **coupled** -- invalidating the base layer also invalidates the build layer (cascade invalidation).
+
+## Cache Lifecycle
+
+1. **Restoration**: cached files moved from `/build/cache` to `/build/source` (no-clobber -- source files win)
+2. **Build execution**: buildCommands run with cached + source files
+3. **Preservation**: specified cache files moved from `/build/source` to `/build/cache`
+
+No compression or network transfer -- fast directory rename operations within the container.
+
+---
+
+## Configuration
+
+### Path-Specific Caching (Recommended)
+
+```yaml
+build:
+  cache: node_modules                # single path
+  cache: [node_modules, .next]       # multiple paths
+```
+
+All paths resolve relative to `/build/source`. Supports Go `filepath.Match` patterns (e.g., `"subdir/*.txt"`, `"package*"`). Forms `./node_modules`, `node_modules`, `node_modules/` are equivalent.
+
+### System-Wide Caching
+
+- **`cache: true`** -- preserves entire build container state. Best for global package managers (Go modules, pip)
+- **`cache: false`** -- only prevents caching within `/build/source`. Files outside (e.g., `$GOPATH`) **remain cached**
+
+---
+
+## Cache Invalidation
+
+### Automatic Triggers
+
+Any change to these zerops.yml fields invalidates **both layers**:
+
+- `build.os`
+- `build.base`
+- `build.prepareCommands`
+- `build.cache`
+
+**DO NOT** add trivial changes to `prepareCommands` (e.g., adding `vim`) without understanding this will also invalidate cached `node_modules`, `vendor/`, etc.
+
+### Manual Triggers
+
+- **GUI**: Service detail -> Pipelines & CI/CD Settings -> Invalidate build cache
+- **API**: `DELETE /service-stack/{id}/build-cache`
+- **Version restore**: Activating a backup app version also invalidates cache
+
+---
+
+## Per-Runtime Cache Recommendations
+
+| Runtime | Recommended `cache:` paths |
+|---------|---------------------------|
+| Node.js / Bun | `node_modules`, `.next`, `.turbo`, `package-lock.json` |
+| Go | `cache: true` (modules live outside /build/source) |
+| PHP | `vendor`, `composer.lock` |
+| Python | `cache: true` (pip installs globally) or `.venv` |
+| Rust | `target` |
+| Java | `cache: true` (.m2 lives outside /build/source) |
+| .NET | `cache: true` (NuGet outside /build/source) |
+
+---
+
+## Build Container Specs
+
+CPU 1-5 cores, RAM 8 GB fixed, Disk 1-100 GB, Timeout 60 min. User `zerops` with **sudo**. Default OS: **Alpine** (use `apt-get` with `os: ubuntu`).
+
+---
+
+## Common Pitfalls
+
+1. **Cascade invalidation**: Changing `prepareCommands` wipes build-layer cache too (e.g., adding `sqlite` to prepare also clears cached `node_modules`)
+2. **`cache: false` is misleading**: Only clears `/build/source` cache. Globally installed packages (Go modules, pip packages) persist in the base layer
+3. **No-clobber restore**: If source repo contains a file also in cache, **source wins** -- the cached version is silently skipped (logged but does not fail)
+4. **Lock file caching**: Cache lock files (`package-lock.json`, `composer.lock`) alongside dependency directories for consistent installs
+
+## See Also
+- zerops://themes/core -- zerops.yml schema and cache attribute syntax
+- zerops://guides/deployment-lifecycle -- full build and deploy pipeline sequence
