@@ -3,11 +3,6 @@ title: "Production Checklist for Zerops"
 description: "Before going to production: (1) databases to HA mode, (2) minContainers: 2 on app services, (3) replace Mailpit with real SMTP, (4) remove Adminer, (5) use Object Storage for uploads, (6) use Redis/Valkey for sessions."
 ---
 
-
-## Keywords
-production, checklist, ha, high availability, minContainers, mailpit, smtp, adminer, volatile, sessions, object storage, deploy production, go-live, launch
-
-## TL;DR
 Before going to production: (1) databases to HA mode, (2) minContainers: 2 on app services, (3) replace Mailpit with real SMTP, (4) remove Adminer, (5) use Object Storage for uploads, (6) use Redis/Valkey for sessions.
 
 ## Database
@@ -30,7 +25,6 @@ Before going to production: (1) databases to HA mode, (2) minContainers: 2 on ap
 | Debug mode | Enabled | Disabled |
 
 ```yaml
-# Production app service
 - hostname: app
   type: nodejs@22
   minContainers: 2
@@ -41,12 +35,10 @@ Before going to production: (1) databases to HA mode, (2) minContainers: 2 on ap
 
 ### Mailpit → Production SMTP
 ```yaml
-# REMOVE for production:
 - hostname: mailpit
   type: go@1
   buildFromGit: https://github.com/zeropsio/recipe-mailpit
 
-# REPLACE with production SMTP env vars:
 envVariables:
   SMTP_HOST: smtp.sendgrid.net
   SMTP_PORT: "587"
@@ -69,7 +61,6 @@ Remove entirely or disable `enableSubdomainAccess`. Use VPN + pgAdmin/DBeaver lo
 | Build artifacts | Deploy via zerops.yaml |
 
 ```yaml
-# Add Object Storage for persistent files
 - hostname: storage
   type: object-storage
   objectStorageSize: 2
@@ -88,7 +79,6 @@ Remove entirely or disable `enableSubdomainAccess`. Use VPN + pgAdmin/DBeaver lo
 | Express sessions | Redis store |
 
 ```yaml
-# Add Valkey for sessions/cache
 - hostname: cache
   type: valkey@7.2
   mode: NON_HA  # HA for production
@@ -168,8 +158,3 @@ Readiness check gates traffic during deploy. Health check runs continuously — 
 4. **Mailpit is not production SMTP**: Only for dev — no delivery guarantees
 5. **Debug mode leaks secrets**: Disable APP_DEBUG in production
 6. **Missing health checks**: Load balancer can't route around unhealthy containers
-
-## See Also
-- zerops://themes/core — import.yml patterns
-- zerops://guides/scaling
-- zerops://guides/backup

@@ -3,11 +3,6 @@ title: "Networking on Zerops"
 description: "Zerops networking has two layers: a private VXLAN network per project (service-to-service via hostname, plain HTTP) and an L7 balancer for public traffic (SSL termination, round-robin, health checks). Apps must bind `0.0.0.0` — binding localhost causes 502. The L7 balancer is nginx-based with configurable timeouts, buffers, rate limiting, and access policies."
 ---
 
-
-## Keywords
-networking, vxlan, l7 balancer, load balancer, ssl termination, 502, bad gateway, internal access, service discovery, hostname, proxy headers, x-forwarded-for, x-real-ip, bind, 0.0.0.0, localhost, round robin, health check, keepalive, nginx, connection timeout, websocket, rate limiting, access policy, basic auth, internal port, http, https
-
-## TL;DR
 Zerops networking has two layers: a private VXLAN network per project (service-to-service via hostname, plain HTTP) and an L7 balancer for public traffic (SSL termination, round-robin, health checks). Apps must bind `0.0.0.0` — binding localhost causes 502. The L7 balancer is nginx-based with configurable timeouts, buffers, rate limiting, and access policies.
 
 ---
@@ -103,16 +98,12 @@ Work through these steps **in order**:
 
 **Common framework fixes:**
 ```bash
-# Node.js/Express — bind to 0.0.0.0
 app.listen(3000, '0.0.0.0')
 
-# Python/Flask
 flask run --host=0.0.0.0
 
-# Go
 http.ListenAndServe(":8080", handler)  // implicit 0.0.0.0
 
-# Java/Spring Boot — in application.properties
 server.address=0.0.0.0
 ```
 
@@ -151,10 +142,3 @@ server.address=0.0.0.0
 4. **send_timeout default is 2s**: Slow API responses may be cut off — increase for long-running endpoints
 5. **Cross-project networking impossible**: Each project is an isolated VXLAN — use public access to bridge projects
 6. **Shared IPv4 needs AAAA**: Missing AAAA record = silent routing failure on shared IPv4
-
-## See Also
-- zerops://themes/core — Traffic Flow, Binding & Networking, Port Rules
-- zerops://guides/public-access — IP types, DNS setup, domain configuration
-- zerops://guides/cloudflare — Cloudflare-specific DNS and SSL setup
-- zerops://guides/firewall — port restrictions and outbound rules
-- zerops://guides/vpn — VPN access to private network
