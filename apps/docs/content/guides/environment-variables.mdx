@@ -3,11 +3,6 @@ title: "Environment Variables"
 description: "Zerops manages environment variables at two scopes (project and service) with strict build/runtime isolation. Variables are set via zerops.yml, import.yml, or GUI. Cross-service references use `${hostname_varname}` syntax. Project vars auto-inherit into all services. Secret vars are write-only after creation. Changes require service restart."
 ---
 
-
-## Keywords
-environment variables, env, envVariables, envSecrets, dotEnvSecrets, envReplace, secrets, project variables, service variables, cross-service reference, variable precedence, build runtime isolation, RUNTIME_ prefix, BUILD_ prefix, variable shadowing, envIsolation, restart, placeholder replacement
-
-## TL;DR
 Zerops manages environment variables at two scopes (project and service) with strict build/runtime isolation. Variables are set via zerops.yml, import.yml, or GUI. Cross-service references use `${hostname_varname}` syntax. Project vars auto-inherit into all services. Secret vars are write-only after creation. Changes require service restart.
 
 ---
@@ -96,11 +91,9 @@ Project variables are **automatically available** in every service (build and ru
 
 **DO NOT** re-reference project variables in service envVariables:
 ```yaml
-# WRONG -- creates shadow, may cause circular reference
 envVariables:
   PROJECT_NAME: ${PROJECT_NAME}
 
-# CORRECT -- just use it in your app code, it's already there
 ```
 
 To **override** a project variable for one service, define a service-level variable with the same key:
@@ -172,8 +165,3 @@ Zerops auto-generates variables per service (e.g., `hostname`, `PATH`, DB connec
 - **DO NOT** expect `envReplace` to recurse subdirectories -- it does not
 - **DO NOT** rely on reading secret values back -- they are write-only after creation
 - **DO NOT** create both secret and basic vars with same key -- basic silently wins
-
-## See Also
-- zerops://themes/core -- schema, build/deploy semantics, variable basics
-- zerops://themes/services -- cross-service wiring patterns using env vars
-- zerops://guides/production-checklist -- pre-launch variable audit
