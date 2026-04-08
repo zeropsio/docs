@@ -101,6 +101,32 @@ Zerops pre-configures generous PHP limits, so the **L7 balancer is typically the
 - Subdomain (zerops.app): hard 50MB cap, cannot be changed
 - Custom domain: 512m default, configurable via custom Nginx template
 
+## Extensions (Alpine)
+
+Install via `sudo apk add --no-cache php84-<ext>` — version prefix must match PHP major+minor (e.g. `php84-` for PHP 8.4). Sudo required — containers run as `zerops` user.
+
+Build and runtime are **separate containers with separate images**. The build base (`php@X`) is Alpine-minimal. The runtime base (`php-nginx@X`, `php-apache@X`) bundles more extensions but not all.
+
+If a Composer dependency requires an extension that's missing from the build image:
+- Install it in `build.prepareCommands` so Composer validates platform requirements properly
+- If also needed at runtime, install in `run.prepareCommands` too (separate container, separate image)
+- **Never** use `--ignore-platform-reqs` — it suppresses all platform checks, hiding real problems that crash at runtime
+
+Common extensions not in the build base: `ext-pcntl`, `ext-posix` (needed by Horizon), `ext-gd`, `ext-intl`.
+
+```yaml
+build:
+  base: php@8.4
+  prepareCommands:
+    - sudo apk add --no-cache php84-pcntl php84-posix
+  buildCommands:
+    - composer install --no-dev --optimize-autoloader
+run:
+  base: php-nginx@8.4
+  prepareCommands:
+    - sudo apk add --no-cache php84-pcntl php84-posix
+```
+
 ## Gotchas
 
 - **Reload does NOT apply changes** -- `PHP_INI_*` and `PHP_FPM_*` both require restart. Zerops reload rewrites config files via `zerops-zenv` but does not signal FPM to re-read them.
