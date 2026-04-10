@@ -11,7 +11,8 @@ When you create an Object Storage service, Zerops auto-generates these env vars 
 
 | Variable | Description |
 |----------|-------------|
-| `apiUrl` | S3 endpoint URL (accessible from Zerops and remotely) |
+| `apiUrl` | S3 endpoint URL — full `https://...` URL ready for any S3 SDK's `endpoint` option |
+| `apiHost` | S3 endpoint host only (no scheme); use only if the client library needs host separately |
 | `accessKeyId` | S3 access key |
 | `secretAccessKey` | S3 secret key |
 | `bucketName` | Auto-generated bucket name (hostname + random prefix, immutable) |
@@ -19,6 +20,8 @@ When you create an Object Storage service, Zerops auto-generates these env vars 
 | `projectId` | Project ID (Zerops-generated) |
 | `serviceId` | Service ID (Zerops-generated) |
 | `hostname` | Service hostname |
+
+**Use `${storage_apiUrl}` as the S3 endpoint** — it carries the complete `https://` scheme and is what every S3 SDK's `endpoint` option expects. The `apiHost` variant is host-only; if a client library requires host separately, combine `https://${storage_apiHost}` manually — **never `http://`**. The object-storage gateway rejects plaintext HTTP with a 301 redirect to the HTTPS equivalent, and most S3 SDKs don't follow the redirect automatically. The symptom of a misconfigured endpoint is `UnknownError` or connection-refused on the first bucket call.
 
 Reference them in zerops.yml `run.envVariables`:
 ```yaml
