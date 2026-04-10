@@ -87,21 +87,54 @@ services:
 
 ## Project Variables -- Auto-Inherited
 
-Project variables are **automatically available** in every service (build and runtime). They do NOT need `${...}` referencing.
+Project variables are **automatically available** in every service. They are injected as OS env vars at container start in every service's **runtime** container and are shell-visible in **build** containers too — but with a caveat: inside zerops.yaml YAML interpolation, project vars are referenced through the same `${RUNTIME_VAR_NAME}` prefix you use to lift any service runtime var into build context.
 
-**DO NOT** re-reference project variables in service envVariables:
+**In shell commands** (buildCommands, initCommands) project vars are directly readable:
+```yaml
+build:
+  buildCommands:
+    - echo "building for $STAGE_API_URL"    # shell reads the OS env var
+```
+
+**In `build.envVariables` YAML** (to compose a derived var that the bundler consumes), project vars are lifted with the `RUNTIME_` prefix — the same way any runtime-scope var is lifted into build:
+```yaml
+build:
+  envVariables:
+    VITE_API_URL: ${RUNTIME_STAGE_API_URL}   # project var STAGE_API_URL read into build as VITE_API_URL
+```
+
+**In `run.envVariables` YAML** (to forward a project var under a framework-conventional name without creating a shadow), reference directly without prefix:
+```yaml
+run:
+  envVariables:
+    FRONTEND_URL: ${STAGE_FRONTEND_URL}      # project var STAGE_FRONTEND_URL forwarded as FRONTEND_URL
+```
+
+**DO NOT** re-reference a project variable with its SAME name in service envVariables — that's a shadow loop:
 ```yaml
 envVariables:
   PROJECT_NAME: ${PROJECT_NAME}
-
 ```
 
-To **override** a project variable for one service, define a service-level variable with the same key:
+To **override** a project variable for one service, define a service-level variable with the same key and a DIFFERENT value (not a reference to the project var):
 ```yaml
 run:
   envVariables:
     LOG_LEVEL: debug    # overrides project-level LOG_LEVEL for this service
 ```
+
+### Typical pattern: project-level URL constants for dual-runtime recipes
+
+Dual-runtime recipes (frontend SPA + backend API on the same platform) use project-level URL constants as the single source of truth for cross-service URLs. The constants are derived from `${zeropsSubdomainHost}` (a platform-generated project-scope env var present from project creation) and the services' known hostnames:
+
+```yaml
+project:
+  envVariables:
+    STAGE_API_URL: https://apistage-${zeropsSubdomainHost}-3000.prg1.zerops.app
+    STAGE_FRONTEND_URL: https://appstage-${zeropsSubdomainHost}.prg1.zerops.app
+```
+
+The platform resolves `${zeropsSubdomainHost}` when injecting the value into services at container start. The frontend consumes `STAGE_API_URL` via `${RUNTIME_STAGE_API_URL}` in `build.envVariables` (baking it into the bundle), and the API consumes `STAGE_FRONTEND_URL` via `${STAGE_FRONTEND_URL}` in `run.envVariables` (for CORS allow-list). The same names must be set on the workspace project via `zerops_env project=true action=set` after provision, so workspace verification doesn't see literal `${STAGE_FRONTEND_URL}` strings.
 
 ## Secret Variables
 
