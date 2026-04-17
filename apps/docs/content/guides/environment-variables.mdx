@@ -3,7 +3,7 @@ title: "Environment Variables"
 description: "Zerops manages environment variables at two scopes (project and service) with strict build/runtime isolation. Variables are set via zerops.yml, import.yml, or GUI. Cross-service references use `${hostname_varname}` syntax. Project vars auto-inherit into all services. Secret vars are write-only after creation. Changes require service restart."
 ---
 
-Zerops manages environment variables at two scopes (project and service) with strict build/runtime isolation. Variables are set via zerops.yml, import.yml, or GUI. Cross-service references use `${hostname_varname}` syntax. Project vars auto-inherit into all services. Secret vars are write-only after creation. Changes require service restart.
+Zerops manages environment variables at two scopes (project and service) with strict build/runtime isolation. Variables are set via zerops.yml, import.yml, or GUI. **Both project-level vars AND cross-service vars (`${hostname_varname}`) auto-inject as OS env vars into every container in the project** — no declaration required. `run.envVariables` exists only for mode flags and framework-convention renames. Re-declaring an auto-injected var under its own name creates a literal-string self-shadow. Secret vars are write-only after creation. Changes require service restart.
 
 ---
 
@@ -46,20 +46,71 @@ zerops:
         API_KEY: "12345-abcde"
 ```
 
-## Cross-Service References
+## Cross-Service References — Auto-Injected Project-Wide
 
-Reference another service's variable with `${hostname_varname}`:
+**Every service's variables are automatically injected as OS environment variables into every other service's containers** — both runtime and build. A worker container sees `db_hostname`, `db_password`, `queue_user`, `storage_apiUrl`, etc. as real OS env vars at container start. Zero declaration in zerops.yml required.
+
+Read them directly in application code:
+
+```javascript
+// Node — lowercase native names match the platform
+const host = process.env.db_hostname;
+const pwd  = process.env.db_password;
+const natsUser = process.env.queue_user;
+```
+
+```php
+// PHP
+$host = getenv('db_hostname');
+```
+
+`run.envVariables` and `build.envVariables` have **two legitimate uses only**:
+
+1. **Mode flags** — per-setup values that don't come from another service:
+   ```yaml
+   run:
+     envVariables:
+       NODE_ENV: production
+       APP_ENV: local
+   ```
+
+2. **Framework-convention renames** — forward a platform var under a different name because the framework config expects it. The key on the left MUST DIFFER from the source var name on the right:
+   ```yaml
+   run:
+     envVariables:
+       DB_HOST: ${db_hostname}          # TypeORM expects uppercase DB_HOST
+       DATABASE_URL: ${db_connectionString}
+   ```
+
+**Do NOT re-declare auto-injected vars under their own name.** It is always wrong and never useful:
 
 ```yaml
 run:
   envVariables:
-    DB_PASS: ${db_password}          # 'password' var from service 'db'
-    DB_CONN: ${dbtest_connectionString}
+    db_hostname: ${db_hostname}        # SELF-SHADOW — see next section
+    db_password: ${db_password}        # SELF-SHADOW
+    queue_hostname: ${queue_hostname}  # SELF-SHADOW
+    STAGE_API_URL: ${STAGE_API_URL}    # SELF-SHADOW (project-level variant)
 ```
 
-**Hostname transformation**: dashes become underscores. Service `my-db` variable `port` is `${my_db_port}`.
+The referenced variable does **not** need to exist at definition time — Zerops resolves at container start.
 
-The referenced variable does **not** need to exist at definition time -- Zerops resolves at container start.
+### Self-Shadow Trap
+
+Writing `varname: ${varname}` in `run.envVariables` creates a literal-string self-shadow. The platform's interpolator sees the service-level variable of that name first, can't recurse back to the auto-injected value, and the resolved OS env var becomes the literal string `${varname}`:
+
+```yaml
+run:
+  envVariables:
+    db_hostname: ${db_hostname}        # OS env: db_hostname='${db_hostname}' (literal)
+    db_password: ${db_password}        # OS env: db_password='${db_password}' (literal)
+```
+
+At runtime, the worker tries to connect to `"${db_hostname}:5432"` and crashes. The fix is to **delete the entire block** — those vars are already in the container's env without any declaration.
+
+This applies identically to project-level vars (`${STAGE_API_URL}`, `${APP_SECRET}`) and cross-service vars (`${db_hostname}`, `${queue_user}`) — both auto-propagate, both self-shadow under the same rule.
+
+**Hostname transformation**: dashes become underscores. Service `my-db` variable `port` is `${my_db_port}`.
 
 ### Cross-Service References in API vs Runtime
 
@@ -71,19 +122,23 @@ Cross-service references (`${hostname_varname}`) are **resolved at container sta
 
 ### Isolation Modes (envIsolation)
 
+`envIsolation` does NOT control whether cross-service vars auto-inject — they do, in every mode. It controls something narrower: how `${hostname_varname}` templates inside zerops.yml and import.yml *resolve* during platform interpolation.
+
 | Mode | Behavior |
 |------|----------|
-| `service` (default) | Variables isolated per service. Must use explicit `${hostname_varname}` references |
-| `none` (legacy) | All service variables auto-shared via `${hostname_varname}` without explicit reference |
+| `service` (default) | Service-scoped: `${hostname_varname}` templates inside that service's YAML resolve by following the hostname prefix. The OS env in every container still contains every other service's vars as auto-injected keys. |
+| `none` (legacy) | Cross-service references can be written without the `${hostname_varname}` prefix (e.g. `${password}` resolves to the nearest match). Do not use for new projects — ambiguous, error-prone. |
 
 Set in import.yml at project or service level:
 ```yaml
 project:
-  envIsolation: none       # project-wide: disable isolation
+  envIsolation: none       # legacy — avoid
 services:
   - hostname: db
-    envIsolation: none     # per-service: expose this service's vars to all
+    envIsolation: none     # legacy — avoid
 ```
+
+**Default (`service`) is the right choice.** The auto-inject behavior above applies under the default.
 
 ## Project Variables -- Auto-Inherited
 
@@ -111,13 +166,19 @@ run:
     FRONTEND_URL: ${STAGE_FRONTEND_URL}      # project var STAGE_FRONTEND_URL forwarded as FRONTEND_URL
 ```
 
-**DO NOT** re-reference a project variable with its SAME name in service envVariables — that's a shadow loop:
+**DO NOT** re-reference an auto-injected variable under its SAME name — that's a self-shadow loop. Applies to BOTH project-level vars AND cross-service vars:
+
 ```yaml
 envVariables:
-  PROJECT_NAME: ${PROJECT_NAME}
+  PROJECT_NAME: ${PROJECT_NAME}           # project-level self-shadow
+  STAGE_API_URL: ${STAGE_API_URL}         # project-level self-shadow
+  db_hostname: ${db_hostname}             # cross-service self-shadow
+  queue_user: ${queue_user}               # cross-service self-shadow
 ```
 
-To **override** a project variable for one service, define a service-level variable with the same key and a DIFFERENT value (not a reference to the project var):
+All four resolve to the literal string `${VAR_NAME}` inside the container — the framework tries to connect to `"${db_hostname}:5432"` and crashes. The fix is to delete those lines entirely — the platform already injects the real value as an OS env var.
+
+To **override** a project variable for one service, define a service-level variable with the same key and a DIFFERENT VALUE (not a reference to the project var):
 ```yaml
 run:
   envVariables:
@@ -194,8 +255,9 @@ Zerops auto-generates variables per service (e.g., `hostname`, `PATH`, DB connec
 
 ## Common Mistakes
 
-- **DO NOT** re-reference project vars in service envVariables (creates shadow/circular)
-- **DO NOT** forget restart after GUI/API env changes -- process won't see new values
-- **DO NOT** expect `envReplace` to recurse subdirectories -- it does not
-- **DO NOT** rely on reading secret values back -- they are write-only after creation
-- **DO NOT** create both secret and basic vars with same key -- basic silently wins
+- **DO NOT** re-reference auto-injected vars under their own name — self-shadow loop. Applies to BOTH project-level (`STAGE_API_URL: ${STAGE_API_URL}`) AND cross-service (`db_hostname: ${db_hostname}`, `queue_user: ${queue_user}`).
+- **DO NOT** declare cross-service vars you only want to READ — they are already in the container's OS env. Read via `process.env.db_hostname` / `getenv('db_hostname')` directly. Declare in `run.envVariables` only to RENAME (e.g. `DB_HOST: ${db_hostname}`) or to set mode flags.
+- **DO NOT** forget restart after GUI/API env changes — process won't see new values
+- **DO NOT** expect `envReplace` to recurse subdirectories — it does not
+- **DO NOT** rely on reading secret values back — they are write-only after creation
+- **DO NOT** create both secret and basic vars with same key — basic silently wins
