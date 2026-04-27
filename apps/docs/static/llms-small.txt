@@ -3418,12 +3418,14 @@ Despite these limitations, Docker services offer some benefits:
 ## Configuration Guide
 ### Supported Version
 Currently supported Docker versions:
+Import configuration version:
 ### Basic Structure
 Docker services in Zerops are configured through the `zerops.yaml` file. Here's a typical configuration pattern:
 ```yaml title="zerops.yaml"
 zerops:
   - setup: app
     run:
+      base: docker@latest
       prepareCommands:
         - docker image pull :  # Always use specific version tags
       start: docker run --network=host :
@@ -3448,6 +3450,7 @@ For projects using Docker Compose, additional configuration is required:
 1. **File Deployment**:
    ```yaml title="zerops.yaml"
    build:
+     # base cannot be docker — build phase runs in containers, not VMs
      deployFiles: ./docker-compose.yaml
      addToRunPrepare: ./docker-compose.yaml
    ```
@@ -3471,6 +3474,7 @@ Define your environment variables in the `run.envVariables` section of your `zer
 zerops:
   - setup: app
     run:
+      base: docker@latest
       envVariables:
         DB_HOST: ${db_hostname}
         DB_PORT: ${db_port}
@@ -3479,6 +3483,7 @@ zerops:
 For single containers, pass variables using the `-e` flag:
 ```yaml title="zerops.yaml"
 run:
+  base: docker@latest
   prepareCommands:
     - docker image pull my-application:1.0.0  # Use specific version tags, not :latest
   start: docker run -e DB_HOST -e DB_PORT --network=host my-application:1.0.0
@@ -3502,6 +3507,7 @@ services:
 zerops:
   - setup: app
     run:
+      base: docker@latest
       prepareCommands:
         - docker image pull crccheck/hello-world:1.0.0  # Always use specific version tags
       start: docker run --network=host crccheck/hello-world:1.0.0
@@ -3517,9 +3523,11 @@ Always use specific version tags (like `1.0.0`) instead of `:latest`. Zerops cac
 zerops:
   - setup: api
     build:
+      # base cannot be docker — build phase runs in containers, not VMs
       deployFiles: ./docker-compose.yaml
       addToRunPrepare: ./docker-compose.yaml
     run:
+      base: docker@latest
       prepareCommands:
         - docker compose pull api
       start: docker compose up api --force-recreate
@@ -3539,9 +3547,11 @@ services:
 zerops:
   - setup: apps
     build:
+      # base cannot be docker — build phase runs in containers, not VMs
       deployFiles: ./docker-compose.yaml
       addToRunPrepare: ./docker-compose.yaml
     run:
+      base: docker@latest
       prepareCommands:
         - docker compose pull
       start: docker compose up --force-recreate
@@ -9866,6 +9876,1908 @@ Don't know how to start or got stuck during the process? You might not be the fi
 In case you haven't found an answer (and also if you have), we and our community are looking forward to hearing from you on Discord.
 Have you build something that others might find useful? Don't hesitate to share your knowledge!
 ## Popular Guides
+
+----------------------------------------
+
+# Guides > Backup
+
+Zerops auto-backs up databases and storage daily (00:00-01:00 UTC) with X25519 encryption; backups are retained for 7 days minimum after service/project deletion.
+## Supported Services
+MariaDB, PostgreSQL, Qdrant, Elasticsearch, NATS, Meilisearch, Shared Storage.
+**Not supported**: Runtimes, Object Storage (use S3 lifecycle policies), Valkey/KeyDB (in-memory).
+## Schedule Options
+- No backups
+- Once a day (default: 00:00-01:00 UTC)
+- Once a week
+- Once a month
+- Custom CRON: `minute hour day month weekday`
+## Tagging
+- Auto tags: `daily` (every backup), `weekly` (first Monday UTC), `monthly` (1st of month UTC)
+- User tags: Up to 24 chars (letters, numbers, `:-_`)
+- **Protected tags**: Exempt from automatic deletion — use for critical snapshots
+## Storage Limits
+| Plan | Backup Storage | Egress |
+|------|---------------|--------|
+| Lightweight | 5 GB | 100 GB |
+| Serious | 25 GB | 3 TB |
+| Technical max | 1 TiB per project (shared across all services) |
+| Technical max | 1 TiB per project (shared across all services) |
+## Retention Defaults
+- Minimum kept: 7 daily + 4 weekly + 3 monthly
+- Maximum per service: 50 backups
+## Encryption
+End-to-end with X25519 per-project keys. Decrypted only on download.
+## Grace Period
+7 days after service or project deletion before backups are permanently removed.
+## Backup Formats by Service
+| Service | Format |
+|---------|--------|
+| PostgreSQL | pg_dump |
+| MariaDB | mysqldump |
+| Elasticsearch | elasticdump (.gz) |
+| Meilisearch | .dump |
+| Qdrant | .snapshot |
+| NATS | .tar.gz |
+| Shared Storage | filesystem archive |
+| Shared Storage | filesystem archive |
+## Gotchas
+1. **Object Storage has no Zerops backup**: Use S3 lifecycle policies or external backup
+2. **Valkey/KeyDB not backed up**: In-memory data — use persistence or application-level backup
+3. **Backup storage is shared**: All services in a project share the backup quota
+
+----------------------------------------
+
+# Guides > Build Cache
+
+Zerops uses a two-layer build cache: base layer (OS + prepareCommands) and build layer (buildCommands output). The `cache:` attribute in zerops.yml controls which files persist between builds. Changing `build.os`, `build.base`, `build.prepareCommands`, or `build.cache` invalidates both layers (cascade).
+---
+## Two-Layer Architecture
+| Layer | Contains | Cached when |
+|-------|----------|-------------|
+| **Base layer** | OS, installed packages, prepareCommands output | prepareCommands unchanged |
+| **Build layer** | Files from `cache:` attribute after buildCommands | cache config unchanged |
+| **Build layer** | Files from `cache:` attribute after buildCommands | cache config unchanged |
+Both layers are currently **coupled** -- invalidating the base layer also invalidates the build layer (cascade invalidation).
+## Cache Lifecycle
+1. **Restoration**: cached files moved from `/build/cache` to `/build/source` (no-clobber -- source files win)
+2. **Build execution**: buildCommands run with cached + source files
+3. **Preservation**: specified cache files moved from `/build/source` to `/build/cache`
+No compression or network transfer -- fast directory rename operations within the container.
+---
+## Configuration
+### Path-Specific Caching (Recommended)
+```yaml
+build:
+  cache: node_modules                # single path
+  cache: [node_modules, .next]       # multiple paths
+```
+All paths resolve relative to `/build/source`. Supports Go `filepath.Match` patterns (e.g., `"subdir/*.txt"`, `"package*"`). Forms `./node_modules`, `node_modules`, `node_modules/` are equivalent.
+### System-Wide Caching
+- **`cache: true`** -- preserves entire build container state. Best for global package managers (Go modules, pip)
+- **`cache: false`** -- only prevents caching within `/build/source`. Files outside (e.g., `$GOPATH`) **remain cached**
+---
+## Cache Invalidation
+### Automatic Triggers
+Any change to these zerops.yml fields invalidates **both layers**:
+- `build.os`
+- `build.base`
+- `build.prepareCommands`
+- `build.cache`
+**DO NOT** add trivial changes to `prepareCommands` (e.g., adding `vim`) without understanding this will also invalidate cached `node_modules`, `vendor/`, etc.
+### Manual Triggers
+- **GUI**: Service detail -> Pipelines & CI/CD Settings -> Invalidate build cache
+- **API**: `DELETE /service-stack/{id}/build-cache`
+- **Version restore**: Activating a backup app version also invalidates cache
+---
+## Per-Runtime Cache Recommendations
+| Runtime | Recommended `cache:` paths |
+|---------|---------------------------|
+| Node.js / Bun | `node_modules`, `.next`, `.turbo`, `package-lock.json` |
+| Go | `cache: true` (modules live outside /build/source) |
+| PHP | `vendor`, `composer.lock` |
+| Python | `cache: true` (pip installs globally) or `.venv` |
+| Rust | `target` |
+| Java | `cache: true` (.m2 lives outside /build/source) |
+| .NET | `cache: true` (NuGet outside /build/source) |
+| .NET | `cache: true` (NuGet outside /build/source) |
+---
+## Build Container Specs
+CPU 1-5 cores, RAM 8 GB fixed, Disk 1-100 GB, Timeout 60 min. User `zerops` with **sudo**. Default OS: **Alpine** (use `apt-get` with `os: ubuntu`).
+---
+## Common Pitfalls
+1. **Cascade invalidation**: Changing `prepareCommands` wipes build-layer cache too (e.g., adding `sqlite` to prepare also clears cached `node_modules`)
+2. **`cache: false` is misleading**: Only clears `/build/source` cache. Globally installed packages (Go modules, pip packages) persist in the base layer
+3. **No-clobber restore**: If source repo contains a file also in cache, **source wins** -- the cached version is silently skipped (logged but does not fail)
+4. **Lock file caching**: Cache lock files (`package-lock.json`, `composer.lock`) alongside dependency directories for consistent installs
+
+----------------------------------------
+
+# Guides > Cdn
+
+Zerops CDN has 6 global regions with a **fixed 30-day cache TTL** (HTTP Cache-Control headers are ignored by CDN but still affect browsers). Built on Nginx + Cloudflare geo-steering.
+## Regions
+1. **EU (Prague, CZ)** — Primary + all-region failover
+2. **EU (Falkenstein, DE)** — Secondary European
+3. **UK (London)**
+4. **AU (Sydney)**
+5. **SG (Singapore)**
+6. **CA (Beauharnois, Canada)**
+DNS TTL: 30 seconds. Geo-steering routes to nearest node. EU Prague is fallback if all others down.
+## CDN Modes
+### Object Storage CDN
+- URL: `https://storage.cdn.zerops.app/bucket/path`
+- Env var: `${storageCdnUrl}`
+- Direct from Object Storage through CDN
+### Static CDN
+- URL: `https://static.cdn.zerops.app/domain.com/path`
+- Env var: `${staticCdnUrl}`
+- For custom domains on static/nginx services
+- **Wildcard domains NOT supported**
+### API CDN
+- Coming soon
+- Env var: `${apiCdnUrl}`
+## Cache Behavior
+- TTL: **Fixed 30 days** (not configurable)
+- HTTP `Cache-Control` headers: Affect browser caching, **NOT CDN caching**
+- Eviction: LRU when storage capacity reached
+- First request: Fetched from origin and cached
+## Purge Patterns
+```
+/*            # All content
+/dir/*        # Directory contents
+/file$        # Specific file (exact match)
+/prefix*      # Pattern prefix match
+```
+Wildcard must be at end. Use `$` suffix for exact file match.
+### Purge via zsc
+```bash
+zsc cdn purge /*              # Purge all cached content
+zsc cdn purge /images/*       # Purge directory
+zsc cdn purge /style.css$     # Purge exact file
+```
+## Gotchas
+1. **30-day fixed TTL**: Cannot be changed — `Cache-Control: max-age=3600` has no effect on CDN
+2. **No wildcard domains on static CDN**: `*.domain.com` is not supported
+3. **Purge wildcards at end only**: `/images/*.jpg` is invalid — use `/images/*`
+
+----------------------------------------
+
+# Guides > Choose Cache
+
+**Use Valkey.** KeyDB development has stalled and is effectively deprecated on Zerops.
+## Decision Matrix
+| Need | Choice | Why |
+|------|--------|-----|
+| **Any caching need** | **Valkey** (default) | Active development, full HA, Redis-compatible |
+| Legacy KeyDB apps | KeyDB | Only if migrating existing KeyDB deployment |
+| Legacy KeyDB apps | KeyDB | Only if migrating existing KeyDB deployment |
+## Valkey (Default Choice)
+- Redis-compatible drop-in replacement
+- HA: 3 nodes (1 master + 2 replicas) with automatic failover
+- Ports: 6379 (non-TLS), 6380 (TLS), 7000 (read replica non-TLS), 7001 (read replica TLS)
+- Connection: `redis://${user}:${password}@${hostname}:6379`
+- HA detail: Ports 6379/6380 on replicas forward traffic to current master (Zerops-specific, not native Valkey)
+## KeyDB (Deprecated)
+- Development activity has slowed significantly
+- Port: 6379
+- **Do not use for new projects**
+## Gotchas
+1. **HA replication is async**: Brief data loss possible during master failover
+2. **Port forwarding is Zerops-specific**: Replicas forward 6379/6380 to master — this is not standard Redis/Valkey behavior
+3. **Read replicas use different ports**: 7000/7001 for direct replica reads
+
+----------------------------------------
+
+# Guides > Choose Database
+
+**Use PostgreSQL** for everything unless you have a specific reason not to. It's the best-supported database on Zerops with full HA, read replicas, and pgBouncer.
+## Decision Matrix
+| Need | Choice | Why |
+|------|--------|-----|
+| **General-purpose** | **PostgreSQL** (default) | Full HA, read replicas, pgBouncer, best Zerops support |
+| MySQL compatibility | MariaDB | MaxScale routing, async replication |
+| Analytics / OLAP | ClickHouse | Columnar storage, ReplicatedMergeTree, 4 protocol ports |
+| Analytics / OLAP | ClickHouse | Columnar storage, ReplicatedMergeTree, 4 protocol ports |
+## PostgreSQL (Default Choice)
+- HA: 3 nodes (1 primary + 2 replicas)
+- Ports: 5432 (primary), 5433 (read replicas), 6432 (external TLS via pgBouncer)
+- Connection: `postgresql://${user}:${password}@${hostname}:5432/${db}`
+- Read scaling: Use port 5433 for read-heavy workloads
+## MariaDB
+- HA: MaxScale routing with async replication
+- Port: 3306
+- Connection: `mysql://${user}:${password}@${hostname}:3306/${db}`
+- Use when: Application requires MySQL wire protocol
+## ClickHouse
+- HA: 3 data nodes, replication factor 3
+- Ports: 9000 (native), 8123 (HTTP), 9004 (MySQL), 9005 (PostgreSQL)
+- Requires `ReplicatedMergeTree` engine in HA mode
+- Use when: Analytics, time-series, OLAP workloads
+## Gotchas
+1. **HA mode is immutable**: Cannot switch HA/NON_HA after creation — delete and recreate
+2. **No internal TLS**: Use `http://hostname:port` internally — VPN provides encryption
+3. **PostgreSQL URI scheme**: Some libraries need `postgres://` not `postgresql://` — create a custom env var
+
+----------------------------------------
+
+# Guides > Choose Queue
+
+**Use NATS** for most cases (simple, fast, JetStream persistence). Use **Kafka** only for enterprise event streaming with guaranteed ordering and unlimited retention.
+## Decision Matrix
+| Need | Choice | Why |
+|------|--------|-----|
+| **General messaging** | **NATS** (default) | Simple auth, JetStream built-in, fast |
+| Enterprise event streaming | Kafka | SASL auth, 3-broker HA, unlimited retention |
+| Lightweight pub/sub | NATS | Low overhead, 8MB default messages |
+| Event sourcing / audit logs | Kafka | Indefinite topic retention, strong ordering |
+| Event sourcing / audit logs | Kafka | Indefinite topic retention, strong ordering |
+## NATS (Default Choice)
+- Ports: 4222 (client), 8222 (HTTP monitoring)
+- Auth: user `zerops` + auto-generated password
+- **Connection** — two supported patterns, pick ONE:
+  - **Separate env vars** (recommended, works with every NATS client library): pass `servers: ${hostname}:${port}` plus `user: ${user}, pass: ${password}` as client-side connect options. The servers list stays credential-free.
+  - **Opaque connection string**: pass `${connectionString}` directly as the servers option — the platform builds a correctly-formatted URL with embedded auth that the NATS server expects.
+- JetStream: Enabled by default (`JET_STREAM_ENABLED=1`)
+- Storage: Up to 40GB memory + 250GB file store
+- Max message: 8MB default, 64MB max (`MAX_PAYLOAD`)
+- Health check: `GET /healthz` on port 8222
+- **Config changes require restart** (no hot-reload)
+## Kafka
+- Port: 9092 (SASL PLAIN auth)
+- Auth: `user` + `password` env vars (auto-generated)
+- Bootstrap: `${hostname}:9092`
+- HA: 3 brokers, 6 partitions, replication factor 3
+- Storage: Up to 40GB RAM + 250GB persistent
+- Topic retention: **Indefinite** (no time or size limits)
+- Schema Registry: Port 8081 (if enabled)
+## Gotchas
+1. **NATS config changes need restart**: No hot-reload — changing env vars requires service restart
+2. **Kafka single-node has no replication**: 1 broker = 3 partitions but zero redundancy
+3. **NATS JetStream HA sync interval**: 1-minute sync across nodes — brief data lag possible
+4. **Kafka SASL only**: No anonymous connections — always use the generated credentials
+5. **NATS authorization violation from a hand-composed URL**: do not build a `nats://user:pass@host:4222` URL from the separate env vars. Most NATS client libraries will parse the embedded credentials AND separately attempt SASL with the same values, producing a double-auth that the server rejects with `Authorization Violation` on the first CONNECT frame (symptom: startup crash, no successful subscription). Use either the separate env vars passed as connect options (credential-free servers list) or the opaque `${connectionString}` the platform builds for you — both patterns in the Connection section above avoid the double-auth path.
+
+----------------------------------------
+
+# Guides > Choose Runtime Base
+
+**Use Alpine** as the default base for all services. Use Ubuntu only when you need system packages not available in Alpine. Use Docker only for pre-built images.
+## Decision Matrix
+| Need | Choice | Why |
+|------|--------|-----|
+| **Any standard app** | **Alpine** (default) | ~5MB, fast, secure, sufficient for 95% of apps |
+| System packages (apt) | Ubuntu | Full Debian ecosystem, ~100MB |
+| Pre-built Docker images | Docker | VM-based, bring your own image |
+| CGO / native libs | Ubuntu | Better glibc compatibility than Alpine's musl |
+| CGO / native libs | Ubuntu | Better glibc compatibility than Alpine's musl |
+## Alpine (Default)
+- Size: ~5MB base
+- Package manager: `apk add`
+- Best for: All runtimes (Node.js, Python, Go, Rust, Java, PHP, etc.)
+- Zerops uses Alpine as default base for all managed runtimes
+## Ubuntu
+- Size: ~100MB base
+- Package manager: `apt-get install`
+- Version: 24.04 LTS
+- Use when: You need packages not available in Alpine, or need glibc (not musl)
+- Example: Go apps with CGO, Python packages with C extensions that don't compile on musl
+## Docker
+- **Runs in a VM** (not a container) — slower boot, higher overhead
+- Network: **Must use `--network=host`** or `network_mode: host` in compose
+- Scaling: Fixed resources only (no min-max auto-scaling), VM restarts on resource change
+- Disk: Can only increase, never decrease without recreation
+- Build phase runs in containers (not VMs)
+- **Always use specific version tags** — `:latest` is cached and won't re-pull
+## Gotchas
+1. **Alpine uses musl**: Some C libraries may not compile — use Ubuntu if you hit musl issues
+2. **Docker is VM-based**: Vertical scaling restarts the VM — expect brief downtime
+3. **Docker `:latest` is cached**: Zerops won't re-pull — always use specific tags like `myapp:1.2.3`
+4. **Docker requires host networking**: Without `--network=host`, the container can't receive traffic
+
+----------------------------------------
+
+# Guides > Choose Search
+
+**Use Meilisearch** for simple full-text search. Use **Elasticsearch** for advanced queries or HA requirements. Use **Qdrant** for vector/AI search.
+## Decision Matrix
+| Need | Choice | Why |
+|------|--------|-----|
+| **Simple full-text search** | **Meilisearch** (default) | Instant setup, typo-tolerant, frontend-safe keys |
+| Advanced queries / HA | Elasticsearch | Cluster support, plugins, JVM tuning |
+| Autocomplete + typo-tolerance | Typesense | Raft HA, CORS built-in, fast |
+| Vector / AI similarity | Qdrant | gRPC + HTTP, automatic cluster replication |
+| Vector / AI similarity | Qdrant | gRPC + HTTP, automatic cluster replication |
+## Meilisearch (Default for Simple Search)
+- Single-node only (no clustering)
+- Port: 7700
+- API keys: `masterKey` (admin), `defaultSearchKey` (frontend-safe), `defaultAdminKey` (backend)
+- Production mode by default (no search preview dashboard)
+## Elasticsearch (Advanced / HA)
+- Cluster support with multiple nodes
+- Port: 9200 (HTTP only)
+- Auth: `elastic` user with auto-generated password
+- Plugins via `PLUGINS` env var (comma-separated)
+- JVM heap: `HEAP_PERCENT` env var (default 50%)
+- Min RAM: 0.25 GB
+## Typesense (Fast Autocomplete)
+- HA: 3-node Raft consensus
+- API key via `apiKey` env var (immutable after generation)
+- CORS enabled by default
+- Recovery time: up to 1 minute during failover (503/500 auto-resolves)
+- Data persisted at `/var/lib/typesense`
+## Qdrant (Vector Search)
+- Ports: 6333 (HTTP), 6334 (gRPC)
+- API keys: `apiKey` (full access), `readOnlyApiKey` (search only)
+- HA: 3 nodes with `automaticClusterReplication=true` by default
+- **Internal access only** — no public access available
+## Gotchas
+1. **Meilisearch has no HA**: Single-node only — for HA full-text search, use Elasticsearch or Typesense
+2. **Qdrant is internal-only**: Cannot be exposed publicly — access via your runtime service
+3. **Typesense API key is immutable**: Cannot change `apiKey` after service creation
+4. **Elasticsearch plugins require restart**: Changing `PLUGINS` env var needs service restart
+
+----------------------------------------
+
+# Guides > Ci Cd
+
+Zerops supports GitHub/GitLab webhook triggers (new tag or push to branch) and GitHub Actions / GitLab CI via `zcli push` with an access token.
+## GitHub Integration (Webhook)
+### Setup (GUI)
+1. Service detail → Build, Deploy, Run Pipeline Settings
+2. Connect with GitHub repository
+3. Select repo + authorize (requires **full access** for webhooks)
+4. Choose trigger: **New tag** (optional regex filter) or **Push to branch**
+### GitHub Actions
+```yaml
+name: Deploy
+on: push
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: zeropsio/actions@main
+        with:
+          access-token: ${{ secrets.ZEROPS_TOKEN }}
+          service-id: 
+```
+- `access-token`: From Settings → Access Token Management
+- `service-id`: From service URL or three-dot menu → Copy Service ID
+## GitLab Integration (Webhook)
+### Setup (GUI)
+1. Service detail → Build, Deploy, Run Pipeline Settings
+2. Connect with GitLab repository
+3. Authorize (requires **full access** for webhooks)
+4. Choose trigger: **New tag** (optional regex) or **Push to branch**
+## Skip Pipeline
+Include `ci skip` or `skip ci` in commit message (case-insensitive).
+## Disconnect
+Service detail → Build, Deploy, Run → Stop automatic build trigger.
+## Gotchas
+1. **Full repo access required**: Webhook integration needs full access to create/manage webhooks
+2. **`ci skip` in commit message**: Prevents pipeline trigger — useful for docs-only changes
+3. **Service ID not obvious**: Find it in service URL or three-dot menu → Copy Service ID
+## GitLab CI
+```yaml
+deploy:
+  stage: deploy
+  image: ubuntu:latest
+  script:
+    - apt-get update && apt-get install -y curl
+    - curl -L https://zerops.io/zcli/install.sh | sh
+    - zcli login $ZEROPS_TOKEN
+    - zcli push --project-id $ZEROPS_PROJECT_ID --service-id $ZEROPS_SERVICE_ID
+  only:
+    - main
+```
+## Generic CI (Any System)
+Any CI system with shell access can deploy via `zcli push`:
+1. Install zcli: `curl -L https://zerops.io/zcli/install.sh | sh`
+2. Authenticate: `zcli login `
+3. Deploy: `zcli push --project-id  --service-id `
+### zcli push key flags
+| Flag | Description |
+|------|-------------|
+| `--project-id` | Target project ID |
+| `--service-id` | Target service ID |
+| `--setup` | zerops.yml setup name (if different from service hostname) |
+| `--version-name` | Custom version label (e.g. git tag) |
+| `--workspace-state` | `all` (default), `clean` (git clean), `staged` (staged only) |
+| `--no-git` | Deploy without git context |
+| `--deploy-git-folder` | Include `.git/` directory in deploy |
+| `--deploy-git-folder` | Include `.git/` directory in deploy |
+
+----------------------------------------
+
+# Guides > Cloudflare
+
+Always use **Full (strict)** SSL mode in Cloudflare — "Flexible" causes redirect loops. Shared IPv4 with Cloudflare proxy is not recommended.
+## DNS Configuration
+### CNAME (non-apex or with CNAME flattening)
+```
+CNAME  
+```
+### With Cloudflare Proxy (orange cloud)
+| IP Type | Record | Proxy |
+|---------|--------|-------|
+| IPv6 only | `AAAA <domain> <ipv6>` | Proxied |
+| Dedicated IPv4 | `A <domain> <ipv4>` | Proxied |
+| Shared IPv4 | **Not recommended** | Reverse AAAA lookup issues |
+| Shared IPv4 | **Not recommended** | Reverse AAAA lookup issues |
+### DNS-Only (gray cloud)
+| IP Type | Records Required |
+|---------|-----------------|
+| Shared IPv4 | `A + AAAA` (both required for SNI) |
+| Dedicated IPv4 | `A` (AAAA optional) |
+| IPv6 only | `AAAA` |
+| IPv6 only | `AAAA` |
+## Wildcard Domains
+```
+Method A: A *. + AAAA *.
+Method B: CNAME *. 
+ACME:     CNAME _acme-challenge. .zerops.zone
+```
+## SSL/TLS Settings (Cloudflare Dashboard)
+- **Encryption mode: Full (strict)** — mandatory
+- **Never use "Flexible"** — causes infinite redirect loops
+- Enable "Always Use HTTPS"
+- WAF exception: Skip rule for `/.well-known/acme-challenge/` (ACME validation)
+## Preparing a Service for Cloudflare
+Any runtime service (nodejs, go, python, etc.) can be put behind Cloudflare. Steps:
+1. **Create the service** with `enableSubdomainAccess: true` in import YAML:
+   ```yaml
+   services:
+     - hostname: myapp
+       type: nodejs@22
+       enableSubdomainAccess: true
+       minContainers: 1
+   ```
+2. **Deploy code** to the service (via `zcli push` or `buildFromGit`)
+3. **Configure Cloudflare DNS** to point to your Zerops project IP
+4. **Set SSL mode to "Full (strict)"** in Cloudflare dashboard
+**Important**: The `zerops_subdomain enable` tool only works on deployed (ACTIVE) services. For new services, use `enableSubdomainAccess: true` in import YAML.
+Internal service-to-service communication must always use `http://` — never `https://`. SSL terminates at the Zerops L7 balancer.
+## Gotchas
+1. **Flexible SSL = redirect loop**: Zerops forces HTTPS, Cloudflare Flexible sends HTTP → infinite redirect
+2. **Shared IPv4 + proxy is broken**: Reverse AAAA lookup doesn't work with Cloudflare proxy on shared IPv4
+3. **ACME challenge needs WAF exception**: Without it, Cloudflare blocks Let's Encrypt validation
+4. **Wildcard SSL on Cloudflare Free**: Free plan doesn't proxy wildcard subdomains — use DNS-only or upgrade
+5. **Subdomain on undeployed service**: `zerops_subdomain enable` returns "Service stack is not http or https" on READY_TO_DEPLOY services — deploy code first or use `enableSubdomainAccess` in import YAML
+
+----------------------------------------
+
+# Guides > Deployment Lifecycle
+
+Zerops build & deploy pipeline: temporary build container runs prepareCommands + buildCommands, uploads artifact via deployFiles, then deploys to runtime containers with optional readiness checks. Default is zero-downtime rolling deployment. Build has a 60-minute timeout. The pipeline emits events trackable via `zerops_events`.
+---
+## Build Phase
+### Build Container Lifecycle
+The build container is **temporary** -- created on demand, destroyed after completion or failure.
+**Step-by-step execution order:**
+1. **Container creation** -- base environment from `build.base` + `build.os` (default Alpine)
+2. **Source code download** -- from GitHub, GitLab, or zcli push to `/var/www`
+3. **Cache restoration** -- cached files moved to `/build/source` (no-clobber, source wins)
+4. **prepareCommands** -- install additional tools/packages (skipped if cache valid)
+5. **buildCommands** -- compile, bundle, package your application
+6. **Artifact upload** -- files matching `deployFiles` stored in internal Zerops storage
+7. **Cache preservation** -- files matching `cache:` moved to `/build/cache`
+8. **Container deletion** -- build container destroyed regardless of outcome
+### Build Limits
+- **Resources**: CPU 1-5 cores, RAM 8 GB fixed, Disk 1-100 GB (auto-scales, not charged separately)
+- **Timeout**: **60 minutes** hard limit -- no retry, must trigger new pipeline
+- **Cancellation**: only available before build finishes -- once artifact uploaded, deploy cannot be cancelled
+### Command Exit Codes
+- **Exit 0** -- success, next command runs
+- **Non-zero** -- build cancelled, check build log for errors
+- YAML list items = **separate shells**; use `|` block scalar for **single shell** (shared env/cwd)
+---
+## Runtime Prepare Phase (Optional)
+Runs **after build, before deploy** when `run.prepareCommands` is defined. Creates a **custom runtime image** with additional system packages.
+**Execution order:**
+1. Create prepare container from `run.os` + `run.base`
+2. Copy files from `build.addToRunPrepare` to `/home/zerops/`
+3. Execute `run.prepareCommands` in order
+4. Snapshot as custom runtime image
+5. Image cached for future deploys
+**Cache invalidation triggers:**
+- Change to `run.os`, `run.base`, or `run.prepareCommands`
+- Change to `build.addToRunPrepare` file contents
+- Manual invalidation via GUI
+**DO NOT** include application code in the runtime prepare image. Deploy files arrive separately.
+---
+## Deploy Phase
+### First Deploy
+For each new container (count based on auto scaling settings):
+1. **Install runtime** -- base image or custom runtime image
+2. **Download artifact** -- from internal storage to `/var/www`
+3. **initCommands** -- optional per-container initialization (runs every start/restart)
+4. **start command** -- launch application
+5. **Readiness check** -- if configured, gates traffic routing
+6. **Container active** -- receives incoming requests
+Multiple containers deploy **in parallel**.
+### Subsequent Deploys (Rolling Deployment)
+Default behavior (`temporaryShutdown: false`):
+1. New containers started (same count as existing)
+2. New containers go through steps 1-6 above
+3. **Both old and new versions run simultaneously** during transition
+4. Old containers removed from load balancer (stop receiving new requests)
+5. Old container processes terminated
+6. Old containers deleted
+### temporaryShutdown Behavior
+| Setting | Behavior | Downtime |
+|---------|----------|----------|
+| `false` (default) | New containers start BEFORE old ones stop | **Zero downtime** |
+| `true` | Old containers stop BEFORE new ones start | **Temporary downtime** |
+| `true` | Old containers stop BEFORE new ones start | **Temporary downtime** |
+Use `temporaryShutdown: true` only when you cannot run two versions simultaneously (e.g., database migrations, singleton locks).
+---
+## Readiness Check vs Health Check
+| Aspect | Readiness Check | Health Check |
+|--------|----------------|--------------|
+| When | **During deploy only** | **Continuously after deploy** |
+| Purpose | Gates traffic to new containers | Detects runtime failures |
+| Location | `deploy.readinessCheck` | `run.healthCheck` |
+| Failure action | Container marked failed after timeout, replaced | Container restarted |
+| Failure action | Container marked failed after timeout, replaced | Container restarted |
+### Readiness Check Mechanics
+1. Application starts via `start` command
+2. Readiness check runs (httpGet or exec)
+3. If **fails** -- wait `retryPeriod` seconds (default 5s), retry
+4. If **succeeds** -- container marked active, receives traffic
+5. If still failing after `failureTimeout` (default 300s / 5 min) -- container deleted, new one created
+**httpGet**: succeeds on HTTP `2xx`, follows `3xx` redirects, 5-second per-request timeout
+**exec.command**: succeeds on exit code 0, 5-second per-command timeout
+---
+## Event Timeline (zerops_events)
+Typical pipeline events in chronological order:
+1. **`stack.build` process RUNNING** -- build container created, pipeline started
+2. **`stack.build` process FINISHED** -- build complete, artifact uploaded
+3. **`appVersion` build event ACTIVE** -- deploy started, containers launching
+4. **Service status returns to RUNNING** -- all containers active, deploy complete
+**Terminal states:**
+- Build done: `stack.build` process status = `FINISHED`
+- Build failed: `stack.build` process status = `FAILED`
+- Deploy done: service containers all active, new appVersion is `ACTIVE`
+**DO NOT** keep polling after `stack.build` shows `FINISHED` -- that means the build itself is complete. The `ACTIVE` status on appVersion means deployed and running.
+---
+## Build Event Polling Checklist
+When monitoring a build/deploy via `zerops_events`:
+1. **Filter by service**: always use `serviceHostname` parameter to avoid stale events from other services or previous iterations
+2. **Check `stack.build` process**: look for status `FINISHED` (success) or `FAILED` (error). Once `FINISHED`, the build is done — stop polling build status
+3. **Check `appVersion` build event**: status `ACTIVE` means deployed and running. This confirms deploy completion
+4. **Do NOT confuse build events**: `stack.build` process `RUNNING` = build in progress. `appVersion` `ACTIVE` = already deployed. These are different events
+5. **Timeout guidance**: builds have a 60-minute hard limit. If no `FINISHED` after ~5 minutes for typical apps, check build logs via `zerops_logs`
+6. **Stale events**: project-level events may include old builds from previous deploys. Always verify the event timestamp and service match
+## Application Versions
+Zerops keeps **10 most recent versions**. Older auto-deleted. Any archived version can be **restored** -- activates that version, archives current, restores env vars to their state when that version was last active.
+## Gotchas
+1. **Build and run are SEPARATE containers** -- build output does not automatically appear in runtime. You must specify `deployFiles`
+2. **initCommands run on EVERY container start** -- including restarts and horizontal scaling, not just deploys
+3. **initCommands failures do NOT cancel deploy** -- app starts regardless of init exit code
+4. **prepareCommands in build vs run** -- `build.prepareCommands` customizes build env, `run.prepareCommands` creates custom runtime image. Different containers, different purposes
+5. **deployFiles land in `/var/www`** -- tilde syntax (`dist/~`) extracts contents directly to `/var/www/` (strips directory). Without tilde, `dist` → `/var/www/dist/` (preserved). **CRITICAL**: `run.start` path must match — `dist/~` + `start: bun dist/index.js` BREAKS because the file is at `/var/www/index.js`, not `/var/www/dist/index.js`
+## SSHFS Mount and Deploy Interaction
+When using SSHFS (`zerops_mount`) for dev workflows, deploy replaces the container. This has important consequences:
+1. **After deploy, run container only has `deployFiles` content.** All other files (including zerops.yml if not in deployFiles) are gone. Use `deployFiles: [.]` for dev services to ensure zerops.yml and source files survive the deploy cycle.
+2. **SSHFS mount auto-reconnects after deploy.** No explicit remount is needed — the SSHFS reconnect mechanism handles the container replacement transparently. The mount only becomes truly stale during stop (container not running); after start it auto-reconnects again.
+3. **zerops.yml must be in deployFiles** for dev self-deploy lifecycle. Without it, subsequent deploys from the container fail because zerops.yml is missing.
+**Two kinds of "mount" (disambiguation):**
+- `zerops_mount` -- SSHFS tool, mounts service `/var/www` locally for development. This is a dev workflow tool.
+- Shared storage mount -- platform feature, attaches a shared-storage volume at `/mnt/{hostname}` via `mount:` in import.yml + zerops.yml `run.mount`. These are completely unrelated features.
+
+----------------------------------------
+
+# Guides > Environment Variables
+
+Zerops manages environment variables at two scopes (project and service) with strict build/runtime isolation. Variables are set via zerops.yml, import.yml, or GUI. **Both project-level vars AND cross-service vars (`${hostname_varname}`) auto-inject as OS env vars into every container in the project** — no declaration required. `run.envVariables` exists only for mode flags and framework-convention renames. Re-declaring an auto-injected var under its own name creates a literal-string self-shadow. Secret vars are write-only after creation. Changes require service restart.
+---
+## Scope Hierarchy
+| Scope | Defined In | Visibility | Editable Without Redeploy |
+|-------|-----------|------------|--------------------------|
+| **Project** | import.yml `project.envVariables`, GUI | All services (auto-inherited) | Yes (restart required) |
+| **Service secret** | import.yml `envSecrets`, GUI | Single service | Yes (restart required) |
+| **Service basic (build)** | zerops.yml `build.envVariables` | Build container only | No (redeploy required) |
+| **Service basic (runtime)** | zerops.yml `run.envVariables` | Runtime container only | No (redeploy required) |
+| **Service basic (runtime)** | zerops.yml `run.envVariables` | Runtime container only | No (redeploy required) |
+## Variable Precedence
+When the same key exists at multiple levels:
+1. **Service basic (build/runtime)** wins over service secret
+2. **Service-level** wins over project-level
+3. Build and runtime are **separate environments** -- same key can have different values in each
+**DO NOT** create a secret and a basic runtime variable with the same key expecting both to persist. The basic runtime variable from zerops.yml silently overrides the secret.
+## Build/Runtime Isolation
+Build and runtime run in **separate containers**. Variables from one phase are not visible in the other unless explicitly referenced with prefixes:
+| Want to access | From | Use prefix |
+|---------------|------|-----------|
+| Runtime var `API_KEY` | Build container | `${RUNTIME_API_KEY}` |
+| Build var `BUILD_ID` | Runtime container | `${BUILD_BUILD_ID}` |
+| Build var `BUILD_ID` | Runtime container | `${BUILD_BUILD_ID}` |
+```yaml
+zerops:
+  - setup: app
+    build:
+      envVariables:
+        API_KEY: ${RUNTIME_API_KEY}   # reads runtime API_KEY during build
+    run:
+      envVariables:
+        API_KEY: "12345-abcde"
+```
+## Cross-Service References — Auto-Injected Project-Wide
+**Every service's variables are automatically injected as OS environment variables into every other service's containers** — both runtime and build. A worker container sees `db_hostname`, `db_password`, `queue_user`, `storage_apiUrl`, etc. as real OS env vars at container start. Zero declaration in zerops.yml required.
+Read them directly in application code:
+```javascript
+// Node — lowercase native names match the platform
+const host = process.env.db_hostname;
+const pwd  = process.env.db_password;
+const natsUser = process.env.queue_user;
+```
+```php
+// PHP
+$host = getenv('db_hostname');
+```
+`run.envVariables` and `build.envVariables` have **two legitimate uses only**:
+1. **Mode flags** — per-setup values that don't come from another service:
+   ```yaml
+   run:
+     envVariables:
+       NODE_ENV: production
+       APP_ENV: local
+   ```
+2. **Framework-convention renames** — forward a platform var under a different name because the framework config expects it. The key on the left MUST DIFFER from the source var name on the right:
+   ```yaml
+   run:
+     envVariables:
+       DB_HOST: ${db_hostname}          # TypeORM expects uppercase DB_HOST
+       DATABASE_URL: ${db_connectionString}
+   ```
+**Do NOT re-declare auto-injected vars under their own name.** It is always wrong and never useful:
+```yaml
+run:
+  envVariables:
+    db_hostname: ${db_hostname}        # SELF-SHADOW — see next section
+    db_password: ${db_password}        # SELF-SHADOW
+    queue_hostname: ${queue_hostname}  # SELF-SHADOW
+    STAGE_API_URL: ${STAGE_API_URL}    # SELF-SHADOW (project-level variant)
+```
+The referenced variable does **not** need to exist at definition time — Zerops resolves at container start.
+### Self-Shadow Trap
+Writing `varname: ${varname}` in `run.envVariables` creates a literal-string self-shadow. The platform's interpolator sees the service-level variable of that name first, can't recurse back to the auto-injected value, and the resolved OS env var becomes the literal string `${varname}`:
+```yaml
+run:
+  envVariables:
+    db_hostname: ${db_hostname}        # OS env: db_hostname='${db_hostname}' (literal)
+    db_password: ${db_password}        # OS env: db_password='${db_password}' (literal)
+```
+At runtime, the worker tries to connect to `"${db_hostname}:5432"` and crashes. The fix is to **delete the entire block** — those vars are already in the container's env without any declaration.
+This applies identically to project-level vars (`${STAGE_API_URL}`, `${APP_SECRET}`) and cross-service vars (`${db_hostname}`, `${queue_user}`) — both auto-propagate, both self-shadow under the same rule.
+**Hostname transformation**: dashes become underscores. Service `my-db` variable `port` is `${my_db_port}`.
+### Cross-Service References in API vs Runtime
+Cross-service references (`${hostname_varname}`) are **resolved at container start time**, not at definition time. This means:
+- **`zerops_discover` with `includeEnvs=true`** returns the **literal template** (e.g., `${db_password}`), NOT the resolved value. This is expected — the API stores templates, not resolved values.
+- **Inside the running container**, environment variables contain the actual resolved values.
+- **Restarting a service does NOT change** what `zerops_discover` returns — it always shows templates. To verify resolved values, check from inside the container (e.g., via SSH or application endpoint).
+### Isolation Modes (envIsolation)
+`envIsolation` does NOT control whether cross-service vars auto-inject — they do, in every mode. It controls something narrower: how `${hostname_varname}` templates inside zerops.yml and import.yml *resolve* during platform interpolation.
+| Mode | Behavior |
+|------|----------|
+| `service` (default) | Service-scoped: `${hostname_varname}` templates inside that service's YAML resolve by following the hostname prefix. The OS env in every container still contains every other service's vars as auto-injected keys. |
+| `none` (legacy) | Cross-service references can be written without the `${hostname_varname}` prefix (e.g. `${password}` resolves to the nearest match). Do not use for new projects — ambiguous, error-prone. |
+| `none` (legacy) | Cross-service references can be written without the `${hostname_varname}` prefix (e.g. `${password}` resolves to the nearest match). Do not use for new projects — ambiguous, error-prone. |
+Set in import.yml at project or service level:
+```yaml
+project:
+  envIsolation: none       # legacy — avoid
+services:
+  - hostname: db
+    envIsolation: none     # legacy — avoid
+```
+**Default (`service`) is the right choice.** The auto-inject behavior above applies under the default.
+## Project Variables -- Auto-Inherited
+Project variables are **automatically available in every service, in both runtime AND build containers**. The platform injects them as OS env vars at container start in every service's runtime container and also in every service's build container during the build phase. From zerops.yaml's point of view they are referenced **directly by name** with `${VAR_NAME}` — **no `RUNTIME_` prefix in either scope**. The `RUNTIME_` prefix is reserved for a different use case: lifting a single service's service-level runtime variable into that same service's build context. Project-scope vars are broader than service-scope and do not need lifting.
+**In shell commands** (buildCommands, initCommands, start) project vars are directly readable:
+```yaml
+build:
+  buildCommands:
+    - echo "building for $STAGE_API_URL"          # shell reads the OS env var
+    - VITE_API_URL=$STAGE_API_URL npm run build    # or pass it forward by shell prefix
+```
+**In `build.envVariables` YAML** (to compose a derived var that the bundler consumes) reference the project var directly without prefix:
+```yaml
+build:
+  envVariables:
+    VITE_API_URL: ${STAGE_API_URL}   # project var STAGE_API_URL read as-is, NO RUNTIME_ prefix
+```
+**In `run.envVariables` YAML** (to forward a project var under a framework-conventional name without creating a shadow), reference directly without prefix:
+```yaml
+run:
+  envVariables:
+    FRONTEND_URL: ${STAGE_FRONTEND_URL}      # project var STAGE_FRONTEND_URL forwarded as FRONTEND_URL
+```
+**DO NOT** re-reference an auto-injected variable under its SAME name — that's a self-shadow loop. Applies to BOTH project-level vars AND cross-service vars:
+```yaml
+envVariables:
+  PROJECT_NAME: ${PROJECT_NAME}           # project-level self-shadow
+  STAGE_API_URL: ${STAGE_API_URL}         # project-level self-shadow
+  db_hostname: ${db_hostname}             # cross-service self-shadow
+  queue_user: ${queue_user}               # cross-service self-shadow
+```
+All four resolve to the literal string `${VAR_NAME}` inside the container — the framework tries to connect to `"${db_hostname}:5432"` and crashes. The fix is to delete those lines entirely — the platform already injects the real value as an OS env var.
+To **override** a project variable for one service, define a service-level variable with the same key and a DIFFERENT VALUE (not a reference to the project var):
+```yaml
+run:
+  envVariables:
+    LOG_LEVEL: debug    # overrides project-level LOG_LEVEL for this service
+```
+### Typical pattern: project-level URL constants for dual-runtime recipes
+Dual-runtime recipes (frontend SPA + backend API on the same platform) use project-level URL constants as the single source of truth for cross-service URLs. The constants are derived from `${zeropsSubdomainHost}` (a platform-generated project-scope env var present from project creation) and the services' known hostnames:
+```yaml
+project:
+  envVariables:
+    STAGE_API_URL: https://apistage-${zeropsSubdomainHost}-3000.prg1.zerops.app
+    STAGE_FRONTEND_URL: https://appstage-${zeropsSubdomainHost}.prg1.zerops.app
+```
+The platform resolves `${zeropsSubdomainHost}` when injecting the value into services at container start. The frontend consumes `STAGE_API_URL` via plain `${STAGE_API_URL}` in `build.envVariables` (baking it into the bundle at compile time) — **no `RUNTIME_` prefix**. The API consumes `STAGE_FRONTEND_URL` via plain `${STAGE_FRONTEND_URL}` in `run.envVariables` (for CORS allow-list). The same names must be set on the workspace project via `zerops_env project=true action=set` after provision, so workspace verification doesn't see literal `${STAGE_FRONTEND_URL}` strings.
+## Secret Variables
+- Defined via GUI, import.yml `envSecrets`, or `dotEnvSecrets`
+- **Write-only after creation** -- values masked in GUI, cannot be read back via API
+- Can be updated without redeploy, but service **must be restarted**
+- Overridden by basic (zerops.yml) variables with the same key
+### dotEnvSecrets
+Import secrets in `.env` format within import.yml:
+```yaml
+services:
+  - hostname: app
+    dotEnvSecrets: |
+      APP_KEY=generated_value
+      DB_PASSWORD=secure123
+```
+All entries become secret variables. Requires `#zeropsPreprocessor=on` if using generator functions.
+## envReplace -- File-Level Substitution
+Replaces placeholders in deployed files with environment variable values **during deployment** (not at runtime).
+```yaml
+run:
+  envReplace:
+    delimiter: "%%"
+    target:
+      - ./config/
+      - ./templates/settings.json
+```
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `delimiter` | Yes | Wrapping characters (e.g., `%%` makes `%%VAR%%`). String or array |
+| `target` | Yes | Files or directories to process. String or array |
+| `target` | Yes | Files or directories to process. String or array |
+**DO NOT** expect directory targets to recurse into subdirectories. `./config/` processes only files directly in `config/`, not `config/jwt/`. Specify each subdirectory explicitly.
+## Naming Restrictions
+**Key**: must match `[a-zA-Z_]+[a-zA-Z0-9_]*`. Case-sensitive. Must be unique within scope regardless of case.
+**Value**: ASCII only. No EOL characters.
+## Restart Requirement
+Env var changes (secret or project) take effect only on container start. The running process does **not** receive updated values.
+**DO NOT** expect hot-reload of env vars. After changing secrets or project vars in GUI, **restart the service**. For zerops.yml `envVariables` changes, a **full redeploy** is required.
+## System-Generated Variables
+Zerops auto-generates variables per service (e.g., `hostname`, `PATH`, DB connection strings). Cannot be deleted. Some read-only (`hostname`), others editable (`PATH`). Can be referenced by other services using `${hostname_varname}`.
+## Common Mistakes
+- **DO NOT** re-reference auto-injected vars under their own name — self-shadow loop. Applies to BOTH project-level (`STAGE_API_URL: ${STAGE_API_URL}`) AND cross-service (`db_hostname: ${db_hostname}`, `queue_user: ${queue_user}`).
+- **DO NOT** declare cross-service vars you only want to READ — they are already in the container's OS env. Read via `process.env.db_hostname` / `getenv('db_hostname')` directly. Declare in `run.envVariables` only to RENAME (e.g. `DB_HOST: ${db_hostname}`) or to set mode flags.
+- **DO NOT** forget restart after GUI/API env changes — process won't see new values
+- **DO NOT** expect `envReplace` to recurse subdirectories — it does not
+- **DO NOT** rely on reading secret values back — they are write-only after creation
+- **DO NOT** create both secret and basic vars with same key — basic silently wins
+
+----------------------------------------
+
+# Guides > Firewall
+
+Zerops uses nftables with restricted TCP ports 1-1024 (only 22, 53, 80, 123, 443, 587 allowed); UDP and ports 1025-65535 are unrestricted.
+## TCP Ports 1-1024 (Restricted)
+| Port | Protocol | Status |
+|------|----------|--------|
+| 22 | SSH | Allowed |
+| 25 | SMTP | **Blocked** (spam prevention) |
+| 53 | DNS | Allowed |
+| 80 | HTTP | Allowed |
+| 123 | NTP | Allowed |
+| 443 | HTTPS | Allowed |
+| 465 | SMTPS | **Blocked** (deprecated) |
+| 587 | SMTP/STARTTLS | Allowed |
+| All others | — | **Blocked** |
+| All others | — | **Blocked** |
+## UDP Ports
+No restrictions on any UDP port.
+## TCP Ports 1025-65535
+No restrictions.
+## Direct Port Access Firewall
+For services with direct port access enabled:
+- Configure **blacklist** or **whitelist** rules per port
+- Available on ports 10-65435
+- Protocols: TCP, UDP
+## Port Modification
+Contact `support@zerops.io` with Project ID + Organization ID to request changes to restricted ports.
+## Gotchas
+1. **Port 25 is permanently blocked**: Use port 587 with STARTTLS for email sending
+2. **Port 465 is blocked**: Legacy SMTPS — use 587 instead
+3. **Cannot self-service unblock**: Must contact Zerops support for port exceptions
+
+----------------------------------------
+
+# Guides > Local Development
+
+Develop locally with hot reload while connecting to Zerops managed services (DB, cache, storage) via VPN. ZCP generates `.env` with real credentials. Deploy to Zerops with `zerops_deploy` which uses `zcli push` under the hood.
+---
+## Setup
+### Prerequisites
+- **zcli** installed: `npm i -g @zerops/zcli` or [docs.zerops.io/references/cli](https://docs.zerops.io/references/cli)
+- **VPN**: WireGuard (installed by zcli automatically on first `zcli vpn up`)
+- **Project-scoped token**: Create in Zerops GUI → Settings → Access Tokens → Custom access per project
+### Configuration
+```json
+// .mcp.json (in project root)
+{
+  "mcpServers": {
+    "zcp": {
+      "command": "zcp",
+      "env": { "ZCP_API_KEY": "" }
+    }
+  }
+}
+```
+---
+## Workflow
+### 1. Connect to Zerops services
+```bash
+zcli vpn up 
+```
+- All services accessible by hostname (e.g., `db`, `cache`)
+- One project at a time — switching disconnects the current
+- **Env vars NOT available via VPN** — use `.env` file instead
+### 2. Load credentials
+ZCP generates `.env` from `zerops_discover`:
+```
+db_host=db
+db_port=5432
+db_password=
+db_connectionString=postgresql://db:@db:5432/db
+```
+How to load:
+| Runtime | Method |
+|---------|--------|
+| Node.js 20+ | `node --env-file .env app.js` |
+| Next.js, Vite, Nuxt | Automatic (reads `.env`) |
+| PHP/Laravel | Automatic (reads `.env`) |
+| Python | `python-dotenv` or `django-environ` |
+| Go | `godotenv.Load()` or `source .env && go run .` |
+| Java/Spring | `spring-dotenv` or `application.properties` |
+| Java/Spring | `spring-dotenv` or `application.properties` |
+### 3. Develop locally
+Start your dev server as usual — hot reload works against Zerops managed services over VPN.
+### 4. Deploy to Zerops
+```
+zerops_deploy targetService="appstage"
+```
+Uses `zcli push` under the hood. Blocks until build completes.
+---
+## zerops.yml for Local Mode
+The same `zerops.yml` works for both local push and container deploy:
+```yaml
+zerops:
+  - setup: appstage
+    build:
+      base: nodejs@22
+      buildCommands:
+        - npm ci
+        - npm run build
+      deployFiles: ./dist
+    run:
+      start: node dist/server.js
+      ports:
+        - port: 3000
+          httpSupport: true
+      envVariables:
+        DB_URL: ${db_connectionString}
+```
+`${hostname_varName}` references are resolved by Zerops at container runtime — they work regardless of push source (local or container).
+---
+## Connection Troubleshooting
+| Symptom | Diagnosis | Fix |
+|---------|-----------|-----|
+| `nc -zv db 5432` times out | VPN not connected | `zcli vpn up <project-id>` |
+| VPN connected, still timeout | Wrong project | `zcli vpn up <correct-project-id>` |
+| Connected but auth fails | Stale .env | Regenerate from `zerops_discover includeEnvs=true` |
+| Service unreachable | Service stopped | `zerops_manage action="start" serviceHostname="db"` |
+| Service unreachable | Service stopped | `zerops_manage action="start" serviceHostname="db"` |
+### Diagnostic sequence
+1. `zerops_discover service="db"` — is service RUNNING?
+2. `nc -zv db 5432 -w 3` — network reachable?
+3. Compare `.env` vs `zerops_discover includeEnvs=true` — credentials current?
+---
+## Multi-Project
+Each project directory has its own `.mcp.json` + `.zcp/state/`. VPN is one per machine — switch manually:
+```bash
+zcli vpn up   # work on project A
+zcli vpn up   # auto-disconnects A, connects B
+```
+---
+## Gotchas
+1. **VPN = network only**: Env vars must come from `.env` file, not VPN connection
+2. **`.env` contains secrets**: Add to `.gitignore` immediately — never commit
+3. **Deploy = new container**: Local files on Zerops are lost on every deploy. Only `deployFiles` content persists
+4. **One VPN project at a time**: Connecting to project B disconnects project A
+5. **Object storage (S3)**: Uses HTTPS apiUrl — may work without VPN but not fully verified. Include VPN as fallback
+6. **zcli must be installed**: `zerops_deploy` requires zcli in PATH. Error message includes install link if missing
+
+----------------------------------------
+
+# Guides > Logging
+
+Zerops captures stdout/stderr as logs; use syslog output format for severity filtering. Supports forwarding to Better Stack, Papertrail, or self-hosted ELK via syslog.
+## Log Types
+1. **Build logs** — output from build pipeline
+2. **Prepare runtime logs** — output from custom runtime image creation
+3. **Runtime/Database logs** — operational output (stdout/stderr)
+## Access Methods
+### GUI
+- Project detail → service → Logs section
+- Filter by severity, time range, container
+### CLI
+```bash
+zcli service log                   # Runtime logs
+zcli service log  --showBuildLogs  # Build logs
+```
+## Severity Filtering
+Logs must output to **syslog format** for severity filtering to work. Plain stdout/stderr logs appear as "info" level.
+## Log Forwarding
+### Ready-Made Integrations
+- **Better Stack** — cloud log management
+- **Papertrail** — cloud log aggregation
+- **ELK Stack** — self-hosted (Elasticsearch + Logstash + Kibana)
+### ELK Stack Setup (Self-Hosted on Zerops)
+Services needed:
+- `elkstorage` — Elasticsearch
+- `kibana` — UI
+- `logstash` — Log collection (UDP syslog)
+Multi-project forwarding: make Logstash public with firewall whitelist rules.
+### Custom syslog-ng Configuration
+**Critical**: Use source name `s_src` (not `s_sys`):
+```
+source s_src {
+    system();
+    internal();
+};
+```
+Certificate paths:
+- System certs: `/etc/ssl/certs`
+- Custom certs: `ca-file("/etc/syslog-ng/user.crt")`
+## Gotchas
+1. **Syslog format required**: Without syslog formatting, all logs appear as same severity — no filtering possible
+2. **Build logs separate**: Use `--showBuildLogs` flag in CLI — not shown by default
+3. **Source name must be `s_src`**: Using `s_sys` (common default) will not capture Zerops logs
+4. **UDP for Logstash**: Zerops forwards logs via UDP syslog — ensure Logstash listens on UDP
+5. **Custom certs path**: Place custom CA certs in `/etc/syslog-ng/user.crt`
+
+----------------------------------------
+
+# Guides > Metrics
+
+Zerops supports ELK (APM + logs) and Prometheus/Grafana stacks; expose `/metrics` endpoint and set `ZEROPS_PROMETHEUS_PORT` for auto-scraping.
+## Deployment Modes
+- **Local**: Monitoring services in the same project as your app
+- **Global**: Dedicated observability project (recommended for multi-project)
+## ELK Stack Services
+| Service | Purpose |
+|---------|---------|
+| `elkstorage` | Elasticsearch (data storage) |
+| `kibana` | Visualization UI |
+| `apmserver` | APM traces (made public via Zerops subdomain) |
+| `logstash` | Log collection |
+| `logstash` | Log collection |
+### APM Configuration
+```yaml
+envVariables:
+  ELASTIC_APM_ACTIVE: "true"
+  ELASTIC_APM_SERVICE_NAME: my-app
+  ELASTIC_APM_SERVER_URL: https://apmserver.zerops.app
+  ELASTIC_APM_SECRET_TOKEN: 
+```
+## Prometheus + Grafana Stack Services
+| Service | Purpose |
+|---------|---------|
+| `prometheus` | Metrics collection |
+| `grafana` | Visualization UI |
+| `grafanadb` | PostgreSQL for Grafana |
+| `prometheusbackups` | S3 for Prometheus data |
+| `prometheuslight` | Forwarder (in source project for cross-project) |
+| `prometheuslight` | Forwarder (in source project for cross-project) |
+### Custom Metrics
+1. Expose HTTP `/metrics` endpoint in your app
+2. Set env var: `ZEROPS_PROMETHEUS_PORT=8080` (comma-separated for multiple ports)
+3. Prometheus auto-discovers and scrapes
+## Built-in Metrics
+- Service scaling & resource usage
+- PostgreSQL (with `pg_stat_statements` extension)
+- MariaDB
+- Valkey
+## Gotchas
+1. **`ZEROPS_PROMETHEUS_PORT` is required**: Without it, Prometheus won't discover your custom metrics endpoint
+2. **APM server must be public**: Use Zerops subdomain to expose apmserver for trace collection
+3. **Cross-project needs forwarder**: Use `prometheuslight` service in source project to forward to global Prometheus
+
+----------------------------------------
+
+# Guides > Networking
+
+Zerops networking has two layers: a private VXLAN network per project (service-to-service via hostname, plain HTTP) and an L7 balancer for public traffic (SSL termination, round-robin, health checks). Apps must bind `0.0.0.0` — binding localhost causes 502. The L7 balancer is nginx-based with configurable timeouts, buffers, rate limiting, and access policies.
+---
+## Architecture Overview
+```
+Internet
+  │
+  ├─ HTTP/HTTPS ──→ L7 Balancer (SSL termination, nginx) ──→ container VXLAN IP:port
+  │
+  └─ Direct port ──→ L3/Core Balancer ──→ container VXLAN IP:port
+```
+**Per-project infrastructure:**
+- **Private VXLAN network** — isolated overlay network shared by all services
+- **L7 HTTP Balancer** — 2 HA containers, auto-scales, domain routing + SSL
+- **L3 Core Balancer** — IP addresses and direct port access (TCP/UDP)
+---
+## Internal Networking (VXLAN)
+Services in the same project communicate by **hostname and internal port**:
+```
+http://api:3000/health
+http://postgres:5432
+```
+**Rules:**
+- Always **`http://`** — never `https://` for internal traffic
+- Isolated per project — no cross-project private networking
+- Service discovery is automatic — no manual network config
+- VPN uses same hostnames: `http://api:3000` from local machine (both `api` and `api.zerops` resolve — VPN sets up DNS search domain)
+**Cross-service env vars**: prefix with hostname — e.g., `app_API_TOKEN`. Zerops auto-generates connection vars for managed services.
+**DO NOT** use `https://` for service-to-service calls — SSL terminates at the L7 balancer, internal network is already isolated.
+---
+## L7 Balancer (HTTP/HTTPS)
+The L7 balancer is **nginx-based**, deployed as 2 HA containers per project. It handles SSL/TLS termination (Let's Encrypt, auto-renewed), domain routing, round-robin load balancing with health checks, and connection pooling.
+### Proxy Headers
+The balancer forwards client info via standard headers:
+- **`X-Forwarded-For`** / **`X-Real-IP`** — original client IP
+- **`X-Forwarded-Proto`** — `https` (original protocol)
+Your app receives plain HTTP but can inspect these headers for the real client info.
+### Key Default Settings
+| Parameter | Default | Range | Notes |
+|-----------|---------|-------|-------|
+| `worker_connections` | 4000 | 1024-65535 | Simultaneous connections per worker |
+| `keepalive_timeout` | 30s | 1s-300s | Idle connection lifetime |
+| `keepalive_requests` | 100000 | 1-1000000 | Max requests per connection |
+| `client_max_body_size` | 512m | 1k-2048m | Max upload size (custom domain) |
+| `client_header_timeout` | 10s | 1s-300s | Header receive timeout |
+| `client_body_timeout` | 10s | 1s-300s | Body receive timeout |
+| `send_timeout` | 2s | 1s-300s | Response transmission timeout |
+| `proxy_buffering` | on | on/off | Buffer backend responses |
+| `proxy_buffering` | on | on/off | Buffer backend responses |
+**Zerops subdomain** balancer: fixed **50 MB** upload limit (not configurable).
+### Advanced Routing Features (GUI)
+| Feature | Description |
+|---------|-------------|
+| **Redirects** | 301/302/307/308 with `preservePath` and `preserveQuery` options |
+| **Access Policy** | CIDR-based IP allow/deny lists, returns 403 on denied request |
+| **Rate Limiting** | Per-IP or per-domain, configurable burst queue, returns 503 when exceeded |
+| **Basic Auth** | HTTP Basic Authentication per location |
+| **Custom Content** | Return static content with custom status code and MIME type |
+| **Custom Content** | Return static content with custom status code and MIME type |
+---
+## 502 Bad Gateway Diagnostic Checklist
+Work through these steps **in order**:
+1. **Binding address** — App bound to `0.0.0.0`? Binding `127.0.0.1`/`localhost` is the #1 cause
+2. **Port match** — App listening on the port declared in `zerops.yml` `ports[]`?
+3. **App running** — Check runtime logs (`zerops_logs`) for crash/startup errors
+4. **Health check** — If configured, returning 2xx / exit 0? 5-minute retry window
+5. **Readiness check** — If configured, traffic only routes after it passes
+6. **Service status** — Is the service ACTIVE? (check `zerops_discover`)
+7. **Timeout settings** — For slow responses, increase `send_timeout` (default 2s)
+**Common framework fixes:**
+```bash
+app.listen(3000, '0.0.0.0')
+flask run --host=0.0.0.0
+http.ListenAndServe(":8080", handler)  // implicit 0.0.0.0
+server.address=0.0.0.0
+```
+---
+## Shared vs Dedicated IPv4
+| Feature | Shared IPv4 | Dedicated IPv4 |
+|---------|-------------|----------------|
+| Cost | Free | $3 / 30 days |
+| Protocol support | HTTP/HTTPS only | All (TCP/UDP/HTTP) |
+| Connections | Limited, shorter timeouts | Full capacity |
+| Blacklist risk | Shared with other users | Isolated |
+| DNS requirement | A + AAAA (both mandatory) | A only (AAAA optional) |
+| SNI routing | AAAA record used for verification | Not needed |
+| Production use | No | Yes |
+| Production use | No | Yes |
+**Shared IPv4 SNI mechanism**: Zerops reverse-looks-up the domain's AAAA record to verify project ownership. Without it, routing fails silently.
+---
+## Cloudflare Integration Summary
+- **SSL mode**: Always **Full (strict)** — "Flexible" causes redirect loops
+- **Shared IPv4 + proxy**: **DO NOT** — reverse AAAA lookup breaks with Cloudflare proxy
+- **Best setup**: IPv6-only AAAA record, Cloudflare proxied (handles IPv4 translation)
+- **ACME challenge**: WAF skip rule for `/.well-known/acme-challenge/`
+- **Wildcard SSL**: `_acme-challenge.` CNAME to `.zerops.zone`
+---
+## Gotchas
+1. **Binding localhost = 502**: The L7 balancer connects via VXLAN IP, not localhost — always bind `0.0.0.0`
+2. **Internal HTTPS breaks things**: Service-to-service must use `http://` — the VXLAN network is already isolated
+3. **Subdomain 50MB cap**: zerops.app subdomains have a hard 50MB upload limit — use custom domain for larger files
+4. **send_timeout default is 2s**: Slow API responses may be cut off — increase for long-running endpoints
+5. **Cross-project networking impossible**: Each project is an isolated VXLAN — use public access to bridge projects
+6. **Shared IPv4 needs AAAA**: Missing AAAA record = silent routing failure on shared IPv4
+
+----------------------------------------
+
+# Guides > Object Storage Integration
+
+Zerops Object Storage is S3-compatible (MinIO). Always set `AWS_USE_PATH_STYLE_ENDPOINT: true`. Use env var references `${storage_*}` for credentials. Container filesystem is lost on deploy — use Object Storage for any files that must persist across deployments.
+## Environment Variables
+When you create an Object Storage service, Zerops auto-generates these env vars (prefix with hostname for cross-service access, e.g. `${storage_apiUrl}`):
+| Variable | Description |
+|----------|-------------|
+| `apiUrl` | S3 endpoint URL — full `https://...` URL ready for any S3 SDK's `endpoint` option |
+| `apiHost` | S3 endpoint host only (no scheme); use only if the client library needs host separately |
+| `accessKeyId` | S3 access key |
+| `secretAccessKey` | S3 secret key |
+| `bucketName` | Auto-generated bucket name (hostname + random prefix, immutable) |
+| `quotaGBytes` | Bucket quota in GB |
+| `projectId` | Project ID (Zerops-generated) |
+| `serviceId` | Service ID (Zerops-generated) |
+| `hostname` | Service hostname |
+| `hostname` | Service hostname |
+**Use `${storage_apiUrl}` as the S3 endpoint** — it carries the complete `https://` scheme and is what every S3 SDK's `endpoint` option expects. The `apiHost` variant is host-only; if a client library requires host separately, combine `https://${storage_apiHost}` manually — **never `http://`**. The object-storage gateway rejects plaintext HTTP with a 301 redirect to the HTTPS equivalent, and most S3 SDKs don't follow the redirect automatically. The symptom of a misconfigured endpoint is `UnknownError` or connection-refused on the first bucket call.
+Reference them in zerops.yml `run.envVariables`:
+```yaml
+S3_ENDPOINT: ${storage_apiUrl}
+S3_ACCESS_KEY: ${storage_accessKeyId}
+S3_SECRET_KEY: ${storage_secretAccessKey}
+S3_BUCKET: ${storage_bucketName}
+S3_REGION: us-east-1
+AWS_USE_PATH_STYLE_ENDPOINT: "true"
+```
+## Path Style Endpoint (Required)
+Zerops uses MinIO which requires **path-style** URLs (not virtual-hosted):
+```
+https://endpoint.com/bucket-name/object-key
+https://bucket-name.endpoint.com/object-key
+```
+**Every S3 client must be configured for path-style access.**
+## Framework Integration
+### PHP (Laravel — Flysystem)
+```php
+// config/filesystems.php
+'s3' => [
+    'driver' => 's3',
+    'endpoint' => env('S3_ENDPOINT'),
+    'use_path_style_endpoint' => true,  // REQUIRED
+    'key' => env('S3_ACCESS_KEY'),
+    'secret' => env('S3_SECRET_KEY'),
+    'region' => env('S3_REGION', 'us-east-1'),
+    'bucket' => env('S3_BUCKET'),
+],
+```
+Package: `league/flysystem-aws-s3-v3`
+### Node.js (AWS SDK v3)
+```javascript
+const s3 = new S3Client({
+  endpoint: process.env.S3_ENDPOINT,
+  forcePathStyle: true,  // REQUIRED
+  credentials: {
+    accessKeyId: process.env.S3_ACCESS_KEY,
+    secretAccessKey: process.env.S3_SECRET_KEY,
+  },
+  region: process.env.S3_REGION || 'us-east-1',
+});
+```
+Package: `@aws-sdk/client-s3`
+### Python (boto3)
+```python
+import boto3
+s3 = boto3.client('s3',
+    endpoint_url=os.environ['S3_ENDPOINT'],
+    aws_access_key_id=os.environ['S3_ACCESS_KEY'],
+    aws_secret_access_key=os.environ['S3_SECRET_KEY'],
+    region_name='us-east-1',
+    config=boto3.session.Config(s3={'addressing_style': 'path'}),  # REQUIRED
+)
+```
+Package: `boto3`
+### Java (AWS SDK)
+```java
+S3Client s3 = S3Client.builder()
+    .endpointOverride(URI.create(System.getenv("S3_ENDPOINT")))
+    .serviceConfiguration(S3Configuration.builder()
+        .pathStyleAccessEnabled(true)  // REQUIRED
+        .build())
+    .credentialsProvider(StaticCredentialsProvider.create(
+        AwsBasicCredentials.create(
+            System.getenv("S3_ACCESS_KEY"),
+            System.getenv("S3_SECRET_KEY"))))
+    .region(Region.US_EAST_1)
+    .build();
+```
+## import.yaml Definition
+```yaml
+services:
+  - hostname: storage
+    type: object-storage             # or "objectstorage" (both valid)
+    objectStorageSize: 2              # GB (1-100, changeable in GUI later)
+    objectStoragePolicy: public-read  # predefined policy
+    priority: 10
+```
+**Predefined policies** (`objectStoragePolicy`):
+- `private` — no anonymous access (documents, backups)
+- `public-read` — anonymous list + get (media, avatars, static assets)
+- `public-objects-read` — anonymous get only, no listing (direct links only)
+- `public-write` — anonymous put only
+- `public-read-write` — full anonymous access
+**Custom policy**: use `objectStorageRawPolicy` with IAM Policy JSON instead (template var `{{ .BucketName }}` available).
+Each service = one bucket (auto-named, immutable). Need multiple buckets? Create multiple services.
+## When to Use Object Storage
+| Scenario | Use Object Storage? |
+|----------|-------------------|
+| User uploads (avatars, documents) | Yes — lost on deploy |
+| Media files (images, videos) | Yes — serve via public URL |
+| Build artifacts | No — deploy via zerops.yaml |
+| Temporary files | No — container disk is fine |
+| Logs | No — use Zerops logging |
+| Database dumps | Yes — for backup storage |
+| Database dumps | Yes — for backup storage |
+## Gotchas
+1. **`forcePathStyle: true` / `AWS_USE_PATH_STYLE_ENDPOINT: true` is REQUIRED**: Zerops uses MinIO which doesn't support virtual-hosted style
+2. **Container filesystem is replaced on deploy**: Files on disk survive restarts but are lost when a new container is created (deploy, scale-up). Always use Object Storage for persistent data
+3. **Region is required but ignored**: Set `us-east-1` — MinIO ignores it but SDKs require it
+4. **Public URL format**: `{apiUrl}/{bucketName}/path/to/file`
+5. **Independent infrastructure**: Object Storage runs on separate infra from other services — accessible from Zerops and remotely over internet
+6. **One bucket per service**: Bucket name auto-generated (hostname + random prefix), cannot be changed. Need multiple buckets? Add more object-storage services
+7. **No Zerops backup**: Object Storage is not covered by the Zerops backup system
+8. **No autoscaling**: Quota (1-100 GB) must be set manually, changeable in GUI after creation
+
+----------------------------------------
+
+# Guides > Php Tuning
+
+Override php.ini via `PHP_INI_*` env vars, FPM via `PHP_FPM_*`. Both require **restart** (not reload). Zerops defaults: upload/post = 1024M, FPM dynamic 20/2/1/3. Upload bottleneck is L7 balancer (50MB subdomain), not PHP.
+## PHP Configuration (`PHP_INI_*`)
+Override any php.ini directive via `PHP_INI_{directive}` env vars in `run.envVariables` or via `zerops_env` API.
+**Requires restart** to take effect. Reload writes config files (`/etc/php*/conf.d/overwrite.ini`) but FPM master does not re-read INI on reload.
+### Zerops Platform Defaults
+Zerops overrides several stock PHP values for production use:
+| Directive | Zerops default | Stock PHP | Why |
+|-----------|---------------|-----------|-----|
+| `upload_max_filesize` | **1024M** | 2M | Generous upload limit (L7 balancer is the real gate) |
+| `post_max_size` | **1024M** | 8M | Matches upload limit |
+| `display_errors` | **off** | on | Production: errors to logs, not browser |
+| `error_reporting` | **22527** | 32767 | E_ALL & ~E_DEPRECATED & ~E_STRICT |
+| `log_errors` | **1** | 0 | Errors go to log files |
+| `output_buffering` | **4096** | 0 | Buffered output for performance |
+| `date.timezone` | **UTC** | (empty) | Consistent timezone |
+| `sendmail_path` | `/usr/sbin/sendmail -t -i` | (empty) | System sendmail wired |
+| `sendmail_path` | `/usr/sbin/sendmail -t -i` | (empty) | System sendmail wired |
+### Example
+```yaml
+zerops:
+  - setup: app
+    run:
+      base: php-nginx@8.4
+      envVariables:
+        PHP_INI_upload_max_filesize: 10M
+        PHP_INI_post_max_size: 12M
+        PHP_INI_memory_limit: 256M
+        PHP_INI_max_execution_time: 60
+        PHP_INI_max_input_vars: 5000
+```
+## PHP-FPM (`PHP_FPM_*`)
+Configure FPM process management via `PHP_FPM_*` env vars. **Requires restart** — same as PHP_INI.
+Config files are written to `/etc/php*/php-fpm.d/www.conf` by `zerops-zenv` at container startup.
+### Dynamic Mode (default)
+Pre-forks a pool of workers. Good for consistent traffic.
+| Variable | Default |
+|----------|---------|
+| `PHP_FPM_PM` | `dynamic` |
+| `PHP_FPM_PM_MAX_CHILDREN` | `20` |
+| `PHP_FPM_PM_START_SERVERS` | `2` |
+| `PHP_FPM_PM_MIN_SPARE_SERVERS` | `1` |
+| `PHP_FPM_PM_MAX_SPARE_SERVERS` | `3` |
+| `PHP_FPM_PM_MAX_SPAWN_RATE` | `32` |
+| `PHP_FPM_PM_MAX_REQUESTS` | `500` |
+| `PHP_FPM_PM_MAX_REQUESTS` | `500` |
+High-traffic example:
+```yaml
+envVariables:
+  PHP_FPM_PM_MAX_CHILDREN: 50
+  PHP_FPM_PM_START_SERVERS: 10
+  PHP_FPM_PM_MIN_SPARE_SERVERS: 5
+  PHP_FPM_PM_MAX_SPARE_SERVERS: 15
+  PHP_FPM_PM_MAX_REQUESTS: 1000
+```
+### Ondemand Mode
+Spawns workers only when requests arrive. Saves memory for low-traffic sites.
+```yaml
+envVariables:
+  PHP_FPM_PM: ondemand
+  PHP_FPM_PM_MAX_CHILDREN: 20
+  PHP_FPM_PM_PROCESS_IDLE_TIMEOUT: 60s
+  PHP_FPM_PM_MAX_REQUESTS: 500
+```
+Available parameters for ondemand:
+- `PHP_FPM_PM_MAX_CHILDREN` -- maximum child processes
+- `PHP_FPM_PM_PROCESS_IDLE_TIMEOUT` -- idle timeout before termination (default: 60s)
+- `PHP_FPM_PM_MAX_REQUESTS` -- requests per process before recycling (default: 500)
+## Upload Limits (3-layer chain)
+File uploads pass through three layers -- ALL must allow the size:
+1. **L7 Balancer**: `client_max_body_size` = 512m (custom domain) / **50MB fixed** (subdomain)
+2. **PHP**: `upload_max_filesize` = 1024M (Zerops default)
+3. **PHP**: `post_max_size` = 1024M (Zerops default)
+Zerops pre-configures generous PHP limits, so the **L7 balancer is typically the bottleneck**:
+- Subdomain (zerops.app): hard 50MB cap, cannot be changed
+- Custom domain: 512m default, configurable via custom Nginx template
+## Extensions (Alpine)
+Install via `sudo apk add --no-cache php84-` — version prefix must match PHP major+minor (e.g. `php84-` for PHP 8.4). Sudo required — containers run as `zerops` user.
+Build and runtime are **separate containers with separate images**. The build base (`php@X`) is Alpine-minimal. The runtime base (`php-nginx@X`, `php-apache@X`) bundles more extensions but not all.
+If a Composer dependency requires an extension that's missing from the build image:
+- Install it in `build.prepareCommands` so Composer validates platform requirements properly
+- If also needed at runtime, install in `run.prepareCommands` too (separate container, separate image)
+- **Never** use `--ignore-platform-reqs` — it suppresses all platform checks, hiding real problems that crash at runtime
+Common extensions not in the build base: `ext-pcntl`, `ext-posix` (needed by Horizon), `ext-gd`, `ext-intl`.
+```yaml
+build:
+  base: php@8.4
+  prepareCommands:
+    - sudo apk add --no-cache php84-pcntl php84-posix
+  buildCommands:
+    - composer install --no-dev --optimize-autoloader
+run:
+  base: php-nginx@8.4
+  prepareCommands:
+    - sudo apk add --no-cache php84-pcntl php84-posix
+```
+## Gotchas
+- **Reload does NOT apply changes** -- `PHP_INI_*` and `PHP_FPM_*` both require restart. Zerops reload rewrites config files via `zerops-zenv` but does not signal FPM to re-read them.
+- **Upload fails at 50MB on subdomain** -- this is the L7 balancer limit, not PHP. Use a custom domain for larger uploads.
+- **`post_max_size` must be >= `upload_max_filesize`** -- PHP silently drops the POST body if it exceeds `post_max_size`, even if the file itself is under `upload_max_filesize`.
+
+----------------------------------------
+
+# Guides > Production Checklist
+
+Before going to production: (1) databases to HA mode, (2) minContainers: 2 on app services, (3) replace Mailpit with real SMTP, (4) remove Adminer, (5) use Object Storage for uploads, (6) use Redis/Valkey for sessions.
+## Database
+| Item | Dev | Production |
+|------|-----|------------|
+| Mode | `NON_HA` | `HA` (must recreate) |
+| Backups | Optional | Enabled |
+| Connection | Single primary | Primary + read replicas |
+| Connection | Single primary | Primary + read replicas |
+**HA is immutable** — cannot switch after creation. Delete and recreate with `mode: HA`.
+## Application Services
+| Item | Dev | Production |
+|------|-----|------------|
+| minContainers | 1 | 2+ |
+| Health checks | Optional | Enabled |
+| Logging | Console/debug | Structured (syslog) |
+| Debug mode | Enabled | Disabled |
+| Debug mode | Enabled | Disabled |
+```yaml
+- hostname: app
+  type: nodejs@22
+  minContainers: 2
+  maxContainers: 4
+```
+## Dev Services to Remove
+### Mailpit → Production SMTP
+```yaml
+- hostname: mailpit
+  type: go@1
+  buildFromGit: https://github.com/zeropsio/recipe-mailpit
+envVariables:
+  SMTP_HOST: smtp.sendgrid.net
+  SMTP_PORT: "587"
+envSecrets:
+  SMTP_PASSWORD: your-production-key
+```
+### Adminer → Remove or Restrict
+Remove entirely or disable `enableSubdomainAccess`. Use VPN + pgAdmin/DBeaver locally.
+## File Storage
+**Container filesystem survives restarts but is replaced on every deploy** — files stored on disk persist through reload/restart/stop+start but are lost on deploy or container replacement (scale-up/down).
+| Use case | Solution |
+|----------|----------|
+| User uploads | Object Storage (S3) |
+| Media files | Object Storage (S3) |
+| Temp files | Container disk (OK) |
+| Build artifacts | Deploy via zerops.yaml |
+| Build artifacts | Deploy via zerops.yaml |
+```yaml
+- hostname: storage
+  type: object-storage
+  objectStorageSize: 2
+  objectStoragePolicy: public-read
+```
+## Sessions & Cache
+**File-based sessions break with multiple containers and are lost on deploy.**
+| Use case | Solution |
+|----------|----------|
+| PHP sessions | Redis/Valkey |
+| Laravel sessions | Redis driver |
+| Django sessions | Redis backend |
+| Express sessions | Redis store |
+| Express sessions | Redis store |
+```yaml
+- hostname: cache
+  type: valkey@7.2
+  mode: NON_HA  # HA for production
+```
+## Framework-Specific Production Settings
+### PHP/Laravel
+- `APP_ENV: production`, `APP_DEBUG: "false"`
+- Trusted proxies: `TRUSTED_PROXIES: 127.0.0.1,10.0.0.0/8`
+- Sessions in Redis, not files
+- Optimize: `php artisan config:cache && route:cache && view:cache`
+### PHP/Symfony
+- `APP_ENV: prod`
+- `TRUSTED_PROXIES: 127.0.0.1,10.0.0.0/8`
+- Logging via Monolog SyslogHandler
+### Python/Django
+- `DEBUG: "false"`
+- `CSRF_TRUSTED_ORIGINS: https://your-domain.com`
+- `ALLOWED_HOSTS: .zerops.app,your-domain.com`
+- Static files via `collectstatic`
+### Node.js
+- `NODE_ENV: production`
+- `HOST: 0.0.0.0`
+- Health check endpoint at `/status` or `/health`
+### Java/Spring
+- `server.address: 0.0.0.0` (required — default binds localhost)
+- Actuator health endpoints enabled
+- JVM memory flags: `-Xmx512m` (match container limits)
+### Elixir/Phoenix
+- `PHX_SERVER: "true"` (required to start server in releases)
+- `SECRET_KEY_BASE` generated via preprocessor
+- `PHX_HOST` set to domain
+## HA Checklist
+| Item | Recommendation |
+|------|---------------|
+| Core package | **Serious Core** for production (better SLA, dedicated resources) |
+| CPU mode | `cpuMode: DEDICATED` for consistent performance under load |
+| Environment separation | Separate projects for dev/staging/prod |
+| Stateless design | Sessions in Valkey, uploads in Object Storage — no local state |
+| Database mode | `mode: HA` for all managed services (immutable — plan before creation) |
+| Min containers | `minContainers: 2` on all app services for zero-downtime deploys |
+| Min containers | `minContainers: 2` on all app services for zero-downtime deploys |
+## Health Check Pattern
+Combined readiness + runtime health check for production services:
+```yaml
+zerops:
+  - setup: app
+    deploy:
+      readinessCheck:
+        httpGet:
+          port: 3000
+          path: /health
+    run:
+      healthCheck:
+        httpGet:
+          port: 3000
+          path: /health
+      start: node server.js
+```
+Readiness check gates traffic during deploy. Health check runs continuously — unhealthy containers are restarted after 5-minute retry window.
+## Gotchas
+1. **HA is immutable**: Must delete and recreate service to switch modes
+2. **Container filesystem survives restarts but is replaced on every deploy**: use external storage for persistent data
+3. **File sessions break with scaling**: Multiple containers don't share filesystem
+4. **Mailpit is not production SMTP**: Only for dev — no delivery guarantees
+5. **Debug mode leaks secrets**: Disable APP_DEBUG in production
+6. **Missing health checks**: Load balancer can't route around unhealthy containers
+
+----------------------------------------
+
+# Guides > Public Access
+
+Zerops offers three public access methods: zerops.app subdomains (dev only, 50MB upload limit), custom domains (production, needs IPv4/IPv6), and direct port access (TCP/UDP on 10-65435).
+## Access Methods
+### 1. Zerops Subdomains (`.zerops.app`)
+- Shared HTTPS balancer (scalability bottleneck)
+- Max upload: **50 MB**
+- **Not for production** — use for development/testing only
+- Auto-provisioned SSL
+- Pre-configure via import YAML: `enableSubdomainAccess: true` (works for all runtime/web types)
+- **Activate routing via API:** `zerops_subdomain enable` (only works on deployed/ACTIVE services) — call once after the first deploy of each new service, even if `enableSubdomainAccess: true` was set in import. Import pre-configures routing but does NOT activate L7 balancer; without the explicit enable call, the subdomain returns 502. Re-deploys do NOT deactivate it. Use `zerops_discover` to check current status and get the URL (`subdomainEnabled` + `subdomainUrl` fields).
+- **Port-specific subdomains**: If HTTP ports are defined in zerops.yml, each port gets its own subdomain: `{hostname}-{subdomainHost_prefix}-{port}.{subdomainHost_rest}`. Example: hostname `appdev`, subdomainHost `1df2.prg1.zerops.app`, port 3000 → actual URL `https://appdev-1df2-3000.prg1.zerops.app`. Port 80 omits the port suffix: `https://appdev-1df2.prg1.zerops.app`
+- **Internal network fallback**: Every service is accessible internally via `http://{hostname}:{port}` (e.g., `http://appdev:3000`). Use this to verify the app is running when subdomain access is uncertain — `curl http://appdev:3000/health` from the ZCP container or any other service in the project
+- Works for: nodejs, static, nginx, go, python, php, java, rust, dotnet, and all other runtime types
+### 2. Custom Domains (Production)
+- Per-project HTTPS balancer (2 containers, HA)
+- Round-robin load balancing + health checks
+- Full upload limit: 512 MB
+- Requires IP address assignment:
+| IP Type | Cost | Protocol | Notes |
+|---------|------|----------|-------|
+| Shared IPv4 | Free | HTTP/HTTPS only | Limited connections, shorter timeouts |
+| Dedicated IPv4 | $3/30 days | All protocols | Non-refundable, auto-renews |
+| IPv6 | Free | All protocols | Dedicated per project |
+| IPv6 | Free | All protocols | Dedicated per project |
+### 3. Direct Port Access
+- Available for: Runtime services, PostgreSQL
+- Port range: 10-65435 (80, 443 reserved)
+- Protocols: TCP, UDP
+- Configurable firewall: blacklist or whitelist per port
+## DNS Setup (Custom Domain)
+Point your domain to the project's IP:
+- `A` record → Dedicated IPv4
+- `AAAA` record → IPv6
+- Shared IPv4: Requires **both A and AAAA** records (AAAA needed for SNI routing)
+## Gotchas
+1. **Shared IPv4 needs AAAA record**: Without AAAA, SNI routing fails — always add both A and AAAA
+2. **zerops.app 50MB limit**: File uploads over 50MB fail on subdomains — use custom domain
+3. **Dedicated IPv4 is non-refundable**: $3/30 days, auto-renews — cannot get refund if removed early
+4. **Ports 80/443 reserved**: Your app cannot bind to these — Zerops uses them for SSL termination
+
+----------------------------------------
+
+# Guides > Scaling
+
+Zerops autoscales vertically (CPU/RAM/disk) and horizontally (container count). Runtimes support both. Managed services (DB, cache, shared-storage) support vertical only with fixed container count (NON_HA=1, HA=3). Object-storage and Docker have no autoscaling. Extends grammar.md section 9 with mechanics, thresholds, YAML syntax, and common mistakes.
+## When to Scale Which Way
+| Symptom | Scale type | Why |
+|---------|-----------|-----|
+| CPU/memory pressure on existing containers | Vertical (CPU/RAM) | More resources per container |
+| High request volume, stateless service | Horizontal (containers) | Distribute load across more instances |
+| Disk filling up | Vertical (disk) | More storage per container |
+| Latency-sensitive workload on SHARED CPU | CPU mode → DEDICATED | Guaranteed cores, no burstable throttling |
+| Latency-sensitive workload on SHARED CPU | CPU mode → DEDICATED | Guaranteed cores, no burstable throttling |
+## Applicability Matrix
+| Service type | Vertical autoscaling | Horizontal scaling | Notes |
+|---|---|---|---|
+| **Runtime** (Node.js, Go, PHP, Python, Java, etc.) | Yes | Yes (1-10 containers) | Full autoscaling |
+| **Linux containers** (Alpine, Ubuntu) | Yes | Yes (1-10 containers) | Same as runtimes |
+| **Managed DB** (PostgreSQL, MariaDB) | Yes | No (fixed: NON_HA=1, HA=3) | Mode immutable after creation |
+| **Managed cache** (KeyDB/Valkey) | Yes | No (fixed: NON_HA=1, HA=3) | Mode immutable after creation |
+| **Shared storage** | No (automatic, not configurable) | No (fixed: NON_HA=1, HA=3) | DO NOT set verticalAutoscaling in import.yml |
+| **Object storage** | No | No | Fixed size at creation, no verticalAutoscaling |
+| **Docker** | No (manual, triggers VM restart) | Yes (VM count changeable, triggers restart) | No autoscaling at all |
+| **Docker** | No (manual, triggers VM restart) | Yes (VM count changeable, triggers restart) | No autoscaling at all |
+## Vertical Autoscaling
+### CPU Modes
+| Mode | Behavior | Best for |
+|---|---|---|
+| **SHARED** | Physical core shared with up to 10 tenants. Performance ranges 1/10 to 10/10 depending on neighbors | Dev, staging, low-traffic production |
+| **DEDICATED** | Exclusive full physical core(s). Consistent performance | Production, CPU-intensive workloads |
+| **DEDICATED** | Exclusive full physical core(s). Consistent performance | Production, CPU-intensive workloads |
+- CPU mode can be changed **once per hour**
+- **startCpuCoreCount**: cores allocated at container start (default: 2). Increase for apps with heavy initialization
+### CPU Scaling Thresholds (DEDICATED mode only)
+- **Min free CPU cores** (`minFreeCpuCores`): scale-up triggers when free capacity on a single core drops below this fraction, range 0.0-1.0 (default: 0.1 = 10%)
+- **Min free CPU percent** (`minFreeCpuPercent`): scale-up triggers when total free capacity across all cores drops below this percentage, range 0-100 (default: 0, disabled)
+### RAM Dual-Threshold System
+RAM is monitored every **10 seconds**. Two independent thresholds control scale-up -- whichever provides **more free memory** wins:
+| Threshold | Field | Default | Behavior |
+|---|---|---|---|
+| **Absolute** | `minFreeRamGB` | 0.0625 GB (64 MB) | Scale up when free RAM drops below this fixed amount |
+| **Percentage** | `minFreeRamPercent` | 0% (disabled) | Scale up when free RAM drops below this % of granted RAM |
+| **Percentage** | `minFreeRamPercent` | 0% (disabled) | Scale up when free RAM drops below this % of granted RAM |
+Both thresholds serve dual purpose: prevent OOM crashes and preserve space for kernel disk caching. Swap is enabled as a safety net but does not replace proper threshold configuration.
+**Higher wins example**: with 12 GB granted RAM, `minFreeRamGB=0.5` (500 MB buffer) and `minFreeRamPercent=5` (600 MB buffer) — the 600 MB threshold applies. As granted RAM grows, the percentage threshold automatically provides a larger buffer.
+### Disk
+- **Grows only -- never shrinks** (no scale-down). Set `minDisk = maxDisk` to disable.
+### Resource Limits (Defaults)
+| Resource | Min | Max |
+|---|---|---|
+| CPU cores | 1 | 8 |
+| RAM | 0.125 GB | 48 GB |
+| Disk | 1 GB | 250 GB |
+| Disk | 1 GB | 250 GB |
+PostgreSQL and MariaDB override RAM minimum to **0.25 GB**.
+### Scaling Behavior Parameters
+| Parameter | CPU | RAM | Disk |
+|---|---|---|---|
+| Collection interval | 10s | 10s | 10s |
+| Scale-up window | 20s | 10s | 10s |
+| Scale-down window | 60s | 120s | 300s |
+| Scale-up percentile | 60th | 50th | 50th |
+| Scale-down percentile | 40th | 50th | 50th |
+| Minimum step | 1 (0.1 cores) | 0.125 GB | 0.5 GB |
+| Maximum step | 40 | 32 GB | 128 GB |
+| Maximum step | 40 | 32 GB | 128 GB |
+Scaling uses exponential growth: small increments initially, larger jumps under sustained high load.
+**Scale-up behavior summary:**
+- **RAM/Disk**: immediate scale-up when free resources drop below threshold (single measurement)
+- **CPU**: requires 2 consecutive measurements below threshold (~20s window) to avoid spikes
+- **Scale-down is conservative**: 3-5 consecutive measurements above threshold (60-300s depending on resource) — prevents flapping
+### Spike Protection via minRam
+Autoscaling reacts within 10-20 seconds. Compilation and package installation create RAM spikes faster than scaling can respond. Set `minRam` high enough to absorb the first spike WITHOUT relying on autoscaling:
+- **Dev services** (compilation on container via SSH): `minRam` must cover the build tool peak — `npm install`, `go build`, `cargo build` spike within seconds
+- **Stage/prod services** (pre-built artifacts): `minRam` only needs to cover the startup peak (JVM heap allocation, SSR warming)
+Thresholds (`minFreeRamGB`, `minFreeRamPercent`) handle gradual load growth. They cannot protect against sub-10s spikes that exceed the total allocated RAM. See runtime guides for per-runtime `minRam` recommendations.
+**Disabling autoscaling**: set **minimum = maximum** for any resource to pin it at a fixed value (e.g., `minRam: 2, maxRam: 2`).
+## Horizontal Scaling
+Applies to **runtimes and Linux containers only**. New containers are added when vertical scaling reaches configured maximums.
+- **minContainers**: baseline always running (system range: 1-10)
+- **maxContainers**: upper limit during peak (system range: 1-10)
+- Set `minContainers = maxContainers` to disable horizontal autoscaling
+**HA requirement**: applications must be stateless and handle distributed operation (no local file sessions, no local uploads).
+### Managed Services (DB, Cache, Shared Storage)
+Container count is **fixed by deployment mode**, set at creation, **immutable**:
+| Mode | Containers | Use case |
+|---|---|---|
+| `NON_HA` | 1 | Development, non-critical |
+| `HA` | 3 (on separate physical machines) | Production, automatic failover |
+| `HA` | 3 (on separate physical machines) | Production, automatic failover |
+HA recovery: failed container is disconnected, new one created on different hardware, data synchronized from healthy copies, failed container removed.
+PostgreSQL HA exposes read replica port **5433** for distributing SELECT queries.
+## Configuring Thresholds via zerops_scale
+Threshold parameters can be set via the `zerops_scale` MCP tool, not just import.yml:
+```
+zerops_scale serviceHostname="api" minFreeRamGB=0.5 minFreeRamPercent=5 minFreeCpuCores=0.2
+```
+All four threshold parameters (`minFreeRamGB`, `minFreeRamPercent`, `minFreeCpuCores`, `minFreeCpuPercent`) are optional and can be combined with any other scaling parameters in a single call.
+## Docker Services
+- Run in **VMs**, not containers. **No autoscaling** -- resources fixed at creation
+- Changing resources or VM count triggers **VM restart** (downtime). Disk can only increase
+- Consider runtime services or Linux containers if dynamic scaling is needed
+## import.yml Syntax
+```yaml
+services:
+  # Runtime with full scaling
+  - hostname: api
+    type: nodejs@22
+    minContainers: 2
+    maxContainers: 6
+    verticalAutoscaling:
+      cpuMode: SHARED
+      minCpu: 1
+      maxCpu: 4
+      startCpuCoreCount: 2
+      minRam: 0.5
+      maxRam: 8
+      minFreeRamGB: 0.125
+      minFreeRamPercent: 10
+      minDisk: 1
+      maxDisk: 20
+  # Managed DB (vertical only, no container settings)
+  - hostname: db
+    type: postgresql@16
+    mode: HA
+    verticalAutoscaling:
+      cpuMode: DEDICATED
+      minCpu: 1
+      maxCpu: 4
+      minRam: 1
+      maxRam: 16
+      minDisk: 5
+      maxDisk: 100
+```
+## Strategy Presets
+**Development** — SHARED CPU, min resources, 1 container. Cost-effective for dev/staging:
+```
+zerops_scale serviceHostname="api" cpuMode="SHARED" minCpu=1 maxCpu=2 minRam=0.25 maxRam=1 minContainers=1 maxContainers=1
+```
+**Production** — DEDICATED CPU, higher minimums, multiple containers for HA:
+```
+zerops_scale serviceHostname="api" cpuMode="DEDICATED" minCpu=2 maxCpu=8 minRam=2 maxRam=8 minContainers=2 maxContainers=6
+```
+**Burst workloads** — Wide autoscaling range, SHARED CPU:
+```
+zerops_scale serviceHostname="worker" cpuMode="SHARED" minCpu=1 maxCpu=8 minRam=1 maxRam=16 minContainers=1 maxContainers=10
+```
+## Common Mistakes
+**DO NOT** add `verticalAutoscaling` to **object-storage** or **shared-storage** services in import.yml -- causes import failure. Object storage has a fixed `objectStorageSize` only. Shared storage is managed automatically.
+**DO NOT** set `minContainers` or `maxContainers` for managed services (DB, cache, shared-storage) -- container count is fixed by `mode` (NON_HA=1, HA=3). Setting these causes import failure.
+**DO NOT** use `DEDICATED` CPU for low-traffic or dev services -- wastes resources. Use `SHARED` and switch to `DEDICATED` only when consistent performance matters.
+**DO NOT** set `minFreeRamGB: 0` and `minFreeRamPercent: 0` simultaneously -- the API rejects this with "Invalid custom autoscaling value". Always keep at least the default absolute threshold (0.0625 GB).
+**DO NOT** forget that disk **never shrinks** -- setting a high `minDisk` is permanent for that container's lifetime.
+**DO NOT** assume horizontal scaling works automatically -- your application must be stateless. File-based sessions, local uploads, and in-memory state break with multiple containers.
+
+----------------------------------------
+
+# Guides > Smtp
+
+Only port **587** (STARTTLS) is allowed for outbound email — ports 25 and 465 are permanently blocked. Use an external email service.
+## Port Configuration
+| Port | Status | Protocol |
+|------|--------|----------|
+| 25 | **Blocked** | Traditional SMTP (spam risk) |
+| 465 | **Blocked** | Legacy SMTPS (deprecated) |
+| **587** | **Allowed** | SMTP submission with STARTTLS |
+| **587** | **Allowed** | SMTP submission with STARTTLS |
+## Provider Configurations
+| Provider | Host | Port | Username | Password |
+|----------|------|------|----------|----------|
+| Gmail | smtp.gmail.com | 587 | user@gmail.com | App password |
+| Google Workspace | smtp-relay.gmail.com | 587 | user@domain.com | Regular/App pass |
+| Office 365 | smtp.office365.com | 587 | user@domain.com | Account password |
+| SendGrid | smtp.sendgrid.net | 587 | `apikey` | API key |
+| Mailgun | smtp.mailgun.org | 587 | postmaster@domain | Password |
+| Amazon SES | `email-smtp.{region}.amazonaws.com` | 587 | Access key | Secret key |
+| Amazon SES | `email-smtp.{region}.amazonaws.com` | 587 | Access key | Secret key |
+## Configuration Example
+```yaml
+envVariables:
+  SMTP_HOST: smtp.sendgrid.net
+  SMTP_PORT: "587"
+  SMTP_USER: apikey
+envSecrets:
+  SMTP_PASSWORD: 
+```
+## Gotchas
+1. **Port 25 is permanently blocked**: Cannot be unblocked — use 587 with STARTTLS
+2. **Port 465 is also blocked**: Legacy SMTPS is deprecated — use 587
+3. **Gmail needs App Password**: Regular Gmail passwords won't work — generate an App Password in Google Account settings
+
+----------------------------------------
+
+# Guides > Vpn
+
+Zerops VPN uses WireGuard via `zcli vpn up ` — connects to one project at a time, services accessible by hostname, but env vars are NOT available through VPN.
+## Commands
+```bash
+zcli vpn up                     # Connect
+zcli vpn up  --auto-disconnect  # Auto-disconnect on terminal close
+zcli vpn up  --mtu 1350        # Custom MTU (default 1420)
+zcli vpn down                               # Disconnect
+```
+## Behavior
+- All services accessible via hostname (e.g., `db`, `api`) — `.zerops` suffix optional
+- **One project at a time** — connecting to another disconnects the current
+- Automatic reconnection with daemon
+- **Environment variables NOT available** through VPN — use GUI or API to read them
+## Hostname Resolution
+- Both plain hostname (`db`) and suffixed (`db.zerops`) work — VPN configures a DNS search domain
+- Plain hostname is resolved via the `.zerops` search domain automatically (e.g., `db` → `db.zerops`)
+- Example: `postgresql://user:pass@db:5432/mydb` or `postgresql://user:pass@db.zerops:5432/mydb`
+- Note: CLI tools like `dig`, `nslookup`, `host` bypass the system resolver and may show false NXDOMAIN — use `dscacheutil -q host -a name db` on macOS to verify, or just test with `nc -zv db 5432`
+## Troubleshooting
+| Problem | Solution |
+|---------|----------|
+| Interface already exists | `zcli vpn down` then `zcli vpn up` |
+| Hostname not resolving | Try `db.zerops` suffix. On Windows, add `zerops` to DNS suffix list. Note: `dig`/`nslookup` bypass system resolver — use `nc -zv db 5432` to test |
+| WSL2 not working | Enable systemd in `/etc/wsl.conf` under `[boot]` |
+| Conflicting VPN | Use `--mtu 1350` |
+| Ubuntu 25.* issues | Install AppArmor utilities |
+| Ubuntu 25.* issues | Install AppArmor utilities |
+## Gotchas
+1. **No env vars via VPN**: Must read env vars from GUI or API — VPN only provides network access
+2. **One project at a time**: Cannot connect to multiple projects simultaneously
+3. **Hostname resolution**: Both `hostname` and `hostname.zerops` work (VPN sets up DNS search domain). Use plain hostname for simplicity. If resolution fails on Windows, add `zerops` to DNS suffix list in Advanced TCP/IP Settings.
+
+----------------------------------------
+
+# Guides > Zerops Yaml Advanced
+
+Behavioral semantics for advanced zerops.yml features: health/readiness checks, deploy strategies, cron, background processes, runtime init, envReplace, routing, and `extends`. Schema is in grammar.md -- this file covers what the schema cannot express.
+---
+## Health Check Behavior
+Health checks run **continuously** on every container after startup. Two types (mutually exclusive):
+- **`httpGet`**: GET to `localhost:{port}{path}`. Success = 2xx. Runs **inside** the container. Use `host` for custom Host header, `scheme: https` only if app requires TLS.
+- **`exec`**: Shell command, success = exit 0. Has access to all env vars. Use YAML `|` for multi-command scripts.
+| Parameter | Purpose |
+|-----------|---------|
+| `failureTimeout` | Seconds of consecutive failures before container restart |
+| `disconnectTimeout` | Seconds before failing container is removed from load balancer |
+| `recoveryTimeout` | Seconds of success before restarted container receives traffic again |
+| `execPeriod` | Interval in seconds between check attempts |
+| `execPeriod` | Interval in seconds between check attempts |
+**Failure sequence**: repeated failures -> `disconnectTimeout` removes from LB -> `failureTimeout` triggers restart -> `recoveryTimeout` gates traffic reconnection.
+**DO NOT** configure both `httpGet` and `exec` in the same block.
+---
+## Readiness Check Behavior
+Runs **only during deployments** to gate traffic switch to a new container.
+```yaml
+deploy:
+  readinessCheck:
+    httpGet: { port: 3000, path: /health }
+    failureTimeout: 60
+    retryPeriod: 10
+```
+**How it works**: Checks the **new** container at `localhost`. Until it passes, traffic stays on the old container. After `failureTimeout`, deploy fails and the old container remains active.
+**DO NOT** confuse with healthCheck -- readiness gates a deploy; healthCheck monitors continuously after.
+> **Dev/stage distinction**: In dev+stage pairs, healthCheck and readinessCheck belong ONLY on the stage entry. Dev services use `start: zsc noop --silent` — the agent controls server lifecycle via SSH. Adding healthCheck to dev causes unwanted container restarts during iteration.
+---
+## temporaryShutdown
+| Value | Behavior | Downtime |
+|-------|----------|----------|
+| `false` (default) | New containers start first, old removed after readiness | None (zero-downtime) |
+| `true` | All old containers stop, then new ones start | Yes |
+| `true` | All old containers stop, then new ones start | Yes |
+Use `true` when: exclusive DB migration access needed, or brief downtime acceptable. Use `false` for: production web services, APIs, user-facing apps.
+---
+## Crontab Execution
+```yaml
+run:
+  crontab:
+    - command: "php artisan schedule:run"
+      timing: "* * * * *"
+      workingDir: /var/www/html
+      allContainers: false
+```
+Parameters: `command` (required), `timing` (required, 5-field cron: `min hour dom mon dow`), `workingDir` (default `/var/www`), `allContainers` (`false` = one container, `true` = all containers).
+Cron runs inside the runtime container with full env var access. When `allContainers: false`, Zerops picks **one** container (good for DB jobs). Use `true` for cache clearing or log rotation everywhere. Minimum granularity is 1 minute.
+---
+## startCommands (Background Processes)
+Runs **multiple named processes** in parallel. **Mutually exclusive** with `start`.
+```yaml
+run:
+  startCommands:
+    - command: npm run start:prod
+      name: server
+    - command: litestream replicate -config=litestream.yaml
+      name: replication
+      initCommands:
+        - litestream restore -if-replica-exists -if-db-not-exists $DB_NAME
+```
+Each entry: `command` (required), `name` (required), `workingDir` (optional), `initCommands` (optional, per-process init). **DO NOT** use both `start` and `startCommands`.
+---
+## initCommands vs prepareCommands
+| Feature | `run.initCommands` | `run.prepareCommands` |
+|---------|-------------------|----------------------|
+| **When** | Every container start/restart | Only when building runtime image |
+| **Cached** | Never | Yes (base layer cache) |
+| **Use for** | Migrations, cache warming, cleanup | OS packages, system deps |
+| **Deploy files** | Present in `/var/www` | **Not available** -- DO NOT reference app files |
+| **Reruns on** | Restart, scaling, deploy | Only when commands change |
+| **Reruns on** | Restart, scaling, deploy | Only when commands change |
+---
+## envReplace (Variable Substitution)
+Replaces placeholders in deployed files with env var values at deploy time.
+```yaml
+run:
+  envReplace:
+    delimiter: "%%"
+    target: [./config/, ./templates/settings.json]
+```
+File containing `%%DATABASE_URL%%` gets the placeholder replaced with the actual value. Multiple delimiters supported: `delimiter: ["%%", "##"]`. Use for: secrets in config files, PEM certificates, frontend configs.
+**Directory targets are NOT recursive** -- `./config/` processes only files directly in that directory. Specify subdirectories explicitly.
+---
+## routing (Static Services Only)
+```yaml
+run:
+  routing:
+    cors: "'*' always"
+    redirects:
+      - { from: /old, to: /new, status: 301 }
+      - { from: /blog/*, to: /articles/, preservePath: true, status: 302 }
+    headers:
+      - for: "/*"
+        values: { X-Frame-Options: "'DENY'" }
+```
+- **`cors`**: Sets Access-Control-Allow-Origin. `"*"` auto-converted to `'*'`
+- **`redirects[]`**: `from` (wildcards `*`), `to`, `status`, `preservePath`, `preserveQuery`
+- **`headers[]`**: `for` (path pattern), `values` (header key-value pairs)
+- **`root`**: Custom root directory
+**DO NOT** use on non-static services -- silently ignored.
+---
+## extends (Configuration Inheritance)
+```yaml
+zerops:
+  - setup: base
+    build: { buildCommands: [npm run build], deployFiles: ./dist }
+    run: { start: npm start }
+  - setup: prod
+    extends: base
+    run: { envVariables: { NODE_ENV: production } }
+```
+Supports single parent (`extends: base`) or multiple parents (`extends: [base, logging]`) -- later parents override earlier ones:
+```yaml
+zerops:
+  - setup: base
+    build: { buildCommands: [npm run build], deployFiles: ./dist }
+  - setup: logging
+    run: { envVariables: { LOG_LEVEL: info } }
+  - setup: prod
+    extends: [base, logging]
+    run: { envVariables: { NODE_ENV: production } }
+```
+Configuration is **merged at the section level** -- child values override parent values within each section (build, run, deploy), but unspecified sections inherit from parent. Must reference another `setup` name in the same file.
+## Base Images
+Available runtimes and versions are listed in **Service Stacks (live)** -- injected by `zerops_knowledge` and workflow responses. Some key rules:
+- PHP: build `php@X`, run `php-nginx@X` or `php-apache@X` (different bases)
+- Deno, Gleam: REQUIRES `os: ubuntu` (not available on Alpine)
+- Static sites: build `nodejs@latest`, run `static`
+- `@latest` = newest stable version
+---
 
 ----------------------------------------
 
@@ -20679,13 +22591,18 @@ Versions listed on the same line are aliases of the same underlying version.
       Supported OS
       Versions
     
-    Build / Runtime
+    Build
+    Runtime
   
-    Alpine
-    `alpine`
-    
+      Alpine
+      `alpine`
+      
       Ubuntu
       `ubuntu`
+      
+      Docker
+      `ubuntu`
+      -
       
 
 ----------------------------------------
