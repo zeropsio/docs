@@ -3,6 +3,7 @@ title: Docker Service
 desc: Comprehensive guide to using Docker in Zerops with VM-based environments. Includes configuration examples and best practices.
 ---
 
+import UnorderedList from '@site/src/components/UnorderedList';
 import UnorderedCodeList from '@site/src/components/UnorderedCodeList';
 import data from '@site/static/data.json';
 
@@ -41,7 +42,7 @@ Despite these limitations, Docker services offer some benefits:
 ### Supported Version
 
 Currently supported Docker versions:
-<UnorderedCodeList data={data.docker.import}/>
+<UnorderedList data={data.docker.readable}/>
 
 ### Basic Structure
 
@@ -51,6 +52,7 @@ Docker services in Zerops are configured through the `zerops.yaml` file. Here's 
 zerops:
   - setup: app
     run:
+      base: docker@latest
       prepareCommands:
         - docker image pull <your-image>:<version>  # Always use specific version tags
       start: docker run --network=host <your-image>:<version>
@@ -84,6 +86,7 @@ For projects using Docker Compose, additional configuration is required:
 1. **File Deployment**:
    ```yaml title="zerops.yaml"
    build:
+     # base cannot be docker — build phase runs in containers, not VMs
      deployFiles: ./docker-compose.yaml
      addToRunPrepare: ./docker-compose.yaml
    ```
@@ -114,6 +117,7 @@ Define your environment variables in the `run.envVariables` section of your `zer
 zerops:
   - setup: app
     run:
+      base: docker@latest
       envVariables:
         DB_HOST: ${db_hostname}
         DB_PORT: ${db_port}
@@ -125,6 +129,7 @@ For single containers, pass variables using the `-e` flag:
 
 ```yaml title="zerops.yaml"
 run:
+  base: docker@latest
   prepareCommands:
     - docker image pull my-application:1.0.0  # Use specific version tags, not :latest
   start: docker run -e DB_HOST -e DB_PORT --network=host my-application:1.0.0
@@ -154,6 +159,7 @@ services:
 zerops:
   - setup: app
     run:
+      base: docker@latest
       prepareCommands:
         - docker image pull crccheck/hello-world:1.0.0  # Always use specific version tags
       start: docker run --network=host crccheck/hello-world:1.0.0
@@ -172,9 +178,11 @@ Always use specific version tags (like `1.0.0`) instead of `:latest`. Zerops cac
 zerops:
   - setup: api
     build:
+      # base cannot be docker — build phase runs in containers, not VMs
       deployFiles: ./docker-compose.yaml
       addToRunPrepare: ./docker-compose.yaml
     run:
+      base: docker@latest
       prepareCommands:
         - docker compose pull api
       start: docker compose up api --force-recreate
@@ -197,9 +205,11 @@ services:
 zerops:
   - setup: apps
     build:
+      # base cannot be docker — build phase runs in containers, not VMs
       deployFiles: ./docker-compose.yaml
       addToRunPrepare: ./docker-compose.yaml
     run:
+      base: docker@latest
       prepareCommands:
         - docker compose pull
       start: docker compose up --force-recreate
