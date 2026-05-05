@@ -7,7 +7,7 @@ interface DeployButtonProps {
 
 const DeployButton: React.FC<DeployButtonProps> = ({ link, badgeWidth }) => {
     return (
-        <a href={`https://app.zerops.io/recipe/${link}`} target="_blank">
+        <a href={`https://app.zerops.io/recipe/?if=${link}`} target="_blank">
             <svg className="duration-100" width={badgeWidth} viewBox="0 0 167 30" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <g clip-path="url(#clip0_469_290)">
                     <path d="M151.364 0H15C6.71573 0 0 6.71573 0 15C0 23.2843 6.71573 30 15 30H151.364C159.648 30 166.364 23.2843 166.364 15C166.364 6.71573 159.648 0 151.364 0Z" fill="#7CC6BB" className="hover:fill-[#74C0B5]   
