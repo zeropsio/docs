@@ -1,0 +1,136 @@
+---
+title: "Trust model"
+description: "ZCP gives agents project-scoped operational power inside a bounded Zerops project."
+---
+
+Zerops Control Plane (ZCP) gives agents project-scoped operational power inside a bounded Zerops project.
+
+:::caution Public preview
+Zerops Control Plane (ZCP) is in public preview. Use it for development and staging projects, keep production in a separate Zerops project, and expect setup details to change.
+:::
+
+This page is the security review map. It explains what ZCP can touch, what it cannot, where the boundary is enforced, and which actions still require a human decision.
+
+## Project boundary
+
+One ZCP process works against one Zerops project.
+
+The boundary starts at authentication. At startup, ZCP resolves the token to a project before it exposes operations to the agent. A token with access to no projects is refused. A token with access to multiple projects is refused. The intended shape is a Zerops token scoped to exactly one project.
+
+ZCP does not create a separate permissions system. Zerops [RBAC](/features/rbac) remains the authority for what the token can do. If the token can deploy, manage env vars, read logs, or operate services in that project, ZCP can expose those operations to the agent. If Zerops rejects the token for an operation, ZCP cannot bypass that rejection.
+
+The practical rule is simple:
+
+| Question | Boundary |
+|---|---|
+| What project can ZCP see? | The one Zerops project resolved from the token at startup. |
+| What resources can it change? | Resources the token can change inside that project: runtime services, managed services, env vars, deploys, logs, lifecycle operations, scaling, and public access settings. |
+| What resources are outside reach? | Other Zerops projects, organization-wide settings outside the token's authority, and any infrastructure Zerops RBAC does not grant. |
+| Where is networking scoped? | Inside the project's private network. See [Public access and private networking](/features/access). |
+| Where is state scoped? | To the current ZCP process and the current project directory or hosted workspace. There is no cross-project state store. |
+
+This is why production should live in a separate Zerops project during public preview. A development project token should not also reach production.
+
+Project-scoped does not mean read-only. A full project token is still powerful inside that project. Use it the same way you would use a project-level operations credential: give it to development and staging projects where agent work is intended, rotate it when needed, and keep it out of repositories.
+
+It also does not mean the agent gains organization-wide authority. ZCP does not ask Zerops for a broader token, does not fan out across projects, and does not infer a target project from names that happen to match.
+
+For token storage, rotation, and project access rules, continue to [Tokens and project access](/zcp/security/tokens-and-project-access).
+
+## Hosted workspace boundary
+
+In a hosted workspace, ZCP runs inside the Zerops project it manages. Claude Code runs in the browser-hosted workspace in the same project, and `ZCP_API_KEY` is present in the project's container environment.
+
+Treat the hosted workspace as credentialed access to that project. The agent can ask ZCP to discover services, read env vars, deploy code, read logs, operate services, and verify URLs inside the project boundary.
+
+The hosted workspace can also reach project services over the Zerops private network. That includes databases, caches, object storage, search, queues, and runtime services created in the same project.
+
+Filesystem access is narrower than network access:
+
+| Area | Hosted workspace can reach | Hosted workspace cannot reach |
+|---|---|---|
+| Zerops API | The one project resolved from `ZCP_API_KEY`. | Other projects unless you intentionally run another ZCP process with another project-scoped token. |
+| Private network | Services in the same Zerops project. | Your laptop, your home network, and unrelated Zerops projects. |
+| Runtime files | Runtime service filesystems mounted through SSHFS when requested. | Local files on your machine. |
+| ZCP service files | The ZCP service's own container filesystem. `/var/www` is the SSHFS mount root, not an app repository. | Git history for the ZCP service itself. Hosted app git state belongs to mounted runtime services, not to the ZCP service. |
+| Browser process | The browser helper used by the hosted workspace. Raw `pkill -f chrome` cleanup patterns are refused because they can kill code-server. | Arbitrary host-level process control outside the container. |
+
+The hosted boundary is useful because the agent works near the runtime and managed services. It is also why the project boundary matters: the workspace is intentionally powerful inside one project.
+
+The most important hosted distinction is between the ZCP service and the runtime services it manages. The ZCP service is the control surface. Runtime services are where application code runs. When the agent deploys an app, it deploys to a runtime service; it is not turning the ZCP service itself into the app.
+
+If you open a terminal in the hosted workspace, assume it can exercise the same project-scoped power as the agent. That is convenient for development, and it is also the reason the preview guidance keeps production separate.
+
+## Local agent bridge boundary
+
+In the local agent bridge, ZCP runs on your laptop as the project bridge. Claude Code starts it from your project directory. The Zerops token lives in that directory's `.mcp.json`, and ZCP writes its per-project files under `.zcp/state/`.
+
+Each project directory has its own `.mcp.json` and its own `.zcp/state/`. Switching projects means switching directories. ZCP does not merge local bridge state between projects.
+
+The local bridge has the same Zerops trust model as `zcli`: it uses your project-scoped token to talk to the Zerops API, and it can only do what that token can do in that project.
+
+What changes is the filesystem and network boundary:
+
+| Capability | Hosted workspace | Local agent bridge |
+|---|---|---|
+| Agent runs against the project | Yes, inside the Zerops-hosted workspace. | Yes, from your local project directory. |
+| Token location | `ZCP_API_KEY` in the project container environment. | `ZCP_API_KEY` in `.mcp.json` in the project directory. |
+| Project state files | In the hosted workspace for that project. | In `.zcp/state/` under the current project directory. |
+| Files the agent edits | Mounted runtime service filesystems. | Your local checkout, through Claude Code's normal local file access. |
+| Runtime deploy target | Zerops runtime services in the project. | The linked Zerops stage runtime, when one is selected. |
+| Managed service network | Directly over the project private network. | Through the Zerops project VPN. |
+| Runtime SSHFS mounts | Yes, in hosted workspace shapes. | No. Use direct SSH if you need runtime files from your laptop. |
+| Local dev server | Not applicable; the app runs in Zerops. | Your tool's job. ZCP does not start, stop, or supervise it. |
+| Laptop privileges | Container privileges only. | No privilege escalation beyond the user process that launched it. |
+
+VPN setup is deliberately outside ZCP's authority. Bringing up the Zerops VPN requires admin or root approval on the laptop, so ZCP can tell you the `zcli vpn up` command but cannot start it on your behalf.
+
+Local `.env` generation is also scoped. ZCP can write a generated `.env` in the current project directory when asked, using values from the linked Zerops project. It does not make those values global on your machine.
+
+The local bridge does not protect your checkout from the agent client. Claude Code can edit files according to the permissions you gave it when you launched it. ZCP's boundary is the Zerops side of the work: project token, project VPN, project deploy target, and per-directory state.
+
+Use one local directory per project. Reusing one directory for several Zerops projects makes the human review problem harder, even though ZCP still reads the token and state from the current directory.
+
+## MCP process model
+
+ZCP speaks MCP over STDIO. In the documented path today, Claude Code starts ZCP as a subprocess and exchanges MCP messages with it over standard input and standard output.
+
+That process model has a few security properties:
+
+| Property | What it means |
+|---|---|
+| No daemon | ZCP is not a background service that keeps listening after the agent client exits. |
+| No listening port | The MCP server is reached through the parent process, not through an HTTP port exposed on the network. |
+| JSON-only stdout | MCP protocol messages go to stdout. Debug and diagnostic output goes to stderr so it does not corrupt the protocol stream. |
+| Fresh call handling | Each MCP call runs as a fresh operation against the Zerops API, the project directory, and explicit per-project files. |
+| No hidden memory authority | Handler memory from one call is not the source of truth for the next call. Durable facts live in Zerops or in the per-project `.zcp/state/` directory. |
+| No privilege escalation | Local ZCP has the operating-system privileges of the process that launched it. Hosted ZCP has the container privileges of its service. |
+
+This is separate from the agent's own permissions. Claude Code may have local file access because you launched it in a directory. ZCP does not expand that into operating-system admin rights or cross-project Zerops access.
+
+The stdout and stderr split is part of the boundary. Anything meant for the MCP protocol must be JSON on stdout. Human-readable diagnostics go to stderr, so log noise cannot become a malformed tool response.
+
+There is no hidden server to discover with a port scan, and there is no ZCP daemon to stop after a session. Closing the agent client ends the subprocess path. Starting again creates a new process that reads the same project token and explicit per-project files.
+
+## What ZCP refuses by design
+
+ZCP uses hard refusals for boundaries that should never be inferred, and confirmation gates for actions that are destructive but sometimes necessary. The important part is that these behaviors are concrete, not aspirational.
+
+| Behavior | When it triggers | Result |
+|---|---|---|
+| Refuse a token with no project access | Startup cannot resolve any Zerops project from the token. | ZCP does not start for agent operations. Use a token with access to one project. |
+| Refuse a multi-project token | Startup sees more than one accessible Zerops project. | ZCP does not choose for the agent. Generate a project-scoped token or scope `zcli` to one project. |
+| Refuse hosted self-deletion | `zerops_delete` targets the service where ZCP is currently running. | The call is blocked. Delete that service manually through Zerops UI or `zcli` if you really intend to remove the control plane. |
+| Require named approval for deletion | An agent wants to delete a service. | The destructive tool contract requires explicit approval in the current conversation for that specific service name. The agent should not delete proactively. |
+| Gate destructive service replacement | `zerops_import override=true` would replace services with prior failed build or deploy history. | The first call returns a structured `wouldDestroy` payload. A second call must include matching `confirmDestructive` fields before the import proceeds. |
+
+The import gate is intentionally not a permanent blocker. Replacing a failed service can be the right recovery path. The gate makes the loss explicit first: which service stacks are being replaced, which targets are acknowledged, and which operation is being confirmed.
+
+For the detailed rules, see [Destructive actions and confirmations](/zcp/security/destructive-actions).
+
+## Next steps
+
+- [Tokens and project access](/zcp/security/tokens-and-project-access) - token scope, storage, rotation, and project isolation.
+- [Destructive actions and confirmations](/zcp/security/destructive-actions) - delete and replacement gates in detail.
+- [Auditing agent work](/zcp/security/auditing-agent-work) - how to review what the agent changed and deployed.
+- [Production policy](/zcp/security/production-policy) - how to keep production outside the public preview loop.

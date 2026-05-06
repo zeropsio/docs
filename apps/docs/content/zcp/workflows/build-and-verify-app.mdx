@@ -1,0 +1,113 @@
+---
+title: "Build and verify an app"
+description: "Use ZCP's develop loop to edit code, deploy through Zerops, read logs, fix failures, and verify behavior."
+---
+
+Use Zerops Control Plane (ZCP) to do real application work in a tight loop: edit code, deploy through the Zerops pipeline, watch logs, fix failures from platform-classified evidence, and verify the result against a real URL. The loop closes when every service in scope has a successful deploy and a passing verify.
+
+:::caution Public preview
+Zerops Control Plane (ZCP) is in public preview. Use it for development and staging projects, keep production in a separate Zerops project, and expect setup details to change.
+:::
+
+This is the workflow that owns the application work — code, `zerops.yaml`, the first deploy, and every iteration after it. It is what comes after [Create or adopt services](/zcp/workflows/create-or-adopt-services) closes; it is what runs every time you ask the agent to change something.
+
+## Start the work
+
+Before any code changes, the agent and you agree on the runtime scope: which service this change targets. In the `standard` workspace shape, that is `appdev` (the dev half of the pair). In `dev` shape, the single mutable dev runtime. In `simple` shape, the runtime IS the application service. In a [local agent bridge](/zcp/setup/local-agent-bridge), the scope is your local checkout plus the linked stage runtime. See [Workspace shapes](/zcp/setup/workspace-shapes) for the taxonomy.
+
+Wrong path: writing app code before the runtime scope is named. If the agent jumps straight to editing without saying which service is in scope, the first deploy lands somewhere unexpected.
+
+Good starting prompts:
+
+```text
+Add a /health endpoint to appdev and verify it returns 200.
+```
+
+```text
+Fix the failing migration on appdev and re-deploy.
+```
+
+```text
+What is the next step in this project? Read ZCP status first.
+```
+
+The agent reads the project state, names the scope, and starts. If the agent asks you to confirm scope, that is a feature — `standard` projects have two runtimes, and the agent should not assume stage when you asked for dev.
+
+Managed dependencies (databases, caches, storage) are dependencies, not deploy targets. If the agent tries to deploy `db`, that is a wrong path.
+
+## Deploy
+
+When code is ready, the agent runs the standard Zerops [build and deploy pipeline](/guides/deployment-lifecycle). The deploy call blocks until the build completes and the runtime is ready — the agent waits with you, not for you.
+
+A few specifics worth knowing as a developer:
+
+- **First deploy is always direct.** After [Create or adopt services](/zcp/workflows/create-or-adopt-services) closes, the first deploy uses the platform's direct push regardless of `close-mode`. Close-mode (auto, git-push, or manual) applies to subsequent changes; see [Choose how finished work ships](/zcp/workflows/delivery-handoff).
+- **Build is separate from runtime.** The build runs in a temporary build container, then the runtime is created with the new appVersion. The agent reads logs from each phase distinctly.
+- **Two event streams to follow, not one.** Build status lives on the `stack.build` process — that is what tells you `FINISHED` or `FAILED` for the build itself. The appVersion event tells you which deploy ran on top of a successful build; it is not the build-status source. Reading appVersion events for a build failure shows nothing useful — start at `stack.build`.
+- **Multi-service deploys run in parallel.** When several services need to ship together, ZCP runs them concurrently rather than serially. In a dev+stage `standard` workflow, the typical order is still dev first, verify, then cross-deploy stage from the verified dev build.
+
+Deploy success and verify success are not the same thing. A successful deploy means the build finished and the runtime started; whether the requested behavior actually works is a separate check.
+
+## Read logs and events
+
+When something looks wrong, ZCP gives the agent direct access to platform evidence — not your retell of it.
+
+- The project activity timeline shows recent deploys, builds, status transitions, and process events, scoped by service hostname.
+- Runtime logs come back filtered by severity, time window, and search text — the agent does not need to scroll a wall of output.
+- Health checks return service status, error logs, startup detection, and an HTTP probe on the public URL in one structured response.
+
+Each failed deploy carries a structured failure classification on top of the raw logs. The agent reads this first:
+
+- A category — `build`, `start`, `verify`, `network`, `config`, `credential`, or `other` (see [Failure categories](/zcp/reference/failure-categories)).
+- A likely cause inferred from the platform's pattern library.
+- A suggested next action that points at the right tool or fix.
+
+> An agent without logs is a hypothesis generator. An agent with a deploy, log, and verify loop can fix real causes.
+
+The classification is what turns a deploy failure from "the agent guesses why" into "the agent reads the cause and fixes the right thing."
+
+## Verify
+
+After a deploy succeeds, verification runs in two layers:
+
+1. **The runtime is reachable.** The platform health check answers: is the service status running? Are there error logs? Did the startup script complete? Does an HTTP probe on the public URL return a successful status?
+2. **The requested behavior works.** Reachability is necessary, not sufficient. If you asked for `/health` to return 200, the agent fetches `/health` and confirms. If you asked for the dashboard to list notes, the agent opens the URL and checks the rendered page.
+
+Both layers must pass before a service counts as "done". The first layer is automatic; the second is the agent applying judgment to your specific request. The runtime configuration the agent edits — start command, ports, health check, env vars — lives in [`zerops.yaml`](/zerops-yaml/specification).
+
+If verify fails, the agent reads the failure classification and routes to the appropriate fix — same machinery that catches deploy failures, applied at the verify step.
+
+## Iterate, then stop
+
+The deploy → log → verify loop repeats until the service is verified or the agent hits a hard blocker. Iteration is not blind retry.
+
+Cadence:
+
+| Attempt | What the agent should do |
+|---|---|
+| 1-2 | Diagnose locally from logs and events; fix the targeted issue |
+| 3-4 | Systematic check — `zerops.yaml`, env vars, `deployFiles`, build commands, health check definition |
+| 5 | Stop and ask. Five attempts without progress is a signal that the loop has exhausted its standard strategies |
+
+The workflow auto-closes when every service in scope has a successful deploy and a passing verify. The result you see is concrete — a working URL (or set of URLs), plus the agent's summary of what it changed and where it verified.
+
+If the agent gets stuck before the loop closes:
+
+- **Hard blockers escalate.** Missing credentials, ambiguous scope, or a `zerops.yaml` problem that needs human input — the agent stops and asks instead of redeploying without new evidence.
+- **Recovery comes first.** If the agent appears confused after an interruption (a long session, a closed tab, a restarted machine), ask it to read ZCP status before changing anything else. See [How ZCP works](/zcp/concept/how-it-works).
+
+A clear blocker — even when the work is incomplete — is a successful end of session if it names the failure category, the in-scope runtime, what was tried, and what evidence is still missing.
+
+## Gotchas
+
+1. **Deploy success is not "done".** A green build with a 500 on the route you care about is not finished. Verify the requested behavior, not just the runtime status.
+2. **Stage deploys do not happen automatically.** In the `standard` workspace shape, when you ask for dev work, the agent should deploy and verify `appdev` only. If the agent silently changes `appstage`, that is a wrong path. Ask for stage explicitly when you want it.
+3. **Build logs and runtime logs are different streams.** A build failure shows in the build container's logs (scoped by build event); a runtime crash shows in the runtime container's logs (scoped by service hostname). The agent should pick the right stream — if it pastes runtime logs for a build failure, the diagnosis will be wrong.
+4. **Five attempts is a stop signal.** A loop that cannot make progress in five tries is a loop that needs you, not another retry.
+
+## Next steps
+
+- [Choose how finished work ships](/zcp/workflows/delivery-handoff) — close-mode, git-push, build integration after the first deploy works.
+- [Failure categories](/zcp/reference/failure-categories) — the seven categories ZCP recognizes and what each one means.
+- [What ZCP lets agents do](/zcp/concept/capabilities) — the full capability surface used in this loop.
+- [Workspace shapes](/zcp/setup/workspace-shapes) — runtime scope by shape (`standard` / `dev` / `simple` / `local-stage`).

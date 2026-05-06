@@ -159,6 +159,171 @@ module.exports = {
 //    },
     {
       type: 'html',
+      value: 'Zerops Control Plane',
+      customProps: {
+        sidebar_is_group_divider: true,
+      },
+      className: 'homepage-sidebar-item',
+    },
+    {
+      type: 'doc',
+      id: 'zcp/overview',
+      label: 'Overview',
+      className: 'homepage-sidebar-item',
+    },
+    {
+      type: 'doc',
+      id: 'zcp/quickstart',
+      label: 'Quickstart',
+      className: 'homepage-sidebar-item',
+    },
+    {
+      type: 'category',
+      label: 'Concept',
+      link: {
+        type: 'doc',
+        id: 'zcp/concept/how-it-works',
+      },
+      className: 'homepage-sidebar-item',
+      items: [
+        {
+          type: 'doc',
+          id: 'zcp/concept/capabilities',
+          label: 'What ZCP lets agents do',
+          className: 'homepage-sidebar-item',
+        },
+        {
+          type: 'doc',
+          id: 'zcp/concept/zcp-vs-zcli',
+          label: 'ZCP vs zCLI',
+          className: 'homepage-sidebar-item',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Setup',
+      link: {
+        type: 'doc',
+        id: 'zcp/setup/workspace-shapes',
+      },
+      className: 'homepage-sidebar-item',
+      items: [
+        {
+          type: 'doc',
+          id: 'zcp/setup/choose-workspace',
+          label: 'Choose your workspace',
+          className: 'homepage-sidebar-item',
+        },
+        {
+          type: 'doc',
+          id: 'zcp/setup/hosted-workspace',
+          label: 'Provision a hosted workspace',
+          className: 'homepage-sidebar-item',
+        },
+        {
+          type: 'doc',
+          id: 'zcp/setup/connect-agent',
+          label: 'Connect your coding agent',
+          className: 'homepage-sidebar-item',
+        },
+        {
+          type: 'doc',
+          id: 'zcp/setup/local-agent-bridge',
+          label: 'Use ZCP from your laptop',
+          className: 'homepage-sidebar-item',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Workflows',
+      link: {
+        type: 'doc',
+        id: 'zcp/workflows/create-or-adopt-services',
+      },
+      className: 'homepage-sidebar-item',
+      items: [
+        {
+          type: 'doc',
+          id: 'zcp/workflows/build-and-verify-app',
+          label: 'Build and verify an app',
+          className: 'homepage-sidebar-item',
+        },
+        {
+          type: 'doc',
+          id: 'zcp/workflows/delivery-handoff',
+          label: 'Choose how finished work ships',
+          className: 'homepage-sidebar-item',
+        },
+        {
+          type: 'doc',
+          id: 'zcp/workflows/package-running-service',
+          label: 'Package a running service for reuse',
+          className: 'homepage-sidebar-item',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Security and operations',
+      link: {
+        type: 'doc',
+        id: 'zcp/security/trust-model',
+      },
+      className: 'homepage-sidebar-item',
+      items: [
+        {
+          type: 'doc',
+          id: 'zcp/security/tokens-and-project-access',
+          label: 'Tokens and project access',
+          className: 'homepage-sidebar-item',
+        },
+        {
+          type: 'doc',
+          id: 'zcp/security/destructive-actions',
+          label: 'Destructive actions and confirmations',
+          className: 'homepage-sidebar-item',
+        },
+        {
+          type: 'doc',
+          id: 'zcp/security/auditing-agent-work',
+          label: 'Auditing agent work',
+          className: 'homepage-sidebar-item',
+        },
+        {
+          type: 'doc',
+          id: 'zcp/security/production-policy',
+          label: 'Production policy',
+          className: 'homepage-sidebar-item',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Reference',
+      link: {
+        type: 'doc',
+        id: 'zcp/reference/faq',
+      },
+      className: 'homepage-sidebar-item',
+      items: [
+        {
+          type: 'doc',
+          id: 'zcp/reference/failure-categories',
+          label: 'Failure categories',
+          className: 'homepage-sidebar-item',
+        },
+        {
+          type: 'doc',
+          id: 'zcp/reference/troubleshooting',
+          label: 'Troubleshooting',
+          className: 'homepage-sidebar-item',
+        },
+      ],
+    },
+    {
+      type: 'html',
       value: 'All Supported Services',
       customProps: {
         sidebar_is_group_divider: true,

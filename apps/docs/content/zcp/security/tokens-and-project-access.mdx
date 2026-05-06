@@ -1,0 +1,136 @@
+---
+title: "Tokens and project access"
+description: "Use project-scoped Zerops tokens and explicit repository credentials for ZCP agent work."
+---
+
+Use project-scoped Zerops tokens and explicit repository credentials for Zerops Control Plane (ZCP) agent work. The token shape ZCP accepts, where it lives, and how it relates to git credentials are all decided up front — they are the practical edge of the [trust model](/zcp/security/trust-model) you have already read.
+
+:::caution Public preview
+Zerops Control Plane (ZCP) is in public preview. Use it for development and staging projects, keep production in a separate Zerops project, and expect setup details to change.
+:::
+
+## Required token shape — project-scoped Zerops API token
+
+ZCP needs a Zerops API token scoped to **exactly one project**. In the Zerops dashboard, this is the **Custom access per project** integration token type — one of three integration-token shapes (the other two, *Full access to all projects* and *Read access to all projects*, are explicitly refused by ZCP). See [Roles & Permissions — Integration Tokens](/features/rbac#integration-tokens) for how Zerops scopes the token at the platform layer. It authorizes ZCP to read services, env vars, and recent activity in that one project, and to drive deploys, logs, and verification against it.
+
+Generate one:
+
+1. Open [Settings → Access Tokens Management](https://app.zerops.io/settings/token-management) in the Zerops dashboard.
+2. Click **Create Token** and give it a name (for example `zcp-<project-slug>`).
+3. Pick **Custom access per project** as the access level.
+4. Add the project the agent will operate against, set its permission to **Full access**, and create the token.
+5. Copy the value once. Zerops shows it only at creation time; if you lose it you have to regenerate it.
+
+The token's blast radius equals the project. Anything outside the project — other projects in the same organization, account-level settings, billing — stays out of reach. See [Roles & Permissions](/features/rbac) for how Zerops scopes access tokens at the platform layer.
+
+## Rejected token shapes — multi-project, no-project, expired
+
+ZCP validates the token at startup and refuses to come up with the wrong shape. Three rejection modes matter:
+
+| Token shape | What ZCP does | Why |
+|---|---|---|
+| Multi-project (e.g. full-access) | Refuses with `TOKEN_MULTI_PROJECT` | One ZCP connection equals one project; ZCP will not pick which one to drive. |
+| No project access (zero-project) | Refuses with `TOKEN_NO_PROJECT` | The token authenticates a user but cannot reach any project. There is nothing for ZCP to operate on. |
+| Read-only token | Refuses or fails on the first mutation | ZCP needs to deploy, set env, and trigger builds. A read-only token cannot do that. |
+| Expired or revoked | Refuses with `AUTH_TOKEN_EXPIRED` or `AUTH_REQUIRED` | The token no longer authenticates against the Zerops API. |
+
+A typical multi-project rejection looks like this in the agent's view:
+
+```text
+Token accesses 4 projects; use project-scoped token
+Recovery: Create a project-scoped token in Zerops GUI or set project via zcli scope
+```
+
+The fix is always the same: generate a per-project token and replace the value (or, if you are running ZCP through `zcli`'s credentials, switch the active scope to the target project before starting ZCP).
+
+## Where the token lives — hosted vs local
+
+ZCP reads the token from environment at startup. It does not write the token anywhere else, and it does not exchange it for a derived credential. Where the env var comes from depends on the workspace shape:
+
+| Workspace | Where `ZCP_API_KEY` comes from | Who provisions it |
+|---|---|---|
+| Hosted workspace (ZCP service inside the project) | The `zcp` service container env | Zerops platform — injected automatically when the workspace boots. You do not paste the token by hand. |
+| [Local agent bridge](/zcp/setup/local-agent-bridge) | The `env` block of `.mcp.json` in the project directory | You — added manually after `zcp init`. |
+
+In the hosted workspace, opening the workspace from the Zerops dashboard is enough. The container starts with `ZCP_API_KEY` already populated, and Claude Code launches against it without asking for a credential.
+
+In the local agent bridge, `zcp init` writes a token-less `.mcp.json` template:
+
+```json
+{
+  "mcpServers": {
+    "zerops": {
+      "command": "zcp",
+      "args": ["serve"]
+    }
+  }
+}
+```
+
+You add the project-scoped token under an `env` block:
+
+```json
+{
+  "mcpServers": {
+    "zerops": {
+      "command": "zcp",
+      "args": ["serve"],
+      "env": {
+        "ZCP_API_KEY": "<your-project-scoped-token>"
+      }
+    }
+  }
+}
+```
+
+Gitignore `.mcp.json` so the token does not leave the machine. Each project directory has its own `.mcp.json` and its own token — switching projects on your laptop means switching directories, not editing one shared file. See [Connect your coding agent](/zcp/setup/connect-agent) for the full local setup walkthrough.
+
+## Git credentials — separate from `ZCP_API_KEY`
+
+Three names, three jobs — keeping them straight prevents most of the credential confusion in [delivery handoff](/zcp/workflows/delivery-handoff):
+
+| Name | What it authorizes | Where it lives |
+|---|---|---|
+| `ZCP_API_KEY` | ZCP itself, against the Zerops API | Container env (hosted) or `.mcp.json` env block (local) |
+| `GIT_TOKEN` | A git push from a ZCP-managed environment to a remote (GitHub, GitLab) | Hosted: project env var on the ZCP service. Local: not applicable — the user's git credential helper handles it. |
+| `ZEROPS_TOKEN` | A GitHub Actions workflow running `zcli` against Zerops | A repository secret in GitHub Actions |
+
+`GIT_TOKEN` is a separate concern from `ZCP_API_KEY`. It only matters when delivery uses the **git-push** close-mode and ZCP is the one performing the push (the hosted workspace path). In the local bridge, the developer's own git CLI talks to the remote — SSH keys or credential manager already handle authentication, and ZCP does not need a credential of its own. If `GIT_TOKEN` is present in the hosted workspace's project env when you run **git-push setup**, ZCP reuses it for the push instead of asking for a new credential.
+
+`ZEROPS_TOKEN` is the GitHub Actions secret used by the `actions` build integration. It is a **Zerops API token, not a GitHub token** — the workflow uses it to authenticate `zcli` against Zerops. It can be the same project-scoped token already behind `ZCP_API_KEY` (one credential, one rotation surface) or a separate Zerops token if your team prefers credential separation. The agent prepares the `gh secret set` command for you, with the value pulled from the right place for your environment:
+
+```bash
+# Hosted workspace — read ZCP_API_KEY from the container env
+gh secret set ZEROPS_TOKEN -b "$ZCP_API_KEY" -R <owner>/<repo>
+
+# Local install — extract ZCP_API_KEY from .mcp.json
+gh secret set ZEROPS_TOKEN -b "$(jq -r '.mcpServers.zerops.env.ZCP_API_KEY' .mcp.json)" -R <owner>/<repo>
+```
+
+Run the command in a terminal authenticated to the GitHub repository (`gh auth login` first if needed). The literal token value never crosses the MCP wire — the shell expands `$ZCP_API_KEY` or `jq` reads `.mcp.json` at command time.
+
+## Rotation
+
+When a token is rotated in the Zerops dashboard, the new value replaces the old one at the source:
+
+- **Hosted workspace** — the project env value is updated; ZCP picks up the new value the next time the workspace boots (or the `zcp` service restarts).
+- **Local agent bridge** — paste the new token into the `env` block of `.mcp.json`, then restart Claude Code so the new ZCP process inherits the updated env.
+- **GitHub Actions secret** — `gh secret set ZEROPS_TOKEN ...` (or the equivalent in the GitHub UI) replaces the secret. The next workflow run uses the new value.
+
+Rotations on `ZCP_API_KEY` and `ZEROPS_TOKEN` are independent unless you reused the same Zerops token for both. If you did, rotate it in the dashboard once, then update both surfaces.
+
+## Gotchas
+
+1. **Multi-project tokens are refused at startup, not at first deploy.** A full-access token will not let ZCP boot at all. Generate a per-project token before connecting.
+2. **`zcp init` overwrites `.mcp.json`.** If you added `ZCP_API_KEY` to the file and re-run `zcp init`, the regenerated template ships without your token. Re-add it before launching the agent.
+3. **`GIT_TOKEN` is not `ZCP_API_KEY`.** `GIT_TOKEN` authorizes git push (hosted, when ZCP performs the push); `ZCP_API_KEY` authorizes ZCP against Zerops. Mixing them up either grants too much (a Zerops token used as a git push credential) or fails authentication. Treat them as separate surfaces.
+4. **`ZEROPS_TOKEN` in GitHub Actions is a Zerops API token, not a GitHub PAT.** If a deploy from Actions fails on permissions and you reach for a GitHub PAT, you have rotated the wrong credential. The fix is in `gh secret set ZEROPS_TOKEN ...`.
+5. **Rotation is picked up on next ZCP startup, not mid-session.** If you rotate the token while a Claude Code session is live, restart the agent so ZCP re-reads the env. The session in flight still holds the old value in process memory.
+
+## Related
+
+- [Trust model](/zcp/security/trust-model) — the project boundary this page enforces in practice.
+- [Roles & Permissions](/features/rbac) — how Zerops scopes access tokens at the platform layer.
+- [Connect your coding agent](/zcp/setup/connect-agent) — where the local token gets configured.
+- [Choose how finished work ships](/zcp/workflows/delivery-handoff) — where `GIT_TOKEN` and `ZEROPS_TOKEN` come into play.
+- [GitHub integration](/references/github-integration) — full reference for the dashboard and Actions paths that consume `ZEROPS_TOKEN`.

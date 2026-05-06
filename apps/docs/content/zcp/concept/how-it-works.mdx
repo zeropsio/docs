@@ -1,0 +1,53 @@
+---
+title: "How ZCP works"
+description: "ZCP runs near the project, reads live platform state, and gives the agent the next useful operation."
+---
+
+Zerops Control Plane (ZCP) runs near the project, reads live platform state, and gives the agent the next useful operation. The agent never has to be told what the project looks like; ZCP reports it from what is actually deployed and running right now.
+
+:::caution Public preview
+Zerops Control Plane (ZCP) is in public preview. Use it for development and staging projects, keep production in a separate Zerops project, and expect setup details to change.
+:::
+
+## Runs inside or beside the project
+
+ZCP comes in two shapes. The agent uses the same control surface in both:
+
+- **Inside the project (hosted workspace).** When you create a project from the **AI Agent** environment in [Zerops recipes](https://app.zerops.io/recipes), or check **Add Zerops Control Plane (ZCP) service** during project creation, Zerops adds a `zcp` service to the project. The agent runs in a browser-hosted workspace inside that service. ZCP sees the rest of the project over the project's private network, with filesystem access to runtime services through SSHFS mounts.
+- **Beside the project (local agent bridge).** When you install ZCP locally and run `zcp init` in your project directory, the binary runs on your laptop and acts as a bridge to a Zerops project. The agent runs in your editor; ZCP talks to the Zerops API on your behalf. The filesystem is your laptop, not the runtime services.
+
+The agent's interface is the same in both. What changes is where ZCP physically runs and what filesystem the agent sees. See [Choose your workspace](/zcp/setup/choose-workspace) to pick.
+
+## Reads live project state
+
+When the agent needs context, ZCP queries the platform: what services exist, what state they are in, what env variables are exposed, what the recent build and deploy events look like. The agent does not rely on a long prompt or stale documentation; the answer comes from the project as it stands now.
+
+> You do not explain the environment to the agent. The environment reports itself from current platform reality.
+
+This matters when:
+
+- **You start a session.** ZCP discovers what is already provisioned instead of asking you to describe it.
+- **A deploy fails.** ZCP reads the build logs, runtime logs, and event timeline directly, classifies the failure, and proposes the next step.
+- **You return after an interruption.** The agent asks ZCP for status and resumes from real state, not from chat memory.
+
+The platform is the source of truth. ZCP exposes it; the agent reads it.
+
+## Gives the agent scoped operations
+
+ZCP does not let the agent type arbitrary platform commands. It exposes a fixed set of scoped operations, grouped by user job: see the project, deploy code, verify the result, operate services, recover from failures, hand off finished work. See [What ZCP lets agents do](/zcp/concept/capabilities) for the full surface.
+
+Each operation knows the project boundary and the current workflow scope. The agent can deploy `appdev`; it cannot reach across to a different project, modify your laptop, or push code your token does not authorize. Destructive operations require explicit confirmation in the conversation — see [Destructive actions and confirmations](/zcp/security/destructive-actions).
+
+## Recovers after interruptions
+
+Coding agents lose context. Conversations get long, browser tabs close, machines restart. ZCP is designed for that.
+
+When you (or the agent) ask for current status, ZCP rebuilds the picture from platform state plus its own session record. The agent gets back: which services exist, where the work was, what the last successful deploy was, what is still pending. It then offers the next reasonable step.
+
+You do not need to dictate everything you tried. The platform remembers what was deployed; ZCP reads it back; the agent picks up where it makes sense.
+
+## Where ZCP gets out of the way
+
+ZCP does not pick the framework, choose the database schema, decide whether a feature ships, or define what counts as done. Those are still yours.
+
+ZCP also does not replace the platform reference. When you need to understand the [build and deploy pipeline](/guides/deployment-lifecycle), [public access](/features/access), or [environment variables](/features/env-variables), the canonical Zerops docs are still the source. ZCP sits on top of them.

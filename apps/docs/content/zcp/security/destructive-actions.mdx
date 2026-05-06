@@ -1,0 +1,157 @@
+---
+title: "Destructive actions and confirmations"
+description: "ZCP requires explicit confirmation before destructive service replacement or deletion."
+---
+
+Zerops Control Plane (ZCP) requires explicit confirmation before destructive service replacement or deletion.
+
+:::caution Public preview
+Zerops Control Plane (ZCP) is in public preview. Use it for development and staging projects, keep production in a separate Zerops project, and expect setup details to change.
+:::
+
+This page covers what counts as destructive in ZCP, how the confirmation flow works in conversation, what ZCP refuses outright, and the diagnose-first rule that runs before any destructive operation. It is written for the developer or reviewer asking a sharper question: can the agent do something irreversible without me?
+
+The short answer is no. ZCP cannot delete on its own, cannot replace a broken service without acknowledgement, and cannot delete the service it is running on. The longer answer follows.
+
+## What counts as destructive
+
+ZCP marks an operation destructive when calling it can erase platform state that an agent cannot trivially reconstruct. Operations that only read project state, or whose mutations roll back cleanly, are not destructive.
+
+| Operation category | Destructive? | Why |
+|---|---|---|
+| Read-only inspection (discover services, read logs, events, verify checks) | No | Reveals state, never changes it. |
+| Deploy and env changes (deploy, set or delete env vars) | Yes | Replaces the running appVersion on the targeted service or changes runtime behaviour. |
+| Import to add services (no override) | Yes | Adds new services to the project. Marked destructive because import-time mistakes are real changes. |
+| Import with override (replace existing) | Yes, gated | Replaces existing service stacks. Tears down container, deployed code, env vars, and the SSHFS mount on every matching hostname. Gated by the diagnose-first rule below. |
+| Service deletion | Yes, requires approval | Removes the service entirely. Permanent. |
+| Lifecycle changes (start, stop, restart, scale, subdomain enable/disable) | No | Shape and lifecycle changes that revert cleanly. |
+
+The destructive flag is part of the MCP annotations a well-behaved client uses to surface a confirmation prompt before calling. For the canonical capability surface (which operations exist, by job), see [What ZCP lets agents do](/zcp/concept/capabilities).
+
+## Service deletion (`zerops_delete`)
+
+Deleting a service is permanent. The container is gone, the deployed code is gone, the env vars are gone. ZCP treats this as a user decision, not an agent decision.
+
+The contract:
+
+- The agent must have explicit user approval **in the same conversation, by service name**, before calling `zerops_delete`. Approval cannot be inferred from a previous chat or carried over from another task.
+- The agent must not delete proactively. Cleaning up "leftover" services, removing services it created earlier, or pruning anything you did not name is out of bounds.
+- The user must name the service. "Delete the broken one" is not enough; the agent should ask which hostname.
+
+A typical confirmation in conversation looks like this:
+
+```text
+> Drop the `appdev-old` service. I do not need it any more.
+
+Agent: Confirming — delete `appdev-old`. This is permanent: the
+container, the deployed code, env vars, and the SSHFS mount go with
+it. Reply "yes, delete appdev-old" to proceed.
+```
+
+```text
+> yes, delete appdev-old
+```
+
+The phrasing varies; the structure does not. Approval is an explicit yes paired with the service name in the same turn-window.
+
+ZCP cannot relax this requirement. If a poorly behaved client skipped the prompt entirely, the tool description still tells the model that explicit user approval is mandatory, and the test suite enforces that wording on every release.
+
+## Service replacement via import override (`zerops_import override=true`)
+
+`zerops_import` with `override=true` is the wholesale-replace path: every imported hostname that already exists is torn down and recreated. The previous container, deployed code, env vars, and SSHFS mount on each matching service are gone. This is intentionally destructive — it is how the agent transitions a service that came up wrong, or how it reshapes a service that drifted from its declared form.
+
+ZCP does not let this happen silently when the targeted service has a history of failure. The handler runs a diagnose-first gate (next section) on every call. The first call against a service with failed deploy history is refused with a structured `wouldDestroy` payload describing exactly what is about to disappear:
+
+- `operation` — the destructive class, currently `import-override`.
+- `targets` — the service hostnames that would be replaced.
+- `wouldDestroy` — a breakdown by category: service stacks, env var keys, and so on.
+
+The agent's second call must include a `confirmDestructive` block that echoes that payload. The block has to:
+
+- Set `operation` to the same string returned in `wouldDestroy.operation`.
+- Set `acknowledgedTargets` to the same hostname set as `wouldDestroy.targets` (order-insensitive, no extras, no missing entries).
+- Optionally include `diagnosedFailureClass` to record which failure category the agent looked at.
+
+A mismatch fails again. Acknowledging two of three targets, or acknowledging targets the gate did not flag, returns the same refusal. The conversation has to acknowledge what would be destroyed, exactly, before destruction proceeds.
+
+A worked example, told in agent voice:
+
+```text
+Agent (call 1): I tried to override the import for `appdev` — the
+previous deploy failed. ZCP refuses without confirmation. The platform
+says replacing `appdev` would erase its container, the failed
+appVersion, and these env vars: APP_KEY, DATABASE_URL.
+
+Read the failure first or confirm? Reply "confirm replace appdev" to
+acknowledge.
+```
+
+```text
+> Show me the failure first.
+```
+
+```text
+Agent: Reading recent events on `appdev` — the build failed in the
+runPrepare phase with exit 1. The runtime never started. Logs show a
+missing PHP extension in the prepare command.
+
+If you still want to override and re-import as planned, reply
+"confirm replace appdev". Otherwise we can fix the prepare command and
+redeploy without dropping the service.
+```
+
+This is the pattern the gate is designed to produce: the agent has read the failure before asking you to confirm wholesale replacement.
+
+## The diagnose-first rule
+
+ZCP enforces a single rule across destructive paths: when a service is in trouble, read the platform's account of why before destroying anything. The rule lives in the import-override gate today and shows up as recovery hints on related checks.
+
+What "in trouble" means in ZCP: the service has a non-running state, a failed last deploy, or both. The platform records a structured failure classification on every failed deploy — a category, a likely cause, a suggested next action. The agent reads this first, then the raw logs, then decides.
+
+The rule prevents two specific failure modes:
+
+- **Delete-and-retry loops.** Without the gate, an agent that hits a non-running service can decide the cleanest fix is to delete and re-import. That works once and masks the cause; the next deploy fails the same way and the agent reaches for the same hammer.
+- **Override-as-reset.** Without the gate, `zerops_import override=true` becomes a "make it like new" button that erases the failure context the next agent (or the next session) needs to fix the real problem.
+
+In practice the rule turns into a short detour at the start of any destructive operation:
+
+1. The agent calls the destructive tool.
+2. ZCP refuses if the targets carry failure history, returning the failure context references.
+3. The agent reads the failure — events, logs, classification.
+4. The agent either fixes the cause (no destruction needed) or comes back with `confirmDestructive` and a summary of what it read.
+
+Recovery state is not the same as broken state. A service that came up `READY_TO_DEPLOY` and is waiting for code is not in trouble; it is waiting. The gate does not fire there. It fires when the platform itself records that the last attempt failed.
+
+## What ZCP refuses outright
+
+A handful of patterns are not gated, conditional, or confirmable. ZCP refuses them on every call.
+
+| Pattern | What ZCP does | Why |
+|---|---|---|
+| Deleting the service ZCP runs on | `zerops_delete` returns `SELF_SERVICE_BLOCKED` when the target hostname matches the running ZCP service | The hosted ZCP container cannot delete itself; the call would tear down the agent mid-operation. Use zCLI or the Zerops GUI for that one. |
+| Cross-project access | Every ZCP token is bound to one Zerops project at authentication time | One ZCP equals one project. The agent cannot read or change services in any other project, regardless of what it is asked to do. |
+| Multi-project tokens | Rejected at token validation | Full-access and multi-project tokens widen the blast radius beyond what the trust model permits. ZCP requires a project-scoped token by design. |
+| Raw `pkill -f chrome` against the workspace | Not a ZCP tool, but explicitly called out in the browser-tool description | The pattern matches code-server's `--no-chrome` CLI argument; running it from Bash inside the workspace previously killed the IDE. The agent is told to use the structured browser-lifecycle tool instead. |
+
+These are the non-negotiable lines. ZCP cannot be configured to cross them.
+
+## Recovery comes first
+
+When a service looks broken, the right next move is rarely a destructive one. ZCP exposes status as a non-destructive primitive — the agent can ask for current platform state, read the failure, and decide. Status is the prerequisite for any destructive op, not the alternative to it.
+
+If you find yourself approving a destructive call without a status read in the same session, that is worth pushing back on. The agent should be able to tell you what it saw, in the platform's own words, before asking to delete or override.
+
+## Gotchas
+
+1. **Confirmation must be in the same conversation.** Approval from a previous chat does not carry forward. A new conversation is a new approval window — the agent cannot delete on memory of an earlier yes.
+2. **ZCP cannot delete itself.** Calling `zerops_delete` against the hosted ZCP service returns `SELF_SERVICE_BLOCKED`. Removing it is a manual operation outside the workspace.
+3. **Diagnose before destroy is per-target, not per-session.** The gate fires on every call against a service with failed deploy history, even if you acknowledged a different target a minute ago. Each destructive op stands on its own evidence.
+4. **Recovery state is not broken state.** A service that came up `READY_TO_DEPLOY` is waiting for code, not failing. The diagnose-first rule does not block work there; it blocks destruction of services the platform marked as failed.
+5. **A successful confirmation is still a destructive call.** Once you acknowledge the `wouldDestroy` payload, the override runs. Roll-back is not automatic — recover lost data through [Backup](/features/backup), and review what changed through [Auditing agent work](/zcp/security/auditing-agent-work).
+
+## Related
+
+- [Trust model](/zcp/security/trust-model) — the boundary this page enforces.
+- [Auditing agent work](/zcp/security/auditing-agent-work) — review what the agent did before or after a destructive op.
+- [Backup](/features/backup) — the safety net when data is lost.
+- [Failure categories](/zcp/reference/failure-categories) — the structured failure information the diagnose-first rule reads.

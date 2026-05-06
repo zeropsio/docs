@@ -1,0 +1,119 @@
+---
+title: "Workspace shapes"
+description: "ZCP uses five workspace shapes to describe where the agent works and where code is deployed."
+---
+
+Zerops Control Plane (ZCP) uses five workspace shapes to describe where the agent works and where code is deployed.
+
+:::caution Public preview
+Zerops Control Plane (ZCP) is in public preview. Use it for development and staging projects, keep production in a separate Zerops project, and expect setup details to change.
+:::
+
+## The two families
+
+Workspace shape is ZCP vocabulary. It tells the agent which filesystem it can edit, which Zerops runtime receives deploys, and whether there is a separate stage target.
+
+There are two families:
+
+| Family | Shapes | Where the agent works | Where code runs while you work |
+|---|---|---|---|
+| Hosted shapes | `standard`, `dev`, `simple` | In the hosted workspace inside the Zerops project | In Zerops runtime services |
+| Local shapes | `local-stage`, `local-only` | On your laptop through the local agent bridge | On your laptop first; optionally in a linked Zerops stage runtime |
+
+Use a hosted shape when you want the agent to work inside the Zerops project it manages. Use a local shape when your editor, git checkout, and dev server stay on your machine.
+
+The agent interface stays the same. The workspace shape changes what ZCP can safely assume about filesystems, service hostnames, and deploy targets.
+
+Do not pick by framework. The same framework can fit more than one shape; the right choice is where the agent should work and where the first real deploy should land.
+
+Pick by the place where the code should be edited:
+
+| If you want this | Start with |
+|---|---|
+| Agent edits files inside Zerops and promotes to a separate runtime | `standard` |
+| Agent edits one mutable hosted runtime | `dev` |
+| Agent edits and deploys one hosted runtime directly | `simple` |
+| Agent edits your local checkout and deploys to one Zerops runtime | `local-stage` |
+| Agent edits your local checkout with no Zerops runtime chosen yet | `local-only` |
+
+## Hosted shapes
+
+Hosted shapes run the agent in a browser-hosted workspace inside the Zerops project. ZCP can mount runtime service filesystems, deploy from the project, read logs, and verify the result against Zerops URLs.
+
+| Shape | Runtime services | Agent edits | Deploy path | Use it when |
+|---|---|---|---|---|
+| `standard` | `{name}dev` and an explicit stage hostname | The dev runtime | Dev first, then stage | You want a separate stage target for the app before handoff |
+| `dev` | `{name}dev` | The dev runtime | Dev only | You want one mutable hosted runtime for iteration |
+| `simple` | `{name}` | The runtime service | The same service | You want the smallest hosted shape with a real app process |
+
+`standard` is the default hosted shape. It gives the agent a mutable dev runtime and a separate stage runtime. The agent deploys and verifies dev first, then deploys stage from the verified dev code. Use it when you want the setup to model a normal development-to-stage path.
+
+`dev` is a single mutable hosted runtime. The runtime is named like `appdev`, has no separate stage pair, and is optimized for direct iteration. Use it when the work does not need a separate stage service yet.
+
+`simple` is a single hosted runtime without the `dev` suffix. It runs the real app process and uses the same service for deploy and verify. Use it for small apps, demos, and cases where a separate dev/stage split adds no value.
+
+In `standard` and `dev`, dynamic runtimes use a dev-style start path during iteration. In `simple`, the runtime uses the real start path because there is no separate stage service.
+
+## Local shapes
+
+Local shapes run the agent from your laptop. Your local checkout is the filesystem the agent edits. Zerops managed services still live in the project, and ZCP talks to Zerops through the local bridge.
+
+| Shape | Linked Zerops runtime | Local dev server | Deploy path | Use it when |
+|---|---|---|---|---|
+| `local-stage` | One runtime selected as stage | On your laptop | Local checkout to linked stage runtime | You want local development plus Zerops stage deploys |
+| `local-only` | None | On your laptop | None until a runtime is linked | You are preparing locally or ZCP cannot safely choose a stage target |
+
+`local-stage` means your laptop is the dev side and one Zerops runtime is the stage side. The agent edits local files, you run the local dev server, and deploys go from the local checkout to the linked stage runtime.
+
+`local-only` means ZCP has no Zerops runtime to deploy to. It can still help the agent understand the project, generate local configuration, and work against managed services, but it has no push target.
+
+Before the default deploy path works in `local-only`, ask the agent to link one runtime as the stage target — name the hostname so the agent does not have to guess. The shape becomes `local-stage` and deploys start working.
+
+If the project has no runtime services yet, create or adopt one first, then link it. Until a runtime is linked, `local-only` is useful for local edits, configuration, and managed-service access; the default deploy path has no target. Git-push delivery can still apply if your project is set up that way — see [Choose how finished work ships](/zcp/workflows/delivery-handoff).
+
+## How stage fits
+
+Stage is a deploy target for development and review. It is not production. Keep production in a separate Zerops project while ZCP is in public preview.
+
+Stage appears in two shapes:
+
+| Shape | What stage means | How it is chosen |
+|---|---|---|
+| `standard` | A second hosted runtime, separate from `{name}dev` | You provide the stage hostname in the setup plan |
+| `local-stage` | One Zerops runtime linked to your local checkout | You select the runtime during local adoption |
+
+The stage hostname is explicit. The agent does not invent it from the dev hostname. If the dev runtime is `appdev`, the stage runtime might be `appstage`, but that name must come from your confirmed setup plan.
+
+In hosted `standard`, the stage runtime has the real start command, a health check, and build output deploy files. The dev runtime stays mutable so the agent can edit, deploy, start, and verify before promoting to stage.
+
+In `local-stage`, your laptop is the dev side. The linked Zerops runtime is the stage side. Deploys still use the Zerops [deployment lifecycle](/guides/deployment-lifecycle), but the source files come from your local checkout instead of a mounted hosted runtime.
+
+The other shapes do not have stage:
+
+| Shape | Stage status |
+|---|---|
+| `dev` | No stage runtime |
+| `simple` | No stage runtime |
+| `local-only` | No linked stage runtime until you link one |
+
+Add stage when you need a stable Zerops URL and runtime separate from the place where the agent is actively editing code.
+
+## Workspace shape vs. service mode
+
+Workspace shape is not the same thing as Zerops service `mode`.
+
+| Term | Scope | Values | What it controls |
+|---|---|---|---|
+| Workspace shape | ZCP project topology | `standard`, `dev`, `simple`, `local-stage`, `local-only` | Where the agent works, where code is deployed, and whether stage exists |
+| Service `mode` | Individual Zerops service infrastructure | `HA`, `NON_HA` | How a service is provisioned and scaled |
+
+A `standard` workspace can use `NON_HA` services. A `simple` workspace can include managed services configured for `HA`. Those choices are independent.
+
+Use workspace shape to answer: "Where does the agent work, and what is the deploy target?" Use service `mode` to answer: "How is this Zerops service provisioned?" For service infrastructure details, see [Scaling](/features/scaling).
+
+## Next steps
+
+- [Choose your workspace](/zcp/setup/choose-workspace) - decide between hosted and local setup.
+- [Provision a hosted workspace](/zcp/setup/hosted-workspace) - create a hosted workspace inside a Zerops project.
+- [Use ZCP from your laptop](/zcp/setup/local-agent-bridge) - run the local bridge from your own checkout.
+- [Build and verify an app](/zcp/workflows/build-and-verify-app) - use the selected shape in the deploy and verify loop.

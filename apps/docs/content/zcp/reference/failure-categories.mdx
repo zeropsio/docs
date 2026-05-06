@@ -1,0 +1,161 @@
+---
+title: "Failure categories"
+description: "ZCP classifies failures by recovery path: build, start, verify, network, config, credential, or other."
+---
+
+Zerops Control Plane (ZCP) classifies failures by recovery path: `build`, `start`, `verify`, `network`, `config`, `credential`, or `other`.
+
+:::caution Public preview
+Zerops Control Plane (ZCP) is in public preview. Use it for development and staging projects, keep production in a separate Zerops project, and expect setup details to change.
+:::
+
+Use this page when an agent response or the events feed shows a failure category and you need to decide what to read next. These categories surface during [Build and verify an app](/zcp/workflows/build-and-verify-app) and when reviewing failed work in [Auditing agent work](/zcp/security/auditing-agent-work).
+
+## How to read a category
+
+Every failed deploy carries a structured classification: a category, a likely cause, a suggested next action, and signals from the platform's pattern library. The agent reads that classification before raw logs, because the category points at the recovery path. Categories are recovery-path-shaped, not blame-shaped: `network` does not mean "the network is broken"; it means the first recovery move is connectivity, VPN, SSH, DNS, or platform reachability instead of editing application code. When you need concrete fixes after identifying the category, continue with [Troubleshooting](/zcp/reference/troubleshooting).
+
+## build
+
+`build` means the Zerops build pipeline failed before a runtime container could start.
+
+This covers dependency install, compile steps, and `buildCommands` problems. Build logs live on the `stack.build` process; start with the build event, not runtime logs. For the platform pipeline shape, see [Deployment lifecycle](/guides/deployment-lifecycle).
+
+Canonical signals:
+
+- `build:command-not-found` — `command not found`, `: not found`, or `No such file or directory`.
+- `build:npm-package-missing` — `npm 404`, `notarget`, or `enoent`.
+- `build:module-not-found` — `Cannot find module '...'` during a build step.
+- `build:oom-killed` — `Killed`, `Out of memory`, or `OOMKilled`.
+
+Recovery path:
+
+- Read the `stack.build` process logs first.
+- Fix `buildCommands`, dependency manifests, lock files, or the build working directory.
+- If the signal is memory pressure, increase build resources or split the heavy build step.
+- Redeploy after the build failure is fixed; runtime logs will not explain a failed build.
+
+## start
+
+`start` means the build succeeded, but the runtime did not reach `RUNNING` or `ACTIVE`.
+
+This includes `PREPARING_RUNTIME_FAILED`, `READY_TO_DEPLOY` after a deploy attempt, and `DEPLOY_FAILED`. The recovery path is runtime configuration: `run.prepareCommands`, `run.initCommands`, `run.start`, ports, env vars, package names, writable paths, and managed-service connectivity.
+
+Canonical signals:
+
+- `phase:prepare` — `run.prepareCommands` exited non-zero before deploy files arrived.
+- `prepare:missing-sudo` — package install failed with `must be root`, `Operation not permitted`, or a lock error.
+- `prepare:php-extension-missing` — PHP extension package name mismatch such as `php-pgsql` on an Alpine PHP runtime.
+- `init:port-in-use` — `EADDRINUSE` or `address already in use`.
+- `init:missing-env-var` — `Environment variable ... required` or `process.env.NAME is undefined`.
+
+Recovery path:
+
+- Read prepare logs for `PREPARING_RUNTIME_FAILED`; read runtime logs for `DEPLOY_FAILED`.
+- Check that `run.start` binds the configured port and that only one command owns that port.
+- Check env-var references and managed-service hostnames; see [Environment variables](/guides/environment-variables).
+- Fix `zerops.yaml` or runtime config, then deploy again.
+
+## verify
+
+`verify` means the deploy finished, but a post-deploy health check did not pass.
+
+The verify response checks service status, recent error logs, and the public HTTP probe. A failed `service_running` check is treated as `start`; `verify` is for the cases where the runtime is up but the health surface still says the app is not ready.
+
+Canonical signals:
+
+- `http_root: HTTP 502` — the public URL responds, but the server returned a 5xx.
+- `http_root: request failed: ...` — the HTTP probe could not connect.
+- `http_root: subdomain access not enabled — service is not reachable via HTTP`.
+- `verify_error` — the health check itself could not complete.
+
+Recovery path:
+
+- Read the first failing check name and detail; it is the shortest path to the broken layer.
+- For `http_root`, inspect the HTTP status, rendered body text, and console errors if present.
+- For error-log detail, read the recent runtime logs and fix the application error.
+- If the failure is subdomain access, recover the public route before changing app code.
+
+## network
+
+`network` means ZCP could not reach the platform or source container at the transport layer.
+
+No build was triggered. This category does not assign blame to the network; it tells the agent to check connectivity, VPN, SSH, DNS, or platform availability before editing `zerops.yaml` or application files. For background, see [Networking](/guides/networking).
+
+Canonical signals:
+
+- `transport:ssh-unreachable` — `connection refused`, `no route to host`, `connect: network is unreachable`, or `Could not resolve hostname`.
+- `transport:ssh-killed` — `signal: killed`, often because the source container ran out of memory mid-transfer.
+- `phase:transport` — transport failed and no narrower signal matched.
+
+Recovery path:
+
+- Confirm the source service is running and reachable.
+- In a local workspace shape, bring up the Zerops VPN and retry the same operation.
+- If the error is DNS or API timeout, wait for the platform path to recover before retrying.
+- If the SSH process was killed, scale the source container memory, then redeploy.
+
+## config
+
+`config` means a pre-deploy check rejected the request before the platform accepted the deploy.
+
+This category covers `zerops.yaml` schema rejection, deploy-mode contract violations, missing prerequisites, unknown runtime names, and setup-block mismatches. The right first read is the structured error detail: field path, API metadata, or the suggestion attached to the rejection.
+
+Canonical signals:
+
+- `preflight:invalid-zerops-yaml` — `zerops.yaml` rejected by the platform.
+- `preflight:dm2-self-deploy-narrow` — self-deploy `deployFiles` is narrower than `[.]`.
+- `preflight:prerequisite` — a required file, committed code, or deploy prerequisite is missing.
+- `transport:zcli-setup-mismatch` — `Cannot find corresponding setup`.
+- `transport:zcli-unknown-runtime` — `unknown base ...` or `unknown stack ...`.
+
+Recovery path:
+
+- Read the field-level detail or suggestion attached to the rejection.
+- Fix the relevant `zerops.yaml` setup block, base/runtime name, `deployFiles`, or prerequisite.
+- For setup-block mismatches, use the setup name declared in `zerops.yaml`, not the hostname.
+- Redeploy after the config shape matches the workspace shape and deploy direction.
+
+## credential
+
+`credential` means an auth token, git credential, or SSH credential was missing or rejected.
+
+It is split from `network` because the recovery path is not connectivity. Regenerate or reconfigure the credential, restart the process that reads it if needed, then retry the deploy or git push.
+
+Canonical signals:
+
+- `transport:git-token-missing` — `GIT_TOKEN` is missing on the source container.
+- `transport:zcli-auth-failed` — `invalid token`, `unauthorized`, `401`, `forbidden`, or `403`.
+- `transport:git-auth-failed` — `Authentication failed`, `Permission denied (publickey)`, `fatal: could not read Username`, or `terminal prompts disabled`.
+
+Recovery path:
+
+- Regenerate the rejected Zerops or git token with the required project or repository scope.
+- Re-run the git-push setup path so `GIT_TOKEN`, `.netrc`, and the remote URL line up.
+- For local workspaces, check your SSH agent or HTTPS credential store.
+- Retry only after the agent can read that the expected credential is present.
+
+## other
+
+`other` means the classifier ran, but no known recovery signal matched.
+
+Treat this as "read the raw evidence", not as a diagnosis. The `Reason` field carries the raw status or message, and the absence of a specific signal is useful: the agent should stop trying to fit the error into a known card and inspect the events, process logs, and tool error detail directly.
+
+Canonical signals:
+
+- `category: other` — the platform could not map the failure to a narrower recovery category.
+- `Reason: <raw status>` — the raw platform status or error text is the important field.
+- Empty or missing `signals` — no pattern-library signal matched.
+
+Recovery path:
+
+- Read the raw event timeline for the affected service.
+- Read the logs for the phase named by the raw status: build process logs for build-like statuses, runtime logs for runtime-like statuses.
+- If the raw status is unclear, preserve it in the handoff summary and continue in [Troubleshooting](/zcp/reference/troubleshooting).
+- If the same raw status repeats, report it with the exact `Reason` and recent log lines.
+
+## Next steps
+
+- [Build and verify an app](/zcp/workflows/build-and-verify-app) — where the deploy, log, health-check, and iteration loop surfaces these categories.
+- [Troubleshooting](/zcp/reference/troubleshooting) — concrete recovery moves after you know the category.
+- [Auditing agent work](/zcp/security/auditing-agent-work) — how to review failed deploys and the classification attached to them.

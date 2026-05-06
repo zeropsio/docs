@@ -1,0 +1,157 @@
+---
+title: "Use ZCP from your laptop"
+description: "Run ZCP locally so your editor and agent can discover Zerops services, generate credentials, and deploy to Zerops."
+---
+
+Run Zerops Control Plane (ZCP) locally so your editor and agent can discover Zerops services, generate credentials, and deploy to Zerops. Your laptop is the development environment. ZCP is the bridge between your editor and the project's services.
+
+:::caution Public preview
+Zerops Control Plane (ZCP) is in public preview. Use it for development and staging projects, keep production in a separate Zerops project, and expect setup details to change.
+:::
+
+The local agent bridge is for developers who already have a comfortable local setup — your editor, your shell, your dev server — and want a coding agent that can drive Zerops without giving up your machine. If you are evaluating ZCP for the first time, the [hosted workspace](/zcp/setup/hosted-workspace) is a faster start.
+
+## Prerequisites
+
+- A Zerops project. Create one from the [Zerops dashboard](https://app.zerops.io/dashboard/project-add) or from a [recipe](https://app.zerops.io/recipes).
+- [zCLI](/references/cli) installed on your machine and authenticated.
+- A **project-scoped Zerops token**. Multi-project tokens are refused — see [Tokens and project access](/zcp/security/tokens-and-project-access).
+- A **Claude subscription** (Pro or Max) and Claude Code installed locally.
+
+## Install ZCP
+
+Install the `zcp` binary on your machine:
+
+```bash
+curl -sSfL https://raw.githubusercontent.com/zeropsio/zcp/main/install.sh | sh
+```
+
+The script downloads the latest release for your platform into `~/.local/bin` (or `/usr/local/bin` if run as root) and makes it executable. Pin a specific version by passing the tag:
+
+```bash
+curl -sSfL https://raw.githubusercontent.com/zeropsio/zcp/main/install.sh | sh -s v0.1.0
+```
+
+Verify the install:
+
+```bash
+zcp version
+```
+
+You should see the ZCP version and build info. If `zcp` is not on your `PATH` afterwards, make sure `~/.local/bin` is in `PATH` and reload your shell.
+
+## Initialize ZCP in your project directory
+
+Open a terminal in your project's working directory (the one that contains your code) and run:
+
+```bash
+zcp init
+```
+
+`zcp init` writes:
+
+- `.mcp.json` — the MCP configuration Claude Code reads to discover ZCP
+- `CLAUDE.md` — instructions for the agent about how to operate ZCP in this project
+- `.claude/settings.local.json` — Claude Code per-project settings
+- A `.zcp/state/` directory for ZCP's own session state
+- Shell aliases for common ZCP operations
+
+Re-running `zcp init` refreshes the generated files. `CLAUDE.md` preserves your edits outside the managed markers, but `.mcp.json` is rewritten from the template — if you added `ZCP_API_KEY` to it, check the file afterward and re-add the token. The regenerated `.mcp.json` ships without a token.
+
+## Add your token
+
+`zcp init` writes an `.mcp.json` without your token. Add the project-scoped token under an `env` block:
+
+```json
+{
+  "mcpServers": {
+    "zerops": {
+      "command": "zcp",
+      "args": ["serve"],
+      "env": {
+        "ZCP_API_KEY": "<your-project-scoped-token>"
+      }
+    }
+  }
+}
+```
+
+Gitignore `.mcp.json` so the token never leaves your machine. ZCP reads the token from this file at startup and does not store it anywhere else.
+
+## Connect the project VPN
+
+ZCP reaches managed services (databases, caches, storage) through the Zerops project [VPN](/references/networking/vpn). Bring it up with zCLI:
+
+```bash
+zcli vpn up <project-id>
+```
+
+You will be prompted for sudo or admin — VPN setup needs root on Linux and macOS. ZCP cannot start the VPN for you; this is your one manual step.
+
+After the VPN is up, you can resolve project services by hostname (`db`, `cache`, etc.) from your laptop.
+
+VPN gives you network reach. It does not expose env values. ZCP generates those for you in the next step.
+
+## Generate a local `.env`
+
+Ask Claude Code to generate the env file from your project:
+
+```text
+Use ZCP to generate a .env file for my local app.
+```
+
+ZCP reads the project's services, resolves env-template references (the `${hostname_var}` syntax used in `zerops.yaml`), and writes a `.env` in your working directory. Your local app reads the same hostnames and credentials it would see when deployed, just over VPN.
+
+The `.env` is a snapshot, not a live link. Regenerate it after changing project env variables.
+
+## Pick a deploy target
+
+Local mode has two shapes, depending on how the project is set up. See [Workspace shapes](/zcp/setup/workspace-shapes) for the full taxonomy.
+
+### `local-stage` — one Zerops runtime is your stage
+
+This is the common shape. Your laptop is the dev environment; one Zerops runtime is the linked stage. Deploys go from your local checkout to that stage runtime.
+
+If your project has exactly one runtime, ZCP picks it up automatically. If it has multiple, the agent asks which one to link — answer by hostname (for example, `appstage`). After linking, deploys from the agent push from your local working directory to that runtime.
+
+### `local-only` — no runtime linked as stage yet
+
+This shape applies when no runtime is linked as the stage target — when the project has only managed services, when it has multiple runtimes and ZCP cannot safely choose one, or when you have not yet decided which runtime is stage. You can develop locally against the managed services and reach the project state through ZCP, but the default deploy path has no target until you link one.
+
+Git-push delivery can still work if your project is set up that way; see [Choose how finished work ships](/zcp/workflows/delivery-handoff).
+
+When you are ready, ask the agent to link one runtime as your stage target — name the hostname so the agent does not guess. The shape becomes `local-stage` and the default deploy path starts working.
+
+## What stays your tool's job
+
+ZCP does not run your local dev server. Whether you use Vite, Valet, Docker Compose, your IDE's runner, or something else, the dev process stays your tool's responsibility. ZCP works alongside it.
+
+ZCP also does not mount Zerops runtime filesystems on your laptop. The hosted workspace gives the agent SSHFS access to runtime services; the local bridge does not. If you need to read runtime files from your machine, use [SSH](/references/networking/ssh) directly.
+
+## Capability matrix — what differs from the hosted workspace
+
+| Capability | Hosted workspace | Local agent bridge |
+|---|---|---|
+| Run agent against the project | Yes | Yes |
+| Discover services and env | Yes | Yes |
+| Deploy to a runtime | Yes (any) | Yes (linked stage only) |
+| Read runtime logs | Yes | Yes |
+| Verify URL | Yes | Yes |
+| SSHFS access to runtime files | Yes | No |
+| Manage user's local dev server | n/a (no local server) | No (your tool's job) |
+| Long-lived dev server in another container | Yes | No |
+| Reach managed services without VPN | Yes (project private network) | No (VPN required) |
+
+## Gotchas
+
+1. **VPN goes down with sleep.** When your laptop sleeps or your network changes, the VPN often drops. Bring it back with `zcli vpn up <project-id>` before the agent retries.
+2. **Each project directory needs its own `zcp init`.** State and tokens are per-project. Switching projects means switching directories.
+3. **The `.env` is a snapshot.** Regenerate after changing project env variables, not before.
+4. **`local-only` has no default deploy target.** Until you link a runtime as stage, the default deploy path refuses with a clear hint. Git-push delivery can still apply if your project is set up that way. See [Failure categories](/zcp/reference/failure-categories) for what the agent shows.
+5. **Production stays out of this loop.** The local bridge is for development and staging projects. See [Production policy](/zcp/security/production-policy).
+
+## Next steps
+
+- [Connect your coding agent](/zcp/setup/connect-agent) — Claude Code configuration details (token, sanity check).
+- [Build and verify an app](/zcp/workflows/build-and-verify-app) — the deploy and verify loop with the agent.
+- [Workspace shapes](/zcp/setup/workspace-shapes) — full taxonomy of `local-stage`, `local-only`, hosted shapes, and how stage fits.

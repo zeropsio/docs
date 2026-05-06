@@ -1,0 +1,113 @@
+---
+title: "Connect your coding agent"
+description: "Configure your MCP-aware coding agent to use ZCP against one Zerops project."
+---
+
+Configure your MCP-aware coding agent to use Zerops Control Plane (ZCP) against one Zerops project. ZCP is project-scoped: one connection equals one project.
+
+:::caution Public preview
+Zerops Control Plane (ZCP) is in public preview. Use it for development and staging projects, keep production in a separate Zerops project, and expect setup details to change.
+:::
+
+Today, ZCP supports **Claude Code**, paired with a **Claude Pro or Max subscription**. Other MCP-aware agents will follow as their integrations stabilize.
+
+## Get a project-scoped Zerops token
+
+ZCP needs a Zerops API token scoped to **one project**. Multi-project tokens and tokens with no project access are refused at startup — see [Roles & Permissions](/features/rbac) for how Zerops scopes access tokens, and [Tokens and project access](/zcp/security/tokens-and-project-access) for the ZCP-specific trust model.
+
+To generate one:
+
+1. Open [Settings → Access Tokens Management](https://app.zerops.io/settings/token-management) in the Zerops dashboard.
+2. Click **Create Token**, give it a name, and pick **Custom access per project**.
+3. Add the project the agent will operate against and set its permission to **Full access**. Create the token, copy it once, and store it like any other credential — Zerops shows the value only at creation time.
+
+The hosted workspace path injects `ZCP_API_KEY` automatically — you do not paste the token by hand. The local agent bridge stores the token in `.mcp.json` inside your project directory.
+
+## Hosted workspace — preconfigured
+
+When ZCP runs as a service inside your Zerops project (the **AI Agent** recipe environment or the **Add ZCP service** checkbox), Claude Code is preinstalled in the workspace and already connected. The terminal in code-server has Claude Code running, scoped to the project the workspace lives in. `ZCP_API_KEY` is in the container environment.
+
+There is no `.mcp.json` to write. There is no token to paste. Open the workspace from the [Zerops dashboard](https://app.zerops.io/) and start.
+
+If your Claude Code session begins cold, ask it to read ZCP status first:
+
+```text
+Read ZCP status and tell me what is in this project.
+```
+
+A working session lists the project's runtime and managed services, their state, and a sensible next step. If the agent asks you for a token or says it cannot reach ZCP, the workspace was misconfigured — open a fresh workspace from the same project and try again.
+
+## Local install — Claude Code via `.mcp.json`
+
+When ZCP runs on your laptop ([Use ZCP from your laptop](/zcp/setup/local-agent-bridge)), Claude Code reads ZCP through the `.mcp.json` file `zcp init` writes in your project directory. As long as you launch Claude Code from that directory, it picks up the connection automatically.
+
+`zcp init` produces an `.mcp.json` with this shape:
+
+```json
+{
+  "mcpServers": {
+    "zerops": {
+      "command": "zcp",
+      "args": ["serve"]
+    }
+  }
+}
+```
+
+Add your project-scoped token under an `env` block:
+
+```json
+{
+  "mcpServers": {
+    "zerops": {
+      "command": "zcp",
+      "args": ["serve"],
+      "env": {
+        "ZCP_API_KEY": "<your-project-scoped-token>"
+      }
+    }
+  }
+}
+```
+
+Gitignore `.mcp.json` so the token never leaves your machine. ZCP reads the token from this file at startup; it does not store it anywhere else.
+
+Launch Claude Code from your project root:
+
+```bash
+cd path/to/your/project
+# launch your Claude Code client; it picks up .mcp.json from the working directory
+```
+
+Claude Code starts and lists the MCP servers it found. The `zerops` server (that's the ZCP MCP server) should be in the list.
+
+Your **Claude subscription** (Pro or Max) is what runs the model behind the agent. Claude Code handles login through its own flow; ZCP does not see your subscription credentials.
+
+## Sanity check
+
+In Claude Code, run:
+
+```text
+Use ZCP to list the services in this project.
+```
+
+A working connection answers with the project's runtime and managed services and their state. If the agent says it cannot reach ZCP, see [Troubleshooting](/zcp/reference/troubleshooting) — the most common issues are token-scope mismatches and starting Claude Code from the wrong directory in local mode.
+
+## Other MCP-aware agents
+
+ZCP exposes a standard MCP server over STDIO and follows the protocol. If you already use another MCP-aware client and want to experiment, the connection details mirror the local agent bridge above — substitute your client's MCP config syntax for the `.mcp.json` shown.
+
+Today, behavior outside the documented Claude Code path is not yet covered. Setup pages for additional agents will land here as their integrations reach stable parity.
+
+## Gotchas
+
+1. **Multi-project tokens are rejected.** A token granting access to multiple projects (or no project) is refused at ZCP startup. Generate a per-project token.
+2. **Each project directory has its own `.mcp.json`.** Switching projects on your laptop means launching Claude Code from the matching directory. Otherwise it picks up the wrong ZCP connection.
+3. **The `zerops` server name is fixed.** `.mcp.json` keys the ZCP MCP server as `zerops`. Don't rename it; ZCP and Claude Code expect that key.
+4. **Hosted workspace ≠ local install.** They use the same agent and the same control plane, but the file paths and dev loop differ — see [Workspace shapes](/zcp/setup/workspace-shapes).
+
+## Next steps
+
+- [Use ZCP from your laptop](/zcp/setup/local-agent-bridge) — full local install if you skipped the hosted path.
+- [Build and verify an app](/zcp/workflows/build-and-verify-app) — the deploy and verify loop with the agent.
+- [Tokens and project access](/zcp/security/tokens-and-project-access) — token scope, rotation, and what ZCP refuses.

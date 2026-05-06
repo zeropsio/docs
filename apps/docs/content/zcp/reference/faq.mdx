@@ -1,0 +1,132 @@
+---
+title: "ZCP FAQ"
+description: "Short answers about ZCP scope, supported agents, recipes, local mode, security, zCLI, zsc, and production use."
+---
+
+Short answers about Zerops Control Plane (ZCP) — scope, supported agents, recipes, local mode, security, zCLI, zsc, and production use. Each entry routes to the canonical page that owns the topic.
+
+:::caution Public preview
+Zerops Control Plane (ZCP) is in public preview. Use it for development and staging projects, keep production in a separate Zerops project, and expect setup details to change.
+:::
+
+## Scope
+
+**What is ZCP?**
+
+ZCP is a service that runs inside (or alongside) a Zerops project and gives a coding agent — over MCP — direct, scoped access to that project's services, env vars, deploy pipeline, logs, and verify loop. See [Overview](/zcp/overview) and [How ZCP works](/zcp/concept/how-it-works).
+
+**Is ZCP a separate product from Zerops?**
+
+No. ZCP is a service you add to a Zerops project, the same way you add a Node.js runtime or a PostgreSQL service. It is part of the Zerops platform.
+
+**Does ZCP create or author Zerops recipes?**
+
+No. Recipes are Zerops-published starters. ZCP users select recipes during [Create or adopt services](/zcp/workflows/create-or-adopt-services); this section does not cover authoring or publishing them.
+
+**Can ZCP work without a coding agent?**
+
+ZCP exists to expose Zerops to a coding agent over MCP. For direct human or CI use, the right tool is [zCLI](/references/cli). See [ZCP vs zCLI](/zcp/concept/zcp-vs-zcli).
+
+## Agents
+
+**Which agents does ZCP support today?**
+
+Claude Code is the supported coding agent today, paired with a Claude subscription (Pro or Max). Other MCP-aware agents are in active development and will land as their integrations stabilize. See [Connect your coding agent](/zcp/setup/connect-agent).
+
+**Do I need a separate Claude API key, or does my subscription cover it?**
+
+Claude Code uses your Claude subscription (Pro or Max). ZCP does not see or store your subscription credentials.
+
+**Can I use my own MCP-aware client?**
+
+The MCP server ZCP exposes is standard. Other clients can connect by mirroring the `.mcp.json` shape shown in [Connect your coding agent](/zcp/setup/connect-agent). Behavior outside the documented Claude Code path is not yet covered.
+
+## Setup
+
+**Hosted workspace or local install — which should I pick?**
+
+For a fast first run, hosted. For an established local setup with your own editor, local. See [Choose your workspace](/zcp/setup/choose-workspace).
+
+**Do I install ZCP manually for the hosted workspace?**
+
+No. The hosted path adds the `zcp` service automatically — either via the recipe **AI Agent** environment or via the **Add Zerops Control Plane (ZCP) service** toggle in project creation. See [Provision a hosted workspace](/zcp/setup/hosted-workspace).
+
+**How do I install ZCP locally?**
+
+Run the install script:
+
+```bash
+curl -sSfL https://raw.githubusercontent.com/zeropsio/zcp/main/install.sh | sh
+```
+
+Then `zcp init` in your project directory. Full walkthrough: [Use ZCP from your laptop](/zcp/setup/local-agent-bridge).
+
+**What kind of Zerops token does ZCP need?**
+
+A token scoped to **one Zerops project**. Multi-project tokens and tokens with no project access are refused at startup. See [Tokens and project access](/zcp/security/tokens-and-project-access) and [Roles & Permissions](/features/rbac).
+
+## Workflows
+
+**What workflows does ZCP run?**
+
+Four named workflows: [Create or adopt services](/zcp/workflows/create-or-adopt-services), [Build and verify an app](/zcp/workflows/build-and-verify-app), [Choose how finished work ships](/zcp/workflows/delivery-handoff), and [Package a running service for reuse](/zcp/workflows/package-running-service).
+
+**Where does the first deploy happen?**
+
+Always direct, regardless of close-mode. Close-mode (`auto`, `git-push`, or `manual`) governs how subsequent changes ship. See [Build and verify an app](/zcp/workflows/build-and-verify-app).
+
+**Why does the agent stop after five deploy attempts?**
+
+If the loop has not closed in five tries, the agent escalates instead of retrying blindly. See the iterate-and-stop section in [Build and verify an app](/zcp/workflows/build-and-verify-app).
+
+## Security
+
+**Can the agent delete services or override imports without my permission?**
+
+No. `zerops_delete` requires explicit user approval in the same conversation, by service name. `zerops_import override=true` against services with prior failed builds is gated behind a structured `wouldDestroy` / `confirmDestructive` exchange. See [Destructive actions and confirmations](/zcp/security/destructive-actions).
+
+**Can the agent reach a different Zerops project?**
+
+No. ZCP authorizes one project per token; multi-project tokens are refused at startup. See [Trust model](/zcp/security/trust-model).
+
+**Where does ZCP store my token?**
+
+Hosted workspace: `ZCP_API_KEY` in the project container env, platform-injected. Local install: in the `env` block of `.mcp.json` in your project directory. See [Tokens and project access](/zcp/security/tokens-and-project-access).
+
+**How do I review what the agent did?**
+
+Through Zerops events, runtime logs, deploy/verify history, and (when close-mode is `git-push`) git history. See [Auditing agent work](/zcp/security/auditing-agent-work).
+
+## Production
+
+**Can I run ZCP in my production project?**
+
+No. The Zerops dashboard itself flags this with **"Designed for development projects — not recommended for production"**. Keep production in a separate Zerops project that does not have a `zcp` service. See [Production policy](/zcp/security/production-policy).
+
+**How does my agent's development work reach production?**
+
+Outside ZCP. A team-owned CI pipeline (or a manual `zcli push`) deploys to the production project. The agent does not bridge the two projects. See [Production policy](/zcp/security/production-policy).
+
+## Terms
+
+**ZCP, zCLI, zsc — these are different tools, right?**
+
+Yes:
+
+- **ZCP** (Zerops Control Plane) — the agent's control plane, the topic of this docs section.
+- **zCLI** — the canonical Zerops command-line client for direct human and CI use. See [zCLI](/references/cli).
+- **zsc** (Zerops Setup Control) — an in-container utility used by `zerops.yaml` build steps and SSH sessions; not part of ZCP. See [zsc](/references/zsc).
+
+See [ZCP vs zCLI](/zcp/concept/zcp-vs-zcli) for the head-to-head and [Provision a hosted workspace](/zcp/setup/hosted-workspace) for the three-way disambiguation.
+
+**Workspace shape vs service mode — which is which?**
+
+Workspace shape is a ZCP topology choice (`standard`, `dev`, `simple`, `local-stage`, `local-only`). Service `mode` is the Zerops scaling enum (`HA` / `NON_HA`) and is independent. See [Workspace shapes](/zcp/setup/workspace-shapes) and [Scaling](/features/scaling).
+
+**What's the difference between deploy success and verify success?**
+
+Deploy success means the build finished and the runtime started. Verify success means the requested behavior actually works (the agent fetched the URL and got the expected response). They are separate checks. See [Build and verify an app](/zcp/workflows/build-and-verify-app).
+
+**What is the AI Agent environment on a recipe page?**
+
+It is one of the deploy-time environments a Zerops recipe ships. Selecting **AI Agent** on the recipe page adds a `zcp` service alongside the recipe's runtime and managed services, and the deploy button label changes to `Deploy <recipe-slug>-agent`. Other environments (`Remote (CDE)`, `Local`, `Stage`, `Small Production`, `Highly-available Production`) deploy the same recipe without ZCP.

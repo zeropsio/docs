@@ -1,0 +1,99 @@
+---
+title: "Choose your workspace"
+description: "Choose whether the coding agent runs in a hosted Zerops workspace or from your local machine."
+---
+
+Choose whether the coding agent runs in a hosted Zerops workspace or from your local machine. Both paths give the agent the same Zerops Control Plane (ZCP) tools against the same project; what differs is where the agent runs and which filesystem it sees.
+
+:::caution Public preview
+Zerops Control Plane (ZCP) is in public preview. Use it for development and staging projects, keep production in a separate Zerops project, and expect setup details to change.
+:::
+
+## The short rule
+
+If you want a working agent in 15 minutes with nothing installed locally, pick the **hosted workspace**. If you already work in your own editor on your own machine and want the agent to deploy from there, pick the **local agent bridge**. The first run is friendlier in the hosted workspace; switching later is straightforward, because the agent's tools are identical in both shapes.
+
+Recipes — the pre-built starters Zerops publishes — work the same way in both. The agent picks one when it fits the request; where it runs is independent of which recipe it pulls.
+
+Today, ZCP supports **Claude Code**, paired with a **Claude Pro or Max subscription**. Other MCP-aware agents will follow as their integrations stabilize. Either path uses the same agent.
+
+## Hosted workspace
+
+Zerops adds a `zcp` service to your project. ZCP runs as a service inside the project, the agent runs in a browser-hosted VS Code (code-server) inside that service, and the editor is one click from the Zerops dashboard. There is nothing to install on your laptop.
+
+When you open the workspace, a terminal already has Claude Code running, connected to ZCP, and scoped to this project. You give the agent intent in plain language; the agent calls ZCP tools to discover services, edit files, deploy, and verify against the live URL.
+
+When this fits:
+
+- You want the fastest possible first run, including for the [Quickstart](/zcp/quickstart).
+- You are evaluating ZCP and don't want to install anything yet.
+- You want the agent to have direct filesystem access to runtime services in the project.
+- You work from multiple machines and want the same workspace to follow you.
+
+What it gives the agent:
+
+- Filesystem access to runtime services through SSHFS mounts, so the agent can read and edit files where they actually run.
+- A long-lived dev process inside another project container when the workflow needs one.
+- Project-local network reach to managed services without a VPN.
+- A clean separation between your laptop and the work — the project owns the editor, the credentials, and the running code.
+
+What it costs:
+
+- A small `zcp` service inside the project, billed like any other Zerops service.
+- An editor that lives in your browser instead of your local IDE.
+- A short trip to the Zerops dashboard to open the workspace each session.
+
+How to set it up: [Provision a hosted workspace](/zcp/setup/hosted-workspace).
+
+## Local agent bridge
+
+You install ZCP on your laptop and run `zcp init` in your project directory. The agent runs in your editor; ZCP talks to the Zerops API on your behalf. Your laptop is the development environment — not a watered-down hosted workspace, just your normal local setup with ZCP wired in.
+
+The agent edits code in your working directory, runs your usual local dev server, deploys to Zerops through ZCP, and verifies the deployed result. Managed services (the database, the cache) live in the Zerops project; your laptop reaches them over VPN with credentials ZCP writes into a local `.env`.
+
+When this fits:
+
+- You already have an established local setup (your editor, your shell, your toolchain) and want to keep it.
+- The team works from local machines and you want each developer's editor to drive its own ZCP.
+- You want to develop locally with hot reload while the agent deploys to a Zerops stage runtime.
+
+What it gives the agent:
+
+- The same ZCP tools the hosted workspace exposes, against the same project.
+- A locally generated `.env` with real credentials so your local app can connect to managed services.
+- One-command deploy from your working directory to a linked Zerops runtime.
+- Native editor speed and your existing keybindings, plugins, and workflow.
+
+What it costs:
+
+- [zCLI](/references/cli) installed on your machine and authenticated with a project-scoped token.
+- Zerops [VPN](/references/networking/vpn) up to reach managed services by hostname (databases, caches, storage). The VPN is per-machine, one project at a time.
+- A `.env` file with real secrets in your working directory. Add it to `.gitignore` immediately.
+- Your local dev server stays your tool's job. ZCP does not start, stop, or watch the local dev process. It also does not mount remote filesystems on your laptop.
+
+If your team has multiple developers, each laptop runs its own ZCP against the same project. Each developer's working directory is independent; the project, services, and managed dependencies are shared.
+
+How to set it up: [Use ZCP from your laptop](/zcp/setup/local-agent-bridge). Background on the local VPN flow: [Local development](/guides/local-development).
+
+## Decision table
+
+| Question | Hosted workspace | Local agent bridge |
+|---|---|---|
+| Where does ZCP run? | Inside the project, as a `zcp` service | On your laptop |
+| Where does the agent run? | Browser-hosted VS Code (code-server) | Your local editor |
+| Who owns the dev environment? | Zerops (the project) | You (your machine) |
+| Filesystem the agent sees | Project services via SSHFS mounts | Your local working directory |
+| Local install needed? | None | [zCLI](/references/cli) + Zerops [VPN](/references/networking/vpn) |
+| Reaches managed services via | Project-private network | VPN to the project |
+| Deploys to Zerops through | Standard Zerops [pipeline](/guides/deployment-lifecycle) | Same pipeline, pushed from your laptop |
+| Manages your local dev server? | N/A — there is no local dev server | No, that stays your tool's job |
+| Best for first run? | Yes | After you've used ZCP once |
+| Cost shape | One small `zcp` service in the project | Free locally; you still pay for the Zerops project |
+
+The agent's tool surface is identical across both shapes. What ZCP lets the agent do — discover, deploy, verify, operate, recover, hand off — is described in [What ZCP lets agents do](/zcp/concept/capabilities).
+
+## Next steps
+
+- [Provision a hosted workspace](/zcp/setup/hosted-workspace) — recommended for the first run.
+- [Use ZCP from your laptop](/zcp/setup/local-agent-bridge) — local editor, VPN, `.env` generation.
+- [Workspace shapes](/zcp/setup/workspace-shapes) — once you've picked a workspace, see how the project's runtimes map to dev, stage, simple, local-stage, or local-only.

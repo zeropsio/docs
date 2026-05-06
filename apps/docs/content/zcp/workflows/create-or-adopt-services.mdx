@@ -1,0 +1,161 @@
+---
+title: "Create or adopt services"
+description: "Use ZCP to create new Zerops services or adopt existing ones before application work starts."
+---
+
+Use Zerops Control Plane (ZCP) to create new Zerops services or adopt existing ones before application work starts.
+
+:::caution Public preview
+Zerops Control Plane (ZCP) is in public preview. Use it for development and staging projects, keep production in a separate Zerops project, and expect setup details to change.
+:::
+
+This is the first workflow because the agent needs a real runtime target before it can build or deploy anything. If your Zerops project already has runtime services, ZCP registers them so the agent can work against them. If the project is empty, ZCP creates the services first.
+
+You do not need to choose tool calls. Ask for the project shape you want. The agent should read the project, explain the route it chose, and stop this workflow when the infrastructure is known to ZCP.
+
+## What this workflow does
+
+Create-or-adopt is infrastructure-only.
+
+It answers these questions:
+
+- Which runtime services will hold application code?
+- Which managed services does the app depend on?
+- Are the services already present, or should ZCP create them?
+- Which workspace shape does the project fit: `standard`, `dev`, `simple`, `local-stage`, or `local-only`?
+- Are the services running and visible to ZCP?
+
+The boundary is strict. This workflow does not write application code, create `zerops.yaml`, run a deploy, or verify application behavior. When any of those are needed, the work moves to [Build and verify an app](/zcp/workflows/build-and-verify-app).
+
+ZCP uses the same project capabilities described in [What ZCP lets agents do](/zcp/concept/capabilities): discover services, create or import infrastructure, inspect env-var keys, check service state, and recover enough context to continue after an interruption. This page shows how those capabilities fit one outcome.
+
+For Zerops service background, see [Infrastructure](/features/infrastructure). For how managed services expose connection details to runtimes, see [Environment Variables](/guides/environment-variables).
+
+The `zcp` service is not the application. It hosts the workspace and the agent connection. The runtime target is a service such as `appdev`, `appstage`, `api`, `web`, or another service that runs your app. If the agent starts treating `zcp` as the app runtime, stop and correct the target.
+
+## Choose the safe starting path
+
+At the start of this workflow, ZCP compares the project state and the user request, then offers one of four starting paths. A good agent response names the path and the reason before changing anything. The path codes (`adopt`, `classic`, `recipe`, `resume`) are how the agent and ZCP refer to the choice; the outcome is what each path actually does for you.
+
+| Path | Use when | What ZCP does | Wrong move |
+|---|---|---|---|
+| Use existing services (`adopt`) | Runtime services already exist in the project. | Registers the existing runtimes, classifies their shape, confirms they are running, and records them as known to ZCP. | Recreating services just to begin, or treating `zcp` as the app runtime. |
+| Create a custom service plan (`classic`) | You need a custom service plan no starter covers. | Creates the runtime and managed services from an explicit plan the agent explains. | Pulling a starter that does not match the request, or writing app code before the services exist. |
+| Start from a Zerops starter (`recipe`) | The project is empty from the application point of view and the request fits a pre-built Zerops starter. | Selects a Zerops-published starter, creates its service set, and makes those services known to ZCP. | Using this path for a project that was already created from a recipe. |
+| Resume interrupted setup (`resume`) | Setup was interrupted before the previous path finished. | Reconnects to the unfinished setup and continues from the last known step. | Starting over without explaining what already exists. |
+
+### Use existing services
+
+Use the `adopt` path when the project already contains app runtime services. This includes projects created from a Zerops recipe before the agent started. The services already exist, so ZCP should not create them again.
+
+Adoption should identify the workspace shape from what is present:
+
+- `appdev` plus `appstage` usually maps to `standard`.
+- A single `appdev` runtime usually maps to `dev`.
+- A single `app` runtime usually maps to `simple`.
+- A local checkout linked to one Zerops runtime maps to `local-stage`.
+
+The agent should also distinguish runtimes from dependencies. A database, cache, object storage service, queue, or search service is a dependency. It is not the place where application code is deployed.
+
+### Create a custom service plan
+
+Use the `classic` path when the request needs a custom plan instead of a starter. This is common when you name exact hostnames, pick a runtime that no starter covers, or ask for a small bespoke service layout.
+
+The agent should propose the service plan before provisioning:
+
+- runtime type and hostname,
+- workspace shape,
+- managed dependencies,
+- stage hostname when the shape needs one,
+- which existing services should be reused.
+
+After you confirm the shape, ZCP creates the services and checks that they are visible. It still stops before app code.
+
+### Start from a Zerops starter
+
+Use the `recipe` path only when the project is empty from the application point of view and the request matches a pre-built Zerops starter. Recipes are starters Zerops publishes; the agent selects one when it fits.
+
+This nuance matters: a project that was already created from a Zerops recipe usually goes through the **use existing services** path, not the starter path. From ZCP's point of view, the runtime services already exist. The agent should adopt them, then move to application work and change the starter into what you asked for.
+
+The starter path is for creating the starter service set in an empty project, not for editing an already-created starter.
+
+### Resume interrupted setup
+
+Use the `resume` path after an interruption: a long session, browser crash, machine restart, closed terminal, or disconnected workspace.
+
+Ask the agent to continue. It should read current ZCP status before changing anything else, explain that it is resuming the interrupted setup, and continue from the last known step. You do not need to recreate the project from memory.
+
+## Pick a starting prompt that matches your situation
+
+Write the prompt in terms of the project you want, not in terms of tools. Name a route only when you already know the route you want.
+
+```text
+Create the services for a Node.js API with PostgreSQL in the standard workspace shape. Use appdev and appstage.
+```
+
+The agent should answer with the route, the target services, and the next confirmation it needs.
+
+| Situation | Starting prompt | Expected route |
+|---|---|---|
+| Project was created from a Zerops recipe and already has app services. | "Use the existing Laravel services and build a small notes app." | `adopt` |
+| Existing dev and stage runtimes. | "Adopt `appdev` and `appstage`, then tell me what shape ZCP sees." | `adopt` |
+| Existing single runtime. | "Use the existing `api` service as the app runtime." | `adopt` |
+| Empty project, custom service layout. | "Create a Bun API with PostgreSQL. I want one dev runtime and no stage yet." | `classic` |
+| Empty project, exact hosted dev and stage names. | "Create a Node.js API in the standard workspace shape using `apidev` and `apistage`." | `classic` |
+| Empty project, known starter request. | "Start from a Laravel starter with PostgreSQL and Valkey." | `recipe` |
+| Empty project, request closely matches a starter but can be customized later. | "Use a suitable Zerops starter for a small team dashboard." | `recipe` or `classic`, with an explanation |
+| Previous setup was interrupted. | "Continue the service setup I started earlier." | `resume` |
+| Project has only the `zcp` service. | "Create the app runtime and database for a simple notes app." | `classic` or `recipe`, not `adopt` |
+
+After the route is chosen, the workspace shape becomes clearer. See [Workspace shapes](/zcp/setup/workspace-shapes) for how ZCP names the edit and deploy topology.
+
+## Stop conditions — when create-or-adopt is done
+
+Stop reading this page when the agent can show that services are running and known to ZCP.
+
+Done looks like this:
+
+- The agent named the route it used.
+- Runtime services are identified and separated from managed dependencies.
+- The workspace shape is known.
+- New services, if any, are created in Zerops.
+- Existing services, if any, are adopted instead of recreated.
+- Managed services have exposed env-var keys for the runtimes to reference later.
+- The agent reports that create-or-adopt is complete.
+- No application code has been written.
+- No `zerops.yaml` has been authored for the app.
+- No deploy has run.
+
+For `standard`, expect a dev runtime plus an explicit stage runtime. The stage name is not invented from the dev name; the plan should name it.
+
+For `dev`, expect one mutable hosted runtime, usually with a `dev` suffix.
+
+For `simple`, expect one hosted runtime without a separate stage target.
+
+For `local-stage`, expect your local checkout to be the edit side and one Zerops runtime to be the stage target.
+
+For `local-only`, expect no deploy target yet. The agent can still prepare locally and work with managed-service configuration, but it cannot deploy through the default path until a runtime is linked.
+
+When the next task involves files, framework setup, `zerops.yaml`, deploys, logs, or behavior checks, continue to [Build and verify an app](/zcp/workflows/build-and-verify-app).
+
+## Common failures and what they mean
+
+| Symptom | What it usually means | What to do |
+|---|---|---|
+| The agent wants to deploy `zcp`. | It confused the workspace service with the app runtime. | Stop and name the real runtime service. |
+| The agent uses `recipe` in an already-created recipe project. | It is treating existing services as if they still need to be created. | Ask it to adopt the existing runtimes first. |
+| The agent writes application files during this workflow. | It crossed into application work too early. | Move to [Build and verify an app](/zcp/workflows/build-and-verify-app) or ask it to stop and finish service setup first. |
+| The agent creates a new service with a hostname that already exists. | The plan did not account for current project state. | Ask it to rediscover services and revise the plan. |
+| A managed service exists, but no runtime exists. | There is no app target yet. | Create or adopt a runtime before asking for application work. |
+| A service creation step fails. | The infrastructure request did not complete cleanly. | Treat it as a hard stop. The agent should explain the failure and ask for a decision; it should not keep retrying automatically. |
+| The agent cannot find env-var values. | ZCP normally reads env-var keys first and avoids exposing secret values unless troubleshooting requires it. | Ask for the expected key names and service references, not raw secrets. |
+| The agent asks you to describe every service manually. | It has not used live project discovery yet. | Ask it to inspect the project first and explain what it found. |
+| After an interruption, the agent proposes a fresh setup. | It has not checked for an unfinished run. | Ask it to resume current ZCP status before changing services. |
+
+Create-or-adopt failures do not have retry magic. Provisioning infrastructure twice without understanding the first failure can create hostname conflicts or partial service state. The agent should stop, report what failed, and wait for your decision.
+
+## Next steps
+
+- [Build and verify an app](/zcp/workflows/build-and-verify-app) — write application code, create `zerops.yaml`, deploy through Zerops, and verify behavior.
+- [Choose how finished work ships](/zcp/workflows/delivery-handoff) — decide what happens after the app works: direct deploy, git push, or manual handoff.
+- [Workspace shapes](/zcp/setup/workspace-shapes) — understand the shape ZCP assigned after services were created or adopted.

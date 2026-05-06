@@ -1,0 +1,92 @@
+---
+title: "Production policy"
+description: "Use ZCP for development and staging projects, and keep production in a separate Zerops project."
+---
+
+Use Zerops Control Plane (ZCP) for development and staging projects, and keep production in a separate Zerops project. The project that hosts the agent's workspace is not the project that hosts your live app.
+
+:::caution Public preview
+Zerops Control Plane (ZCP) is in public preview. Use it for development and staging projects, keep production in a separate Zerops project, and expect setup details to change.
+:::
+
+This is policy, not a configuration toggle. The Zerops dashboard surfaces the same guidance directly: when you toggle on **Add Zerops Control Plane (ZCP) service**, the project flags itself as **"Designed for development projects — not recommended for production"**. Treat that as load-bearing.
+
+## Public preview policy
+
+ZCP ships under the public preview model. That has two practical implications:
+
+- **Setup details may change.** The exact `.mcp.json` shape, the configuration surface, the recipe environment menu, the available agents — any of these can shift between previews. Pin ZCP to development and staging projects so a change between releases does not put a production service in transition.
+- **Errors and edge cases surface against real platform calls.** Public preview means real deploys, real services, real bills, and a real platform — not a sandbox. If a development session goes sideways, the platform shows what actually happened. That is exactly the value, and exactly why you do not aim it at production yet.
+
+When ZCP exits public preview, this page will move to a "production-readiness checklist" framing. Until then: development and staging projects only.
+
+## Separate production project
+
+Keep production in a Zerops project that does not have a `zcp` service in it. Separate the agent workspace from the running production app at the project boundary, not at the service boundary inside one project.
+
+Why a separate project, not a separate service in the same project:
+
+- **Project is the security boundary.** ZCP authorizes a single project per token (see [Trust model](/zcp/security/trust-model)). A token scoped to your development project cannot reach production by accident — even if the agent went off the rails, it cannot touch what its token does not authorize.
+- **Environment variables stay clean.** Production env values live in production's project. Development env values live in development's project. Mixing them in one project muddies which value the agent's local `.env` actually pulls in.
+- **Scaling and backup policies differ.** Production typically runs HA-mode services with longer backup retention; development typically runs NON_HA with shorter retention. Keeping them separate lets [scaling](/features/scaling) and [backup](/features/backup) policies stay distinct without compromise.
+
+In practice, that means at least two Zerops projects:
+
+- A development (or development + staging) project where ZCP runs and the agent works.
+- A production project that does not have ZCP added, where deploys come from your CI or release pipeline.
+
+## Stage as proof
+
+Stage in the development project is not a formality. It is the place where the agent proves the change works on the same shape your production runs — same runtime version, same managed services, same deploy pipeline — before the change is promoted.
+
+Use stage as the production-shape rehearsal:
+
+- The agent develops on dev (`appdev` in the `standard` workspace shape).
+- After dev verifies, the agent cross-deploys to stage (`appstage`).
+- Stage runs the real start command — not the dev hot-reload. It exercises the same build, deploy, and verify path production will use.
+- A green stage is the signal that the change is ready to leave the development project.
+
+If you skip stage and try to promote dev work directly to production, you skip the layer where production-shaped failures show up.
+
+## Promotion path
+
+The handoff from development to production is **outside ZCP**. When stage verifies, ZCP's role in the development project is done; from there:
+
+- A team-owned **CI pipeline** picks up the merged commit (or a release tag) and deploys to the production project.
+- Or a human runs `zcli push` against production manually, using a token scoped to production.
+- Or [GitHub Actions](/references/github-integration) on the production repo authenticates with a separate `ZEROPS_TOKEN` scoped to the production project (different secret from the development workflow's `ZEROPS_TOKEN`).
+
+The agent does not bridge the two projects. ZCP in the development project has no token for production, and a development token would be refused if used elsewhere. Promotion is a deliberate human or pipeline step.
+
+For the broader CI/CD reference, see [CI/CD with Zerops](/guides/ci-cd).
+
+## Team workflows
+
+Several layouts map cleanly to this policy:
+
+| Layout | Dev project | Staging | Production |
+|---|---|---|---|
+| Solo developer | One project with ZCP and the dev runtimes | Same project (`standard` workspace shape gives `appdev` + `appstage`) | Separate project, no ZCP |
+| Small team, shared dev | One shared dev project with ZCP, runtimes per feature | Same project's stage runtimes | Separate production project |
+| Larger team, isolated dev | One dev project per developer, each with its own ZCP | One shared staging project (with or without ZCP) | Separate production project, no ZCP |
+| Multi-env production | Same as above for dev/staging | Shared staging project | One production project per environment (region, customer, etc.) |
+
+Pick the layout that maps to how your team thinks about isolation. The principle is the same across all of them: ZCP sits in development and staging projects only; production is its own project, with its own token, its own pipeline, and no `zcp` service.
+
+## What not to do
+
+| Anti-pattern | Why it is wrong |
+|---|---|
+| Add a `zcp` service to your production project. | The agent gets project-scoped power over production. The dashboard's own guidance flags this. |
+| Reuse a development `ZCP_API_KEY` against production. | The token is project-scoped — using it against another project either fails outright or breaks the boundary. |
+| Treat dev verification as production approval. | Dev is a hot-reload runtime; stage is the production-shape rehearsal. Skip stage and you skip the rehearsal. |
+| Run the agent's deploys directly into production from a development session. | Production deploys come from the production project's pipeline, not from the development workspace. |
+| Disable the dashboard's preview warning by silencing it locally. | The warning is the canonical guidance from the platform owner, not a hint. Listen to it. |
+
+## Next steps
+
+- [Trust model](/zcp/security/trust-model) — the project boundary that makes this separation enforceable.
+- [Tokens and project access](/zcp/security/tokens-and-project-access) — how project-scoped tokens prevent cross-project leakage.
+- [Auditing agent work](/zcp/security/auditing-agent-work) — review what the agent did in development before promoting to production.
+- [Backup](/features/backup) — the production data safety net that operates outside ZCP.
+- [Build and verify an app](/zcp/workflows/build-and-verify-app) — the dev/stage loop this policy assumes.
