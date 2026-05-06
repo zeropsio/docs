@@ -1,0 +1,121 @@
+---
+title: ZCP Agent Workflow Reference
+description: Workflow contracts a coding agent operating inside ZCP follows — bootstrap routes, the develop flow, verification layers, failure categories, runtime modes, and delivery contracts.
+---
+
+This page documents the workflow contracts an agent operating inside ZCP follows during a session. The shape of a session is intentionally explicit so you can predict what happens next, audit what happened, and recover when something goes wrong.
+
+For background on what ZCP is and how it fits into a project, see [Infrastructure Platform for Coding Agents](/features/coding-agents).
+
+## Scope: three layers
+
+Work inside a ZCP-equipped project happens across three layers. Distinguishing them matters — most workflow mistakes come from confusing them.
+
+| Layer | What it is | What changes go here |
+|---|---|---|
+| ZCP control service | The agent's workspace itself (`zcp@1`). Carries the integration token, hosts the MCP server, runs the agent. | None — code changes don't target ZCP. |
+| Target runtime service | The app's runtime — `appdev`, `appstage`, `app`, etc. SSHFS-mounted into ZCP. | App files, `zerops.yml`, deploys. |
+| Managed services | Databases, caches, search, queues, object storage. Provide connection details. | Schema migrations and data, never code. |
+
+The most common mistake is targeting the ZCP control service as the deploy destination. ZCP isn't the application — it's the place the agent operates from.
+
+## Bootstrap routes
+
+Before any code change, the agent establishes what's already in the project and picks one of four routes. The agent should tell you which route it picked.
+
+| Route | Use when | Wrong signal |
+|---|---|---|
+| `adopt` | App runtime services already exist (the most common case, including projects created from a Zerops recipe). | Recreating services that already exist, or treating the ZCP control service as the target. |
+| `recipe` | Project is empty (or has only ZCP) and the request matches a known stack. | Deploying the unchanged starter as if it were the finished product. |
+| `classic` | Project is empty and the request needs a custom service plan. | Writing app code before service ownership is settled. |
+| `resume` | A previous session was interrupted mid-bootstrap. | Starting from scratch without acknowledging existing state. |
+
+Bootstrap completes when services are known and mounted; develop follows from there.
+
+## Develop flow
+
+The develop phase is where the actual change happens. The flow is a fixed sequence so the agent's progress is auditable:
+
+1. **Name the runtime scope.** State which runtime the change targets (`appdev`, `appstage`, etc.). For `appdev` + `appstage` pairs, work scoped to `appdev` should not touch `appstage` unless promotion was explicitly requested.
+2. **Build the requested change.** Code edits and `zerops.yml` updates as needed.
+3. **Deploy to the in-scope runtime.** First deploy uses the direct path; delivery style is decided later.
+4. **Serve the app.** Start or restart the process if needed — dynamic dev runtimes may need explicit start/restart after deploy.
+5. **Verify runtime reachability.** Platform-level health check.
+6. **Verify the requested behavior.** Application-level check against the actual endpoint, UI, or stage URL.
+7. **Fix and redeploy if needed.** Categorize the failure (see below) and retry with new evidence rather than the same attempt with hope.
+
+Steps 5 and 6 are not interchangeable — a green deploy with a 500 on the relevant route is not done.
+
+## Verification layers
+
+Verification has two distinct layers:
+
+- **Runtime reachability.** The platform's own health check on the runtime container — process is alive, port is bound, the service answers.
+- **Requested behavior.** The agent makes a real request against the actual endpoint, UI, or stage URL the user cares about. Status codes alone aren't sufficient if the body is wrong.
+
+Both must pass before a session reports completion. The platform-level check tells you the runtime is alive; the application-level check tells you it does what was asked.
+
+## Failure categories
+
+When something fails, the agent labels the failure with one of these tags. The tag drives the retry strategy and is what you read in the session log.
+
+| Category | What it means | Typical fix direction |
+|---|---|---|
+| `build` | Build phase failed (compile error, missing dependency, build command exit non-zero). | Inspect build log; fix `zerops.yml` build steps or source. |
+| `start` | Container started but the process crashed or exited. | Inspect runtime log; fix start command, init commands, or app entry. |
+| `verify` | Process started but reachability or behavior verification failed. | Distinguish between unreachable port and wrong response; fix accordingly. |
+| `network` | Service-to-service network problem (hostname unresolved, port closed, VPN-only access expected). | Confirm hostnames, ports, isolation settings. |
+| `config` | `zerops.yml`, env vars, or service settings inconsistent with what the code expects. | Reconcile config with code; document the contract. |
+| `credential` | Auth failure against a managed service or external API. | Rotate or correct credentials; check `envIsolation`. |
+| `other` | Doesn't fit the categories above. | Log details and escalate; agent shouldn't loop on unknown failures. |
+
+The point of categorization is that retries should consume new evidence — repeating the same deploy with the same code on a `start` failure is a bug in the loop, not a recovery strategy.
+
+## Modes
+
+A project's runtime shape determines what "deploy" and "promote" mean during the develop flow.
+
+| Mode | Shape | Use case |
+|---|---|---|
+| `standard` | Dev runtime + stage runtime (e.g. `appdev` + `appstage`). | Projects that want a separation between development and production-like environments. |
+| `dev` | One mutable development runtime. | Fast experimentation; no separate staging. |
+| `simple` | Single runtime, no dev/stage pair. | Small apps, static sites, simple APIs. |
+
+In `standard` mode, **stage is a promotion target only**. Changes scoped to `appdev` don't automatically reach `appstage`; promotion happens when the user asks for it. Conflating the two is the most common semantic error in `standard` projects.
+
+## Delivery contracts
+
+After a verified deploy, the agent picks a contract that describes how *future* changes will be delivered. This isn't a flag that affects the current work — it's an agreement about what comes next.
+
+| Contract | Meaning |
+|---|---|
+| `auto` | Future work continues on the direct Zerops deploy path. |
+| `git-push` | Future work is committed and pushed to a configured remote; the resulting build is observed via webhook or GitHub Actions. |
+| `manual` | A human or external CI takes over delivery from here. |
+
+For `git-push`, the agent should observe the build result (webhook or Actions run) and record it before reporting the session complete. A push without a verified build result is not a finished session.
+
+## Practical rules
+
+A few rules of thumb that shape correct sessions:
+
+- **Existing recipe projects** — adopt existing services rather than recreating them.
+- **Bootstrap before develop** — services must be known and mounted before the develop flow starts.
+- **First deploy uses the direct path** — delivery style is decided after the first deploy is verified, not before.
+- **Dynamic dev runtimes** — may need explicit start, restart, or process inspection after deploy.
+- **Built-in webserver** — runtimes that ship with one don't need a separate dev-server step.
+- **Runtime health vs requested behavior** — platform health checks and feature verification are not the same thing; both must pass.
+- **Completion evidence** — a finished session shows a verified deploy on the in-scope runtime, *or* a clearly-stated blocker the user can act on.
+
+## Auditing a session
+
+A session is well-shaped if you can answer all of these from its log:
+
+- Whether existing or new services were used (route).
+- Which runtime scope, mode, and route were chosen.
+- Where bootstrap ended and develop began.
+- Whether the dev process started or was deliberately skipped.
+- What URL, endpoint, or visible behavior proved success.
+- Which delivery contract governs future changes.
+
+If any of those are unclear, the session under-explained itself — a fix-it-next-time signal, not a correctness failure.

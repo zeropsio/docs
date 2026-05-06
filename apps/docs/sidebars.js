@@ -140,6 +140,24 @@ module.exports = {
       },
       className: 'homepage-sidebar-item',
     },
+    {
+      type: 'doc',
+      id: 'features/local-remote-development',
+      label: 'Local & Remote Development',
+      customProps: {
+        sidebar_icon: 'computer-desktop',
+      },
+      className: 'homepage-sidebar-item',
+    },
+    {
+      type: 'doc',
+      id: 'features/coding-agents',
+      label: 'Infrastructure for Coding Agents',
+      customProps: {
+        sidebar_icon: 'sparkles',
+      },
+      className: 'homepage-sidebar-item',
+    },
 //    {
 //      type: 'html',
 //      value: 'Perfectly suited for',
@@ -552,6 +570,15 @@ module.exports = {
           type: 'doc',
           label: 'zsc',
           id: 'references/zsc',
+          customProps: {
+            sidebar_icon: 'command-line',
+          },
+          className: 'homepage-sidebar-item',
+        },
+        {
+          type: 'zcp',
+          label: 'zcp',
+          id: 'references/agent-workflow',
           customProps: {
             sidebar_icon: 'command-line',
           },
