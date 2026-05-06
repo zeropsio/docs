@@ -1,5 +1,5 @@
 ---
-title: "Deploy with a coding agent in 15 minutes"
+title: "Deploy with a coding agent"
 description: "Use a prepared Zerops starter, connect a coding agent, deploy through ZCP, and verify the running app."
 ---
 
@@ -13,18 +13,18 @@ Zerops Control Plane (ZCP) is in public preview. Use it for development and stag
 
 - A Zerops account with permission to create a project. [Sign up](https://app.zerops.io/) if you don't have one.
 - A **Claude subscription** (Pro or Max). Claude Code is the supported coding agent for this Quickstart and uses your subscription to run the work.
-- About 15 minutes of focused time.
 
 Claude Code runs preconfigured inside the hosted workspace — no local install needed.
 
-This Quickstart uses the Laravel showcase as the canonical first run because it exercises every part of the platform (runtime + queue worker + Postgres + Valkey + object storage). If you'd prefer a lighter starter — Node, Bun, Python — pick any recipe in the [catalog](https://app.zerops.io/recipes) with the **AI Agent** environment selected; the rest of this page works the same way against a smaller service set.
+## Pick a recipe and deploy
 
-## Create the starter project
+1. Open the [Zerops recipes catalog](https://app.zerops.io/recipes) and pick the recipe that matches what you want to build — Node, Bun, Python, Go, Rust, PHP, Laravel, NestJS, Next.js, Static, and more are ready to go. There are dozens of starters covering common stacks.
+2. On the recipe page, select the **AI Agent** environment from the environment selector. The deploy button label updates to include `-agent` (for example **Deploy laravel-showcase-agent**).
+3. Click the deploy button. Zerops provisions the project.
 
-1. Open the [Laravel showcase recipe](https://app.zerops.io/recipes/laravel-showcase?environment=ai-agent). The page opens with the **AI Agent** environment already selected.
-2. Click **Deploy laravel-showcase-agent**. Zerops provisions the project.
+The **AI Agent** environment is what tells the platform to add a `zcp` service alongside the recipe's runtime and managed services, so the agent has a workspace inside the project from the first second. You don't install ZCP — the recipe ships it.
 
-The recipe ships a Laravel app and the full set of services it depends on. With the **AI Agent** environment, Zerops also adds a `zcp` service alongside, so the agent has a workspace inside the project from the first second:
+The rest of this page narrates the [Laravel showcase](https://app.zerops.io/recipes/laravel-showcase?environment=ai-agent) as one worked example because it exercises every part of the platform (runtime + queue worker + Postgres + Valkey + object storage). With the **AI Agent** environment selected, that recipe provisions:
 
 - `appdev` — Laravel + Nginx (PHP 8.4) dev runtime; the agent edits and deploys code here
 - `appstage` — Laravel + Nginx stage runtime; promotion target after `appdev` is verified
@@ -34,17 +34,17 @@ The recipe ships a Laravel app and the full set of services it depends on. With 
 - `storage` — S3-compatible object storage
 - `zcp` — the Zerops Control Plane service that runs the MCP server and hosts the workspace
 
-You don't install ZCP. The recipe ships it.
+If you picked a different recipe, the service names and runtimes will differ but the steps below work the same way — adapt the agent prompt to the stack you chose.
 
 ## Open the workspace
 
 When the project finishes provisioning, open the **zcp** service in the Zerops dashboard and click the workspace link. A browser-hosted VS Code (code-server) opens. The terminal in the bottom panel already has Claude Code running, connected to ZCP, and scoped to this project.
 
-If you prefer your local IDE, see [Use ZCP from your laptop](/zcp/setup/local-agent-bridge) — but for the first 15-minute run, use the in-browser workspace.
+If you prefer your local IDE, see [Use ZCP from your laptop](/zcp/setup/local-agent-bridge) — but for the first run, use the in-browser workspace.
 
 ## Give the agent the prompt
 
-In the Claude Code terminal, paste:
+In the Claude Code terminal, paste a prompt that asks for a small concrete change against the recipe you picked. The example below targets the Laravel showcase; adapt the stack-specific bits if you started elsewhere:
 
 ```text
 Use ZCP to turn this starter into a small team notes app. Keep it simple: list notes, add a note, store notes in PostgreSQL, deploy it, verify the public URL, and tell me what changed.
@@ -87,14 +87,13 @@ That loop is what ZCP exists to enable.
 
 ## Next steps
 
-- [How ZCP works](/zcp/concept/how-it-works) — the mental model behind that loop.
-- [What ZCP lets agents do](/zcp/concept/capabilities) — the full capability surface, by job.
+- [How ZCP works](/zcp/concept/how-it-works) — the mental model and the full capability surface, by job.
 - [Choose how finished work ships](/zcp/workflows/delivery-handoff) — when this small app is real, decide whether changes go through git, CI, or direct deploy.
 - [Use ZCP from your laptop](/zcp/setup/local-agent-bridge) — same flow, your local editor.
 
 ## Gotchas
 
 1. **The deploy button label is environment-specific.** On the recipe page, picking the **AI Agent** environment changes the button to `Deploy <recipe-slug>-agent`. If the button still says `Deploy <recipe-slug>` (no `-agent` suffix), the AI Agent environment is not selected and ZCP will not be added. Pick the environment first, then deploy.
-2. **The first deploy goes through `appdev`.** If the agent skips dev and tries stage first, that is a wrong path — see [Workspace shapes](/zcp/setup/workspace-shapes) for why.
+2. **The first deploy goes through `appdev`.** If the agent skips dev and tries stage first, that is a wrong path — see [workspace topology in Choose your workspace](/zcp/setup/choose-workspace#workspace-topology--what-the-agent-recognizes-after-you-pick) for why.
 3. **A successful deploy with a broken page is not "done".** ZCP separates deploy success from verify success precisely because deploys can succeed and the app can still 500 on the route you care about.
 4. **Production lives in a different project.** The provisioning UI flags this with **"Designed for development projects — not recommended for production"**. Do not run this Quickstart in a project that hosts your production app. See [Production policy](/zcp/security/production-policy).

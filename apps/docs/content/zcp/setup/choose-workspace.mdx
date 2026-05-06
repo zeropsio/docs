@@ -1,9 +1,9 @@
 ---
 title: "Choose your workspace"
-description: "Choose whether the coding agent runs in a hosted Zerops workspace or from your local machine."
+description: "Pick whether the coding agent runs in a hosted Zerops workspace or from your local machine, and recognize the project topology the agent picks up."
 ---
 
-Choose whether the coding agent runs in a hosted Zerops workspace or from your local machine. Both paths give the agent the same Zerops Control Plane (ZCP) tools against the same project. What differs is where the agent runs, which filesystem it sees, and — importantly — the safety profile.
+Pick whether the coding agent runs in a hosted Zerops workspace or from your local machine. Both paths give the agent the same Zerops Control Plane (ZCP) tools against the same project. What differs is where the agent runs, which filesystem it sees, and — importantly — the safety profile.
 
 ## The short rule
 
@@ -70,7 +70,7 @@ If your team has multiple developers, each laptop runs its own ZCP against the s
 
 How to set it up: [Use ZCP from your laptop](/zcp/setup/local-agent-bridge). Background on the local VPN flow: [Local development](/guides/local-development).
 
-## Decision table
+## Hosted vs local at a glance
 
 | Question | Hosted workspace | Local agent bridge |
 |---|---|---|
@@ -85,7 +85,25 @@ How to set it up: [Use ZCP from your laptop](/zcp/setup/local-agent-bridge). Bac
 | Best for first run? | Yes | After you've used ZCP once |
 | Cost shape | One small `zcp` service in the project | Free locally; you still pay for the Zerops project |
 
-The agent's tool surface is identical across both shapes. What ZCP lets the agent do — discover, deploy, verify, operate, recover, hand off — is described in [What ZCP lets agents do](/zcp/concept/capabilities).
+The agent's tool surface is identical across both shapes. What ZCP lets the agent do — discover, deploy, verify, operate, recover, hand off — is described in [How ZCP works](/zcp/concept/how-it-works).
+
+## Workspace topology — what the agent recognizes after you pick
+
+Once hosted-vs-local is decided, the agent reads the project state and identifies a workspace topology. You almost never pick this directly — it's the agent telling you which combination of *where files live* and *whether there's a separate stage* it found in your project. The names show up in agent responses; this section is for understanding what they mean.
+
+| Topology | When | Typical names you'll see |
+|---|---|---|
+| Dev runtime plus an explicit stage runtime | You want a separate target the agent verifies before promoting work | `appdev` + `appstage`. Agent calls this `standard`. |
+| One mutable dev runtime, no stage yet | You want a single iteration target without splitting dev from stage | `appdev` (or similar). Agent calls this `dev`. |
+| One runtime, no dev/stage split | Small apps, demos, static sites | `app` (or similar). Agent calls this `simple`. |
+| Local checkout with one Zerops runtime as the stage target | You develop locally with hot reload and deploy to a Zerops stage runtime | The local checkout + a linked Zerops runtime. Agent calls this `local-stage`. |
+| Local checkout, no Zerops runtime linked yet | The project is local-only or has only managed services | The local checkout. Agent calls this `local-only`. |
+
+Stage is a deploy target for dev and review, not production. Production lives in a separate Zerops project (see [Production policy](/zcp/security/production-policy)).
+
+The stage hostname is **explicit**. The agent does not invent it from the dev hostname — `appstage` next to `appdev` is one example, not a rule. The confirmed project state or setup plan supplies the stage hostname, and the agent uses what is named there.
+
+**Workspace topology is not service scaling mode.** Workspace shape (`standard`, `dev`, `simple`, `local-stage`, `local-only`) is ZCP's name for the project topology. Zerops service `mode` (`HA`, `NON_HA`) is the scaling shape of an individual managed service — see [Scaling](/features/scaling). The two are independent: a `standard` workspace can use `NON_HA` services, a `simple` workspace can include managed services configured as `HA`.
 
 ## A note on developer dev modes
 
@@ -95,4 +113,4 @@ Choosing where the agent runs is a different question from choosing where you, t
 
 - [Provision a hosted workspace](/zcp/setup/hosted-workspace) — recommended for the first run.
 - [Use ZCP from your laptop](/zcp/setup/local-agent-bridge) — local editor, VPN, `.env` generation.
-- [Workspace shapes](/zcp/setup/workspace-shapes) — once you've picked, see how the project's runtimes map to one runtime or a dev/stage pair.
+- [Build and verify an app](/zcp/workflows/build-and-verify-app) — use the chosen workspace in the deploy and verify loop.

@@ -11,6 +11,8 @@ Zerops Control Plane (ZCP) is in public preview. Use it for development and stag
 
 The local agent bridge is for developers who already have a comfortable local setup — your editor, your shell, your dev server — and want a coding agent that can drive Zerops without giving up your machine. If you are evaluating ZCP for the first time, the [hosted workspace](/zcp/setup/hosted-workspace) is a faster start.
 
+You don't need ZCP to develop locally against a Zerops project. `zcli vpn up <project-id>` is enough to reach managed services by hostname from your laptop and run your dev process against them — see [Local & Remote Development](/guides/local-development) for the platform-side picture. ZCP is what you add when you also want a coding agent operating the project from the same machine: discovering services, generating credentials, deploying, reading logs, verifying.
+
 :::caution Supervise the agent client
 The local bridge runs the agent on your dev machine. ZCP itself stays project-scoped, but the agent process inherits your user — what your client (Claude Code, etc.) does with file edits, shell commands, and other tools is decided by your client's permissions, not ZCP's. Set those permissions accordingly. See [Trust model](/zcp/security/trust-model) for the full picture.
 :::
@@ -19,8 +21,18 @@ The local bridge runs the agent on your dev machine. ZCP itself stays project-sc
 
 - A Zerops project. Create one from the [Zerops dashboard](https://app.zerops.io/dashboard/project-add) or from a [recipe](https://app.zerops.io/recipes).
 - [zCLI](/references/cli) installed on your machine and authenticated.
-- A **project-scoped Zerops token**. Multi-project tokens are refused — see [Tokens and project access](/zcp/security/tokens-and-project-access).
-- A **Claude subscription** (Pro or Max) and Claude Code installed locally.
+- A **project-scoped Zerops token** (steps below). Multi-project tokens are refused.
+- A **Claude subscription** (Pro or Max) and Claude Code installed locally. Claude Code handles login through its own flow; ZCP does not see your subscription credentials.
+
+## Get a project-scoped Zerops token
+
+ZCP needs a Zerops API token scoped to **one project**. To generate one:
+
+1. Open [Settings → Access Tokens Management](https://app.zerops.io/settings/token-management) in the Zerops dashboard.
+2. Click **Create Token**, give it a name, and pick **Custom access per project**.
+3. Add the project the agent will operate against and set its permission to **Full access**. Create the token, copy it once, and store it like any other credential — Zerops shows the value only at creation time.
+
+For the full token shape, where it lives, and rotation rules, see [Tokens and project access](/zcp/security/tokens-and-project-access).
 
 ## Install ZCP
 
@@ -30,19 +42,7 @@ Install the `zcp` binary on your machine:
 curl -sSfL https://raw.githubusercontent.com/zeropsio/zcp/main/install.sh | sh
 ```
 
-The script downloads the latest release for your platform into `~/.local/bin` (or `/usr/local/bin` if run as root) and makes it executable. Pin a specific version by passing the tag:
-
-```bash
-curl -sSfL https://raw.githubusercontent.com/zeropsio/zcp/main/install.sh | sh -s v0.1.0
-```
-
-Verify the install:
-
-```bash
-zcp version
-```
-
-You should see the ZCP version and build info. If `zcp` is not on your `PATH` afterwards, make sure `~/.local/bin` is in `PATH` and reload your shell.
+The script downloads the latest release for your platform into `~/.local/bin` (or `/usr/local/bin` if run as root). Verify with `zcp version`. If `zcp` is not on your `PATH`, make sure `~/.local/bin` is in `PATH` and reload your shell.
 
 ## Initialize ZCP in your project directory
 
@@ -82,6 +82,25 @@ Re-running `zcp init` refreshes the generated files. `CLAUDE.md` preserves your 
 
 Gitignore `.mcp.json` so the token never leaves your machine. ZCP reads the token from this file at startup and does not store it anywhere else.
 
+Launch Claude Code from your project root so it picks up `.mcp.json` from the working directory:
+
+```bash
+cd path/to/your/project
+# launch your Claude Code client
+```
+
+Claude Code starts and lists the MCP servers it found. The `zerops` server (that's the ZCP MCP server) should be in the list.
+
+### Sanity check
+
+Once Claude Code is running, verify the connection:
+
+```text
+Use ZCP to list the services in this project.
+```
+
+A working connection answers with the project's runtime and managed services and their state. If the agent says it cannot reach ZCP, see [Troubleshooting](/zcp/reference/troubleshooting) — the most common issues are token-scope mismatches and starting Claude Code from the wrong directory.
+
 ## Connect the project VPN
 
 ZCP reaches managed services (databases, caches, storage) through the Zerops project [VPN](/references/networking/vpn). Bring it up with zCLI:
@@ -104,13 +123,13 @@ Ask Claude Code to generate the env file from your project:
 Use ZCP to generate a .env file for my local app.
 ```
 
-ZCP reads the project's services, resolves env-template references (the `${hostname_var}` syntax used in `zerops.yaml`), and writes a `.env` in your working directory. Your local app reads the same hostnames and credentials it would see when deployed, just over VPN.
+ZCP reads the project's services, resolves env-template references (the `${hostname_var}` syntax used in `zerops.yaml`), and writes a `.env` in your working directory. Cross-service references in compound values resolve recursively — for example `DATABASE_URL=postgres://${db_user}:${db_password}@${db_hostname}:${db_port}/${db_dbName}` lands as a fully-resolved connection string. Your local app reads the **same hostnames and credentials it would see when deployed** to Zerops, just reached over VPN instead of the project's private network. No mocks, no Docker Compose drift between dev and prod.
 
-The `.env` is a snapshot, not a live link. Regenerate it after changing project env variables.
+The `.env` is a snapshot, not a live link. Regenerate after changing project env variables.
 
 ## Pick a deploy target
 
-Local mode has two shapes, depending on how the project is set up. See [Workspace shapes](/zcp/setup/workspace-shapes) for the full taxonomy.
+Local mode has two shapes, depending on how the project is set up. See [workspace topology in Choose your workspace](/zcp/setup/choose-workspace#workspace-topology--what-the-agent-recognizes-after-you-pick) for the full taxonomy.
 
 ### `local-stage` — one Zerops runtime is your stage
 
@@ -137,13 +156,15 @@ For the full hosted-vs-local comparison, see [Choose your workspace](/zcp/setup/
 ## Gotchas
 
 1. **VPN goes down with sleep.** When your laptop sleeps or your network changes, the VPN often drops. Bring it back with `zcli vpn up <project-id>` before the agent retries.
-2. **Each project directory needs its own `zcp init`.** State and tokens are per-project. Switching projects means switching directories.
-3. **The `.env` is a snapshot.** Regenerate after changing project env variables, not before.
-4. **`local-only` has no default deploy target.** Until you link a runtime as stage, the default deploy path refuses with a clear hint. Git-push delivery can still apply if your project is set up that way. See [Failure categories](/zcp/reference/failure-categories) for what the agent shows.
-5. **Production stays out of this loop.** The local bridge is for development and staging projects. See [Production policy](/zcp/security/production-policy).
+2. **Each project directory needs its own `zcp init`.** State and tokens are per-project. Switching projects on your laptop means switching directories — Claude Code picks up the wrong ZCP connection if you launch from the wrong root.
+3. **Multi-project tokens are rejected at startup.** A token granting access to multiple projects (or no project) is refused. Generate a per-project token (steps above).
+4. **The `zerops` server name is fixed.** `.mcp.json` keys the ZCP MCP server as `zerops`. Don't rename it; ZCP and Claude Code expect that key.
+5. **The `.env` is a snapshot.** Regenerate after changing project env variables, not before.
+6. **`local-only` has no default deploy target.** Until you link a runtime as stage, the default deploy path refuses with a clear hint. Git-push delivery can still apply if your project is set up that way. See [Troubleshooting](/zcp/reference/troubleshooting) for what the agent shows.
+7. **Production stays out of this loop.** The local bridge is for development and staging projects. See [Production policy](/zcp/security/production-policy).
 
 ## Next steps
 
-- [Connect your coding agent](/zcp/setup/connect-agent) — Claude Code configuration details (token, sanity check).
 - [Build and verify an app](/zcp/workflows/build-and-verify-app) — the deploy and verify loop with the agent.
-- [Workspace shapes](/zcp/setup/workspace-shapes) — full taxonomy of `local-stage`, `local-only`, hosted shapes, and how stage fits.
+- [Tokens and project access](/zcp/security/tokens-and-project-access) — token scope, rotation, and what ZCP refuses.
+- [Choose your workspace](/zcp/setup/choose-workspace) — hosted-vs-local + workspace topology reference.

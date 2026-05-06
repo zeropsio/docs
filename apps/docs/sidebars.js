@@ -188,12 +188,6 @@ module.exports = {
       items: [
         {
           type: 'doc',
-          id: 'zcp/concept/capabilities',
-          label: 'What ZCP lets agents do',
-          className: 'homepage-sidebar-item',
-        },
-        {
-          type: 'doc',
           id: 'zcp/concept/zcp-vs-zcli',
           label: 'ZCP vs zCLI',
           className: 'homepage-sidebar-item',
@@ -205,26 +199,14 @@ module.exports = {
       label: 'Setup',
       link: {
         type: 'doc',
-        id: 'zcp/setup/workspace-shapes',
+        id: 'zcp/setup/choose-workspace',
       },
       className: 'homepage-sidebar-item',
       items: [
         {
           type: 'doc',
-          id: 'zcp/setup/choose-workspace',
-          label: 'Choose your workspace',
-          className: 'homepage-sidebar-item',
-        },
-        {
-          type: 'doc',
           id: 'zcp/setup/hosted-workspace',
           label: 'Provision a hosted workspace',
-          className: 'homepage-sidebar-item',
-        },
-        {
-          type: 'doc',
-          id: 'zcp/setup/connect-agent',
-          label: 'Connect your coding agent',
           className: 'homepage-sidebar-item',
         },
         {
@@ -304,20 +286,14 @@ module.exports = {
       label: 'Reference',
       link: {
         type: 'doc',
-        id: 'zcp/reference/faq',
+        id: 'zcp/reference/troubleshooting',
       },
       className: 'homepage-sidebar-item',
       items: [
         {
           type: 'doc',
-          id: 'zcp/reference/failure-categories',
-          label: 'Failure categories',
-          className: 'homepage-sidebar-item',
-        },
-        {
-          type: 'doc',
-          id: 'zcp/reference/troubleshooting',
-          label: 'Troubleshooting',
+          id: 'zcp/reference/faq',
+          label: 'ZCP FAQ',
           className: 'homepage-sidebar-item',
         },
       ],

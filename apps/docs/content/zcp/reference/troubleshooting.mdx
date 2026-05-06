@@ -1,15 +1,98 @@
 ---
 title: "Troubleshooting"
-description: "Diagnose common ZCP problems with deploys, logs, public URLs, tokens, VPN, and workflow state."
+description: "Diagnose ZCP problems by failure category or by symptom — deploys, logs, public URLs, tokens, VPN, workflow state."
 ---
 
-Diagnose common Zerops Control Plane (ZCP) problems with deploys, logs, public URLs, tokens, VPN, and workflow state. This page is symptom-driven — find the symptom that matches what you are seeing and follow the concrete next check. For a category-driven view of deploy failures (`build`, `start`, `verify`, `network`, `config`, `credential`, `other`), see [Failure categories](/zcp/reference/failure-categories).
+Diagnose Zerops Control Plane (ZCP) problems two ways. If the agent already classified the failure (`build`, `start`, `verify`, `network`, `config`, `credential`, `other`), [start from a failure category](#start-from-a-failure-category). If you see specific behavior but no clean classification, [start from a symptom](#start-from-a-symptom).
 
 **Lost the thread of the session?** Ask the agent: `Read ZCP status and tell me where this project stands.` Status rebuilds the agent's view from live platform state in one prompt — full recovery details in [Workflow state and session recovery](#workflow-state-and-session-recovery) below.
 
-## Deploy errors
+## Start from a failure category
 
-A failed deploy carries a structured failure classification. The agent reads that first; you can route to the matching category if you want to read it yourself. The full classification reference is at [Failure categories](/zcp/reference/failure-categories).
+Every failed deploy carries a structured classification: a category, a likely cause, a suggested next action. The agent reads the classification before raw logs because the category points at the recovery path. Categories are **recovery-path-shaped**, not blame-shaped — `network` does not mean "the network is broken"; it means the first move is connectivity, VPN, SSH, DNS, or platform reachability rather than editing application code.
+
+Each subsection below: what it means, where to read first, the first recovery move, one example.
+
+### build
+
+The Zerops build pipeline failed before a runtime container could start.
+
+**Read first.** The build process logs (the `stack.build` process). Build logs live separately from runtime logs; runtime logs will not explain a failed build.
+
+**Recovery.** Fix `buildCommands`, dependency manifests, lock files, or the build working directory. If the failure is memory pressure, increase build resources or split the heavy build step. Redeploy after the fix.
+
+**Example.** "Build failed for `appdev` — `npm install` exited with `ENOENT: no such file or directory` on `package-lock.json`. Likely cause: lock file missing from the deploy. Suggested action: check `deployFiles` in `zerops.yaml`."
+
+### start
+
+The build succeeded, but the runtime did not reach a running state.
+
+**Read first.** Prepare logs when the failure is in `prepareCommands`; runtime logs when the runtime started briefly and crashed. The classification names which. If a successful operation also returned a `warnings` array, read it before treating the deploy as healthy — subdomain readiness and HTTP probe results show up there even when the deploy itself reports `FINISHED`.
+
+**Recovery path** (in this order):
+
+1. **Read the named log stream first.** Whatever the classification points at — prepare logs or runtime logs — that is the cause, not the alternative.
+2. **Check `run.start` and ports.** Most "started briefly and crashed" failures are the start command exiting non-zero, not binding the configured port, or binding `127.0.0.1` instead of `0.0.0.0`.
+3. **Check env-var references.** Missing `${db_*}` or `${redis_*}` resolution leaves the runtime crashing with "undefined" connection strings. See [Environment variables](/guides/environment-variables).
+4. **Check `prepareCommands` for missing packages or wrong distro names.** Alpine vs Debian package names trip up Python and PHP runtimes most often.
+
+**Example.** "Deploy of `appdev` failed at start. Cause: `EADDRINUSE` on port 3000 — another command in the start sequence is already binding the port. Suggested action: confirm `run.start` binds the configured port and that only one command owns it."
+
+### verify
+
+The deploy finished, but a post-deploy health check did not pass.
+
+**Read first.** The first failing check name and its detail. For HTTP probe failures, the response status and body text. For service-level failures, recent error logs.
+
+**Recovery.** Inspect the failing check. For `http_root` 5xx, read runtime logs at request time and fix the application error. For "subdomain access not enabled," recover the public route before changing app code.
+
+**Example.** "Deploy of `appdev` succeeded but verify failed: HTTP probe returned 502 against the public URL. Cause: runtime is up, but the listener is not on `0.0.0.0`. Suggested action: read `zerops.yaml` `run.ports[]` and confirm the start command binds `0.0.0.0`, not `127.0.0.1`."
+
+Subdomain-readiness signals can appear in the `warnings` array of an otherwise-successful operation (an `enable subdomain` call that returned `FINISHED` may include "URL not ready after 10s"). Read warnings before treating the URL as live.
+
+### network
+
+ZCP could not reach the platform or source container at the transport layer. No build was triggered.
+
+**Read first.** The transport-layer error string in the failure detail.
+
+**Recovery.** Confirm the source service is running and reachable. In a local workspace, bring up the Zerops VPN. If the SSH process was killed mid-transfer, scale source container memory. If the failure is a platform timeout, wait for the platform path to recover before retrying.
+
+**Example.** "Deploy of `appdev` failed at the transport layer: `signal: killed` during the SSH transfer. Likely cause: the source container ran out of memory mid-transfer. Suggested action: scale `appdev` RAM up and retry."
+
+### config
+
+A pre-deploy check rejected the request before the platform accepted the deploy.
+
+**Read first.** The structured error detail — the field path, API metadata, or suggestion attached to the rejection.
+
+**Recovery.** Fix the relevant `zerops.yaml` setup block, base/runtime name, `deployFiles`, or prerequisite. For setup-block mismatches, use the setup name declared in `zerops.yaml`, not the hostname. Redeploy when the config matches the workspace and deploy direction.
+
+**Example.** "Deploy refused: `INVALID_ZEROPS_YML` — `setup` block named `prod` was not found. Cause: the `zerops.yaml` declares only `dev`. Suggested action: pass the existing setup name or add the missing block."
+
+### credential
+
+An auth token, git credential, or SSH credential was missing or rejected. Recovery is regenerate-or-reconfigure, not connectivity.
+
+**Read first.** Which credential the failure names — Zerops API token, git push credential, SSH credential.
+
+**Recovery.** Regenerate the rejected token with the required project or repository scope. Re-run the relevant credential setup so the token, the auth file, and the remote URL line up. Retry only after the agent confirms the expected credential is present.
+
+**Example.** "git push from `appdev` failed: `Authentication failed`. Likely cause: `GIT_TOKEN` is missing on the source container. Suggested action: re-run git-push setup; the agent will provision the token."
+
+### other
+
+The classifier ran, but no known recovery signal matched. Treat this as "read the raw evidence", not as a diagnosis.
+
+**Read first.** The raw `Reason` field. The absence of a specific signal is itself useful — the agent should stop trying to fit the error into a known card.
+
+**Recovery.** Read the raw event timeline for the affected service. Read logs for the phase named by the raw status. If the same raw status repeats, report it with the exact `Reason` and recent log lines.
+
+## Start from a symptom
+
+Pick the section that matches what you're seeing. Symptom tables map to the most common shapes; the failure-category column maps back to the [category sections above](#start-from-a-failure-category) for full recovery detail.
+
+### Deploy errors
 
 | Symptom | Likely category | Next move |
 |---|---|---|
@@ -28,20 +111,18 @@ Show me the build logs for the last failed deploy of appdev, and read the failur
 
 Build logs and runtime logs are different streams. A build failure does not show in runtime logs, and a runtime crash does not show in build logs. If the agent pastes the wrong stream, the diagnosis will miss.
 
-## Verify errors
+### Verify errors
 
 A deploy can succeed (build green, runtime running) and still fail to verify. Verify is a separate gate — reachability plus the requested behavior. Some common shapes:
 
 | Symptom | Likely cause | Next move |
 |---|---|---|
 | Service status is `RUNNING` but the route returns 500 / 404 | The app started but the requested behavior is broken. | Read runtime logs at request time; the agent confirms whether the route is wired up and the dependencies it needs. |
-| HTTP probe on the public URL returns a connection error | Subdomain access is still propagating, or the runtime is not bound to `0.0.0.0`. | Wait 30-60 seconds and retry. If it stays broken, see the next section. |
+| HTTP probe on the public URL returns a connection error | Subdomain access is still propagating, or the runtime is not bound to `0.0.0.0`. | Wait 30-60 seconds and retry. If it stays broken, see Public URL errors below. |
 | Service status is `READY_TO_DEPLOY` after a deploy | Build succeeded but the runtime never started (start command failed). | Read runtime logs scoped to the start phase — the start command itself is the cause. |
 | `RUNNING` but log output shows continuous restart | The start command exits and is being restarted by the platform. | Read runtime logs over the last few minutes; the exit reason is in the logs. |
 
-Verify failures route through the same failure classification as deploy failures. The agent reads that classification, decides whether to fix and retry or escalate.
-
-## Public URL errors
+### Public URL errors
 
 Public access is auto-enabled on the first deploy for eligible services. If the URL still does not work after deploy, work through the symptoms in order — the platform may still be propagating, or the service may not be eligible for public access.
 
@@ -60,7 +141,7 @@ Enable subdomain access on appdev and verify the URL responds.
 
 The agent runs the equivalent operation, waits for HTTP-readiness, and reports the URL.
 
-## Token errors
+### Token errors
 
 Token rejection happens at startup. ZCP refuses to come up with a token that has the wrong shape, and the error names the specific reason.
 
@@ -73,7 +154,7 @@ Token rejection happens at startup. ZCP refuses to come up with a token that has
 
 After replacing the token in `.mcp.json`, restart the agent. ZCP reads `ZCP_API_KEY` once at process startup; the live session still holds the old value in memory.
 
-## VPN errors (local install)
+### VPN errors (local install)
 
 The local agent bridge reaches Zerops managed services over the project [VPN](/references/networking/vpn). The hosted workspace does not need a VPN — it is already on the project's private network. These symptoms only apply to the local bridge.
 
@@ -85,7 +166,7 @@ The local agent bridge reaches Zerops managed services over the project [VPN](/r
 
 VPN drops with sleep, network change, and idle timeouts. Treat re-running `zcli vpn up` as a routine recovery, not a setup error.
 
-## Local install errors (`zcp init`, `.mcp.json`, `.env`)
+### Local install errors (`zcp init`, `.mcp.json`, `.env`)
 
 Local-bridge setup has a few moving pieces — the binary, the generated config, the token, and the `.env`. The most common stumbles:
 
@@ -125,7 +206,8 @@ Status is not just for cold starts. Any time the conversation drifts from the pr
 
 ## Related
 
-- [Failure categories](/zcp/reference/failure-categories) — the seven categories deploy and verify failures classify into.
+- [Build and verify an app](/zcp/workflows/build-and-verify-app) — where these failures surface in the deploy/verify loop.
+- [Auditing agent work](/zcp/security/auditing-agent-work) — review failed deploys and the classification attached to them.
 - [Tokens and project access](/zcp/security/tokens-and-project-access) — full token shape, where it lives, and how it relates to git credentials.
 - [VPN](/references/networking/vpn) — Zerops project VPN reference (used by the local agent bridge).
 - [Public access](/guides/public-access) — public URL platform behavior, custom domains, and DNS.
