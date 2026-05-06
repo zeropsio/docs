@@ -3,25 +3,33 @@ title: "Choosing a Message Queue on Zerops"
 description: "**Use NATS** for most cases (simple, fast, JetStream persistence). Use **Kafka** only for enterprise event streaming with guaranteed ordering and unlimited retention."
 ---
 
-**Use NATS** for most cases (simple, fast, JetStream persistence). Use **Kafka** only for enterprise event streaming with guaranteed ordering and unlimited retention.
+**Use NATS** for most cases (simple, fast, optional JetStream persistence layer when durability is needed). Use **Kafka** only for enterprise event streaming with guaranteed ordering and unlimited retention.
 
 ## Decision Matrix
 
 | Need | Choice | Why |
 |------|--------|-----|
-| **General messaging** | **NATS** (default) | Simple auth, JetStream built-in, fast |
+| **General messaging** | **NATS** (default) | Simple auth, fast, JetStream available when needed |
 | Enterprise event streaming | Kafka | SASL auth, 3-broker HA, unlimited retention |
-| Lightweight pub/sub | NATS | Low overhead, 8MB default messages |
+| Lightweight pub/sub | NATS — core | Low overhead, 8MB default messages, fire-and-forget |
+| Durable queues, replay, at-least-once | NATS — JetStream | Persistent streams, durable consumers, ack/redeliver |
 | Event sourcing / audit logs | Kafka | Indefinite topic retention, strong ordering |
 
 ## NATS (Default Choice)
+
+NATS exposes **two distinct messaging shapes**. Pick ONE per recipe and write yaml comments / KB content describing only that shape — mixing them confuses porters about what the recipe actually does.
+
+- **Core pub/sub + queue groups**: `nc.subscribe('subject', { queue: 'workers' })`. No persistence; queue groups load-balance delivery across replicas; lost messages stay lost. HA story: surviving cluster nodes keep delivering, no consumer position to restore. Use when fan-out + load balance + at-most-once is enough.
+- **JetStream streams + durable consumers**: opens an explicit stream via `JetStreamManager`, subscribes durably via `js.subscribe(...)`. Persistent message store; replay on reconnect; ack/redeliver. HA story: cluster replicates stream state, acked-but-unprocessed messages survive node loss. Use when at-least-once + replay + persistence are required.
+
+**Authoring rule**: a recipe's yaml comments and KB bullets should reflect the shape the code actually uses. If the worker only calls `nc.subscribe()` with a queue group and never opens a stream, do not invoke JetStream language at HA tiers — the recipe has no stream to replicate. If the worker opens a JetStream stream, the JetStream HA story is the relevant one.
 
 - Ports: 4222 (client), 8222 (HTTP monitoring)
 - Auth: user `zerops` + auto-generated password
 - **Connection** — two supported patterns, pick ONE:
   - **Separate env vars** (recommended, works with every NATS client library): pass `servers: ${hostname}:${port}` plus `user: ${user}, pass: ${password}` as client-side connect options. The servers list stays credential-free.
   - **Opaque connection string**: pass `${connectionString}` directly as the servers option — the platform builds a correctly-formatted URL with embedded auth that the NATS server expects.
-- JetStream: Enabled by default (`JET_STREAM_ENABLED=1`)
+- JetStream capability: enabled by default (`JET_STREAM_ENABLED=1`); recipes opt in by writing JetStream client code. Setting `JET_STREAM_ENABLED=0` hard-disables the capability across the project.
 - Storage: Up to 40GB memory + 250GB file store
 - Max message: 8MB default, 64MB max (`MAX_PAYLOAD`)
 - Health check: `GET /healthz` on port 8222
@@ -40,6 +48,6 @@ description: "**Use NATS** for most cases (simple, fast, JetStream persistence).
 ## Gotchas
 1. **NATS config changes need restart**: No hot-reload — changing env vars requires service restart
 2. **Kafka single-node has no replication**: 1 broker = 3 partitions but zero redundancy
-3. **NATS JetStream HA sync interval**: 1-minute sync across nodes — brief data lag possible
+3. **NATS JetStream HA sync interval**: 1-minute sync across nodes — brief data lag possible. Applies only to recipes that actually open JetStream streams; core pub/sub recipes are unaffected.
 4. **Kafka SASL only**: No anonymous connections — always use the generated credentials
 5. **NATS authorization violation from a hand-composed URL**: do not build a `nats://user:pass@host:4222` URL from the separate env vars. Most NATS client libraries will parse the embedded credentials AND separately attempt SASL with the same values, producing a double-auth that the server rejects with `Authorization Violation` on the first CONNECT frame (symptom: startup crash, no successful subscription). Use either the separate env vars passed as connect options (credential-free servers list) or the opaque `${connectionString}` the platform builds for you — both patterns in the Connection section above avoid the double-auth path.

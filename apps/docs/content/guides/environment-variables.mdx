@@ -90,7 +90,7 @@ run:
     db_hostname: ${db_hostname}        # SELF-SHADOW — see next section
     db_password: ${db_password}        # SELF-SHADOW
     queue_hostname: ${queue_hostname}  # SELF-SHADOW
-    STAGE_API_URL: ${STAGE_API_URL}    # SELF-SHADOW (project-level variant)
+    API_URL: ${API_URL}                # SELF-SHADOW (project-level variant)
 ```
 
 The referenced variable does **not** need to exist at definition time — Zerops resolves at container start.
@@ -108,7 +108,7 @@ run:
 
 At runtime, the worker tries to connect to `"${db_hostname}:5432"` and crashes. The fix is to **delete the entire block** — those vars are already in the container's env without any declaration.
 
-This applies identically to project-level vars (`${STAGE_API_URL}`, `${APP_SECRET}`) and cross-service vars (`${db_hostname}`, `${queue_user}`) — both auto-propagate, both self-shadow under the same rule.
+This applies identically to project-level vars (`${API_URL}`, `${APP_SECRET}`) and cross-service vars (`${db_hostname}`, `${queue_user}`) — both auto-propagate, both self-shadow under the same rule.
 
 **Hostname transformation**: dashes become underscores. Service `my-db` variable `port` is `${my_db_port}`.
 
@@ -148,22 +148,22 @@ Project variables are **automatically available in every service, in both runtim
 ```yaml
 build:
   buildCommands:
-    - echo "building for $STAGE_API_URL"          # shell reads the OS env var
-    - VITE_API_URL=$STAGE_API_URL npm run build    # or pass it forward by shell prefix
+    - echo "building for $API_URL"                # shell reads the OS env var
+    - VITE_API_URL=$API_URL npm run build         # or pass it forward by shell prefix
 ```
 
 **In `build.envVariables` YAML** (to compose a derived var that the bundler consumes) reference the project var directly without prefix:
 ```yaml
 build:
   envVariables:
-    VITE_API_URL: ${STAGE_API_URL}   # project var STAGE_API_URL read as-is, NO RUNTIME_ prefix
+    VITE_API_URL: ${API_URL}         # project var API_URL read as-is, NO RUNTIME_ prefix
 ```
 
 **In `run.envVariables` YAML** (to forward a project var under a framework-conventional name without creating a shadow), reference directly without prefix:
 ```yaml
 run:
   envVariables:
-    FRONTEND_URL: ${STAGE_FRONTEND_URL}      # project var STAGE_FRONTEND_URL forwarded as FRONTEND_URL
+    CORS_ALLOWED_ORIGIN: ${FRONTEND_URL}     # project var FRONTEND_URL forwarded under a different name
 ```
 
 **DO NOT** re-reference an auto-injected variable under its SAME name — that's a self-shadow loop. Applies to BOTH project-level vars AND cross-service vars:
@@ -171,7 +171,7 @@ run:
 ```yaml
 envVariables:
   PROJECT_NAME: ${PROJECT_NAME}           # project-level self-shadow
-  STAGE_API_URL: ${STAGE_API_URL}         # project-level self-shadow
+  API_URL: ${API_URL}                     # project-level self-shadow
   db_hostname: ${db_hostname}             # cross-service self-shadow
   queue_user: ${queue_user}               # cross-service self-shadow
 ```
@@ -192,11 +192,11 @@ Dual-runtime recipes (frontend SPA + backend API on the same platform) use proje
 ```yaml
 project:
   envVariables:
-    STAGE_API_URL: https://apistage-${zeropsSubdomainHost}-3000.prg1.zerops.app
-    STAGE_FRONTEND_URL: https://appstage-${zeropsSubdomainHost}.prg1.zerops.app
+    API_URL: https://apistage-${zeropsSubdomainHost}-3000.prg1.zerops.app
+    FRONTEND_URL: https://appstage-${zeropsSubdomainHost}.prg1.zerops.app
 ```
 
-The platform resolves `${zeropsSubdomainHost}` when injecting the value into services at container start. The frontend consumes `STAGE_API_URL` via plain `${STAGE_API_URL}` in `build.envVariables` (baking it into the bundle at compile time) — **no `RUNTIME_` prefix**. The API consumes `STAGE_FRONTEND_URL` via plain `${STAGE_FRONTEND_URL}` in `run.envVariables` (for CORS allow-list). The same names must be set on the workspace project via `zerops_env project=true action=set` after provision, so workspace verification doesn't see literal `${STAGE_FRONTEND_URL}` strings.
+The platform resolves `${zeropsSubdomainHost}` when injecting the value into services at container start. The frontend consumes `API_URL` via plain `${API_URL}` in `build.envVariables` (baking it into the bundle at compile time) — **no `RUNTIME_` prefix**. The API consumes `FRONTEND_URL` via plain `${FRONTEND_URL}` in `run.envVariables` (for CORS allow-list). The same names must be set on the workspace project via `zerops_env project=true action=set` after provision, so workspace verification doesn't see literal `${FRONTEND_URL}` strings.
 
 ## Secret Variables
 
@@ -255,7 +255,7 @@ Zerops auto-generates variables per service (e.g., `hostname`, `PATH`, DB connec
 
 ## Common Mistakes
 
-- **DO NOT** re-reference auto-injected vars under their own name — self-shadow loop. Applies to BOTH project-level (`STAGE_API_URL: ${STAGE_API_URL}`) AND cross-service (`db_hostname: ${db_hostname}`, `queue_user: ${queue_user}`).
+- **DO NOT** re-reference auto-injected vars under their own name — self-shadow loop. Applies to BOTH project-level (`API_URL: ${API_URL}`) AND cross-service (`db_hostname: ${db_hostname}`, `queue_user: ${queue_user}`).
 - **DO NOT** declare cross-service vars you only want to READ — they are already in the container's OS env. Read via `process.env.db_hostname` / `getenv('db_hostname')` directly. Declare in `run.envVariables` only to RENAME (e.g. `DB_HOST: ${db_hostname}`) or to set mode flags.
 - **DO NOT** forget restart after GUI/API env changes — process won't see new values
 - **DO NOT** expect `envReplace` to recurse subdirectories — it does not
