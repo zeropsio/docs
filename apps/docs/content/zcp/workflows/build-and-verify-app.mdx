@@ -11,7 +11,7 @@ Localhost is not delivery. Deploy is not the finale — for an agent, a deploy i
 
 ## Start the work
 
-Before any code changes, the agent and you agree on the runtime scope: which service this change targets. In a dev/stage project that is the dev runtime (`appdev` or similar). In a single-runtime project, the runtime IS the application service. In a [local agent bridge](/zcp/setup/local-agent-bridge), the scope is your local checkout plus the linked stage runtime. See [workspace topology in Choose your workspace](/zcp/setup/choose-workspace#workspace-topology--what-the-agent-recognizes-after-you-pick) for the full taxonomy.
+Before any code changes, the agent and you agree on the runtime scope: which service this change targets. In a dev/stage project that is the dev runtime (`appdev` or similar). In a single-runtime project, the runtime IS the application service. In a [local agent bridge](/zcp/setup/local-agent-bridge), the scope is your local checkout plus the linked stage runtime. See [workspace shapes in Choose your workspace](/zcp/setup/choose-workspace#workspace-shapes) for the full taxonomy.
 
 Wrong path: writing app code before the runtime scope is named. If the agent jumps straight to editing without saying which service is in scope, the first deploy lands somewhere unexpected.
 
@@ -79,7 +79,7 @@ If verify fails, the agent reads the failure classification and routes to the ap
 
 The deploy → log → verify loop repeats until the service is verified or the agent hits a hard blocker. Iteration is not blind retry.
 
-ZCP's workflow engine caps recipe-flow iterations at five and emits explicit "stop and ask" guidance at that point. The deploy and verify loop covered on this page has the same cap available, but the auto-emitted tier escalation is wired into the recipe flow — here, treat the table below as the cadence the agent should follow, and as your own signal that something has gone off the rails when it doesn't.
+Repeated no-progress retries should stop. There is no automatic cap in the deploy/verify loop today, so treat the table below as the cadence you should expect — and as your signal that something has gone off the rails when the agent doesn't follow it.
 
 Cadence:
 
@@ -87,7 +87,7 @@ Cadence:
 |---|---|
 | 1-2 | Diagnose locally from logs and events; fix the targeted issue |
 | 3-4 | Systematic check — `zerops.yaml`, env vars, `deployFiles`, build commands, health check definition |
-| 5 | Stop and ask. Five attempts without progress is a signal that the loop has exhausted its standard strategies |
+| 5 | Stop and ask. Five attempts without progress is the signal that the loop has exhausted its standard strategies |
 
 The workflow auto-closes when every service in scope has a successful deploy and a passing verify. The result you see is concrete — a working URL (or set of URLs), plus the agent's summary of what it changed and where it verified.
 
@@ -98,11 +98,15 @@ If the agent gets stuck before the loop closes:
 
 A clear blocker — even when the work is incomplete — is a successful end of session if it names the failure category, the in-scope runtime, what was tried, and what evidence is still missing.
 
+## Review and take over
+
+Whether the loop closed cleanly or stopped on a blocker, the platform has its own record of what happened — events, runtime logs, deploy/verify history, and (when delivery uses git-push) commits. Read it before accepting the work, before approving anything destructive, or before taking over manually. Step-by-step, with the evidence-coverage matrix and the take-over decision tables, lives in [Auditing agent work](/zcp/security/auditing-agent-work). The short version: ask for ZCP status when the chat-side picture has drifted, and read the platform's account of failures before asking the agent to delete or override anything.
+
 ## Gotchas
 
 1. **Deploy success is not "done".** A green build with a 500 on the route you care about is not finished. Verify the requested behavior, not just the runtime status.
-2. **In a `standard` (dev/stage) project, stage deploys do not happen automatically.** Dev work targets the dev runtime only — stage deploys must be asked for. If the agent silently changes the stage runtime, that is a wrong path. (`local-stage` projects deploy from your laptop into the linked stage runtime by design and are not affected — see [workspace topology](/zcp/setup/choose-workspace#workspace-topology--what-the-agent-recognizes-after-you-pick).)
-3. **Five attempts is a stop signal.** A loop that cannot make progress in five tries is a loop that needs you, not another retry. ZCP enforces this automatically inside recipe flows; in the deploy and verify loop on this page, it is the cadence the agent should follow and the threshold beyond which you should step in.
+2. **In a `standard` (dev/stage) project, stage deploys do not happen automatically.** Dev work targets the dev runtime only — stage deploys must be asked for. If the agent silently changes the stage runtime, that is a wrong path. (`local-stage` projects deploy from your laptop into the linked stage runtime by design and are not affected — see [workspace shapes](/zcp/setup/choose-workspace#workspace-shapes).)
+3. **Five attempts is your stop signal.** A loop that cannot make progress in five tries is a loop that needs you, not another retry. ZCP does not enforce this in the deploy/verify loop — it's the cadence you should expect and the threshold beyond which you step in.
 
 ## Next steps
 

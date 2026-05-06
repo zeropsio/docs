@@ -31,7 +31,7 @@ The four platform-side streams have an order:
 
 1. **Project events** — timeline of deploys, builds, scaling, status transitions. Scope by service hostname; the project-level view mixes everything.
 2. **Runtime logs** — explain why a failure happened, scoped by hostname, severity, time, search.
-3. **Deploys and verifies** — the canonical "did the agent ship something, and did it work" record. Deploy/build/appVersion events persist as durable platform records; verify results live in the tool response and ZCP's per-project work-session state, which is PID-scoped and cleaned over time. For durable verify audit, capture the response in the chat transcript or rerun verify on demand.
+3. **Deploys and verifies** — the canonical "did the agent ship something, and did it work" record. Deploy and build events persist as durable platform records; verify results live in the agent's response and ZCP's short-lived session memory, which is cleaned over time. For durable verify audit, capture the response in the chat transcript or rerun verify on demand.
 4. **Git history** (when delivery uses git-push) — commits the agent pushed, reviewed like any other diff.
 
 Plus, when a session has gone sideways and you want the agent's current view of the project, **ZCP status** is what realigns: it rebuilds the picture from live platform state in one prompt.
@@ -83,7 +83,7 @@ The logs are the application's own stdout and stderr. The agent does not paraphr
 
 ## Review deploys and verifies
 
-Deploys and verifies are the canonical "did the agent ship something, and did it work" record. They persist on different surfaces: deploy/build/appVersion events are durable platform records you can reread weeks later; verify results live in the tool response and ZCP's per-project work-session state (PID-scoped, cleaned over time). For an audit you can revisit, capture the verify response in the chat transcript or rerun verify on demand.
+Deploys and verifies are the canonical "did the agent ship something, and did it work" record. They persist on different surfaces: deploy and build events are durable platform records you can reread weeks later; verify results live in the agent's response and ZCP's short-lived session memory, which is cleaned over time. For an audit you can revisit, capture the verify response in the chat transcript or rerun verify on demand.
 
 Each deploy carries a build status, an appVersion status, and — for failures — a structured classification with a category, a likely cause, and a suggested next action. See [Failure categories in Troubleshooting](/zcp/reference/troubleshooting#start-from-a-failure-category).
 
@@ -105,9 +105,9 @@ Did the verify on appdev pass after the last deploy?
 
 If a deploy looped (the agent retried the same build several times without progress), that pattern is visible in the timeline — repeated `BUILD_FAILED` entries with the same `failureCause`, no new commit between them. That is your cue to stop and read the cause yourself rather than ask the agent for another retry.
 
-## Review git history (when close-mode is git-push)
+## Review git history (when delivery uses git-push)
 
-When delivery uses `close-mode=git-push`, the agent's edits land as commits on a configured remote. At that point the audit shifts: the agent is just another committer, and the diffs review the same way a coworker's would.
+When the agent's delivery answer is "push to git, then build from there", the agent's edits land as commits on a configured remote. At that point the audit shifts: the agent is just another committer, and the diffs review the same way a coworker's would.
 
 Standard tooling applies. The agent is identified as the committer per your repository conventions; the commit messages and diffs are what they are. Treat them as you would any other change:
 
@@ -117,9 +117,9 @@ git diff main...HEAD
 gh pr view <number>
 ```
 
-If the close-mode is `git-push` with a build integration (`webhook` or `actions`), each push fires the next deploy; the deploy and verify history above shows what the build did with that push. Cross-referencing the two streams is how you confirm "the commit landed and the deploy that ran from it succeeded". For the platform side of that integration, see [GitHub integration](/references/github-integration).
+When git-push delivery has a build integration set up (Zerops dashboard webhook, or GitHub Actions), each push fires the next deploy; the deploy and verify history above shows what the build did with that push. Cross-referencing the two streams is how you confirm "the commit landed and the deploy that ran from it succeeded". For the platform side of that integration, see [GitHub integration](/references/github-integration).
 
-In `close-mode=auto` projects, no git evidence exists — the agent deployed directly through ZCP. In `close-mode=manual` projects, git review is your call: ZCP recorded the deploys it ran at your request and yielded delivery to you, so any commits are yours, not the agent's.
+When the agent kept deploying directly, no git evidence exists — the deploys went through ZCP. When delivery was handed off to you or your CI, git review is your call: ZCP recorded the deploys it ran at your request and yielded delivery, so any commits after that are yours, not the agent's. See [Choose how finished work ships](/zcp/workflows/delivery-handoff).
 
 ## Take over from the agent
 
@@ -138,7 +138,7 @@ From there:
 | Situation | Action |
 |---|---|
 | Agent has a clear next step but is hesitating | Tell it to proceed. Status told you the path is intact. |
-| Agent is looping on the same failure | Stop the loop. Read the failure classification and last logs yourself, give the agent the corrected approach, or take over manually. Five attempts without progress is the standard stop signal — see [Build and verify an app](/zcp/workflows/build-and-verify-app). |
+| Agent is looping on the same failure | Stop the loop. Read the failure classification and last logs yourself, give the agent the corrected approach, or take over manually. Five attempts without progress is the cadence to expect — see [Build and verify an app](/zcp/workflows/build-and-verify-app). |
 | Scope is wrong (agent targeting `appstage` when you asked for `appdev`) | Correct the scope explicitly. The agent picks up the new value on the next call. |
 | Session has drifted past usefulness | End the session. The deploys and verifies it ran are recorded; you can resume from the same project on a fresh start. |
 
@@ -147,24 +147,24 @@ From there:
 | Decision | What to do |
 |---|---|
 | Keep the changes | Nothing further is required. The deploys are live, the verify passed. |
-| Take over manually for the next change | Switch the close-mode to `manual` if you want ZCP to stop initiating deploys, or just keep going yourself. See [Choose how finished work ships](/zcp/workflows/delivery-handoff). |
-| Revert via git | When `close-mode=git-push`, revert the commit on the remote and let the build integration ship the previous state. Standard `git revert` workflow. |
+| Take over manually for the next change | Switch the delivery answer to "hand off to your CI or a human" if you want ZCP to stop initiating deploys, or just keep going yourself. See [Choose how finished work ships](/zcp/workflows/delivery-handoff). |
+| Revert via git | When delivery uses git-push, revert the commit on the remote and let the build integration ship the previous state. Standard `git revert` workflow. |
 | Restore from backup | When data was lost (a destructive operation, a bad migration), use the platform's [backup and restore](/features/backup) — that is the data-safety net, not ZCP. |
 
-Before any irreversible follow-up — a destructive import override, a service deletion — re-read [Destructive actions and confirmations](/zcp/security/destructive-actions). The audit you just ran is exactly the diagnosis those gates expect you to have done first.
+Before any irreversible follow-up — a destructive import override, a service deletion — re-read [Tokens and credentials → Confirmation gates](/zcp/security/tokens-and-project-access#confirmation-gates-for-destructive-actions). The audit you just ran is exactly the diagnosis those gates expect you to have done first.
 
 ## Gotchas
 
 1. **Filter events by service hostname every time.** The project-level view mixes builds from every service and every retry; an audit needs the runtime in scope and nothing else. Without the hostname filter you will read someone else's failure and diagnose the wrong thing.
 2. **Read status before changing anything when taking over.** The chat transcript is not the source of truth. Status rebuilds the agent's view from live platform state — a single call confirms whether the scope, last action, and pending work match what you remember. Acting on the transcript without checking status is how take-overs break things the agent had right.
 3. **Build logs and runtime logs are different streams.** A failed build never appears in runtime logs; a runtime crash never appears in build logs. The timeline's failure category points at the right stream — `build` → build logs, everything else → runtime logs. Pulling the wrong stream wastes the audit.
-4. **The agent's diffs are like any committer's.** When `close-mode=git-push`, do not treat the agent's commits as a separate review surface. Use `git log`, `git diff`, your normal PR review. The fact that an agent authored the change does not make the diff special.
+4. **The agent's diffs are like any committer's.** When delivery uses git-push, do not treat the agent's commits as a separate review surface. Use `git log`, `git diff`, your normal PR review. The fact that an agent authored the change does not make the diff special.
 5. **Backup is the data safety net, not ZCP.** Audit and roll-back via git cover code; if data was lost, [Backup](/features/backup) is what gets it back. Do not expect the audit trail to undo a destructive database operation — it can show you that one happened, not undo it.
 
 ## Related
 
 - [Deployment lifecycle](/guides/deployment-lifecycle) — the canonical reference for events, build phases, and the timeline shape this page reads.
 - [How ZCP works](/zcp/concept/how-it-works) — the recovery model that makes status the right take-over primitive.
-- [Destructive actions and confirmations](/zcp/security/destructive-actions) — audit before any destructive override.
+- [Tokens and credentials → Confirmation gates](/zcp/security/tokens-and-project-access#confirmation-gates-for-destructive-actions) — audit before any destructive override.
 - [GitHub integration](/references/github-integration) — when reviewing PRs the agent pushed.
 - [Backup](/features/backup) — recovering from data loss surfaced during the audit.

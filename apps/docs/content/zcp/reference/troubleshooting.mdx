@@ -147,7 +147,7 @@ Token rejection happens at startup. ZCP refuses to come up with a token that has
 
 | Symptom | Likely cause | Next move |
 |---|---|---|
-| `Token accesses N projects; use project-scoped token` | A multi-project (or full-access) token was supplied. | Generate a project-scoped token in the Zerops dashboard and replace the value. See [Tokens and project access](/zcp/security/tokens-and-project-access). |
+| `Token accesses N projects; use project-scoped token` | A multi-project (or full-access) token was supplied. | Generate a project-scoped token in the Zerops dashboard and replace the value. See [Tokens and credentials](/zcp/security/tokens-and-project-access). |
 | `Token has no project access` | The token authenticates a user but cannot reach any project. | Grant the token project access (or generate a new project-scoped token) and replace the value. |
 | `No authentication found: set ZCP_API_KEY or log in with zcli` | No token is reaching ZCP. | Add `ZCP_API_KEY` under the `env` block of `.mcp.json`, or run `zcli login <token>`. |
 | API replies with 401 / `AUTH_TOKEN_EXPIRED` | The token was revoked or has expired. | Generate a new project-scoped token, replace the value, and restart the agent. |
@@ -172,7 +172,7 @@ Local-bridge setup has a few moving pieces — the binary, the generated config,
 
 | Symptom | Likely cause | Next move |
 |---|---|---|
-| Re-running `zcp init` made the agent stop working | `zcp init` rewrites `.mcp.json` from the template; your `ZCP_API_KEY` is gone. | Re-add the `env` block with `ZCP_API_KEY` and restart Claude Code. See [Tokens and project access](/zcp/security/tokens-and-project-access). |
+| Re-running `zcp init` made the agent stop working | `zcp init` rewrites `.mcp.json` from the template; your `ZCP_API_KEY` is gone. | Re-add the `env` block with `ZCP_API_KEY` and restart Claude Code. See [Tokens and credentials](/zcp/security/tokens-and-project-access). |
 | Claude Code does not list the `zerops` MCP server | Claude Code launched from the wrong directory. | Quit and relaunch from the project root that contains `.mcp.json`. |
 | Local app reads stale env values | `.env` is a snapshot taken at generation time. | Regenerate after any project env-variable change — ask the agent to re-run the env-file generator. |
 | `zcp` not found on `PATH` after install | The install script wrote to `~/.local/bin` and that is not on `PATH`. | Add `~/.local/bin` to `PATH` in your shell rc and reload. |
@@ -192,7 +192,7 @@ Status rebuilds the agent's view from live platform state — services, their st
 | Symptom | Likely cause | Next move |
 |---|---|---|
 | Agent says "no project found" or "I have no context" mid-conversation | The agent's chat memory drifted from real platform state. | Ask for status (above). It reads live state and rebuilds the picture. |
-| Agent loops on the same failed deploy without progressing | Five attempts without progress is a stop signal — see [Build and verify an app](/zcp/workflows/build-and-verify-app). | Stop the loop and ask the agent to summarize what it has tried and what evidence is still missing. |
+| Agent loops on the same failed deploy without progressing | Five attempts without progress is the cadence to expect — see [Build and verify an app](/zcp/workflows/build-and-verify-app). | Stop the loop and ask the agent to summarize what it has tried and what evidence is still missing. |
 | Agent picks the wrong service when you said "the runtime" | In a dev/stage project there are two runtimes; ambiguous prompts can land on the wrong one. | Name the hostname explicitly: `Deploy appdev` rather than `deploy the runtime`. |
 
 Status is not just for cold starts. Any time the conversation drifts from the project, asking ZCP for current state realigns the agent with real state in one prompt. If status itself fails — the agent reports "cannot reach ZCP" or returns a token error — see [Token errors](#token-errors).
@@ -208,7 +208,7 @@ Status is not just for cold starts. Any time the conversation drifts from the pr
 
 - [Build and verify an app](/zcp/workflows/build-and-verify-app) — where these failures surface in the deploy/verify loop.
 - [Auditing agent work](/zcp/security/auditing-agent-work) — review failed deploys and the classification attached to them.
-- [Tokens and project access](/zcp/security/tokens-and-project-access) — full token shape, where it lives, and how it relates to git credentials.
+- [Tokens and credentials](/zcp/security/tokens-and-project-access) — full token shape, where it lives, and how it relates to git credentials.
 - [VPN](/references/networking/vpn) — Zerops project VPN reference (used by the local agent bridge).
 - [Public access](/guides/public-access) — public URL platform behavior, custom domains, and DNS.
 - [Deployment lifecycle](/guides/deployment-lifecycle) — the build, deploy, and event surface ZCP reads from.

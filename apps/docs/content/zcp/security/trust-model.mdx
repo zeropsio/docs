@@ -20,7 +20,7 @@ Zerops Control Plane (ZCP) is in public preview. Use it for development and stag
 
 This is not an argument against the local path. The local bridge is the right choice when you want to keep your editor, dotfiles, and toolchain. It is a different security model — recognize it, set the agent client's permissions accordingly.
 
-For per-action gates (delete, override import), see [Destructive actions and confirmations](/zcp/security/destructive-actions). For token storage and rotation, see [Tokens and project access](/zcp/security/tokens-and-project-access).
+For per-action gates (delete, override import), token storage, and rotation, see [Tokens and credentials](/zcp/security/tokens-and-project-access).
 
 ## Project is the boundary
 
@@ -37,7 +37,7 @@ ZCP does not create a separate permissions system. Zerops [RBAC](/features/rbac)
 
 Project-scoped does not mean read-only. A full project token is still powerful inside that project — use it like a project-level operations credential: give it to dev/staging projects where agent work is intended, rotate it when needed, keep it out of repositories.
 
-For token storage and rotation, continue to [Tokens and project access](/zcp/security/tokens-and-project-access).
+For token storage and rotation, continue to [Tokens and credentials](/zcp/security/tokens-and-project-access).
 
 ## Hosted workspace specifics
 
@@ -67,17 +67,16 @@ ZCP uses hard refusals for boundaries that should never be inferred, and confirm
 |---|---|---|
 | Refuse a token with no project access | Startup cannot resolve any Zerops project from the token. | ZCP does not start for agent operations. Use a token with access to one project. |
 | Refuse a multi-project token | Startup sees more than one accessible Zerops project. | ZCP does not choose for the agent. Generate a project-scoped token or scope `zcli` to one project. |
-| Refuse hosted self-deletion | `zerops_delete` targets the service where ZCP is currently running. | The call is blocked. Delete that service manually through Zerops UI or `zcli` if you really intend to remove the control plane. |
-| Require named approval for deletion | An agent wants to delete a service. | The destructive tool contract requires explicit approval in the current conversation for that specific service name. The agent should not delete proactively. |
-| Gate destructive service replacement | `zerops_import override=true` would replace services with prior failed deploy history. | The first call returns a structured `wouldDestroy` payload. A second call must include matching `confirmDestructive` fields before the import proceeds. |
+| Refuse hosted self-deletion | A service-deletion call targets the service where ZCP is currently running. | The call is blocked. Delete that service manually through Zerops UI or `zcli` if you really intend to remove the control plane. |
+| Require named approval for deletion | The agent wants to delete a service. | Explicit approval is required in the current conversation for that specific service name. The agent should not delete proactively. |
+| Gate destructive service replacement | An import override would replace services with prior failed deploy history. | The first call shows what would be destroyed and refuses; the second call must acknowledge the same payload before the import proceeds. |
 
 The import gate is intentionally not a permanent blocker. Replacing a failed service can be the right recovery path. The gate makes the loss explicit first: which service stacks are being replaced, which targets are acknowledged, and which operation is being confirmed.
 
-For the detailed rules, see [Destructive actions and confirmations](/zcp/security/destructive-actions).
+For the detailed confirmation flow and the diagnose-first rule, see [Tokens and credentials → Confirmation gates](/zcp/security/tokens-and-project-access#confirmation-gates-for-destructive-actions).
 
 ## Next steps
 
-- [Tokens and project access](/zcp/security/tokens-and-project-access) - token scope, storage, rotation, and project isolation.
-- [Destructive actions and confirmations](/zcp/security/destructive-actions) - delete and replacement gates in detail.
-- [Auditing agent work](/zcp/security/auditing-agent-work) - how to review what the agent changed and deployed.
-- [Production policy](/zcp/security/production-policy) - how to keep production outside the public preview loop.
+- [Tokens and credentials](/zcp/security/tokens-and-project-access) — token scope, storage, rotation, and confirmation gates.
+- [Auditing agent work](/zcp/security/auditing-agent-work) — review what the agent changed and deployed.
+- [Production boundary](/zcp/security/production-policy) — keep production outside the public preview loop.

@@ -178,25 +178,14 @@ module.exports = {
       className: 'homepage-sidebar-item',
     },
     {
-      type: 'category',
-      label: 'Concept',
-      link: {
-        type: 'doc',
-        id: 'zcp/concept/how-it-works',
-      },
+      type: 'doc',
+      id: 'zcp/concept/how-it-works',
+      label: 'How ZCP works',
       className: 'homepage-sidebar-item',
-      items: [
-        {
-          type: 'doc',
-          id: 'zcp/concept/zcp-vs-zcli',
-          label: 'ZCP vs zCLI',
-          className: 'homepage-sidebar-item',
-        },
-      ],
     },
     {
       type: 'category',
-      label: 'Setup',
+      label: 'Connect',
       link: {
         type: 'doc',
         id: 'zcp/setup/choose-workspace',
@@ -215,11 +204,17 @@ module.exports = {
           label: 'Use ZCP locally',
           className: 'homepage-sidebar-item',
         },
+        {
+          type: 'doc',
+          id: 'zcp/security/tokens-and-project-access',
+          label: 'Tokens and credentials',
+          className: 'homepage-sidebar-item',
+        },
       ],
     },
     {
       type: 'category',
-      label: 'Workflows',
+      label: 'Build',
       link: {
         type: 'doc',
         id: 'zcp/workflows/create-or-adopt-services',
@@ -232,23 +227,34 @@ module.exports = {
           label: 'Build and verify an app',
           className: 'homepage-sidebar-item',
         },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Ship',
+      link: {
+        type: 'doc',
+        id: 'zcp/workflows/delivery-handoff',
+      },
+      className: 'homepage-sidebar-item',
+      items: [
         {
           type: 'doc',
-          id: 'zcp/workflows/delivery-handoff',
-          label: 'Choose how finished work ships',
+          id: 'zcp/security/production-policy',
+          label: 'Production boundary',
           className: 'homepage-sidebar-item',
         },
         {
           type: 'doc',
           id: 'zcp/workflows/package-running-service',
-          label: 'Package a running service for reuse',
+          label: 'Package a running service',
           className: 'homepage-sidebar-item',
         },
       ],
     },
     {
       type: 'category',
-      label: 'Security and operations',
+      label: 'Trust & recover',
       link: {
         type: 'doc',
         id: 'zcp/security/trust-model',
@@ -257,43 +263,14 @@ module.exports = {
       items: [
         {
           type: 'doc',
-          id: 'zcp/security/tokens-and-project-access',
-          label: 'Tokens and project access',
-          className: 'homepage-sidebar-item',
-        },
-        {
-          type: 'doc',
-          id: 'zcp/security/destructive-actions',
-          label: 'Destructive actions and confirmations',
-          className: 'homepage-sidebar-item',
-        },
-        {
-          type: 'doc',
           id: 'zcp/security/auditing-agent-work',
           label: 'Auditing agent work',
           className: 'homepage-sidebar-item',
         },
         {
           type: 'doc',
-          id: 'zcp/security/production-policy',
-          label: 'Production policy',
-          className: 'homepage-sidebar-item',
-        },
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Reference',
-      link: {
-        type: 'doc',
-        id: 'zcp/reference/troubleshooting',
-      },
-      className: 'homepage-sidebar-item',
-      items: [
-        {
-          type: 'doc',
-          id: 'zcp/reference/faq',
-          label: 'ZCP FAQ',
+          id: 'zcp/reference/troubleshooting',
+          label: 'Troubleshooting',
           className: 'homepage-sidebar-item',
         },
       ],

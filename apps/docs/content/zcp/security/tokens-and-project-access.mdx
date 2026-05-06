@@ -1,9 +1,9 @@
 ---
-title: "Tokens and project access"
-description: "Use project-scoped Zerops tokens and explicit repository credentials for ZCP agent work."
+title: "Tokens and credentials"
+description: "Project-scoped Zerops tokens, git credentials, and the confirmation gates ZCP enforces before destructive actions."
 ---
 
-Use project-scoped Zerops tokens and explicit repository credentials for Zerops Control Plane (ZCP) agent work. The token shape ZCP accepts, where it lives, and how it relates to git credentials are all decided up front — they are the practical edge of the [trust model](/zcp/security/trust-model) you have already read.
+Project-scoped Zerops tokens, git credentials, and the confirmation gates Zerops Control Plane (ZCP) enforces before destructive actions. The token shape ZCP accepts, where it lives, how it relates to git credentials, and what the agent cannot do without your explicit consent — these are the practical edges of project boundary. For the full hosted-vs-local boundary picture, see [Trust model](/zcp/security/trust-model).
 
 ## Required token shape — project-scoped Zerops API token
 
@@ -41,7 +41,7 @@ The fix is always the same: generate a per-project token and replace the value (
 
 ## Where the token lives — hosted vs local
 
-ZCP reads the token from environment at startup. It does not write the token anywhere else, and it does not exchange it for a derived credential. Where the env var comes from depends on the workspace shape:
+ZCP reads the token from environment at startup. It does not write the token anywhere else, and it does not exchange it for a derived credential. Where the env var comes from depends on whether ZCP runs hosted or local:
 
 | Workspace | Where `ZCP_API_KEY` comes from | Who provisions it |
 |---|---|---|
@@ -115,6 +115,27 @@ When a token is rotated in the Zerops dashboard, the new value replaces the old 
 
 Rotations on `ZCP_API_KEY` and `ZEROPS_TOKEN` are independent unless you reused the same Zerops token for both. If you did, rotate it in the dashboard once, then update both surfaces.
 
+## Confirmation gates for destructive actions
+
+A valid token does not unlock everything. Two operations carry an explicit confirmation gate because the loss is not reversible from inside the conversation: **service deletion** and **wholesale service replacement** on a service with prior failed deploy history. Everything else the agent runs — deploys, env changes, lifecycle actions, restarts, scaling — runs without pausing for approval. Most of those are reversible by another call (a bad deploy is fixed by another deploy, a started service is stopped); a few are operationally destructive even though they aren't gated (deleting an env value, rotating a secret used by running services). You stay in the loop on these via the verify pass and the audit trail, not via a pre-call gate.
+
+| Operation | Gate |
+|---|---|
+| **Service deletion** — removes the service entirely; the container, deployed code, env vars on the service, and (for managed services) the data inside it all go with it. | The MCP tool contract requires explicit user approval in the same conversation, by service name. Supported clients (Claude Code) enforce this. ZCP itself hard-blocks one case: deleting the hosted ZCP service it is running on (`SELF_SERVICE_BLOCKED`). |
+| **Wholesale service replacement** (import override) on a service with prior failed deploy history | First call is refused with a structured payload naming the operation and target hostnames. The agent's second call must echo that payload back as a confirmation. |
+
+Approval is an explicit yes paired with the service name in the same turn-window. Approval from a previous chat does not carry forward — a new conversation is a new approval window. The agent cannot delete on memory of an earlier yes, and ZCP cannot delete itself.
+
+### Diagnose before destruct
+
+When a service is in trouble — non-running state, failed last deploy, or both — ZCP enforces a single rule across destructive paths: read the platform's account of why before destroying anything. The first call against a service with failure history is refused; the agent reads the failure classification, events, and logs, then either fixes the cause (no destruction needed) or comes back with a confirmation that includes a summary of what it read.
+
+The rule prevents two failure modes: **delete-and-retry loops** (the agent decides the cleanest fix is to delete and re-import, masking the cause every time) and **override-as-reset** (`zerops_import override=true` becomes a "make it like new" button that erases the failure context the next session needs).
+
+Recovery state is not the same as broken state — a service that came up `READY_TO_DEPLOY` and is waiting for code is not in trouble. The gate fires on platform-recorded failure, not on idle.
+
+For the broader threat model and what ZCP refuses outright (cross-project access, multi-project tokens, self-deletion), see [Trust model](/zcp/security/trust-model).
+
 ## Gotchas
 
 1. **Multi-project tokens are refused at startup, not at first deploy.** A full-access token will not let ZCP boot at all. Generate a per-project token before connecting.
@@ -122,6 +143,8 @@ Rotations on `ZCP_API_KEY` and `ZEROPS_TOKEN` are independent unless you reused 
 3. **`GIT_TOKEN` is not `ZCP_API_KEY`.** `GIT_TOKEN` authorizes git push (hosted, when ZCP performs the push); `ZCP_API_KEY` authorizes ZCP against Zerops. Mixing them up either grants too much (a Zerops token used as a git push credential) or fails authentication. Treat them as separate surfaces.
 4. **`ZEROPS_TOKEN` in GitHub Actions is a Zerops API token, not a GitHub PAT.** If a deploy from Actions fails on permissions and you reach for a GitHub PAT, you have rotated the wrong credential. The fix is in `gh secret set ZEROPS_TOKEN ...`.
 5. **Rotation is picked up on next ZCP startup, not mid-session.** If you rotate the token while a Claude Code session is live, restart the agent so ZCP re-reads the env. The session in flight still holds the old value in process memory.
+6. **Confirmation must be in the same conversation.** Approval from a previous chat does not carry forward to a new session. The agent cannot delete on memory of an earlier yes.
+7. **A successful confirmation is still a destructive call.** Once you acknowledge replacement, the override runs. Roll-back is not automatic — recover lost data through [Backup](/features/backup), and review what changed through [Auditing agent work](/zcp/security/auditing-agent-work).
 
 ## Related
 

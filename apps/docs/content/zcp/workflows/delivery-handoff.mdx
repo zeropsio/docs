@@ -7,7 +7,7 @@ Choose whether Zerops Control Plane (ZCP) closes work by deploying directly, pus
 
 If you don't have a CI pipeline yet, the third answer below is not for you — pick "the agent keeps deploying" and revisit when your team needs git-tracked releases.
 
-ZCP projects are intentionally dev/staging environments. Today, packaging a verified ZCP project for production handoff is supported via [Package a running service for reuse](/zcp/workflows/package-running-service); production then lives in its own Zerops project deployed by your CI or a release pipeline.
+ZCP projects are intentionally dev/staging environments. Today, packaging a verified ZCP project for production handoff is supported via [Package a running service](/zcp/workflows/package-running-service); production then lives in its own Zerops project deployed by your CI or a release pipeline.
 
 ## Three answers
 
@@ -15,7 +15,7 @@ ZCP projects are intentionally dev/staging environments. Today, packaging a veri
 - **Push to git, then build from there.** Future changes get committed and pushed to a configured remote. Either Zerops or your existing CI takes the push and runs the build. Right when the team's source of truth is git and you want reviewable commits.
 - **Hand off to your CI or a human.** ZCP records every deploy and verify the agent runs at your request, but does not initiate further deploys. Right when an external pipeline or release process owns delivery from here.
 
-These are recorded against each service as a triple: a **close-mode** that picks one of the three answers above (`auto`, `git-push`, `manual`), an optional **git-push setup** that names the remote URL and credential when close-mode is `git-push`, and an optional **build integration** that picks what fires after a push lands (`webhook` for the Zerops dashboard pull, `actions` for a GitHub Actions workflow you check in). The three are orthogonal — configured git push can coexist with `auto` close-mode for emergencies, and build integration only applies when git push is set up. The agent translates "set the close-mode" or "configure git push" prompts into the right operations; you do not call them by name.
+You ask for an outcome ("set up git-push delivery for appdev", "ZCP records changes for appdev but my CI takes over from here"); the agent picks the right operations. Git-push capability and what fires after a push lands are independent — configured git push can coexist with the agent-keeps-deploying answer for emergencies.
 
 The first deploy always uses the direct path regardless of the answer you pick later — there is no deploy yet for the choice to apply to.
 
@@ -45,10 +45,7 @@ This requires committed code. In a [local agent bridge](/zcp/setup/local-agent-b
 
 When you ask the agent to set up git-push delivery, it provisions the remote URL and credentials so future pushes work without per-call configuration. If the setup step fails — repository unreachable, credential missing, working directory has no commits — the agent reports the specific reason. Fix the underlying issue and ask again.
 
-How the credential is sourced depends on the workspace:
-
-- **Hosted workspace.** If the project already has `GIT_TOKEN` in its env, the agent reuses it. Otherwise, provide a token that can push to the remote — typically a fine-grained GitHub or GitLab access token scoped to the target repo.
-- **Local agent bridge.** The push runs from your laptop, so your local git credential helper handles authentication — SSH keys, the macOS keychain, `gh auth login`, whatever you already use. ZCP does not need a token of its own. See [Tokens and project access](/zcp/security/tokens-and-project-access).
+How the push credential is sourced differs by workspace: a hosted workspace reuses or asks for a `GIT_TOKEN` (typically a fine-grained GitHub or GitLab access token); a local agent bridge defers to your existing git credential helper (SSH keys, macOS keychain, `gh auth login`). Full credential reference: [Tokens and credentials → Git credentials](/zcp/security/tokens-and-project-access#git-credentials--separate-from-zcp_api_key).
 
 ### What fires after a push lands
 
@@ -56,7 +53,7 @@ How the credential is sourced depends on the workspace:
 - **The Zerops dashboard build integration.** The Zerops dashboard pulls the repository and runs the [build and deploy pipeline](/guides/deployment-lifecycle) — see [GitHub integration via the dashboard](/references/github-integration#integration-via-zerops-gui).
 - **A GitHub Actions workflow you check in.** Your repository's `.github/workflows/zerops.yml` checks out the code and pushes it to Zerops via `zcli` — see [GitHub Actions](/references/github-integration#github-workflow-integration).
 
-The GitHub Actions option needs a **Zerops API token** stored as a GitHub Actions secret (it authenticates `zcli` against Zerops; it is **not** a GitHub token). One credential, one rotation surface — you can reuse the project-scoped token already behind `ZCP_API_KEY`. The agent prepares the right `gh secret set ZEROPS_TOKEN ...` command for your environment. Token-shape details: [Tokens and project access](/zcp/security/tokens-and-project-access).
+The GitHub Actions option needs a Zerops API token (not a GitHub token) stored as a GitHub Actions secret named `ZEROPS_TOKEN`. The agent prepares the right `gh secret set` command for your environment; you can reuse the project-scoped token already behind `ZCP_API_KEY` for one rotation surface. Token shapes and rotation: [Tokens and credentials](/zcp/security/tokens-and-project-access).
 
 ## Hand off to your CI or a human
 
@@ -83,6 +80,6 @@ None of these choices are sticky. The handoff style, the git-push capability, an
 ## Next steps
 
 - [Build and verify an app](/zcp/workflows/build-and-verify-app) — the deploy and verify loop the handoff picks up from.
-- [Package a running service for reuse](/zcp/workflows/package-running-service) — turn a running service into reusable import files when the work is worth re-using.
+- [Package a running service](/zcp/workflows/package-running-service) — turn a running service into reusable import files when the work is worth re-using.
 - [GitHub integration](/references/github-integration) — full reference for the dashboard and Actions paths.
 - [CI/CD with Zerops](/guides/ci-cd) — broader context on running pipelines around the Zerops build.

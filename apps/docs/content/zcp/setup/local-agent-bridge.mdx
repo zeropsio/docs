@@ -26,13 +26,7 @@ The local bridge runs the agent on your dev machine. ZCP itself stays project-sc
 
 ## Get a project-scoped Zerops token
 
-ZCP needs a Zerops API token scoped to **one project**. To generate one:
-
-1. Open [Settings → Access Tokens Management](https://app.zerops.io/settings/token-management) in the Zerops dashboard.
-2. Click **Create Token**, give it a name, and pick **Custom access per project**.
-3. Add the project the agent will operate against and set its permission to **Full access**. Create the token, copy it once, and store it like any other credential — Zerops shows the value only at creation time.
-
-For the full token shape, where it lives, and rotation rules, see [Tokens and project access](/zcp/security/tokens-and-project-access).
+ZCP needs a Zerops API token scoped to **one project** — multi-project and full-access tokens are refused at startup. Generate one in the Zerops dashboard, then keep the value handy for the **Add your token** step below. Full walkthrough, rejection rules, and rotation: [Tokens and credentials](/zcp/security/tokens-and-project-access).
 
 ## Install ZCP
 
@@ -63,30 +57,7 @@ ZCP creates `.zcp/state/` later, on the first state write for adoption, sessions
 
 ## Add your token
 
-`zcp init` writes an `.mcp.json` without your token. Add the project-scoped token under an `env` block:
-
-```json
-{
-  "mcpServers": {
-    "zerops": {
-      "command": "zcp",
-      "args": ["serve"],
-      "env": {
-        "ZCP_API_KEY": "<your-project-scoped-token>"
-      }
-    }
-  }
-}
-```
-
-Gitignore `.mcp.json` so the token never leaves your machine. Claude Code reads `.mcp.json` at startup and sets `ZCP_API_KEY` for the spawned ZCP process. ZCP reads `ZCP_API_KEY` from its environment and does not store the token elsewhere.
-
-Launch Claude Code from your project root so it picks up `.mcp.json` from the working directory:
-
-```bash
-cd path/to/your/project
-# launch your Claude Code client
-```
+`zcp init` writes a token-less `.mcp.json`. Add your project-scoped token under an `env` block (`ZCP_API_KEY`), gitignore the file, and launch Claude Code from your project root so it picks up the config. The exact JSON shape and rotation rules live in [Tokens and credentials → Where the token lives](/zcp/security/tokens-and-project-access#where-the-token-lives--hosted-vs-local).
 
 Claude Code starts and lists the MCP servers it found. The `zerops` server (that's the ZCP MCP server) should be in the list.
 
@@ -128,23 +99,13 @@ The tool call must include the target service hostname, your working directory m
 
 The `.env` is a snapshot, not a live link. Regenerate after changing project env variables.
 
-## Pick a deploy target
+## Link a deploy target
 
-Local mode has two shapes, depending on how the project is set up. See [workspace topology in Choose your workspace](/zcp/setup/choose-workspace#workspace-topology--what-the-agent-recognizes-after-you-pick) for the full taxonomy.
+Local mode needs one Zerops runtime linked as your stage target so the agent has somewhere to deploy from your working directory. If your project has exactly one runtime, ZCP picks it up automatically. If it has multiple, the agent asks which one to link — answer by hostname (for example, `appstage`).
 
-### `local-stage` — one Zerops runtime is your stage
+If no runtime is linked yet (the project has only managed services, or you haven't decided), the agent's default deploy path refuses with a clear hint. You can still develop locally against the managed services, and git-push delivery can still work if your project is configured for it — see [Choose how finished work ships](/zcp/workflows/delivery-handoff). Ask the agent to link a runtime by hostname when you're ready.
 
-This is the common shape. Your laptop is the dev environment; one Zerops runtime is the linked stage. Deploys go from your local checkout to that stage runtime.
-
-If your project has exactly one runtime, ZCP picks it up automatically. If it has multiple, the agent asks which one to link — answer by hostname (for example, `appstage`). After linking, deploys from the agent push from your local working directory to that runtime.
-
-### `local-only` — no runtime linked as stage yet
-
-This shape applies when no runtime is linked as the stage target — when the project has only managed services, when it has multiple runtimes and ZCP cannot safely choose one, or when you have not yet decided which runtime is stage. You can develop locally against the managed services and reach the project state through ZCP, but the default deploy path has no target until you link one.
-
-Git-push delivery can still work if your project is set up that way; see [Choose how finished work ships](/zcp/workflows/delivery-handoff).
-
-When you are ready, ask the agent to link one runtime as your stage target — name the hostname so the agent does not guess. The shape becomes `local-stage` and the default deploy path starts working.
+The shape names the agent uses (`local-stage` once linked, `local-only` until then) and the full hosted-vs-local taxonomy live in [Choose your workspace](/zcp/setup/choose-workspace#workspace-shapes).
 
 ## What stays your tool's job
 
@@ -161,11 +122,10 @@ For the full hosted-vs-local comparison, see [Choose your workspace](/zcp/setup/
 3. **Multi-project tokens are rejected at startup.** A token granting access to multiple projects (or no project) is refused. Generate a per-project token (steps above).
 4. **The `zerops` server name is fixed.** `.mcp.json` keys the ZCP MCP server as `zerops`. Don't rename it; ZCP and Claude Code expect that key.
 5. **The `.env` is a snapshot.** Regenerate after changing project env variables, not before.
-6. **`local-only` has no default deploy target.** Until you link a runtime as stage, the default deploy path refuses with a clear hint. Git-push delivery can still apply if your project is set up that way. See [Troubleshooting](/zcp/reference/troubleshooting) for what the agent shows.
-7. **Production stays out of this loop.** The local bridge is for development and staging projects. See [Production policy](/zcp/security/production-policy).
+6. **Production stays out of this loop.** The local bridge is for development and staging projects. See [Production boundary](/zcp/security/production-policy).
 
 ## Next steps
 
 - [Build and verify an app](/zcp/workflows/build-and-verify-app) — the deploy and verify loop with the agent.
-- [Tokens and project access](/zcp/security/tokens-and-project-access) — token scope, rotation, and what ZCP refuses.
-- [Choose your workspace](/zcp/setup/choose-workspace) — hosted-vs-local + workspace topology reference.
+- [Tokens and credentials](/zcp/security/tokens-and-project-access) — token scope, rotation, and confirmation gates.
+- [Choose your workspace](/zcp/setup/choose-workspace) — hosted-vs-local + workspace shapes reference.

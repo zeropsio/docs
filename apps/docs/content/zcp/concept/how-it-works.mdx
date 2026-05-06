@@ -10,7 +10,7 @@ Zerops Control Plane (ZCP) runs near the project, reads live platform state, and
 ZCP is a participant in the project network first. It joins the same private network your services use, either as a hosted `zcp` service inside the project or as a local binary on your laptop while the project VPN is up.
 
 - **Hosted workspace.** When you create a project from the **AI Agent** environment in [Zerops recipes](https://app.zerops.io/recipes), or check **Add Zerops Control Plane (ZCP) service** during project creation, Zerops adds a `zcp` service to the project. The agent runs in a browser-hosted workspace inside that service. ZCP reaches the rest of the project over the project's private network, with filesystem access to runtime services through SSHFS mounts.
-- **Local agent bridge.** When you install ZCP locally and run `zcp init` in your project directory, the binary runs on your laptop and acts as a bridge to one Zerops project. The agent runs in your editor; ZCP talks to the Zerops API on your behalf, and project service access goes through your Zerops VPN. The filesystem is your laptop, not the runtime services.
+- **Local agent bridge.** When you [install ZCP locally](/zcp/setup/local-agent-bridge) and run `zcp init` in your project directory, the binary runs on your laptop and acts as a bridge to one Zerops project. The agent runs in your editor; ZCP talks to the Zerops API on your behalf, and project service access goes through your Zerops VPN. The filesystem is your laptop, not the runtime services.
 
 The core jobs are the same in both modes. The helper tools differ by environment: hosted workspace uses SSHFS, SSH/container deploy helpers, server-side batch deploys, and the dev-server runner; local agent bridge uses deploys from your local working directory and the `.env` bridge for local apps. See [Choose your workspace](/zcp/setup/choose-workspace) to pick.
 
@@ -38,7 +38,7 @@ The agent reads the project before changing anything: which services exist, what
 
 ### Deploy
 
-The agent ships code through the standard Zerops [build and deploy pipeline](/guides/deployment-lifecycle). For default deploys, the deploy call blocks until the build finishes and the runtime reports `ACTIVE` — the agent waits with you, not for you. For `strategy="git-push"`, ZCP returns after pushing committed code; the agent then polls `zerops_events` until the runtime is `ACTIVE` and records the deploy with `zerops_workflow action="record-deploy"`.
+The agent ships code through the standard Zerops [build and deploy pipeline](/guides/deployment-lifecycle). For default deploys, the deploy call blocks until the build finishes and the runtime reports active — the agent waits with you, not for you. For git-push delivery, ZCP returns after the push lands; the agent then polls platform events until the runtime is active and records the deploy.
 
 When several services need to ship together, the hosted workspace can coordinate server-side batch deploys. In the local agent bridge, deploys run from your working directory.
 
@@ -46,11 +46,11 @@ Deploy success is not the same as verify success. A deploy that finished is a de
 
 ### Verify
 
-After a deploy, the agent runs post-deploy health checks. Managed services get a service-status check. Runtime services get service status, recent error logs, and an HTTP probe on the public URL. If reachability passes, the agent then checks the requested behavior — opening the URL, hitting an endpoint, inspecting a database row. Failures carry a structured classification — see [Failure categories in Troubleshooting](/zcp/reference/troubleshooting#start-from-a-failure-category).
+After a deploy, ZCP runs post-deploy infrastructure checks: service status, recent error logs, and an HTTP probe on the public URL for runtime services (managed services get the status check only). Those three checks prove the service is reachable, not that the requested behavior works. If reachability passes, the agent layers behavior verification on top — opening the URL, hitting a specific endpoint, inspecting a database row — to confirm the change you asked for actually landed. Failures carry a structured classification — see [Failure categories in Troubleshooting](/zcp/reference/troubleshooting#start-from-a-failure-category).
 
 ### Operate
 
-For service lifecycle — start, stop, restart, reload, [scaling](/features/scaling), [public access](/references/networking/public-access) — the agent uses scoped operations that read and change one project at a time. [Environment variables](/features/env-variables) are read and set the same way, at service or project scope, with preprocessor support so the agent can generate strong secrets in place.
+For service lifecycle — start, stop, restart, reload, [scaling](/features/scaling), [public access](/features/access) — the agent uses scoped operations that read and change one project at a time. [Environment variables](/features/env-variables) are read and set the same way, at service or project scope, with preprocessor support so the agent can generate strong secrets in place.
 
 When ZCP runs in the hosted workspace, the agent has filesystem access to other services through SSHFS mounts and can run a long-lived dev process inside another container.
 
@@ -64,22 +64,26 @@ If the agent loses context — a long session, a browser crash, a closed tab —
 
 When the work is done, you and the agent decide how the next change ships: keep deploying directly, commit and push to git, or hand off to your CI. ZCP records the choice and configures any push credentials and build integrations needed. See [Choose how finished work ships](/zcp/workflows/delivery-handoff).
 
-For a different kind of handoff — turning a deployed service into reusable project files — see [Package a running service for reuse](/zcp/workflows/package-running-service).
+For a different kind of handoff — turning a deployed service into reusable project files — see [Package a running service](/zcp/workflows/package-running-service).
 
 ## Project boundary and explicit confirmation
 
 Each operation knows the project boundary and the current workflow scope. ZCP itself cannot reach across to a different project or push code your token does not authorize. In the local agent bridge, ZCP is project-scoped but the agent client inherits your user — what the client does on your laptop is decided by your client's permissions, not ZCP's.
 
-Two operations carry an explicit confirmation gate because the loss is not reversible from inside the conversation: **service deletion** (requires explicit user approval in the same conversation, by service name) and **wholesale service replacement** on a service with prior failed deploy history (first call refused with a structured payload describing what would be replaced; second call must echo it back). See [Destructive actions and confirmations](/zcp/security/destructive-actions). For the full hosted-vs-local boundary, see [Trust model](/zcp/security/trust-model).
+Two operations carry an explicit confirmation gate because the loss is not reversible from inside the conversation: **service deletion** (requires explicit user approval in the same conversation, by service name) and **wholesale service replacement** on a service with prior failed deploy history (first call refused with a structured payload; second call must echo it back). See [Tokens and credentials → Confirmation gates](/zcp/security/tokens-and-project-access#confirmation-gates-for-destructive-actions). For the full hosted-vs-local boundary, see [Trust model](/zcp/security/trust-model).
 
 ## Knowledge comes by state, not as a manual
 
-ZCP does not feed the agent a long prompt about Zerops up front; it surfaces the specific guidance that matches the current project state, the workflow phase, and the next reasonable action. As the project changes, the guidance changes with it. When the agent asks for status after an interruption, what it gets back is the picture as the project stands now — not what the chat memory recalls.
+ZCP does not feed the agent a long prompt about Zerops up front; it surfaces the specific guidance that matches the current project state, the current step the agent is in, and the next reasonable action. As the project changes, the guidance changes with it. When the agent asks for status after an interruption, what it gets back is the picture as the project stands now — not what the chat memory recalls.
 
-## What's not here
+## ZCP and zCLI
 
-A few capabilities are intentionally out of scope:
+ZCP and [zCLI](/references/cli) coexist on the same project. They have different drivers: zCLI is what a human or a CI runner uses (`zcli push`, `zcli vpn up`, scripts and Makefiles); ZCP is what a coding agent uses over MCP. ZCP does not replace zCLI — the local agent bridge expects zCLI to be installed for `zcli vpn up` (which you run yourself, ZCP does not start the VPN), and the hosted workspace ships with zCLI ready in the terminal next to the agent.
 
-- **Authoring new recipes.** Recipes are pre-built starters Zerops publishes; ZCP users select them.
-- **Your local dev server in local mode.** ZCP does not start, stop, or watch the dev process you run on your own machine. That stays your tool's job.
-- **Production operations.** Keep production in a separate Zerops project and operate it through Zerops UI, the API, or your CI. See [Production policy](/zcp/security/production-policy). Production data restore is owned by [Backup](/features/backup), not ZCP.
+Pick zCLI for direct commands you type, scripted automation, and CI/CD pipelines. Pick ZCP when an agent is doing real application work and needs scoped operations, structured failure handling, post-deploy verify, and recovery from interrupted sessions. They share the same Zerops API, the same project, and the same build pipeline.
+
+:::note Three names, easy to confuse
+- **ZCP** (Zerops Control Plane) — the service this section documents; exposes one Zerops project to a coding agent over MCP.
+- **zCLI** — the [Zerops command-line client](/references/cli); used by humans and CI to push code, manage projects, and connect over VPN.
+- **zsc** (Zerops Setup Control) — an [in-container utility](/references/zsc) that ships in every Zerops runtime and build container; used by `zerops.yaml` build steps to install runtime tech, scale resources, and configure the container. Not part of ZCP.
+:::
