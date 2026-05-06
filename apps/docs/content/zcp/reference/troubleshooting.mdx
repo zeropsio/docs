@@ -17,7 +17,7 @@ Each subsection below: what it means, where to read first, the first recovery mo
 
 The Zerops build pipeline failed before a runtime container could start.
 
-**Read first.** The build process logs (the `stack.build` process). Build logs live separately from runtime logs; runtime logs will not explain a failed build.
+**Read first.** The build container's logs. Build logs live separately from runtime logs; runtime logs will not explain a failed build.
 
 **Recovery.** Fix `buildCommands`, dependency manifests, lock files, or the build working directory. If the failure is memory pressure, increase build resources or split the heavy build step. Redeploy after the fix.
 
@@ -27,7 +27,7 @@ The Zerops build pipeline failed before a runtime container could start.
 
 The build succeeded, but the runtime did not reach a running state.
 
-**Read first.** Prepare logs when the failure is in `prepareCommands`; runtime logs when the runtime started briefly and crashed. The classification names which. If a successful operation also returned a `warnings` array, read it before treating the deploy as healthy — subdomain readiness and HTTP probe results show up there even when the deploy itself reports `FINISHED`.
+**Read first.** Prepare logs when the failure is in `prepareCommands`; runtime logs when the runtime started briefly and crashed. The classification names which. If the agent surfaces warnings alongside an otherwise-successful operation, read them before treating the deploy as healthy — subdomain readiness and HTTP probe results show up there even when the deploy itself reports `FINISHED`.
 
 **Recovery path** (in this order):
 
@@ -48,7 +48,7 @@ The deploy finished, but a post-deploy health check did not pass.
 
 **Example.** "Deploy of `appdev` succeeded but verify failed: HTTP probe returned 502 against the public URL. Cause: runtime is up, but the listener is not on `0.0.0.0`. Suggested action: read `zerops.yaml` `run.ports[]` and confirm the start command binds `0.0.0.0`, not `127.0.0.1`."
 
-Subdomain-readiness signals can appear in the `warnings` array of an otherwise-successful operation (an `enable subdomain` call that returned `FINISHED` may include "URL not ready after 10s"). Read warnings before treating the URL as live.
+Subdomain-readiness signals can appear as warnings the agent surfaces alongside an otherwise-successful operation (an `enable subdomain` call that returned `FINISHED` may include "URL not ready after 10s"). Read warnings before treating the URL as live.
 
 ### network
 

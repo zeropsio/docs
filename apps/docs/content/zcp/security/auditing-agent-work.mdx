@@ -15,7 +15,7 @@ This page assumes a development session has happened. Maybe the agent reported i
 | Runtime behavior (crashes, log lines, restarts) | Runtime logs scoped by service hostname, severity, time | Pre-deploy local stdout if your app prints before being deployed. |
 | Lifecycle (start, stop, restart, scale, subdomain enable/disable) | Project events timeline | The agent's reasoning for choosing the action — that lives in the chat client. |
 | Env-var changes (set, delete, update) | Project events; current values via discover | Per-call before/after diff is not separately recorded — read the discover snapshot before and after. |
-| Service deletion and import override | Project events; the `wouldDestroy`/confirmation exchange in the chat | Once executed, the destroyed state is gone. Roll-back via [Backup](/features/backup), not the audit log. |
+| Service deletion and import override | Project events + the resulting service-stack changes | The structured `wouldDestroy`/confirmation exchange persists only in the chat-client transcript (same caveat as agent-side reasoning, below). Once executed, the destroyed state itself is gone — roll-back via [Backup](/features/backup), not the audit log. |
 | Git-push delivery commits | Git history on the configured remote | Same as any other committer — `git log`, `git blame`, your PR review. |
 | **Agent-side decisions, prompt history, planning** | The chat client's transcript | Not recorded by ZCP. If the chat is closed without export, that reasoning is gone. |
 | **File edits the agent makes via a shell terminal in the workspace** | Filesystem state on the runtime container | Per-edit diff is not platform-recorded. Use `git status` in the runtime mount or commit incrementally to capture intent. |
@@ -31,7 +31,7 @@ The four platform-side streams have an order:
 
 1. **Project events** — timeline of deploys, builds, scaling, status transitions. Scope by service hostname; the project-level view mixes everything.
 2. **Runtime logs** — explain why a failure happened, scoped by hostname, severity, time, search.
-3. **Deploys and verifies** — the canonical "did the agent ship something, and did it work" record. Both persist as platform records.
+3. **Deploys and verifies** — the canonical "did the agent ship something, and did it work" record. Deploy/build/appVersion events persist as durable platform records; verify results live in the tool response and ZCP's per-project work-session state, which is PID-scoped and cleaned over time. For durable verify audit, capture the response in the chat transcript or rerun verify on demand.
 4. **Git history** (when delivery uses git-push) — commits the agent pushed, reviewed like any other diff.
 
 Plus, when a session has gone sideways and you want the agent's current view of the project, **ZCP status** is what realigns: it rebuilds the picture from live platform state in one prompt.
@@ -83,11 +83,11 @@ The logs are the application's own stdout and stderr. The agent does not paraphr
 
 ## Review deploys and verifies
 
-Deploys and verifies are the canonical "did the agent ship something, and did it work" record. Both persist as platform records — you do not have to trust the agent's transcript for either.
+Deploys and verifies are the canonical "did the agent ship something, and did it work" record. They persist on different surfaces: deploy/build/appVersion events are durable platform records you can reread weeks later; verify results live in the tool response and ZCP's per-project work-session state (PID-scoped, cleaned over time). For an audit you can revisit, capture the verify response in the chat transcript or rerun verify on demand.
 
 Each deploy carries a build status, an appVersion status, and — for failures — a structured classification with a category, a likely cause, and a suggested next action. See [Failure categories in Troubleshooting](/zcp/reference/troubleshooting#start-from-a-failure-category).
 
-Verification results sit alongside the deploys. Each verify run records service status, error log presence, startup detection, and the HTTP probe outcome. A "successful" deploy with a failed verify is a real signal — the build finished and the runtime started, but the requested behavior did not pass. The audit needs both halves.
+Verification results sit alongside the deploys. Each verify run records service status, error log presence, and the HTTP probe outcome. A "successful" deploy with a failed verify is a real signal — the build finished and the runtime started, but the requested behavior did not pass. The audit needs both halves.
 
 Useful prompts:
 

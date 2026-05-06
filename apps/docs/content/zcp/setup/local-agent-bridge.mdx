@@ -3,7 +3,7 @@ title: "Use ZCP from your laptop"
 description: "Run ZCP locally so your editor and agent can discover Zerops services, generate credentials, and deploy to Zerops."
 ---
 
-Run Zerops Control Plane (ZCP) locally so your editor and agent can discover Zerops services, generate credentials, and deploy to Zerops. Your laptop is the development environment. ZCP is the bridge between your editor and the project's services.
+Run Zerops Control Plane (ZCP) as a binary on your laptop so your editor and agent can operate one Zerops project. With `zcli vpn up <project-id>`, your laptop joins the project's private network — the same network your services use. ZCP is the bridge between your local editor, the agent, and the project.
 
 :::caution Public preview
 Zerops Control Plane (ZCP) is in public preview. Use it for development and staging projects, keep production in a separate Zerops project, and expect setup details to change.
@@ -11,7 +11,7 @@ Zerops Control Plane (ZCP) is in public preview. Use it for development and stag
 
 The local agent bridge is for developers who already have a comfortable local setup — your editor, your shell, your dev server — and want a coding agent that can drive Zerops without giving up your machine. If you are evaluating ZCP for the first time, the [hosted workspace](/zcp/setup/hosted-workspace) is a faster start.
 
-You don't need ZCP to develop locally against a Zerops project. `zcli vpn up <project-id>` is enough to reach managed services by hostname from your laptop and run your dev process against them — see [Local & Remote Development](/guides/local-development) for the platform-side picture. ZCP is what you add when you also want a coding agent operating the project from the same machine: discovering services, generating credentials, deploying, reading logs, verifying.
+You don't need ZCP to develop locally against a Zerops project. `zcli vpn up <project-id>` is enough to reach managed services by hostname from your laptop and run your dev process against them — see [Local Development with Zerops](/guides/local-development) for the platform-side picture. ZCP is what you add when you also want a coding agent operating the project from the same machine: discovering services, generating credentials, deploying, reading logs, verifying.
 
 :::caution Supervise the agent client
 The local bridge runs the agent on your dev machine. ZCP itself stays project-scoped, but the agent process inherits your user — what your client (Claude Code, etc.) does with file edits, shell commands, and other tools is decided by your client's permissions, not ZCP's. Set those permissions accordingly. See [Trust model](/zcp/security/trust-model) for the full picture.
@@ -57,10 +57,9 @@ zcp init
 - `.mcp.json` — the MCP configuration Claude Code reads to discover ZCP
 - `CLAUDE.md` — instructions for the agent about how to operate ZCP in this project
 - `.claude/settings.local.json` — Claude Code per-project settings
-- A `.zcp/state/` directory for ZCP's own session state
-- Shell aliases for common ZCP operations
+- `~/.config/zerops/aliases` plus a shell RC sourcing line — today this defines one `zcl` alias that launches Claude Code
 
-Re-running `zcp init` refreshes the generated files. `CLAUDE.md` preserves your edits outside the managed markers, but `.mcp.json` is rewritten from the template — if you added `ZCP_API_KEY` to it, check the file afterward and re-add the token. The regenerated `.mcp.json` ships without a token.
+ZCP creates `.zcp/state/` later, on the first state write for adoption, sessions, or workflow progress. Re-running `zcp init` refreshes the generated files. `CLAUDE.md` preserves your edits outside the managed markers, but `.mcp.json` is rewritten from the template — if you added `ZCP_API_KEY` to it, check the file afterward and re-add the token. The regenerated `.mcp.json` ships without a token.
 
 ## Add your token
 
@@ -80,7 +79,7 @@ Re-running `zcp init` refreshes the generated files. `CLAUDE.md` preserves your 
 }
 ```
 
-Gitignore `.mcp.json` so the token never leaves your machine. ZCP reads the token from this file at startup and does not store it anywhere else.
+Gitignore `.mcp.json` so the token never leaves your machine. Claude Code reads `.mcp.json` at startup and sets `ZCP_API_KEY` for the spawned ZCP process. ZCP reads `ZCP_API_KEY` from its environment and does not store the token elsewhere.
 
 Launch Claude Code from your project root so it picks up `.mcp.json` from the working directory:
 
@@ -123,7 +122,9 @@ Ask Claude Code to generate the env file from your project:
 Use ZCP to generate a .env file for my local app.
 ```
 
-ZCP reads the project's services, resolves env-template references (the `${hostname_var}` syntax used in `zerops.yaml`), and writes a `.env` in your working directory. Cross-service references in compound values resolve recursively — for example `DATABASE_URL=postgres://${db_user}:${db_password}@${db_hostname}:${db_port}/${db_dbName}` lands as a fully-resolved connection string. Your local app reads the **same hostnames and credentials it would see when deployed** to Zerops, just reached over VPN instead of the project's private network. No mocks, no Docker Compose drift between dev and prod.
+ZCP reads `run.envVariables` for the requested service from your local `zerops.yaml`, resolves env-template references (the `${hostname_var}` syntax used in `zerops.yaml`) from the platform, and writes a `.env` in your working directory. Cross-service references in compound values resolve recursively — for example `DATABASE_URL=postgres://${db_user}:${db_password}@${db_hostname}:${db_port}/${db_dbName}` lands as a fully-resolved connection string.
+
+The tool call must include the target service hostname, your working directory must contain `zerops.yaml`, and that file must have a matching `setup:` entry with non-empty `run.envVariables`. Without those, generate-dotenv returns an error instead of guessing. Your local app reads the same hostnames and credentials it would see when deployed to Zerops, reached over VPN instead of from inside the project's private network.
 
 The `.env` is a snapshot, not a live link. Regenerate after changing project env variables.
 

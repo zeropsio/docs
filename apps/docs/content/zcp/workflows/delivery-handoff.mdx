@@ -7,7 +7,7 @@ Choose whether Zerops Control Plane (ZCP) closes work by deploying directly, pus
 
 If you don't have a CI pipeline yet, the third answer below is not for you — pick "the agent keeps deploying" and revisit when your team needs git-tracked releases.
 
-ZCP projects are intentionally dev/staging environments. Today, packaging a verified ZCP project for production handoff is supported via the [export workflow](/zcp/workflows/package-running-service); production then lives in its own Zerops project deployed by your CI or a release pipeline.
+ZCP projects are intentionally dev/staging environments. Today, packaging a verified ZCP project for production handoff is supported via [Package a running service for reuse](/zcp/workflows/package-running-service); production then lives in its own Zerops project deployed by your CI or a release pipeline.
 
 ## Three answers
 
@@ -15,7 +15,7 @@ ZCP projects are intentionally dev/staging environments. Today, packaging a veri
 - **Push to git, then build from there.** Future changes get committed and pushed to a configured remote. Either Zerops or your existing CI takes the push and runs the build. Right when the team's source of truth is git and you want reviewable commits.
 - **Hand off to your CI or a human.** ZCP records every deploy and verify the agent runs at your request, but does not initiate further deploys. Right when an external pipeline or release process owns delivery from here.
 
-These are recorded against each service. The agent translates "set the close-mode" or "configure git push" prompts into the right operations; you do not call them by name.
+These are recorded against each service as a triple: a **close-mode** that picks one of the three answers above (`auto`, `git-push`, `manual`), an optional **git-push setup** that names the remote URL and credential when close-mode is `git-push`, and an optional **build integration** that picks what fires after a push lands (`webhook` for the Zerops dashboard pull, `actions` for a GitHub Actions workflow you check in). The three are orthogonal — configured git push can coexist with `auto` close-mode for emergencies, and build integration only applies when git push is set up. The agent translates "set the close-mode" or "configure git push" prompts into the right operations; you do not call them by name.
 
 The first deploy always uses the direct path regardless of the answer you pick later — there is no deploy yet for the choice to apply to.
 
@@ -41,7 +41,7 @@ Pick this when the project is small or solo, when the deploys ZCP runs are the c
 
 Future changes get committed and pushed to a configured git remote. Whatever sits behind that remote — a Zerops-managed build or your own CI — produces the next deploy.
 
-This requires committed code. ZCP does not auto-init git or invent a commit on your behalf. Before git-push delivery becomes useful you need an initialized repository with at least one commit covering the work you want to ship, a remote URL ZCP can push to, and credentials that authorize the push.
+This requires committed code. In a [local agent bridge](/zcp/setup/local-agent-bridge), ZCP does not auto-init git in your working directory — you `git init` and make your first commit. In a [hosted workspace](/zcp/setup/hosted-workspace), ZCP initializes `/var/www/.git/` for each managed runtime at bootstrap with a deploy identity, so the repository is already there; what's still missing is a commit covering the work you want to ship. Either way, git-push delivery needs at least one commit, a remote URL ZCP can push to, and credentials that authorize the push.
 
 When you ask the agent to set up git-push delivery, it provisions the remote URL and credentials so future pushes work without per-call configuration. If the setup step fails — repository unreachable, credential missing, working directory has no commits — the agent reports the specific reason. Fix the underlying issue and ask again.
 

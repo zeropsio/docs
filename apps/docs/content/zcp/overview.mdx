@@ -11,7 +11,9 @@ Zerops Control Plane (ZCP) is in public preview. Use it for development and stag
 
 ## What ZCP is
 
-ZCP runs as a service inside your Zerops project, or as a binary on your laptop. Either way, it exposes the same project to a coding agent — the same services, env vars, deploy pipeline, logs, and verify loop your app actually uses.
+ZCP joins your project's private network and exposes project operations to a coding agent. In a hosted workspace, ZCP runs as a `zcp` service inside the project. In the local agent bridge, ZCP runs as a binary on your laptop while your laptop is connected to the project VPN.
+
+Either way, the agent works against the same private VXLAN your services use, with the same hostname resolution (`db:5432`, `api:3000`), credentials, services, deploy pipeline, logs, and verify loop your app actually uses.
 
 What ZCP gives an agent:
 
@@ -24,12 +26,12 @@ You hold the product intent — what to build, which target matters, what counts
 
 ## Two ways to run it
 
-Same control plane, two ways to host it — and the safety profile is different in each.
+Same control plane, two workspace modes — and the safety profile is different in each.
 
-- **Container (hosted workspace)** — ZCP runs as a `zcp` service inside your Zerops project. The agent runs in a browser-hosted editor in the same project. Safe by design: the container has no path to your laptop, your home directory, or your other Zerops projects.
-- **Local (laptop bridge)** — you install ZCP on your machine and run `zcp init` in your project directory. The agent runs in your editor; ZCP talks to the project on your behalf. Bigger blast radius: ZCP is still project-scoped, but the agent client inherits your user — you supervise the client's file/shell permissions, not just ZCP's.
+- **Hosted workspace** — ZCP runs as a `zcp` service inside your Zerops project. The agent runs in a browser-hosted editor in the same project. Safe by design: the container has no path to your laptop, your home directory, or your other Zerops projects.
+- **Local agent bridge** — you install ZCP on your machine and run `zcp init` in your project directory. The agent runs in your editor; ZCP talks to the project on your behalf while your laptop reaches project services over VPN. Bigger blast radius: ZCP is still project-scoped, but the agent client inherits your user — you supervise the client's file/shell permissions, not just ZCP's.
 
-Pick the one that fits how you already work. The agent's tool surface is identical in both. See [Trust model](/zcp/security/trust-model) for the full security framing and [Choose your workspace](/zcp/setup/choose-workspace) for the decision.
+Pick the one that fits how you already work. Both modes cover the same core jobs: discover, deploy, verify, operate, recover, and hand off. Some helpers are environment-specific: hosted workspace supports SSHFS mounts, SSH/container deploys, server-side batch deploys, and a dev-server runner; local agent bridge supports deploys from your working directory and `.env` generation for local apps. See [Trust model](/zcp/security/trust-model) for the full security framing and [Choose your workspace](/zcp/setup/choose-workspace) for the decision. If you also want a non-agent development workflow, see [Local Development with Zerops](/guides/local-development).
 
 ## Who it is for
 
@@ -41,7 +43,7 @@ Today, ZCP supports **Claude Code**, paired with a **Claude Pro or Max subscript
 
 ## ZCP projects are dev/staging — not production
 
-ZCP projects are intentionally development and staging environments. The Zerops dashboard flags this directly: **"Designed for development projects — not recommended for production"**. Today, packaging a verified ZCP project for production handoff is supported via the [export workflow](/zcp/workflows/package-running-service), which produces a re-importable bundle whose `buildFromGit:` URL points at the same source repo. Production then lives in its own Zerops project, deployed by your CI or a release pipeline. See [Production policy](/zcp/security/production-policy).
+ZCP projects are intentionally development and staging environments. The Zerops dashboard flags this directly: **"Designed for development projects — not recommended for production"**. Today, packaging a verified ZCP project for production handoff is supported via [Package a running service for reuse](/zcp/workflows/package-running-service), which produces a re-importable bundle whose `buildFromGit:` URL points at the same source repo. Production then lives in its own Zerops project, deployed by your CI or a release pipeline. See [Production policy](/zcp/security/production-policy).
 
 ## Where to start
 

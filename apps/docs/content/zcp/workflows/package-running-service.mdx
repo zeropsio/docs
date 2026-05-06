@@ -65,6 +65,7 @@ Auto-secret rotation is destructive to any persisted state encrypted with the ol
 The result of a successful export is a **single-repo, self-contained bundle** with two files:
 
 ```yaml
+#zeropsPreprocessor=on
 # zerops-project-import.yaml — paste into a fresh Zerops project
 project:
   name: demo
@@ -111,8 +112,9 @@ zerops:
         DATABASE_URL: postgres://${db_user}:${db_password}@${db_hostname}:${db_port}/${db_dbName}
 ```
 
-Two things to notice:
+Three things to notice:
 
+- The first line is `#zeropsPreprocessor=on`. When the bundle carries `<@...>` directives (here `<@generateRandomString(<32>)>` for `APP_KEY`), this header is required on line 1 — without it the platform skips directive expansion at re-import and the literal string lands in the env var. Export emits the header automatically when any directive is present.
 - The runtime's `buildFromGit:` URL points back at the same repo the bundle lives in. The bundle is **self-referential**: re-importing creates a project that builds itself from git. Source code lives in git, **not** in YAML.
 - Managed dependencies (`db`, `redis`) appear as plain entries with no `buildFromGit:`. They are there so `${db_*}` and `${redis_*}` references in `zerops.yaml` resolve at re-import — see [environment variables](/guides/environment-variables).
 

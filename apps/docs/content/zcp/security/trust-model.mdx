@@ -9,7 +9,7 @@ Zerops Control Plane (ZCP) gives a coding agent project-scoped power inside one 
 Zerops Control Plane (ZCP) is in public preview. Use it for development and staging projects, keep production in a separate Zerops project, and expect setup details to change.
 :::
 
-## Container or local: two different blast radii
+## Hosted workspace or local agent bridge: two different blast radii
 
 | | Hosted workspace | Local agent bridge |
 |---|---|---|
@@ -69,7 +69,7 @@ ZCP uses hard refusals for boundaries that should never be inferred, and confirm
 | Refuse a multi-project token | Startup sees more than one accessible Zerops project. | ZCP does not choose for the agent. Generate a project-scoped token or scope `zcli` to one project. |
 | Refuse hosted self-deletion | `zerops_delete` targets the service where ZCP is currently running. | The call is blocked. Delete that service manually through Zerops UI or `zcli` if you really intend to remove the control plane. |
 | Require named approval for deletion | An agent wants to delete a service. | The destructive tool contract requires explicit approval in the current conversation for that specific service name. The agent should not delete proactively. |
-| Gate destructive service replacement | `zerops_import override=true` would replace services with prior failed build or deploy history. | The first call returns a structured `wouldDestroy` payload. A second call must include matching `confirmDestructive` fields before the import proceeds. |
+| Gate destructive service replacement | `zerops_import override=true` would replace services with prior failed deploy history. | The first call returns a structured `wouldDestroy` payload. A second call must include matching `confirmDestructive` fields before the import proceeds. |
 
 The import gate is intentionally not a permanent blocker. Replacing a failed service can be the right recovery path. The gate makes the loss explicit first: which service stacks are being replaced, which targets are acknowledged, and which operation is being confirmed.
 

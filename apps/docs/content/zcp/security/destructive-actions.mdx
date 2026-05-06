@@ -17,8 +17,8 @@ Two operations carry an explicit gate because the loss is not reversible from in
 
 | Operation | Gate |
 |---|---|
-| **Service deletion** — removes the service entirely; container, deployed code, env vars all gone. | Requires explicit user approval in the same conversation, by service name. The agent does not delete proactively. |
-| **Wholesale service replacement (override import)** on a service with prior failed deploy history | First call is refused with a structured payload describing what would be replaced. The agent's second call must echo that payload back as a confirmation. |
+| **Service deletion** — removes the service entirely; container, deployed code, env vars all gone. | The MCP tool contract requires explicit user approval in the same conversation, by service name; supported clients (Claude Code) enforce this. ZCP itself hard-blocks one case: deleting the hosted ZCP service it is running on. |
+| **Wholesale service replacement (override import)** on a service with prior failed deploy history | First call is refused with a structured payload naming the operation and target hostnames. The agent's second call must echo that payload back as a confirmation. |
 
 Everything else — import to add new services, normal deploys, env writes, public-access toggles — is mutating but reversible. The agent runs them as part of the workflow without pausing for approval.
 
@@ -26,11 +26,10 @@ Everything else — import to add new services, normal deploys, env writes, publ
 
 Deleting a service is permanent. The container is gone, the deployed code is gone, the env vars are gone. ZCP treats this as a user decision, not an agent decision.
 
-The contract:
+The contract — enforced at two layers:
 
-- The agent must have explicit user approval **in the same conversation, by service name**, before calling `zerops_delete`. Approval cannot be inferred from a previous chat or carried over from another task.
-- The agent must not delete proactively. Cleaning up "leftover" services, removing services it created earlier, or pruning anything you did not name is out of bounds.
-- The user must name the service. "Delete the broken one" is not enough; the agent should ask which hostname.
+- **Tool-contract layer (the MCP client).** The `zerops_delete` tool description requires explicit user approval in the same conversation, by service name. Supported clients (Claude Code) honor this — the agent must not delete proactively, must not infer approval from previous chats, and must ask which hostname when you say "delete the broken one".
+- **Runtime layer (ZCP itself).** ZCP hard-blocks exactly one deletion case: a hosted ZCP service deleting itself (`SELF_SERVICE_BLOCKED`). Beyond that, ZCP does not validate approval state at the API boundary — it relies on the client to enforce the contract.
 
 A typical confirmation in conversation looks like this:
 
@@ -46,24 +45,22 @@ it. Reply "yes, delete appdev-old" to proceed.
 > yes, delete appdev-old
 ```
 
-The phrasing varies; the structure does not. Approval is an explicit yes paired with the service name in the same turn-window. ZCP cannot relax this requirement.
+The phrasing varies; the structure does not. Approval is an explicit yes paired with the service name in the same turn-window. The MCP client enforces this; ZCP enforces only the self-deletion block at the API.
 
 ## Service replacement via import override
 
 The wholesale-replace path tears down every imported hostname that already exists and recreates it: the previous container, deployed code, env vars, and SSHFS mount on each matching service are gone. This is intentionally destructive — it is how the agent transitions a service that came up wrong, or reshapes a service that drifted from its declared form.
 
-ZCP does not let this happen silently when the targeted service has a history of failure. The first call against a service with failed deploy history is refused with a structured payload describing exactly what would be replaced — which hostnames, which env-var keys, and which container state. The agent's second call must echo that payload back so the conversation acknowledges the loss explicitly before destruction proceeds.
+ZCP does not let this happen silently when the targeted service has a history of failure. The first call against a service with prior failed deploy history is refused with a structured payload naming the operation and the target hostnames. The agent's second call must echo that payload back so the conversation acknowledges the loss explicitly before destruction proceeds.
 
 A worked example, told in agent voice:
 
 ```text
 Agent (call 1): I tried to override the import for `appdev` — the
-previous deploy failed. ZCP refuses without confirmation. The platform
-says replacing `appdev` would erase its container, the failed
-appVersion, and these env vars: APP_KEY, DATABASE_URL.
-
-Read the failure first or confirm? Reply "confirm replace appdev" to
-acknowledge.
+previous deploy failed. ZCP refuses without confirmation. Replacing
+`appdev` would erase its container and the failed appVersion. Reply
+"confirm replace appdev" to acknowledge — or let me read the failure
+first.
 ```
 
 ```text
@@ -109,7 +106,7 @@ A handful of patterns are not gated, conditional, or confirmable. ZCP refuses th
 | Pattern | What ZCP does | Why |
 |---|---|---|
 | Deleting the service ZCP runs on | The call is blocked when the target hostname matches the running ZCP service | The hosted ZCP container cannot delete itself; the call would tear down the agent mid-operation. Use zCLI or the Zerops GUI for that one. |
-| Cross-project access | Every ZCP token is bound to one Zerops project at authentication time | One ZCP equals one project. The agent cannot read or change services in any other project, regardless of what it is asked to do. |
+| Cross-project access | ZCP resolves a single project at startup and pins every tool call to that ID; agents have no path to address another project, regardless of the token's underlying scope. | One ZCP equals one project. The agent cannot read or change services in any other project, regardless of what it is asked to do. |
 | Multi-project tokens | Rejected at token validation | Full-access and multi-project tokens widen the blast radius beyond what the trust model permits. ZCP requires a project-scoped token by design. |
 
 These are the non-negotiable lines. ZCP cannot be configured to cross them.

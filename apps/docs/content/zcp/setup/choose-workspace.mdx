@@ -3,14 +3,14 @@ title: "Choose your workspace"
 description: "Pick whether the coding agent runs in a hosted Zerops workspace or from your local machine, and recognize the project topology the agent picks up."
 ---
 
-Pick whether the coding agent runs in a hosted Zerops workspace or from your local machine. Both paths give the agent the same Zerops Control Plane (ZCP) tools against the same project. What differs is where the agent runs, which filesystem it sees, and — importantly — the safety profile.
+Pick whether the coding agent runs in a hosted Zerops workspace or from your local machine. Both paths connect the agent to the same Zerops project through Zerops Control Plane (ZCP). What differs is where ZCP runs, which filesystem the agent sees, which helper tools are available, and — importantly — the safety profile.
 
 ## The short rule
 
 - **First run, nothing installed locally** → **hosted workspace**. Safe by design: the agent runs in a project container with no path to your laptop or your other projects.
 - **Already work in your own editor on your own machine, want the agent to deploy from there** → **local agent bridge**. ZCP itself is still project-scoped, but the agent process inherits your user — you supervise the client's permissions on your laptop.
 
-Switching later is straightforward; the agent's tool surface is identical in both. The full security framing for both paths lives in [Trust model](/zcp/security/trust-model).
+Switching later is straightforward. The core jobs stay the same in both modes, but helper tools differ by environment. The full security framing for both paths lives in [Trust model](/zcp/security/trust-model).
 
 ## Hosted workspace
 
@@ -54,7 +54,7 @@ When this fits:
 
 What it gives the agent:
 
-- The same ZCP tools the hosted workspace exposes, against the same project.
+- The same core ZCP jobs as the hosted workspace — discover, deploy, verify, operate, recover, hand off — against the same project.
 - A locally generated `.env` with real credentials so your local app can connect to managed services.
 - One-command deploy from your working directory to a linked Zerops runtime.
 - Native editor speed and your existing keybindings, plugins, and workflow.
@@ -85,7 +85,7 @@ How to set it up: [Use ZCP from your laptop](/zcp/setup/local-agent-bridge). Bac
 | Best for first run? | Yes | After you've used ZCP once |
 | Cost shape | One small `zcp` service in the project | Free locally; you still pay for the Zerops project |
 
-The agent's tool surface is identical across both shapes. What ZCP lets the agent do — discover, deploy, verify, operate, recover, hand off — is described in [How ZCP works](/zcp/concept/how-it-works).
+Both modes cover the same core jobs: discover, deploy, verify, operate, recover, and hand off. The environment-specific helpers differ: hosted workspace supports SSHFS mounts, SSH/container deploys, server-side batch deploys, and a dev-server runner; local agent bridge supports deploys from your working directory and `.env` generation for local apps. What ZCP lets the agent do is described in [How ZCP works](/zcp/concept/how-it-works).
 
 ## Workspace topology — what the agent recognizes after you pick
 
@@ -107,7 +107,9 @@ The stage hostname is **explicit**. The agent does not invent it from the dev ho
 
 ## A note on developer dev modes
 
-Choosing where the agent runs is a different question from choosing where you, the developer, work. Your editor can stay on your laptop with a [VPN](/references/networking/vpn) into the project's private network and reach project services by hostname (see [Local development](/guides/local-development)). You can [SSH or Remote SSH](/references/networking/ssh) directly into runtime containers from your laptop and edit there. Or you can use the browser-hosted editor that comes with the [hosted ZCP workspace](/zcp/setup/hosted-workspace). All three coexist with the workspace choice on this page.
+:::tip
+If you also want a non-agent developer workflow on this project — local IDE + VPN, browser Cloud IDE, or native IDE over SSH — see [Local Development with Zerops](/guides/local-development) for the full landscape. The ZCP choice on this page is independent of how you, the developer, edit code.
+:::
 
 ## Next steps
 

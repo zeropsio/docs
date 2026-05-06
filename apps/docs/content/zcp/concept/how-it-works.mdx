@@ -7,16 +7,16 @@ Zerops Control Plane (ZCP) runs near the project, reads live platform state, and
 
 ## Runs inside or beside the project
 
-ZCP comes in two shapes. The agent uses the same control surface in both:
+ZCP is a participant in the project network first. It joins the same private network your services use, either as a hosted `zcp` service inside the project or as a local binary on your laptop while the project VPN is up.
 
-- **Inside the project (hosted workspace).** When you create a project from the **AI Agent** environment in [Zerops recipes](https://app.zerops.io/recipes), or check **Add Zerops Control Plane (ZCP) service** during project creation, Zerops adds a `zcp` service to the project. The agent runs in a browser-hosted workspace inside that service. ZCP sees the rest of the project over the project's private network, with filesystem access to runtime services through SSHFS mounts.
-- **Beside the project (local agent bridge).** When you install ZCP locally and run `zcp init` in your project directory, the binary runs on your laptop and acts as a bridge to a Zerops project. The agent runs in your editor; ZCP talks to the Zerops API on your behalf. The filesystem is your laptop, not the runtime services.
+- **Hosted workspace.** When you create a project from the **AI Agent** environment in [Zerops recipes](https://app.zerops.io/recipes), or check **Add Zerops Control Plane (ZCP) service** during project creation, Zerops adds a `zcp` service to the project. The agent runs in a browser-hosted workspace inside that service. ZCP reaches the rest of the project over the project's private network, with filesystem access to runtime services through SSHFS mounts.
+- **Local agent bridge.** When you install ZCP locally and run `zcp init` in your project directory, the binary runs on your laptop and acts as a bridge to one Zerops project. The agent runs in your editor; ZCP talks to the Zerops API on your behalf, and project service access goes through your Zerops VPN. The filesystem is your laptop, not the runtime services.
 
-The agent's interface is the same in both. What changes is where ZCP physically runs and what filesystem the agent sees. See [Choose your workspace](/zcp/setup/choose-workspace) to pick.
+The core jobs are the same in both modes. The helper tools differ by environment: hosted workspace uses SSHFS, SSH/container deploy helpers, server-side batch deploys, and the dev-server runner; local agent bridge uses deploys from your local working directory and the `.env` bridge for local apps. See [Choose your workspace](/zcp/setup/choose-workspace) to pick.
 
 ## Reads live project state
 
-When the agent needs context, ZCP queries the platform: what services exist, what state they are in, what env variables are exposed, what the recent build and deploy events look like. The agent does not rely on a long prompt or stale documentation; the answer comes from the project as it stands now.
+When the agent needs context, ZCP queries the platform: what services exist, what state they are in, what ports and env variables are exposed. Build and deploy timelines come from the separate events surface, which the agent uses when it is diagnosing a failure or polling a git-push deploy. The agent does not rely on a long prompt or stale documentation; the answer comes from the project as it stands now.
 
 > You do not explain the environment to the agent. The environment reports itself from current platform reality.
 
@@ -34,17 +34,19 @@ ZCP groups platform operations by user job. You ask for an outcome in plain lang
 
 ### Discover
 
-The agent reads the project before changing anything: which services exist, what state they are in, what env variables they expose, what the recent build and deploy timeline looks like. When you ask "what is in this project?", you do not describe it — the agent asks ZCP and tells you.
+The agent reads the project before changing anything: which services exist, what state they are in, what ports they expose, and what env variables they expose. When you ask "what is in this project?", you do not describe it — the agent asks ZCP and tells you.
 
 ### Deploy
 
-The agent ships code through the standard Zerops [build and deploy pipeline](/guides/deployment-lifecycle). The deploy call blocks until the build finishes and the runtime is ready — the agent waits with you, not for you. When several services need to ship together, the agent coordinates the deploys and reports each result.
+The agent ships code through the standard Zerops [build and deploy pipeline](/guides/deployment-lifecycle). For default deploys, the deploy call blocks until the build finishes and the runtime reports `ACTIVE` — the agent waits with you, not for you. For `strategy="git-push"`, ZCP returns after pushing committed code; the agent then polls `zerops_events` until the runtime is `ACTIVE` and records the deploy with `zerops_workflow action="record-deploy"`.
+
+When several services need to ship together, the hosted workspace can coordinate server-side batch deploys. In the local agent bridge, deploys run from your working directory.
 
 Deploy success is not the same as verify success. A deploy that finished is a deploy that built and started; whether the app actually does what you asked is a separate check.
 
 ### Verify
 
-After a deploy, the agent runs post-deploy health checks: service status, error logs, startup detection, an HTTP probe on the public URL. If reachability passes, the agent then checks the requested behavior — opening the URL, hitting an endpoint, inspecting a database row. Failures carry a structured classification — see [Failure categories in Troubleshooting](/zcp/reference/troubleshooting#start-from-a-failure-category).
+After a deploy, the agent runs post-deploy health checks. Managed services get a service-status check. Runtime services get service status, recent error logs, and an HTTP probe on the public URL. If reachability passes, the agent then checks the requested behavior — opening the URL, hitting an endpoint, inspecting a database row. Failures carry a structured classification — see [Failure categories in Troubleshooting](/zcp/reference/troubleshooting#start-from-a-failure-category).
 
 ### Operate
 
