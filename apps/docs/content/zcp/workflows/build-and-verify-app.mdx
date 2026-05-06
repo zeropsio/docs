@@ -5,15 +5,13 @@ description: "Use ZCP's develop loop to edit code, deploy through Zerops, read l
 
 Use Zerops Control Plane (ZCP) to do real application work in a tight loop: edit code, deploy through the Zerops pipeline, watch logs, fix failures from platform-classified evidence, and verify the result against a real URL. The loop closes when every service in scope has a successful deploy and a passing verify.
 
-:::caution Public preview
-Zerops Control Plane (ZCP) is in public preview. Use it for development and staging projects, keep production in a separate Zerops project, and expect setup details to change.
-:::
-
 This is the workflow that owns the application work — code, `zerops.yaml`, the first deploy, and every iteration after it. It is what comes after [Create or adopt services](/zcp/workflows/create-or-adopt-services) closes; it is what runs every time you ask the agent to change something.
+
+Localhost is not delivery. Deploy is not the finale — for an agent, a deploy is diagnostics: it surfaces problems localhost cannot. The verify that follows is the proof that the requested behavior actually works.
 
 ## Start the work
 
-Before any code changes, the agent and you agree on the runtime scope: which service this change targets. In the `standard` workspace shape, that is `appdev` (the dev half of the pair). In `dev` shape, the single mutable dev runtime. In `simple` shape, the runtime IS the application service. In a [local agent bridge](/zcp/setup/local-agent-bridge), the scope is your local checkout plus the linked stage runtime. See [Workspace shapes](/zcp/setup/workspace-shapes) for the taxonomy.
+Before any code changes, the agent and you agree on the runtime scope: which service this change targets. In a dev/stage project that is the dev runtime (`appdev` or similar). In a single-runtime project, the runtime IS the application service. In a [local agent bridge](/zcp/setup/local-agent-bridge), the scope is your local checkout plus the linked stage runtime. See [Workspace shapes](/zcp/setup/workspace-shapes) for the topology.
 
 Wrong path: writing app code before the runtime scope is named. If the agent jumps straight to editing without saying which service is in scope, the first deploy lands somewhere unexpected.
 
@@ -41,10 +39,10 @@ When code is ready, the agent runs the standard Zerops [build and deploy pipelin
 
 A few specifics worth knowing as a developer:
 
-- **First deploy is always direct.** After [Create or adopt services](/zcp/workflows/create-or-adopt-services) closes, the first deploy uses the platform's direct push regardless of `close-mode`. Close-mode (auto, git-push, or manual) applies to subsequent changes; see [Choose how finished work ships](/zcp/workflows/delivery-handoff).
+- **First deploy is always direct.** After [Create or adopt services](/zcp/workflows/create-or-adopt-services) closes, the first deploy uses the platform's direct push regardless of how delivery is later configured. Delivery handoff applies to subsequent changes; see [Choose how finished work ships](/zcp/workflows/delivery-handoff).
 - **Build is separate from runtime.** The build runs in a temporary build container, then the runtime is created with the new appVersion. The agent reads logs from each phase distinctly.
-- **Two event streams to follow, not one.** Build status lives on the `stack.build` process — that is what tells you `FINISHED` or `FAILED` for the build itself. The appVersion event tells you which deploy ran on top of a successful build; it is not the build-status source. Reading appVersion events for a build failure shows nothing useful — start at `stack.build`.
-- **Multi-service deploys run in parallel.** When several services need to ship together, ZCP runs them concurrently rather than serially. In a dev+stage `standard` workflow, the typical order is still dev first, verify, then cross-deploy stage from the verified dev build.
+- **Build logs and runtime logs are different streams.** A build failure shows in the build container's logs; a runtime crash shows in the runtime container's logs. The agent picks the right stream for the failure category — pasting runtime logs for a build failure produces a wrong diagnosis.
+- **Multi-service deploys run in parallel.** When several services need to ship together, ZCP runs them concurrently. In a dev+stage workflow, the typical order is still dev first, verify, then deploy stage from the verified dev build.
 
 Deploy success and verify success are not the same thing. A successful deploy means the build finished and the runtime started; whether the requested behavior actually works is a separate check.
 
@@ -101,13 +99,11 @@ A clear blocker — even when the work is incomplete — is a successful end of 
 ## Gotchas
 
 1. **Deploy success is not "done".** A green build with a 500 on the route you care about is not finished. Verify the requested behavior, not just the runtime status.
-2. **Stage deploys do not happen automatically.** In the `standard` workspace shape, when you ask for dev work, the agent should deploy and verify `appdev` only. If the agent silently changes `appstage`, that is a wrong path. Ask for stage explicitly when you want it.
-3. **Build logs and runtime logs are different streams.** A build failure shows in the build container's logs (scoped by build event); a runtime crash shows in the runtime container's logs (scoped by service hostname). The agent should pick the right stream — if it pastes runtime logs for a build failure, the diagnosis will be wrong.
-4. **Five attempts is a stop signal.** A loop that cannot make progress in five tries is a loop that needs you, not another retry.
+2. **Stage deploys do not happen automatically.** In a dev/stage project, dev work targets the dev runtime only. If the agent silently changes the stage runtime, that is a wrong path. Ask for stage explicitly when you want it.
+3. **Five attempts is a stop signal.** A loop that cannot make progress in five tries is a loop that needs you, not another retry.
 
 ## Next steps
 
-- [Choose how finished work ships](/zcp/workflows/delivery-handoff) — close-mode, git-push, build integration after the first deploy works.
-- [Failure categories](/zcp/reference/failure-categories) — the seven categories ZCP recognizes and what each one means.
+- [Choose how finished work ships](/zcp/workflows/delivery-handoff) — direct deploy, git push, or hand off to your CI.
+- [Failure categories](/zcp/reference/failure-categories) — the categories ZCP recognizes and what each one points at.
 - [What ZCP lets agents do](/zcp/concept/capabilities) — the full capability surface used in this loop.
-- [Workspace shapes](/zcp/setup/workspace-shapes) — runtime scope by shape (`standard` / `dev` / `simple` / `local-stage`).

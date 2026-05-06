@@ -11,6 +11,10 @@ Zerops Control Plane (ZCP) is in public preview. Use it for development and stag
 
 The local agent bridge is for developers who already have a comfortable local setup — your editor, your shell, your dev server — and want a coding agent that can drive Zerops without giving up your machine. If you are evaluating ZCP for the first time, the [hosted workspace](/zcp/setup/hosted-workspace) is a faster start.
 
+:::caution Supervise the agent client
+The local bridge runs the agent on your dev machine. ZCP itself stays project-scoped, but the agent process inherits your user — what your client (Claude Code, etc.) does with file edits, shell commands, and other tools is decided by your client's permissions, not ZCP's. Set those permissions accordingly. See [Trust model](/zcp/security/trust-model) for the full picture.
+:::
+
 ## Prerequisites
 
 - A Zerops project. Create one from the [Zerops dashboard](https://app.zerops.io/dashboard/project-add) or from a [recipe](https://app.zerops.io/recipes).
@@ -128,19 +132,7 @@ ZCP does not run your local dev server. Whether you use Vite, Valet, Docker Comp
 
 ZCP also does not mount Zerops runtime filesystems on your laptop. The hosted workspace gives the agent SSHFS access to runtime services; the local bridge does not. If you need to read runtime files from your machine, use [SSH](/references/networking/ssh) directly.
 
-## Capability matrix — what differs from the hosted workspace
-
-| Capability | Hosted workspace | Local agent bridge |
-|---|---|---|
-| Run agent against the project | Yes | Yes |
-| Discover services and env | Yes | Yes |
-| Deploy to a runtime | Yes (any) | Yes (linked stage only) |
-| Read runtime logs | Yes | Yes |
-| Verify URL | Yes | Yes |
-| SSHFS access to runtime files | Yes | No |
-| Manage user's local dev server | n/a (no local server) | No (your tool's job) |
-| Long-lived dev server in another container | Yes | No |
-| Reach managed services without VPN | Yes (project private network) | No (VPN required) |
+For the full hosted-vs-local comparison, see [Choose your workspace](/zcp/setup/choose-workspace).
 
 ## Gotchas
 

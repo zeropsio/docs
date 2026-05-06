@@ -5,10 +5,6 @@ description: "Diagnose common ZCP problems with setup, tokens, VPN, deploys, log
 
 Diagnose common Zerops Control Plane (ZCP) problems with setup, tokens, VPN, deploys, logs, public URLs, and workflow state. This page is symptom-driven — find the symptom that matches what you are seeing and follow the concrete next check. For a category-driven view of deploy failures (`build`, `start`, `verify`, `network`, `config`, `credential`, `other`), see [Failure categories](/zcp/reference/failure-categories).
 
-:::caution Public preview
-Zerops Control Plane (ZCP) is in public preview. Use it for development and staging projects, keep production in a separate Zerops project, and expect setup details to change.
-:::
-
 ## Start with status
 
 Before anything else, ask the agent to read ZCP status. Most "the agent forgot," "ZCP cannot see anything," and "I lost the thread" symptoms are recovered in one prompt:
@@ -83,14 +79,11 @@ A failed deploy carries a structured failure classification. The agent reads tha
 | Symptom | Likely category | Next move |
 |---|---|---|
 | Build container exits non-zero — "command not found", missing module, npm 404 | `build` | Read `buildCommands` in `zerops.yaml`. Add missing packages or fix typos. |
-| Container OOM-killed during build | `build` | Increase build container RAM (`build.containerOptions` in `zerops.yaml`) or split heavy install steps. |
-| `prepareCommands` fails — package not found, permission denied | `start` (prepare runs before runtime is fully up) | Check the package name for the runtime base distro (Alpine/Debian); prefix privileged ops with `sudo`. |
+| Container OOM-killed during build or `signal: killed` during deploy | `build` / `network` | Scale build or source container RAM up and retry. |
 | Runtime crashes immediately — `EADDRINUSE`, `Cannot find module`, missing env var | `start` | Read runtime logs scoped to the failed deploy. The classification names the likely cause. |
-| Database connection refused during init | `start` | Confirm the DB service is `RUNNING` (`zerops_discover`); confirm env var refs (`${db_*}`) resolve. |
-| `signal: killed` over SSH during deploy | `network` | Source container OOM-killed. Scale source RAM up and retry. |
-| `Authentication failed` on git push | `credential` | Check `GIT_TOKEN` (hosted) or your local git credential helper (local). |
-| `Cannot find corresponding setup` from zcli | `config` | `zerops.yaml` has multiple setup blocks; pass the right `setup` name on deploy. |
-| Preflight refuses with `INVALID_ZEROPS_YML` | `config` | Read the field-level reasons in `apiMeta` — fix the rejected fields and retry. |
+| Database connection refused during init | `start` | Confirm the DB service is running; confirm env-var references (`${db_*}`) resolve. |
+| `Authentication failed` on git push | `credential` | Check the git credential — `GIT_TOKEN` (hosted) or your local git credential helper (local). |
+| Preflight refuses with an `INVALID_ZEROPS_YML` or setup-mismatch error | `config` | Read the field-level reasons in the rejection — fix the rejected fields and retry. |
 
 For any of these, the diagnostic next step is the same — ask the agent to read the deploy events, build logs, and runtime logs:
 
@@ -153,11 +146,8 @@ Workflow state errors usually surface as "the agent forgot," "no project found,"
 | Symptom | Likely cause | Next move |
 |---|---|---|
 | Agent says "no project found" or "I have no context" mid-conversation | The agent's chat memory drifted from real platform state. | Ask for status: `Read ZCP status and tell me where this project stands.` Status reads live state and rebuilds the picture. |
-| Agent asks you to re-describe the project from scratch | Same as above — the chat lost the thread but the platform did not. | Same fix. Status returns the project's services and recent activity. |
 | Agent loops on the same failed deploy without progressing | Five attempts without progress is a stop signal — see [Build and verify an app](/zcp/workflows/build-and-verify-app). | Stop the loop and ask the agent to summarize what it has tried and what evidence is still missing. |
-| Agent picks the wrong service when you said "the runtime" | In `standard` shape there are two runtimes (dev + stage); ambiguous prompts can land on the wrong one. | Name the hostname explicitly: `Deploy appdev` rather than `deploy the runtime`. |
-| A mutation tool returned a terse response without lifecycle context | Mutation responses are intentionally terse; lifecycle context is recovered by reading status. | Ask for status if you want the full picture. |
-| `WORKFLOW_REQUIRED` or `WORKFLOW_ACTIVE` from a tool | The tool needs a workflow open (or refuses because one is already open). | The error message names which workflow to start or close. Follow the named recovery. |
+| Agent picks the wrong service when you said "the runtime" | In a dev/stage project there are two runtimes; ambiguous prompts can land on the wrong one. | Name the hostname explicitly: `Deploy appdev` rather than `deploy the runtime`. |
 
 Status is not just for cold starts. Any time the conversation drifts from the project, asking ZCP for current state realigns the agent with real state in one prompt.
 

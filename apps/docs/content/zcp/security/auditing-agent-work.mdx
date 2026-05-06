@@ -5,10 +5,6 @@ description: "Review ZCP agent work through Zerops events, logs, deploy attempts
 
 Review Zerops Control Plane (ZCP) agent work through Zerops events, logs, deploy attempts, verification results, and git history. Everything the agent did to a project leaves platform-native evidence; reviewing that evidence is how you decide whether to keep the changes, take over, or revert.
 
-:::caution Public preview
-Zerops Control Plane (ZCP) is in public preview. Use it for development and staging projects, keep production in a separate Zerops project, and expect setup details to change.
-:::
-
 This page assumes a development session has happened. Maybe the agent reported it finished. Maybe a deploy looped. Maybe you stepped away and came back to a long transcript. The platform recorded the same things either way — the audit is reading them in the right order.
 
 There are four streams of evidence, plus a fifth stream when delivery uses git-push:
@@ -35,19 +31,15 @@ Show me the last 20 events for appdev.
 What happened on appdev between 14:00 and 15:00 today?
 ```
 
-The agent calls `zerops_events` with the right hostname filter. The timeline comes back sorted by time, with each entry tagged by type (`process`, `build`, or `deploy`), action (`build`, `start`, `stop`, `restart`, `scale`, `subdomain-enable`, …), status (`RUNNING`, `FINISHED`, `FAILED`, `ACTIVE`), and — for failures — a structured failure classification on top of the raw fail reason. See [Deployment lifecycle](/guides/deployment-lifecycle) for what each event type means in the build-and-deploy pipeline.
+The agent reads the timeline back sorted by time, with each entry tagged by event type, action, status, and — for failures — a structured failure classification. See [Deployment lifecycle](/guides/deployment-lifecycle) for what each event type means in the build-and-deploy pipeline, and [Failure categories](/zcp/reference/failure-categories) for what the classification points at.
 
 Filter by service hostname every time. The project-level view mixes events from every service and every old build container; for an audit, you want the runtime in scope and nothing else.
 
-What the timeline answers cleanly:
-
-- "Did the agent deploy this service today, and how many times?" — count the `stack.build` and `appVersion` entries.
-- "Did any of those deploys fail?" — `FAILED` and `BUILD_FAILED` jump out, with `failureClass` and `failureCause` populated.
-- "Did the agent restart, scale, or change the subdomain?" — those land as their own events on the same timeline.
+The timeline answers: did the agent deploy this service today (and how many times)? Did any of those deploys fail (and with what classification)? Did the agent restart, scale, or change the subdomain?
 
 ## Review runtime logs
 
-Once events frame what happened, runtime logs explain why. The agent calls `zerops_logs` with a service hostname plus severity, time window, and search text — you do not have to scroll a wall of output.
+Once events frame what happened, runtime logs explain why. Ask the agent for them scoped by hostname, severity, time window, and search text — you do not have to scroll a wall of output.
 
 Useful prompts:
 
@@ -74,11 +66,7 @@ The logs are the application's own stdout and stderr. The agent does not paraphr
 
 Deploys and verifies are the canonical "did the agent ship something, and did it work" record. Both persist as platform records — you do not have to trust the agent's transcript for either.
 
-Each deploy carries:
-
-- A build status (`FINISHED` or `FAILED`).
-- An appVersion status (`ACTIVE` if it deployed, `BUILD_FAILED` / `PREPARING_RUNTIME_FAILED` / `DEPLOY_FAILED` if not).
-- For failures, a structured classification with **category** (`build`, `start`, `verify`, `network`, `config`, `credential`, or `other`), a **likely cause** drawn from the platform's pattern library, and a **suggested next action**. See [Failure categories](/zcp/reference/failure-categories) for the full breakdown.
+Each deploy carries a build status, an appVersion status, and — for failures — a structured classification with a category, a likely cause, and a suggested next action. See [Failure categories](/zcp/reference/failure-categories).
 
 Verification results sit alongside the deploys. Each verify run records service status, error log presence, startup detection, and the HTTP probe outcome. A "successful" deploy with a failed verify is a real signal — the build finished and the runtime started, but the requested behavior did not pass. The audit needs both halves.
 

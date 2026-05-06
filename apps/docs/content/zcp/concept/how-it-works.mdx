@@ -3,11 +3,7 @@ title: "How ZCP works"
 description: "ZCP runs near the project, reads live platform state, and gives the agent the next useful operation."
 ---
 
-Zerops Control Plane (ZCP) runs near the project, reads live platform state, and gives the agent the next useful operation. The agent never has to be told what the project looks like; ZCP reports it from what is actually deployed and running right now.
-
-:::caution Public preview
-Zerops Control Plane (ZCP) is in public preview. Use it for development and staging projects, keep production in a separate Zerops project, and expect setup details to change.
-:::
+Zerops Control Plane (ZCP) runs near the project, reads live platform state, and gives the agent the next useful operation. The agent never has to be told what the project looks like — ZCP reports it from what is actually deployed and running right now.
 
 ## Runs inside or beside the project
 
@@ -36,7 +32,7 @@ The platform is the source of truth. ZCP exposes it; the agent reads it.
 
 ZCP does not let the agent type arbitrary platform commands. It exposes a fixed set of scoped operations, grouped by user job: see the project, deploy code, verify the result, operate services, recover from failures, hand off finished work. See [What ZCP lets agents do](/zcp/concept/capabilities) for the full surface.
 
-Each operation knows the project boundary and the current workflow scope. The agent can deploy `appdev`; it cannot reach across to a different project, modify your laptop, or push code your token does not authorize. Destructive operations require explicit confirmation in the conversation — see [Destructive actions and confirmations](/zcp/security/destructive-actions).
+Each operation knows the project boundary and the current workflow scope. ZCP itself cannot reach across to a different project or push code your token does not authorize. In the local agent bridge, ZCP is project-scoped but the agent client inherits your user — what the client does on your laptop is decided by your client's permissions, not ZCP's. Destructive ZCP operations require explicit confirmation in the conversation — see [Destructive actions and confirmations](/zcp/security/destructive-actions). For the full hosted-vs-local boundary, see [Trust model](/zcp/security/trust-model).
 
 ## Recovers after interruptions
 
@@ -44,10 +40,6 @@ Coding agents lose context. Conversations get long, browser tabs close, machines
 
 When you (or the agent) ask for current status, ZCP rebuilds the picture from platform state plus its own session record. The agent gets back: which services exist, where the work was, what the last successful deploy was, what is still pending. It then offers the next reasonable step.
 
-You do not need to dictate everything you tried. The platform remembers what was deployed; ZCP reads it back; the agent picks up where it makes sense.
+You do not dictate everything you tried. The platform remembers what was deployed; ZCP reads it back; the agent picks up where it makes sense.
 
-## Where ZCP gets out of the way
-
-ZCP does not pick the framework, choose the database schema, decide whether a feature ships, or define what counts as done. Those are still yours.
-
-ZCP also does not replace the platform reference. When you need to understand the [build and deploy pipeline](/guides/deployment-lifecycle), [public access](/features/access), or [environment variables](/features/env-variables), the canonical Zerops docs are still the source. ZCP sits on top of them.
+Knowledge comes by state, not as a manual. ZCP does not feed the agent a long prompt about Zerops up front; it surfaces the specific guidance that matches the current project state, the workflow phase, and the next reasonable action. As the project changes, the guidance changes with it.

@@ -1,9 +1,9 @@
 ---
 title: "Zerops Control Plane overview"
-description: "Zerops Control Plane (ZCP) lets coding agents operate a real Zerops project through scoped tools, live state, deploys, logs, and verification."
+description: "Zerops Control Plane (ZCP) lets a coding agent operate a real Zerops project — services, env vars, deploys, logs, verify — instead of working against a substitute world."
 ---
 
-Zerops Control Plane (ZCP) lets coding agents operate a real Zerops project through scoped tools, live state, deploys, logs, and verification. Through ZCP, an agent does real application work — not just suggesting commands you run elsewhere.
+Zerops Control Plane (ZCP) lets a coding agent operate a real Zerops project — services, env vars, deploys, logs, and verification. The agent works against the platform itself, not a sandbox or a description of it. That difference is the point: AI that cannot see the infrastructure cannot ship software, and ZCP is what lets the agent see.
 
 :::caution Public preview
 Zerops Control Plane (ZCP) is in public preview. Use it for development and staging projects, keep production in a separate Zerops project, and expect setup details to change.
@@ -11,34 +11,47 @@ Zerops Control Plane (ZCP) is in public preview. Use it for development and stag
 
 ## What ZCP is
 
-ZCP runs as a service inside your Zerops project, or as a binary on your laptop. Either way, it exposes the same project to a coding agent — the same services, env vars, deploy pipeline, logs, and verify loop your app actually uses. The agent operates against the platform; it does not work in a sandbox.
+ZCP runs as a service inside your Zerops project, or as a binary on your laptop. Either way, it exposes the same project to a coding agent — the same services, env vars, deploy pipeline, logs, and verify loop your app actually uses.
 
 What ZCP gives an agent:
 
-- **Project awareness** — services, runtime shape, env vars, recent activity
-- **Service targeting** — distinguishing the application runtime from managed dependencies
-- **A real deploy and verify loop** — proving the app works on the selected runtime, not stopping after writing code
-- **Delivery handoff** — explaining whether future changes stay on direct deploy, move through git, or need a manual or external step
+- **Project awareness** — services, runtime shape, env vars, recent activity, all read live from the platform.
+- **Service targeting** — distinguishing the application runtime from managed dependencies.
+- **A real deploy and verify loop** — proving the app works on the selected runtime, not stopping after writing code.
+- **Delivery handoff** — explaining whether future changes stay on direct deploy, move through git, or need a manual or external step.
 
-You hold the product intent: what to build, which target matters, what counts as done. ZCP fills in the Zerops-specific path and explains the choices it made.
+You hold the product intent — what to build, which target matters, what counts as done. ZCP fills in the Zerops-specific path and explains the choices it made.
+
+## Two ways to run it
+
+Same control plane, two ways to host it — and the safety profile is different in each.
+
+- **Container (hosted workspace)** — ZCP runs as a `zcp` service inside your Zerops project. The agent runs in a browser-hosted editor in the same project. Safe by design: the container has no path to your laptop, your home directory, or your other Zerops projects.
+- **Local (laptop bridge)** — you install ZCP on your machine and run `zcp init` in your project directory. The agent runs in your editor; ZCP talks to the project on your behalf. Bigger blast radius: ZCP is still project-scoped, but the agent client inherits your user — you supervise the client's file/shell permissions, not just ZCP's.
+
+Pick the one that fits how you already work. The agent's tool surface is identical in both. See [Trust model](/zcp/security/trust-model) for the full security framing and [Choose your workspace](/zcp/setup/choose-workspace) for the decision.
 
 ## Who it is for
 
-ZCP is for developers who use a coding agent and want it to do real application work — provision services, edit code, deploy through the Zerops pipeline, verify against real URLs, recover from failure, and report back. You hold the product intent and quality bar; the agent handles the platform-specific path; ZCP is the bridge between them.
+Developers who use a coding agent and want it to do real application work — provision services, edit code, deploy through the Zerops pipeline, verify against real URLs, recover from failure, and report back. You hold the product intent and quality bar; the agent handles the platform-specific path; ZCP is the bridge between them.
 
-Today, ZCP supports **Claude Code**, paired with a **Claude Pro or Max subscription**. Other MCP-aware agents will follow as their integrations stabilize. You bring the agent and the subscription; ZCP is the control plane in the middle.
+Today, ZCP supports **Claude Code**, paired with a **Claude Pro or Max subscription**. Other MCP-aware agents will follow as their integrations stabilize.
 
 > The LLM does the engineering. The developer holds intent, quality, and decisions. ZCP holds reality.
 
+## ZCP projects are dev/staging — not production
+
+ZCP projects are intentionally development and staging environments. The Zerops dashboard flags this directly: **"Designed for development projects — not recommended for production"**. Today, packaging a verified ZCP project for production handoff is supported via the [export workflow](/zcp/workflows/package-running-service), which produces a re-importable bundle whose `buildFromGit:` URL points at the same source repo. Production then lives in its own Zerops project, deployed by your CI or a release pipeline. See [Production policy](/zcp/security/production-policy).
+
 ## Where to start
 
-- New to ZCP? Run the [Quickstart](/zcp/quickstart) — 15 minutes, one agent, one deployed app.
+- New here? Run the [Quickstart](/zcp/quickstart) — 15 minutes, one agent, one deployed app.
 - Want the mental model first? Read [How ZCP works](/zcp/concept/how-it-works).
-- Ready to set up your own project? See [Choose your workspace](/zcp/setup/choose-workspace).
-- Considering ZCP for an existing zCLI workflow? Read [ZCP vs zCLI](/zcp/concept/zcp-vs-zcli).
+- Ready to set up? See [Choose your workspace](/zcp/setup/choose-workspace).
+- Coming from a zCLI workflow? See [ZCP vs zCLI](/zcp/concept/zcp-vs-zcli).
 
 ## What stays outside ZCP
 
-ZCP is a control plane, not the platform itself. The Zerops platform — the [build and deploy pipeline](/features/pipeline), [permissions](/features/rbac), [deployment lifecycle](/guides/deployment-lifecycle), networking, scaling — keeps its own canonical documentation. ZCP docs explain how an agent uses these primitives; they do not replace the platform reference.
+ZCP is a control plane, not the platform itself. The Zerops [build and deploy pipeline](/features/pipeline), [permissions](/features/rbac), [deployment lifecycle](/guides/deployment-lifecycle), networking, and scaling keep their own canonical documentation. ZCP docs explain how an agent uses those primitives; they do not replace the platform reference.
 
 Recipes are Zerops-published starters. ZCP users select recipes; this section does not cover authoring or publishing them.

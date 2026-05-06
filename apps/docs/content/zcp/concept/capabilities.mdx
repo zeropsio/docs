@@ -3,68 +3,50 @@ title: "What ZCP lets agents do"
 description: "ZCP groups platform operations by user job: discover, deploy, verify, operate, recover, and hand off."
 ---
 
-Zerops Control Plane (ZCP) groups platform operations by user job: discover, deploy, verify, operate, recover, and hand off. The agent calls these as MCP tools; you ask in plain language and let the agent pick the right one.
-
-:::caution Public preview
-Zerops Control Plane (ZCP) is in public preview. Use it for development and staging projects, keep production in a separate Zerops project, and expect setup details to change.
-:::
+Zerops Control Plane (ZCP) groups platform operations by user job: discover, deploy, verify, operate, recover, and hand off. You ask for an outcome in plain language; the agent picks the right operations and reports what changed.
 
 ## Discover
 
-The agent reads the project before it changes anything: which services exist, what state they are in, what env variables they expose, what the recent build and deploy timeline looks like. This happens through `zerops_discover` and `zerops_events`. When troubleshooting, the agent reads runtime logs through `zerops_logs`.
-
-When you ask "what's in this project?", you do not need to describe it; the agent asks ZCP.
-
-The agent can also pull Zerops platform knowledge — recipe metadata, runtime hints, known import shapes — through `zerops_knowledge`. This grounds answers in current Zerops behavior, not in stale model knowledge.
+The agent reads the project before changing anything: which services exist, what state they are in, what env variables they expose, what the recent build and deploy timeline looks like. When you ask "what is in this project?", you do not describe it — the agent asks ZCP and tells you. The same surface answers questions about runtime activity and recent failures.
 
 ## Deploy
 
-The agent ships code through `zerops_deploy`, which runs the standard Zerops [build and deploy pipeline](/guides/deployment-lifecycle). The call blocks until the build completes and the runtime is ready — the agent waits with you, not for you. When several services need to ship together, the agent coordinates the deploys as one scoped change and reports each service result.
-
-Before deploying, the agent expands Zerops [import preprocessor expressions](/references/import-yaml/pre-processor) — random secrets, key generation, hashing — through `zerops_preprocess`, so generated values match what the platform itself would produce.
+The agent ships code through the standard Zerops [build and deploy pipeline](/guides/deployment-lifecycle). The deploy call blocks until the build finishes and the runtime is ready — the agent waits with you, not for you. When several services need to ship together, the agent coordinates the deploys and reports each result.
 
 Deploy success is not the same as verify success. A deploy that finished is a deploy that built and started; whether the app actually does what you asked is a separate check.
 
 ## Verify
 
-`zerops_verify` runs the post-deploy health checks: service status, error logs, startup detection, HTTP probe on the service URL. The agent reads the result, decides whether the runtime is reachable, and only then checks the requested behavior — opening the URL, hitting an endpoint, or inspecting a database row.
+After a deploy, the agent runs post-deploy health checks: service status, error logs, startup detection, an HTTP probe on the public URL. If reachability passes, the agent then checks the requested behavior — opening the URL, hitting an endpoint, inspecting a database row.
 
-If verify fails, the agent reads the failure classification and routes to the appropriate fix. See [Failure categories](/zcp/reference/failure-categories) for the seven categories ZCP recognizes.
+If verify fails, the agent reads a structured failure classification before raw logs and routes to the right fix. See [Failure categories](/zcp/reference/failure-categories).
 
 ## Operate
 
-For service lifecycle, the agent uses `zerops_manage` (start, stop, restart, reload, connect storage), `zerops_scale` ([CPU, RAM, disk, container count](/features/scaling)), and `zerops_subdomain` ([public L7 routing](/references/networking/public-access)). Reload is faster than restart for env-var changes.
+For service lifecycle — start, stop, restart, reload, [scaling](/features/scaling), [public access](/references/networking/public-access) — the agent uses scoped operations that read and change one project at a time. [Environment variables](/features/env-variables) are read and set the same way, at service or project scope, with preprocessor support so the agent can generate strong secrets in place.
 
-[Environment variables](/features/env-variables) go through `zerops_env` (read, set, delete) at service or project scope; values support the import preprocessor, so the agent can generate strong secrets in place.
-
-When ZCP runs in the hosted workspace, the agent has filesystem access to other services through `zerops_mount` (SSHFS in or out), and can run a long-lived dev server in another container through `zerops_dev_server` (start, stop, status, restart).
+When ZCP runs in the hosted workspace, the agent has filesystem access to other services through SSHFS mounts and can run a long-lived dev process inside another container.
 
 ## Recover
 
-Every failed deploy carries structured failure information. The agent reads it before the raw logs: a category (`build`, `start`, `verify`, `network`, `config`, `credential`, `other`), a likely cause, a suggested next action. See [Failure categories](/zcp/reference/failure-categories).
+Every failed deploy carries a structured failure classification: a category, a likely cause, a suggested next action. The agent reads this before the raw logs. See [Failure categories](/zcp/reference/failure-categories).
 
-When an async platform operation is in flight (a long deploy, a scaling action), the agent can check or cancel it through `zerops_process`. Most tools poll automatically; this is for the rare case where you want to interrupt.
-
-If the agent loses context (a long session, a browser crash), it asks ZCP for status and resumes from current platform state. The recovery does not depend on the prior chat — see [How ZCP works](/zcp/concept/how-it-works).
+If the agent loses context — a long session, a browser crash, a closed tab — it asks ZCP for status and resumes from current platform state. The recovery does not depend on the prior chat. See [How ZCP works](/zcp/concept/how-it-works).
 
 ## Hand off
 
-When the work is done, you and the agent decide how future changes ship. ZCP records this on the service: `close-mode=auto` keeps direct deploy through ZCP, `close-mode=git-push` commits and pushes to a configured remote, `close-mode=manual` hands off to a human or external CI. See [Choose how finished work ships](/zcp/workflows/delivery-handoff).
+When the work is done, you and the agent decide how the next change ships: keep deploying directly, commit and push to git, or hand off to your CI. ZCP records the choice and configures any push credentials and build integrations needed. See [Choose how finished work ships](/zcp/workflows/delivery-handoff).
 
-If the close path is git-push, ZCP can configure the remote and credential through `git-push-setup`, and pick a build integration (Zerops webhook, GitHub Actions, or none tracked) through `build-integration`.
+For a different kind of handoff — turning a deployed service into reusable project files — see [Package a running service for reuse](/zcp/workflows/package-running-service).
 
-For a different kind of handoff — turning a deployed service into reusable project files — `zerops_export` produces a re-importable bundle. See [Package a running service for reuse](/zcp/workflows/package-running-service).
+## What needs your explicit confirmation
 
-For services that are already running and need wholesale replacement, the agent uses `zerops_import`. Destructive imports — those that would delete failed appVersions or change service shape — require structured confirmation; see [Destructive actions and confirmations](/zcp/security/destructive-actions).
+Service deletion and wholesale service replacement (override import) sit behind a confirmation gate: the agent cannot delete a service or replace a service with failed deploy history without an explicit yes from you in the same conversation. The agent reads the failure first, then asks. See [Destructive actions and confirmations](/zcp/security/destructive-actions).
 
 ## What's not here
 
 A few capabilities are intentionally out of scope:
 
-- **Creating new recipes.** Recipes are pre-built starters Zerops publishes; ZCP does not create new ones.
-- **The user's local dev server in local mode.** ZCP does not start, stop, or watch the dev process you run on your own machine. That stays your tool's job.
-- **Production operations.** Keep production in a separate Zerops project and operate it through Zerops UI, the API, or CI. See [Production policy](/zcp/security/production-policy). Production data restore is owned by [Backup](/features/backup), not by ZCP.
-
-## Beyond this page
-
-This page is the canonical home for ZCP capabilities by job. The workflow pages — [Create or adopt services](/zcp/workflows/create-or-adopt-services), [Build and verify an app](/zcp/workflows/build-and-verify-app), [Choose how finished work ships](/zcp/workflows/delivery-handoff), [Package a running service for reuse](/zcp/workflows/package-running-service) — show these capabilities in action against a specific outcome. [Destructive actions and confirmations](/zcp/security/destructive-actions) covers the gates around delete and override imports.
+- **Authoring new recipes.** Recipes are pre-built starters Zerops publishes; ZCP users select them.
+- **Your local dev server in local mode.** ZCP does not start, stop, or watch the dev process you run on your own machine. That stays your tool's job.
+- **Production operations.** Keep production in a separate Zerops project and operate it through Zerops UI, the API, or your CI. See [Production policy](/zcp/security/production-policy). Production data restore is owned by [Backup](/features/backup), not ZCP.

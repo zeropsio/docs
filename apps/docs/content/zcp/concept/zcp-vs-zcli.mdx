@@ -5,15 +5,11 @@ description: "Use zCLI for direct human and CI commands; use ZCP when a coding a
 
 Use zCLI for direct human and CI commands; use Zerops Control Plane (ZCP) when a coding agent needs workflow state and verification. Both talk to the same Zerops project, both use the same build and deploy pipeline, and both can live on the same machine — they just have different jobs.
 
-:::caution Public preview
-Zerops Control Plane (ZCP) is in public preview. Use it for development and staging projects, keep production in a separate Zerops project, and expect setup details to change.
-:::
-
 ## The short rule
 
-If a human or a CI runner is issuing commands, use [zCLI](/references/cli). If a coding agent is driving the work, use ZCP. The two are not alternatives competing for the same job — they are tools sized for different drivers.
+A human or a CI runner — use [zCLI](/references/cli). A coding agent — use ZCP. The two are not competitors; they are tools sized for different drivers.
 
-zCLI is the canonical Zerops command-line tool: you type `zcli push`, it deploys; a CI step runs `zcli push`, it deploys the same way. ZCP is the control plane a coding agent uses to operate the project: it discovers services, runs scoped operations, classifies failures, and resumes after interruptions. ZCP wraps `zcli push` for some deploy paths (especially in local mode) instead of replacing it.
+zCLI is the canonical Zerops command-line tool: you type `zcli push`, it deploys; a CI step runs `zcli push`, it deploys the same way. ZCP is the control plane a coding agent uses to operate the project — discover services, run scoped operations, classify failures, resume after interruptions. ZCP wraps `zcli push` for some deploy paths (especially in local mode) instead of replacing it.
 
 ## When to use zCLI
 
@@ -51,44 +47,15 @@ The agent picks the right ZCP operations to do that work. See [What ZCP lets age
 
 ## How they work together
 
-ZCP and zCLI coexist. They are not alternatives, and you do not pick one to the exclusion of the other.
-
-| Concern | zCLI | ZCP |
-|---|---|---|
-| Driver | Human or CI runner | Coding agent |
-| Interface | Shell commands | MCP tools |
-| Project state | You query, you interpret | ZCP queries, agent reads structured result |
-| Deploy path | `zcli push` directly | Wraps `zcli push` for local-mode deploys |
-| Failure output | Logs and exit codes | Structured classification plus logs |
-| Recovery after interruption | You re-run the command | Agent reads status, resumes from real state |
-| Verify after deploy | Manual check | ZCP runs structured health and behaviour checks |
-| Required for the local agent bridge | Yes | Yes |
-
-A few things to know about coexistence:
+ZCP and zCLI coexist. You do not pick one to the exclusion of the other:
 
 - **Local ZCP requires zCLI installed.** The [local agent bridge](/zcp/setup/local-agent-bridge) uses zCLI to bring up the VPN, push code through the standard pipeline, and resolve project scope. Without zCLI, local ZCP cannot deploy.
 - **Hosted workspaces have zCLI preinstalled.** When ZCP runs as a service inside the project, the workspace already has zCLI ready for shell sessions. You can drop into a terminal and run `zcli push` alongside the agent.
-- **The same project supports both at once.** A team can run a CI/CD pipeline that pushes via zCLI and let developers drive agent-based work via ZCP — against the same project, the same services, the same pipeline. There is no exclusivity.
-
-## Decision examples
-
-| Situation | Right tool | Why |
-|---|---|---|
-| GitHub Actions job that deploys on push to `main` | zCLI | No agent, no MCP client; just `zcli push` with a token |
-| You want the agent to add a Redis service and update env vars | ZCP | Agent reads project state and picks scoped operations |
-| You want to deploy the current branch from your terminal, no agent involved | zCLI | A direct `zcli push` is faster than asking an agent to do it |
-| The deploy failed and you want the agent to figure out why and retry | ZCP | Structured failure classification and verify-after-deploy live in ZCP |
-| A teammate without ZCP wants to push a fix from their laptop | zCLI | zCLI works standalone; no agent setup needed |
-| You returned to a session after lunch and want to know where work stopped | ZCP | The agent asks ZCP for status and resumes from platform state |
-| Your nightly CI runs migrations and a smoke check | zCLI | Pipelines run commands, not agents |
-| You want to package a deployed service for reuse in another project | ZCP | ZCP export produces a re-importable bundle the agent uses — see [Package a running service for reuse](/zcp/workflows/package-running-service) |
-
-If a situation is not on the list, the short rule still works: a human or a runner — zCLI; a coding agent — ZCP.
+- **The same project supports both at once.** A team can run a CI/CD pipeline that pushes via zCLI and let developers drive agent-based work via ZCP — same project, same services, same pipeline. There is no exclusivity.
 
 ## Next steps
 
-- [zCLI](/references/cli) — install zCLI and authenticate.
-- [zCLI command reference](/references/zcli/commands) — full command catalog.
+- [zCLI](/references/cli) — install and authenticate.
 - [What ZCP lets agents do](/zcp/concept/capabilities) — what ZCP adds on top of the platform.
 - [Use ZCP from your laptop](/zcp/setup/local-agent-bridge) — set up the local agent bridge (requires zCLI).
 - [zCLI in CI/CD](/guides/ci-cd) — using zCLI in a pipeline.

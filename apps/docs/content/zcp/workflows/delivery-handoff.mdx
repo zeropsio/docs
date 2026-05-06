@@ -1,164 +1,86 @@
 ---
 title: "Choose how finished work ships"
-description: "Choose whether ZCP closes work by deploying directly, pushing to git, or handing off manually."
+description: "Choose whether ZCP closes work by deploying directly, pushing to git, or handing off to your CI."
 ---
 
-Choose whether Zerops Control Plane (ZCP) closes work by deploying directly, pushing to git, or handing off manually.
+Choose whether Zerops Control Plane (ZCP) closes work by deploying directly, pushing to git, or handing off to your CI. This page picks up after [Build and verify an app](/zcp/workflows/build-and-verify-app) — the first deploy worked, verification passed, and the app does what you asked. Now decide how the next change gets out the door.
 
-:::caution Public preview
-Zerops Control Plane (ZCP) is in public preview. Use it for development and staging projects, keep production in a separate Zerops project, and expect setup details to change.
-:::
+## Three answers
 
-This page picks up after [Build and verify an app](/zcp/workflows/build-and-verify-app). The first deploy worked, verification passed, and the app does what you asked. Now decide how the next change gets out the door — does ZCP keep deploying directly, do future changes go through git, or does another system take over after ZCP records the result?
+- **The agent keeps deploying directly.** Future changes ship the same way the first deploy did — straight from ZCP through the Zerops [build and deploy pipeline](/guides/deployment-lifecycle). Right for solo work and fast iteration.
+- **Push to git, then build from there.** Future changes get committed and pushed to a configured remote. Either Zerops or your existing CI takes the push and runs the build. Right when the team's source of truth is git and you want reviewable commits.
+- **Hand off to your CI or a human.** ZCP records every deploy and verify the agent runs at your request, but does not initiate further deploys. Right when an external pipeline or release process owns delivery from here.
 
-Three independent choices describe the answer:
+These are recorded against each service. The agent translates "set the close-mode" or "configure git push" prompts into the right operations; you do not call them by name.
 
-1. **Close-mode** — the delivery pattern (`auto`, `git-push`, `manual`).
-2. **Git-push capability** — whether ZCP can push to a configured remote.
-3. **Build integration** — whether a Zerops-tracked build fires when a push lands.
-
-These are three separate calls to the agent, not one switch. A project can have git-push capability set up and still keep `close-mode=auto`. A `git-push` close-mode can use no tracked build integration if your team already runs its own CI. Treat them as orthogonal axes, not as one flag with combined values.
-
-## The three close-modes
-
-Close-mode declares the delivery pattern for finished work. It is **not** a hidden deploy button. Setting `close-mode=auto` does not redeploy anything; it records that direct ZCP deploy is how this work ships, so a verified session can end cleanly. The session still needs deploy and verify evidence — the close-mode says how that evidence ships, not whether it exists.
-
-| Close-mode | What it means | Typical fit |
-|---|---|---|
-| `auto` | Finished work stays on the direct ZCP deploy path. The deploys ZCP already ran during iteration are the deploys that ship. | Solo developer, fast iteration, no separate CI step. |
-| `git-push` | Finished work is committed and pushed to a configured git remote. Zerops or your CI picks up the push and builds. | Team development, code lives in git, optional Zerops-tracked CI. |
-| `manual` | The developer or another system owns delivery after ZCP records the result. ZCP yields and does not initiate further deploys. | Experienced users, external CI/CD systems ZCP does not need to track. |
-
-The first deploy always uses the default direct path regardless of close-mode. Close-mode only governs how subsequent changes ship. Setting it earlier than that is premature — there is no deploy yet to declare a pattern for.
-
-To set or change the close-mode, ask the agent in plain language. For example:
+The first deploy always uses the direct path regardless of the answer you pick later — there is no deploy yet for the choice to apply to.
 
 ```text
-Set close-mode for appdev to git-push.
+Set up git-push delivery for appdev. Push to git@github.com:my-org/notes-app.git.
 ```
-
-The agent translates that into the right tool call. Close-mode can be changed at any time; the next handoff picks up the new value automatically.
-
-## Auto — keep direct ZCP deploy
-
-`close-mode=auto` keeps the deploy path the agent has already been using. When you and the agent are done, the work session can close on the deploys that already landed.
-
-Pick `auto` when:
-
-- The project is small or solo and the deploys ZCP runs are the canonical way the app updates.
-- You do not need a git-tracked history of the deploys themselves.
-- You are happy for a verified session to end without an extra git step.
-
-`auto` does not require any further configuration. Git-push capability and build integration stay at their defaults (unconfigured / none).
-
-## Git push — commit and push to a configured remote
-
-`close-mode=git-push` makes commit-and-push the close step. Finished work goes to a configured git remote; whatever sits behind that remote — a Zerops-managed build or your own CI — produces the next deploy.
-
-Pick `git-push` when:
-
-- The project's source of truth is a git repository.
-- The team needs reviewable commits, not direct deploys, as the delivery step.
-- A Zerops-tracked CI integration or your own pipeline takes the push from there.
-
-`git-push` requires committed code. ZCP does not auto-init git or invent a commit on your behalf. Before `close-mode=git-push` becomes useful you need:
-
-- An initialized repository with at least one commit covering the work you want to ship.
-- A remote URL ZCP can push to.
-- Credentials that authorize the push.
-
-Ask the agent to run **git-push setup** for the service:
 
 ```text
-Set up git-push for appdev to git@github.com:my-org/notes-app.git.
+Keep ZCP deploying appdev directly for now.
 ```
-
-The agent runs the equivalent setup step, which provisions the remote URL and the credentials so future pushes work without per-call configuration. Once the setup completes, the service is recorded as having git-push capability configured. Capability is a separate fact from the close-mode that uses it: a service can have git-push capability configured while `close-mode` is still `auto`. Switching `close-mode=git-push` later does not require redoing the setup.
-
-If the setup step fails — repository unreachable, credential missing, working directory has no commits — the agent reports the specific reason. Fix the underlying issue (initialize git, add a commit, fix the remote) and ask again.
-
-Credential note: if your hosted workspace already has a repository push credential available (typically as `GIT_TOKEN` in the project env), the agent reuses it for git-push setup instead of asking for a new one. If no such credential exists, provide a token that can push to the remote — a fine-grained GitHub or GitLab access token scoped to the target repo is usually the right shape.
-
-## Manual — human or external CI owns delivery
-
-`close-mode=manual` tells ZCP to step out of the delivery loop. ZCP keeps recording every deploy and verify the agent runs at your request, but it does not initiate further deploys on its own and does not auto-close the session.
-
-Pick `manual` when:
-
-- An external CI/CD pipeline (one ZCP does not need to know about) owns delivery.
-- A human takes over for a release step that does not belong inside the agent loop.
-- The next change is ambiguous enough that explicit close calls beat any automation.
-
-In manual mode, ending the session is a deliberate step. The agent will not auto-close it for you, even after a clean deploy and verify.
-
-## Build integration — only when git-push is the close-mode
-
-Build integration is a separate axis from close-mode. It only matters when finished work goes through git, because it describes what fires **after** a push lands on the remote. If the close-mode is `auto` or `manual`, leave build integration alone.
-
-There are three values:
-
-| Build integration | What ZCP records | What runs on push |
-|---|---|---|
-| `none` | No ZCP-tracked build integration. | Whatever your repository already has, if anything. ZCP does not track or set it up. |
-| `webhook` | Zerops dashboard owns the connection to the remote. | The Zerops dashboard pulls the repository and runs the [build and deploy pipeline](/guides/deployment-lifecycle) — see [GitHub integration via the dashboard](/references/github-integration#integration-via-zerops-gui). |
-| `actions` | A GitHub Actions workflow runs the deploy with `zcli`. | Your repository's `.github/workflows/zerops.yml` checks out the code and pushes it to Zerops via `zcli` — see [GitHub Actions](/references/github-integration#github-workflow-integration). |
-
-`webhook` and `actions` both need git-push capability to be configured first; the integration fires on remote pushes, and remote pushes need a working remote. Setting build integration to `none` clears any prior ZCP-tracked integration; it does **not** mean "no build will fire" — anything you set up outside ZCP keeps running.
-
-Ask the agent to set the integration:
 
 ```text
-Use the Zerops webhook integration for appdev.
+ZCP records changes for appdev, but my CI takes over from here.
 ```
 
-or
+## The agent keeps deploying
 
-```text
-Wire up GitHub Actions for appdev.
-```
+The deploys ZCP already ran during iteration are how the next change ships, too. No further configuration. A verified session can close on the deploys that already landed.
 
-For the GitHub Actions option, the workflow needs a **Zerops API token stored as a GitHub Actions secret** (it authenticates `zcli` against Zerops; it is not a GitHub token). You can reuse the project-scoped token already behind ZCP — set the GitHub Actions secret `ZEROPS_TOKEN` to the value of `ZCP_API_KEY`. One credential, one rotation surface. If you prefer a separate Zerops token for CI use, that works too.
+Pick this when the project is small or solo, when the deploys ZCP runs are the canonical way the app updates, and when you do not need a git-tracked history of the deploys themselves.
 
-Where the token value lives depends on the workspace:
+## Push to git, then build from there
 
-- **Hosted workspace:** `ZCP_API_KEY` is in the container environment as `$ZCP_API_KEY`.
-- **Local install:** `ZCP_API_KEY` is in the `env` block of `.mcp.json` in your project directory.
+Future changes get committed and pushed to a configured git remote. Whatever sits behind that remote — a Zerops-managed build or your own CI — produces the next deploy.
 
-The agent reads the value from the right place and prepares the `gh secret set` command for you. The shape is:
+This requires committed code. ZCP does not auto-init git or invent a commit on your behalf. Before git-push delivery becomes useful you need an initialized repository with at least one commit covering the work you want to ship, a remote URL ZCP can push to, and credentials that authorize the push.
 
-```bash
-# Hosted workspace
-gh secret set ZEROPS_TOKEN -b "$ZCP_API_KEY" -R <owner>/<repo>
+When you ask the agent to set up git-push delivery, it provisions the remote URL and credentials so future pushes work without per-call configuration. If the setup step fails — repository unreachable, credential missing, working directory has no commits — the agent reports the specific reason. Fix the underlying issue and ask again.
 
-# Local install
-gh secret set ZEROPS_TOKEN -b "$(jq -r '.mcpServers.zerops.env.ZCP_API_KEY' .mcp.json)" -R <owner>/<repo>
-```
+How the credential is sourced depends on the workspace:
 
-Pasting the right one into a terminal authenticated to the repository wires up the secret in one step. The literal token value never crosses the MCP wire — the shell expands `$ZCP_API_KEY` (or `jq` reads `.mcp.json`) at command-time. If you would rather generate a separate GitHub-only Zerops token, that works too — see [Tokens and project access](/zcp/security/tokens-and-project-access) for the trade-offs.
+- **Hosted workspace.** If the project already has `GIT_TOKEN` in its env, the agent reuses it. Otherwise, provide a token that can push to the remote — typically a fine-grained GitHub or GitLab access token scoped to the target repo.
+- **Local agent bridge.** The push runs from your laptop, so your local git credential helper handles authentication — SSH keys, the macOS keychain, `gh auth login`, whatever you already use. ZCP does not need a token of its own. See [Tokens and project access](/zcp/security/tokens-and-project-access).
 
-If you already use an external CI/CD pipeline for this repository and do not want ZCP to know about it, leave build integration at `none`. ZCP will still record the deploys you ask it to verify; it just will not assume responsibility for triggering them.
+### What fires after a push lands
+
+- **Nothing tracked by ZCP.** Whatever your repository already has — a non-Zerops CI, a deploy hook elsewhere — keeps running. ZCP records the deploys you ask it to verify and stays out of the way.
+- **The Zerops dashboard build integration.** The Zerops dashboard pulls the repository and runs the [build and deploy pipeline](/guides/deployment-lifecycle) — see [GitHub integration via the dashboard](/references/github-integration#integration-via-zerops-gui).
+- **A GitHub Actions workflow you check in.** Your repository's `.github/workflows/zerops.yml` checks out the code and pushes it to Zerops via `zcli` — see [GitHub Actions](/references/github-integration#github-workflow-integration).
+
+The GitHub Actions option needs a **Zerops API token** stored as a GitHub Actions secret (it authenticates `zcli` against Zerops; it is **not** a GitHub token). One credential, one rotation surface — you can reuse the project-scoped token already behind `ZCP_API_KEY`. The agent prepares the right `gh secret set ZEROPS_TOKEN ...` command for your environment. Token-shape details: [Tokens and project access](/zcp/security/tokens-and-project-access).
+
+## Hand off to your CI or a human
+
+ZCP keeps recording every deploy and verify the agent runs at your request, but does not initiate further deploys on its own and does not auto-close the session.
+
+Pick this when an external CI/CD pipeline owns delivery, a human takes over for a release step that does not belong inside the agent loop, or the next change is ambiguous enough that explicit close calls beat any automation.
+
+In this mode, ending the session is a deliberate step. The agent does not auto-close it for you, even after a clean deploy and verify.
 
 ## Change later
 
-None of these choices are sticky. Close-mode, git-push capability, and build integration are read fresh on every handoff. Switch any one of them at any time:
+None of these choices are sticky. The handoff style, the git-push capability, and any build integration are read fresh on every handoff. Switch any one of them at any time:
 
-- Move from `auto` to `git-push` once the project is large enough to want commits.
-- Add a webhook integration after `git-push` is already in use.
-- Drop back to `manual` for a release where you want full control.
+- Move from direct deploy to git-push once the project is large enough to want commits.
+- Add a Zerops dashboard or GitHub Actions integration after git-push is already in use.
+- Drop back to manual hand-off for a release where you want full control.
 
-The agent picks up the new values on the next call. Capability and integration choices persist independently of close-mode — flipping close-mode does not reset them, and reconfiguring git-push does not change the close-mode you already set.
+The agent picks up the new values on the next call.
 
 ## Gotchas
 
-1. **First deploy is always direct, regardless of close-mode.** Setting `close-mode=git-push` early does not redirect the first deploy to git. Close-mode governs what happens to subsequent changes, not the deploy that closed the previous workflow.
-2. **Build integration only matters when close-mode is git-push.** With `auto` or `manual`, the build-integration value is irrelevant — leave it alone. Setting it without git-push capability configured will not silently fix a missing remote.
-3. **Build integration `none` does not mean "no build will fire".** It means "no Zerops-tracked build is set up by ZCP". Whatever your repository already has — a non-Zerops CI, a deploy hook elsewhere — keeps running.
-4. **The GitHub Actions secret is a Zerops token, not a GitHub token.** The workflow runs `zcli` against Zerops; it needs a Zerops API token in `ZEROPS_TOKEN`. If the deploy fails with a permission error and you reflexively rotate your GitHub PAT, you have rotated the wrong credential.
+1. **First deploy is always direct, regardless of the choice.** Setting up git-push delivery early does not redirect the first deploy to git. The choice governs subsequent changes, not the deploy that closed the previous workflow.
+2. **GitHub Actions secret is a Zerops API token, not a GitHub token.** The workflow runs `zcli` against Zerops; it needs a Zerops API token in `ZEROPS_TOKEN`. If a deploy from Actions fails on permissions and you reflexively rotate your GitHub PAT, you have rotated the wrong credential.
+3. **Build integration set to "none tracked" does not mean no build will fire.** It means ZCP did not set one up. Whatever your repository already has — a non-Zerops CI, a deploy hook elsewhere — keeps running.
 
 ## Next steps
 
-- [Build and verify an app](/zcp/workflows/build-and-verify-app) — the deploy and verify loop the close-mode hands off from.
+- [Build and verify an app](/zcp/workflows/build-and-verify-app) — the deploy and verify loop the handoff picks up from.
 - [Package a running service for reuse](/zcp/workflows/package-running-service) — turn a running service into reusable import files when the work is worth re-using.
-- [GitHub integration](/references/github-integration) — full reference for the dashboard and Actions paths build integration wires up.
+- [GitHub integration](/references/github-integration) — full reference for the dashboard and Actions paths.
 - [CI/CD with Zerops](/guides/ci-cd) — broader context on running pipelines around the Zerops build.
-- [What ZCP lets agents do](/zcp/concept/capabilities) — the full capability surface, by job.
