@@ -5,13 +5,7 @@ description: "ZCP classifies failures by recovery path: build, start, verify, ne
 
 Zerops Control Plane (ZCP) classifies failures by recovery path: `build`, `start`, `verify`, `network`, `config`, `credential`, or `other`.
 
-Use this page when an agent response or the events feed shows a failure category and you need to decide what to read next. These categories surface during [Build and verify an app](/zcp/workflows/build-and-verify-app) and when reviewing failed work in [Auditing agent work](/zcp/security/auditing-agent-work).
-
-## How to read a category
-
-Every failed deploy carries a structured classification: a category, a likely cause, a suggested next action. The agent reads that classification before raw logs, because the category points at the recovery path. Categories are recovery-path-shaped, not blame-shaped: `network` does not mean "the network is broken"; it means the first recovery move is connectivity, VPN, SSH, DNS, or platform reachability instead of editing application code.
-
-For each category below: what it means, where to read first, the first recovery move, and one example of what it looks like in conversation. After identifying the category, continue with [Troubleshooting](/zcp/reference/troubleshooting) for concrete fixes.
+Use this page when an agent response or the events feed shows a failure category and you need to decide what to read next. Categories are **recovery-path-shaped**, not blame-shaped — `network` does not mean "the network is broken"; it means the first move is connectivity, VPN, SSH, DNS, or platform reachability rather than editing application code. Each section below: what it means, where to read first, the first recovery move, one example. For concrete fixes after you've identified the category, continue with [Troubleshooting](/zcp/reference/troubleshooting).
 
 ## build
 
@@ -27,9 +21,14 @@ The Zerops build pipeline failed before a runtime container could start.
 
 The build succeeded, but the runtime did not reach a running state.
 
-**Read first.** Prepare logs when the failure is in `prepareCommands`; runtime logs when the runtime started briefly and crashed. The classification names which.
+**Read first.** Prepare logs when the failure is in `prepareCommands`; runtime logs when the runtime started briefly and crashed. The classification names which. If a successful operation also returned a `warnings` array, read it before treating the deploy as healthy — subdomain readiness and HTTP probe results show up there even when the deploy itself reports `FINISHED`.
 
-**Recovery.** Fix `run.prepareCommands`, `run.start`, ports, env-var references, package names, writable paths, or managed-service connectivity. See [Environment variables](/guides/environment-variables) for how managed-service references resolve.
+**Recovery path** (in this order):
+
+1. **Read the named log stream first.** Whatever the classification points at — prepare logs or runtime logs — that is the cause, not the alternative.
+2. **Check `run.start` and ports.** Most "started briefly and crashed" failures are the start command exiting non-zero, not binding the configured port, or binding `127.0.0.1` instead of `0.0.0.0`.
+3. **Check env-var references.** Missing `${db_*}` or `${redis_*}` resolution leaves the runtime crashing with "undefined" connection strings. See [Environment variables](/guides/environment-variables).
+4. **Check `prepareCommands` for missing packages or wrong distro names.** Alpine vs Debian package names trip up Python and PHP runtimes most often.
 
 **Example.** "Deploy of `appdev` failed at start. Cause: `EADDRINUSE` on port 3000 — another command in the start sequence is already binding the port. Suggested action: confirm `run.start` binds the configured port and that only one command owns it."
 
@@ -42,6 +41,8 @@ The deploy finished, but a post-deploy health check did not pass.
 **Recovery.** Inspect the failing check. For `http_root` 5xx, read runtime logs at request time and fix the application error. For "subdomain access not enabled," recover the public route before changing app code.
 
 **Example.** "Deploy of `appdev` succeeded but verify failed: HTTP probe returned 502 against the public URL. Cause: runtime is up, but the listener is not on `0.0.0.0`. Suggested action: read `zerops.yaml` `run.ports[]` and confirm the start command binds `0.0.0.0`, not `127.0.0.1`."
+
+Subdomain-readiness signals can appear in the `warnings` array of an otherwise-successful operation (an `enable subdomain` call that returned `FINISHED` may include "URL not ready after 10s"). Read warnings before treating the URL as live.
 
 ## network
 

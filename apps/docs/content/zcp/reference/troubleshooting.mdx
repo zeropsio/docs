@@ -1,76 +1,11 @@
 ---
 title: "Troubleshooting"
-description: "Diagnose common ZCP problems with setup, tokens, VPN, deploys, logs, public URLs, and workflow state."
+description: "Diagnose common ZCP problems with deploys, logs, public URLs, tokens, VPN, and workflow state."
 ---
 
-Diagnose common Zerops Control Plane (ZCP) problems with setup, tokens, VPN, deploys, logs, public URLs, and workflow state. This page is symptom-driven — find the symptom that matches what you are seeing and follow the concrete next check. For a category-driven view of deploy failures (`build`, `start`, `verify`, `network`, `config`, `credential`, `other`), see [Failure categories](/zcp/reference/failure-categories).
+Diagnose common Zerops Control Plane (ZCP) problems with deploys, logs, public URLs, tokens, VPN, and workflow state. This page is symptom-driven — find the symptom that matches what you are seeing and follow the concrete next check. For a category-driven view of deploy failures (`build`, `start`, `verify`, `network`, `config`, `credential`, `other`), see [Failure categories](/zcp/reference/failure-categories).
 
-## Start with status
-
-Before anything else, ask the agent to read ZCP status. Most "the agent forgot," "ZCP cannot see anything," and "I lost the thread" symptoms are recovered in one prompt:
-
-```text
-Read ZCP status and tell me where this project stands.
-```
-
-Status is the universal first move. It rebuilds the agent's view from live platform state — services, their state, recent deploys, recent failures — without you having to re-explain the project. If the answer comes back coherent, the session is fine and you can carry on. If the answer reveals a token, VPN, or platform problem, the rest of this page maps the symptom to the fix.
-
-The same prompt is the right recovery move when:
-
-- A long Claude Code session has lost the thread of where the work was.
-- You closed the browser tab or restarted the editor mid-task.
-- The agent answers vaguely about services or asks you to repeat what the project contains.
-- You are not sure whether the last deploy actually succeeded.
-
-If status itself fails — the agent reports "cannot reach ZCP" or returns a token error — the problem is below the workflow layer. Continue to the relevant section.
-
-## Token errors
-
-Token rejection happens at startup. ZCP refuses to come up with a token that has the wrong shape, and the error names the specific reason.
-
-| Symptom | Likely cause | Next move |
-|---|---|---|
-| `Token accesses N projects; use project-scoped token` | A multi-project (or full-access) token was supplied. | Generate a project-scoped token in the Zerops dashboard and replace the value. See [Tokens and project access](/zcp/security/tokens-and-project-access). |
-| `Token has no project access` | The token authenticates a user but cannot reach any project. | Grant the token project access (or generate a new project-scoped token) and replace the value. |
-| `No authentication found: set ZCP_API_KEY or log in with zcli` | No token is reaching ZCP. | Add `ZCP_API_KEY` under the `env` block of `.mcp.json`, or run `zcli login <token>`. |
-| `cli.data found but token is empty` | zCLI has a config file but no token in it. | Run `zcli login <token>` with a project-scoped token. |
-| API replies with 401 / `AUTH_TOKEN_EXPIRED` | The token was revoked or has expired. | Generate a new project-scoped token, replace the value, and restart the agent. |
-
-After replacing the token in `.mcp.json`, restart Claude Code. ZCP reads `ZCP_API_KEY` once at process startup; the live session still holds the old value in memory.
-
-```bash
-# After editing .mcp.json, relaunch Claude Code from the project root
-cd path/to/your/project
-# launch your Claude Code client; it picks up the new env on startup
-```
-
-If the agent still reports the same rejection after restart, the value in the file is still the wrong shape. Generate a fresh project-scoped token and try again.
-
-## VPN errors (local install)
-
-The local agent bridge reaches Zerops managed services over the project [VPN](/references/networking/vpn). The hosted workspace does not need a VPN — it is already on the project's private network. These symptoms only apply to the local bridge.
-
-| Symptom | Likely cause | Next move |
-|---|---|---|
-| `connection refused` against a managed service hostname (e.g. `db`, `redis`) | VPN is not up, or it dropped after sleep / network change. | `zcli vpn up <project-id>` — bring the tunnel back. |
-| `no route to host` for `db.zerops` or similar | Same as above; the search domain only resolves through the VPN. | `zcli vpn up <project-id>`. |
-| Local app starts but cannot connect to Postgres / Valkey / storage | VPN is up but the `.env` is stale, or VPN is down. | First check `nc -zv db 5432 -w 3` (or the right port). If that fails, restart the VPN. If it succeeds, regenerate the `.env`. |
-| `zcli vpn up` prompts repeatedly for sudo | VPN setup needs root each time the tunnel comes up. | This is expected on Linux and macOS — VPN setup requires admin/root. |
-
-A representative recovery loop:
-
-```bash
-# 1. Confirm the VPN is up
-nc -zv db 5432 -w 3
-
-# 2. If it is not, bring it back
-zcli vpn up <project-id>
-
-# 3. After VPN is healthy, regenerate stale env values
-# (ask Claude Code to do this; it reads live values from the project)
-```
-
-VPN drops with sleep, network change, and idle timeouts. Treat re-running `zcli vpn up` as a routine recovery, not a setup error.
+**Lost the thread of the session?** Ask the agent: `Read ZCP status and tell me where this project stands.` Status rebuilds the agent's view from live platform state in one prompt — full recovery details in [Workflow state and session recovery](#workflow-state-and-session-recovery) below.
 
 ## Deploy errors
 
@@ -101,7 +36,7 @@ A deploy can succeed (build green, runtime running) and still fail to verify. Ve
 |---|---|---|
 | Service status is `RUNNING` but the route returns 500 / 404 | The app started but the requested behavior is broken. | Read runtime logs at request time; the agent confirms whether the route is wired up and the dependencies it needs. |
 | HTTP probe on the public URL returns a connection error | Subdomain access is still propagating, or the runtime is not bound to `0.0.0.0`. | Wait 30-60 seconds and retry. If it stays broken, see the next section. |
-| Service status is `READY_TO_DEPLOY` after a deploy | Build succeeded but the runtime never started (start command failed). | Read runtime logs scoped to `ContainerCreationStart` — the start command itself is the cause. |
+| Service status is `READY_TO_DEPLOY` after a deploy | Build succeeded but the runtime never started (start command failed). | Read runtime logs scoped to the start phase — the start command itself is the cause. |
 | `RUNNING` but log output shows continuous restart | The start command exits and is being restarted by the platform. | Read runtime logs over the last few minutes; the exit reason is in the logs. |
 
 Verify failures route through the same failure classification as deploy failures. The agent reads that classification, decides whether to fix and retry or escalate.
@@ -125,6 +60,31 @@ Enable subdomain access on appdev and verify the URL responds.
 
 The agent runs the equivalent operation, waits for HTTP-readiness, and reports the URL.
 
+## Token errors
+
+Token rejection happens at startup. ZCP refuses to come up with a token that has the wrong shape, and the error names the specific reason.
+
+| Symptom | Likely cause | Next move |
+|---|---|---|
+| `Token accesses N projects; use project-scoped token` | A multi-project (or full-access) token was supplied. | Generate a project-scoped token in the Zerops dashboard and replace the value. See [Tokens and project access](/zcp/security/tokens-and-project-access). |
+| `Token has no project access` | The token authenticates a user but cannot reach any project. | Grant the token project access (or generate a new project-scoped token) and replace the value. |
+| `No authentication found: set ZCP_API_KEY or log in with zcli` | No token is reaching ZCP. | Add `ZCP_API_KEY` under the `env` block of `.mcp.json`, or run `zcli login <token>`. |
+| API replies with 401 / `AUTH_TOKEN_EXPIRED` | The token was revoked or has expired. | Generate a new project-scoped token, replace the value, and restart the agent. |
+
+After replacing the token in `.mcp.json`, restart the agent. ZCP reads `ZCP_API_KEY` once at process startup; the live session still holds the old value in memory.
+
+## VPN errors (local install)
+
+The local agent bridge reaches Zerops managed services over the project [VPN](/references/networking/vpn). The hosted workspace does not need a VPN — it is already on the project's private network. These symptoms only apply to the local bridge.
+
+| Symptom | Likely cause | Next move |
+|---|---|---|
+| `connection refused` against a managed service hostname (e.g. `db`, `redis`) | VPN is not up, or it dropped after sleep / network change. | `zcli vpn up <project-id>` — bring the tunnel back. |
+| `no route to host` for `db.zerops` or similar | Same as above; the search domain only resolves through the VPN. | `zcli vpn up <project-id>`. |
+| Local app starts but cannot connect to Postgres / Valkey / storage | VPN is up but the `.env` is stale, or VPN is down. | First check `nc -zv db 5432 -w 3` (or the right port). If that fails, restart the VPN. If it succeeds, regenerate the `.env`. |
+
+VPN drops with sleep, network change, and idle timeouts. Treat re-running `zcli vpn up` as a routine recovery, not a setup error.
+
 ## Local install errors (`zcp init`, `.mcp.json`, `.env`)
 
 Local-bridge setup has a few moving pieces — the binary, the generated config, the token, and the `.env`. The most common stumbles:
@@ -133,31 +93,35 @@ Local-bridge setup has a few moving pieces — the binary, the generated config,
 |---|---|---|
 | Re-running `zcp init` made the agent stop working | `zcp init` rewrites `.mcp.json` from the template; your `ZCP_API_KEY` is gone. | Re-add the `env` block with `ZCP_API_KEY` and restart Claude Code. See [Tokens and project access](/zcp/security/tokens-and-project-access). |
 | Claude Code does not list the `zerops` MCP server | Claude Code launched from the wrong directory. | Quit and relaunch from the project root that contains `.mcp.json`. |
-| Agent says it cannot find a `zerops_*` tool | Claude Code's MCP introspection cached an older tool list. | Restart Claude Code so it re-reads the MCP server and picks up the current tool catalog. |
 | Local app reads stale env values | `.env` is a snapshot taken at generation time. | Regenerate after any project env-variable change — ask the agent to re-run the env-file generator. |
 | `zcp` not found on `PATH` after install | The install script wrote to `~/.local/bin` and that is not on `PATH`. | Add `~/.local/bin` to `PATH` in your shell rc and reload. |
 
 Re-running `zcp init` is safe for everything except `.mcp.json` — `CLAUDE.md` preserves your edits outside the managed markers, but `.mcp.json` is rewritten clean. If you re-init, treat re-adding the token as routine.
 
-## Workflow state errors
+## Workflow state and session recovery
 
 Workflow state errors usually surface as "the agent forgot," "no project found," or "session lost" symptoms. Almost all of them recover with a status read.
 
+```text
+Read ZCP status and tell me where this project stands.
+```
+
+Status rebuilds the agent's view from live platform state — services, their state, recent deploys, recent failures — without you having to re-explain the project. The same prompt is the right recovery move when a long Claude Code session has lost the thread, you closed the browser tab or restarted the editor mid-task, the agent answers vaguely about services, or you are not sure whether the last deploy actually succeeded.
+
 | Symptom | Likely cause | Next move |
 |---|---|---|
-| Agent says "no project found" or "I have no context" mid-conversation | The agent's chat memory drifted from real platform state. | Ask for status: `Read ZCP status and tell me where this project stands.` Status reads live state and rebuilds the picture. |
+| Agent says "no project found" or "I have no context" mid-conversation | The agent's chat memory drifted from real platform state. | Ask for status (above). It reads live state and rebuilds the picture. |
 | Agent loops on the same failed deploy without progressing | Five attempts without progress is a stop signal — see [Build and verify an app](/zcp/workflows/build-and-verify-app). | Stop the loop and ask the agent to summarize what it has tried and what evidence is still missing. |
 | Agent picks the wrong service when you said "the runtime" | In a dev/stage project there are two runtimes; ambiguous prompts can land on the wrong one. | Name the hostname explicitly: `Deploy appdev` rather than `deploy the runtime`. |
 
-Status is not just for cold starts. Any time the conversation drifts from the project, asking ZCP for current state realigns the agent with real state in one prompt.
+Status is not just for cold starts. Any time the conversation drifts from the project, asking ZCP for current state realigns the agent with real state in one prompt. If status itself fails — the agent reports "cannot reach ZCP" or returns a token error — see [Token errors](#token-errors).
 
 ## Gotchas
 
-1. **Status is the first move, not the last.** When something is unclear — "did that deploy succeed?", "what state is the project in?" — ask for status before debugging anything else. Most "the agent is confused" cases recover from a status read in one turn.
-2. **Restart Claude Code to refresh the MCP tool list.** Claude Code reads the `zerops_*` tool catalog at startup. If ZCP's tool surface changes (new install, version update) and the agent says it cannot find a tool, quit and relaunch the editor so it re-introspects the MCP server.
-3. **Build logs and runtime logs are different streams.** A build failure shows in build-container logs; a runtime crash shows in runtime-container logs. Asking for the wrong one returns nothing useful — make sure the agent is reading the stream that matches the phase that failed.
-4. **VPN drops are routine, not setup errors.** Sleep, network change, and idle timeouts will drop the VPN tunnel. `zcli vpn up <project-id>` brings it back. The error message ("connection refused" / "no route to host") looks like an app bug but is almost always a network move.
-5. **Re-running `zcp init` does not preserve the token in `.mcp.json`.** The regenerated file ships without `ZCP_API_KEY`. Re-adding the `env` block is part of the re-init flow, not a separate setup step.
+1. **Build logs and runtime logs are different streams.** A build failure shows in build-container logs; a runtime crash shows in runtime-container logs. Asking for the wrong one returns nothing useful — make sure the agent is reading the stream that matches the phase that failed.
+2. **Restart the agent to refresh the MCP tool list.** The agent reads ZCP's tool catalog at startup. If ZCP's surface changes (new install, version update) and the agent says it cannot find an operation, quit and relaunch so it re-introspects.
+3. **VPN drops are routine, not setup errors.** Sleep, network change, and idle timeouts will drop the VPN tunnel. `zcli vpn up <project-id>` brings it back. The error message ("connection refused" / "no route to host") looks like an app bug but is almost always a network move.
+4. **Re-running `zcp init` does not preserve the token in `.mcp.json`.** The regenerated file ships without `ZCP_API_KEY`. Re-adding the `env` block is part of the re-init flow, not a separate setup step.
 
 ## Related
 
