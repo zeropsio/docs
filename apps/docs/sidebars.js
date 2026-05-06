@@ -212,7 +212,7 @@ module.exports = {
         {
           type: 'doc',
           id: 'zcp/setup/local-agent-bridge',
-          label: 'Use ZCP from your laptop',
+          label: 'Use ZCP locally',
           className: 'homepage-sidebar-item',
         },
       ],
