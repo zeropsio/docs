@@ -11,8 +11,8 @@ Coding agents need somewhere to operate, not just somewhere to generate code. Th
 
 > The LLM does the engineering. The developer holds intent and judgment. ZCP holds reality.
 
-:::caution Public preview — keep production in a separate project
-ZCP carries a project-scoped token with full rights so the agent can operate the services you select. It belongs in a development or staging project, not a production one. See [Production boundary](/zcp/security/production-policy).
+:::caution Keep production in a separate project
+The `zcp` binary runs with a project-scoped token that grants the agent full rights inside that project. It belongs in a development or staging project, not a production one — independent of preview status, you don't want a coding agent loose against the project that runs your production traffic. See [Production boundary](/zcp/security/production-policy).
 :::
 
 ## Who it's for
@@ -23,7 +23,7 @@ Today ZCP supports **Claude Code**, paired with a **Claude Pro or Max subscripti
 
 ## What ZCP MCP does
 
-The ZCP MCP exposes a fixed set of operations on one Zerops project, grouped by user job. The agent never has to be told what the project looks like — ZCP reports it from what's deployed and running right now.
+The ZCP MCP exposes a fixed set of operations on one Zerops project, grouped by user job. The agent never has to be told what the project looks like — the MCP reports it from what's deployed and running right now.
 
 | Job | What it means | Reference |
 |---|---|---|
@@ -40,20 +40,20 @@ Full contract — bootstrap routes, mode semantics, failure categories, recovery
 
 ## Two ways to run it
 
-ZCP is a binary; the question is where it runs.
+ZCP MCP is a binary; the question is where it runs.
 
 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 my-2">
   <CustomCard title="Hosted workspace" emoji="🌐">
-    A Zerops service (`zcp@1`) that runs the ZCP MCP inside the project, with optional Cloud IDE and bundled Claude Code. Safe by design — no path to your laptop or other projects. **Recommended starting point.**
+    A Zerops service (`zcp@1`) that runs the ZCP MCP inside the project, with optional Cloud IDE and bundled Claude Code. Safe by design — no path to your laptop or other projects. **Recommended starting point.** [Set up →](/zcp/setup/hosted-workspace)
   </CustomCard>
   <CustomCard title="Local agent bridge" emoji="💻">
-    The `zcp` binary on your laptop, connected to the project VPN. The agent runs in your editor. Real and supported, but the most WIP path — expect setup churn between releases.
+    The `zcp` binary on your laptop, connected to the project VPN. The agent runs in your editor. Real and supported, but the most WIP path — expect setup churn between releases. [Set up →](/zcp/setup/local-agent-bridge)
   </CustomCard>
 </div>
 
-Either way, the agent gets the same project-scoped operations against the same project. The hosted service packages ZCP with an editor and an agent CLI; the local bridge is the same MCP without those extras.
+Either way, the agent gets the same project-scoped operations against the same project. The hosted service packages the MCP with an editor and an agent CLI; the local bridge is the same MCP without those extras.
 
-Decision: [Choose your workspace](/zcp/setup/choose-workspace). Broader local-dev story (humans, not just agents): [Local & Remote Development](/features/local-remote-development).
+Decision: [Choose your workspace](/zcp/setup/choose-workspace). First time? Try the [Quickstart](/zcp/quickstart) — no install needed. Broader local-dev story (humans, not just agents): [Local & Remote Development](/features/local-remote-development).
 
 ## What the hosted workspace adds
 
@@ -63,7 +63,9 @@ When you pick the hosted path, ZCP MCP ships as part of a `zcp@1` Zerops service
 
 **Cloud IDE.** Browser-based VS Code (code-server) with the Claude Code plugin, SSHFS access to runtime services in the project, and a curated dev toolchain. Reachable VPN-only or on a `.zerops.app` subdomain gated by an auto-generated password. Useful when you want to watch the agent work and step in occasionally rather than running it autonomously over SSH. Full toolchain inventory: [Local & Remote Development → Browser Cloud IDE on ZCP](/features/local-remote-development#browser-cloud-ide-on-zcp).
 
-Without either toggle, the hosted ZCP service is an MCP endpoint plus a Linux dev container with `zcli`, the platform-injected token, and project-private network reach — useful as a shared remote workstation. With both, it's a one-click agent + IDE workspace inside the project.
+Without either toggle, the `zcp@1` service is an MCP endpoint plus a Linux dev container with `zcli`, the platform-injected token, and project-private network reach — useful as a shared remote workstation. With both, it's a one-click agent + IDE workspace inside the project.
+
+Both toggles are configured when you provision the service: [Provision a hosted workspace → Path B](/zcp/setup/hosted-workspace#path-b--toggle-the-zcp-service).
 
 ## Why transparent infrastructure works for agents
 
@@ -83,17 +85,17 @@ ZCP MCP groups its operations into three categories so a host agent can gate the
 
 <div className="grid grid-cols-1 md:grid-cols-3 gap-2 my-2">
   <CustomCard title="Read-only" emoji="👁️">
-    Inspect state and configuration. Safe to auto-allow. Example: `zerops_logs`, `zerops_events`, `zerops_discover`.
+    Inspect state and configuration. Safe to auto-allow. Example: `zerops_logs`, `zerops_events`, `zerops_discover`. [Full list →](/zcp/reference/agent-workflow#read-only--inspect-state-and-configuration)
   </CustomCard>
   <CustomCard title="Destructive" emoji="⚠️">
-    Mutate the project or its services. Require confirmation. Example: `zerops_deploy`, `zerops_scale`, `zerops_delete`.
+    Mutate the project or its services. Require confirmation. Example: `zerops_deploy`, `zerops_scale`, `zerops_delete`. [Full list →](/zcp/reference/agent-workflow#destructive--mutate-the-project-or-its-services)
   </CustomCard>
   <CustomCard title="Operational" emoji="🔧">
-    Set up infrastructure or coordinate work. Gated by team policy. Example: `zerops_recipe`, `zerops_mount`, `zerops_subdomain`.
+    Set up infrastructure or coordinate work. Gated by team policy. Example: `zerops_recipe`, `zerops_mount`, `zerops_subdomain`. [Full list →](/zcp/reference/agent-workflow#operational--set-up-or-coordinate-work)
   </CustomCard>
 </div>
 
-That's the surface. The boundary is the project. ZCP's token authorizes one project, full stop — cross-project, account-wide, or organization actions stay outside reach. Project roles (Owner, Admin, Developer, Guest) apply to ZCP itself; see [Roles & Permissions](/features/rbac).
+That's the surface. The boundary is the project. The MCP's token authorizes one project, full stop — cross-project, account-wide, or organization actions stay outside reach. Project roles (Owner, Admin, Developer, Guest) apply to the project token the MCP uses; see [Roles & Permissions](/features/rbac). Full blast-radius framing: [Trust model](/zcp/security/trust-model).
 
 Full tool list and permission semantics: [agent workflow reference](/zcp/reference/agent-workflow). Audit surface — deploys, events, logs, git history — is the same any human session leaves: [Auditing agent work](/zcp/security/auditing-agent-work). Token shape and confirmation gates: [Tokens and credentials](/zcp/security/tokens-and-project-access).
 
@@ -105,7 +107,7 @@ The local agent bridge isn't extensible the same way; the binary on your laptop 
 
 ## Source control
 
-When the agent runs in the hosted workspace, it lives in a container, not on your laptop — git access wires through `gh auth login` (the GitHub CLI is preinstalled), through a fine-grained token stored in ZCP's secret env vars, or through SSH agent forwarding from your local editor. When the agent runs in the local bridge, it uses your existing git credentials. Detail: [Tokens and credentials → Git credentials](/zcp/security/tokens-and-project-access#git-credentials--separate-from-zcp_api_key).
+When the agent runs in the hosted workspace, it lives in a container, not on your laptop — git access wires through `gh auth login` (the GitHub CLI is preinstalled), through a fine-grained token stored in the `zcp` service's secret env vars, or through SSH agent forwarding from your local editor. When the agent runs in the local bridge, it uses your existing git credentials. Detail: [Tokens and credentials → Git credentials](/zcp/security/tokens-and-project-access#git-credentials--separate-from-zcp_api_key).
 
 ## How this differs from related tools
 
@@ -134,8 +136,9 @@ The agent space contains several products that look superficially similar but so
 
 <DocCardList items={[
   { type: 'link', href: '/zcp/quickstart', label: 'Quickstart', description: 'Try it without installing anything — deploy with a coding agent against a real project.' },
-  { type: 'link', href: '/zcp/concept/how-it-works', label: 'How ZCP works', description: 'The model — where ZCP runs, what it exposes, how operations are grouped.' },
+  { type: 'link', href: '/zcp/concept/how-it-works', label: 'How ZCP works', description: 'The model — where the MCP runs, what it exposes, how operations are grouped.' },
   { type: 'link', href: '/zcp/setup/choose-workspace', label: 'Choose your workspace', description: 'Hosted vs local — pick where ZCP runs, then go set it up.' },
   { type: 'link', href: '/zcp/reference/agent-workflow', label: 'Agent workflow contract', description: 'Full reference — bootstrap routes, develop flow, failure categories, MCP tool surface.' },
+  { type: 'link', href: '/zcp/glossary', label: 'Glossary', description: 'Disambiguate ZCP, ZCP MCP, the hosted workspace, the binary, workspace shapes, and the rest.' },
   { type: 'link', href: '/features/local-remote-development', label: 'Local & Remote Development', description: 'The broader local-dev story — VPN, Cloud IDE, native IDE over SSH.' },
 ]} />

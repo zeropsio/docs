@@ -40,13 +40,13 @@ When code is ready, the agent runs the standard Zerops [build and deploy pipelin
 - **First deploy is always direct.** Delivery handoff applies to subsequent changes, not the first.
 - **Build is separate from runtime.** Build runs in a temporary build container; the runtime is created with the new appVersion. The agent reads logs from each phase distinctly.
 - **Build logs and runtime logs are different streams.** A build failure shows in build-container logs; a runtime crash shows in runtime-container logs. The agent picks the right stream for the failure category — pasting runtime logs for a build failure produces a wrong diagnosis.
-- **Hosted multi-service deploys run in parallel.** When several services ship together from a hosted workspace, ZCP runs them concurrently via deploy-batch. From the local bridge, deploys run serially per service. In a dev+stage workflow, the typical order is dev first, verify, then deploy stage from the verified dev build.
+- **Hosted multi-service deploys run in parallel.** When several services ship together from a hosted workspace, the MCP runs them concurrently via deploy-batch. From the local bridge, deploys run serially per service. In a dev+stage workflow, the typical order is dev first, verify, then deploy stage from the verified dev build.
 
 Deploy success and verify success aren't the same. A successful deploy means the build finished and the runtime started; whether the requested behavior works is a separate check.
 
 ## Read logs and events
 
-When something looks wrong, ZCP gives the agent direct access to platform evidence — not your retell of it.
+When something looks wrong, the MCP gives the agent direct access to platform evidence — not your retell of it.
 
 - The project activity timeline shows recent deploys, builds, status transitions, and process events, scoped by service hostname.
 - Runtime logs come back filtered by severity, time window, and search text — the agent does not need to scroll a wall of output.
@@ -92,7 +92,7 @@ Whether the loop closed cleanly or stopped on a blocker, the platform has its ow
 
 1. **Deploy success is not verify success.** A green build with a 500 on the route you care about isn't finished — the build status check and the behavior check are different gates, and the second is the one that matters to a user.
 2. **In a `standard` (dev/stage) project, stage deploys do not happen automatically.** Dev work targets the dev runtime only — stage deploys must be asked for. If the agent silently changes the stage runtime, that is a wrong path. (`local-stage` projects deploy from your laptop into the linked stage runtime by design and are not affected — see [workspace shapes](/zcp/setup/choose-workspace#workspace-shapes).)
-3. **Five attempts is your stop signal.** A loop that cannot make progress in five tries is a loop that needs you, not another retry. ZCP does not enforce this in the deploy/verify loop — it's the cadence you should expect and the threshold beyond which you step in.
+3. **Five attempts is your stop signal.** A loop that can't make progress in five tries is a loop that needs you, not another retry. The MCP doesn't enforce this in the deploy/verify loop — it's the cadence you should expect and the threshold beyond which you step in.
 
 ## Next steps
 

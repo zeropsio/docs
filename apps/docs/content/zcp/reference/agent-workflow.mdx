@@ -154,11 +154,11 @@ Safe to call without confirmation. Integration tokens can be scoped to read-only
 | `zerops_events` | Project event timeline (deploys, builds, scaling, status transitions), scoped by hostname |
 | `zerops_discover` | Read services, ports, env-var keys, current state from live platform reality |
 | `zerops_verify` | Post-deploy reachability and HTTP-probe checks |
-| `zerops_knowledge` | Surface ZCP-side guidance specific to current project state and step |
+| `zerops_knowledge` | Surface MCP-side guidance specific to current project state and step |
 
 ### Destructive — mutate the project or its services
 
-Host agent should require user confirmation. Two operations carry an explicit ZCP-side gate (see Confirmation gates).
+Host agent should require user confirmation. Two operations carry an explicit MCP-side gate (see Confirmation gates).
 
 | Tool | Purpose |
 |---|---|
@@ -182,9 +182,9 @@ Host agent decides per team policy. These don't fit cleanly as read-only or dest
 
 ## Confirmation gates
 
-Two operations carry an explicit ZCP-side confirmation gate because the loss isn't reversible from inside the conversation:
+Two operations carry an explicit MCP-side confirmation gate because the loss isn't reversible from inside the conversation:
 
-- **Service deletion** — requires explicit user approval in the same conversation, by service name. Hosted ZCP additionally hard-blocks deleting the workspace it's running on (`SELF_SERVICE_BLOCKED`).
+- **Service deletion** — requires explicit user approval in the same conversation, by service name. The hosted MCP additionally hard-blocks deleting the `zcp` service it's running on (`SELF_SERVICE_BLOCKED`).
 - **Wholesale service replacement** (import override) on a service with prior failed deploy history — first call is refused with a structured payload; second call must echo it back.
 
 Detail: [Tokens and credentials → Confirmation gates](/zcp/security/tokens-and-project-access#confirmation-gates-for-destructive-actions).

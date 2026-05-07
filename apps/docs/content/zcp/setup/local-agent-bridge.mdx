@@ -6,15 +6,15 @@ description: "Run the zcp binary on your laptop and connect your local editor's 
 Run the `zcp` binary on your laptop. With `zcli vpn up <project-id>`, your laptop joins the project's private network — the same network your services use. The agent runs in your editor; ZCP MCP runs as a process on your machine and bridges between the two.
 
 :::warning Public preview — local mode is the part most likely to change
-The `zcp` binary, the `.mcp.json` shape, and the artifacts written by `zcp init` are still settling. Pin local mode to development and staging projects, keep production in a separate project, and expect setup details to shift between releases.
+The `zcp` binary, the `.mcp.json` shape, and the artifacts written by `zcp init` are still settling. Expect setup details to shift between releases.
 :::
 
 The local agent bridge is for developers who already have a comfortable setup — your editor, your shell, your dev server — and want a coding agent that can drive Zerops without giving up your machine. If you're evaluating ZCP for the first time, the [hosted workspace](/zcp/setup/hosted-workspace) is a faster start.
 
-You don't need ZCP at all to develop locally against a Zerops project — `zcli vpn up` plus your editor is enough; see [Local & Remote Development](/features/local-remote-development). ZCP is what you add when you also want a coding agent operating the project from the same machine: discovering services, generating credentials, deploying, reading logs, verifying.
+You don't need ZCP at all to develop locally against a Zerops project — `zcli vpn up` plus your editor is enough; see [Local & Remote Development](/features/local-remote-development). The MCP is what you add when you also want a coding agent operating the project from the same machine: discovering services, generating credentials, deploying, reading logs, verifying.
 
 :::caution Supervise the agent client
-The local bridge runs the agent on your dev machine. ZCP itself stays project-scoped, but the agent process inherits your user — what your client (Claude Code, etc.) does with file edits, shell commands, and other tools follows your client's permissions, not ZCP's. Set those permissions accordingly. See [Trust model](/zcp/security/trust-model).
+The local bridge runs the agent on your dev machine. The MCP itself stays project-scoped, but the agent process inherits your user — what your client (Claude Code, etc.) does with file edits, shell commands, and other tools follows your client's permissions, not the MCP's. Set those permissions accordingly. See [Trust model](/zcp/security/trust-model).
 :::
 
 ## Prerequisites
@@ -22,11 +22,11 @@ The local bridge runs the agent on your dev machine. ZCP itself stays project-sc
 - A Zerops project. Create one from the [Zerops dashboard](https://app.zerops.io/dashboard/project-add) or from a [recipe](https://app.zerops.io/recipes).
 - [zCLI](/references/cli) installed on your machine and authenticated.
 - A **project-scoped Zerops token** (steps below). Multi-project tokens are refused at startup.
-- A **Claude Pro or Max subscription** and Claude Code installed locally. Claude Code handles login through its own flow; ZCP doesn't see your subscription credentials.
+- A **Claude Pro or Max subscription** and Claude Code installed locally. Claude Code handles login through its own flow; the MCP doesn't see your subscription credentials.
 
 ## Get a project-scoped Zerops token
 
-ZCP needs a Zerops API token scoped to **one project** — multi-project and full-access tokens are refused at startup. Generate one in the Zerops dashboard, then keep the value handy for the **Add your token** step. Full walkthrough, rejection rules, and rotation: [Tokens and credentials](/zcp/security/tokens-and-project-access).
+The MCP needs a Zerops API token scoped to **one project** — multi-project and full-access tokens are refused at startup. Generate one in the Zerops dashboard, then keep the value handy for the **Add your token** step. Full walkthrough, rejection rules, and rotation: [Tokens and credentials](/zcp/security/tokens-and-project-access).
 
 ## Install the binary
 
@@ -65,17 +65,17 @@ Claude Code starts and lists the MCP servers it found. The `zerops` server (that
 Use ZCP to list the services in this project.
 ```
 
-A working connection answers with the project's runtime and managed services and their state. If the agent says it can't reach ZCP, see [Troubleshooting](/zcp/reference/troubleshooting) — most common issues are token-scope mismatches and starting Claude Code from the wrong directory.
+A working connection answers with the project's runtime and managed services and their state. If the agent says it can't reach the MCP, see [Troubleshooting](/zcp/reference/troubleshooting) — most common issues are token-scope mismatches and starting Claude Code from the wrong directory.
 
 ## Connect the project VPN
 
-ZCP reaches managed services (databases, caches, storage) through the Zerops project [VPN](/references/networking/vpn). Bring it up with zCLI:
+Your laptop reaches managed services (databases, caches, storage) through the Zerops project [VPN](/references/networking/vpn) — the MCP itself talks to the Zerops API directly, but anything your local app or shell does against `db`, `cache`, etc. needs the tunnel. Bring it up with zCLI:
 
 ```bash
 zcli vpn up <project-id>
 ```
 
-You'll be prompted for sudo or admin — VPN setup needs root on Linux and macOS. ZCP can't start the VPN for you; this is your one manual step.
+You'll be prompted for sudo or admin — VPN setup needs root on Linux and macOS. The MCP can't start the VPN for you; this is your one manual step.
 
 After the VPN is up, project services resolve by hostname (`db`, `cache`, etc.) from your laptop.
 
@@ -87,7 +87,7 @@ Ask Claude Code:
 Use ZCP to generate a .env file for my local app.
 ```
 
-ZCP reads `run.envVariables` for the requested service from your local `zerops.yaml`, resolves env-template references (the `${hostname_var}` syntax) from the platform, and writes a `.env` in your working directory. Cross-service references resolve recursively — for example `DATABASE_URL=postgres://${db_user}:${db_password}@${db_hostname}:${db_port}/${db_dbName}` lands as a fully-resolved connection string.
+The MCP reads `run.envVariables` for the requested service from your local `zerops.yaml`, resolves env-template references (the `${hostname_var}` syntax) from the platform, and writes a `.env` in your working directory. Cross-service references resolve recursively — for example `DATABASE_URL=postgres://${db_user}:${db_password}@${db_hostname}:${db_port}/${db_dbName}` lands as a fully-resolved connection string.
 
 The call needs the target service hostname, a `zerops.yaml` in your working directory, and a matching `setup:` entry with non-empty `run.envVariables`. Without those, generate-dotenv returns an error instead of guessing.
 
@@ -95,7 +95,7 @@ Your local app reads the same hostnames and credentials it would see deployed, j
 
 ## Link a deploy target
 
-Local mode needs one Zerops runtime linked as your stage target so the agent has somewhere to deploy from your working directory. If your project has exactly one runtime, ZCP picks it up automatically. If multiple, the agent asks which to link — answer by hostname (e.g. `appstage`).
+Local mode needs one Zerops runtime linked as your stage target so the agent has somewhere to deploy from your working directory. If your project has exactly one runtime, the MCP picks it up automatically. If multiple, the agent asks which to link — answer by hostname (e.g. `appstage`).
 
 If no runtime is linked yet (project has only managed services, or you haven't decided), the agent's default deploy path refuses with a hint. You can still develop locally against the managed services, and git-push delivery can still work — see [Choose how finished work ships](/zcp/workflows/delivery-handoff). Ask the agent to link a runtime by hostname when ready.
 
@@ -103,16 +103,16 @@ Workspace shapes the agent uses here: `local-stage` once a runtime is linked, `l
 
 ## What stays your tool's job
 
-ZCP doesn't run your local dev server. Vite, Valet, Docker Compose, your IDE's runner, whatever — the dev process stays your tool's responsibility. ZCP works alongside it.
+The MCP doesn't run your local dev server. Vite, Valet, Docker Compose, your IDE's runner, whatever — the dev process stays your tool's responsibility. The MCP works alongside it.
 
-ZCP doesn't mount Zerops runtime filesystems on your laptop. The hosted workspace gives the agent SSHFS access; the local bridge doesn't. If you need to read runtime files from your machine, use [SSH](/references/networking/ssh) directly.
+The MCP doesn't mount Zerops runtime filesystems on your laptop. The hosted workspace gives the agent SSHFS access; the local bridge doesn't. If you need to read runtime files from your machine, use [SSH](/references/networking/ssh) directly.
 
 ## Gotchas
 
 - **VPN goes down with sleep.** Laptop sleep, network change, idle timeout — the tunnel often drops. Bring it back with `zcli vpn up <project-id>` before the agent retries.
-- **Each project directory needs its own `zcp init`.** State and tokens are per-project. Switching projects means switching directories; Claude Code picks up the wrong ZCP connection if you launch from the wrong root.
+- **Each project directory needs its own `zcp init`.** State and tokens are per-project. Switching projects means switching directories; Claude Code picks up the wrong MCP connection if you launch from the wrong root.
 - **Multi-project tokens are rejected at startup.** A token granting access to multiple projects (or no project) is refused. Generate a per-project token (steps above).
-- **The `zerops` server name in `.mcp.json` is fixed.** Don't rename the key; ZCP and Claude Code both expect it.
+- **The `zerops` server name in `.mcp.json` is fixed.** Don't rename the key; the MCP and Claude Code both expect it.
 - **The `.env` is a snapshot.** Regenerate after changing project env variables, not before.
 - **Production stays out of this loop.** Local bridge is for development and staging projects. See [Production boundary](/zcp/security/production-policy).
 

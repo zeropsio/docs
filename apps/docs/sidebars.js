@@ -579,7 +579,7 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'Zerops Control Plane',
+      label: 'Zerops Control Plane MCP',
       collapsible: false,
       customProps: {
         sidebar_is_group_headline: true,
@@ -609,15 +609,6 @@ module.exports = {
           label: 'How ZCP works',
           customProps: {
             sidebar_icon: 'cog-six-tooth',
-          },
-          className: 'homepage-sidebar-item',
-        },
-        {
-          type: 'doc',
-          id: 'zcp/glossary',
-          label: 'Glossary',
-          customProps: {
-            sidebar_icon: 'book-open',
           },
           className: 'homepage-sidebar-item',
         },
@@ -714,6 +705,15 @@ module.exports = {
           label: 'Agent workflow contract',
           customProps: {
             sidebar_icon: 'command-line',
+          },
+          className: 'homepage-sidebar-item',
+        },
+        {
+          type: 'doc',
+          id: 'zcp/glossary',
+          label: 'Glossary',
+          customProps: {
+            sidebar_icon: 'book-open',
           },
           className: 'homepage-sidebar-item',
         },
