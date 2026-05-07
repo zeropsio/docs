@@ -140,6 +140,24 @@ module.exports = {
       },
       className: 'homepage-sidebar-item',
     },
+    {
+      type: 'doc',
+      id: 'features/local-remote-development',
+      label: 'Local & Remote Development',
+      customProps: {
+        sidebar_icon: 'computer-desktop',
+      },
+      className: 'homepage-sidebar-item',
+    },
+    {
+      type: 'doc',
+      id: 'features/coding-agents',
+      label: 'Infrastructure for Coding Agents',
+      customProps: {
+        sidebar_icon: 'sparkles',
+      },
+      className: 'homepage-sidebar-item',
+    },
 //    {
 //      type: 'html',
 //      value: 'Perfectly suited for',
@@ -558,6 +576,148 @@ module.exports = {
           className: 'homepage-sidebar-item',
         },
       ]
+    },
+    {
+      type: 'category',
+      label: 'Zerops Control Plane',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'zcp/overview',
+          label: 'Overview',
+          customProps: {
+            sidebar_icon: 'sparkles',
+          },
+          className: 'homepage-sidebar-item',
+        },
+        {
+          type: 'doc',
+          id: 'zcp/quickstart',
+          label: 'Quickstart',
+          customProps: {
+            sidebar_icon: 'rocket-launch',
+          },
+          className: 'homepage-sidebar-item',
+        },
+        {
+          type: 'doc',
+          id: 'zcp/concept/how-it-works',
+          label: 'How ZCP works',
+          customProps: {
+            sidebar_icon: 'cog-six-tooth',
+          },
+          className: 'homepage-sidebar-item',
+        },
+        {
+          type: 'doc',
+          id: 'zcp/glossary',
+          label: 'Glossary',
+          customProps: {
+            sidebar_icon: 'book-open',
+          },
+          className: 'homepage-sidebar-item',
+        },
+        {
+          type: 'category',
+          label: 'Connect',
+          link: {
+            type: 'doc',
+            id: 'zcp/setup/choose-workspace',
+          },
+          customProps: {
+            sidebar_icon: 'computer-desktop',
+          },
+          className: 'homepage-sidebar-item',
+          items: [
+            {
+              type: 'doc',
+              id: 'zcp/setup/hosted-workspace',
+              label: 'Provision a hosted workspace',
+            },
+            {
+              type: 'doc',
+              id: 'zcp/setup/local-agent-bridge',
+              label: 'Use ZCP locally',
+            },
+            {
+              type: 'doc',
+              id: 'zcp/security/tokens-and-project-access',
+              label: 'Tokens and credentials',
+            },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Build & ship',
+          link: {
+            type: 'doc',
+            id: 'zcp/workflows/build-and-verify-app',
+          },
+          customProps: {
+            sidebar_icon: 'circle-stack',
+          },
+          className: 'homepage-sidebar-item',
+          items: [
+            {
+              type: 'doc',
+              id: 'zcp/workflows/create-or-adopt-services',
+              label: 'Create or adopt services',
+            },
+            {
+              type: 'doc',
+              id: 'zcp/workflows/delivery-handoff',
+              label: 'Delivery handoff',
+            },
+            {
+              type: 'doc',
+              id: 'zcp/workflows/package-running-service',
+              label: 'Package a running service',
+            },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Trust & recover',
+          link: {
+            type: 'doc',
+            id: 'zcp/security/trust-model',
+          },
+          customProps: {
+            sidebar_icon: 'users',
+          },
+          className: 'homepage-sidebar-item',
+          items: [
+            {
+              type: 'doc',
+              id: 'zcp/security/production-policy',
+              label: 'Production boundary',
+            },
+            {
+              type: 'doc',
+              id: 'zcp/security/auditing-agent-work',
+              label: 'Auditing agent work',
+            },
+            {
+              type: 'doc',
+              id: 'zcp/reference/troubleshooting',
+              label: 'Troubleshooting',
+            },
+          ],
+        },
+        {
+          type: 'doc',
+          id: 'zcp/reference/agent-workflow',
+          label: 'Agent workflow contract',
+          customProps: {
+            sidebar_icon: 'command-line',
+          },
+          className: 'homepage-sidebar-item',
+        },
+      ],
     },
     {
       type: 'category',

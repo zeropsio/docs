@@ -1,0 +1,85 @@
+---
+title: "Choose how finished work ships"
+description: "Choose whether ZCP closes work by deploying directly, pushing to git, or handing off to your CI."
+---
+
+Choose whether ZCP closes work by deploying directly, pushing to git, or handing off to your CI. Picks up after [Build and verify an app](/zcp/workflows/build-and-verify-app) — the first deploy worked, verification passed, the app does what you asked. Now decide how the next change gets out the door.
+
+If you don't have a CI pipeline yet, the third answer isn't for you — pick "the agent keeps deploying" and revisit when your team needs git-tracked releases.
+
+ZCP is for dev/staging. Production handoff goes through [Package a running service](/zcp/workflows/package-running-service); production then lives in its own Zerops project deployed by your CI or release pipeline.
+
+## Three answers
+
+- **The agent keeps deploying directly.** Future changes ship the same way the first deploy did — straight from ZCP through the Zerops [build and deploy pipeline](/guides/deployment-lifecycle). Right for solo work and fast iteration.
+- **Push to git, then build from there.** Future changes get committed and pushed to a configured remote. Either Zerops or your existing CI takes the push and runs the build. Right when the team's source of truth is git and you want reviewable commits.
+- **Hand off to your CI or a human.** ZCP records every deploy and verify the agent runs at your request, but does not initiate further deploys. Right when an external pipeline or release process owns delivery from here.
+
+You ask for an outcome ("set up git-push delivery for appdev", "my CI takes over from here"); the agent picks the right operations. Git-push capability and what fires after a push are independent — configured git-push can coexist with the agent-keeps-deploying answer for emergencies.
+
+The first deploy always uses the direct path, regardless of which answer you pick later — there's no deploy yet for the choice to apply to.
+
+```text
+Set up git-push delivery for appdev. Push to git@github.com:my-org/notes-app.git.
+```
+
+```text
+Keep ZCP deploying appdev directly for now.
+```
+
+```text
+ZCP records changes for appdev, but my CI takes over from here.
+```
+
+## The agent keeps deploying
+
+The deploys ZCP already ran during iteration are how the next change ships too. No further configuration; a verified session closes on the deploys that already landed.
+
+Pick this when the project is small or solo, when ZCP's deploys are the canonical way the app updates, and when you don't need a git-tracked history of deploys.
+
+## Push to git, then build from there
+
+Future changes get committed and pushed to a configured git remote. Whatever sits behind that remote — a Zerops-managed build or your own CI — produces the next deploy.
+
+This requires committed code. In the [local agent bridge](/zcp/setup/local-agent-bridge), ZCP doesn't auto-init git in your working directory — you `git init` and make your first commit. In the [hosted workspace](/zcp/setup/hosted-workspace), ZCP initializes `/var/www/.git/` for each managed runtime at bootstrap with a deploy identity, so the repository is already there; what's missing is a commit covering the work you want to ship. Git-push delivery needs at least one commit, a remote URL ZCP can push to, and credentials that authorize the push.
+
+When you ask the agent to set up git-push delivery, it provisions the remote URL and credentials so future pushes work without per-call configuration. If setup fails — repository unreachable, credential missing, working directory has no commits — the agent reports the specific reason.
+
+Push credentials differ by workspace: hosted reuses or asks for a `GIT_TOKEN` (typically a fine-grained GitHub or GitLab access token); local defers to your existing git credential helper (SSH keys, macOS keychain, `gh auth login`). Full credential reference: [Tokens and credentials → Git credentials](/zcp/security/tokens-and-project-access#git-credentials--separate-from-zcp_api_key).
+
+### What fires after a push lands
+
+- **Nothing tracked by ZCP.** Whatever your repository already has — a non-Zerops CI, a deploy hook elsewhere — keeps running. ZCP records the deploys you ask it to verify and stays out of the way.
+- **The Zerops dashboard build integration.** The Zerops dashboard pulls the repository and runs the [build and deploy pipeline](/guides/deployment-lifecycle) — see [GitHub integration via the dashboard](/references/github-integration#integration-via-zerops-gui).
+- **A GitHub Actions workflow you check in.** Your repository's `.github/workflows/zerops.yml` checks out the code and pushes it to Zerops via `zcli` — see [GitHub Actions](/references/github-integration#github-workflow-integration).
+
+The GitHub Actions option needs a Zerops API token (not a GitHub token) stored as a GitHub Actions secret named `ZEROPS_TOKEN`. The agent prepares the right `gh secret set` command for your environment; you can reuse the project-scoped token already behind `ZCP_API_KEY` for one rotation surface. Token shapes and rotation: [Tokens and credentials](/zcp/security/tokens-and-project-access).
+
+## Hand off to your CI or a human
+
+ZCP keeps recording every deploy and verify the agent runs at your request, but doesn't initiate further deploys on its own and doesn't auto-close the session.
+
+Pick this when an external CI/CD pipeline owns delivery, a human takes over for a release step that doesn't belong inside the agent loop, or the next change is ambiguous enough that explicit close calls beat automation.
+
+In this mode, ending the session is a deliberate step — the agent doesn't auto-close even after a clean deploy and verify.
+
+## Change later
+
+None of these choices are sticky. The handoff style, the git-push capability, and any build integration are read fresh on every handoff. Switch any one of them at any time:
+
+- Move from direct deploy to git-push once the project is large enough to want commits.
+- Add a Zerops dashboard or GitHub Actions integration after git-push is already in use.
+- Drop back to manual hand-off for a release where you want full control.
+
+## Gotchas
+
+1. **First deploy is always direct, regardless of the choice.** Setting up git-push delivery early does not redirect the first deploy to git. The choice governs subsequent changes, not the deploy that closed the previous workflow.
+2. **GitHub Actions secret is a Zerops API token, not a GitHub token.** The workflow runs `zcli` against Zerops; it needs a Zerops API token in `ZEROPS_TOKEN`. If a deploy from Actions fails on permissions and you reflexively rotate your GitHub PAT, you have rotated the wrong credential.
+3. **Build integration set to "none tracked" does not mean no build will fire.** It means ZCP did not set one up. Whatever your repository already has — a non-Zerops CI, a deploy hook elsewhere — keeps running.
+
+## Next steps
+
+- [Build and verify an app](/zcp/workflows/build-and-verify-app) — the deploy and verify loop the handoff picks up from.
+- [Package a running service](/zcp/workflows/package-running-service) — turn a running service into reusable import files when the work is worth re-using.
+- [GitHub integration](/references/github-integration) — full reference for the dashboard and Actions paths.
+- [CI/CD with Zerops](/guides/ci-cd) — broader context on running pipelines around the Zerops build.

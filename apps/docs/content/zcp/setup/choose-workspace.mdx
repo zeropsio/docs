@@ -1,0 +1,102 @@
+---
+title: "Choose your workspace"
+description: "Pick whether ZCP MCP runs hosted inside the Zerops project (with optional Cloud IDE and bundled agent), or as a binary on your laptop."
+---
+
+Pick whether ZCP MCP runs hosted inside the Zerops project — wrapped in a `zcp@1` service that can also bundle a browser-based VS Code and a coding-agent CLI — or as a binary on your laptop while you're connected to the project VPN. Either path connects the same agent to the same project. What differs is the safety profile, what's bundled around the MCP, and which filesystem the agent sees.
+
+:::info Both modes are public preview; local is the more WIP one
+Hosted is the recommended starting point. The local agent bridge is real and supported, but the binary, `.mcp.json`, and `zcp init` artifacts are still settling — expect setup churn between releases.
+:::
+
+## The short rule
+
+- **First run, nothing installed locally** → **hosted workspace**. Safe by design: the workspace runs in a project container with no path to your laptop or your other projects.
+- **Already work in your own editor on your own machine, want the agent to deploy from there** → **local agent bridge**. ZCP itself is project-scoped, but the agent process inherits your user — you supervise the client's permissions on your laptop.
+
+Switching later is straightforward. The MCP operations are the same in both modes; what's bundled around them differs by environment. Full security framing: [Trust model](/zcp/security/trust-model).
+
+## Hosted workspace
+
+A Zerops service of type `zcp@1` runs the ZCP MCP inside your project. The same service optionally bundles a browser-hosted VS Code (the Cloud IDE), Claude Code preinstalled and pre-authenticated, and a curated dev toolchain. The editor is one click from the Zerops dashboard.
+
+Open the workspace and a terminal already has Claude Code running, scoped to this project, talking to the project's MCP. You give the agent intent in plain language; the agent calls MCP operations to discover services, edit files, deploy, and verify against the live URL.
+
+**Pick this when**
+
+- You want the fastest first run (it's what the [Quickstart](/zcp/quickstart) uses).
+- You're evaluating ZCP and don't want to install anything yet.
+- You want the agent to have direct filesystem access to runtime services in the project.
+- You work from multiple machines and want the same workspace to follow you.
+
+**What it gets you on top of the MCP**
+
+- SSHFS-mounted access to runtime services so the agent can read and edit files where they actually run.
+- A long-lived dev process inside another project container when the workflow needs one.
+- Project-local network reach without a VPN.
+- Clean separation between your laptop and the work — the project owns the editor, the credentials, and the running code.
+
+**Cost** — one small `zcp` service in the project, billed like any other Zerops service. The editor lives in your browser instead of your local IDE.
+
+Setup: [Provision a hosted workspace](/zcp/setup/hosted-workspace).
+
+## Local agent bridge
+
+Install the `zcp` binary on your laptop and run `zcp init` in your project directory. The agent runs in your editor; ZCP MCP runs as a process on your machine and talks to the Zerops API on your behalf. Your laptop is the development environment — your normal local setup with ZCP wired in.
+
+The agent edits code in your working directory, runs your usual local dev server, deploys to Zerops through the MCP, and verifies the deployed result. Managed services (database, cache, storage) live in the project; your laptop reaches them over the Zerops VPN with credentials ZCP writes into a local `.env`.
+
+**Pick this when**
+
+- You already have an established local setup (your editor, shell, toolchain) and want to keep it.
+- The team works from local machines, each developer's editor driving its own MCP.
+- You want hot-reload locally while the agent deploys to a Zerops stage runtime.
+
+**What it gets you on top of the MCP**
+
+- A locally generated `.env` with real credentials so your local app can connect to managed services.
+- One-command deploy from your working directory to a linked Zerops runtime.
+- Native editor speed, your existing keybindings, plugins, and workflow.
+
+**Cost** — [zCLI](/references/cli) installed on your machine, the Zerops [VPN](/references/networking/vpn) up to reach managed services by hostname, and a `.env` file with real secrets in your working directory (gitignore it immediately). Your local dev server stays your tool's job; ZCP doesn't start, stop, or watch it, and doesn't mount remote filesystems on your laptop.
+
+Setup: [Use ZCP locally](/zcp/setup/local-agent-bridge). For the broader local-dev landscape (VPN, Cloud IDE, native IDE over SSH), see [Local & Remote Development](/features/local-remote-development).
+
+## Hosted vs local at a glance
+
+|  | Hosted workspace | Local agent bridge |
+|---|---|---|
+| Safety profile | **Safe by design** — isolated project container | **Supervise the agent client** — agent runs as your user |
+| Where the MCP runs | Inside the project, in a `zcp@1` service | On your laptop, as a binary |
+| Where the agent runs | Browser-hosted code editor | Your local editor |
+| Filesystem the agent sees | Project services via SSHFS mounts | Your local working directory |
+| Local install | None | [zCLI](/references/cli) + Zerops [VPN](/references/networking/vpn) |
+| Reaches managed services via | Project-private network | VPN to the project |
+| Best for first run | Yes | After you've used ZCP once |
+| Maturity | Public preview | Public preview, more WIP |
+
+The MCP operations are the same on both sides. Hosted bundles SSHFS, SSH/container deploys, server-side batch deploys, a dev-server runner, and a Cloud IDE; local adds deploys from your working directory and `.env` generation for local apps.
+
+## Workspace shapes
+
+Once hosted-vs-local is decided, the agent reads the project state and identifies a **workspace shape** — its name for the combination of *where files live* and *whether there's a separate stage*. You almost never pick this directly; the agent tells you which it found.
+
+| Shape | When | Typical names |
+|---|---|---|
+| `standard` — dev runtime plus an explicit stage runtime | You want a separate target the agent verifies before promoting | `appdev` + `appstage` |
+| `dev` — one mutable dev runtime, no stage yet | A single iteration target without splitting dev from stage | `appdev` |
+| `simple` — one runtime, no dev/stage split | Small apps, demos, static sites | `app` |
+| `local-stage` — local checkout linked to one Zerops runtime as the stage target | Local hot reload + deploys to a Zerops stage runtime | local checkout + linked runtime |
+| `local-only` — local checkout, no Zerops runtime linked yet | Project is local-only or has only managed services | local checkout |
+
+Stage is a deploy target for dev and review, not production. Production lives in a separate Zerops project — see [Production boundary](/zcp/security/production-policy).
+
+The stage hostname is explicit. The agent doesn't invent it from the dev hostname — `appstage` next to `appdev` is one convention, not a rule. The confirmed project state supplies the stage hostname; the agent uses what's there.
+
+Workspace shape (`standard`, `dev`, `simple`, `local-stage`, `local-only`) is ZCP's name for project topology. Zerops service `mode` (`HA`, `NON_HA`) is the scaling shape of an individual managed service — see [Scaling](/features/scaling). The two are independent.
+
+## Next steps
+
+- [Provision a hosted workspace](/zcp/setup/hosted-workspace) — recommended for the first run.
+- [Use ZCP locally](/zcp/setup/local-agent-bridge) — local editor, VPN, `.env` generation.
+- [Build and verify an app](/zcp/workflows/build-and-verify-app) — the deploy and verify loop in either workspace.

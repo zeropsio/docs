@@ -1,0 +1,80 @@
+---
+title: "Create or adopt services"
+description: "Use ZCP to create new Zerops services or adopt existing ones before any application work starts."
+---
+
+Create new Zerops services or adopt existing ones before any application work starts. This is the first workflow because the agent needs a real runtime target before it can build or deploy.
+
+You don't pick a route. You describe the project shape you want; the agent reads the project state and explains the choice it made.
+
+## What this workflow does
+
+Create-or-adopt is **infrastructure only**. It answers:
+
+- Which runtime services will hold application code?
+- Which managed services does the app depend on?
+- Are the services already present, or does the agent create them via ZCP MCP?
+- Are they running and visible to the MCP?
+
+The boundary is strict. This workflow doesn't write application code, create `zerops.yaml`, run a deploy, or verify behavior. When any of those are needed, the work moves to [Build and verify an app](/zcp/workflows/build-and-verify-app).
+
+The `zcp` service is the workspace and the MCP endpoint — not the application. Runtime services are where your code runs (`appdev`, `appstage`, `api`, `web`). If the agent starts treating `zcp` as the app runtime, stop and correct the target.
+
+## Two starting situations
+
+| Situation | What the agent should do |
+|---|---|
+| **Project already has runtime services** (including any recipe-based project) | Adopt them. Identify which are runtime services and which are managed dependencies. Don't recreate or rename services just to begin. |
+| **Project is empty** (only the `zcp` service, or nothing yet) | Create the runtime and managed services. Use a Zerops-published recipe when the request matches one, or a custom plan otherwise. Explain the choice and create services before any code work. |
+
+If an earlier setup was interrupted, ask the agent for current ZCP status before changing anything else. ZCP rebuilds the picture from live platform state and resumes from the last known step.
+
+## Prompts that work
+
+Write the prompt in terms of the project shape you want. Name a runtime hostname only when you already know it.
+
+```text
+Create the services for a Node.js API with PostgreSQL. Use appdev and appstage.
+```
+
+```text
+Use the existing Laravel services and build a small notes app.
+```
+
+```text
+Build me a small team dashboard. Pick a suitable starter and explain what you chose.
+```
+
+The agent answers with: which path it took (adopt vs create), the target services, and the next confirmation it needs.
+
+## Stop conditions — when create-or-adopt is done
+
+The agent should report this workflow complete when:
+
+- Runtime services are identified and separated from managed dependencies.
+- New services, if any, were created in Zerops; existing services, if any, were adopted instead of recreated.
+- Managed services have exposed env-var keys for the runtimes to reference later.
+- No application code was written.
+- No `zerops.yaml` was authored for the app.
+- No deploy ran.
+
+When the next task involves files, framework setup, `zerops.yaml`, deploys, logs, or behavior checks, continue to [Build and verify an app](/zcp/workflows/build-and-verify-app).
+
+## Common failures
+
+| Symptom | What it usually means | What to do |
+|---|---|---|
+| The agent wants to deploy `zcp` | It confused the workspace service with the app runtime | Stop and name the real runtime service. |
+| The agent treats existing services as if they need creating | It's taking the create path on a project that should adopt | Ask it to inspect the project first and adopt what's already there. |
+| The agent writes application files during this workflow | It crossed into application work too early | Stop and finish service setup, or move to [Build and verify an app](/zcp/workflows/build-and-verify-app). |
+| The agent creates a service with a hostname that already exists | The plan didn't account for current project state | Ask it to rediscover services and revise the plan. |
+| A service-creation step fails | The infrastructure request didn't complete cleanly | Treat as a hard stop. The agent should explain the failure and ask for a decision, not retry automatically. |
+| The agent asks you to describe every service manually | It hasn't used live project discovery yet | Ask it to inspect the project first and explain what it found. |
+
+Create-or-adopt failures don't have retry magic. Provisioning infrastructure twice without understanding the first failure creates hostname conflicts or partial service state.
+
+## Next steps
+
+- [Build and verify an app](/zcp/workflows/build-and-verify-app) — write application code, create `zerops.yaml`, deploy, and verify behavior.
+- [Choose how finished work ships](/zcp/workflows/delivery-handoff) — decide what happens after the app works.
+- [Choose your workspace](/zcp/setup/choose-workspace) — workspace shapes and the names you'll see after services are created or adopted.
