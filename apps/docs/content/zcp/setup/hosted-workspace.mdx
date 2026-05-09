@@ -1,36 +1,38 @@
 ---
-title: "Provision a hosted workspace"
-description: "Add a Zerops Control Plane service to your project. The service runs ZCP MCP, hosts a browser-based VS Code, and ships Claude Code preconfigured."
+title: "Set up remote ZCP"
+description: "Add a zcp@1 service to a Zerops project and choose whether it includes a coding agent, Cloud IDE, or both."
 ---
 
-Add a Zerops service of type `zcp@1` to your project. The service runs the ZCP MCP inside the project, hosts a browser-based VS Code (the Cloud IDE), and ships Claude Code preconfigured in the terminal. By the end of this page you have a project with the hosted workspace running, an open browser editor, and Claude Code waiting for the first instruction.
+Remote setup is a `zcp@1` service inside your Zerops project. It keeps ZCP, project-scoped credentials, private-network access, and optional agent tooling inside the project boundary.
 
-This page assumes you've read [Choose your workspace](/zcp/setup/choose-workspace). For a fully walked-through example with a real prompt and a deployed app at the end, jump to the [Quickstart](/zcp/quickstart).
+Enable **Include Coding Agent** when you want Zerops to add the bundled agent CLI and preconfigure it to use ZCP in that service. Enable **Cloud IDE** when you also want browser-based VS Code for watching or intervening.
 
-For the broader local-dev landscape (humans, not just agents), see [Local & Remote Development](/features/local-remote-development).
+After provisioning, the service is ready for your first app instruction. If **Cloud IDE** is enabled, you can open the browser workspace from the dashboard; otherwise use the access method configured for the service.
 
-## Two paths to the same workspace
+Remote and local setup have the same ZCP project boundary but different work surfaces. The comparison lives in [Choose remote or local setup](/zcp/setup/choose-workspace); the broader human development modes live in [Local & Remote Development](/features/local-remote-development).
 
-Zerops provisions the workspace for you — no manual install, no YAML to paste. Pick the path that matches what you're starting from:
+## Two paths to remote setup
 
-- **Path A — Start from a recipe.** New project, known stack (e.g. a Laravel app with managed Postgres + Valkey + storage). Open a recipe in the catalog, pick the **AI Agent** environment, deploy. Zerops creates the project with the recipe's services plus the `zcp` service.
-- **Path B — Add the service to a custom or existing project.** Blank project, or one already running. Toggle **Add Zerops Control Plane (ZCP) service** during creation, or add a `zcp` service to an existing project the same way you add any other Zerops service.
+Zerops provisions the service for you - no local install, no MCP config to write by hand, no YAML to paste. Pick the path that matches what you're starting from:
 
-Both paths produce the same result: a `zcp@1` service inside the project with `ZCP_API_KEY` injected automatically and scoped to this project. You don't configure the token by hand.
+- **Path A - Start from a recipe.** New project, known stack (e.g. a Laravel app with managed Postgres + Valkey + storage). Open a recipe in the catalog, pick the **AI Agent** environment, deploy. Zerops creates the project with the recipe's services plus a `zcp@1` service with **Include Coding Agent** enabled.
+- **Path B - Add the service to a custom or existing project.** Blank project, or one already running. Toggle **Add Zerops Control Plane (ZCP) service** during creation, or add a `zcp` service to an existing project the same way you add any other Zerops service.
 
-## Path A — Recipe + AI Agent environment
+Both paths produce the same base result: a `zcp@1` service inside the project with `ZCP_API_KEY` injected automatically and scoped to this project. **Include Coding Agent** adds the preconfigured agent. **Cloud IDE** adds the browser editor.
 
-Use this when you want a working stack quickly and the recipe matches the runtime shape you need.
+## Path A — recipe + AI Agent environment
+
+Recipes are the quickest path when their stack matches the runtime layout you need.
 
 1. Open the [Zerops recipes catalog](https://app.zerops.io/recipes) and pick a recipe — for example the [Laravel showcase](https://app.zerops.io/recipes/laravel-showcase?environment=ai-agent).
 2. On the recipe page, select the **AI Agent** environment. The deploy button updates to include `-agent` (e.g. **Deploy laravel-showcase-agent**).
 3. Click deploy. Zerops provisions the project.
 
-The recipe ships its full service set; the **AI Agent** environment is what adds the `zcp` service alongside.
+The recipe ships its full service set; the **AI Agent** environment is what adds the `zcp@1` service with **Include Coding Agent** enabled alongside.
 
-If you pick a non-AI environment (Remote CDE, Local, Stage, Small Production, Highly-available Production) the recipe still deploys, but no `zcp` service is added and no agent workspace exists. Add ZCP afterward via Path B.
+If you pick a non-AI environment (Remote CDE, Local, Stage, Small Production, Highly-available Production) the recipe still deploys, but no `zcp` service with a bundled agent is added. Add ZCP afterward via Path B.
 
-## Path B — Toggle the ZCP service
+## Path B — toggle the ZCP service
 
 Use this for a custom project with no recipe, or when you already have a Zerops project running.
 
@@ -39,56 +41,61 @@ For a **new project**:
 1. Open [Add new project](https://app.zerops.io/dashboard/project-add).
 2. Enter a project name, region, and (optionally) tags.
 3. Toggle **Add Zerops Control Plane (ZCP) service** on (below Project Access).
-4. The **ZCP CONFIGURATION** panel appears with two cards: **Coding Agent** (Claude Code with Subscription Login) and **Cloud IDE** (VS Code, Public Access). Defaults are sensible — click **Configure** to adjust, otherwise leave and submit.
+4. The **ZCP CONFIGURATION** panel appears. Keep **Include Coding Agent** enabled to add and preconfigure the bundled agent inside the service. Use **Configure** when you need to choose authentication or adjust Cloud IDE access; otherwise leave the defaults and submit.
 5. Submit.
 
 For an **existing project**, add a `zcp` service from the project dashboard the same way you add any other service. End state is identical to the new-project path: a `zcp@1` service alongside your runtime services with `ZCP_API_KEY` injected automatically.
 
-## Open the workspace
+## Open the service
 
-The `zcp` service hosts a browser-based code editor (code-server) with Claude Code preconfigured in the terminal.
+Open the `zcp` service from the Zerops dashboard after it reaches running state.
 
 1. Open the project in the [Zerops dashboard](https://app.zerops.io/).
 2. Open the `zcp` service.
-3. From the service page, open its public subdomain — code-server launches in a new tab. The public subdomain is enabled automatically; see [Public access](/features/access) for the routing model.
+3. If **Cloud IDE** is enabled, open the service workspace URL. Code-server launches in a new tab. If the service is exposed on a `.zerops.app` subdomain, see [Public access](/features/access) for the routing model.
 
-After the first-run bootstrap, runtime services are SSHFS-mounted into the workspace filesystem with one folder per runtime in the file explorer. Editing a file under a runtime mount changes the file inside that runtime service — no upload step. Filesystem access stays inside the project network, so your laptop doesn't need a VPN for the hosted workspace.
+If **Cloud IDE** is disabled, remote setup can still exist as a project-contained service, but there is no browser editor to open. Use the access method configured for the service, such as SSH, or enable Cloud IDE when you want a browser workspace.
 
-If you added ZCP to an existing project with services not yet adopted, the agent runs an adoption pass before any code work — see [Create or adopt services](/zcp/workflows/create-or-adopt-services).
+## Run the agent
 
-The workspace is persistent. Close the browser tab and reopen the workspace link later; editor state, open files, and Claude Code's running session survive across reconnects as long as the `zcp` service is running.
+When **Include Coding Agent** is enabled, the bundled agent starts already connected to this project through ZCP. In the Cloud IDE path, the terminal has the bundled agent available with `ZCP_API_KEY` in its environment.
 
-## Verify the connection
-
-When the editor opens, the terminal already has Claude Code running, scoped to this project, with `ZCP_API_KEY` in its environment.
-
-Ask Claude Code to list the project services:
+For a connection sanity check, ask the bundled agent:
 
 ```text
 List the services in this project and tell me which are runtimes versus managed dependencies.
 ```
 
-A working setup answers with the runtime services (e.g. `appdev`, `appstage`) and managed services (e.g. `db`), and identifies the workspace shape — `standard`, `dev`, or `simple` for the hosted workspace. (Local-mode shapes `local-stage` and `local-only` are listed alongside in the [full taxonomy](/zcp/setup/choose-workspace#workspace-shapes).)
+A working setup answers with the runtime services (for example `appdev`, `appstage`) and managed services (for example `db`), and says whether the project has one runtime or a dev+stage pair.
 
-If Claude Code can't reach ZCP, the service may still be starting. Wait for it to reach running state in the dashboard and reload the workspace.
+For real work, ask for the app behavior, not the Zerops procedure:
 
-You're ready to give the agent its first instruction. Try the [Quickstart](/zcp/quickstart) for an end-to-end example, or read [How ZCP works](/zcp/concept/how-it-works) for the model first.
+```text
+Build a task board where tasks stay saved after refresh.
+```
 
-## Hack on the workspace
+Discovery, service setup, deploy, verification, and final reporting happen behind that app request.
 
-The hosted workspace is a normal Zerops service running the `zcp@1` Ubuntu base image. The configuration generated when you toggle Coding Agent and Cloud IDE is a starting point — read the generated `zerops.yml`, edit it, redeploy.
+If **Include Coding Agent** is disabled, the `zcp@1` service exists but no preconfigured agent is waiting inside it. Enable the option or use [local ZCP](/zcp/setup/local-agent-bridge) from your own agent client.
 
-Common patterns:
+After the first setup pass, runtime services can be SSHFS-mounted into the service filesystem with one folder per runtime. Editing a file under a runtime mount changes the file inside that runtime service - no upload step. Filesystem access stays inside the project network, so your laptop doesn't need a VPN for remote setup.
 
-- **Add tools per workspace.** SSH into the `zcp` service and `apt install` whatever else your team needs. To make it persistent, move the install commands into `run.initCommands` in `zerops.yml`.
-- **Pre-warm caches or run side processes.** Add additional `run.startCommands`, or define service-level processes that run alongside the agent and Cloud IDE.
-- **Inject team config into every workspace.** Put your developer-onboarding script (dotfiles, shell config, framework setup) into `run.initCommands`. It applies to every workspace and every agent session automatically.
-- **Fork the base image.** When changes outgrow `initCommands`, build your own image off `zcp@1` and ship a hardened or extended version with team-standard tools baked in.
+If you added ZCP to an existing project, the agent should inspect existing services and use them instead of creating duplicates. That is handled as part of the first product prompt; the details are explained in [Service setup behind the prompt](/zcp/workflows/create-or-adopt-services).
 
-Run additional processes alongside the bundled agent and Cloud IDE — a pre-warmed cache, a custom inspector, your own MCP server. The service is yours; ZCP is one of the things running inside it, not the whole product.
+When Cloud IDE is enabled, the browser workspace is persistent. Close the browser tab and reopen the workspace link later; editor state, open files, and the agent session survive across reconnects as long as the `zcp` service is running.
+
+## If connection fails
+
+If the agent can't reach ZCP, the service may still be starting. Wait for it to reach running state in the dashboard and reload the workspace. If **Include Coding Agent** was not enabled, add it or use local ZCP from your own agent client.
+
+At this point, the agent can receive the first app instruction. The [Quickstart](/zcp/quickstart) shows the shortest end-to-end run.
+
+## Customize remote setup
+
+Remote setup is a normal Zerops service, so teams can customize it like one: add tools, preload team config, or run helper processes next to the agent and Cloud IDE. Keep this separate from app runtime work; deploy app code to runtime services, not to `zcp`.
 
 ## Gotchas
 
-- **The `zcp` service is not the application.** It's where the agent operates *from*; your runtime services (`appdev`, `appstage`, `app`) are where code is deployed. Ask the agent to deploy a runtime service, not `zcp`.
-- **Don't set `ZCP_API_KEY` by hand in the hosted workspace.** It's platform-injected. Manual override risks breaking the agent's access. (The local bridge is the only path where you manage the token yourself.)
-- **First load takes a minute.** Provisioning includes pulling the workspace image, starting code-server, and registering Claude Code. Until the service reaches running state, the workspace URL may return an empty page or error.
+- **The `zcp` service is not the application.** It's where the agent operates *from*; your runtime services (`appdev`, `appstage`, `app`) are where code is deployed. If the agent targets `zcp` as the app runtime, stop and correct the target.
+- **Don't set `ZCP_API_KEY` by hand in remote setup.** It's platform-injected. Manual override risks breaking the agent's access. (Local setup is the only path where you manage the token yourself.)
+- **First load takes a minute.** Provisioning includes pulling the workspace image, starting code-server, and registering the bundled agent. Until the service reaches running state, the workspace URL may return an empty page or error.

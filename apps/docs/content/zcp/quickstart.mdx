@@ -1,83 +1,70 @@
 ---
-title: "Deploy with a coding agent"
-description: "Pick a Zerops starter with the AI Agent environment, open the hosted workspace, prompt Claude Code, deploy and verify a working app."
+title: "Quickstart"
+description: "Open remote setup, ask for a small app, and inspect the verified result."
 ---
 
-Pick a Zerops starter, open the hosted workspace, prompt Claude Code, watch it deploy and verify. By the end you have a real dev URL serving real content, with the agent showing you what it changed and how it verified.
-
-This Quickstart uses the hosted workspace because it has nothing for you to install. If you'd rather run ZCP from your local editor, see [Use ZCP locally](/zcp/setup/local-agent-bridge) — but for the first time through, stay hosted.
+Remote setup is the fastest first run: no local `zcp` install, no local MCP config, and the bundled agent is already connected to the project. You will open a project with **Include Coding Agent** enabled, give the agent a small app request, and inspect what it verified.
 
 ## Prerequisites
 
-- A Zerops account with permission to create a project. [Sign up](https://app.zerops.io/) if you don't have one.
-- A **Claude Pro or Max subscription**. Claude Code is the supported coding agent and uses your subscription to run the work.
+- A Zerops account with permission to create a project.
+- A login for the bundled agent shown in the dashboard.
 
-No local install needed — Claude Code runs preconfigured inside the hosted workspace.
+## Create a remote setup project
 
-## Pick a recipe and deploy
+The fastest path is a recipe with the **AI Agent** environment:
 
-1. Open the [Zerops recipes catalog](https://app.zerops.io/recipes) and pick a recipe that matches what you want to build — Node, Bun, Python, Go, Rust, PHP, Laravel, NestJS, Next.js, Static, and more.
-2. On the recipe page, select the **AI Agent** environment. The deploy button updates to include `-agent` (for example **Deploy laravel-showcase-agent**).
-3. Click deploy. Zerops provisions the project.
+1. Open the [Zerops recipes catalog](https://app.zerops.io/recipes).
+2. Pick a recipe that matches the stack you want to try.
+3. Select the **AI Agent** environment.
+4. Deploy the recipe.
 
-The **AI Agent** environment is what adds a `zcp@1` service alongside the recipe's runtime and managed services. The recipe ships it; you don't install anything.
+The **AI Agent** environment creates the app services plus a `zcp@1` remote setup with **Include Coding Agent** enabled. Keep **Cloud IDE** enabled too so you can open the browser workspace. If you start from an empty project instead, enable **Add Zerops Control Plane (ZCP) service** during project creation and keep **Include Coding Agent** on; the agent can use existing app services or create the missing ones from your prompt. Full setup path: [Set up remote ZCP](/zcp/setup/hosted-workspace).
 
-The rest of this page narrates the [Laravel showcase](https://app.zerops.io/recipes/laravel-showcase?environment=ai-agent) as one worked example because it exercises every part of the platform (runtime + queue worker + Postgres + Valkey + Meilisearch + object storage). With the **AI Agent** environment selected, the recipe provisions its app stack plus the ZCP service:
+## Open remote setup
 
-- `appdev` — Laravel + Nginx (PHP 8.4) dev runtime; the agent edits and deploys code here
-- `appstage` — Laravel + Nginx stage runtime; promotion target after `appdev` is verified
-- `workerstage` — Laravel queue worker stage runtime
-- `db` — managed PostgreSQL
-- `redis` — managed Valkey (Redis-compatible)
-- `search` — managed Meilisearch (full-text search)
-- `storage` — S3-compatible object storage
-- `zcp` — the hosted ZCP service that runs the MCP, the Cloud IDE, and Claude Code inside the project
+When provisioning finishes, open the `zcp` service in the Zerops dashboard. If **Cloud IDE** is enabled, open its workspace URL; a browser editor opens with the agent connected to this project through ZCP.
 
-If you picked a different recipe, the service names will differ but the steps below work the same way — adapt the prompt to the stack you chose.
+Ask for what the app should do. Service setup, deploy, verification, and reporting are part of the ZCP-backed agent contract.
 
-## Open the workspace
-
-When provisioning finishes, open the **zcp** service in the Zerops dashboard and click the workspace link. A browser-hosted VS Code opens. The terminal already has Claude Code running, connected to the project's ZCP MCP.
-
-## Give the agent the prompt
-
-In the Claude Code terminal, paste a prompt that asks for a small concrete change against the recipe you picked. The example below targets the Laravel showcase; adapt the stack-specific bits if you started elsewhere:
+In the agent chat:
 
 ```text
-Use ZCP to turn this starter into a small team notes app. Keep it simple: list notes, add a note, store notes in PostgreSQL, deploy it, verify the public URL, and tell me what changed.
+Build a task board where tasks stay saved after refresh.
 ```
 
-A good run looks like this:
+Add constraints only when they change the product, runtime layout, or delivery path:
 
-1. **Reads project state.** The agent confirms the runtime scope (`appdev`) and the database (`db`). It doesn't ask you to install anything, find tokens, or configure the network — that's already done.
-2. **Edits the dev runtime.** Files change in the editor pane.
-3. **Deploys.** The agent runs a real deploy and waits for build + runtime to come up.
-4. **Verifies against the real URL.** Fetches the public URL and probes it. If the requested behavior doesn't work, the agent reads logs, classifies the failure, and iterates.
-5. **Reports.** A URL serving the notes app, plus a short summary of what it changed.
+```text
+Build a task board where tasks stay saved after refresh. Use the existing dev+stage pair if this project has one.
+```
 
-If the agent gets stuck or asks a clarifying question, answer it as a developer would. A good agent explains the path it chose; you don't memorize tool calls.
+```text
+After it works, set up git-push delivery to git@github.com:my-org/task-dashboard.git.
+```
 
-## Verify the result
+## What you should see
 
-Open the URL the agent gave you. You should see the notes app: a list view, an "add note" form, and persistence across page reloads.
+A good run should make these points clear:
 
-Quick checks:
+1. The agent read current project state before changing anything.
+2. It named the app runtime it will change. The `zcp` service is the ZCP setup, not the app target.
+3. It used existing services when they already fit, or created missing services before app work.
+4. It changed code and `zerops.yaml` as needed.
+5. It deployed through Zerops and read logs or events if something failed.
+6. It verified both platform reachability and the requested dashboard behavior.
+7. It ended with a URL or a concrete blocker.
 
-- Add a note. Reload. The note should still be there.
-- Look at the agent's summary. It should mention which runtime it deployed, where it verified, and any changes worth committing.
-
-Deploy success and verify success are not the same. Deploy success means the build finished and the runtime started; verify success means the requested behavior actually works. ZCP separates them on purpose.
-
-If something is missing or broken, see [Troubleshooting](/zcp/reference/troubleshooting).
+Open the URL the agent gives you. If the page loads but the requested behavior is missing, the task is not done; ask the agent to verify that exact behavior again.
 
 ## Next steps
 
-- [How ZCP works](/zcp/concept/how-it-works) — the mental model and the full capability surface, by job.
-- [Choose how finished work ships](/zcp/workflows/delivery-handoff) — when this small app is real, decide whether changes go through git, CI, or direct deploy.
-- [Use ZCP locally](/zcp/setup/local-agent-bridge) — same flow, your local editor.
+- [How ZCP works](/zcp/concept/how-it-works) - the model behind the run.
+- [Build with ZCP](/zcp/workflows/build-with-zcp) - how real app work flows.
+- [Choose how finished work ships](/zcp/workflows/delivery-handoff) - direct deploy, git-push, or external handoff.
 
 ## Gotchas
 
-- **The first deploy goes through `appdev`.** If the agent skips dev and tries stage first, that's a wrong path — see [workspace shapes](/zcp/setup/choose-workspace#workspace-shapes) for why.
-- **A successful deploy with a broken page is not "done".** Verify the requested behavior, not just the runtime status.
-- **Don't run this in a project that hosts your production app.** See [Production boundary](/zcp/security/production-policy).
+- **Deploy success is not done.** The app behavior you requested must be verified on the real URL or endpoint.
+- **The `zcp` service is not the app.** Runtime services such as `appdev`, `appstage`, or `app` receive app code and deploys.
+- **Production stays out of the agent loop.** Use ZCP in dev/staging projects; promote to production through your CI or release process.

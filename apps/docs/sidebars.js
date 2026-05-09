@@ -152,7 +152,7 @@ module.exports = {
     {
       type: 'doc',
       id: 'features/coding-agents',
-      label: 'Infrastructure for Coding Agents',
+      label: 'ZCP for Coding Agents',
       customProps: {
         sidebar_icon: 'sparkles',
       },
@@ -579,7 +579,7 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'Zerops Control Plane MCP',
+      label: 'Zerops Control Plane',
       collapsible: false,
       customProps: {
         sidebar_is_group_headline: true,
@@ -614,7 +614,7 @@ module.exports = {
         },
         {
           type: 'category',
-          label: 'Connect',
+          label: 'Choose remote or local setup',
           link: {
             type: 'doc',
             id: 'zcp/setup/choose-workspace',
@@ -627,26 +627,21 @@ module.exports = {
             {
               type: 'doc',
               id: 'zcp/setup/hosted-workspace',
-              label: 'Provision a hosted workspace',
+              label: 'Set up remote ZCP',
             },
             {
               type: 'doc',
               id: 'zcp/setup/local-agent-bridge',
-              label: 'Use ZCP locally',
-            },
-            {
-              type: 'doc',
-              id: 'zcp/security/tokens-and-project-access',
-              label: 'Tokens and credentials',
+              label: 'Set up local ZCP',
             },
           ],
         },
         {
           type: 'category',
-          label: 'Build & ship',
+          label: 'Build with ZCP',
           link: {
             type: 'doc',
-            id: 'zcp/workflows/build-and-verify-app',
+            id: 'zcp/workflows/build-with-zcp',
           },
           customProps: {
             sidebar_icon: 'circle-stack',
@@ -656,23 +651,23 @@ module.exports = {
             {
               type: 'doc',
               id: 'zcp/workflows/create-or-adopt-services',
-              label: 'Create or adopt services',
+              label: 'Service setup behind the prompt',
+            },
+            {
+              type: 'doc',
+              id: 'zcp/workflows/build-and-verify-app',
+              label: 'Deploy, verify, and fix',
             },
             {
               type: 'doc',
               id: 'zcp/workflows/delivery-handoff',
-              label: 'Delivery handoff',
-            },
-            {
-              type: 'doc',
-              id: 'zcp/workflows/package-running-service',
-              label: 'Package a running service',
+              label: 'Choose how finished work ships',
             },
           ],
         },
         {
           type: 'category',
-          label: 'Trust & recover',
+          label: 'Security',
           link: {
             type: 'doc',
             id: 'zcp/security/trust-model',
@@ -684,38 +679,54 @@ module.exports = {
           items: [
             {
               type: 'doc',
-              id: 'zcp/security/production-policy',
-              label: 'Production boundary',
+              id: 'zcp/security/tokens-and-project-access',
+              label: 'Tokens and credentials',
             },
             {
               type: 'doc',
-              id: 'zcp/security/auditing-agent-work',
-              label: 'Auditing agent work',
+              id: 'zcp/security/production-policy',
+              label: 'Production boundary',
+            },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Reference',
+          link: {
+            type: 'doc',
+            id: 'zcp/reference/index',
+          },
+          customProps: {
+            sidebar_icon: 'command-line',
+          },
+          className: 'homepage-sidebar-item',
+          items: [
+            {
+              type: 'doc',
+              id: 'zcp/reference/agent-workflow',
+              label: 'Workflow terms',
+            },
+            {
+              type: 'doc',
+              id: 'zcp/reference/mcp-operations',
+              label: 'Advanced operations',
+            },
+            {
+              type: 'doc',
+              id: 'zcp/workflows/package-running-service',
+              label: 'Package a running service',
             },
             {
               type: 'doc',
               id: 'zcp/reference/troubleshooting',
               label: 'Troubleshooting',
             },
+            {
+              type: 'doc',
+              id: 'zcp/glossary',
+              label: 'Glossary',
+            },
           ],
-        },
-        {
-          type: 'doc',
-          id: 'zcp/reference/agent-workflow',
-          label: 'Agent workflow contract',
-          customProps: {
-            sidebar_icon: 'command-line',
-          },
-          className: 'homepage-sidebar-item',
-        },
-        {
-          type: 'doc',
-          id: 'zcp/glossary',
-          label: 'Glossary',
-          customProps: {
-            sidebar_icon: 'book-open',
-          },
-          className: 'homepage-sidebar-item',
         },
       ],
     },

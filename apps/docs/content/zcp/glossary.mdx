@@ -1,66 +1,72 @@
 ---
 title: "Glossary"
-description: "Quick definitions for the terms used across ZCP docs — what ZCP is, where it runs, the contracts the agent follows, and the project shapes it picks up."
+description: "Short definitions for ZCP terms used across the docs."
 ---
 
-Quick definitions for the terms that appear across ZCP docs. The four sections below answer: what ZCP *is*, where ZCP *runs*, what the *agent* does, and what the *project* looks like.
+## Core names
 
-## What ZCP is
+**ZCP** - Zerops Control Plane for coding agents: the project-scoped control plane documented in this section.
 
-**Zerops Control Plane (ZCP)** — the umbrella name. In context, can refer to the binary, the operations it exposes, or loosely to the wrapping Zerops service. When precision matters, use the more specific terms below.
+**ZCP operations** - the project-scoped operations surface exposed to a coding agent. In MCP clients, this appears as the ZCP MCP server.
 
-**ZCP MCP** — the project-scoped operations the `zcp` binary exposes to a coding agent over MCP: discover, deploy, verify, operate, recover, hand off. Same MCP surface in both modes (hosted workspace and local agent bridge).
+**`zcp` binary** - the executable. Runs inside remote setup or on your laptop in local setup.
 
-**`zcp` binary** — the executable. Runs as a process inside the hosted service, or on your laptop in the local agent bridge.
+**zCLI** - the Zerops command-line client for humans, scripts, VPN, and CI. It coexists with ZCP.
+
+**zsc** - the in-container Zerops Setup Control utility used from `zerops.yaml`.
 
 ## Where ZCP runs
 
-**Hosted workspace** — a Zerops service of type `zcp@1` running inside your project. Bundles ZCP MCP plus optional Cloud IDE and a coding-agent CLI. The recommended starting point. Setup: [Provision a hosted workspace](/zcp/setup/hosted-workspace).
+**Remote setup** - ZCP running inside a Zerops `zcp@1` service in the project.
 
-**`zcp@1`** — the Zerops service type the hosted workspace runs as. The wrapping service, not the MCP itself.
+**`zcp@1` service** - the Zerops service type behind remote setup.
 
-**`zcp` service** — an instance of `zcp@1` in a specific project. What you see in the Zerops dashboard.
+**Include Coding Agent** - the remote setup option that adds the currently supported bundled agent CLI and preconfigures it to use the project's ZCP operations.
 
-**Local agent bridge** — the `zcp` binary running on your laptop while you're connected to the project VPN. Same MCP operations, no editor or agent CLI bundled. The most WIP path. Setup: [Use ZCP locally](/zcp/setup/local-agent-bridge).
+**Cloud IDE** - browser-based VS Code served by remote setup.
 
-**Cloud IDE** — the browser-based VS Code (code-server) the hosted workspace can serve. Optional toggle on the `zcp` service.
+**AI Agent environment** - a recipe environment preset that creates app services plus remote setup with **Include Coding Agent** enabled. It is a recipe preset, not a separate ZCP setup path.
 
-**Coding Agent (toggle)** — bundles a coding-agent CLI (currently Claude Code) inside the hosted workspace, preconfigured with auth and MCP wiring. Optional toggle on the `zcp` service.
+**Local setup** - the `zcp` binary running on your laptop after `zcp init`, while your editor or CLI agent talks to it.
 
-## What the agent does
+**Local agent bridge** - local setup with the `zcp` binary connected to a local agent client.
 
-**Bootstrap route** — how the agent starts a session: `adopt` existing services, start from a `recipe`, build a `classic` custom plan, or `resume` an interrupted session. Detail: [Agent workflow → Bootstrap routes](/zcp/reference/agent-workflow#bootstrap-routes).
+## Workflows and results
 
-**Develop flow** — the fixed sequence the agent follows for a change: name scope → build → deploy → serve → verify reachability → verify behavior → fix and redeploy if needed.
+**Service setup** - the infrastructure phase behind an app prompt. It uses existing runtime and managed services when they fit, creates missing services when needed, then stops before app code, `zerops.yaml`, or deploy.
 
-**Failure category** — the structured tag the platform attaches to a failed deploy: `build`, `start`, `verify`, `network`, `config`, `credential`, `other`. Drives the recovery path. Canonical home: [Agent workflow → Failure categories](/zcp/reference/agent-workflow#failure-categories).
+**Deploy, verify, and fix** - the app phase. It scopes the runtime, changes code/config, deploys, verifies reachability, verifies requested behavior, and fixes failures.
 
-**Verification layers** — runtime reachability (a platform health check) and requested behavior (an application check the agent runs against the actual endpoint). Both must pass before a session reports complete.
+**Runtime scope** - the app runtime the change targets, such as `appdev`, `appstage`, `app`, or a linked local target.
 
-**Delivery contract** — what happens to *future* changes after a verified deploy: `auto` (direct deploy), `git-push` (commits go to a configured remote), `manual` (your CI takes over). Detail: [Choose how finished work ships](/zcp/workflows/delivery-handoff).
+**Delivery choice** - what happens to future changes after a verified deploy: direct deploy, git-push, or external handoff.
 
-**ZCP status** — a single MCP call that rebuilds the agent's view of the project from live platform state. The right recovery move when chat memory has drifted.
+**ZCP status** - a live project read the agent can use after interruption or confusion. Ask for it before letting the agent change anything else.
 
-## What the project looks like
+**Blocker** - a clear stop state with evidence: failure category, runtime in scope, what was tried, and what decision or credential is needed.
 
-**Runtime scope** — the service the agent targets for a change (`appdev`, `appstage`, `app`).
+## Project and runtime terms
 
-**Workspace shape** — ZCP's name for the project topology:
+**Runtime service** - a service that runs app code.
 
-- `standard` — dev runtime + explicit stage runtime (e.g. `appdev` + `appstage`)
-- `dev` — one mutable dev runtime, no stage
-- `simple` — one runtime, no dev/stage split
-- `local-stage` — local checkout linked to a Zerops stage runtime
-- `local-only` — local checkout, no Zerops runtime linked yet
+**Managed service** - database, cache, queue, search, storage, or similar dependency. It provides connection details; it is not an app deploy target.
 
-Decision context: [Choose your workspace → Workspace shapes](/zcp/setup/choose-workspace#workspace-shapes).
+**Runtime layout** - which app runtime services ZCP should use:
 
-**Service mode** — Zerops scaling shape (`HA`, `NON_HA`). Independent of workspace shape — see [Scaling](/features/scaling).
+- `standard` - dev runtime plus explicit stage runtime.
+- `dev` - one mutable development runtime.
+- `simple` - one runtime with no dev/stage split.
+- `local-stage` - local checkout linked to one Zerops runtime as deploy target.
+- `local-only` - local checkout with no linked runtime yet.
 
-**Recipe** — a Zerops-published starter project. With the **AI Agent** environment selected, recipes provision a `zcp@1` service alongside the runtime services.
+**Service scaling mode** - Zerops scaling setting such as `HA` or `NON_HA`. Different from runtime layout.
 
-## Three names that get confused
+**Stage** - review or promotion target. Stage is not production.
 
-- **ZCP** (Zerops Control Plane) — what this section documents.
-- **zCLI** — the [Zerops command-line client](/references/cli). What humans and CI use to push code, manage projects, connect over VPN. Coexists with ZCP; not part of it.
-- **zsc** (Zerops Setup Control) — the [in-container utility](/references/zsc) that ships in every Zerops runtime and build container. Used by `zerops.yaml` build steps. Not part of ZCP.
+## Credentials
+
+**`ZCP_API_KEY`** - project-scoped Zerops token used by ZCP.
+
+**`GIT_TOKEN`** - git provider credential used by remote git-push delivery when needed.
+
+**`ZEROPS_TOKEN`** - Zerops token commonly used by GitHub Actions or external CI that runs `zcli`.

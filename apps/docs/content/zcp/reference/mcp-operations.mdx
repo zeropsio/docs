@@ -1,0 +1,65 @@
+---
+title: "Advanced operations"
+description: "Common ZCP operation names for app-building, debugging, and automation."
+---
+
+Most users never need operation names. They matter when you configure agent-client policy, debug an MCP integration, or automate ZCP directly. In normal app work, ask the agent for outcomes. Recipe-authoring and ZCP-internal maintenance operations are intentionally out of scope.
+
+## Permission classes
+
+| Class | Meaning |
+|---|---|
+| Read-only | Inspect state, logs, events, guidance, or verification output. |
+| Mutating | Change services, env vars, scaling, deploy state, or lifecycle. |
+| Operational setup | Coordinate workflows, mounts, imports, recipes, delivery setup, or generated local files. |
+
+## Read-only operations
+
+| Operation | Purpose |
+|---|---|
+| `zerops_discover` | Read services, ports, env-var keys, and current state. |
+| `zerops_logs` | Read runtime/build logs filtered by service, severity, time, or search. |
+| `zerops_events` | Read service-scoped project activity, deploys, builds, scaling, and failures. |
+| `zerops_verify` | Run service health, recent error log, and HTTP-readiness checks. |
+| `zerops_knowledge` | Fetch ZCP guidance or platform knowledge for the current state. |
+| `zerops_process` | Check a known async process; cancel is a mutating action. |
+
+## Mutating operations
+
+| Operation | Purpose |
+|---|---|
+| `zerops_deploy` | Ship code through the Zerops build and deploy pipeline. |
+| `zerops_env` | Read, set, delete, or generate env vars and local `.env` files. |
+| `zerops_manage` | Start, stop, restart, reload, or connect storage. |
+| `zerops_scale` | Change CPU, RAM, disk, CPU mode, or container autoscaling where supported. `HA`/`NON_HA` is set at service creation. |
+| `zerops_subdomain` | Enable or disable public subdomain access. |
+| `zerops_delete` | Delete a service. Explicit named approval is required. |
+
+## Operational setup
+
+| Operation | Purpose |
+|---|---|
+| `zerops_workflow` | Track, recover, or configure ZCP work sessions; also carries the package-running-service export flow. |
+| `zerops_import` | Import project/service definitions. Destructive override is gated. |
+| `zerops_mount` | Mount or unmount runtime filesystems in remote setup. |
+| `zerops_preprocess` | Expand Zerops preprocessor expressions. |
+| `zerops_export` | Read platform project/service export YAML and service metadata. |
+
+## Remote and local differences
+
+| Area | Remote setup | Local setup |
+|---|---|---|
+| Files | Runtime files through SSHFS/project containers | Local working directory |
+| Deploy source | Project service or batch deploy inside Zerops | Local `workingDir` |
+| Dev server | ZCP can run/inspect project-container dev processes | Your local tool owns the dev server |
+| Env bridge | Project env is available in the project | `.env` generation resolves project references for local app use |
+| Git | Workspace-managed credentials | User's local git credentials |
+
+## Confirmation gates
+
+Two operations require explicit care:
+
+- **Service deletion** requires explicit user approval in the current conversation, by service name.
+- **Destructive import override** first refuses and names what would be replaced; a second call must acknowledge the same targets.
+
+See [Tokens and credentials](/zcp/security/tokens-and-project-access#confirmation-gates-for-destructive-actions) for the user-facing confirmation flow.

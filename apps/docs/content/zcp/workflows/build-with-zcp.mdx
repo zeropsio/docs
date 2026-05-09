@@ -1,0 +1,44 @@
+---
+title: "Build with ZCP"
+description: "How an outcome prompt becomes service setup, code, deploy, verification, fixes, and delivery."
+---
+
+Start with what the app should do, not with tool calls or workflow names.
+
+```text
+Build a task board where tasks stay saved after refresh.
+```
+
+Behind that prompt, the agent should inspect the project, choose a target runtime, make the app change, and use real deploy evidence until the requested behavior is proven. ZCP supplies the project knowledge and tool access needed for that loop: live services and env state, Zerops guidance, deploys, logs, verification, and guarded infrastructure changes.
+
+Do not make the prompt longer to restate completion expectations such as deploy, verification, or returning the URL. The words you add should change the app, the stack, the runtime layout, the acceptance criteria, or the delivery path.
+
+You also do not need to paste an infrastructure inventory, env wiring plan, or log summary into the prompt. ZCP makes those available to the agent from the live project.
+
+## What happens after your prompt
+
+The agent should make this path visible as it works:
+
+**Project discovery.** Read what exists now: runtime services, managed services, env vars, logs, recent events, and current work state.
+
+**Service setup.** Use existing services when they fit, or create the missing runtime and managed dependencies before app code starts.
+
+**Runtime scope.** Identify the app runtime that will receive code, such as `appdev`, `appstage`, `app`, or a linked local deploy target. The `zcp` service is never the app target.
+
+**Code, deploy, verify, fix.** Change app files and `zerops.yaml`, deploy through Zerops, verify reachability and requested behavior, read evidence on failure, and retry from the cause.
+
+**Delivery after proof.** After a verified deploy exists, keep direct deploy, push to git, or use external handoff to CI or a human.
+
+Advanced export/reuse path: [Package a running service](/zcp/workflows/package-running-service).
+
+## What the final answer should contain
+
+For a completed app task, the agent should report:
+
+- which runtime service changed,
+- which deploy passed,
+- which URL, endpoint, or UI state proved the requested behavior,
+- any env vars, managed services, or delivery settings touched,
+- the delivery choice if one was set.
+
+If the task is incomplete, the final answer should name the blocker, the evidence read, what was tried, and the next decision needed from you.

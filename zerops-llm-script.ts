@@ -64,7 +64,9 @@ function cleanMarkdownContent(content: string): string {
     }
   }
   
-  const lines = processedContent.split('\n')
+  const lines = processedContent
+    .split('\n')
+    .map((line) => line.replace(/[ \t]+$/g, ''))
   const processedLines: string[] = []
   let lastLineWasEmpty = false
   
