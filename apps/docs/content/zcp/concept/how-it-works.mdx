@@ -1,32 +1,33 @@
 ---
 title: "How ZCP works"
-description: "How product intent moves through project discovery, infrastructure, app changes, deployment, verification, and delivery."
+description: "How product intent moves through live project state, service fit, app wiring, deploy, verification, proof, and delivery."
 ---
 
-ZCP turns product or app intent into a verified deployed app by giving the coding agent two things it normally lacks: current knowledge of the Zerops project and the tools to change, deploy, inspect, and verify it.
+ZCP does not make you run a workflow by hand. It gives the coding agent a project loop: read the current Zerops project, fit the requested app change to the right services, wire the app, deploy it, verify real behavior, and either return proof or stop on a blocker that needs human judgment.
 
-## The model in one pass
-
-Product intent enters a project loop: read current state, decide whether the needed services already exist, change the app and its Zerops wiring, deploy, verify from evidence, and return either proof or a concrete blocker.
+## The loop
 
 ```mermaid
 flowchart TD
-  intent["Product intent<br/><code>Build a task board where tasks stay saved after refresh.</code>"]
-  context["ZCP context<br/>live services, env vars, logs, events,<br/>runtime guidance, available operations"]
-  target["Project fit<br/>use existing services or create missing ones;<br/>select the app runtime,<br/>not the <code>zcp</code> setup service"]
-  app["Build the app<br/>code, <code>zerops.yaml</code>, env wiring"]
+  intent["Product intent<br/><code>Build a task board for my team.</code>"]
+  state["Project state<br/>services, runtime layout, env vars,<br/>logs, events, current work"]
+  fit["Service and runtime fit<br/>use existing services or create missing ones;<br/>target the app runtime, not <code>zcp</code>"]
+  wiring["App wiring<br/>code, <code>zerops.yaml</code>, env references,<br/>managed-service connections"]
   deploy["Deploy through Zerops"]
-  verify{"Verify real behavior<br/>endpoint or UI"}
-  fix["Read evidence<br/>logs, events, checks"]
-  done["Done<br/>URL, endpoint, or UI proof"]
-  blocker["Blocker<br/>missing credential, decision,<br/>or repeated failure"]
-  delivery["Future delivery<br/>direct deploy, git push, or CI handoff"]
+  reachability{"Platform reachability<br/>service status, logs, HTTP check"}
+  behavior{"Requested behavior<br/>endpoint, UI flow, persisted state"}
+  evidence["Read evidence<br/>build logs, runtime logs,<br/>events, checks"]
+  proof["Proof<br/>URL, endpoint result,<br/>or UI state"]
+  blocker["Blocker<br/>missing credential, decision,<br/>unsupported fit, repeated failure"]
+  delivery["Delivery choice<br/>direct deploy, git push,<br/>or CI/human handoff"]
 
-  intent --> context --> target
-  target --> app --> deploy --> verify
-  verify -->|fixable| fix --> app
-  verify -->|verified| done --> delivery
-  verify -->|needs human| blocker
+  intent --> state --> fit --> wiring --> deploy --> reachability
+  reachability -->|fixable| evidence --> wiring
+  reachability -->|reachable| behavior
+  behavior -->|fixable| evidence
+  behavior -->|verified| proof --> delivery
+  behavior -->|needs human| blocker
+  reachability -->|needs human| blocker
 
   classDef user fill:#f7fbff,stroke:#2d72d9,stroke-width:1.5px,color:#172033;
   classDef zcpbox fill:#eef7f1,stroke:#32845a,stroke-width:1.5px,color:#172033;
@@ -35,39 +36,82 @@ flowchart TD
   classDef stop fill:#fff1f2,stroke:#d33f49,stroke-width:1.5px,color:#172033;
 
   class intent user;
-  class context zcpbox;
-  class target,app,deploy,verify,fix work;
-  class done,delivery done;
+  class state zcpbox;
+  class fit,wiring,deploy,reachability,behavior,evidence work;
+  class proof,delivery done;
   class blocker stop;
 ```
 
-The important signals are simple: the agent read current project state, named the target runtime, verified the requested behavior, and explained what remains.
+The agent should make this path visible while it works, but you should not have to prompt each step. ZCP exists so the operational path is available behind a product request.
 
-## Where ZCP runs
+## The lifecycle layers
 
-ZCP can run in two places:
+ZCP separates the work into three layers so the agent can tell what kind of step comes next.
 
-| Path | What runs where | What changes for you |
-|---|---|---|
-| Remote setup | A `zcp@1` service runs the `zcp` binary inside the Zerops project. **Include Coding Agent** adds the bundled agent CLI and preconfigures it to use ZCP; **Cloud IDE** adds browser VS Code. | The work stays inside the project. The agent can use project-private networking and SSHFS mounts for runtime files. |
-| Local setup | The `zcp` binary runs on your laptop after `zcp init`, and your editor's agent talks to it. | Your checkout and dev server stay local. Managed services are reached over VPN, and `.env` generation bridges project credentials into your local app. |
+**Service setup.** Prepare the project shape before app work starts: use existing services when they fit, create missing runtimes or managed dependencies when they do not, record the runtime layout, and establish the app target. This layer is not where app code, `zerops.yaml`, or the first deploy belongs.
 
-The project-scoped control plane is the same idea in both paths. The filesystem, network path, deploy source, and safety profile are different. See [Choose remote or local setup](/zcp/setup/choose-workspace).
+**Development loop.** Change code and configuration, deploy the selected runtime services, verify platform reachability, verify the requested behavior, read logs and events on failure, fix from evidence, and repeat until proof or blocker.
 
-## What ZCP reads
+**Delivery handoff.** After a verified running result exists, choose how future changes should ship: keep direct deploys, push to git, or hand off to CI or a human release process. The first functional deploy is direct; delivery setup follows proof.
 
-ZCP reads live project state instead of relying on a long prompt:
+## 1. Read the project before choosing a plan
 
-- services and whether they are runtime or managed dependencies,
+The first useful move is discovery. ZCP reads live project state instead of relying on a long prompt or stale notes:
+
+- runtime services and managed services,
 - runtime layout, such as one app runtime, a dev+stage pair, or a local checkout linked to a Zerops runtime,
-- service env-var keys and references,
-- build/deploy events, runtime logs, and verification results,
-- the current work state when a session is interrupted.
+- env-var keys and references,
+- build/deploy events, runtime logs, and recent verification results,
+- current work state when a session resumes after an interruption.
 
-Recovery starts from live state. If a session gets confused or interrupted, ask the agent to read ZCP status before changing anything else.
+This is why a prompt can stay short. The agent can inspect what exists instead of asking you to paste the project inventory.
 
-## What counts as done
+## 2. Fit the request to services and runtimes
 
-A task is not done when code is written, or when a build succeeds. A ZCP task is done when the target runtime was deployed, platform reachability passed, the requested behavior was verified against the real endpoint or UI, and the agent reported the URL or a concrete blocker.
+The agent then decides where the app work belongs. The `zcp` service is the control-plane setup, not the app target. App code deploys to runtime services such as `appdev`, `appstage`, or `app`; managed services such as databases, cache, storage, search, or queues provide dependencies.
 
-Workflow path: [Build with ZCP](/zcp/workflows/build-with-zcp). Exact terms and runtime layouts: [Workflow terms](/zcp/reference/agent-workflow).
+If the right services already exist, the agent should use them. If a requested app needs missing infrastructure, the agent can create it before app work starts. If the choice affects product scope, cost, credentials, or destructive changes, the agent should stop and ask.
+
+## 3. Wire the app to Zerops
+
+App work usually spans code and platform wiring. The agent may need to update application files, `zerops.yaml`, service references, env vars, migrations, seeds, or framework configuration so the app runtime can reach its managed services after deploy.
+
+ZCP guidance matters here because Zerops has its own build, deploy, networking, and env-reference rules. The agent should use those rules instead of importing assumptions from Docker Compose, Kubernetes, or a generic cloud template.
+
+## 4. Deploy, read evidence, and retry from the cause
+
+Deploy is part of the work, not a separate instruction. ZCP gives the agent access to the Zerops deploy path and the evidence needed when it fails: build output, runtime logs, project events, service status, and recovery hints.
+
+A failed build, broken start command, missing env reference, or unreachable route should lead to evidence-driven fixes. Repeating the same deploy without a new cause is not progress; after repeated failure or a missing decision, the useful result is a blocker.
+
+## 5. Verify behavior, not only reachability
+
+A successful deploy proves only that the runtime built and started. Platform reachability checks prove the service is running and reachable. They do not prove the product request.
+
+For a task-board app, the behavior check is not "the page returns 200". The useful proof is the user-facing workflow the prompt asked for: tasks can be created, edited, moved, persisted, or shared according to the requested scope. For an API task, proof might be a JSON response from the endpoint. For a worker task, proof might be a processed job and the resulting stored state.
+
+## 6. Return proof or a concrete blocker
+
+A finished ZCP-backed app task should leave one of two things:
+
+- proof: the changed runtime, URL or endpoint, and the specific behavior that was verified,
+- blocker: the evidence read, what was tried, and the credential, decision, unsupported fit, or repeated failure that prevents completion.
+
+That final proof is the practical difference between "the agent wrote code" and "the app task is done".
+
+## Remote and local setup
+
+The same `zcp` binary can run in two places. The project loop stays the same; the work surface changes.
+
+| Path | What runs where | Practical effect |
+|---|---|---|
+| Remote setup | A `zcp@1` service runs the `zcp` binary inside the Zerops project. **Include Coding Agent** adds the bundled agent CLI; **Cloud IDE** adds browser VS Code. | Work happens inside the project boundary. The agent can use project-private networking and runtime file mounts. |
+| Local setup | The `zcp` binary runs on your laptop after `zcp init`, and your local editor or CLI agent talks to it. | App edits, dev server, deploy source, and git credentials stay local. Managed services are reached over Zerops VPN, and `.env` generation bridges project credentials into your local app. |
+
+Choose the setup based on where you want the agent and filesystem to live: [Choose remote or local setup](/zcp/setup/choose-workspace).
+
+## Where to go deeper
+
+- [Build with ZCP](/zcp/workflows/build-with-zcp) - normal app work after setup.
+- [Workflow terms](/zcp/reference/agent-workflow) - exact runtime layouts, delivery terms, and completion evidence.
+- [Troubleshooting](/zcp/reference/troubleshooting) - practical recovery when a run gets stuck.

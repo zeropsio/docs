@@ -65,9 +65,29 @@ Zerops records platform-side evidence: service events, deploy/build results, run
 
 When taking over from an agent, read evidence in this order: service-scoped events, runtime logs, deploy/verify result, then git history when delivery uses git-push.
 
+| Surface | What it proves | What it does not prove |
+|---|---|---|
+| Service events | Deploy/build lifecycle, failures, restarts, scaling, public-access changes. | The exact source edit that caused them. |
+| Build logs | Build commands, dependency install, compile/package failures. | Runtime request failures after deploy. |
+| Runtime logs | Start crashes, port binding, request-time app errors. | Why the build failed. |
+| Verify output | Whether platform reachability and requested behavior passed. | That unrelated app flows work. |
+| Git history | Source changes pushed during git-push delivery. | Shell edits or uncommitted work that never reached git. |
+
+Filter events and logs by service hostname when possible. Project-level timelines include unrelated services and older failures that can mislead an audit.
+
 ## What ZCP refuses by design
 
-ZCP refuses boundaries that should never be inferred: tokens that do not resolve to exactly one project, remote self-deletion, and destructive replacement before the agent has read the relevant failure evidence. Destructive confirmation details live in [Tokens and credentials](/zcp/security/tokens-and-project-access#confirmation-gates-for-destructive-actions).
+ZCP refuses boundaries that should never be inferred.
+
+| Refusal | Trigger | Recovery |
+|---|---|---|
+| Token resolves to multiple projects | Account-wide or multi-project token. | Use a token scoped to exactly one project. |
+| Token resolves to no project | Token authenticates but has no project access. | Grant project access or generate a new project-scoped token. |
+| Remote setup self-deletion | Agent tries to delete the `zcp` service it is running in. | Do it manually from outside that service if you really intend to remove ZCP. |
+| Service deletion without named approval | Destructive delete requested without explicit same-conversation approval and service name. | Ask the human for explicit approval naming the service. |
+| Destructive replacement before diagnosis | Import/override would replace a service with failed deploy history before logs/events were read. | Read the failure evidence first, then ask for confirmation with the evidence summary. |
+
+Destructive confirmation details live in [Tokens and credentials](/zcp/security/tokens-and-project-access#confirmation-gates-for-destructive-actions).
 
 ## Next steps
 

@@ -32,6 +32,15 @@ ZCP validates the token at startup and refuses wrong shapes before the agent can
 
 The fix is always the same: generate a per-project token and replace `ZCP_API_KEY` on the surface ZCP reads from. In remote setup, that value is injected into the `zcp` service environment. In local setup, it is the `env` block in `.mcp.json`.
 
+Common startup/auth messages:
+
+| Message | Meaning |
+|---|---|
+| `Token accesses N projects; use project-scoped token` | The token can see more than one project. Replace it with a single-project token. |
+| `Token has no project access` | The token authenticates but reaches no project. Grant project access or replace it. |
+| `No authentication found: set ZCP_API_KEY or log in with zcli` | No usable token reached the `zcp` process. |
+| `AUTH_TOKEN_EXPIRED` or HTTP 401 | The token expired, was revoked, or is otherwise invalid. Replace it and restart the agent. |
+
 ## Where the token lives - remote vs local {#where-the-token-lives--remote-vs-local}
 
 ZCP reads `ZCP_API_KEY` from environment at startup. It doesn't write the token anywhere else, doesn't exchange it for a derived credential. Where the env var comes from depends on which path you're on:
@@ -74,6 +83,14 @@ Three names, three jobs — keeping them straight prevents most credential confu
 `GIT_TOKEN` only matters when delivery uses git-push and remote setup is the one pushing. In local setup, your own git CLI talks to the remote — SSH keys or credential manager already handle authentication, and ZCP doesn't need a credential of its own. If `GIT_TOKEN` is present in the `zcp` service env when you run git-push setup, ZCP reuses it instead of asking for a new credential.
 
 `ZEROPS_TOKEN` is a **Zerops API token, not a GitHub token** — an Actions workflow uses it to authenticate `zcli` against Zerops. It can be the same project-scoped token already behind `ZCP_API_KEY` (one credential, one rotation surface) or a separate token if your team prefers credential separation. Delivery setup should place it in the CI secret store for the repository that runs the deploy.
+
+With GitHub CLI, the secret shape is:
+
+```bash
+gh secret set ZEROPS_TOKEN -b "$ZCP_API_KEY"
+```
+
+Use the GitHub UI instead if your team does not allow local CLI secret writes.
 
 ## Rotation
 

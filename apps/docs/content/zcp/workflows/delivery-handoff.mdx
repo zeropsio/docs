@@ -3,15 +3,19 @@ title: "Choose how finished work ships"
 description: "After a verified deploy, choose whether future changes use direct deploy, git-push, or an external handoff."
 ---
 
-Delivery is decided after the app works. You can include delivery intent in the original product prompt, but ZCP applies it only after a verified deploy exists. The first deploy uses ZCP's direct deploy path; the delivery choice records how future changes should be delivered.
+Delivery is decided after the app works. You can include delivery intent in the original product prompt, but ZCP applies it only after a verified deploy exists. The first deploy uses ZCP's direct deploy path; the delivery choice records how future changes should ship.
+
+If you do not have a CI or repository-driven release process yet, keep direct deploy for now. Git-push and external handoff become useful when source control, review, or a separate release owner matters.
+
+ZCP is for development and staging projects. Production should receive promoted work through your CI or release process; see [Production boundary](/zcp/security/production-policy).
 
 ## Three delivery choices
 
-**Keep direct deploy** for fast iteration, solo projects, and demos. The agent keeps deploying through ZCP directly.
-
-**Push to git** when you want commits, reviews, or a repository-driven build. The agent commits and pushes to a configured remote; a build integration may run afterward.
-
-**External handoff** when your CI, release process, or a human owns delivery. ZCP records what happened but does not initiate future deploys.
+| Choice | Exact mode | Use when | What ZCP does next |
+|---|---|---|---|
+| Keep direct deploy | `auto` | Fast iteration, solo projects, demos, agent-owned dev/stage work. | Future changes keep deploying through ZCP directly. |
+| Push to git | `git-push` | You want commits, review, repository history, or repo-driven builds. | The agent commits and pushes to a configured remote, then observes/verifies the resulting build when one is tracked. |
+| External handoff | `manual` | CI, release process, or a human owns delivery from here. | ZCP records evidence but does not initiate the next deploy on its own. |
 
 You can ask in plain language:
 
@@ -27,23 +31,66 @@ Keep ZCP deploying directly for now.
 My CI takes over after this verified deploy.
 ```
 
-## Push to git
+## Direct deploy
 
-Git-push needs committed code, a remote URL, and credentials that can push.
+Direct deploy is the path ZCP already used to produce the first verified result. No extra setup is needed.
+
+Pick this when the project is still exploratory, the agent's deploys are the canonical dev/stage path, or you do not need repository-driven delivery yet.
+
+Direct deploy is not a shortcut around verification. The next session still needs deploy plus reachability plus requested behavior before it reports completion.
+
+## Git-push delivery
+
+Git-push needs committed code, a remote URL, and credentials that can push. It records where future source changes should go; it does not make the first functional deploy happen through git.
 
 Remote and local setup differ:
 
-- Remote setup uses credentials configured inside the `zcp` service, commonly a fine-grained git token.
-- Local setup uses your local git credentials and working directory.
+- Remote setup uses credentials configured inside the `zcp` service, commonly a fine-grained `GIT_TOKEN`.
+- Local setup uses your local git working directory and git credential helper.
+
+Local setup does not initialize git for you. If the directory is not a git repository yet, initialize it and make a first commit before asking for git-push delivery.
+
+Remote setup can prepare repository state during service setup, but git-push still needs at least one commit covering the work, a remote URL, and push credentials.
+
+## What fires after a push
+
+Git-push capability and build integration are separate. A push may trigger one of three outcomes:
+
+| Outcome | Meaning |
+|---|---|
+| Nothing tracked by ZCP | Your repository may still have its own hooks or CI, but ZCP did not set up or observe one. |
+| Zerops dashboard build integration | Zerops pulls from the repository and runs the build/deploy pipeline from dashboard integration. |
+| GitHub Actions workflow | A workflow checks out the repo and deploys to Zerops with `zcli`. |
+
+The GitHub Actions path needs a Zerops API token stored as a repository secret named `ZEROPS_TOKEN`. It is not a GitHub token. The project-scoped token already used by `ZCP_API_KEY` can be reused if your team wants one rotation surface.
 
 A push is not proof that the app works. If a webhook or GitHub Actions build runs from the push, the agent should observe the build result and verify the app afterward.
 
+## External handoff
+
+External handoff means a human or external system owns delivery after the verified ZCP result. ZCP can still read state, verify, and record deploy evidence when asked, but it does not auto-initiate future deploys as the close condition.
+
+Pick this when the next step is a release review, a non-ZCP CI pipeline, a production promotion process, or a human decision that should not be hidden inside the agent loop.
+
+In this mode, ending the session is deliberate: the agent reports what is verified, what is handed off, and what the external owner must do next.
+
 ## Change later
 
-Delivery choice is not permanent. You can move from direct deploy to git-push later, add a build integration later, or switch to external handoff for a release that needs human control.
+Delivery choice is not permanent. You can move from direct deploy to git-push later, add a dashboard or GitHub Actions build integration later, or switch to manual handoff for a release that needs human control.
+
+Git-push capability can also coexist with direct deploy. A configured remote does not force every future task to close through git.
 
 ## Gotchas
 
-1. **Delivery choice is not a hidden deploy button.** It records the future path after the app already works.
-2. **External handoff is not a deploy by itself.** It means a human or external system owns delivery.
-3. **GitHub Actions uses a Zerops token.** The Actions secret for `zcli` deploys is `ZEROPS_TOKEN`, not your GitHub token.
+1. **First deploy is always direct.** Setting up git-push early does not redirect the deploy that creates the first verified running result.
+2. **Delivery choice is not a hidden deploy button.** It records the future path after the app already works.
+3. **External handoff is not a deploy by itself.** It means a human or external system owns the next delivery action.
+4. **GitHub Actions uses `ZEROPS_TOKEN`.** That secret is a Zerops API token, not your GitHub PAT.
+5. **"No tracked build integration" does not mean no build will fire.** It means ZCP did not set one up or observe it.
+
+## Next steps
+
+- [Deploy, verify, and fix](/zcp/workflows/build-and-verify-app)
+- [Tokens and credentials](/zcp/security/tokens-and-project-access)
+- [GitHub integration](/references/github-integration)
+- [CI/CD with Zerops](/guides/ci-cd)

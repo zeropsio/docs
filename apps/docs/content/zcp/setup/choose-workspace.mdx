@@ -3,7 +3,11 @@ title: "Choose remote or local setup"
 description: "Choose remote setup inside Zerops or local setup in your own editor/CLI."
 ---
 
-Choose where the ZCP-backed agent runs. ZCP gives the agent the same project-scoped Zerops toolset in both paths, but the filesystem, network path, deploy source, and safety profile are different.
+Choose where the ZCP-backed agent runs. The same `zcp` binary gives the agent the same project-scoped Zerops operations in both paths, but the filesystem, network path, deploy source, and safety profile are different.
+
+:::info Public preview
+Remote setup is the recommended first run. Local setup is real and supported, but the binary install, `.mcp.json`, and `zcp init` artifacts are still settling; expect setup details to move between releases.
+:::
 
 Use remote setup for the first run and project-contained isolation. Use local setup when your checkout, editor, dev server, and git credentials should stay on your machine.
 
@@ -13,38 +17,50 @@ Use remote setup for the first run and project-contained isolation. Use local se
 
 **Local setup** fits when you want to keep your editor, shell, checkout, local dev server, and git credentials.
 
-## Compare the paths
+## Remote vs local at a glance
 
-**Remote setup**
-
-- ZCP runs inside the Zerops project in a `zcp@1` service.
-- The agent runs inside that service when **Include Coding Agent** is enabled.
-- Runtime files can be mounted through SSHFS.
-- Managed services are reached over the project-private network.
-- Deploy source, env vars, and git credentials live inside the project service.
-- Safety profile: project-contained by design.
-
-**Local setup**
-
-- ZCP runs on your laptop as the `zcp` binary.
-- The agent runs in your local editor or CLI after `zcp init`.
-- App work happens in your local working directory.
-- Managed services are reached from your app and shell through Zerops VPN.
-- Deploy source and git credentials are your local working directory and local git setup.
-- Safety profile: ZCP is project-scoped, but the agent client runs as your user.
+|  | Remote setup | Local setup |
+|---|---|---|
+| Where `zcp` runs | Inside the Zerops project in a `zcp@1` service | On your machine as the `zcp` binary |
+| Where the agent runs | In the `zcp` service when **Include Coding Agent** is enabled | In your local editor or CLI agent |
+| Filesystem the agent sees | Runtime files when mounted into the remote setup | Your local working directory |
+| Private service access | Project-private network, no laptop VPN | `zcli vpn up` from your machine |
+| Deploy source | Project service / mounted runtime source | Your local checkout |
+| Git credentials | Credentials configured in the `zcp` service | Your local git credentials |
+| Local install | None for the first run | `zcp` binary, zCLI, project token, agent client config |
+| Safety profile | Project-contained by design | ZCP is project-scoped, but the agent client runs as your user |
+| Best first use | Yes | After you know you want local-agent control |
+| Maturity | Public preview | Public preview, more WIP |
 
 ## What changes in practice
 
-In remote setup, a `zcp@1` service runs the `zcp` binary inside the Zerops project. Enable **Include Coding Agent** when you want the service to add the bundled agent CLI and preconfigure it to use ZCP. Enable **Cloud IDE** when you also want browser-based VS Code. Runtime files can be mounted into the service, and managed services are reachable over the project-private network.
+In remote setup, Zerops packages the `zcp` binary inside a `zcp@1` service in the project. Enable **Include Coding Agent** when you want the service to add the bundled agent CLI and preconfigure it to use ZCP. Enable **Cloud IDE** when you also want browser-based VS Code. Runtime files can be mounted into the service, and managed services are reachable over the project-private network.
 
-In local setup, the agent works in your local checkout. You install the `zcp` binary and run `zcp init` in the project folder so the local agent can talk to ZCP. ZCP talks to the Zerops API directly, while your local app and shell need `zcli vpn up` to reach managed services by hostname.
+In local setup, you install the same `zcp` binary on your machine and initialize it in a project folder. Your local agent client talks to ZCP from that folder. ZCP talks to the Zerops API directly, while your local app and shell need `zcli vpn up` to reach managed services by hostname. Full install flow lives in [Set up local ZCP](/zcp/setup/local-agent-bridge).
 
-After setup, ZCP reads whether the project has one runtime, a dev+stage pair, or a local checkout linked to a runtime. You usually state the outcome, not the label: dev+stage, one dev runtime, or local deploys to a named runtime. Exact labels live in [Workflow terms](/zcp/reference/agent-workflow#runtime-layouts).
+Remote setup costs one small `zcp` service in the project, billed like any other Zerops service. Local setup costs local installation and a VPN path, plus a local `.env` snapshot with real project credentials that must stay out of git.
+
+## Runtime layouts
+
+After setup, ZCP reads whether the project has one runtime, a dev+stage pair, or a local checkout linked to a runtime. You usually state the outcome, not the label: use the dev+stage pair, deploy to a named stage runtime, or use the single app runtime.
+
+| Layout | What it means | Typical names |
+|---|---|---|
+| `standard` | Dev runtime plus explicit stage runtime. | `appdev` + `appstage` |
+| `dev` | One mutable dev runtime. | `appdev` |
+| `simple` | One runtime with no dev/stage split. | `app` |
+| `local-stage` | Local checkout linked to one Zerops runtime as the deploy target. | local checkout + `appstage` |
+| `local-only` | Local checkout with no linked runtime yet. | local checkout |
 
 Stage is a review or promotion target, not production. Production should live in a separate Zerops project; see [Production boundary](/zcp/security/production-policy).
+
+The stage hostname is explicit. ZCP should use the confirmed project state, not invent `appstage` from `appdev`.
+
+Runtime layout is ZCP's topology term. Zerops service scaling mode, such as `HA` or `NON_HA`, is an individual service setting and is unrelated to this table.
 
 ## Next steps
 
 - [Set up remote ZCP](/zcp/setup/hosted-workspace)
 - [Set up local ZCP](/zcp/setup/local-agent-bridge)
 - [Build with ZCP](/zcp/workflows/build-with-zcp)
+- [Trust model](/zcp/security/trust-model)

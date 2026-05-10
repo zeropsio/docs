@@ -7,7 +7,9 @@ Local setup runs the `zcp` binary on your laptop, initialized in one project dir
 
 `zcp init` writes the local MCP configuration for that folder, so a compatible local agent client can talk to ZCP as the `zerops` MCP server. With `zcli vpn up <project-id>`, your laptop also joins the project's private network - the same network your services use.
 
-Local setup is newer than remote setup. Expect install details and generated project files to move between releases.
+:::warning Public preview
+Local setup is the part most likely to change. The binary install path, `.mcp.json` shape, and files written by `zcp init` are still settling between releases.
+:::
 
 Use this path when you already have a comfortable local setup - your editor, your shell, your dev server - and want a coding agent that can drive Zerops from the same machine. If you're evaluating ZCP for the first time, [remote setup](/zcp/setup/hosted-workspace) is a faster start.
 
@@ -42,7 +44,17 @@ In a terminal in your project's working directory:
 zcp init
 ```
 
-`zcp init` writes the local MCP configuration and agent instructions for this project. Re-running it may refresh generated config; after rerunning it, confirm `.mcp.json` still contains `ZCP_API_KEY` before launching the agent.
+`zcp init` writes the local MCP configuration and agent instructions for this project.
+
+Current generated artifacts:
+
+- `.mcp.json` - MCP configuration your local agent client reads to discover ZCP.
+- `CLAUDE.md` - agent instructions for operating ZCP in this project.
+- `.claude/settings.local.json` - Claude Code per-project settings when that client is used.
+- `~/.config/zerops/aliases` plus a shell-rc sourcing line - helper aliases for launching the agent from this project.
+- `.zcp/state/` - appears later, on the first workflow/adoption/session state write.
+
+Re-running `zcp init` may refresh generated config. `CLAUDE.md` preserves edits outside managed markers, but `.mcp.json` is rewritten from the token-less template. After rerunning it, confirm `.mcp.json` still contains `ZCP_API_KEY` before launching the agent.
 
 ## Configure `zcp` as the local MCP server
 

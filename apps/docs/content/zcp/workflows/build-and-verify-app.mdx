@@ -7,6 +7,8 @@ After the target runtime and dependencies are known, the agent can change code a
 
 A ZCP task is done only when the target runtime was deployed, platform reachability passed, the requested behavior was verified against the real endpoint or UI, and the agent reported the working URL or a concrete blocker.
 
+Localhost is not delivery. A local dev server can speed up implementation, but the completion proof comes from the Zerops runtime or the linked deploy target.
+
 ## What the agent does
 
 ZCP treats deploy as diagnostics and verification as the completion gate. The user does not have to script this sequence; it is the expected path behind an app prompt.
@@ -29,6 +31,16 @@ If the agent starts writing files before it knows the runtime scope, treat that 
 ## Deploy
 
 The first deploy uses the direct ZCP deploy path. Delivery choices such as git-push or external handoff apply after a verified deploy exists.
+
+A direct deploy waits for the Zerops build/deploy process to finish and for the runtime to be ready enough to verify. Git-push delivery is different: the push returns first, then the agent observes the build integration or events that follow and verifies afterward. See [Choose how finished work ships](/zcp/workflows/delivery-handoff).
+
+Build and runtime evidence are separate:
+
+- Build runs in a temporary build container. Build logs explain compile errors, missing packages, lock-file problems, and failed build commands.
+- Runtime logs explain start crashes, port binding, request-time 500s, missing env vars, and app-level failures.
+- Events show deploy/build transitions, service lifecycle, scaling, public access, and failed process reasons.
+
+Remote setup can deploy multiple hosted runtime services in parallel when the task spans them. Local setup deploys from your working directory to the linked runtime target one service at a time.
 
 Deploy failures point to different evidence:
 
@@ -54,7 +66,15 @@ Both layers must pass before the agent reports completion.
 
 The agent should name the failure point in plain language, read fresh logs/events/check output, fix the indicated cause, and redeploy. A repeated retry with no new evidence is not progress.
 
-Stop and ask for a decision when scope is ambiguous, credentials are missing, destructive recovery is needed, or several evidence-based retries hit the same failure.
+Use this cadence as the expected shape:
+
+| Attempt | What should change |
+|---|---|
+| 1-2 | Diagnose from the named logs/events/check output and fix the targeted issue. |
+| 3-4 | Re-check `zerops.yaml`, env vars, `deployFiles`, build commands, start command, and health/public route assumptions. |
+| 5 | Stop and ask. Five attempts without progress means the loop needs a missing decision, credential, or human diagnosis. |
+
+Stop sooner when scope is ambiguous, credentials are missing, destructive recovery is needed, or several evidence-based retries hit the same failure.
 
 ## Review and take over
 
