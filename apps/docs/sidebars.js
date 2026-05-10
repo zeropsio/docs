@@ -613,7 +613,7 @@ module.exports = {
         },
         {
           type: 'category',
-          label: 'Choose remote or local setup',
+          label: 'Remote or local setup',
           link: {
             type: 'doc',
             id: 'zcp/setup/choose-workspace',
