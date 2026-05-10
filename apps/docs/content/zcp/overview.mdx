@@ -1,21 +1,21 @@
 ---
 title: 'Zerops Control Plane for coding agents'
-description: 'Why ZCP changes how a coding agent works with a Zerops project, and what you can leave out of the prompt.'
+description: 'Why ZCP changes how a coding agent works with Zerops, and what you can leave out of the prompt.'
 ---
 
 import Image from '/src/components/Image';
 
-ZCP is a project-scoped control plane for AI coding agents over one Zerops project. It gives the agent the current truth about that project, project-scoped tools for operating it, and rules for deciding what should happen next and when the work is done.
+ZCP is the project-scoped control plane for coding-agent work on Zerops. Zerops gives developers production-shaped infrastructure from the start: runtimes, managed services, private networking, env references, the deploy pipeline, logs, and public routes. ZCP gives the agent that same operating surface in a development or staging project, so its output can be verified on real infrastructure before production promotion.
 
-The practical effect is that the agent can work from the project's real state instead of a guessed checklist. It can identify the right app runtime and managed services, make Zerops changes through project-scoped operations, read evidence when something fails, and finish with proof or a concrete blocker.
+A ZCP-backed task should end in one of two states: proof or a blocker. Proof means a deployed runtime plus the URL, endpoint response, UI state, worker result, or stored data that shows the requested behavior works. A blocker means the agent read the relevant Zerops evidence and names the missing credential, decision, unsupported fit, or repeated failure.
 
-That changes the job you give the agent. You provide the product intent, technical constraints, and quality bar. ZCP provides the platform reality: what exists, where code runs, which dependencies are available, what was deployed, what passed verification, and what the next evidence-backed step should be.
+Your prompt can stay about the product. Name the stack, runtime layout, acceptance criteria, delivery path, external credentials, or risky approval only when those decisions matter.
 
 ## What ZCP gives the agent
 
-**Project truth.** Services, app runtime layout, managed dependencies, env-var keys and references, logs, events, deploy history, verification state, and current work state.
+**Current state.** Services, app runtime layout, managed dependencies, env-var keys and references, logs, events, deploy history, verification state, and current work state.
 
-**Zerops control.** Project-scoped operations for discovering services, changing env vars, managing runtimes, deploying, verifying, scaling, public access, and delivery setup.
+**Zerops operations.** Tools for discovering services, changing env vars, managing runtimes, deploying, verifying, scaling, public access, and delivery setup.
 
 **Workflow.** ZCP combines two work loops: infrastructure for using existing Zerops services or creating missing ones, and development for code, `zerops.yaml`, deploy, verification, and delivery choice. The goal is to keep Zerops work aligned with platform and development best practices while staying behind the product task, not becoming another checklist.
 
@@ -28,16 +28,16 @@ Without ZCP, an app prompt often turns into an operations runbook. With ZCP, you
 - the service map, runtime target, dev/stage state, or managed-service inventory,
 - database credentials, private hostnames, env-var references, or generated connection strings,
 - build logs, runtime logs, event timelines, or a guess about why the last deploy failed,
-- a deploy/verify/recovery script for every task; ZCP treats proof or a concrete blocker as part of completion,
+- a deploy/verify/recovery script for every task; ZCP treats proof or a blocker as part of completion,
 - a recap after the chat loses context; the agent can read current ZCP status.
 
 **You still own the decisions that need human judgment:** product intent, technology constraints, acceptance criteria, external credentials, repository policy, and approval for destructive actions.
 
 ## Where ZCP runs
 
-The **same `zcp` binary** runs in both setups. In [remote setup](/zcp/setup/hosted-workspace), Zerops packages it inside a `zcp@1` service in the project. In [local setup](/zcp/setup/local-agent-bridge), you install the binary on your machine and connect your own editor or CLI agent to the project. The mental model is the same: one project, live state, scoped operations, deploy/verify evidence. The filesystem, network path, deploy source, and safety profile differ.
+The **same `zcp` binary** runs in both setups. In [remote setup](/zcp/setup/hosted-workspace), Zerops packages it as a `zcp@1` service with Browser VS Code and bundled agent wiring. In [local setup](/zcp/setup/local-agent-bridge), you install the binary on your machine and connect your own editor or CLI agent. The model is the same: live state, bounded operations, deploy/verify evidence. The workspace, network access, deploy source, and safety profile differ.
 
-To start using ZCP, choose one path: add remote setup to a Zerops project, or initialize local setup beside your editor or CLI agent. The [Quickstart](/zcp/quickstart) uses remote setup because it needs no local install.
+To start using ZCP, choose a setup: add remote setup in Zerops, or initialize local setup beside your editor or CLI agent. The [Quickstart](/zcp/quickstart) uses remote setup because it needs no local install.
 
 <figure style={{ textAlign: 'center', margin: '1.5rem 0' }}>
   <Image
@@ -45,30 +45,30 @@ To start using ZCP, choose one path: add remote setup to a Zerops project, or in
     darkImage="/img/zcp/remote-setup-claude-code.jpg"
     alt="Remote setup with the zcp service in Zerops and Claude Code running in browser VS Code"
     style={{ width: '95%', height: 'auto' }}
-    caption="Remote setup keeps the ZCP service, browser workspace, and bundled agent inside the Zerops project."
+    caption="Remote setup keeps the ZCP service, browser workspace, and bundled agent inside Zerops."
   />
 </figure>
 
 ## Your agent, credentials, and workspace
 
-**Agent account.** Remote setup can include a bundled agent CLI, currently Claude Code, already configured to use ZCP. Zerops wires the agent to the project; it does not provide or own your model account. You authenticate the agent with your own subscription login or API credentials.
+**Agent account.** Remote setup can include a bundled agent CLI, currently Claude Code, already configured to use ZCP. Zerops wires the agent to the control plane; it does not provide or own your model account. You authenticate the agent with your own subscription login or API credentials.
 
-**Zerops token.** ZCP itself connects to Zerops through a project-scoped Zerops token. In remote setup, Zerops injects that token into the `zcp@1` service. In local setup, you provide a project-scoped token when you initialize ZCP beside your editor or CLI agent. Token details live in [Tokens and credentials](/zcp/security/tokens-and-project-access).
+**Zerops token.** ZCP connects through `ZCP_API_KEY`, a Zerops token limited to one project. Remote setup gets it from the platform; local setup reads it from your `.mcp.json`. Token details live in [Tokens and credentials](/zcp/security/tokens-and-project-access).
 
-**Workspace freedom.** The `zcp@1` service is still a normal project service. You can install another agent CLI, add private MCP servers or helper tools, edit `CLAUDE.md`, add team dotfiles, and adapt the workspace around the bundled setup. ZCP is the project control plane available to the agent; it is not a closed agent product. Details live in [Use remote workspace](/zcp/setup/hosted-workspace#make-customization-persistent).
+**Workspace freedom.** The `zcp@1` service is still a normal Zerops service. You can install another agent CLI, add private MCP servers or helper tools, edit `CLAUDE.md`, add team dotfiles, and adapt the workspace around the bundled setup. ZCP is not a closed agent product. Details live in [What remote workspace gives you](/zcp/setup/hosted-workspace#make-customization-persistent).
 
 :::caution Production boundary
-Use ZCP in development or staging projects. Production should stay in a separate Zerops project and receive promoted work through your CI or release process; see [Production boundary](/zcp/security/production-policy).
+Use ZCP for development or staging work. Production should stay in a separate Zerops project and receive promoted work through your CI or release process; see [Production boundary](/zcp/security/production-policy).
 :::
 
 ## Start here
 
-First-read path:
+First-read pages:
 
 | If you want to                            | Read                                                     |
 | ----------------------------------------- | -------------------------------------------------------- |
 | Try the guided hands-on path              | [Quickstart](/zcp/quickstart)                            |
-| Understand what happens behind the prompt | [How ZCP works](/zcp/concept/how-it-works)               |
+| Understand the agent operating loop      | [How ZCP works](/zcp/concept/how-it-works)               |
 | Compare remote and local setup            | [Remote or local ZCP setup](/zcp/setup/choose-workspace) |
 | Start building after setup                | [Build with ZCP](/zcp/workflows/build-with-zcp)          |
 
@@ -76,10 +76,10 @@ Specific tasks and reference:
 
 | If you want to                           | Read                                                                        |
 | ---------------------------------------- | --------------------------------------------------------------------------- |
-| Use remote workspace in a project        | [Use remote workspace](/zcp/setup/hosted-workspace)                         |
-| Use your local editor or CLI agent       | [Set up local ZCP](/zcp/setup/local-agent-bridge)                           |
+| Understand remote workspace              | [What remote workspace gives you](/zcp/setup/hosted-workspace)              |
+| Use your local editor or CLI agent       | [How to run ZCP on your machine](/zcp/setup/local-agent-bridge)             |
 | Decide how finished work ships           | [Build with ZCP](/zcp/workflows/build-with-zcp#choose-delivery-after-proof) |
-| Understand tokens and project boundaries | [Trust model](/zcp/security/trust-model)                                    |
+| Understand token access and boundaries   | [Trust model](/zcp/security/trust-model)                                    |
 | Understand why ZCP exists                | [ZCP for coding agents](/features/coding-agents)                            |
 | Look up exact workflow terms             | [Workflow terms](/zcp/reference/agent-workflow)                             |
 | Diagnose a stuck session                 | [Troubleshooting](/zcp/reference/troubleshooting)                           |

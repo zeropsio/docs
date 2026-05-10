@@ -1,9 +1,9 @@
 ---
 title: 'Workflow terms'
-description: 'Precise ZCP workflow terms: session layers, service setup routes, develop flow, runtime layouts, delivery modes, failure categories, and completion evidence.'
+description: 'Precise ZCP terms for setup routes, develop flow, runtime layouts, delivery modes, failure categories, and completion evidence.'
 ---
 
-Exact vocabulary for ZCP workflows. Day-to-day prompts should describe outcomes; reference, audits, policies, and handoffs can use these names when precision matters.
+Exact vocabulary for ZCP reference, audits, policies, and handoffs. Day-to-day prompts should describe outcomes.
 
 ## Session layers
 
@@ -19,7 +19,7 @@ The `zcp` service is the control surface, not the app runtime.
 
 ## Service setup routes
 
-Before app code work starts, ZCP reads project state and chooses a setup route. The route is an implementation detail in first-read docs, but it is useful in reference and audits.
+Before app code work starts, ZCP reads live state and chooses a setup route. The route is an implementation detail in first-read docs, but it is useful in reference and audits.
 
 ```mermaid
 flowchart TD
@@ -44,7 +44,7 @@ flowchart TD
 | --------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
 | `adopt`   | Runtime services already exist, including recipe-created projects.                  | Recreating services that exist, or targeting `zcp` as the app.             |
 | `recipe`  | The project is empty or only has ZCP, and the request matches a known stack recipe. | Deploying an unchanged starter as if it were the requested product.        |
-| `classic` | The project is empty and needs a custom service plan.                               | Writing app code before service ownership and runtime scope are known.     |
+| `classic` | The project is empty and needs a custom service plan.                               | Writing app code before service ownership and runtime target are known.    |
 | `resume`  | A previous setup was interrupted.                                                   | Starting from scratch without acknowledging live services and saved state. |
 
 Service setup stops when app runtimes and managed dependencies are known. App code, `zerops.yaml`, and the first deploy belong to the develop flow.
@@ -55,7 +55,7 @@ The develop loop is the main ZCP work cycle. It closes only when reachability an
 
 ```mermaid
 flowchart TD
-  scope["1. Name runtime scope"]
+  scope["1. Name runtime target"]
   change["2. Change code/config"]
   deploy["3. Deploy in-scope runtime"]
   reach{"4. Runtime reachability<br/>passes?"}
@@ -72,9 +72,9 @@ flowchart TD
   fix --> blocker
 ```
 
-1. **Name runtime scope.** State which runtime is in scope (`appdev`, `appstage`, `app`, or linked local target). In dev+stage projects, dev work does not imply stage unless requested.
+1. **Name runtime target.** State which runtime is in scope (`appdev`, `appstage`, `app`, or linked local target). In dev+stage projects, dev work does not imply stage unless requested.
 2. **Change code/config.** Edit app files, `zerops.yaml`, env references, migrations, seeds, or framework config.
-3. **Deploy directly first.** The first verified runtime deploy uses the direct ZCP deploy path. Delivery setup is applied after a verified running result exists.
+3. **Deploy directly first.** The first verified runtime deploy goes through ZCP directly. Delivery setup is applied after a verified running result exists.
 4. **Verify runtime reachability.** Service status, recent error logs, and HTTP probe for eligible runtime services.
 5. **Verify requested behavior.** Endpoint body, UI state, job result, persisted data, or another check tied to the user request.
 6. **Fix from evidence.** Read classification, logs, events, and check output. Repeating the same deploy without new evidence is not progress.
@@ -93,7 +93,7 @@ Runtime layout describes which app runtime services ZCP should use. Zerops servi
 | `local-stage` | Local source directory linked to one Zerops runtime for deploys.                               | local directory + `appstage` |
 | `local-only`  | Local source directory with no linked deploy target yet.                                       | local directory              |
 
-The stage hostname is supplied by project state. ZCP should not invent it from the dev hostname.
+The stage hostname comes from live state. ZCP should not invent it from the dev hostname.
 
 ## Delivery modes
 
@@ -114,7 +114,7 @@ Git-push capability, delivery mode, and build integration are separate. A projec
 | `build`      | Build phase failed.                                                   | Build logs and build commands.                         |
 | `start`      | Build passed, runtime failed to start or crashed.                     | Prepare/runtime logs and start command.                |
 | `verify`     | Runtime exists but reachability or behavior failed.                   | Failing check detail and runtime logs at request time. |
-| `network`    | Transport, DNS, VPN, SSH, or service-to-service reach failed.         | Transport error and network path.                      |
+| `network`    | Transport, DNS, VPN, SSH, or service-to-service reach failed.         | Transport error and failed network access.             |
 | `config`     | `zerops.yaml`, env vars, setup block, or service settings mismatch.   | Structured rejection detail and config files.          |
 | `credential` | Zerops, git, SSH, managed-service, or external API credential failed. | The named credential surface.                          |
 | `other`      | No known category matched.                                            | Raw event/log evidence; stop if repeated.              |
@@ -126,7 +126,7 @@ Categorization is what turns retries into evidence-driven fixes. Recovery moves 
 A completed app task can answer:
 
 - which services were used or created,
-- which runtime scope changed,
+- which runtime target changed,
 - which deploy passed,
 - which reachability check passed,
 - which user-requested behavior passed,
@@ -144,7 +144,7 @@ A green build with a broken route is not completion. A clear blocker is acceptab
 - Managed services are dependencies, not deploy targets.
 - Stage is explicit in `standard` projects; dev changes do not silently promote.
 - Runtime health and requested behavior are separate verification gates.
-- Stop on repeated failure without new evidence, missing credentials, ambiguous runtime scope, or destructive recovery.
+- Stop on repeated failure without new evidence, missing credentials, ambiguous runtime target, or destructive recovery.
 
 ## Auditing a session
 
@@ -152,7 +152,7 @@ A session is well-shaped if platform evidence and the agent report answer:
 
 | Question                                        | Evidence                                                                  |
 | ----------------------------------------------- | ------------------------------------------------------------------------- |
-| Which setup route and runtime layout were used? | ZCP status, service metadata, project services.                           |
+| Which setup route and runtime layout were used? | ZCP status, service metadata, service list.                               |
 | Where did service setup end and app work begin? | Work-session state, deploy history, file changes.                         |
 | Which runtime was deployed and verified?        | Service events, deploy result, verify output.                             |
 | What behavior proved success?                   | Endpoint/UI/job/data proof in the final report.                           |

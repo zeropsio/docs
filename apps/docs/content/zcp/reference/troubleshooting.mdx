@@ -1,15 +1,15 @@
 ---
 title: 'Troubleshooting'
-description: 'Recover ZCP sessions by reading current state, failure category, logs, events, token state, VPN state, and local setup artifacts.'
+description: 'Recover ZCP sessions from current state, failure category, logs, events, tokens, VPN, and local setup artifacts.'
 ---
 
-Start recovery from current project state, not from chat memory.
+Start recovery from current state, not from chat memory.
 
 ```text
-Read ZCP status and tell me where this project stands before changing anything.
+Read ZCP status and tell me where things stand before changing anything.
 ```
 
-That prompt fits confused sessions, interrupted browser tabs or CLI sessions, repeated deploy loops, and manual takeovers. ZCP can rebuild the project picture from live services, recent deploys, logs, events, and saved work-session state.
+That prompt fits confused sessions, interrupted browser tabs or CLI sessions, repeated deploy loops, and manual takeovers. ZCP can rebuild the picture from live services, recent deploys, logs, events, and saved work state.
 
 ## Start from the failure category
 
@@ -20,7 +20,7 @@ When a deploy or verify step fails, ZCP should surface a category with the likel
 | `build`      | Build failed before runtime start.                              | Build logs and `zerops.yaml` build steps.                           | Fix build commands, dependency manifests, lock files, deploy files, or build resources. Runtime logs will not explain this failure. |
 | `start`      | Build passed, runtime failed to start or crashed.               | Prepare logs or runtime logs, whichever the failure names.          | Check `run.start`, ports, env references, `prepareCommands`, and whether the process binds `0.0.0.0` rather than `127.0.0.1`.       |
 | `verify`     | Runtime exists, but reachability or requested behavior failed.  | The failing check, HTTP response, and runtime logs at request time. | Treat it as app behavior or route recovery, not deploy success.                                                                     |
-| `network`    | Transport, DNS, VPN, SSH, or service-to-service reach failed.   | The transport error and the named network path.                     | Check VPN for local setup, service status for remote setup, SSH transfer state, DNS/subdomain readiness, or platform timeout.       |
+| `network`    | Transport, DNS, VPN, SSH, or service-to-service reach failed.   | The transport error and named network route.                        | Check VPN for local setup, service status for remote setup, SSH transfer state, DNS/subdomain readiness, or platform timeout.       |
 | `config`     | `zerops.yaml`, setup, env vars, or service settings mismatch.   | Structured rejection detail, field path, or API metadata.           | Fix the named setup block, env reference, `deployFiles`, service type, or prerequisite.                                             |
 | `credential` | Zerops, git, SSH, managed-service, or external API auth failed. | The credential surface named in the error.                          | Replace that credential only: `ZCP_API_KEY`, `GIT_TOKEN`, local git auth, `ZEROPS_TOKEN`, SSH key, or app secret.                   |
 | `other`      | No known category matched.                                      | Raw reason, service events, and logs for the named phase.           | Stop if the same unknown reason repeats; report the raw reason and recent evidence.                                                 |
@@ -64,24 +64,24 @@ Token problems usually happen at startup. The fix is to replace the token on the
 
 | Symptom                                                        | Likely cause                                | Next move                                                                                       |
 | -------------------------------------------------------------- | ------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `Token accesses N projects; use project-scoped token`          | Multi-project or account-wide token.        | Generate a token scoped to exactly one project and replace `ZCP_API_KEY`.                       |
-| `Token has no project access`                                  | Token authenticates but reaches no project. | Grant project access or generate a new project-scoped token.                                    |
+| `Token accesses N projects; use project-scoped token`          | Multi-project or account-wide token.        | Generate a single-project token and replace `ZCP_API_KEY`.                                      |
+| `Token has no project access`                                  | Token authenticates but reaches no project. | Grant project access or generate a new single-project token.                                    |
 | `No authentication found: set ZCP_API_KEY or log in with zcli` | No token reached ZCP.                       | Add `ZCP_API_KEY` under `.mcp.json` `env` for local setup, or check remote service env.         |
-| API replies with 401 or `AUTH_TOKEN_EXPIRED`                   | Token expired or was revoked.               | Generate a new project-scoped token, replace it, restart the agent.                             |
+| API replies with 401 or `AUTH_TOKEN_EXPIRED`                   | Token expired or was revoked.               | Generate a new single-project token, replace it, restart the agent.                             |
 | GitHub Actions deploy fails on auth                            | `ZEROPS_TOKEN` missing/wrong.               | Set a Zerops API token as the repository secret named `ZEROPS_TOKEN`. It is not a GitHub token. |
 
 Full credential model: [Tokens and credentials](/zcp/security/tokens-and-project-access).
 
 ## Local setup symptoms
 
-These apply to local setup. Remote setup is already on the project-private network and does not need VPN from your laptop.
+These apply to local setup. Remote setup is already on the private network and does not need VPN from your laptop.
 
 | Symptom                                                               | Likely cause                                                  | Next move                                                                                    |
 | --------------------------------------------------------------------- | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
 | Local app cannot reach `db`, `redis`, `cache`, or storage hostname    | VPN is down or dropped after sleep/network change.            | Run `zcli vpn up <project-id>` again.                                                        |
-| `no route to host` or connection refused for managed-service hostname | Same network path issue.                                      | Bring VPN up, then retry. If network works, regenerate `.env`.                               |
-| Local app reads stale project credentials                             | `.env` is a snapshot.                                         | Ask ZCP to regenerate the `.env` after project env changes.                                  |
-| Re-running `zcp init` made ZCP disappear from the agent               | `.mcp.json` was rewritten without `ZCP_API_KEY`.              | Re-add the `env` block and restart the agent from the project root.                          |
+| `no route to host` or connection refused for managed-service hostname | Same network access issue.                                    | Bring VPN up, then retry. If network works, regenerate `.env`.                               |
+| Local app reads stale credentials                                     | `.env` is a snapshot.                                         | Ask ZCP to regenerate the `.env` after env changes.                                          |
+| Re-running `zcp init` made ZCP disappear from the agent               | `.mcp.json` was rewritten without `ZCP_API_KEY`.              | Re-add the `env` block and restart the agent from the app directory.                         |
 | Agent does not list the `zerops` MCP server                           | Agent launched from the wrong directory or config not loaded. | Quit and relaunch from the directory containing `.mcp.json`.                                 |
 | `zcp` is not found after install                                      | Install path is not on `PATH`.                                | Add `~/.local/bin` or the install target to your shell `PATH`, then restart the shell/agent. |
 
@@ -108,7 +108,7 @@ For manual takeover, read evidence in this order:
 
 Stop the loop when the agent cannot make progress with new evidence, needs a missing credential, is about to delete or replace a service, or the target runtime/stage is ambiguous.
 
-A repeated retry with the same evidence is not recovery. Ask the agent for the category, evidence read, fixes attempted, and the next human decision.
+A repeated retry with the same evidence is not recovery. Ask the agent for the category, evidence read, fixes attempted, and next human decision.
 
 Before destructive recovery, read service-scoped events, logs, deploy/verify result, and git history when delivery uses git-push.
 
@@ -117,4 +117,4 @@ Before destructive recovery, read service-scoped events, logs, deploy/verify res
 - [Build with ZCP](/zcp/workflows/build-with-zcp)
 - [Workflow terms](/zcp/reference/agent-workflow)
 - [Tokens and credentials](/zcp/security/tokens-and-project-access)
-- [Set up local ZCP](/zcp/setup/local-agent-bridge)
+- [How to run ZCP on your machine](/zcp/setup/local-agent-bridge)

@@ -7,6 +7,8 @@ You can develop on Zerops without leaving your laptop, fully inside Zerops, or a
 
 This is also what narrows the gap between development and production. Development and staging can use the same Zerops-managed service types, networking model, and `zerops.yaml` patterns production uses. Production should still live in a separate project with separate credentials, access rules, and resource policies.
 
+The same substrate works for humans and coding agents. A local agent inherits your laptop's VPN reach; an agent inside remote setup inherits the project's private network; an editor over SSH inherits the service or workspace it connects to. ZCP adds project operations and workflow evidence on top of that access, but local and remote development do not require ZCP.
+
 :::note
 Remote setup is a `zcp@1` service you can add to a development or staging project. It can provide a Linux dev container, optional Cloud IDE, and optional **Include Coding Agent** wiring. The paths below can use that service, connect directly to runtime services, or stay fully local over VPN; local development with `zcli vpn up` does not require ZCP at all.
 :::
@@ -39,7 +41,7 @@ What you get on your laptop: every service in the project addressable by hostnam
 
 What you don't have to do: add remote setup, run `zcli push`, learn a new editor, change your dev loop. If you're used to running `npm run dev` against a local Postgres, run it against `db:5432` instead — same connection string format, same SQL, same managed service type as stage or production.
 
-This path is also where coding agents running on your laptop fit. Without ZCP, a local agent client inherits the VPN's access, so the agent can hit `db:5432` and SSH into containers the same way you can. To let the agent operate the project - discover, deploy, verify, read logs, and manage delivery handoff - set up [local ZCP](/zcp/setup/local-agent-bridge).
+This path is also where coding agents running on your laptop fit. Without ZCP, a local agent client inherits the VPN's access, so the agent can hit `db:5432` and SSH into containers the same way you can. To let the agent operate the project - discover, deploy, verify, read logs, and manage delivery handoff - add [ZCP on your machine](/zcp/setup/local-agent-bridge).
 
 **Source control.** Use git on your laptop the way you always have. Commits, pushes, SSH agent against GitHub, your existing credentials — nothing about Zerops sits between you and the remote.
 
@@ -51,7 +53,7 @@ See the [VPN reference guide](/references/networking/vpn).
 
 **Best for:** zero local setup, working from a machine that isn't yours, or wanting a pristine environment that doesn't touch your laptop.
 
-When you add remote setup (a `zcp@1` service) to a development or staging project - see [Use remote workspace](/zcp/setup/hosted-workspace) - you get a project-contained workspace with `zcp`, private-network access, optional Browser VS Code, and optional bundled agent wiring.
+When you add remote setup (a `zcp@1` service) to a development or staging project - see [What remote workspace gives you](/zcp/setup/hosted-workspace) - you get a project-contained workspace with `zcp`, private-network access, optional Browser VS Code, and optional bundled agent wiring.
 
 Remote setup can also mount runtime service files into the workspace, so you can inspect or edit code that runs in another container without moving it to your laptop. Details live in [Runtime file access](/zcp/setup/hosted-workspace#runtime-file-access).
 
@@ -115,7 +117,7 @@ The development environments above don't approximate production by inventing a d
 
 This is what makes the "but it works on my machine" failure mode hard to reach on Zerops. Your dev container's Postgres is the same managed service type production uses. Your queue is the same NATS or Kafka. Your storage is the same S3-compatible service. When code works in dev and stage, you've already tested it against the kind of infrastructure it'll meet in production. The remaining differences are scale, credentials, access policy, and data.
 
-This applies whether the developer is human or an agent — see [ZCP for Coding Agents](/features/coding-agents) for the agent case.
+This applies whether the developer is human or an agent. ZCP is the agent-facing control plane on top of the same project substrate; see [ZCP for Coding Agents](/features/coding-agents) for that case.
 
 ## How this differs from cloud IDEs
 
@@ -133,6 +135,6 @@ Remote setup is just a Zerops service. It's a container running the `zcp@1` Ubun
 - SSH access to services → [SSH reference](/references/networking/ssh)
 - Build and deploy from any of these environments → [Prepare, Build, Deploy Pipeline](/features/pipeline)
 - Coding agents on Zerops → [ZCP for Coding Agents](/features/coding-agents)
-- Use remote workspace → [Use remote workspace](/zcp/setup/hosted-workspace)
+- What remote workspace gives you → [What remote workspace gives you](/zcp/setup/hosted-workspace)
 - Remote or local ZCP setup → [Remote or local ZCP setup](/zcp/setup/choose-workspace)
 - Term reference → [ZCP Glossary](/zcp/glossary)

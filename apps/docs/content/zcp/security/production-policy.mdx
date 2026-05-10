@@ -1,11 +1,11 @@
 ---
 title: 'Production boundary'
-description: "Production lives in a separate Zerops project that doesn't have a zcp service; promotion runs via CI or a release pipeline."
+description: 'Keep ZCP in development or staging. Promote verified work to production through CI, release tooling, or a deliberate human action.'
 ---
 
-Rule: use ZCP in development or staging projects. Production should be a separate Zerops project without a `zcp` service, and production deploys should come from CI, a release pipeline, or a deliberate human `zcli` push using production-scoped credentials.
+Use ZCP in development or staging. Keep production in a separate Zerops project without a `zcp` service. Production deploys should come from CI, a release pipeline, or a deliberate human `zcli` push using production credentials.
 
-Zerops does not prevent you from adding a `zcp` service to production. The policy exists because ZCP gives a coding agent project-scoped operational access. In production, that is the wrong blast radius for normal app development.
+Zerops does not prevent you from adding `zcp` to production. The policy exists because ZCP gives a coding agent operational access. In production, that is the wrong blast radius for normal app development.
 
 ## Recommended project layout
 
@@ -14,11 +14,11 @@ Zerops does not prevent you from adding a `zcp` service to production. The polic
 | Development / staging project | `zcp` service, agent workspace, dev runtime, optional stage runtime, non-production managed services    | Agent plus humans              |
 | Production project            | Production runtimes, production managed services, production env values, production backups and scaling | CI/release process plus humans |
 
-The two projects use different Zerops tokens. A token scoped to the development project cannot reach production. A production token should not be placed in the development `zcp` service or a local `.mcp.json` used by the agent.
+The two projects use different Zerops tokens. A development token cannot reach production. A production token should not be placed in the development `zcp` service or a local `.mcp.json` used by the agent.
 
 ## Why production is a separate project
 
-- **The project is the security boundary.** ZCP binds to one project at startup. Keeping production in another project prevents a development agent from touching production by accident.
+- **The Zerops project is the security boundary.** ZCP binds to one project at startup. Keeping production separate prevents a development agent from touching it by accident.
 - **Secrets stay clean.** Production env values, database credentials, object-storage keys, and third-party secrets stay in the production project.
 - **Operational policies can differ.** Production often needs HA services, stronger backup retention, stricter scaling, alerts, and release approvals. Development can stay cheaper and more flexible.
 - **Audit trails stay readable.** Development experiments and agent retries do not mix with production deploy evidence.
@@ -27,27 +27,27 @@ This separation matters even when the same source repository deploys to both pro
 
 ## What stage proves
 
-Stage is the production-like rehearsal inside the development/staging project. It is where the agent proves the change before promotion leaves the ZCP project.
+Stage is the production-like rehearsal inside development or staging. It is where the agent proves the change before promotion leaves the ZCP loop.
 
 Use stage to match production where it matters:
 
 - same runtime family and version,
 - same managed service types,
 - same build and start command pattern,
-- same deploy path,
+- same deploy route,
 - behavior checks against a real running service.
 
-Stage is not production. It should use non-production data and non-production secrets. A green stage means the change is ready for the production release path, not that the agent should deploy to production itself.
+Stage is not production. It should use non-production data and non-production secrets. A green stage means the change is ready for release, not that the agent should deploy to production itself.
 
-## Promotion path
+## Promotion
 
-After stage verifies, ZCP's job is done for that change. Promotion to production happens outside the agent loop:
+After stage verifies, ZCP's job is done for that change. Promotion happens outside the agent loop:
 
 - CI deploys a merged commit or release tag to the production project.
 - A release pipeline runs `zcli push` with a production-scoped `ZEROPS_TOKEN`.
 - A human runs `zcli push` against the production project with production credentials.
 
-The agent can prepare the handoff by pushing code, summarizing verification evidence, and naming the runtime and URL it verified. It should not bridge the development project to the production project.
+The agent can prepare the handoff by pushing code, summarizing verification evidence, and naming the runtime and URL it verified. It should not bridge development to production.
 
 Broader CI/CD reference: [CI/CD with Zerops](/guides/ci-cd).
 
@@ -58,7 +58,7 @@ Broader CI/CD reference: [CI/CD with Zerops](/guides/ci-cd).
 | Development `ZCP_API_KEY`           | Never grants production access. Keep it scoped to the development/staging project.                       |
 | Production `ZEROPS_TOKEN`           | Store only in the production CI/release secret store. Do not place it in the development `zcp` service.  |
 | Agent subscription or model API key | May be used by the agent, but it does not grant Zerops production access by itself.                      |
-| Git credentials                     | May push source changes, but production deploy authority should still be controlled by the release path. |
+| Git credentials                     | May push source changes, but production deploy authority should stay with the release process.           |
 
 If a production deploy fails, investigate in the production project with production logs, events, backups, and CI output. Do not attach the development agent directly to production as a shortcut.
 
@@ -66,11 +66,11 @@ If a production deploy fails, investigate in the production project with product
 
 | Rule                                                              | Why it matters                                                                        |
 | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| Keep the production project without a `zcp` service               | Production should not host an agent workspace with project-scoped operational access. |
+| Keep the production project without a `zcp` service               | Production should not host an agent workspace with operational access.                |
 | Keep production tokens out of local `.mcp.json`                   | Local agents should operate development or staging projects, not production.          |
-| Keep production `ZEROPS_TOKEN` in the release secret store        | Development tooling should not deploy to production outside the release path.         |
+| Keep production `ZEROPS_TOKEN` in the release secret store        | Development tooling should not deploy to production outside the release process.      |
 | Treat stage proof as release evidence, not production approval    | Stage is the rehearsal; production approval is a separate release decision.           |
-| Promote through CI, release tooling, or a deliberate human action | Production execution should use the production credential boundary.                   |
+| Promote through CI, release tooling, or a deliberate human action | Production execution should use production credentials.                               |
 
 ## Acceptable agent involvement
 
@@ -79,15 +79,15 @@ The agent can still help before production promotion:
 - make the code change in development,
 - deploy and verify dev/stage runtimes,
 - produce the URL, endpoint result, or UI proof it verified,
-- push or prepare the code path your team uses for review,
+- push or prepare the branch your team uses for review,
 - summarize release notes and known blockers for the human or CI handoff.
 
-ZCP's involvement stops at the handoff. Production execution belongs to the production release path.
+ZCP's involvement stops at the handoff. Production execution belongs to the release process.
 
 ## Next steps
 
-- [Trust model](/zcp/security/trust-model) - the project boundary that makes this policy enforceable.
-- [Tokens and credentials](/zcp/security/tokens-and-project-access) - project-scoped token handling.
-- [Remote or local ZCP setup](/zcp/setup/choose-workspace) - compare development setup paths.
+- [Trust model](/zcp/security/trust-model) - the boundary that makes this policy enforceable.
+- [Tokens and credentials](/zcp/security/tokens-and-project-access) - token handling.
+- [Remote or local ZCP setup](/zcp/setup/choose-workspace) - compare development setups.
 - [Build with ZCP](/zcp/workflows/build-with-zcp) - the dev/stage loop this policy assumes.
 - [Backup](/features/backup) - production recovery outside ZCP.

@@ -3,12 +3,12 @@ title: 'Remote or local ZCP setup'
 description: 'Where the ZCP workspace runs: inside Zerops or on your machine.'
 ---
 
-Remote setup is the default for most ZCP work. Use local setup when the agent specifically needs to run next to local files, local data, local tools, or a local-only agent client.
+Remote setup is the default for most ZCP work. Use local setup when the agent needs your local files, data, tools, editor, or a local-only agent client.
 
-Both paths use the same `zcp` binary and the same ZCP model: one Zerops project, live project state, project-scoped operations, and an agent that can finish with proof or a blocker. The choice is where the agent workspace lives.
+Both setups use the same `zcp` binary and the same model: live state, bounded operations, and a finish line of proof or a blocker. The choice is where the agent workspace lives.
 
 :::tip Recommended default
-**Remote setup** gives you a project-contained agent workspace with clean isolation inside the Zerops project, no local install, project-private networking, and a preconfigured Claude Code + browser VS Code environment when enabled.
+**Remote setup** gives you an agent workspace inside Zerops, no local install, private networking, and preconfigured Claude Code + Browser VS Code when enabled.
 :::
 
 ## The short version
@@ -17,65 +17,64 @@ Both paths use the same `zcp` binary and the same ZCP model: one Zerops project,
   <div className="zcp-choice-card">
     <h3>Remote setup</h3>
     <p>
-      The agent runs inside a <code>zcp@1</code> service in the Zerops project.
-      Use it when you want the agent workspace, project-private networking, and
-      broad shell permissions contained inside the project.
+      The agent runs inside a <code>zcp@1</code> service in Zerops. Use it when
+      you want the workspace, private networking, and broad shell permissions
+      contained away from your laptop.
     </p>
     <ul>
       <li>No local install.</li>
       <li>Claude Code and browser VS Code can be bundled.</li>
-      <li>Project-private services are reachable from the workspace.</li>
+      <li>Private services are reachable from the workspace.</li>
       <li>Desktop remote editors can connect when you prefer them.</li>
     </ul>
-    <a href="/zcp/setup/hosted-workspace">Use remote workspace →</a>
+    <a href="/zcp/setup/hosted-workspace">Remote workspace →</a>
   </div>
   <div className="zcp-choice-card">
     <h3>Local setup</h3>
     <p>
-      The agent runs from your machine. Use it when local files, local data,
-      your desktop editor, local git credentials, or a specific local agent
-      client should stay in charge.
+      The agent runs from your machine. Use it when files, data, desktop editor,
+      git credentials, or a specific local agent client should stay local.
     </p>
     <ul>
       <li>Install <code>zcp</code> locally.</li>
       <li>Run <code>zcp init</code> in the working directory.</li>
-      <li>Add a project-scoped token.</li>
+      <li>Add a Zerops token for one project.</li>
       <li>Use <code>zcli vpn up</code> for private service access.</li>
     </ul>
-    <a href="/zcp/setup/local-agent-bridge">Set up local ZCP →</a>
+    <a href="/zcp/setup/local-agent-bridge">Run ZCP locally →</a>
   </div>
 </div>
 
-Remote setup usually costs one extra workspace service. Local setup avoids that workspace service, but deploy targets and managed services still cost while running. For most teams, the decision should be about where the agent should safely and ergonomically work, not about the small workspace cost.
+Remote setup usually adds one small workspace service. Local setup avoids that service, but deploy targets and managed services still cost while running. For most teams, the real decision is where the agent should safely and ergonomically work.
 
 :::info Public preview
 Remote setup and local setup are both public preview. Local setup has more moving parts and may change faster: binary install path, `.mcp.json`, and `zcp init` artifacts are still settling between releases.
 :::
 
-## What changes between the paths
+## What changes between setups
 
 |                        | Remote setup                                                   | Local setup                                  |
 | ---------------------- | -------------------------------------------------------------- | -------------------------------------------- |
-| `zcp` process          | Runs in the Zerops project in a `zcp@1` service.               | Runs on your machine.                        |
-| Agent process          | Runs in the project workspace when bundled or installed there. | Runs in your local editor or CLI.            |
+| `zcp` process          | Runs in Zerops as a `zcp@1` service.                           | Runs on your machine.                        |
+| Agent process          | Runs in the remote workspace when bundled or installed there.  | Runs in your local editor or CLI.            |
 | Files the agent edits  | Workspace files and mounted runtime files.                     | Files on your machine.                       |
-| Private service access | Project-private network from inside Zerops.                    | Zerops VPN from your machine.                |
-| Token storage          | Platform-injected into the workspace service.                  | `.mcp.json` in the local project directory.  |
+| Private service access | Private Zerops network from the workspace.                     | Zerops VPN from your machine.                |
+| Token storage          | Platform-injected into the workspace service.                  | `.mcp.json` in the local app directory.      |
 | Git credentials        | Configured inside the workspace service.                       | Your local git credentials.                  |
-| Safety posture         | Agent shell permissions are contained in the project service.  | Agent shell permissions affect your machine. |
+| Safety posture         | Agent shell permissions are contained in the workspace service. | Agent shell permissions affect your machine. |
 
 ## Starting points
 
 Remote setup can start from:
 
 - **Recipe with AI Agent environment.** A guided path for a known stack. A recipe creates app services, managed services, and the `zcp@1` workspace together.
-- **New project with ZCP enabled.** Start from a blank or custom project and add ZCP during project creation.
-- **Existing development or staging project.** Add the `zcp` workspace next to services that already exist. Do not add ZCP to a production project; promote verified work through your release path instead.
+- **New Zerops setup with ZCP enabled.** Start from blank services or a custom stack and add ZCP during creation.
+- **Existing development or staging setup.** Add the `zcp` workspace next to services that already exist. Do not add ZCP to production; promote verified work through your release process instead.
 
 Local setup can start from:
 
 - **Empty local directory.** The agent creates the app structure from a product request and uses ZCP to select or create Zerops services.
-- **Existing project directory.** The app code, editor setup, local data, and git credentials already live on your machine.
+- **Existing app directory.** The app code, editor setup, local data, and git credentials already live on your machine.
 - **Recipe prepared for local setup.** The recipe creates the Zerops service baseline, while the agent and files stay local.
 
 ## Runtime layout is separate
@@ -89,28 +88,28 @@ The project can still use:
 - a single app runtime,
 - local files linked to a stage target.
 
-That choice belongs to normal app work: [Build with ZCP](/zcp/workflows/build-with-zcp#choose-the-runtime-layout).
+That choice belongs to app work: [Build with ZCP](/zcp/workflows/build-with-zcp#choose-the-runtime-layout).
 
-Stage is not production. Keep production in a separate Zerops project and promote work through your release path; see [Production boundary](/zcp/security/production-policy).
+Stage is not production. Keep production in a separate Zerops project and promote work through your release process; see [Production boundary](/zcp/security/production-policy).
 
 ## Switching later
 
-You can change setup path later without changing the ZCP project boundary.
+You can change setup later.
 
-- Start remote for evaluation, then move local when local files or tools should own the workflow.
-- Start local for a repo-first project, then add remote setup when you want a project-contained agent workspace.
-- Keep both paths only when your team understands which source tree is authoritative for deploys.
+- Start remote for evaluation, then move local when files or tools on your machine should own the workflow.
+- Start local for a repo-first app, then add remote setup when you want an agent workspace inside Zerops.
+- Keep both setups only when your team understands which source tree is authoritative for deploys.
 
 Before switching, make the handoff explicit:
 
 - Commit, push, or otherwise preserve the source tree that currently owns deploys.
-- Choose one deploy source for the next task: the remote workspace/mounted runtime files, or the local project directory.
+- Choose one deploy source for the next task: the remote workspace, mounted runtime files, or the local app directory.
 - Do not edit mounted runtime files and a local repo in parallel unless you have a merge plan.
 - Regenerate local `.env` snapshots after project env changes.
 - Relink the local deploy target if the runtime hostname changed.
 
 ## Next steps
 
-- [Use remote workspace](/zcp/setup/hosted-workspace)
-- [Set up local ZCP](/zcp/setup/local-agent-bridge)
+- [What remote workspace gives you](/zcp/setup/hosted-workspace)
+- [How to run ZCP on your machine](/zcp/setup/local-agent-bridge)
 - [Trust model](/zcp/security/trust-model)

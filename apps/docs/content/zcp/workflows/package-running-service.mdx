@@ -3,7 +3,7 @@ title: 'Package a running service'
 description: 'Use ZCP to turn a running Zerops service into a re-importable bundle.'
 ---
 
-Use packaging when a deployed runtime should become a reusable import bundle. This is an advanced handoff or reuse workflow, not the normal way to deploy the next app change.
+Use packaging when a deployed runtime should become a reusable import bundle. This is an advanced handoff or reuse task, not the normal way to deploy the next app change.
 
 Packaging takes a deployed runtime and produces two YAML files: a project [import file](/references/import) describing the services to provision, and a [`zerops.yaml`](/zerops-yaml/specification) describing how to build and run the runtime. The import file points back to the same source repo through `buildFromGit:`, so a fresh Zerops project can rebuild the app from git instead of carrying source code inside YAML.
 
@@ -17,7 +17,7 @@ Packaging is the right tool when:
 
 Packaging is **not** the right tool when:
 
-- You want the next app change deployed. For that, ask for the app result; direct deploy is the expected ZCP path behind the request.
+- You want the next app change deployed. For that, ask for the app result; direct deploy is the expected ZCP behavior behind the request.
 - You want to deploy the next change to an existing production project. Keep production in its own Zerops project and operate it through Zerops UI, the API, or CI.
 
 Packaging does not keep a long-running session. If interrupted, the agent reads live state and prepares the bundle again. You only need to decide when the runtime choice or env-var classification is ambiguous.
@@ -36,9 +36,9 @@ Use ZCP to package the appdev runtime so I can re-import this project into a fre
 
 The agent handles the packaging work; you only step in if it asks which runtime to package or how to classify a value.
 
-## Classify env vars (secrets, project-scoped values, public values)
+## Classify env vars
 
-Once the runtime is chosen, ZCP prepares a candidate bundle and pauses on the project's env vars. Each project env needs a bucket so the generator knows what to do with it:
+Once the runtime is chosen, ZCP prepares a candidate bundle and pauses on env vars. Each value needs a bucket so the generator knows what to do with it:
 
 | Bucket            | What it means                                                                                   | What ends up in the bundle                                                                                   |
 | ----------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
@@ -117,7 +117,7 @@ A few things worth noticing:
 - The runtime's `buildFromGit:` URL points back at the same repo the bundle lives in. The bundle is **self-referential**: re-importing creates a project that builds itself from git. Source code lives in git, not in YAML.
 - Managed dependencies (`db`, `redis`) appear as plain entries with no `buildFromGit:` so `${db_*}` and `${redis_*}` references in `zerops.yaml` resolve at re-import. See [environment variables](/guides/environment-variables).
 
-Packaging can be part of a handoff intent. The agent should produce the files, place them where the chosen delivery preference expects them, and commit or push when that delivery choice is configured. Packaging itself produces the bundle; repository changes still happen through the normal [delivery preference](/zcp/workflows/build-with-zcp#choose-delivery-after-proof).
+Packaging can be part of a handoff intent. The agent should produce the files, place them where the chosen delivery preference expects them, and commit or push when that delivery choice is configured. Packaging itself produces the bundle; repository changes still happen through normal [delivery preference](/zcp/workflows/build-with-zcp#choose-delivery-after-proof).
 
 ## What the bundle does not include
 
@@ -130,7 +130,7 @@ Packaging can be part of a handoff intent. The agent should produce the files, p
 
 ## Packaging checks
 
-1. **Packaging is not the delivery path by itself.** It produces the bundle. Commit and push happen through your chosen [delivery preference](/zcp/workflows/build-with-zcp#choose-delivery-after-proof).
+1. **Packaging is not delivery by itself.** It produces the bundle. Commit and push happen through your chosen [delivery preference](/zcp/workflows/build-with-zcp#choose-delivery-after-proof).
 2. **Managed-service data is not in the bundle.** Re-importing produces fresh empty managed services. Plan a separate restore step for any service with stateful data.
 3. **External secrets land as `REPLACE_ME`.** Re-importing a bundle without filling those in deploys services that fail at startup with credential errors.
 

@@ -3,9 +3,11 @@ title: ZCP for Coding Agents
 description: ZCP gives coding agents current project knowledge and bounded operations on one Zerops project — discover, deploy, verify, recover, and hand off.
 ---
 
-Coding agents need current project knowledge and a safe way to act on it. The hard part is rarely "write the function" — it's letting the agent connect product intent to infrastructure: services, env vars, logs, deploys, verification, and a path to production.
+Coding agents need current project knowledge and a safe way to act on it. The hard part is rarely "write the function" - it's letting the agent connect product intent to infrastructure: services, env vars, logs, deploys, verification, and a path to production.
 
 **Zerops Control Plane (ZCP)** gives a coding agent current project state and bounded operations on one Zerops project. You describe the app or change you want; ZCP lets the agent discover services, use existing infrastructure or create what is missing, wire the app to managed services, deploy through the standard pipeline, verify the real endpoint, inspect logs, and report a URL or blocker. You hold the product intent, constraints, approvals, and quality bar.
+
+The useful split is simple: **ZCP holds project reality; you hold intent.** The agent should not need you to paste a service map, env wiring plan, deploy log, or recovery checklist before it can do useful app work.
 
 :::caution Keep production in a separate project
 ZCP runs with a project-scoped token that grants operational rights inside that project. Put it in a development or staging project, not the project serving production traffic. That keeps agent-driven changes away from production unless your CI or release process promotes them. See [Production boundary](/zcp/security/production-policy).
@@ -15,7 +17,7 @@ ZCP runs with a project-scoped token that grants operational rights inside that 
 
 Developers using a coding agent on application work that needs real infrastructure. The developer stays focused on the product outcome, technology choices, acceptance criteria, and judgment. ZCP gives the agent the platform context and operations needed to use or create services, connect the app to infrastructure, deploy, verify, recover from failure, and report back.
 
-The **Include Coding Agent** option currently bundles Claude Code and wires it to ZCP. The agent account remains yours: authenticate it with your own subscription login or API credentials. Additional bundled agents are planned. Local setup can connect a compatible local agent client after `zcp init`.
+The **Include Coding Agent** option currently bundles Claude Code and wires it to ZCP. The agent account remains yours: authenticate it with your own subscription login or API credentials. Additional bundled agents are planned. Local setup can connect a compatible agent client running on your machine.
 
 ## What ZCP lets the agent do
 
@@ -38,11 +40,13 @@ Full workflow terms: [Workflow terms](/zcp/reference/agent-workflow).
 
 The `zcp` binary can run in a Zerops service or on your laptop. The user choice is remote setup or local setup.
 
-**Remote setup** runs ZCP inside a Zerops `zcp@1` service. Enable **Include Coding Agent** for the bundled agent CLI, and **Cloud IDE** for Browser VS Code. This is the recommended starting point when broad agent permissions can stay inside the project. [Use remote workspace](/zcp/setup/hosted-workspace)
+**Remote setup** runs ZCP inside a Zerops `zcp@1` service. Enable **Include Coding Agent** for the bundled agent CLI, and **Cloud IDE** for Browser VS Code. This is the recommended starting point when broad agent permissions can stay inside the project. [What remote workspace gives you](/zcp/setup/hosted-workspace)
 
-**Local setup** runs the `zcp` binary on your laptop after `zcp init`. The agent runs in your local editor or CLI; private service access uses `zcli vpn up`. Use it when local files, tools, data, or a local-only agent client should stay in charge. [Set up local ZCP](/zcp/setup/local-agent-bridge)
+**Local setup** runs ZCP on your laptop. The agent runs in your local editor or CLI; private service access uses Zerops VPN. Use it when local files, tools, data, or a local-only agent client should stay in charge. [How to run ZCP on your machine](/zcp/setup/local-agent-bridge)
 
 Either way, the agent gets the same project-scoped ZCP operations against the same project. Remote setup can package ZCP with an agent CLI and browser editor; local setup connects your own agent client to ZCP.
+
+ZCP is also MCP-native. Advanced integrations can call the same project operations directly without using the Claude Code workflow layer; in that case your client owns the policy and sequencing. See [Advanced operations](/zcp/reference/mcp-operations#zcp-as-direct-mcp-tools).
 
 Decision: [Remote or local ZCP setup](/zcp/setup/choose-workspace). First time? Try the [Quickstart](/zcp/quickstart) - no install needed. Broader local-dev story (humans, not just agents): [Local & Remote Development](/features/local-remote-development).
 
@@ -50,9 +54,9 @@ Decision: [Remote or local ZCP setup](/zcp/setup/choose-workspace). First time? 
 
 Remote setup starts with a `zcp@1` Zerops service. **Include Coding Agent** adds the currently supported bundled agent CLI, currently Claude Code, and preconfigures it to use ZCP. **Cloud IDE** adds Browser VS Code so you can supervise or take over from the dashboard.
 
-Without **Include Coding Agent**, there is no preconfigured agent waiting inside the service. Without **Cloud IDE**, there is no browser editor. Configure both when you provision the service if you want the first-run agent + IDE path. Details: [Use remote workspace](/zcp/setup/hosted-workspace#what-you-get).
+Without **Include Coding Agent**, there is no preconfigured agent waiting inside the service. Without **Cloud IDE**, there is no browser editor. Configure both when you provision the service if you want the first-run agent + IDE path. Details: [What remote workspace gives you](/zcp/setup/hosted-workspace#what-it-includes).
 
-Remote setup is still your workspace. You can install another agent CLI, add private MCP servers or helper processes, edit `CLAUDE.md` or other agent instruction files, and keep team tooling in the service. ZCP supplies the project-scoped control plane, operations, and workflow evidence; it does not lock the service to one agent or one set of tools.
+Remote setup is still your workspace. You can install another agent CLI, add private MCP servers or helper processes, keep team tooling in the service, or use ZCP from another MCP-capable client. ZCP supplies the project-scoped control plane, operations, and workflow evidence; it does not lock the service to one agent or one set of tools.
 
 ## Why transparent infrastructure works for agents
 

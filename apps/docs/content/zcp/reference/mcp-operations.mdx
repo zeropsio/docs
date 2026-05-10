@@ -1,9 +1,57 @@
 ---
 title: 'Advanced operations'
-description: 'Common ZCP operation names for app-building, debugging, and automation.'
+description: 'Use ZCP as direct MCP tools, understand generated state, and look up common operation names.'
 ---
 
-Most users never need operation names. They matter when you configure agent-client policy, debug an MCP integration, or automate ZCP directly. In normal app work, ask the agent for outcomes. Recipe-authoring and ZCP-internal maintenance operations are intentionally out of scope.
+Most users never need operation names. They matter when you configure agent-client policy, debug an MCP integration, or automate ZCP directly. For normal app work, ask the agent for outcomes. Recipe-authoring and ZCP-internal maintenance operations are intentionally out of scope.
+
+## ZCP as direct MCP tools
+
+ZCP is an MCP server. Workflow instructions are not required for every integration.
+
+Any MCP-capable client can connect to ZCP and call individual tools such as `zerops_discover`, `zerops_logs`, `zerops_events`, `zerops_deploy`, or `zerops_verify`. This is useful for custom agent clients, scripts, dashboards, policy-gated clients, or debugging sessions where you want one Zerops operation instead of a full ZCP-guided task.
+
+The higher-level ZCP behavior comes from generated agent instructions, especially `CLAUDE.md`. Those instructions tell Claude Code when to call `zerops_workflow`, how to discover services, how to treat deploy and verify evidence, and when a task is done. The MCP server exposes the tools; the generated instructions teach the agent the lifecycle. Nothing requires another MCP client to call `zerops_workflow` unless you add equivalent policy yourself.
+
+Using only the tools is valid. In that setup, your integration owns the sequencing: which services are in scope, when to deploy, what counts as verification, how to read logs or events, and when to stop. Tool-level gates still apply, including explicit service deletion approval and destructive import override acknowledgement.
+
+## Generated files
+
+`zcp init` and the remote ZCP workspace create a small amount of agent configuration around the MCP server.
+
+| File or directory | Created where | Purpose |
+| ----------------- | ------------- | ------- |
+| `CLAUDE.md` | Remote workspace or local project directory | Claude Code instruction surface. ZCP writes a managed block between `<!-- ZCP:BEGIN -->` and `<!-- ZCP:END -->`. User content outside that block is preserved. |
+| `.claude/settings.local.json` | Remote workspace or local project directory | Claude Code project settings and ZCP tool permissions for that directory. |
+| `.mcp.json` | Local project directory | Project-local MCP server config. It contains the local `zcp` command and the project-scoped `ZCP_API_KEY`; keep it out of git. |
+| `~/.claude.json` and SSH config | Remote ZCP workspace | Workspace-level Claude Code and SSH wiring used inside the Zerops-hosted workspace. |
+| `.zcp/state/` | Working directory where the MCP server runs | ZCP workflow state and service metadata for that project directory. |
+
+The managed `CLAUDE.md` block is refreshed by `zcp init` and by the MCP server when the block already exists. Put durable project instructions outside the ZCP markers. Edits inside the managed block are treated as generated content.
+
+## `.zcp/state`
+
+`.zcp/state/` is project-scoped state for workflow-aware ZCP use. It is not application source code and should not be committed.
+
+| Path | What it stores |
+| ---- | -------------- |
+| `.zcp/state/services/*.json` | Persistent service metadata: known runtime services, local/stage pairing, delivery preference, git-push setup, build integration, and first-deploy stamps. |
+| `.zcp/state/sessions/*.json` | Bootstrap, recipe, or packaging workflow sessions. |
+| `.zcp/state/work/{pid}.json` | The current agent-process work session: task intent, services in scope, recent deploy attempts, recent verify attempts, and close status. |
+| `.zcp/state/registry.json` | Session ownership and lookup data for active workflow state. |
+| `.zcp/state/locks/` | Local coordination locks for stateful operations. |
+
+ZCP does not use `.zcp/state/` as a stale copy of the Zerops project. Service status, logs, events, runtime files, env-var values, and current platform configuration are read from Zerops or from the local filesystem when tools run. Local `.env` files are generated separately and may contain secrets; `.zcp/state/` is metadata for ZCP's own coordination.
+
+Do not edit `.zcp/state/` by hand during normal work. Use ZCP tools to reset, resume, iterate, or reconfigure workflow state. Deleting it intentionally discards ZCP's local memory of services and delivery setup for that directory; the tools can rediscover live Zerops state, but delivery preferences and workflow history may need to be configured again.
+
+## Tool-only use
+
+If you do not want ZCP to guide Claude Code through workflows, keep the MCP connection and remove the ZCP-managed workflow block from `CLAUDE.md`, or keep your own policy outside the ZCP markers. You can also use a different MCP client that never reads that file.
+
+After that, direct MCP operations still work. The client can call `zerops_discover`, `zerops_logs`, `zerops_events`, `zerops_env`, `zerops_deploy`, `zerops_verify`, and the other tools directly. What you lose is the generated instruction layer that makes the agent plan around live state, use the workflow status, deploy with bounded retries, verify behavior, and report proof or a concrete blocker.
+
+This is a reasonable advanced setup when you are building your own integration or want narrow operational access. Be explicit about the policy you expect from the agent, and test the integration more carefully because ZCP is no longer steering the whole task lifecycle for you.
 
 ## Permission classes
 
@@ -19,7 +67,7 @@ Most users never need operation names. They matter when you configure agent-clie
 | ------------------ | ----------------------------------------------------------------------------- |
 | `zerops_discover`  | Read services, ports, env-var keys, and current state.                        |
 | `zerops_logs`      | Read runtime/build logs filtered by service, severity, time, or search.       |
-| `zerops_events`    | Read service-scoped project activity, deploys, builds, scaling, and failures. |
+| `zerops_events`    | Read service activity, deploys, builds, scaling, and failures.                |
 | `zerops_verify`    | Run service health, recent error log, and HTTP-readiness checks.              |
 | `zerops_knowledge` | Fetch ZCP guidance or platform knowledge for the current state.               |
 | `zerops_process`   | Check a known async process; cancel is a mutating action.                     |
@@ -47,13 +95,13 @@ Most users never need operation names. They matter when you configure agent-clie
 
 ## Remote and local differences
 
-| Area          | Remote setup                                        | Local setup                                                     |
-| ------------- | --------------------------------------------------- | --------------------------------------------------------------- |
-| Files         | Runtime files through SSHFS/project containers      | Local working directory                                         |
-| Deploy source | Project service or batch deploy inside Zerops       | Local `workingDir`                                              |
-| Dev server    | ZCP can run/inspect project-container dev processes | Your local tool owns the dev server                             |
-| Env bridge    | Project env is available in the project             | `.env` generation resolves project references for local app use |
-| Git           | Workspace-managed credentials                       | User's local git credentials                                    |
+| Area          | Remote setup                                     | Local setup                                                   |
+| ------------- | ------------------------------------------------ | ------------------------------------------------------------- |
+| Files         | Runtime files through SSHFS or remote containers | Local working directory                                      |
+| Deploy source | Remote service or batch deploy inside Zerops     | Local `workingDir`                                           |
+| Dev server    | ZCP can run or inspect remote dev processes      | Your local tool owns the dev server                          |
+| Env bridge    | Env vars are already available in Zerops         | `.env` generation resolves Zerops references for local use   |
+| Git           | Workspace-managed credentials                    | User's local git credentials                                  |
 
 ## Confirmation gates
 
