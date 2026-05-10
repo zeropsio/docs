@@ -1,55 +1,49 @@
 ---
 title: 'Set up local ZCP'
-description: 'Install the zcp binary, run zcp init in your project, and let a local coding agent operate one Zerops project.'
+description: 'Install the zcp binary, initialize a local project directory, and connect a local agent to one Zerops project.'
 ---
 
-Local setup runs the `zcp` binary on your machine and connects it to one project directory. Your local agent works next to files and data on your machine, your editor and terminal stay local, your git credentials stay local, and ZCP gives the agent project-scoped Zerops operations.
+Local setup runs ZCP on your machine.
 
-Use local setup when your normal local environment should stay in charge: a desktop editor, local files, local data, familiar terminal tooling, local git credentials, lower-latency feedback, or an agent client that is not covered by remote setup. It can also reduce the need to keep a remote dev runtime running during inner-loop development, although a Zerops runtime is still needed when the agent should deploy and verify on Zerops.
+Use it when the agent should work next to local files, local data, your desktop editor, your terminal tools, and your local git credentials. ZCP still scopes Zerops operations to one project, but the agent client itself runs as your local user. Your local agent permissions and filesystem allowlists matter.
 
-The tradeoff is local machine exposure. ZCP is still scoped to one Zerops project, but the agent client runs as your local user and can reach whatever your client permissions allow. If you are trying ZCP for the first time, [remote setup](/zcp/setup/hosted-workspace) is usually safer and faster.
+[Remote setup](/zcp/setup/hosted-workspace) is the safer default when you do not need local files or tools. Use local setup when the local workflow is the point.
 
 :::warning Public preview
-Local setup is the part most likely to change. The binary install path, `.mcp.json` shape, and files written by `zcp init` are still settling between releases.
+Local setup has more moving parts than remote setup and may change faster. The binary install path, `.mcp.json` shape, and files written by `zcp init` are still settling between releases.
 :::
 
-## What local setup changes
+## Choose a local starting point
 
-| Area              | Local setup behavior                                                                                                                                      |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ZCP process       | Runs on your machine as `zcp serve`, launched by your agent client from the project folder.                                                               |
-| Agent process     | Runs as your local user through your editor or CLI agent. ZCP stays project-scoped, but the agent client can reach whatever your local permissions allow. |
-| Source files      | The agent edits files on your machine. Deploys use your working directory as the source.                                                                  |
-| Local tooling     | Your normal terminal, framework CLI, editor runner, and local feedback loop stay in charge.                                                               |
-| Private network   | Your local app and shell reach project services through `zcli vpn up <project-id>`.                                                                       |
-| Project token     | You add a project-scoped `ZCP_API_KEY` to the local `.mcp.json` env block.                                                                                |
-| Agent credentials | Stay with your local agent client. ZCP does not see the agent subscription or model login.                                                                |
-| Git credentials   | Your local git CLI, SSH agent, or credential helper handles pushes.                                                                                       |
-| Cost profile      | No remote `zcp` workspace service. Deploy targets and managed services still cost when they run.                                                          |
+Pick the folder that should own app work:
 
-Security note: local ZCP cannot protect your laptop from the agent client. Set your client permissions, filesystem allowlists, and shell approval rules as you would for any local coding agent.
+- **Empty local directory.** Start with no app code yet. The agent can create the app shape and use ZCP to select or create Zerops services.
+- **Existing project directory.** Use this when app code, local data, editor setup, test fixtures, and git credentials already live on your machine.
+- **Recipe prepared for local setup.** Use a recipe to create the Zerops service baseline, then run the agent locally from the directory that should own source changes.
+
+After that choice, the mechanics are the same: install `zcp`, run `zcp init`, add a project-scoped token, start VPN when private service access is needed, and link a deploy target when the agent should deploy.
+
+## What local setup gives the agent
+
+- **Local files as source.** The agent edits the directory on your machine, and deploys use that working directory.
+- **Your editor and terminal.** Framework CLIs, test runners, local data, and local feedback stay under your normal tools.
+- **Your git credentials.** Pushes use your local git CLI, SSH agent, or credential helper.
+- **Project-scoped Zerops operations.** ZCP lets the agent discover services, generate env snapshots, deploy to linked runtimes, read logs, and verify the project.
+- **Private service access through VPN.** Your local app and shell reach project services through `zcli vpn up`.
+
+Security note: local ZCP cannot protect your laptop from the agent client. Configure your local agent approvals the same way you would for any coding agent running on your machine.
 
 ## Prerequisites
 
-- A Zerops project. Create one from the [Zerops dashboard](https://app.zerops.io/dashboard/project-add) or from a [recipe](https://app.zerops.io/recipes).
+- A Zerops project. Create one from the [Zerops dashboard](https://app.zerops.io/dashboard/project-add), from a [recipe](https://app.zerops.io/recipes), or use an existing development/staging project.
 - [zCLI](/references/cli) installed and authenticated on your machine.
 - A compatible local agent client installed and logged in.
 - A **project-scoped Zerops token** for exactly one project. Multi-project tokens are refused at startup.
 - A local directory where the agent should run.
 
-You do not need ZCP just to develop locally against Zerops services. `zcli vpn up` plus your editor is enough for human local development. Add ZCP when a local coding agent should also discover services, generate env snapshots, deploy, read logs, and verify the project.
+You do not need ZCP just to develop locally against Zerops services as a human. `zcli vpn up` plus your editor is enough for that. Add ZCP when a local coding agent should also understand and operate the Zerops project.
 
-## Choose a local starting point
-
-Local setup is not limited to an existing app directory. Pick the source that matches the work:
-
-- **Empty local directory.** Use this when you want the agent to create the app shape from a product request, then use ZCP to provision or select Zerops services.
-- **Existing project directory.** Use this when the app code, local data, editor setup, git credentials, and team tooling already live on your machine.
-- **Recipe prepared for local setup.** Some recipes provide local-oriented environments in addition to remote AI Agent environments. Use that path when you want a known Zerops service baseline from a recipe, but want the agent, editor, files, and local tooling to stay on your machine.
-
-After that choice, the local mechanics are the same: initialize ZCP in the chosen directory, add the project-scoped token, use VPN when private service access is needed, and link a runtime when the agent should deploy.
-
-## 1. Get a project-scoped Zerops token
+## 1. Get a project-scoped token
 
 ZCP needs a Zerops API token scoped to exactly one project. For normal agent work, use a single-project token with full access to that project. Read-only tokens can authenticate but fail on deploys, env changes, lifecycle actions, and other mutations.
 
@@ -69,7 +63,7 @@ zcp version
 
 If your shell cannot find `zcp`, add the install directory to `PATH` and reload the shell.
 
-## 3. Run `zcp init` in the project folder
+## 3. Run `zcp init`
 
 From the local directory the agent should operate:
 
@@ -89,7 +83,7 @@ Current generated artifacts:
 
 Re-running `zcp init` may refresh generated config. `CLAUDE.md` preserves edits outside managed markers, but `.mcp.json` is regenerated from the token-less template. If you rerun it, re-check the `ZCP_API_KEY` env block before launching the agent again.
 
-## 4. Add `ZCP_API_KEY` to `.mcp.json`
+## 4. Add `ZCP_API_KEY`
 
 `zcp init` writes a token-less `.mcp.json`. Add the project token under the `env` block:
 
@@ -121,9 +115,9 @@ Sanity check:
 Use ZCP to list the services in this project.
 ```
 
-A working connection answers with the project's runtime and managed services. If the agent cannot reach ZCP, check the launch directory, token scope, and whether the client actually loaded `.mcp.json`.
+A working connection answers with the project's runtime and managed services. If the agent cannot reach ZCP, check the launch directory, token scope, and whether the client loaded `.mcp.json`.
 
-## 6. Bring up the Zerops VPN
+## 6. Bring up VPN when private services are needed
 
 ZCP can talk to the Zerops API without VPN. Your local app, shell, tests, database clients, and framework commands need VPN to reach project-private service hostnames such as `db` or `cache`.
 
@@ -135,7 +129,7 @@ VPN setup needs admin or root approval on macOS and Linux. ZCP can tell the agen
 
 After the tunnel is up, project service hostnames resolve from your machine. Laptop sleep, network changes, and idle time can drop the tunnel; run the command again when local service connections start failing.
 
-## 7. Generate a local env snapshot when needed
+## 7. Generate local env when needed
 
 When the local app needs project credentials, ask the agent for the app work and let ZCP generate the env bridge as part of that work. For a standalone check:
 
