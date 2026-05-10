@@ -44,15 +44,15 @@ flowchart TD
 
 The agent should make this path visible while it works, but you should not have to prompt each step. ZCP exists so the operational path is available behind a product request.
 
-## The lifecycle layers
+## The three parts
 
-ZCP separates the work into three layers so the agent can tell what kind of step comes next.
+ZCP separates an app task into three parts. These are not checklist items you run by hand; they are the shape of the work the agent should make visible while it operates the project.
 
-**Service setup.** Prepare the project shape before app work starts: use existing services when they fit, create missing runtimes or managed dependencies when they do not, record the runtime layout, and establish the app target. This layer is not where app code, `zerops.yaml`, or the first deploy belongs.
+**Infrastructure setup.** Establish where the app should run and what it depends on. The agent should use existing services when they fit, create missing runtimes or managed dependencies when they do not, and confirm the app target before writing code. This part is not where app code, `zerops.yaml`, or the first deploy belongs.
 
-**Development loop.** Change code and configuration, deploy the selected runtime services, verify platform reachability, verify the requested behavior, read logs and events on failure, fix from evidence, and repeat until proof or blocker.
+**Development and verification.** Change code and configuration, deploy the selected runtime services, verify platform reachability, verify the requested behavior, read logs and events on failure, fix from evidence, and repeat until proof or blocker.
 
-**Delivery handoff.** After a verified running result exists, choose how future changes should ship: keep direct deploys, push to git, or hand off to CI or a human release process. The first functional deploy is direct; delivery setup follows proof.
+**Delivery after proof.** After a verified running result exists, choose how future changes should ship: keep direct deploys, push to git, or hand off to CI or a human release process. The first functional deploy is direct; delivery setup follows proof.
 
 ## 1. Read the project before choosing a plan
 
@@ -71,6 +71,8 @@ This is why a prompt can stay short. The agent can inspect what exists instead o
 The agent then decides where the app work belongs. The `zcp` service is the control-plane setup, not the app target. App code deploys to runtime services such as `appdev`, `appstage`, or `app`; managed services such as databases, cache, storage, search, or queues provide dependencies.
 
 If the right services already exist, the agent should use them. If a requested app needs missing infrastructure, the agent can create it before app work starts. If the choice affects product scope, cost, credentials, or destructive changes, the agent should stop and ask.
+
+The important user-facing distinction is simple: infrastructure setup prepares the project shape, while the development loop proves the app behavior. If the agent starts deploying before it knows the runtime target, or keeps creating services after the app is already running, ask it to read project state and explain the target.
 
 ## 3. Wire the app to Zerops
 

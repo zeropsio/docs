@@ -1,47 +1,86 @@
 ---
 title: "Quickstart"
-description: "Run the shortest remote ZCP trial: open the agent workspace, ask for a small app, and inspect the verified result."
+description: "The fastest practical way to try ZCP: deploy an AI Agent recipe, authenticate Claude Code, open Browser VS Code, and ask for an app change."
 ---
 
-Remote setup is the fastest way to try ZCP because the agent runs inside the Zerops project with project access already configured. You do not install `zcp` locally, wire an agent client, or copy project credentials into a prompt.
+import Image from '/src/components/Image';
+
+This is the fastest way to try ZCP and understand it in practice. You deploy a ready-made recipe, authenticate the bundled agent, open the browser workspace, and ask for an app change in natural language.
+
+Zerops has a [recipes catalog](https://app.zerops.io/recipes) covering many runtimes and frameworks. Recipes can ship multiple environments for the same stack; the **AI Agent** environment is the ready-to-go ZCP setup. It creates app services plus the `zcp@1` workspace service, browser VS Code, and bundled agent wiring in one deploy.
+
+This quickstart uses the [Laravel showcase recipe](https://app.zerops.io/recipes/laravel-showcase?environment=ai-agent) because it includes real managed services and an AI Agent environment. The same path works for other recipes that offer AI Agent.
 
 ## Prerequisites
 
 - A Zerops account with permission to create a project.
-- A login or API authentication for the bundled agent shown in the dashboard. Zerops wires the agent to ZCP; your agent subscription or model credentials stay yours.
+- A Claude Code subscription login or API authentication. Claude Code is the bundled agent in the current dashboard flow; support for additional agents is planned. Zerops wires the agent to ZCP, but your agent subscription or model credentials stay yours.
 
-## Create a remote setup project
-
-The shortest path is a recipe with the **AI Agent** environment:
+## 1. Deploy the AI Agent recipe
 
 1. Open the [Zerops recipes catalog](https://app.zerops.io/recipes).
-2. Pick a recipe close to the stack you want to try.
-3. Select the **AI Agent** environment.
-4. Deploy the recipe.
+2. Open a recipe with an **AI Agent** environment. For example, open [Laravel showcase](https://app.zerops.io/recipes/laravel-showcase?environment=ai-agent).
+3. Select **AI Agent**.
+4. Keep **Coding Agent** and **Cloud IDE** enabled.
+5. Deploy the recipe.
 
-That environment creates the app services plus a `zcp@1` remote setup with **Include Coding Agent** enabled. Keep **Cloud IDE** enabled for the first run so you can open the browser workspace.
+<figure style={{ textAlign: 'center', margin: '1.5rem 0' }}>
+  <Image
+    lightImage="/img/zcp/quickstart-laravel-ai-agent-recipe.png"
+    darkImage="/img/zcp/quickstart-laravel-ai-agent-recipe.png"
+    alt="Laravel showcase recipe with the AI Agent environment selected and ZCP configuration enabled"
+    style={{ width: '95%', height: 'auto' }}
+    caption="The AI Agent environment adds app services plus remote ZCP setup with Coding Agent and Cloud IDE enabled."
+  />
+</figure>
 
-Starting from an empty project also works, but it adds setup choices. Enable **Add Zerops Control Plane (ZCP) service** during project creation, keep **Include Coding Agent** on, then let the agent use existing services or create missing ones from your first app prompt. Full setup path: [Set up remote ZCP](/zcp/setup/hosted-workspace).
+The deploy creates a development runtime, a staging runtime, managed dependencies, and a `zcp` service. The `zcp` service is the workspace where the agent operates from; app code still deploys to the app runtimes, not to `zcp`.
 
-## Open the agent workspace
+## 2. Authenticate Claude Code
 
-When provisioning finishes, open the `zcp` service in the Zerops dashboard. If **Cloud IDE** is enabled, open its workspace URL. The browser editor opens with the bundled agent connected to this project through ZCP.
+When provisioning finishes, the dashboard opens the agent authentication flow. Use your own Claude Code subscription login or API credentials. Zerops wires the agent to this project through ZCP, but the agent account stays yours.
 
-## Ask for a product outcome
+If you close the prompt, open the project in the dashboard and then open the `zcp` service. The control-plane panel shows the browser workspace, web terminal, SSH path, desktop IDE path, and agent authorization state.
 
-In the agent chat, ask for the app behavior:
+<figure style={{ textAlign: 'center', margin: '1.5rem 0' }}>
+  <Image
+    lightImage="/img/zcp/quickstart-zcp-service-ready.png"
+    darkImage="/img/zcp/quickstart-zcp-service-ready.png"
+    alt="ZCP service panel with Browser VS Code, web terminal, SSH, desktop IDE access, and agent authorized state"
+    style={{ width: 'min(100%, 500px)', height: 'auto' }}
+    caption="After deploy, open the ZCP service. Browser VS Code is the simplest first-run workspace."
+  />
+</figure>
+
+## 3. Open VS Code and Claude Code
+
+After authentication, continue into **Browser VS Code**. The workspace opens with the project filesystem, ZCP configuration, and the Claude Code panel available in the editor.
+
+<figure style={{ textAlign: 'center', margin: '1.5rem 0' }}>
+  <Image
+    lightImage="/img/zcp/quickstart-cloud-ide-claude-code.jpg"
+    darkImage="/img/zcp/quickstart-cloud-ide-claude-code.jpg"
+    alt="Browser VS Code workspace with the Claude Code panel open"
+    style={{ width: '95%', height: 'auto' }}
+    caption="Remote setup keeps the browser IDE and bundled agent inside the Zerops project boundary."
+  />
+</figure>
+
+## 4. Ask for a product outcome
+
+In Claude Code, ask for the app behavior in natural language:
 
 ```text
 Build a task board for my team.
 ```
 
-Do not add "deploy it", "verify it", or "send me the URL" just to make the agent finish the work. With ZCP, those are part of the expected app task. Add constraints only when they change the result or the project target:
+Do not add "deploy it", "verify it", or "send me the URL" just to make the agent finish the work. With ZCP, those are part of the expected app task. Add constraints only when they change the product, stack, runtime target, acceptance criteria, or delivery path:
 
 ```text
 Build a Node.js task board with latest PostgreSQL on dev+stage.
 ```
 
-## Inspect the result
+## 5. Inspect the result
 
 The final answer should give you a real URL, endpoint, or UI proof. Open the URL and try the core task-board behavior the agent says it verified.
 
@@ -51,6 +90,8 @@ If the agent cannot finish, the useful output is a concrete blocker: the missing
 
 ## Next steps
 
-- [How ZCP works](/zcp/concept/how-it-works) - the model behind the run.
-- [Choose remote or local setup](/zcp/setup/choose-workspace) - when to use remote setup or your local editor.
-- [Build with ZCP](/zcp/workflows/build-with-zcp) - how normal app work proceeds after setup.
+Read [How ZCP works](/zcp/concept/how-it-works) next if you want the model behind what just happened: project state, runtime fit, app wiring, deploy, verification, proof, and blockers.
+
+Read [Choose remote or local setup](/zcp/setup/choose-workspace) when you are deciding how to start a real project: AI Agent recipe, new-project toggle, existing project, or local setup beside your own editor.
+
+Read [Build with ZCP](/zcp/workflows/build-with-zcp) before giving the agent larger tasks. It explains the three practical phases you will use during normal work: infrastructure setup, development and verification, then delivery after proof.

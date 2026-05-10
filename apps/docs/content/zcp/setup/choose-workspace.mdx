@@ -9,7 +9,7 @@ Choose where the ZCP-backed agent runs. The same `zcp` binary gives the agent th
 Remote setup is the recommended first run. Local setup is real and supported, but the binary install, `.mcp.json`, and `zcp init` artifacts are still settling; expect setup details to move between releases.
 :::
 
-Use remote setup for the first run and project-contained isolation. Use local setup when your checkout, editor, dev server, and git credentials should stay on your machine.
+Use remote setup for the first run and project-contained isolation. Use local setup when your checkout, editor, dev server, and git credentials should stay on your machine. Both paths let the agent discover services, wire the app, deploy, verify, and report proof from the same Zerops project.
 
 ## Short rule
 
@@ -40,23 +40,34 @@ In local setup, you install the same `zcp` binary on your machine and initialize
 
 Remote setup costs one small `zcp` service in the project, billed like any other Zerops service. Local setup costs local installation and a VPN path, plus a local `.env` snapshot with real project credentials that must stay out of git.
 
-## Runtime layouts
+## Starting points
 
-After setup, ZCP reads whether the project has one runtime, a dev+stage pair, or a local checkout linked to a runtime. You usually state the outcome, not the label: use the dev+stage pair, deploy to a named stage runtime, or use the single app runtime.
+Remote setup has two common entry points:
 
-| Layout | What it means | Typical names |
+| Starting point | Use when | What happens |
 |---|---|---|
-| `standard` | Dev runtime plus explicit stage runtime. | `appdev` + `appstage` |
-| `dev` | One mutable dev runtime. | `appdev` |
-| `simple` | One runtime with no dev/stage split. | `app` |
-| `local-stage` | Local checkout linked to one Zerops runtime as the deploy target. | local checkout + `appstage` |
-| `local-only` | Local checkout with no linked runtime yet. | local checkout |
+| Recipe with **AI Agent** environment | You want the shortest first run or a known stack baseline. | Zerops deploys app services plus `zcp@1`, Coding Agent, and Cloud IDE together. |
+| New or existing project with **Add Zerops Control Plane (ZCP) service** | You want a custom project, or a project already has services. | Zerops adds the `zcp` workspace service; the agent then uses existing services or creates missing ones from the app request. |
+
+Local setup starts from a local checkout. Run `zcp init` in that folder, add a project-scoped token, and connect your local agent client. The project may already have Zerops runtimes, or the agent may need to create or link a runtime before deploys can happen.
+
+## App runtime layout
+
+After setup, ZCP reads how app runtimes are arranged. You usually state the outcome, not an internal label: use the dev+stage pair, deploy to a named stage runtime, use the single app runtime, or link this local checkout to a stage target.
+
+| Shape | What it means | Typical names |
+|---|---|---|
+| Dev + stage | The agent can iterate on dev, then prove the result on a separate stage runtime. | `appdev` + `appstage` |
+| One mutable dev runtime | Fastest project shape for experiments and early builds. | `appdev` |
+| One app runtime | A small project with no dev/stage split. | `app` |
+| Local checkout + Zerops target | Your local files are the source; a named Zerops runtime receives deploys. | local checkout + `appstage` |
+| Local checkout only | ZCP can inspect and generate env snapshots, but deploy needs a linked runtime later. | local checkout |
 
 Stage is a review or promotion target, not production. Production should live in a separate Zerops project; see [Production boundary](/zcp/security/production-policy).
 
-The stage hostname is explicit. ZCP should use the confirmed project state, not invent `appstage` from `appdev`.
+The stage hostname is explicit. The agent should use confirmed project state, not invent `appstage` from `appdev`.
 
-Runtime layout is ZCP's topology term. Zerops service scaling mode, such as `HA` or `NON_HA`, is an individual service setting and is unrelated to this table.
+Exact runtime-layout labels are listed in the [Glossary](/zcp/glossary#project-and-runtime-terms). Zerops service scaling mode, such as `HA` or `NON_HA`, is an individual service setting and is unrelated to this table.
 
 ## Next steps
 
