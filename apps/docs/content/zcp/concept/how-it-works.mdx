@@ -80,7 +80,7 @@ ZCP is intentionally opinionated about the concerns an agent has to resolve duri
 | Project state    | Live services, env-var keys, Zerops references, recent events, logs, verification output, and saved work state.     | You do not have to paste a service inventory or reconstruct what happened.    |
 | Runtime target   | A model for choosing the app runtime that should receive code changes.                                              | The agent can identify where app work belongs before editing or deploying.    |
 | Managed services | Knowledge and env wiring patterns for database, cache, queue, search, storage, mail, and similar services.          | Product intent can imply real dependencies without a manual wiring checklist. |
-| Service setup    | Project-scoped operations for using existing services or creating missing runtimes and dependencies.                | Infrastructure shape can be established before app work starts.               |
+| Service setup    | Project-scoped operations for using existing services or creating missing runtimes and dependencies.                | Runtime layout and dependencies can be established before app work starts.    |
 | App wiring       | Zerops-specific rules for `zerops.yaml`, env references, ports, commands, public access, and build/deploy behavior. | The app is wired for Zerops rather than for a generic cloud template.         |
 | Deploy evidence  | Build logs, runtime logs, platform events, service status, HTTP checks, and structured verification output.         | A failed deploy becomes a diagnosis surface instead of guesswork.             |
 | Behavior proof   | A done gate based on the requested behavior, not only on a successful build or reachable root URL.                  | The final answer can point to what was actually checked.                      |
@@ -88,17 +88,17 @@ ZCP is intentionally opinionated about the concerns an agent has to resolve duri
 
 The exact labels for layouts, delivery modes, and setup routes live in the [Glossary](/zcp/glossary) and [Workflow terms](/zcp/reference/agent-workflow).
 
-## Service setup prepares the project shape
+## Service setup prepares the project layout
 
 Before app code work starts, ZCP helps the agent make three decisions visible:
 
 - Which runtime service is the app target?
 - Which managed services are dependencies?
-- Does the existing project shape fit the request?
+- Does the existing project layout fit the request?
 
 If the services already exist, the agent can use them. If a needed runtime or dependency is missing, ZCP can create it through project-scoped operations. If the choice affects cost, product scope, credentials, a destructive action, or which stage/runtime should be used, the workflow tells the agent to stop and ask.
 
-Service setup is finished when the app runtime and dependencies are known. It is not the finished app; it is the project shape that lets app work happen in the right place.
+Service setup is finished when the app runtime and dependencies are known. It is not the finished app; it is the project layout that lets app work happen in the right place.
 
 ## App work changes code and platform wiring together
 
@@ -119,7 +119,7 @@ The first functional deploy goes through ZCP's direct deploy path. That deploy c
 
 When something fails, ZCP gives the agent the evidence surface that matches the failure:
 
-| Failure shape            | Useful evidence                                                                                              |
+| Failure pattern          | Useful evidence                                                                                              |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------ |
 | Build failed             | Build logs, build commands, dependency manifests, deploy file list.                                          |
 | Runtime failed to start  | Runtime or prepare logs, start command, ports, env references.                                               |

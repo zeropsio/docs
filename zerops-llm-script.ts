@@ -3,6 +3,7 @@ import * as path from 'node:path'
 import * as globModule from 'glob'
 
 const frontmatterRegex = /^\n*---(\n.+)*?\n---\n/
+const frontmatterBlockRegex = /^\s*---\n([\s\S]*?)\n---\n/
 const mdxComponentRegex = /<[^>]+>/g
 const imageRegex = /!\[.*?\]\(.*?\)/g
 const importRegex = /^import\s+.*?from\s+['"].*?['"];?/gm
@@ -85,6 +86,20 @@ function cleanMarkdownContent(content: string): string {
   return processedLines.join('\n')
 }
 
+function hasFrontmatterFlag(content: string, flag: string): boolean {
+  const frontmatter = content.match(frontmatterBlockRegex)?.[1] ?? ''
+  const flagRegex = new RegExp(`^${flag}:\\s*true\\s*$`, 'm')
+  return flagRegex.test(frontmatter)
+}
+
+function shouldIncludeInLLMDocs(file: string): boolean {
+  const fileContent = fs.readFileSync(path.resolve(contentDir, file), 'utf-8')
+  return (
+    !hasFrontmatterFlag(fileContent, 'draft') &&
+    !hasFrontmatterFlag(fileContent, 'unlisted')
+  )
+}
+
 async function generateContent(
   files: string[],
   contentDir: string
@@ -122,7 +137,9 @@ async function generateLLMDocs() {
   
   const outputListFile = path.resolve(publicDir, 'llms.txt')
 
-  const optionalFiles = globModule.sync('**/*.mdx', { cwd: contentDir })
+  const optionalFiles = globModule
+    .sync('**/*.mdx', { cwd: contentDir })
+    .filter(shouldIncludeInLLMDocs)
 
   const optionals: string[] = []
 
@@ -153,7 +170,9 @@ async function generateLLMDocs() {
   console.log(`< Output '${outputListFile}' `)
 
   const outputFullFile = path.resolve(publicDir, 'llms-full.txt')
-  const files = globModule.sync('**/*.mdx', { cwd: contentDir })
+  const files = globModule
+    .sync('**/*.mdx', { cwd: contentDir })
+    .filter(shouldIncludeInLLMDocs)
 
   const fullContent = await generateContent(
     files,

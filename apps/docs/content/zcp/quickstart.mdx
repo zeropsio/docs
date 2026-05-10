@@ -30,11 +30,11 @@ This quickstart uses the [Laravel showcase recipe](https://app.zerops.io/recipes
     darkImage="/img/zcp/quickstart-laravel-ai-agent-recipe.png"
     alt="Laravel showcase recipe with the AI Agent environment selected and ZCP configuration enabled"
     style={{ width: '95%', height: 'auto' }}
-    caption="The AI Agent environment adds app services plus remote ZCP setup with Coding Agent and Cloud IDE enabled."
+    caption="The AI Agent environment adds app services plus remote setup with Coding Agent and Cloud IDE enabled."
   />
 </figure>
 
-The deploy creates the app runtimes, managed dependencies, and the `zcp@1` workspace service together. The `zcp` service is where the agent, terminal, and browser IDE run. App code still deploys to the app runtime services, not to `zcp`.
+The deploy creates the app runtimes, managed dependencies, and a workspace service using the `zcp@1` service type. In this recipe it appears as the `zcp` service. That service is where the agent, terminal, and browser IDE run. App code still deploys to the app runtime services, not to `zcp`.
 
 ## 2. Authorize Claude Code
 
@@ -48,9 +48,9 @@ If you close the prompt, open the project in the dashboard and then open the `zc
   <Image
     lightImage="/img/zcp/quickstart-zcp-service-ready.png"
     darkImage="/img/zcp/quickstart-zcp-service-ready.png"
-    alt="ZCP service panel with Browser VS Code, web terminal, SSH, desktop IDE access, and agent authorized state"
-    style={{ width: 'min(100%, 500px)', height: 'auto' }}
-    caption="After deploy, open the ZCP service. Browser VS Code is the simplest first-run workspace."
+    alt="Claude Code authorization dialog shown over the ZCP service control plane and Browser VS Code terminal"
+    style={{ width: '100%', height: 'auto' }}
+    caption="Claude Code opens an authorization flow inside the workspace. Use your own Claude login or API credentials; ZCP supplies the project-scoped token separately."
   />
 </figure>
 
@@ -68,7 +68,7 @@ After authentication, continue into **Browser VS Code**. The workspace opens wit
   />
 </figure>
 
-You are now inside the remote ZCP workspace. The agent can read project state, use project-scoped ZCP operations, reach project-private services, and deploy app changes to the runtime services created by the recipe.
+You are now inside the remote workspace. The agent can read project state, use project-scoped ZCP operations, reach project-private services, and deploy app changes to the runtime services created by the recipe.
 
 ## 4. Ask for a product outcome
 
@@ -76,27 +76,28 @@ In Claude Code, ask for the app behavior in natural language. A good first promp
 
 ```text
 Build a task board for my team.
+Tasks should stay saved after refresh.
 ```
 
-Do not add "deploy it", "verify it", or "send me the URL" just to make the agent finish the work. With ZCP, those are part of the expected app task.
+The agent is expected to deploy, verify, read evidence, and return proof for the app task. Reserve extra prompt detail for decisions that change the work.
 
 Add details when they change the product, stack, runtime layout, acceptance criteria, or delivery path:
 
 ```text
-Build a Node.js task board with latest PostgreSQL on dev+stage.
+In this Laravel app, add a task board backed by the existing PostgreSQL service.
+A user can create a task, refresh the page, and still see it.
 ```
 
-:::note What these prompts demonstrate
+:::note Prompt shape
 
-These short prompts are not the only way to use ZCP, and they are not a claim that ZCP is only for one-shot app generation. They show what ZCP can offload from the user: project discovery, infrastructure fit, Zerops wiring, deploy, verification, and recovery. For normal agentic development, work the way you already work with an agent: describe the next product change, review the result, add constraints when they matter, and let ZCP carry the Zerops infrastructure and integration work behind that loop.
-
+Short prompts work when they describe the product outcome. Add stack, runtime layout, acceptance criteria, delivery preference, external credentials, or destructive-action approval only when those decisions matter. ZCP carries project discovery, Zerops wiring, deploy, verification, evidence reading, and recovery behind that request.
 :::
 
 ## 5. Read the proof
 
 The final answer should give you a real URL, endpoint, UI state, stored result, or a concrete blocker. Open the URL and try the core behavior the agent says it verified.
 
-If you used the technical prompt above, create a task, refresh the page, and confirm the task is still there. If it disappears, the app is not done; ask the agent to verify that exact behavior again and continue from the project evidence rather than starting over.
+For the task-board prompt, create a task, refresh the page, and confirm the task is still there. If it disappears, the app is not done; ask the agent to verify that exact behavior again and continue from the project evidence rather than starting over.
 
 If the agent cannot finish, the useful output is a concrete blocker: the missing credential, decision, unsupported runtime choice, or repeated failure it could not recover from.
 

@@ -14,7 +14,7 @@ Remote setup gets `ZCP_API_KEY` from the Zerops platform. Local setup reads it f
 | `ZCP_API_KEY`                | ZCP against one Zerops project               | Remote: `zcp` service env injected by Zerops. Local: `.mcp.json` env block. |
 | Agent login or model API key | The coding agent itself                      | The bundled agent in remote setup, or your local agent client.              |
 | `GIT_TOKEN`                  | Git push from remote setup to a git provider | Secret env var on the `zcp` service when remote git-push delivery needs it. |
-| `ZEROPS_TOKEN`               | `zcli` in GitHub Actions or external CI      | Repository or CI secret for the workflow that deploys to Zerops.            |
+| `ZEROPS_TOKEN`               | `zcli` in GitHub Actions or external CI      | Separate project-scoped Zerops token stored in the CI/release secret store. |
 
 Keeping these names separate prevents most setup and delivery failures.
 
@@ -55,6 +55,8 @@ Common messages:
 | `No authentication found: set ZCP_API_KEY or log in with zcli` | The `zcp` process did not receive a usable token. |
 | `AUTH_TOKEN_EXPIRED` or HTTP 401                               | The token expired, was revoked, or is invalid.    |
 
+For ZCP setup, provide `ZCP_API_KEY`. `zcli` login is a diagnostic fallback, not the normal agent setup path.
+
 ## Where the token lives - remote vs local {#where-the-token-lives--remote-vs-local}
 
 ZCP reads `ZCP_API_KEY` from its process environment at startup. It does not write the token somewhere else or exchange it for a derived credential.
@@ -94,12 +96,14 @@ Zerops wires the agent to the project through ZCP. It does not provide your mode
 
 `GIT_TOKEN` matters only when remote setup pushes to a git remote. It authorizes git provider access from the `zcp` service. In local setup, your local git CLI uses your normal SSH key or credential helper, so ZCP does not need `GIT_TOKEN`.
 
-`ZEROPS_TOKEN` is a Zerops API token used by GitHub Actions or another CI system when that system runs `zcli` against Zerops. It is not a GitHub token. It can be the same project-scoped token used as `ZCP_API_KEY`, or a separate project-scoped token if your team prefers separate rotation.
+`ZEROPS_TOKEN` is a Zerops API token used by GitHub Actions or another CI system when that system runs `zcli` against Zerops. It is not a GitHub token. Use a separate project-scoped delivery token so ZCP sessions and CI/release workflows can be named, rotated, and audited independently.
+
+For production delivery, `ZEROPS_TOKEN` should be scoped to the production project and stored only in the production CI or release secret store.
 
 With GitHub CLI, the secret shape is:
 
 ```bash
-gh secret set ZEROPS_TOKEN -b "$ZCP_API_KEY"
+gh secret set ZEROPS_TOKEN -b "$ZEROPS_DELIVERY_TOKEN"
 ```
 
 Use the GitHub UI or your CI secret manager instead if your team does not allow local CLI secret writes.
@@ -110,7 +114,7 @@ Rotate in the Zerops dashboard, then update the surface that consumes the token.
 
 | Surface              | Rotation step                                                                                                                            |
 | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Remote `ZCP_API_KEY` | Reconfigure or redeploy remote ZCP through the dashboard-managed path, then restart the `zcp` service so the process gets the new value. |
+| Remote `ZCP_API_KEY` | Reconfigure or redeploy the remote workspace through the dashboard-managed path, then restart the `zcp` service so the process gets the new value. |
 | Local `ZCP_API_KEY`  | Paste the new token into `.mcp.json`, then restart the local agent client.                                                               |
 | `ZEROPS_TOKEN` in CI | Replace the repository or CI secret. The next workflow run uses the new value.                                                           |
 | `GIT_TOKEN`          | Replace the git-provider credential stored for remote setup.                                                                             |
@@ -152,7 +156,7 @@ Threat model and boundaries: [Trust model](/zcp/security/trust-model).
 ## Related
 
 - [Trust model](/zcp/security/trust-model) - the project boundary this page enforces.
-- [Use remote ZCP workspace](/zcp/setup/hosted-workspace) - automatic token injection.
+- [Use remote workspace](/zcp/setup/hosted-workspace) - automatic token injection.
 - [Set up local ZCP](/zcp/setup/local-agent-bridge) - local `.mcp.json` token setup.
 - [Production boundary](/zcp/security/production-policy) - why production gets separate credentials.
 - [GitHub integration](/references/github-integration) - CI secret usage with Zerops.

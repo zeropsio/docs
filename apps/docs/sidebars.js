@@ -626,12 +626,12 @@ module.exports = {
             {
               type: 'doc',
               id: 'zcp/setup/hosted-workspace',
-              label: 'Remote workspace',
+              label: 'Use remote workspace',
             },
             {
               type: 'doc',
               id: 'zcp/setup/local-agent-bridge',
-              label: 'Local setup',
+              label: 'Set up local ZCP',
             },
           ],
         },
