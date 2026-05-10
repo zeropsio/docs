@@ -1,6 +1,6 @@
 ---
-title: "Workflow terms"
-description: "Precise ZCP workflow terms: session layers, service setup routes, develop flow, runtime layouts, delivery modes, failure categories, and completion evidence."
+title: 'Workflow terms'
+description: 'Precise ZCP workflow terms: session layers, service setup routes, develop flow, runtime layouts, delivery modes, failure categories, and completion evidence.'
 ---
 
 Exact vocabulary for ZCP workflows. Day-to-day prompts should describe outcomes; reference, audits, policies, and handoffs can use these names when precision matters.
@@ -9,11 +9,11 @@ Exact vocabulary for ZCP workflows. Day-to-day prompts should describe outcomes;
 
 Most workflow mistakes come from confusing these layers:
 
-| Layer | What it is | What changes here |
-|---|---|---|
-| ZCP setup | Where ZCP runs: remote `zcp@1` service or local `zcp` binary. | No app code should be deployed to the setup itself. |
-| Target runtime service | The app runtime: `appdev`, `appstage`, `app`, or a linked local deploy target. | App files, `zerops.yaml`, deploys. |
-| Managed services | Databases, caches, queues, search, storage, mail. | Schema/data operations and credentials, never app code deploys. |
+| Layer                  | What it is                                                                     | What changes here                                               |
+| ---------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------- |
+| ZCP setup              | Where ZCP runs: remote `zcp@1` service or local `zcp` binary.                  | No app code should be deployed to the setup itself.             |
+| Target runtime service | The app runtime: `appdev`, `appstage`, `app`, or a linked local deploy target. | App files, `zerops.yaml`, deploys.                              |
+| Managed services       | Databases, caches, queues, search, storage, mail.                              | Schema/data operations and credentials, never app code deploys. |
 
 The `zcp` service is the control surface, not the app runtime.
 
@@ -40,12 +40,12 @@ flowchart TD
   known -- no --> classic
 ```
 
-| Route | Use when | Wrong signal |
-|---|---|---|
-| `adopt` | Runtime services already exist, including recipe-created projects. | Recreating services that exist, or targeting `zcp` as the app. |
-| `recipe` | The project is empty or only has ZCP, and the request matches a known stack recipe. | Deploying an unchanged starter as if it were the requested product. |
-| `classic` | The project is empty and needs a custom service plan. | Writing app code before service ownership and runtime scope are known. |
-| `resume` | A previous setup was interrupted. | Starting from scratch without acknowledging live services and saved state. |
+| Route     | Use when                                                                            | Wrong signal                                                               |
+| --------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| `adopt`   | Runtime services already exist, including recipe-created projects.                  | Recreating services that exist, or targeting `zcp` as the app.             |
+| `recipe`  | The project is empty or only has ZCP, and the request matches a known stack recipe. | Deploying an unchanged starter as if it were the requested product.        |
+| `classic` | The project is empty and needs a custom service plan.                               | Writing app code before service ownership and runtime scope are known.     |
+| `resume`  | A previous setup was interrupted.                                                   | Starting from scratch without acknowledging live services and saved state. |
 
 Service setup stops when app runtimes and managed dependencies are known. App code, `zerops.yaml`, and the first deploy belong to the develop flow.
 
@@ -85,13 +85,13 @@ Dynamic dev runtimes may need an explicit start or restart after deploy. Built-i
 
 Runtime layout describes which app runtime services ZCP should use. Zerops service scaling mode, such as `HA` or `NON_HA`, is a separate service setting.
 
-| Layout | Meaning | Typical names |
-|---|---|---|
-| `standard` | Separate dev and stage runtime services. Development usually starts on dev; stage is explicit. | `appdev` + `appstage` |
-| `dev` | One mutable development runtime. | `appdev` |
-| `simple` | One runtime with no dev/stage split. | `app` |
-| `local-stage` | Local checkout linked to one Zerops runtime for deploys. | local checkout + `appstage` |
-| `local-only` | Local checkout with no linked deploy target yet. | local checkout |
+| Layout        | Meaning                                                                                        | Typical names                |
+| ------------- | ---------------------------------------------------------------------------------------------- | ---------------------------- |
+| `standard`    | Separate dev and stage runtime services. Development usually starts on dev; stage is explicit. | `appdev` + `appstage`        |
+| `dev`         | One mutable development runtime.                                                               | `appdev`                     |
+| `simple`      | One runtime with no dev/stage split.                                                           | `app`                        |
+| `local-stage` | Local source directory linked to one Zerops runtime for deploys.                               | local directory + `appstage` |
+| `local-only`  | Local source directory with no linked deploy target yet.                                       | local directory              |
 
 The stage hostname is supplied by project state. ZCP should not invent it from the dev hostname.
 
@@ -99,25 +99,25 @@ The stage hostname is supplied by project state. ZCP should not invent it from t
 
 Delivery mode applies after a verified deploy and describes how future changes ship. It does not redirect the first successful deploy.
 
-| Exact mode | User-facing choice | Meaning |
-|---|---|---|
-| `auto` | Keep direct deploy | ZCP keeps deploying future changes directly to the target runtime. |
-| `git-push` | Push to git | The agent commits and pushes to a configured remote; any resulting build still needs observation and verification. |
-| `manual` | External handoff | CI, release process, or a human owns future delivery; ZCP records evidence but does not initiate the next deploy. |
+| Exact mode | User-facing choice | Meaning                                                                                                            |
+| ---------- | ------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| `auto`     | Keep direct deploy | ZCP keeps deploying future changes directly to the target runtime.                                                 |
+| `git-push` | Push to git        | The agent commits and pushes to a configured remote; any resulting build still needs observation and verification. |
+| `manual`   | External handoff   | CI, release process, or a human owns future delivery; ZCP records evidence but does not initiate the next deploy.  |
 
 Git-push capability, delivery mode, and build integration are separate. A project can have git-push configured while still using direct deploy for a given session.
 
 ## Failure categories
 
-| Category | Meaning | Read first |
-|---|---|---|
-| `build` | Build phase failed. | Build logs and build commands. |
-| `start` | Build passed, runtime failed to start or crashed. | Prepare/runtime logs and start command. |
-| `verify` | Runtime exists but reachability or behavior failed. | Failing check detail and runtime logs at request time. |
-| `network` | Transport, DNS, VPN, SSH, or service-to-service reach failed. | Transport error and network path. |
-| `config` | `zerops.yaml`, env vars, setup block, or service settings mismatch. | Structured rejection detail and config files. |
-| `credential` | Zerops, git, SSH, managed-service, or external API credential failed. | The named credential surface. |
-| `other` | No known category matched. | Raw event/log evidence; stop if repeated. |
+| Category     | Meaning                                                               | Read first                                             |
+| ------------ | --------------------------------------------------------------------- | ------------------------------------------------------ |
+| `build`      | Build phase failed.                                                   | Build logs and build commands.                         |
+| `start`      | Build passed, runtime failed to start or crashed.                     | Prepare/runtime logs and start command.                |
+| `verify`     | Runtime exists but reachability or behavior failed.                   | Failing check detail and runtime logs at request time. |
+| `network`    | Transport, DNS, VPN, SSH, or service-to-service reach failed.         | Transport error and network path.                      |
+| `config`     | `zerops.yaml`, env vars, setup block, or service settings mismatch.   | Structured rejection detail and config files.          |
+| `credential` | Zerops, git, SSH, managed-service, or external API credential failed. | The named credential surface.                          |
+| `other`      | No known category matched.                                            | Raw event/log evidence; stop if repeated.              |
 
 Categorization is what turns retries into evidence-driven fixes. Recovery moves and symptom mapping live in [Troubleshooting](/zcp/reference/troubleshooting).
 
@@ -150,12 +150,12 @@ A green build with a broken route is not completion. A clear blocker is acceptab
 
 A session is well-shaped if platform evidence and the agent report answer:
 
-| Question | Evidence |
-|---|---|
-| Which setup route and runtime layout were used? | ZCP status, service metadata, project services. |
-| Where did service setup end and app work begin? | Work-session state, deploy history, file changes. |
-| Which runtime was deployed and verified? | Service events, deploy result, verify output. |
-| What behavior proved success? | Endpoint/UI/job/data proof in the final report. |
-| What controls future delivery? | Delivery mode, git-push state, build integration, or manual handoff note. |
+| Question                                        | Evidence                                                                  |
+| ----------------------------------------------- | ------------------------------------------------------------------------- |
+| Which setup route and runtime layout were used? | ZCP status, service metadata, project services.                           |
+| Where did service setup end and app work begin? | Work-session state, deploy history, file changes.                         |
+| Which runtime was deployed and verified?        | Service events, deploy result, verify output.                             |
+| What behavior proved success?                   | Endpoint/UI/job/data proof in the final report.                           |
+| What controls future delivery?                  | Delivery mode, git-push state, build integration, or manual handoff note. |
 
 Operation-name reference lives in [Advanced operations](/zcp/reference/mcp-operations). Recovery shortcuts live in [Troubleshooting](/zcp/reference/troubleshooting).

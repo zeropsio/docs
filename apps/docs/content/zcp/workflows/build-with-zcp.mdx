@@ -1,6 +1,6 @@
 ---
-title: "Build with ZCP"
-description: "How an outcome prompt becomes service setup, code, deploy, verification, fixes, and delivery."
+title: 'Build with ZCP'
+description: 'How a product prompt turns into service setup, app work, verification, and delivery after proof.'
 ---
 
 Start with what the app should do, not with tool calls or workflow names.
@@ -9,7 +9,7 @@ Start with what the app should do, not with tool calls or workflow names.
 Build a task board where tasks stay saved after refresh.
 ```
 
-Behind that prompt, the agent should inspect the project, choose a target runtime, make the app change, and use real deploy evidence until the requested behavior is proven. ZCP supplies the project knowledge and tool access needed for that loop: live services and env state, Zerops guidance, deploys, logs, verification, and guarded infrastructure changes.
+Behind that prompt, the agent should inspect the project, choose the app runtime, make the change, deploy it, and use evidence from the real Zerops project until the requested behavior is proven. ZCP supplies the live service map, env state, deploy access, logs, events, verification checks, and guardrails needed for that loop.
 
 Do not make the prompt longer to restate completion expectations such as deploy, verification, or returning the URL. The words you add should change the app, the stack, the runtime layout, the acceptance criteria, or the delivery path.
 
@@ -17,18 +17,22 @@ You also do not need to paste an infrastructure inventory, env wiring plan, or l
 
 ## The three parts of the work
 
-The useful mental model is infrastructure, development, then delivery. ZCP makes those phases explicit enough that the agent can resume, recover, and stop at the right boundary without turning your prompt into an operations script.
+The useful mental model is:
+
+1. **Infrastructure setup.** Find or create the runtime and dependencies the app needs.
+2. **Development and verification.** Change the app, deploy it, and prove the requested behavior on Zerops.
+3. **Delivery after proof.** Decide what happens to the finished work after a verified result exists.
+
+ZCP makes those boundaries explicit enough that the agent can resume, recover, and stop at the right point without turning your prompt into an operations script.
 
 ### 1. Infrastructure setup
 
-The agent first reads what exists now: runtime services, managed services, env vars, logs, recent events, and current work state.
-
-Then it establishes the app target:
+The agent first reads what exists now: runtime services, managed services, env vars, recent events, and current work state. Then it establishes the app target:
 
 - use existing runtimes and managed services when they fit,
 - create missing runtimes or managed dependencies when the request needs them,
 - identify the app runtime that will receive code,
-- keep `zcp` as the workspace/control-plane service, not the app runtime.
+- keep `zcp` as the workspace/control-plane service, not as the app runtime.
 
 This phase ends when the app runtime and dependencies are known. It should not end with "the app is done"; no application behavior has been proven yet.
 
@@ -48,31 +52,31 @@ After the target is known, the agent changes app files and `zerops.yaml`, deploy
 
 Two checks matter:
 
-| Check | What it answers |
-|---|---|
-| Reachability | Did the runtime build, start, and answer on the real platform path? |
+| Check              | What it answers                                                                                    |
+| ------------------ | -------------------------------------------------------------------------------------------------- |
+| Reachability       | Did the runtime build, start, and answer on the real platform path?                                |
 | Requested behavior | Does the app do the thing you asked for on the real URL, endpoint, worker result, or stored state? |
 
 A successful build is not enough. A page returning 200 is not enough when the prompt asked for saved tasks. The agent should report the behavior it checked, not only the deploy it ran.
 
-Correction signals:
+If the agent appears to drift, correct it in terms of the outcome you need:
 
-| If the agent... | Ask it to... |
-|---|---|
-| writes files before naming the runtime target | read ZCP status and identify the app runtime first |
-| targets the `zcp` service as the app | switch to the runtime service that runs app code |
-| repeats deploys without new evidence | read fresh logs, events, or verify output and name the failure point |
-| reports completion after only a green build | verify the requested behavior on the real URL or endpoint |
+| If the agent...                               | Ask it to...                                                         |
+| --------------------------------------------- | -------------------------------------------------------------------- |
+| writes files before naming the runtime target | read ZCP status and identify the app runtime first                   |
+| targets the `zcp` service as the app          | switch to the runtime service that runs app code                     |
+| repeats deploys without new evidence          | read fresh logs, events, or verify output and name the failure point |
+| reports completion after only a green build   | verify the requested behavior on the real URL or endpoint            |
 
 ### 3. Delivery after proof
 
-After a verified deploy exists, choose what should happen to future changes:
+After a verified deploy exists, choose what should happen to the finished work and future changes:
 
-| Choice | Use when |
-|---|---|
+| Choice             | Use when                                                                 |
+| ------------------ | ------------------------------------------------------------------------ |
 | Keep direct deploy | Fast iteration, demos, early development, or agent-owned dev/stage work. |
-| Push to git | You want commits, repository history, review, or repo-driven builds. |
-| External handoff | CI, release process, or a human owns delivery from here. |
+| Push to git        | You want commits, repository history, review, or repo-driven builds.     |
+| External handoff   | CI, release process, or a human owns delivery from here.                 |
 
 You can include this intent in the original prompt, but it applies after proof:
 
@@ -80,9 +84,9 @@ You can include this intent in the original prompt, but it applies after proof:
 Build a task board where tasks stay saved after refresh. After it verifies, push the result to git@github.com:my-org/task-dashboard.git.
 ```
 
-The first functional deploy still happens directly through ZCP. Delivery choice controls what follows a verified result.
+The first functional deploy still happens through ZCP so the agent can prove the app in the target project. Delivery choice controls what follows a verified result.
 
-Advanced export/reuse path: [Package a running service](/zcp/workflows/package-running-service).
+Advanced export and reuse path: [Package a running service](/zcp/workflows/package-running-service).
 
 ## What the final answer should contain
 

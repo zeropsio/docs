@@ -1,17 +1,17 @@
 ---
-title: "Deploy, verify, and fix"
-description: "How the agent uses ZCP to edit code, deploy through Zerops, read evidence, fix failures, and prove behavior."
+title: 'Deploy, verify, and fix'
+description: 'How the agent changes app code, deploys through Zerops, reads evidence, fixes failures, and proves behavior.'
 ---
 
 After the target runtime and dependencies are known, the agent can change code and `zerops.yaml`, deploy the runtime, fix failures from evidence, and verify the result.
 
-A ZCP task is done only when the target runtime was deployed, platform reachability passed, the requested behavior was verified against the real endpoint or UI, and the agent reported the working URL or a concrete blocker.
+A ZCP app task is done only when the target runtime was deployed, platform reachability passed, the requested behavior was verified against the real endpoint or UI, and the agent reported the working URL or a concrete blocker.
 
 Localhost is not delivery. A local dev server can speed up implementation, but the completion proof comes from the Zerops runtime or the linked deploy target.
 
-## What the agent does
+## The expected loop
 
-ZCP treats deploy as diagnostics and verification as the completion gate. The user does not have to script this sequence; it is the expected path behind an app prompt.
+ZCP treats deploy as diagnostics and verification as the completion gate. You do not have to script this sequence; it is the expected path behind an app prompt.
 
 - **Runtime scope.** The agent identifies which runtime changed.
 - **Code and `zerops.yaml`.** The agent changes app files and runtime config where needed.
@@ -24,15 +24,15 @@ A green build or running runtime is not done until the requested endpoint, UI, o
 
 ## Runtime scope is a precondition
 
-Before editing, the agent should make the runtime service visible: `appdev`, `appstage`, `app`, or the linked runtime in a local setup. Managed services such as databases and caches are dependencies, not deploy targets.
+Before editing, the agent should name the runtime service that will run app code: for example `appdev`, `appstage`, `app`, or the linked runtime in a local setup. Managed services such as databases and caches are dependencies, not deploy targets.
 
 If the agent starts writing files before it knows the runtime scope, treat that as a correction signal: it should read ZCP status and identify the target before continuing.
 
 ## Deploy
 
-The first deploy uses the direct ZCP deploy path. Delivery choices such as git-push or external handoff apply after a verified deploy exists.
+The first deploy uses ZCP's direct deploy path so the agent can produce and verify a real running result. Delivery choices such as git or external handoff apply after that verified result exists.
 
-A direct deploy waits for the Zerops build/deploy process to finish and for the runtime to be ready enough to verify. Git-push delivery is different: the push returns first, then the agent observes the build integration or events that follow and verifies afterward. See [Choose how finished work ships](/zcp/workflows/delivery-handoff).
+A direct deploy waits for the Zerops build/deploy process to finish and for the runtime to be ready enough to verify. If finished work later ships through git, the push and the follow-up build are separate from this first proof step. See [Choose how finished work ships](/zcp/workflows/delivery-handoff).
 
 Build and runtime evidence are separate:
 
@@ -44,41 +44,53 @@ Remote setup can deploy multiple hosted runtime services in parallel when the ta
 
 Deploy failures point to different evidence:
 
-| Failure point | Read first |
-|---|---|
-| Build failed | Build logs and `zerops.yaml` build steps |
-| Runtime started then crashed | Runtime logs and start command |
-| App is up but route fails | Runtime logs at request time and behavior check output |
-| Local app cannot reach managed services | VPN state and generated `.env` values |
+| Failure point                           | Read first                                             |
+| --------------------------------------- | ------------------------------------------------------ |
+| Build failed                            | Build logs and `zerops.yaml` build steps               |
+| Runtime started then crashed            | Runtime logs and start command                         |
+| App is up but route fails               | Runtime logs at request time and behavior check output |
+| Local app cannot reach managed services | VPN state and generated `.env` values                  |
 
 ## Verify
 
 Verification has two layers:
 
-| Layer | What it proves |
-|---|---|
+| Layer                 | What it proves                                                                                                 |
+| --------------------- | -------------------------------------------------------------------------------------------------------------- |
 | Platform reachability | The service is running, recent error logs are checked, and HTTP runtime services answer a probe when eligible. |
-| Requested behavior | The thing you asked for works: endpoint body, UI state, database row, job result, or stage URL. |
+| Requested behavior    | The thing you asked for works: endpoint body, UI state, database row, job result, or stage URL.                |
 
 Both layers must pass before the agent reports completion.
+
+Good final proof sounds specific:
+
+```text
+Deployed appdev, opened https://task-board.zerops.app, created a task, refreshed, and confirmed the task was still present.
+```
+
+Weak proof sounds generic:
+
+```text
+Build passed and the app is running.
+```
 
 ## Fix or stop
 
 The agent should name the failure point in plain language, read fresh logs/events/check output, fix the indicated cause, and redeploy. A repeated retry with no new evidence is not progress.
 
-Use this cadence as the expected shape:
+Use this escalation shape:
 
-| Attempt | What should change |
-|---|---|
-| 1-2 | Diagnose from the named logs/events/check output and fix the targeted issue. |
-| 3-4 | Re-check `zerops.yaml`, env vars, `deployFiles`, build commands, start command, and health/public route assumptions. |
-| 5 | Stop and ask. Five attempts without progress means the loop needs a missing decision, credential, or human diagnosis. |
+| Stage            | What should change                                                                                                   |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------- |
+| First retries    | Diagnose from the named logs/events/check output and fix the targeted issue.                                         |
+| Repeated failure | Re-check `zerops.yaml`, env vars, `deployFiles`, build commands, start command, and health/public route assumptions. |
+| No progress      | Stop and ask. The loop likely needs a missing decision, credential, or human diagnosis.                              |
 
 Stop sooner when scope is ambiguous, credentials are missing, destructive recovery is needed, or several evidence-based retries hit the same failure.
 
 ## Review and take over
 
-The platform records deploys, events, runtime logs, and lifecycle actions. It does not record every agent thought, browser click, or shell edit. When taking over, ask for ZCP status first, then read service-scoped events, logs, deploy/verify results, and git history if delivery uses git-push.
+The platform records deploys, events, runtime logs, and lifecycle actions. It does not record every agent thought, browser click, or shell edit. When taking over, ask for ZCP status first, then read service-scoped events, logs, deploy/verify results, and git history if delivery uses git.
 
 ## Gotchas
 

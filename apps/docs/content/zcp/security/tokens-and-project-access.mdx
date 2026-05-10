@@ -1,58 +1,72 @@
 ---
-title: "Tokens and credentials"
-description: "Project-scoped Zerops tokens, git credentials, and the confirmation gates ZCP enforces before destructive actions."
+title: 'Tokens and credentials'
+description: 'Project-scoped Zerops tokens, git credentials, and the confirmation gates ZCP enforces before destructive actions.'
 ---
 
-ZCP enforces the project boundary at three layers: token shape (one project, exactly), where the token lives (platform-injected for remote setup, in `.mcp.json` for local setup), and confirmation gates on operations that are not reversible from inside the conversation.
+ZCP uses a Zerops API token to operate exactly one project. The important rule is simple: `ZCP_API_KEY` is a project credential for ZCP, not an agent login, not a git token, and not a general account token.
 
-## Recommended token shape — one project, full access
+Remote setup gets `ZCP_API_KEY` from the Zerops platform. Local setup reads it from `.mcp.json`. In both paths, ZCP validates the token at startup and refuses tokens that resolve to no project or multiple projects.
 
-ZCP requires a Zerops API token that resolves to **exactly one project** at startup. For normal agent workflows, use **Custom access per project** scoped to a single project with **Full access**. Read-only tokens can pass startup, but they fail as soon as the agent tries to deploy, write env vars, or operate services.
+## Credential map
 
-To generate one:
+| Name                         | What it authorizes                           | Where it belongs                                                            |
+| ---------------------------- | -------------------------------------------- | --------------------------------------------------------------------------- |
+| `ZCP_API_KEY`                | ZCP against one Zerops project               | Remote: `zcp` service env injected by Zerops. Local: `.mcp.json` env block. |
+| Agent login or model API key | The coding agent itself                      | The bundled agent in remote setup, or your local agent client.              |
+| `GIT_TOKEN`                  | Git push from remote setup to a git provider | Secret env var on the `zcp` service when remote git-push delivery needs it. |
+| `ZEROPS_TOKEN`               | `zcli` in GitHub Actions or external CI      | Repository or CI secret for the workflow that deploys to Zerops.            |
 
-1. Open [Settings → Access Tokens Management](https://app.zerops.io/settings/token-management).
-2. **Create Token**, name it (e.g. `zcp-<project-slug>`).
-3. Pick **Custom access per project**.
-4. Add the project the agent will operate against, set permission to **Full access**, create.
-5. Copy the value — Zerops shows it only at creation time.
+Keeping these names separate prevents most setup and delivery failures.
 
-The token's blast radius equals the project. Other projects in the organization, account-level settings, and billing stay out of reach. See [Roles & Permissions](/features/rbac#integration-tokens) for how Zerops scopes integration tokens at the platform layer.
+## Recommended `ZCP_API_KEY` shape
+
+Use a Zerops API token with **Custom access per project**, scoped to exactly one project, with **Full access** for normal agent work.
+
+Read-only tokens can authenticate, but they fail as soon as the agent needs to deploy, write env vars, restart services, scale, or change public access. Account-wide or multi-project tokens are refused before the agent can operate.
+
+To generate the token:
+
+1. Open [Settings -> Access Tokens Management](https://app.zerops.io/settings/token-management).
+2. Create a token and name it for the project, for example `zcp-<project-slug>`.
+3. Choose **Custom access per project**.
+4. Add exactly one project.
+5. Set that project to **Full access** for normal ZCP work.
+6. Create the token and copy the value. Zerops shows it only at creation time.
+
+The token's blast radius equals the project and its granted permissions. Other projects, organization settings, and billing stay out of reach. Zerops [Roles & Permissions](/features/rbac#integration-tokens) remain the platform authority.
 
 ## Rejected token shapes
 
-ZCP validates the token at startup and refuses wrong shapes before the agent can operate the project.
+ZCP validates token shape at startup.
 
-| Token shape | What ZCP does | Why |
-|---|---|---|
-| Multi-project, including account-wide full access | Refuses to start | One ZCP process equals one project; ZCP won't pick which one. |
-| No project access | Refuses to start | The token authenticates a user but reaches no project. |
-| Read-only token | Fails on the first mutation | Passes startup auth; Zerops rejects the first deploy / env write / build call with a permission error. |
-| Expired or revoked | Refuses to start | The token no longer authenticates against the Zerops API. |
+| Token shape                         | What happens                                | Fix                                                                  |
+| ----------------------------------- | ------------------------------------------- | -------------------------------------------------------------------- |
+| Account-wide or multi-project token | ZCP refuses to start.                       | Generate a token scoped to exactly one project.                      |
+| Token with no project access        | ZCP refuses to start.                       | Grant one project or create a new project-scoped token.              |
+| Expired or revoked token            | ZCP refuses to start or receives HTTP 401.  | Replace the token and restart the agent or ZCP process.              |
+| Read-only project token             | Startup may pass, but mutations fail later. | Use full access for normal agent work, or expect read-only behavior. |
 
-The fix is always the same: generate a per-project token and replace `ZCP_API_KEY` on the surface ZCP reads from. In remote setup, that value is injected into the `zcp` service environment. In local setup, it is the `env` block in `.mcp.json`.
+Common messages:
 
-Common startup/auth messages:
-
-| Message | Meaning |
-|---|---|
-| `Token accesses N projects; use project-scoped token` | The token can see more than one project. Replace it with a single-project token. |
-| `Token has no project access` | The token authenticates but reaches no project. Grant project access or replace it. |
-| `No authentication found: set ZCP_API_KEY or log in with zcli` | No usable token reached the `zcp` process. |
-| `AUTH_TOKEN_EXPIRED` or HTTP 401 | The token expired, was revoked, or is otherwise invalid. Replace it and restart the agent. |
+| Message                                                        | Meaning                                           |
+| -------------------------------------------------------------- | ------------------------------------------------- |
+| `Token accesses N projects; use project-scoped token`          | The token can see more than one project.          |
+| `Token has no project access`                                  | The token authenticates but reaches no project.   |
+| `No authentication found: set ZCP_API_KEY or log in with zcli` | The `zcp` process did not receive a usable token. |
+| `AUTH_TOKEN_EXPIRED` or HTTP 401                               | The token expired, was revoked, or is invalid.    |
 
 ## Where the token lives - remote vs local {#where-the-token-lives--remote-vs-local}
 
-ZCP reads `ZCP_API_KEY` from environment at startup. It doesn't write the token anywhere else, doesn't exchange it for a derived credential. Where the env var comes from depends on which path you're on:
+ZCP reads `ZCP_API_KEY` from its process environment at startup. It does not write the token somewhere else or exchange it for a derived credential.
 
-| Setup | Where `ZCP_API_KEY` comes from | Who provisions it |
-|---|---|---|
-| Remote setup | The `zcp` service container env | Zerops platform - injected automatically when the service boots |
-| [Local setup](/zcp/setup/local-agent-bridge) | The `env` block of `.mcp.json` in the project directory | You - added manually after `zcp init` |
+| Setup                                        | Where `ZCP_API_KEY` comes from                          | Who provisions it                                        |
+| -------------------------------------------- | ------------------------------------------------------- | -------------------------------------------------------- |
+| [Remote setup](/zcp/setup/hosted-workspace)  | The `zcp` service environment                           | Zerops injects it automatically when the service starts. |
+| [Local setup](/zcp/setup/local-agent-bridge) | The `env` block of `.mcp.json` in the project directory | You add it after `zcp init`.                             |
 
-In remote setup, the service starts with `ZCP_API_KEY` populated. If **Include Coding Agent** is enabled, the bundled agent uses that environment automatically.
+In remote setup, do not hand-edit `ZCP_API_KEY`. Replace or rotate it through the Zerops-managed surface so the service keeps the intended project boundary.
 
-In local setup, `zcp init` writes a token-less `.mcp.json` template; you add the `env` block:
+In local setup, `zcp init` writes a token-less `.mcp.json`. Add the token manually:
 
 ```json
 {
@@ -68,21 +82,19 @@ In local setup, `zcp init` writes a token-less `.mcp.json` template; you add the
 }
 ```
 
-Gitignore `.mcp.json` so the token doesn't leave the machine. Each project directory has its own `.mcp.json` and its own token — switching projects means switching directories, not editing one shared file.
+Add `.mcp.json` to `.gitignore`. Each project directory should have its own file and its own project token. Switching projects means switching directories, not editing one shared credential.
 
-## Git credentials — separate from `ZCP_API_KEY`
+## Agent credentials are separate
 
-Three names, three jobs — keeping them straight prevents most credential confusion in [delivery handoff](/zcp/workflows/delivery-handoff):
+The bundled agent in remote setup may ask you to sign in or provide a model API key. That is not `ZCP_API_KEY`.
 
-| Name | What it authorizes | Where it lives |
-|---|---|---|
-| `ZCP_API_KEY` | ZCP itself, against the Zerops API | Container env (remote) or `.mcp.json` env block (local) |
-| `GIT_TOKEN` | A git push from remote setup to a remote (GitHub, GitLab) | Remote: secret env var on the `zcp` service. Local: not applicable — your git credential helper handles it. |
-| `ZEROPS_TOKEN` | A GitHub Actions workflow running `zcli` against Zerops | A repository secret in GitHub Actions |
+Zerops wires the agent to the project through ZCP. It does not provide your model subscription, store your agent login, or rotate your agent provider credentials. Treat the agent account exactly as you would outside Zerops.
 
-`GIT_TOKEN` only matters when delivery uses git-push and remote setup is the one pushing. In local setup, your own git CLI talks to the remote — SSH keys or credential manager already handle authentication, and ZCP doesn't need a credential of its own. If `GIT_TOKEN` is present in the `zcp` service env when you run git-push setup, ZCP reuses it instead of asking for a new credential.
+## Git and CI credentials
 
-`ZEROPS_TOKEN` is a **Zerops API token, not a GitHub token** — an Actions workflow uses it to authenticate `zcli` against Zerops. It can be the same project-scoped token already behind `ZCP_API_KEY` (one credential, one rotation surface) or a separate token if your team prefers credential separation. Delivery setup should place it in the CI secret store for the repository that runs the deploy.
+`GIT_TOKEN` matters only when remote setup pushes to a git remote. It authorizes git provider access from the `zcp` service. In local setup, your local git CLI uses your normal SSH key or credential helper, so ZCP does not need `GIT_TOKEN`.
+
+`ZEROPS_TOKEN` is a Zerops API token used by GitHub Actions or another CI system when that system runs `zcli` against Zerops. It is not a GitHub token. It can be the same project-scoped token used as `ZCP_API_KEY`, or a separate project-scoped token if your team prefers separate rotation.
 
 With GitHub CLI, the secret shape is:
 
@@ -90,58 +102,57 @@ With GitHub CLI, the secret shape is:
 gh secret set ZEROPS_TOKEN -b "$ZCP_API_KEY"
 ```
 
-Use the GitHub UI instead if your team does not allow local CLI secret writes.
+Use the GitHub UI or your CI secret manager instead if your team does not allow local CLI secret writes.
 
 ## Rotation
 
-Rotate in the Zerops dashboard, then propagate to the consuming surface:
+Rotate in the Zerops dashboard, then update the surface that consumes the token.
 
-- **Remote setup** — the service env value updates; ZCP picks up the new value the next time the `zcp` service boots or restarts.
-- **Local setup** — paste the new token into the `env` block of `.mcp.json`, then restart your agent client so the new ZCP process inherits the updated env.
-- **GitHub Actions secret** — `gh secret set ZEROPS_TOKEN ...` (or the GitHub UI) replaces the secret. Next workflow run uses the new value.
+| Surface              | Rotation step                                                                                                                            |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Remote `ZCP_API_KEY` | Reconfigure or redeploy remote ZCP through the dashboard-managed path, then restart the `zcp` service so the process gets the new value. |
+| Local `ZCP_API_KEY`  | Paste the new token into `.mcp.json`, then restart the local agent client.                                                               |
+| `ZEROPS_TOKEN` in CI | Replace the repository or CI secret. The next workflow run uses the new value.                                                           |
+| `GIT_TOKEN`          | Replace the git-provider credential stored for remote setup.                                                                             |
 
-Rotations on `ZCP_API_KEY` and `ZEROPS_TOKEN` are independent unless you reused the same Zerops token for both.
+Rotation is picked up on next process start or workflow run, not in the middle of a live agent session.
 
 ## Confirmation gates for destructive actions
 
-A valid token doesn't unlock everything. Two operations carry an explicit confirmation gate because the loss isn't reversible from inside the conversation:
+A valid token does not remove every guardrail. ZCP adds explicit confirmation for operations where the loss is not safely reversible from inside the conversation.
 
-| Operation | Gate |
-|---|---|
-| **Service deletion** — removes the service entirely; container, deployed code, env vars, and (for managed services) data go with it. | Requires explicit approval in the same conversation, including the service name. Remote setup also blocks deleting the `zcp` service it is running in. |
-| **Wholesale service replacement** from an import on a service with prior failed deploy history | First returns a summary of what would be replaced and refuses to continue. The agent must show that evidence before asking you to confirm. |
+| Operation                                                 | Gate                                                                                                                                                   |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Service deletion                                          | Requires explicit approval in the same conversation, including the service name. Remote setup also blocks deleting the `zcp` service it is running in. |
+| Wholesale service replacement after failed deploy history | The first request refuses, surfaces what would be replaced, and requires the agent to read failure evidence before asking you to confirm.              |
 
-ZCP itself adds confirmation only for the two operations above. Your agent client or team policy may still prompt before tool calls. Deploys, env changes, lifecycle actions, restarts, scaling, and public-access changes do not get an additional ZCP-specific confirmation gate. Most are reversible by another call. A few are operationally destructive even though they are not gated by ZCP (deleting an env value, rotating a secret used by running services); you stay in the loop on those through the verify pass and the audit trail, not a pre-call gate.
+Deploys, env changes, lifecycle actions, restarts, scaling, and public-access changes do not get an additional ZCP-specific confirmation gate. They are normal project operations for a full-access token and should be reviewed through service events, logs, verification output, and team policy.
 
-Approval is an explicit yes paired with the service name in the same turn-window. Approval from a previous chat doesn't carry forward — a new conversation is a new approval window.
+Approval from a previous chat does not carry forward. A new conversation needs a new approval.
 
-### Diagnose before destruct
+## Diagnose before destruct
 
-When a service is in trouble — non-running state, failed last deploy, or both — ZCP enforces one rule across destructive paths: read the platform's account of why before destroying anything. The first call against a service with failure history is refused; the agent reads the failure classification, events, and logs, then either fixes the cause or comes back with a confirmation that includes a summary of what it read.
+When a service has recent failure history, ZCP enforces one recovery rule: read the platform evidence before destroying or replacing the service.
 
-The rule prevents two failure modes:
+The agent should inspect service events, build logs, runtime logs, and failure summaries, then either fix the cause or show you the evidence before asking for destructive confirmation. This prevents delete-and-retry loops that erase the failure context the next session needs.
 
-- **Delete-and-retry loops** — the agent decides the cleanest fix is to delete and re-import, masking the cause every time.
-- **Replace-as-reset** — replacing a service from an import becomes a "make it like new" button that erases the failure context the next session needs.
+A service waiting for first code deploy is not the same thing as a failed service. The gate is about recorded failure history, not idle state.
 
-Recovery state isn't broken state. A service that came up `READY_TO_DEPLOY` and is waiting for code isn't in trouble — the gate fires on platform-recorded failure, not on idle.
-
-Threat model and hard refusals: [Trust model](/zcp/security/trust-model).
+Threat model and boundaries: [Trust model](/zcp/security/trust-model).
 
 ## Gotchas
 
-- **Multi-project tokens are refused at startup, not at first deploy.** An account-wide full-access token won't let ZCP boot at all. Generate a per-project token before connecting.
-- **`zcp init` overwrites `.mcp.json`.** If you added `ZCP_API_KEY` to the file and re-run `zcp init`, the regenerated template ships without your token. Re-add it before launching the agent.
-- **`GIT_TOKEN` is not `ZCP_API_KEY`.** `GIT_TOKEN` authorizes git push in remote setup; `ZCP_API_KEY` authorizes ZCP against Zerops. Mixing them grants too much or fails authentication.
-- **`ZEROPS_TOKEN` in GitHub Actions is a Zerops API token, not a GitHub PAT.** If a deploy from Actions fails on permissions and you reach for a GitHub PAT, you've rotated the wrong credential.
-- **Rotation is picked up on next ZCP startup, not mid-session.** Restart the agent after rotating; the live session still holds the old value in process memory.
-- **Confirmation must be in the same conversation.** Approval from a previous chat doesn't carry forward.
-- **A successful confirmation is still a destructive call.** Once you acknowledge replacement, the override runs. Roll-back isn't automatic - recover lost data through [Backup](/features/backup), and review service-scoped events, logs, deploy results, and git history before approving destructive recovery.
+- **Account-wide full-access tokens are refused.** ZCP needs one project, not a broad account credential.
+- **`zcp init` regenerates `.mcp.json`.** Re-add `ZCP_API_KEY` after rerunning it.
+- **`GIT_TOKEN` is not `ZCP_API_KEY`.** One authorizes git provider access; the other authorizes Zerops project operations.
+- **`ZEROPS_TOKEN` in GitHub Actions is not a GitHub PAT.** It is a Zerops API token for `zcli`.
+- **A rotated token needs a restart.** The live ZCP process keeps the old environment value until it starts again.
+- **A successful confirmation is still destructive.** Backups, git history, and service events are your recovery evidence; ZCP does not auto-rollback a confirmed deletion or replacement.
 
 ## Related
 
-- [Trust model](/zcp/security/trust-model) — the project boundary this page enforces in practice.
-- [Roles & Permissions](/features/rbac) — how Zerops scopes access tokens at the platform layer.
-- [Set up local ZCP](/zcp/setup/local-agent-bridge) — where the local token gets configured.
-- [Choose how finished work ships](/zcp/workflows/delivery-handoff) — where `GIT_TOKEN` and `ZEROPS_TOKEN` come into play.
-- [GitHub integration](/references/github-integration) — full reference for the dashboard and Actions paths that consume `ZEROPS_TOKEN`.
+- [Trust model](/zcp/security/trust-model) - the project boundary this page enforces.
+- [Use remote ZCP workspace](/zcp/setup/hosted-workspace) - automatic token injection.
+- [Set up local ZCP](/zcp/setup/local-agent-bridge) - local `.mcp.json` token setup.
+- [Production boundary](/zcp/security/production-policy) - why production gets separate credentials.
+- [GitHub integration](/references/github-integration) - CI secret usage with Zerops.

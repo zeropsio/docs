@@ -1,36 +1,36 @@
 ---
-title: "Service setup behind the prompt"
-description: "How ZCP helps the agent use existing app services or create missing runtimes and managed dependencies before code work starts."
+title: 'Set up app services'
+description: 'How ZCP helps the agent reuse existing app services or create missing runtimes and managed dependencies before code work starts.'
 ---
 
-When an app prompt needs infrastructure, ZCP should discover what already exists before creating runtimes or managed services. This usually happens because you asked for a product outcome, not because you explicitly asked for infrastructure.
+When an app prompt needs infrastructure, ZCP should discover what already exists before creating anything. This usually happens because you asked for a product outcome, not because you explicitly asked for runtimes, databases, queues, or caches.
 
 For example, `Build a task board where tasks stay saved after refresh.` may require an app runtime and database. `Use the existing Laravel services` tells the agent to reuse what is already there instead of creating duplicates.
 
-Behind that prompt, the agent should answer:
+Behind that prompt, the agent should answer four practical questions:
 
 - Which runtime service will hold app code?
 - Which managed services does the app depend on?
 - Do those services already exist, or should the agent create them?
 - Are they running and visible to ZCP?
 
-This part does **not** write application code, create `zerops.yaml`, run the first deploy, or verify behavior. Those belong to [Deploy, verify, and fix](/zcp/workflows/build-and-verify-app).
+This part is infrastructure setup. App files, `zerops.yaml`, deploys, and behavior checks belong to [Deploy, verify, and fix](/zcp/workflows/build-and-verify-app).
 
 ## Starting situations
 
-| Situation | What should happen |
-|---|---|
-| Runtime services already exist | Use them. Identify runtimes and managed dependencies. Do not recreate or rename services just to begin. |
-| Project has only the `zcp` service | Treat it as empty from the app point of view. Create or import the requested service layout. |
+| Situation                                          | What should happen                                                                                    |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Runtime services already exist                     | Use them when they fit. Identify runtimes and managed dependencies before changing code.              |
+| Project has only the `zcp` service                 | Treat it as empty from the app point of view. Create or import the requested service layout.          |
 | Project is empty and request matches a known stack | A recipe may be a good starting base, but the starter still has to be changed into the requested app. |
-| Project is empty and request needs a custom layout | Create a custom service plan before app work starts. |
-| Setup was interrupted | Resume from current ZCP status instead of starting over. |
+| Project is empty and request needs a custom layout | Create a custom service plan before app work starts.                                                  |
+| Setup was interrupted                              | Resume from current ZCP status instead of starting over.                                              |
 
-The `zcp` service is the ZCP setup, not the application runtime target.
+The `zcp` service is the ZCP workspace and control plane. It is not the application runtime target.
 
 ## Prompt examples
 
-Product prompts can imply the service setup; they do not need to spell it out:
+Product prompts can imply service setup. Add service details only when they change what should be built or reused:
 
 ```text
 Build a Node.js API with PostgreSQL. Use the existing dev+stage pair if this project has one.
@@ -44,19 +44,24 @@ Use the existing Laravel services and build a small notes app.
 Add saved tasks to this task board.
 ```
 
-The agent should explain whether it used existing services or created new ones, then move into app work when infrastructure is known.
+The agent should explain whether it used existing services or created new ones, then move into app work when the runtime and dependencies are known.
 
 ## Done state
 
-Service setup is done when the app runtime and managed dependencies are known, any new services are visible, and the agent is ready to start app code, `zerops.yaml`, deploy, and verification work.
+Service setup is done when:
+
+- the app runtime is identified,
+- required managed services are identified,
+- any new services are visible to ZCP,
+- the agent can start app code, `zerops.yaml`, deploy, and verification work.
 
 When files, framework setup, deploys, logs, or behavior checks appear, the work has moved to [Deploy, verify, and fix](/zcp/workflows/build-and-verify-app).
 
-## Failure signals
+## Correction signals
 
-| Symptom | What to do |
-|---|---|
-| Agent targets `zcp` as the app | Correct the target to the runtime service. |
-| Agent recreates existing runtimes | Ask it to inspect current services and use what exists. |
+| Symptom                                     | What to do                                                            |
+| ------------------------------------------- | --------------------------------------------------------------------- |
+| Agent targets `zcp` as the app              | Correct the target to the runtime service.                            |
+| Agent recreates existing runtimes           | Ask it to inspect current services and use what exists.               |
 | Agent writes app files during service setup | Stop and finish infrastructure first, or move explicitly to app work. |
-| Service creation fails | Treat it as a hard stop until the failure is understood. |
+| Service creation fails                      | Treat it as a hard stop until the failure is understood.              |
