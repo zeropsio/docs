@@ -636,33 +636,13 @@ module.exports = {
           ],
         },
         {
-          type: 'category',
+          type: 'doc',
+          id: 'zcp/workflows/build-with-zcp',
           label: 'Build with ZCP',
-          link: {
-            type: 'doc',
-            id: 'zcp/workflows/build-with-zcp',
-          },
           customProps: {
             sidebar_icon: 'circle-stack',
           },
           className: 'homepage-sidebar-item',
-          items: [
-            {
-              type: 'doc',
-              id: 'zcp/workflows/create-or-adopt-services',
-              label: 'Service setup behind the prompt',
-            },
-            {
-              type: 'doc',
-              id: 'zcp/workflows/build-and-verify-app',
-              label: 'Deploy, verify, and fix',
-            },
-            {
-              type: 'doc',
-              id: 'zcp/workflows/delivery-handoff',
-              label: 'Choose how finished work ships',
-            },
-          ],
         },
         {
           type: 'category',

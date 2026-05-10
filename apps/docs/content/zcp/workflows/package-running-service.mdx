@@ -117,7 +117,7 @@ A few things worth noticing:
 - The runtime's `buildFromGit:` URL points back at the same repo the bundle lives in. The bundle is **self-referential**: re-importing creates a project that builds itself from git. Source code lives in git, not in YAML.
 - Managed dependencies (`db`, `redis`) appear as plain entries with no `buildFromGit:` so `${db_*}` and `${redis_*}` references in `zerops.yaml` resolve at re-import. See [environment variables](/guides/environment-variables).
 
-Packaging can be part of a handoff intent. The agent should produce the files, place them where the chosen handoff path expects them, and commit or push when that delivery choice is configured. Packaging itself produces the bundle; repository changes still happen through the normal [handoff path](/zcp/workflows/delivery-handoff).
+Packaging can be part of a handoff intent. The agent should produce the files, place them where the chosen delivery preference expects them, and commit or push when that delivery choice is configured. Packaging itself produces the bundle; repository changes still happen through the normal [delivery preference](/zcp/workflows/build-with-zcp#choose-delivery-after-proof).
 
 ## What the bundle does not include
 
@@ -128,14 +128,14 @@ Packaging can be part of a handoff intent. The agent should produce the files, p
 | External API keys (Stripe, OpenAI, etc.)                                 | `REPLACE_ME` placeholder; new project owner pastes the real key |
 | Production config                                                        | Keep production in a separate Zerops project                    |
 
-## Gotchas
+## Packaging checks
 
-1. **Packaging is not the delivery path by itself.** It produces the bundle. Commit and push happen through your chosen [handoff path](/zcp/workflows/delivery-handoff).
+1. **Packaging is not the delivery path by itself.** It produces the bundle. Commit and push happen through your chosen [delivery preference](/zcp/workflows/build-with-zcp#choose-delivery-after-proof).
 2. **Managed-service data is not in the bundle.** Re-importing produces fresh empty managed services. Plan a separate restore step for any service with stateful data.
 3. **External secrets land as `REPLACE_ME`.** Re-importing a bundle without filling those in deploys services that fail at startup with credential errors.
 
 ## Next steps
 
-- [Choose how finished work ships](/zcp/workflows/delivery-handoff) - commit and push the bundle's two files.
-- [Deploy, verify, and fix](/zcp/workflows/build-and-verify-app) - the verified runtime this packages.
+- [Build with ZCP](/zcp/workflows/build-with-zcp#choose-delivery-after-proof) - choose how the bundle's two files ship.
+- [How ZCP works](/zcp/concept/how-it-works#verification-has-two-layers) - the verified runtime this packages.
 - [How ZCP works](/zcp/concept/how-it-works) - why packaging stays stateless.

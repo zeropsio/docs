@@ -1,101 +1,120 @@
 ---
 title: 'Build with ZCP'
-description: 'How a product prompt turns into service setup, app work, verification, and delivery after proof.'
+description: 'The practical ZCP development surface: runtime layout, live project context, and delivery preference.'
 ---
 
-Start with what the app should do, not with tool calls or workflow names.
+Build with ZCP starts from product intent, not from an operations checklist.
 
 ```text
-Build a task board where tasks stay saved after refresh.
+Build a task board.
+Tasks should stay saved after refresh.
 ```
 
-Behind that prompt, the agent should inspect the project, choose the app runtime, make the change, deploy it, and use evidence from the real Zerops project until the requested behavior is proven. ZCP supplies the live service map, env state, deploy access, logs, events, verification checks, and guardrails needed for that loop.
+Behind that prompt, ZCP gives the agent a development surface for one Zerops project: choose the runtime layout, develop from current project state and Zerops-specific guidance, then follow the delivery preference you choose.
 
-Do not make the prompt longer to restate completion expectations such as deploy, verification, or returning the URL. The words you add should change the app, the stack, the runtime layout, the acceptance criteria, or the delivery path.
+You do not need to add "deploy it", "verify it", or "send me the URL" to every prompt. Add words when they change the product, stack, runtime layout, acceptance criteria, or delivery path.
 
-You also do not need to paste an infrastructure inventory, env wiring plan, or log summary into the prompt. ZCP makes those available to the agent from the live project.
+## The lifecycle
 
-## The three parts of the work
+<div className="zcp-lifecycle-diagram">
+  <div className="zcp-lifecycle-prompt">
+    <span>Product prompt</span>
+    <code>Build a task board...</code>
+  </div>
+  <div className="zcp-lifecycle-down" aria-hidden="true" />
+  <div className="zcp-lifecycle-flow">
+    <section className="zcp-lifecycle-stage zcp-lifecycle-stage--infra">
+      <h3>1. Infrastructure layout</h3>
+      <p>Choose where app code should run.</p>
+      <ul>
+        <li>Dev</li>
+        <li>Dev + stage</li>
+        <li>Stage target</li>
+      </ul>
+    </section>
+    <section className="zcp-lifecycle-stage zcp-lifecycle-stage--dev">
+      <h3>2. Development context</h3>
+      <p>Tell the agent what should change.</p>
+      <ul>
+        <li>Live project state</li>
+        <li>Zerops knowledge</li>
+        <li>Product criteria</li>
+      </ul>
+    </section>
+    <section className="zcp-lifecycle-stage zcp-lifecycle-stage--delivery">
+      <h3>3. Delivery preference</h3>
+      <p>Choose how finished work should ship.</p>
+      <ul>
+        <li>Keep direct deploy</li>
+        <li>Push to git</li>
+        <li>CI or human handoff</li>
+      </ul>
+    </section>
+  </div>
+</div>
 
-The useful mental model is:
+The important user-facing concepts are the runtime layout, the development inputs ZCP can work from, and the delivery preference. The exact internal labels live in [Workflow terms](/zcp/reference/agent-workflow).
 
-1. **Infrastructure setup.** Find or create the runtime and dependencies the app needs.
-2. **Development and verification.** Change the app, deploy it, and prove the requested behavior on Zerops.
-3. **Delivery after proof.** Decide what happens to the finished work after a verified result exists.
+## 1. Choose the runtime layout {#choose-the-runtime-layout}
 
-ZCP makes those boundaries explicit enough that the agent can resume, recover, and stop at the right point without turning your prompt into an operations script.
+The runtime layout decides where the agent should build app code. You can let ZCP infer it from the project, or you can name the shape in the prompt when it matters.
 
-### 1. Infrastructure setup
+| Runtime layout            | Use when                                                                                  | What to tell the agent                                  |
+| ------------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| **Dev**                   | You want one mutable runtime for fast iteration, experiments, or early app work.          | `Build a small Node.js API on dev.`                     |
+| **Dev + stage**           | You want a development runtime plus a separate runtime for review or promotion rehearsal. | `Build a Node.js API with PostgreSQL on dev+stage.`     |
+| **Stage / linked target** | You work from local files or a single target runtime and want ZCP to use that target.     | `Use appstage as the deploy target for this local app.` |
 
-The agent first reads what exists now: runtime services, managed services, env vars, recent events, and current work state. Then it establishes the app target:
+The layout is about app runtimes, not where ZCP itself runs. Remote setup can use any of these layouts from the `zcp@1` workspace. Local setup usually works from local files into a linked stage or app runtime.
 
-- use existing runtimes and managed services when they fit,
-- create missing runtimes or managed dependencies when the request needs them,
-- identify the app runtime that will receive code,
-- keep `zcp` as the workspace/control-plane service, not as the app runtime.
+Managed services such as PostgreSQL, Valkey, queues, search, storage, or mail are dependencies. ZCP gives the agent their state and wiring patterns, but app code deploys to runtime services.
 
-This phase ends when the app runtime and dependencies are known. It should not end with "the app is done"; no application behavior has been proven yet.
+## 2. Develop with live project context {#develop-with-live-project-context}
 
-Useful prompts:
+This is the core value of ZCP during development: the agent does not work from a stale prompt or copied log snippet. It gets current project state, Zerops-specific knowledge, and workflow instructions scoped to the project in front of it.
 
-```text
-Build a Node.js API with PostgreSQL. Use the existing dev+stage pair if this project has one.
-```
+| What the agent gets from ZCP | Why it matters during development                                                                       |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Live project state           | Services, runtime layout, env-var keys, Zerops references, events, deploys, logs, and saved work state. |
+| Zerops knowledge             | Runtime and managed-service wiring, `zerops.yaml`, env refs, ports, public access, and deploy behavior. |
+| Project-scoped tools         | Operations for service setup, env vars, deploys, logs, lifecycle, verification, and recovery.           |
+| Workflow instructions        | When to use existing services, when to create missing ones, when to read evidence, and when to ask.     |
 
-```text
-Use the existing Laravel services and add a small notes app.
-```
+That means you usually do not paste an infrastructure inventory, env wiring plan, or log summary into the chat. A short product prompt can be enough because the agent can ask ZCP what exists now.
 
-### 2. Development and verification
+What you control here is the product request, stack preference, acceptance criteria, and any instruction to inspect or continue existing work. ZCP handles the deploy, verification, evidence reading, and recovery loop behind that request.
 
-After the target is known, the agent changes app files and `zerops.yaml`, deploys through Zerops, verifies platform reachability, verifies the requested behavior, reads evidence on failure, and retries from the cause.
+| Development input       | Use when                                                      | What to tell the agent                                                  |
+| ----------------------- | ------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| **Product behavior**    | The feature or app outcome matters more than the exact stack. | `Build a task board where tasks stay saved after refresh.`              |
+| **Stack preference**    | You want a specific runtime, framework, or managed service.   | `Use Laravel and the existing PostgreSQL service.`                      |
+| **Acceptance criteria** | A specific behavior must be true before the task is done.     | `A user can create a task, refresh the page, and still see it.`         |
+| **Existing work**       | A previous ZCP session stopped or the project already exists. | `Read ZCP status first, then continue the interrupted task board work.` |
 
-Two checks matter:
+## 3. Choose delivery preference {#choose-delivery-after-proof}
 
-| Check              | What it answers                                                                                    |
-| ------------------ | -------------------------------------------------------------------------------------------------- |
-| Reachability       | Did the runtime build, start, and answer on the real platform path?                                |
-| Requested behavior | Does the app do the thing you asked for on the real URL, endpoint, worker result, or stored state? |
+Delivery preference controls how ZCP should finish work and how future ZCP sessions should ship changes. You can include it in the original prompt or set it later.
 
-A successful build is not enough. A page returning 200 is not enough when the prompt asked for saved tasks. The agent should report the behavior it checked, not only the deploy it ran.
+| Delivery preference    | What it means                                                                                      | What to tell the agent                                                      |
+| ---------------------- | -------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| **Keep direct deploy** | ZCP keeps deploying directly to the target runtime for fast dev/stage iteration.                   | `Keep direct deploy for now.`                                               |
+| **Push to git**        | The agent commits and pushes working changes to the configured repository.                         | `When the app works, push changes to git@github.com:my-org/task-board.git.` |
+| **CI / handoff**       | A repository integration, GitHub Actions workflow, release process, or human owns the next deploy. | `Set up GitHub Actions delivery for future deploys after the app works.`    |
 
-If the agent appears to drift, correct it in terms of the outcome you need:
+ZCP records the delivery choice so later work can follow the same path without re-explaining the handoff every time. Git push credentials, CI secrets, and production credentials are separate from `ZCP_API_KEY`; see [Tokens and credentials](/zcp/security/tokens-and-project-access).
 
-| If the agent...                               | Ask it to...                                                         |
-| --------------------------------------------- | -------------------------------------------------------------------- |
-| writes files before naming the runtime target | read ZCP status and identify the app runtime first                   |
-| targets the `zcp` service as the app          | switch to the runtime service that runs app code                     |
-| repeats deploys without new evidence          | read fresh logs, events, or verify output and name the failure point |
-| reports completion after only a green build   | verify the requested behavior on the real URL or endpoint            |
-
-### 3. Delivery after proof
-
-After a verified deploy exists, choose what should happen to the finished work and future changes:
-
-| Choice             | Use when                                                                 |
-| ------------------ | ------------------------------------------------------------------------ |
-| Keep direct deploy | Fast iteration, demos, early development, or agent-owned dev/stage work. |
-| Push to git        | You want commits, repository history, review, or repo-driven builds.     |
-| External handoff   | CI, release process, or a human owns delivery from here.                 |
-
-You can include this intent in the original prompt, but it applies after proof:
-
-```text
-Build a task board where tasks stay saved after refresh. After it verifies, push the result to git@github.com:my-org/task-dashboard.git.
-```
-
-The first functional deploy still happens through ZCP so the agent can prove the app in the target project. Delivery choice controls what follows a verified result.
-
-Advanced export and reuse path: [Package a running service](/zcp/workflows/package-running-service).
+Production should still be a separate Zerops project. ZCP can prepare the handoff from dev or stage, but production promotion belongs to your release path; see [Production boundary](/zcp/security/production-policy).
 
 ## What the final answer should contain
 
 For a completed app task, the agent should report:
 
-- which runtime service changed,
-- which deploy passed,
-- which URL, endpoint, or UI state proved the requested behavior,
-- any env vars, managed services, or delivery settings touched,
-- the delivery choice if one was set.
+- the runtime service it changed,
+- the deploy or verification target,
+- the URL, endpoint, UI state, job result, or stored data that proves the requested behavior,
+- managed services, env vars, or delivery settings it touched,
+- the delivery preference that now applies.
 
-If the task is incomplete, the final answer should name the blocker, the evidence read, what was tried, and the next decision needed from you.
+If the task is incomplete, the final answer should name the blocker, the evidence read, what was tried, and the decision or credential needed from you.
+
+Advanced reuse path: [Package a running service](/zcp/workflows/package-running-service) turns a verified runtime into a re-importable bundle. It is not the normal lifecycle for the next app change.

@@ -118,14 +118,17 @@ Use these patterns:
 - **Team-standard workspace:** build a derived image based on `zcp@1` with required tools already present.
 - **Helper processes:** run project-local helpers next to the agent and editor workspace when your team needs private integrations.
 
-Avoid putting app runtime build steps into the `zcp` service. Runtime services own app builds and deploys.
+Keep app runtime build steps with the runtime services. The remote workspace carries the agent, tools, and project access; runtime services own app builds and deploys.
 
-## Boundaries to keep
+## What belongs where
 
-- **The `zcp` service is not the app.** Deploy app code to runtime services, not to the workspace service.
-- **Do not set `ZCP_API_KEY` manually in remote setup.** Zerops injects it. A manual override can break the project boundary.
-- **The agent account is separate from Zerops.** If Claude Code asks you to sign in, use your Claude subscription or model API credential.
-- **Remote setup is not production policy.** Use it in development or staging projects. Production should live in a separate project without a `zcp` service; see [Production boundary](/zcp/security/production-policy).
+| Concern              | Where it belongs                                                                                                                                                     |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Agent workspace      | The `zcp@1` service, with Claude Code, browser VS Code, shell tools, MCP servers, and team-specific helpers.                                                         |
+| App code deploys     | Runtime services such as `appdev`, `appstage`, or `app`; not the workspace service.                                                                                  |
+| ZCP project token    | Injected by Zerops into the remote workspace. You normally do not set `ZCP_API_KEY` by hand in remote setup.                                                         |
+| Agent account        | Your Claude subscription login or model API credential. Zerops wires the agent to ZCP, but the agent account remains yours.                                          |
+| Production promotion | A separate production project and release path. Remote setup belongs in development or staging projects; see [Production boundary](/zcp/security/production-policy). |
 
 ## Next steps
 

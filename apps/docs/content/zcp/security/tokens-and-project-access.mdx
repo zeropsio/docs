@@ -117,7 +117,7 @@ Rotate in the Zerops dashboard, then update the surface that consumes the token.
 
 Rotation is picked up on next process start or workflow run, not in the middle of a live agent session.
 
-## Confirmation gates for destructive actions
+## What ZCP enforces for destructive actions
 
 A valid token does not remove every guardrail. ZCP adds explicit confirmation for operations where the loss is not safely reversible from inside the conversation.
 
@@ -130,17 +130,17 @@ Deploys, env changes, lifecycle actions, restarts, scaling, and public-access ch
 
 Approval from a previous chat does not carry forward. A new conversation needs a new approval.
 
-## Diagnose before destruct
+## Evidence before destructive recovery
 
 When a service has recent failure history, ZCP enforces one recovery rule: read the platform evidence before destroying or replacing the service.
 
-The agent should inspect service events, build logs, runtime logs, and failure summaries, then either fix the cause or show you the evidence before asking for destructive confirmation. This prevents delete-and-retry loops that erase the failure context the next session needs.
+The agent should inspect service events, build logs, runtime logs, and failure summaries, then either fix the cause or show you the evidence before asking for destructive confirmation. The point is to preserve the failure context the next session needs.
 
 A service waiting for first code deploy is not the same thing as a failed service. The gate is about recorded failure history, not idle state.
 
 Threat model and boundaries: [Trust model](/zcp/security/trust-model).
 
-## Gotchas
+## Credential checks
 
 - **Account-wide full-access tokens are refused.** ZCP needs one project, not a broad account credential.
 - **`zcp init` regenerates `.mcp.json`.** Re-add `ZCP_API_KEY` after rerunning it.
