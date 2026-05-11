@@ -1,29 +1,23 @@
 ---
 title: Local & Remote Development
-description: Three ways to develop on Zerops — local with VPN, Cloud IDE, or your native IDE over SSH. Same project network, service types, and deploy pipeline; production stays separate.
+description: Three ways to develop on Zerops — local with VPN, Cloud IDE, or your native IDE over SSH. Same network, same managed services, same pipeline as production.
 ---
 
-You can develop on Zerops without leaving your laptop, fully inside Zerops, or anywhere in between. The project's private network is the thing you join — what you use to join it is a choice, not a constraint. Across local VPN, Cloud IDE, and SSH, you use the same project network, hostnames, service types, and deploy pipeline.
+Zerops development is network-first. Keep your editor on your laptop, work fully inside Zerops, or use a native editor over SSH; in each case you join the same project-private network and use the same hostnames, credentials, managed services, and deploy pipeline.
 
-This is also what narrows the gap between development and production. Development and staging can use the same Zerops-managed service types, networking model, and `zerops.yaml` patterns production uses. Production should still live in a separate project with separate credentials, access rules, and resource policies.
-
-The same substrate works for humans and coding agents. A local agent inherits your laptop's VPN reach; an agent inside remote setup inherits the project's private network; an editor over SSH inherits the service or workspace it connects to. ZCP adds project operations and workflow evidence on top of that access, but local and remote development do not require ZCP.
-
-:::note
-Remote setup is a `zcp@1` service you can add to a development or staging project. It can provide a Linux dev container, optional Cloud IDE, and optional **Include Coding Agent** wiring. The paths below can use that service, connect directly to runtime services, or stay fully local over VPN; local development with `zcli vpn up` does not require ZCP at all.
-:::
+Development, staging, and production can use the same Zerops-managed service types, networking model, and `zerops.yaml` patterns. What changes is environment policy: credentials, resource allocation, access rules, data, and release authority.
 
 ## How development on Zerops works
 
-Every project ships with a private network. Services inside it reach each other by hostname (`db:5432`, `api:3000`, `redis:6379`), with credentials injected as environment variables. Standard hostname resolution on a network that happens to be yours.
+Every project ships with a private network. Services reach each other by hostname (`db:5432`, `api:3000`, `redis:6379`), with credentials injected as environment variables.
 
-The development question is just: how do you, the developer, get onto that network? Three answers give you the same project-private network reach, with different filesystem, tooling, and credential boundaries.
+The development question is how you get onto that network. Three paths give you the same project-private reach, with different filesystem, tooling, and credential boundaries.
 
-- **Local + VPN.** Your laptop joins the private network via WireGuard. Editor, toolchain, and processes stay where they are. Remote setup isn't required.
-- **Cloud IDE.** A Linux container in the project, accessed through VS Code Server in the dashboard. Zero local setup.
-- **Native IDE over SSH.** SSH from your local VS Code, JetBrains Gateway, Cursor, or plain `ssh` — to the `zcp` service, or directly to a service container.
+- **Local + VPN.** Your laptop joins the private network via WireGuard. Editor, toolchain, and processes stay where they are. A hosted workspace is not required.
+- **Cloud IDE.** A Linux workspace in the project, accessed through VS Code Server in the dashboard. Zero local setup.
+- **Native IDE over SSH.** SSH from your local VS Code, JetBrains Gateway, Cursor, or plain `ssh` into a workspace or directly into a runtime service container.
 
-Same `db:5432`, same `api:3000`, same project credentials in all three. Switch paths without changing anything about the development project.
+Same `db:5432`, same `api:3000`, same project credentials. Switch paths without changing the development project.
 
 ## Local + VPN
 
@@ -37,11 +31,9 @@ redis-cli -h cache -p 6379
 ssh apidev
 ```
 
-What you get on your laptop: every service in the project addressable by hostname, passwordless SSH into any container, real Postgres with prod-shaped data, real Redis, real S3-compatible storage. No mocks. No Docker Compose drift between what you run locally and what production runs.
+Your laptop can reach project services by hostname: Postgres, Valkey, S3-compatible storage, runtime containers, and any other service in the project. You can keep your normal dev loop and point it at `db:5432` instead of a local mock or Docker Compose dependency.
 
-What you don't have to do: add remote setup, run `zcli push`, learn a new editor, change your dev loop. If you're used to running `npm run dev` against a local Postgres, run it against `db:5432` instead — same connection string format, same SQL, same managed service type as stage or production.
-
-This path is also where coding agents running on your laptop fit. Without ZCP, a local agent client inherits the VPN's access, so the agent can hit `db:5432` and SSH into containers the same way you can. To let the agent operate the project - discover, deploy, verify, read logs, and manage delivery handoff - add [ZCP on your machine](/zcp/setup/local-agent-bridge).
+You do not need a hosted workspace, `zcli push`, or a new editor for this path.
 
 **Source control.** Use git on your laptop the way you always have. Commits, pushes, SSH agent against GitHub, your existing credentials — nothing about Zerops sits between you and the remote.
 
@@ -49,41 +41,48 @@ This path is also where coding agents running on your laptop fit. Without ZCP, a
 See the [VPN reference guide](/references/networking/vpn).
 :::
 
-## Cloud IDE on remote setup
+## Cloud IDE in Zerops
 
 **Best for:** zero local setup, working from a machine that isn't yours, or wanting a pristine environment that doesn't touch your laptop.
 
-When you add remote setup (a `zcp@1` service) to a development or staging project - see [What remote workspace gives you](/zcp/setup/hosted-workspace) - you get a project-contained workspace with `zcp`, private-network access, optional Browser VS Code, and optional bundled agent wiring.
+A hosted workspace is a normal Zerops service in the project. It gives you a project-contained Linux environment with private-network access, optional Browser VS Code, `zcli`, git tooling, database CLIs, and shell utilities.
 
-Remote setup can also mount runtime service files into the workspace, so you can inspect or edit code that runs in another container without moving it to your laptop. Details live in [Runtime file access](/zcp/setup/hosted-workspace#runtime-file-access).
+The workspace can also mount runtime service files, so you can inspect or edit code that runs in another container without moving it to your laptop:
+
+```bash
+ls /var/www/apidev
+ls /var/www/frontenddev
+vim /var/www/apidev/src/server.ts
+```
+
+The dev server in the runtime container hot-reloads, the database is the same `db:5432`, and staging deploys still go through the Zerops deploy pipeline.
 
 The Cloud IDE itself is configurable. Two access methods:
 
 - **VPN Only.** The IDE is reachable through `zcli vpn up`, no public exposure. Most secure.
 - **Public Access.** The IDE is reachable on a `.zerops.app` subdomain, gated by an auto-generated password.
 
-**Source control.** The remote workspace isn't on your laptop, so your local SSH keys don't follow it. Two patterns work:
+**Source control.** The hosted workspace isn't on your laptop, so your local SSH keys don't follow it. Two patterns work:
 
 - **GitHub via `gh`.** The GitHub CLI is preinstalled. Run `gh auth login` once and `gh` handles HTTPS auth, PR creation, and review flows from the container.
-- **Token in env vars.** Save a fine-grained personal access token to the `zcp` service's secret environment variables; `git` reads it through a credential helper.
+- **Token in env vars.** Save a fine-grained personal access token to the workspace service's secret environment variables; `git` reads it through a credential helper.
 
-Either pattern keeps your token in the `zcp` service, not in your project's source.
+Either pattern keeps your token in the workspace service, not in your project's source.
 
 ## Native IDE over SSH
 
 **Best for:** native editor UX without carrying the toolchain or databases on your laptop.
 
-Once `zcli vpn up` is connected, every container on the project's private network is reachable from your laptop over SSH. Any editor that speaks Remote SSH speaks to it: VS Code Remote SSH, JetBrains Gateway, Cursor, Zed, plain `vim`.
+Once `zcli vpn up` is connected, every container on the project's private network is reachable from your laptop over SSH. Any editor that speaks Remote SSH can use it: VS Code Remote SSH, JetBrains Gateway, Cursor, Zed, or plain `vim`.
 
 ```bash
-ssh apidev               # any service in the project
+ssh apidev               # any runtime service in the project
 ssh frontenddev
-ssh zcp                  # if you provisioned the `zcp` service
 ```
 
-In this path, remote setup is convenient but not required. You can connect VS Code Remote SSH straight to `apidev`, edit the source there, run the dev server in the same container, and never provision a `zcp` service at all. The project's private network does the rest. Remote setup becomes a convenience layer: a single workspace that can carry tools, runtime file mounts, Cloud IDE, and coding-agent wiring for the project. If you'd rather connect your editor directly to your runtime services and skip remote setup entirely, that works.
+In this path, a hosted workspace is convenient but not required. You can connect straight to `apidev`, edit the source there, and run the dev server in the same container. A hosted workspace is only a convenience layer when you want shared tools, runtime file mounts, or Cloud IDE.
 
-**Source control.** SSH agent forwarding works the same way it does to any other machine. Add your local SSH key to your agent (`ssh-add`), and `git push` from inside `apidev` (or the `zcp` service) uses your laptop's GitHub key over the forwarded agent socket — no token storage required.
+**Source control.** SSH agent forwarding works the same way it does to any other machine. Add your local SSH key to your agent (`ssh-add`), and `git push` from inside `apidev` or the workspace service uses your laptop's GitHub key over the forwarded agent socket — no token storage required.
 
 ```ssh-config
 # Local ~/.ssh/config
@@ -101,40 +100,33 @@ See the [SSH reference guide](/references/networking/ssh).
 |                       | Local + VPN        | Cloud IDE                  | Native IDE over SSH               |
 | --------------------- | ------------------ | -------------------------- | --------------------------------- |
 | Editor runs           | Local              | Browser                    | Local                             |
-| Toolchain             | Local              | Remote setup               | Remote setup or service container |
+| Toolchain             | Local              | Hosted workspace           | Hosted workspace or service container |
 | Dev databases         | Hostname via VPN   | Native, on private network | Native, on private network        |
-| Remote setup required | No                 | Yes                        | No (convenience)                  |
+| Hosted workspace required | No              | Yes                        | No (convenience)                  |
 | Git auth              | Local credentials  | `gh` or token in env       | SSH agent forwarding              |
 | Best for              | Keeping your setup | Disposable environments    | Native UX, lighter laptop         |
 
-You're not locked into one path. The same project can support all three without reprovisioning when your source-of-truth handoff is clear. A teammate on Local + VPN and an agent inside remote setup are hitting the same `db:5432`.
+You're not locked into one path. The same project can support all three without reprovisioning. A teammate on Local + VPN and another in Cloud IDE are hitting the same `db:5432`.
 
-For the agent-driven path, the setup decision (remote `zcp@1` service vs. local `zcp` binary) is on its own page: [Remote or local ZCP setup](/zcp/setup/choose-workspace).
+## Same platform model from development to production
 
-## Same architecture, separate production
+The environments above do not approximate production by inventing a different platform. Development, staging, and production can run the same Zerops-managed service types, private networking model, load-balancer model, and `zerops.yaml` patterns. The remaining differences are scale, credentials, access policy, data, and release authority.
 
-The development environments above don't approximate production by inventing a different platform. A Zerops development/staging project can run dev and stage services with the same Zerops-managed service types, private networking, load-balancer model, and `zerops.yaml` patterns that production uses in its separate project. Dev, stage, and production differ in resource allocation, access rules, and credentials, not in architecture.
-
-This is what makes the "but it works on my machine" failure mode hard to reach on Zerops. Your dev container's Postgres is the same managed service type production uses. Your queue is the same NATS or Kafka. Your storage is the same S3-compatible service. When code works in dev and stage, you've already tested it against the kind of infrastructure it'll meet in production. The remaining differences are scale, credentials, access policy, and data.
-
-This applies whether the developer is human or an agent. ZCP is the agent-facing control plane on top of the same project substrate; see [ZCP for Coding Agents](/features/coding-agents) for that case.
+That makes the "but it works on my machine" failure mode harder to reach. Your dev Postgres, queue, cache, or object storage can be the same managed service type the app meets later in stage or production.
 
 ## How this differs from cloud IDEs
 
-If you've used GitHub Codespaces or Gitpod, Cloud IDE looks similar — a Linux container in the cloud, accessed from a browser or local IDE. Two structural differences are worth understanding before you compare them.
+If you've used GitHub Codespaces or Gitpod, Cloud IDE looks similar: a Linux container in the cloud, accessed from a browser or local IDE. Two structural differences matter.
 
-**You don't have to be in the editor.** Codespaces and Gitpod are editor-first. Their value proposition assumes you're inside their environment; the database connections, dependencies, and toolchain all live there. Zerops is network-first. The Cloud IDE is one of three ways to reach the project's private network — `zcli vpn up` lets you skip the editor environment entirely and consume managed services from your existing local setup. There's no equivalent on Codespaces or Gitpod, because their architecture doesn't expose the network.
+**You don't have to be in the editor.** Codespaces and Gitpod are editor-first. Zerops is network-first. Cloud IDE is one way to reach the project's private network; `zcli vpn up` lets you skip the editor environment and consume managed services from your existing local setup.
 
-**Dev, staging, and production use the same platform model.** On a CDE, your dev environment is one platform and your deployment target is another — different runtimes, different databases, different networking. On Zerops, they're the same platform model: managed Postgres, private networking, and `zerops.yaml`. Production still lives in its own project with its own credentials and policies.
+**Development, staging, and production use the same platform model.** On a CDE (cloud development environment), your dev environment is one platform and your deployment target is another. On Zerops, managed services, private networking, and `zerops.yaml` patterns work the same way. Environment policy still differs: credentials, resources, access rules, data, and release process.
 
-Remote setup is just a Zerops service. It's a container running the `zcp@1` Ubuntu base image — you can SSH into it, install your own packages, run your own processes, and configure it however you want. Nothing about it is a walled garden.
+A hosted workspace is just a Zerops service. You can SSH into it, install your own packages, run your own processes, and configure it however you want. Nothing about it is a walled garden.
 
 ## Next steps
 
-- VPN setup and troubleshooting → [VPN reference](/references/networking/vpn)
-- SSH access to services → [SSH reference](/references/networking/ssh)
-- Build and deploy from any of these environments → [Prepare, Build, Deploy Pipeline](/features/pipeline)
-- Coding agents on Zerops → [ZCP for Coding Agents](/features/coding-agents)
-- What remote workspace gives you → [What remote workspace gives you](/zcp/setup/hosted-workspace)
-- Remote or local ZCP setup → [Remote or local ZCP setup](/zcp/setup/choose-workspace)
-- Term reference → [ZCP Glossary](/zcp/glossary)
+- Connect your laptop to a Zerops project → [VPN reference](/references/networking/vpn)
+- Use a native editor over SSH → [SSH reference](/references/networking/ssh)
+- Build and deploy from the same project model → [Build & deploy pipeline](/features/pipeline)
+- Put a coding agent on top of this infrastructure → [Infrastructure for Coding Agents](/features/coding-agents)

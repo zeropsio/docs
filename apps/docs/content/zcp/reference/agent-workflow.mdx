@@ -1,9 +1,9 @@
 ---
 title: 'Workflow terms'
-description: 'Precise ZCP terms for setup routes, develop flow, runtime layouts, delivery modes, failure categories, and completion evidence.'
+description: 'Precise ZCP MCP terms for setup routes, develop flow, runtime layouts, delivery modes, failure categories, and completion evidence.'
 ---
 
-Exact vocabulary for ZCP reference, audits, policies, and handoffs. Day-to-day prompts should describe outcomes.
+Exact vocabulary for ZCP MCP reference, audits, policies, and handoffs. Day-to-day prompts should describe outcomes.
 
 ## Session layers
 
@@ -11,7 +11,7 @@ Most workflow mistakes come from confusing these layers:
 
 | Layer                  | What it is                                                                     | What changes here                                               |
 | ---------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------- |
-| ZCP setup              | Where ZCP runs: remote `zcp@1` service or local `zcp` binary.                  | No app code should be deployed to the setup itself.             |
+| ZCP MCP setup          | Where the `zcp` binary runs: remote `zcp@1` service or local machine.          | No app code should be deployed to the setup itself.             |
 | Target runtime service | The app runtime: `appdev`, `appstage`, `app`, or a linked local deploy target. | App files, `zerops.yaml`, deploys.                              |
 | Managed services       | Databases, caches, queues, search, storage, mail.                              | Schema/data operations and credentials, never app code deploys. |
 
@@ -51,7 +51,7 @@ Service setup stops when app runtimes and managed dependencies are known. App co
 
 ## Develop flow
 
-The develop loop is the main ZCP work cycle. It closes only when reachability and requested behavior both pass.
+The develop loop is the main workflow cycle. It closes only when reachability and requested behavior both pass.
 
 ```mermaid
 flowchart TD
@@ -103,7 +103,7 @@ Delivery mode applies after a verified deploy and describes how future changes s
 | ---------- | ------------------ | ------------------------------------------------------------------------------------------------------------------ |
 | `auto`     | Keep direct deploy | ZCP keeps deploying future changes directly to the target runtime.                                                 |
 | `git-push` | Push to git        | The agent commits and pushes to a configured remote; any resulting build still needs observation and verification. |
-| `manual`   | External handoff   | CI, release process, or a human owns future delivery; ZCP records evidence but does not initiate the next deploy.  |
+| `manual`   | External handoff   | CI, release process, or a human owns future delivery; the workflow records evidence but does not initiate the next deploy. |
 
 Git-push capability, delivery mode, and build integration are separate. A project can have git-push configured while still using direct deploy for a given session.
 
@@ -152,10 +152,10 @@ A session is well-shaped if platform evidence and the agent report answer:
 
 | Question                                        | Evidence                                                                  |
 | ----------------------------------------------- | ------------------------------------------------------------------------- |
-| Which setup route and runtime layout were used? | ZCP status, service metadata, service list.                               |
+| Which setup route and runtime layout were used? | Workflow status, service metadata, service list.                          |
 | Where did service setup end and app work begin? | Work-session state, deploy history, file changes.                         |
 | Which runtime was deployed and verified?        | Service events, deploy result, verify output.                             |
 | What behavior proved success?                   | Endpoint/UI/job/data proof in the final report.                           |
 | What controls future delivery?                  | Delivery mode, git-push state, build integration, or manual handoff note. |
 
-Operation-name reference lives in [Advanced operations](/zcp/reference/mcp-operations). Recovery shortcuts live in [Troubleshooting](/zcp/reference/troubleshooting).
+Operation-name reference lives in [ZCP MCP tools](/zcp/reference/mcp-operations). Recovery shortcuts live in [Troubleshooting](/zcp/reference/troubleshooting).

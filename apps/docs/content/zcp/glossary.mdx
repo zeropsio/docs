@@ -1,19 +1,19 @@
 ---
 title: 'Glossary'
-description: 'Short definitions for ZCP terms, exact workflow labels, setup names, delivery modes, and credential names.'
+description: 'Short definitions for ZCP MCP terms, exact workflow labels, setup names, delivery modes, and credential names.'
 ---
 
-Use the exact labels here when you are reading ZCP status, writing agent policy, debugging a session, or reviewing a handoff. In normal prompts, describe the outcome you want.
+Use the exact labels here when you are reading workflow status, writing agent policy, debugging a session, or reviewing a handoff. In normal prompts, describe the outcome you want.
 
 ## Core names
 
-**ZCP** - Zerops Control Plane for coding agents: the Zerops operations and workflow layer documented in this section.
+**ZCP MCP** - Zerops Control Plane MCP: the MCP tool surface that exposes project-scoped Zerops operations to coding agents.
 
-**ZCP operations** - the bounded Zerops operations exposed to a coding agent. In MCP clients, this usually appears as the `zerops` server.
+**ZCP MCP tools** - the bounded Zerops operations exposed to a coding agent. In MCP clients, this usually appears as the `zerops` server.
 
-**MCP server** - the Model Context Protocol server that exposes ZCP operations to an agent client.
+**MCP server** - the Model Context Protocol server exposed by the `zcp` binary.
 
-**Agent client** - the editor, CLI, or hosted agent runtime that connects to ZCP operations.
+**Agent client** - the editor, CLI, or hosted agent runtime that connects to ZCP MCP.
 
 **`zcp` binary** - the executable. It runs inside remote setup or on your laptop in local setup.
 
@@ -21,21 +21,21 @@ Use the exact labels here when you are reading ZCP status, writing agent policy,
 
 **`zcp@1` service** - the Zerops service type behind remote setup.
 
-**zCLI** - the Zerops command-line client for humans, scripts, VPN, and CI. It coexists with ZCP.
+**zCLI** - the Zerops command-line client for humans, scripts, VPN, and CI. It coexists with ZCP MCP.
 
 **zsc** - the in-container Zerops Setup Control utility used from `zerops.yaml`.
 
-## Where ZCP runs
+## Where ZCP MCP runs
 
-**Remote setup** - ZCP running inside a Zerops `zcp@1` service.
+**Remote setup** - the `zcp` binary running inside a Zerops `zcp@1` service.
 
-**Include Coding Agent** - the remote setup option that adds the currently supported bundled agent CLI, currently Claude Code, and preconfigures it to use ZCP operations.
+**Include Coding Agent** - the remote setup option that adds the currently supported bundled agent CLI, currently Claude Code, and preconfigures it to use ZCP MCP tools.
 
 **Cloud IDE** - browser-based VS Code served by remote setup.
 
 **Browser VS Code** - the dashboard entry point into the Cloud IDE.
 
-**AI Agent environment** - a recipe environment preset that creates app services plus remote setup with **Include Coding Agent** enabled. It is a recipe preset, not a separate ZCP setup choice.
+**AI Agent environment** - a recipe environment preset that creates app services plus remote setup with **Include Coding Agent** enabled. It is a recipe preset, not a separate ZCP MCP setup choice.
 
 **Local setup** - the `zcp` binary running on your laptop after `zcp init`, while your editor or CLI agent talks to it.
 
@@ -62,7 +62,7 @@ Use the exact labels here when you are reading ZCP status, writing agent policy,
 
 **Runtime target** - the app runtime the change targets, such as `appdev`, `appstage`, `app`, or a linked local target.
 
-**Direct deploy** - a ZCP deploy from the current source to the scoped runtime. The first verified running result uses direct deploy before delivery setup is applied.
+**Direct deploy** - a deploy from the current source to the scoped runtime through ZCP MCP. The first verified running result uses direct deploy before delivery setup is applied.
 
 **Reachability verification** - checks that the runtime exists, is running, has no recent blocking errors, and can answer an HTTP probe when it is an HTTP service.
 
@@ -72,7 +72,7 @@ Use the exact labels here when you are reading ZCP status, writing agent policy,
 
 **Proof** - user-inspectable completion evidence, such as a URL, endpoint result, UI state, processed job, or stored result.
 
-**ZCP status** - a live project read the agent can use after interruption or confusion. Ask for it before letting the agent change anything else.
+**Workflow status** - a live project and session read the agent can use after interruption or confusion. Ask for it before letting the agent change anything else.
 
 **Blocker** - a clear stop state with evidence: failure category, runtime in scope, what was tried, and what decision or credential is needed.
 
@@ -86,13 +86,15 @@ Use the exact labels here when you are reading ZCP status, writing agent policy,
 - `git-push` - commit and push to a configured remote, then observe/verify any tracked build.
 - `manual` - external CI, release process, or a human owns future delivery.
 
-**Git-push capability** - whether ZCP has enough remote URL and credential setup to push from remote setup. It can exist even when the current delivery mode is `auto`.
+**Git-push capability** - whether remote setup has enough remote URL and credential setup to push from remote setup. It can exist even when the current delivery mode is `auto`.
 
-**Build integration** - repository-triggered build/deploy path that ZCP may configure or observe, such as a Zerops dashboard webhook or GitHub Actions. It is separate from git-push capability and delivery mode.
+**Build integration** - repository-triggered build/deploy path that ZCP MCP may configure or observe, such as a Zerops dashboard webhook or GitHub Actions. It is separate from git-push capability and delivery mode.
 
-**External handoff** - delivery mode where ZCP records proof and state, but a human or external system owns future deploys.
+**External handoff** - delivery mode where the workflow records proof and state, but a human or external system owns future deploys.
 
-**Package a running service** - advanced reuse workflow that turns one deployed runtime and its managed dependencies into a re-importable bundle. It is not the normal way to deploy the next app change.
+**Package a running service** - handoff or reuse workflow that turns one deployed runtime and its managed dependencies into a re-importable bundle. It is not the normal way to deploy the next app change.
+
+**Production promotion** - handoff from verified dev or stage work into a separate production Zerops project: production infrastructure setup, production deploy trigger setup, and repeated releases without putting ZCP in production.
 
 **Packaging env bucket** - exact labels used when classifying env vars during packaging:
 
@@ -109,7 +111,7 @@ Use the exact labels here when you are reading ZCP status, writing agent policy,
 
 **Managed service** - database, cache, queue, search, storage, mail, or similar dependency. It provides connection details; it is not an app deploy target.
 
-**Runtime layout** - which app runtime services ZCP should use:
+**Runtime layout** - which app runtime services the workflow should use:
 
 - `standard` - dev runtime plus explicit stage runtime.
 - `dev` - one mutable development runtime.
@@ -137,20 +139,20 @@ Use the exact labels here when you are reading ZCP status, writing agent policy,
 - `credential` - Zerops, git, SSH, managed-service, or external API credential failed.
 - `other` - no known category matched.
 
-**Recovery hint** - structured next move surfaced by ZCP when the failure has an actionable recovery path.
+**Recovery hint** - structured next move surfaced by ZCP MCP when the failure has an actionable recovery path.
 
 **Confirmation gate** - an operation that pauses until the user explicitly confirms the named target or consequence.
 
-**Destructive import override** - import action that would replace an existing service stack. ZCP refuses first, names the affected services, and requires a matching acknowledgment before proceeding.
+**Destructive import override** - import action that would replace an existing service stack. ZCP MCP refuses first, names the affected services, and requires a matching acknowledgment before proceeding.
 
 ## Credentials
 
-**Single-project token** - Zerops token that can access exactly one project. ZCP expects this shape.
+**Single-project token** - Zerops token that can access exactly one project. ZCP MCP expects this shape.
 
-**`ZCP_API_KEY`** - single-project Zerops token used by ZCP.
+**`ZCP_API_KEY`** - single-project Zerops token used by ZCP MCP.
 
 **`GIT_TOKEN`** - git provider credential used by remote git-push delivery when needed.
 
 **`ZEROPS_TOKEN`** - Zerops token commonly used by GitHub Actions or external CI that runs `zcli`.
 
-**External secret** - third-party credential such as Stripe, OpenAI, Mailgun, or GitHub API access. ZCP can wire placeholders and env vars, but the secret itself remains your responsibility.
+**External secret** - third-party credential such as Stripe, OpenAI, Mailgun, or GitHub API access. The agent can wire placeholders and env vars, but the secret itself remains your responsibility.

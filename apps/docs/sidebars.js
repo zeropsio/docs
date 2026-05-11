@@ -152,7 +152,7 @@ module.exports = {
     {
       type: 'doc',
       id: 'features/coding-agents',
-      label: 'ZCP for Coding Agents',
+      label: 'Infrastructure for Coding Agents',
       customProps: {
         sidebar_icon: 'sparkles',
       },
@@ -578,7 +578,7 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'Zerops Control Plane',
+      label: 'Zerops Control Plane MCP',
       collapsible: false,
       customProps: {
         sidebar_is_group_headline: true,
@@ -605,7 +605,7 @@ module.exports = {
         {
           type: 'doc',
           id: 'zcp/concept/how-it-works',
-          label: 'How ZCP works',
+          label: 'How it works',
           customProps: {
             sidebar_icon: 'cog-six-tooth',
           },
@@ -631,18 +631,33 @@ module.exports = {
             {
               type: 'doc',
               id: 'zcp/setup/local-agent-bridge',
-              label: 'How to run ZCP on your machine',
+              label: 'Run locally',
             },
           ],
         },
         {
-          type: 'doc',
-          id: 'zcp/workflows/build-with-zcp',
-          label: 'Build with ZCP',
+          type: 'category',
+          label: 'Build and ship',
+          link: {
+            type: 'doc',
+            id: 'zcp/workflows/build-with-zcp',
+          },
           customProps: {
             sidebar_icon: 'circle-stack',
           },
           className: 'homepage-sidebar-item',
+          items: [
+            {
+              type: 'doc',
+              id: 'zcp/workflows/package-running-service',
+              label: 'Package a running service',
+            },
+            {
+              type: 'doc',
+              id: 'zcp/workflows/promote-to-production',
+              label: 'Promote to production',
+            },
+          ],
         },
         {
           type: 'category',
@@ -688,12 +703,7 @@ module.exports = {
             {
               type: 'doc',
               id: 'zcp/reference/mcp-operations',
-              label: 'Advanced operations',
-            },
-            {
-              type: 'doc',
-              id: 'zcp/workflows/package-running-service',
-              label: 'Package a running service',
+              label: 'MCP tools',
             },
             {
               type: 'doc',
