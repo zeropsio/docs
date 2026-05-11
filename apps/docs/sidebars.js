@@ -698,7 +698,7 @@ module.exports = {
             {
               type: 'doc',
               id: 'zcp/reference/agent-workflow',
-              label: 'Workflow terms',
+              label: 'Workflows in depth',
             },
             {
               type: 'doc',

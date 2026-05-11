@@ -3,150 +3,85 @@ title: 'Package a running service'
 description: 'Turn a running Zerops service into a re-importable bundle.'
 ---
 
-Use packaging when a deployed runtime should become a reusable import bundle. This is a handoff or reuse task after a runtime already works, not the normal way to deploy the next app change.
+Use packaging when a verified runtime should become a re-importable Zerops bundle. It is a handoff or reuse task after the app already works, not the normal way to deploy the next change.
 
 You can ask for it directly:
 
 ```text
-Package appstage as a buildFromGit import bundle, commit it, and push it to git so I can import it into a fresh Zerops project.
+Package appstage as a buildFromGit import bundle.
+Commit it and push it to git.
 ```
 
-ZCP's export workflow takes a deployed runtime and prepares a single-repo bundle: source code, a project [import file](/references/import) named `zerops-project-import.yaml`, and a [`zerops.yaml`](/zerops-yaml/specification). The import file points back to the same source repo through `buildFromGit:`, so a fresh Zerops project can rebuild the app from git instead of carrying source code inside YAML.
+The result is a single git repo that contains the app source, [`zerops.yaml`](/zerops-yaml/specification), and a project [import file](/references/import) named `zerops-project-import.yaml`. The import file uses `buildFromGit:` so a fresh Zerops project can rebuild the app from the repo instead of carrying source code inside YAML.
+
+Packaging starts from a deployed Zerops runtime. If important source changes exist only on your laptop, deploy or push them first so the runtime and git repo match what you want to package.
 
 ## When to package
 
-Packaging is the right tool when:
+Package a runtime when you need:
 
-- You have a running runtime (and managed dependencies) you want to reproduce in another Zerops project.
-- You want a re-importable snapshot committed next to the app source.
-- You want the new project to build from the same git repo through `buildFromGit:`, not from a copy of the code in YAML.
-- You want to prepare a reusable starter, demo, handoff, or clean staging project.
+- a running runtime and its managed dependencies reproduced in another Zerops project,
+- a reusable starter, demo, handoff, customer project, or clean staging baseline,
+- a repo commit that carries the Zerops import shape next to the app source,
+- the destination project to build from git.
 
-Packaging is **not** the right tool when:
+Do not use packaging for:
 
-- You want the next app change deployed. For that, ask for the app result; direct deploy is the expected ZCP behavior behind the request.
-- You want to create or update a production project. For production, export/import the project infrastructure and connect a production git or CI trigger; see [Promote to production](/zcp/workflows/promote-to-production).
+- the next app deploy; use the normal build, deploy, and verify loop,
+- production promotion; production needs its own infrastructure, credentials, domains, and release trigger,
+- moving managed-service data; backups and restores are separate.
 
-Packaging does not keep a long-running session. If interrupted, the agent reads live state and prepares the bundle again. You only need to decide when the runtime choice or env-var classification is ambiguous.
+For production setup, follow [Promote to production](/zcp/workflows/promote-to-production). Packaging can help create a reusable app bundle, but it does not decide production infrastructure or release policy.
 
-## Pick the runtime to package
+## What the agent prepares
 
-Packaging captures **one** runtime. If your project has a dev runtime and a separate stage runtime, the agent asks which one to package. They may carry different env values, start commands, or `setup:` blocks. For single-runtime projects, the choice is implied.
+The agent packages **one** runtime. If the project has dev and stage runtimes, it asks which one to use because they can have different env values, start commands, or `setup:` blocks.
 
-Managed services (`db`, `redis`, etc.) come along automatically as dependencies; you do not pick them one by one.
+Managed services come along as dependencies when the runtime's `zerops.yaml` needs their env references. You do not pick databases, caches, queues, or search services one by one.
 
-A typical first prompt:
+The workflow then prepares:
 
-```text
-Package appstage as a buildFromGit import bundle, commit it, and push it so I can import it into a fresh Zerops project.
-```
+- `zerops-project-import.yaml` - the project and service shape for the destination project,
+- `zerops.yaml` - the runtime build and run configuration,
+- a git commit and push when git delivery is configured or explicitly requested.
 
-The agent handles the packaging work; you only step in if it asks which runtime to package, which half of a dev+stage pair to use, how to classify a value, or how to configure git push.
+If the runtime has no usable `zerops.yaml` or git remote, the agent has to fix that first. A bundle is only useful when the destination project can pull source and build it from git.
 
-## Classify env vars
+## Env vars need review
 
-Once the runtime is chosen, ZCP prepares a candidate bundle and pauses on env vars. Each value needs a bucket so the generator knows what to do with it:
+Project env vars are the main place where the agent may ask you to decide. Each value gets one bucket:
 
-| Bucket            | What it means                                                                                   | What ends up in the bundle                                                                                   |
-| ----------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `infrastructure`  | Value comes from a managed service (for example `${db_hostname}`, `${redis_connectionString}`)  | Dropped from the import file. The re-imported managed service will emit a fresh value.                       |
-| `auto-secret`     | A local signing or encryption key (Laravel `APP_KEY`, Django `SECRET_KEY`, a Node `JWT_SECRET`) | A preprocessor directive that generates a fresh secret on re-import.                                         |
-| `external-secret` | A third-party API key (Stripe, OpenAI, Mailgun, GitHub)                                         | A `REPLACE_ME` placeholder. The new project's owner pastes the real key into the dashboard before deploying. |
-| `plain-config`    | Literal runtime config (`LOG_LEVEL`, `NODE_ENV`, feature flags)                                 | The literal value, verbatim.                                                                                 |
+| Bucket | Use for | Bundle result |
+| --- | --- | --- |
+| `infrastructure` | Values derived from managed services, such as database or cache references. | Omitted from project envs; the new managed service provides fresh values. |
+| `auto-secret` | App-owned signing or encryption keys that can be regenerated. | Fresh generated secret on import. |
+| `external-secret` | Third-party credentials such as Stripe, OpenAI, Mailgun, or GitHub. | `REPLACE_ME` placeholder. |
+| `plain-config` | Literal non-secret config such as log level, feature flags, or public app settings. | Copied as-is. |
 
-ZCP does not guess these buckets from key names alone. The agent should classify them from source code: if the value is read by a Stripe SDK call it is `external-secret`; if it appears as `${db_*}` from a managed service it is `infrastructure`. The packaging response carries env _keys_ and redacts values; the agent fetches values only when it needs them.
+Do not treat this as a key-name guessing game. The agent should inspect source code and ask when classification changes behavior. For example, regenerating a Laravel `APP_KEY`, Django `SECRET_KEY`, or session secret can break existing encrypted state. If state continuity matters, carry the existing value instead of generating a new one.
 
-You'll see the agent walk the env table, propose a bucket per key, and ask you to confirm anything it can't decide alone:
+## What is not included
 
-```text
-APP_KEY looks like a Laravel encryption key (auto-secret), but rotating it
-will break existing encrypted columns and session cookies. Carry the
-existing value forward as plain-config, or rotate?
-```
+| Not included | What to do instead |
+| --- | --- |
+| Managed-service data | Restore from [Backup](/features/backup) or another migration path. |
+| Real third-party secrets | Fill placeholders in the destination project before deploying. |
+| Production domains, scaling, backups, and release triggers | Configure them in the destination project. |
+| A repeatable production release process | Use your CI or release workflow; see [Promote to production](/zcp/workflows/promote-to-production). |
 
-Auto-secret rotation is destructive to any persisted state encrypted with the old key; confirm before bucketing as `auto-secret` for stateful apps.
+## Use the bundle
 
-## What the bundle contains
+After the bundle is pushed, import `zerops-project-import.yaml` in the destination project through the dashboard or with `zcli project project-import zerops-project-import.yaml`.
 
-A successful run produces a **single-repo, self-contained bundle**. The app source stays in git, and the export workflow adds or verifies two files at the repo root:
+Before opening the new project to users:
 
-```yaml
-#zeropsPreprocessor=on
-# zerops-project-import.yaml - paste into a fresh Zerops project
-project:
-  name: demo
-  envVariables:
-    APP_KEY: <@generateRandomString(<32>)>
-    LOG_LEVEL: info
-services:
-  - hostname: appdev
-    type: nodejs@22
-    mode: NON_HA
-    buildFromGit: https://github.com/example/demo.git
-    zeropsSetup: appdev
-    enableSubdomainAccess: true
-  - hostname: db
-    type: postgresql@16
-    mode: NON_HA
-    priority: 10
-  - hostname: redis
-    type: valkey@7.2
-    mode: NON_HA
-    priority: 10
-```
-
-```yaml
-# zerops.yaml - verbatim copy from the running runtime
-zerops:
-  - setup: appdev
-    build:
-      base: nodejs@22
-      buildCommands:
-        - npm ci
-        - npm run build
-      deployFiles:
-        - dist
-        - package.json
-        - node_modules
-    run:
-      base: nodejs@22
-      ports:
-        - port: 3000
-          httpSupport: true
-      start: node dist/server.js
-      envVariables:
-        DATABASE_URL: postgres://${db_user}:${db_password}@${db_hostname}:${db_port}/${db_dbName}
-```
-
-A few things worth noticing:
-
-- The first line is the [Zerops preprocessor](/references/import-yaml/pre-processor) header. When the bundle carries `<@...>` directives (here `<@generateRandomString(<32>)>` for `APP_KEY`), `#zeropsPreprocessor=on` must be line 1. Without it, the platform skips directive expansion at re-import and the literal string lands in the env var. The export workflow adds this automatically when any directive is present.
-- The runtime's `buildFromGit:` URL points back at the same repo the bundle lives in. The bundle is **self-referential**: re-importing creates a project that builds itself from git. Source code lives in git, not in YAML.
-- Managed dependencies (`db`, `redis`) appear as plain entries with no `buildFromGit:` so `${db_*}` and `${redis_*}` references in `zerops.yaml` resolve at re-import. See [environment variables](/guides/environment-variables).
-
-Packaging can be part of a handoff intent. The agent should produce the files, place them where the chosen delivery preference expects them, and commit or push when that delivery choice is configured. Packaging itself produces the bundle; repository changes still happen through normal [delivery preference](/zcp/workflows/build-with-zcp#choose-delivery-after-proof).
-
-After the bundle is pushed, import `zerops-project-import.yaml` in the destination project through the dashboard or `zcli project project-import zerops-project-import.yaml`. The runtime entry in that import file uses `buildFromGit:` to clone and build the same repo.
-
-For production setup, prefer the production promotion flow. Packaging creates a reusable app bundle; it does not decide production infrastructure, domains, secrets, release triggers, or scaling. See [Promote to production](/zcp/workflows/promote-to-production).
-
-## What the bundle does not include
-
-| Not in the bundle                                                        | Where it lives instead                                          |
-| ------------------------------------------------------------------------ | --------------------------------------------------------------- |
-| Application source code                                                  | In your git repo, referenced by `buildFromGit:`                 |
-| Managed-service data (Postgres rows, Redis keys, object-storage objects) | Restore from [Backup](/features/backup) separately              |
-| External API keys (Stripe, OpenAI, etc.)                                 | `REPLACE_ME` placeholder; new project owner pastes the real key |
-| Production infrastructure, domains, and release triggers                  | Set up in the production Zerops project                         |
-
-## Packaging checks
-
-1. **Packaging is not delivery by itself.** It produces the bundle. Commit and push happen through your chosen [delivery preference](/zcp/workflows/build-with-zcp#choose-delivery-after-proof) or the explicit packaging prompt.
-2. **Managed-service data is not in the bundle.** Re-importing produces fresh empty managed services. Plan a separate restore step for any service with stateful data.
-3. **External secrets land as `REPLACE_ME`.** Re-importing a bundle without filling those in deploys services that fail at startup with credential errors.
+- fill `REPLACE_ME` values,
+- restore or seed data when needed,
+- review service scaling and public access,
+- run a normal deploy and verification pass in the destination project.
 
 ## Next steps
 
 - [Build and ship](/zcp/workflows/build-with-zcp#package-a-verified-runtime) - where packaging fits into normal agent work.
-- [How it works](/zcp/concept/how-it-works#verification-has-two-layers) - the verified runtime this packages.
 - [Promote to production](/zcp/workflows/promote-to-production) - create production infrastructure and release from git.
+- [Import & Export YAML Configuration](/references/import) - Zerops import file reference.

@@ -1,120 +1,101 @@
 ---
 title: 'Troubleshooting'
-description: 'Recover ZCP sessions from current state, failure category, logs, events, tokens, VPN, and local setup artifacts.'
+description: 'A recovery playbook for stuck ZCP MCP sessions: status first, evidence order, local setup checks, and stop conditions.'
 ---
 
-Start recovery from current state, not from chat memory.
+Use troubleshooting when the agent is confused, a session was interrupted, deploy keeps failing, verification does not match the final answer, or you are taking over manually.
+
+Start from current state, not chat memory:
 
 ```text
 Read current project status and tell me where things stand before changing anything.
 ```
 
-That prompt fits confused sessions, interrupted browser tabs or CLI sessions, repeated deploy loops, and manual takeovers. The agent can rebuild the picture from live services, recent deploys, logs, events, and saved work state.
+That should make the agent read live services, saved workflow state, recent deploys, logs, events, and verification output before it edits anything else.
 
-## Start from the failure category
+## Find where the run is stuck
 
-When a deploy or verify step fails, ZCP should surface a category with the likely cause and next move. Categories are recovery-shaped. `network` does not mean "the network is broken"; it means the first useful move is connectivity, VPN, SSH, DNS, or public-route evidence rather than editing app code.
-
-| Category     | Meaning                                                         | Read first                                                          | Recovery move                                                                                                                       |
-| ------------ | --------------------------------------------------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `build`      | Build failed before runtime start.                              | Build logs and `zerops.yaml` build steps.                           | Fix build commands, dependency manifests, lock files, deploy files, or build resources. Runtime logs will not explain this failure. |
-| `start`      | Build passed, runtime failed to start or crashed.               | Prepare logs or runtime logs, whichever the failure names.          | Check `run.start`, ports, env references, `prepareCommands`, and whether the process binds `0.0.0.0` rather than `127.0.0.1`.       |
-| `verify`     | Runtime exists, but reachability or requested behavior failed.  | The failing check, HTTP response, and runtime logs at request time. | Treat it as app behavior or route recovery, not deploy success.                                                                     |
-| `network`    | Transport, DNS, VPN, SSH, or service-to-service reach failed.   | The transport error and named network route.                        | Check VPN for local setup, service status for remote setup, SSH transfer state, DNS/subdomain readiness, or platform timeout.       |
-| `config`     | `zerops.yaml`, setup, env vars, or service settings mismatch.   | Structured rejection detail, field path, or API metadata.           | Fix the named setup block, env reference, `deployFiles`, service type, or prerequisite.                                             |
-| `credential` | Zerops, git, SSH, managed-service, or external API auth failed. | The credential surface named in the error.                          | Replace that credential only: `ZCP_API_KEY`, `GIT_TOKEN`, local git auth, `ZEROPS_TOKEN`, SSH key, or app secret.                   |
-| `other`      | No known category matched.                                      | Raw reason, service events, and logs for the named phase.           | Stop if the same unknown reason repeats; report the raw reason and recent evidence.                                                 |
-
-Build logs and runtime logs are different streams. A build failure shows in the build container; a runtime crash shows in runtime logs. If the agent reads the wrong stream, the diagnosis will be wrong even when the log command succeeded.
-
-## Deploy and start symptoms
-
-| Symptom                                                                           | Likely category     | Next move                                                                                      |
-| --------------------------------------------------------------------------------- | ------------------- | ---------------------------------------------------------------------------------------------- |
-| Build exits with "command not found", missing module, npm 404, or compile error   | `build`             | Read `buildCommands`, manifests, lock files, package manager, and deploy file list.            |
-| Build or SSH transfer ends with `signal: killed`                                  | `build` / `network` | Treat it as memory pressure first: scale build/source resources or reduce the heavy step.      |
-| Runtime crashes immediately with `EADDRINUSE`, missing module, or missing env var | `start`             | Read runtime logs scoped to the failed start and check the start command/env contract.         |
-| Database connection refused during init/start                                     | `start` / `network` | Confirm the managed service is running and env references such as `${db_*}` resolve.           |
-| Preflight refuses `INVALID_ZEROPS_YML` or setup mismatch                          | `config`            | Read the field-level rejection and fix that setup entry; setup names are not always hostnames. |
-| Git push returns authentication failed                                            | `credential`        | Remote setup needs `GIT_TOKEN`; local setup uses your local git credentials.                   |
+| Stuck point | Ask for | What you should get |
+| ----------- | ------- | ------------------- |
+| Agent lost context | Current project status and services in scope. | Runtime target, managed services, last deploy, last verify result, and any saved workflow state. |
+| Service setup is unclear | Runtime target and dependency plan. | Which existing services will be used, which missing services are needed, and what needs human approval. |
+| Deploy failed | Failure category plus build logs, runtime logs, and recent service events. | A cause or next diagnostic step, not another blind deploy. |
+| Runtime is reachable but app behavior fails | The failing behavior check and request-time runtime logs. | Endpoint/UI/job/data evidence tied to the product request. |
+| Local app cannot reach services | VPN state, generated `.env`, and selected runtime/setup. | Whether MCP auth works separately from private service access. |
+| Delivery is ambiguous | Delivery mode, git-push state, build integration, or handoff note. | What will happen after proof: direct deploy, git push, CI, package, or production handoff. |
 
 Useful prompt:
 
 ```text
-Show me the failure category, build logs, runtime logs, and recent events for the last failed deploy of appdev.
+Show me the runtime in scope, failure category, evidence read, fixes tried, and the next decision needed.
 ```
 
-## Verify and public URL symptoms
+## Evidence order
 
-A deploy can be green and still fail verification. Verify has two layers: platform reachability, then the requested behavior.
+The useful evidence depends on the failure category surfaced by deploy or verify tools.
 
-| Symptom                                                      | Likely cause                                                                 | Next move                                                                                                                |
-| ------------------------------------------------------------ | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Service is `RUNNING`, but the route returns 500 or 404       | App route, dependency, or request handling is broken.                        | Read runtime logs at request time and verify the requested route/body, not only `/`.                                     |
-| Public URL returns connection error right after first deploy | Subdomain route is still propagating, or the runtime is not bound correctly. | Wait 30-60 seconds and retry; if it persists, check port binding and public-access eligibility.                          |
-| 502 persists after deploy and wait                           | Start command binds `127.0.0.1`, wrong port, or HTTP server not listening.   | Check `zerops.yaml` `run.ports[]` and make the app bind the same port on `0.0.0.0`.                                      |
-| Subdomain stays disabled                                     | Worker or non-HTTP service, or explicit public access missing.               | Workers do not get useful public URLs. If it is an HTTP runtime, ask the agent to enable subdomain access and verify it. |
-| Requested feature fails after a successful deploy            | Behavior verification failed.                                                | Continue the loop from logs/events/check output; do not report the task done.                                            |
+| Category | Read first | Avoid |
+| -------- | ---------- | ----- |
+| `build` | Build logs, build commands, dependency manifests, deploy file list. | Runtime logs; the runtime did not start yet. |
+| `start` | Prepare/runtime logs, start command, ports, env references. | Rebuilding without checking why the process exited. |
+| `verify` | Failing check detail, HTTP response, request-time runtime logs, stored state. | Calling a green deploy "done" before behavior passes. |
+| `network` | VPN, SSH, DNS, subdomain readiness, service status, transport error. | Editing app code before proving connectivity. |
+| `config` | Field-level rejection, `zerops.yaml`, setup name, env references, service settings. | Guessing from service names or dashboard memory. |
+| `credential` | The named credential surface: `ZCP_API_KEY`, git, SSH, managed-service, CI, or external API. | Rotating unrelated secrets. |
+| `other` | Raw events/logs and the exact phase that failed. | Repeating the same attempt after the same unknown reason. |
 
-Public subdomain access is enabled on first deploy for eligible HTTP runtimes. Workers and non-HTTP services do not get a useful public URL by design.
+Failure categories come from the deploy/verify evidence surface. They are not a verdict; they tell the agent where the next useful signal is.
 
-## Token and credential symptoms
+## Local setup checks
 
-Token problems usually happen at startup. The fix is to replace the token on the surface ZCP reads, then restart the agent so the new process inherits it.
+Local setup has two separate connections:
 
-| Symptom                                                        | Likely cause                                | Next move                                                                                       |
-| -------------------------------------------------------------- | ------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `Token accesses N projects; use project-scoped token`          | Multi-project or account-wide token.        | Generate a single-project token and replace `ZCP_API_KEY`.                                      |
-| `Token has no project access`                                  | Token authenticates but reaches no project. | Grant project access or generate a new single-project token.                                    |
-| `No authentication found: set ZCP_API_KEY or log in with zcli` | No token reached ZCP.                       | Add `ZCP_API_KEY` under `.mcp.json` `env` for local setup, or check remote service env.         |
-| API replies with 401 or `AUTH_TOKEN_EXPIRED`                   | Token expired or was revoked.               | Generate a new single-project token, replace it, restart the agent.                             |
-| GitHub Actions deploy fails on auth                            | `ZEROPS_TOKEN` missing/wrong.               | Set a Zerops API token as the repository secret named `ZEROPS_TOKEN`. It is not a GitHub token. |
+- MCP uses `ZCP_API_KEY` to talk to the Zerops API.
+- Your local app and shell use `zcli vpn up` to reach private service hostnames such as `db` or `cache`.
 
-Full credential model: [Tokens and credentials](/zcp/security/tokens-and-project-access).
+That means MCP can work while the app cannot reach the database.
 
-## Local setup symptoms
+| Symptom | Check |
+| ------- | ----- |
+| Agent does not list the `zerops` MCP server. | Relaunch the agent from the directory containing `.mcp.json`. |
+| MCP startup says the token reaches multiple projects. | Replace `ZCP_API_KEY` with a single-project token. |
+| Re-running `zcp init` made MCP disappear. | Re-add the `ZCP_API_KEY` env block to `.mcp.json` and restart the agent. |
+| Local app cannot reach `db`, `cache`, or storage hostnames. | Run `zcli vpn up <project-id>` again. |
+| Local app reads stale credentials. | Regenerate `.env`; it is a snapshot, not a live sync. |
+| `zcp` is not found after install. | Add `~/.local/bin` or the install target to `PATH`, then restart the shell/agent. |
 
-These apply to local setup. Remote setup is already on the private network and does not need VPN from your laptop.
+For local setup details, use [Run locally](/zcp/setup/local-agent-bridge).
 
-| Symptom                                                               | Likely cause                                                  | Next move                                                                                    |
-| --------------------------------------------------------------------- | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| Local app cannot reach `db`, `redis`, `cache`, or storage hostname    | VPN is down or dropped after sleep/network change.            | Run `zcli vpn up <project-id>` again.                                                        |
-| `no route to host` or connection refused for managed-service hostname | Same network access issue.                                    | Bring VPN up, then retry. If network works, regenerate `.env`.                               |
-| Local app reads stale credentials                                     | `.env` is a snapshot.                                         | Ask ZCP to regenerate the `.env` after env changes.                                          |
-| Re-running `zcp init` made ZCP disappear from the agent               | `.mcp.json` was rewritten without `ZCP_API_KEY`.              | Re-add the `env` block and restart the agent from the app directory.                         |
-| Agent does not list the `zerops` MCP server                           | Agent launched from the wrong directory or config not loaded. | Quit and relaunch from the directory containing `.mcp.json`.                                 |
-| `zcp` is not found after install                                      | Install path is not on `PATH`.                                | Add `~/.local/bin` or the install target to your shell `PATH`, then restart the shell/agent. |
+## Manual takeover
 
-## Session drift and manual takeover
+If you take over from the agent, read evidence in this order:
 
-Use status when the chat-side picture drifts from reality:
+1. Service list and runtime target.
+2. Service-scoped events for the runtime in question.
+3. Build logs for build failures, runtime logs for start or request failures.
+4. Verify output for reachability and requested behavior.
+5. Git history only when delivery uses git-push or CI.
 
-```text
-Read current project status, list the services in scope, and summarize the last deploy and verify result before changing anything.
-```
-
-That is the right move when the agent says it has no context, a browser workspace was reopened, a CLI session restarted, or you are taking over from a previous run.
-
-For manual takeover, read evidence in this order:
-
-| Evidence                    | Why it matters                                                                                    |
-| --------------------------- | ------------------------------------------------------------------------------------------------- |
-| Service-scoped events       | Shows deploys, build/start transitions, failed process reasons, scaling, lifecycle actions.       |
-| Build logs and runtime logs | Separates build failures from runtime crashes and request-time app errors.                        |
-| Verify output               | Shows whether reachability and requested behavior actually passed.                                |
-| Git history                 | Matters when delivery uses git-push; shows what source change corresponds to the deployed result. |
+Do not inspect every service first. Start with the runtime in scope and expand only when the evidence points to a dependency.
 
 ## When to stop
 
-Stop the loop when the agent cannot make progress with new evidence, needs a missing credential, is about to delete or replace a service, or the target runtime/stage is ambiguous.
+Stop the loop when:
 
-A repeated retry with the same evidence is not recovery. Ask the agent for the category, evidence read, fixes attempted, and next human decision.
+- the same failure repeats without new evidence,
+- the agent needs an external credential,
+- the target runtime or stage choice is ambiguous,
+- a destructive action would delete or replace a service,
+- production release authority is needed,
+- the request no longer fits the current project layout.
+
+A blocker is acceptable only when it names the runtime in scope, failure category, evidence read, fixes attempted, and the human decision or credential still needed.
 
 Before destructive recovery, read service-scoped events, logs, deploy/verify result, and git history when delivery uses git-push.
 
 ## Related
 
-- [Build and ship](/zcp/workflows/build-with-zcp)
-- [Workflow terms](/zcp/reference/agent-workflow)
+- [Workflows in depth](/zcp/reference/agent-workflow)
+- [ZCP MCP tools](/zcp/reference/mcp-operations)
 - [Tokens and credentials](/zcp/security/tokens-and-project-access)
 - [Run locally](/zcp/setup/local-agent-bridge)
