@@ -4,13 +4,15 @@ description: Learn how to define, import and export projects and services using 
 ---
 
 import { Dropdown, DropdownItem } from '/src/components/Dropdown';
-import { Tooltip } from 'docs-ui';
+import YamlConfigsNote from '/src/components/YamlConfigsNote';
 
-The Zerops YAML configuration provides powerful capabilities for both importing and exporting projects and services. This documentation covers how to define your infrastructure as code and move configurations between environments.
+The Import YAML configuration provides powerful capabilities for both importing and exporting projects and services. This documentation covers how to define your infrastructure as code and move configurations between environments.
+
+<YamlConfigsNote />
 
 ## YAML Configuration Basics
 
-The Zerops YAML configuration can be used to create or replicate services in Zerops. You can import configurations in two ways:
+The Import YAML configuration can be used to create or replicate services in Zerops. You can import configurations in two ways:
 
 - **Using the GUI**:
   - **For projects**: In the Zerops dashboard, click on **Import a project** in the Projects section
@@ -816,3 +818,43 @@ The exported YAML files are compatible with:
 - The `zcli project service-import` command (for single service exports)
 
 This allows you to easily move configurations between environments or create new instances of your infrastructure.
+
+## Editor support (JSON Schema)
+
+Zerops publishes an official [JSON Schema ↗](https://json-schema.org/) for the Import YAML:
+
+```
+https://api.app-prg1.zerops.io/api/rest/public/settings/import-project-yml-json-schema.json
+```
+
+With the schema attached, your editor gives you:
+
+- **Autocomplete** for every key and nested field (project, services, autoscaling, nginx, embedded `zeropsYaml`, …)
+- **Inline documentation** on hover
+- **Validation** — typos, wrong types, and missing required fields are flagged as you type
+- **Enum suggestions** for fields like `corePackage`, `mode`, `cpuMode`, service `type`, and more
+
+### Auto-detection via SchemaStore
+
+The schema is registered with [SchemaStore ↗](https://www.schemastore.org/), so most YAML-aware editors apply it automatically — no setup required — when the file matches:
+
+- `zerops-import.yml`, `zerops-import.yaml`
+- `zerops-*-import.yml`, `zerops-*-import.yaml` (e.g., `zerops-project-import.yaml`, `zerops-service-import.yaml`)
+
+This covers VS Code (with the [YAML extension by Red Hat ↗](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml)), all JetBrains IDEs, and any editor backed by [`yaml-language-server` ↗](https://github.com/redhat-developer/yaml-language-server) (Neovim, Helix, Sublime LSP, …).
+
+### Manual attachment
+
+If your file is named differently, add a modeline at the top:
+
+```yaml
+# yaml-language-server: $schema=https://api.app-prg1.zerops.io/api/rest/public/settings/import-project-yml-json-schema.json
+project:
+  name: project0
+services:
+  - hostname: app
+    type: nodejs@22
+    # ...
+```
+
+The same URL works in any editor that lets you map a schema to a file pattern manually (e.g., `yaml.schemas` in VS Code `settings.json`, or JetBrains' **JSON Schema Mappings** panel).

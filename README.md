@@ -33,7 +33,7 @@ If you have any questions, please feel free to join [Zerops Discord Server](http
   •
   <a href="https://docs.zerops.io/discord">Discord Server</a>
   •
-  <a href="http://linkedin.com/company/zerops/">LinkedIn</a>
+  <a href="https://linkedin.com/company/zerops/">LinkedIn</a>
   </b>
 </div>
 
