@@ -7,28 +7,31 @@ import DocCardList from '@theme/DocCardList';
 import Icons from '@theme/Icon';
 import LargeCardList from '@site/src/components/LargeCardList';
 import LargeCard from '@site/src/components/LargeCard';
-import DeployButton from '@site/src/components/DeployButton';
 import CustomCard from '@site/src/components/CustomCard';
+import DeployButton from '@site/src/components/DeployButton';
+import { Dropdown, DropdownItem } from '/src/components/Dropdown';
 
-[Gleam ↗](https://gleam.org/en) is an asynchronous event-driven JavaScript runtime, which is designed to build scalable network applications.
+[Gleam ↗](https://gleam.run/) is a friendly language for building type-safe systems that scale, running on the Erlang virtual machine.
 
-As said, there is no need for coding yet, we have created a [Github repository ↗](https://github.com/zeropsio/recipe-gleam), a **_recipe_**, containing the most simple Gleam web application. The repo will be used as a source from which the app will be built.
+## 1. Try a Zerops Recipe
 
-<CustomCard title="Feel free to deploy the recipe yourself" emoji="🚀">
-  This is the most bare-bones example of Gleam app running in Zerops — as few libraries as possible,
-  just a simple endpoint with connect, read and write to a Zerops PostgreSQL database.
+A **recipe** is a minimal working app in a public GitHub repository, already wired up with a `zerops.yml` — no setup needed on your part, just deploy and see it run.
+
+<CustomCard title="Deploy the Gleam recipe" emoji="🚀">
+  A bare-bones Gleam app with a single endpoint, connected to a PostgreSQL database. One click, no changes needed.
 
   <DeployButton link="gleam" badgeWidth="200" />
 </CustomCard>
 
-1. Log in/sign up to [Zerops GUI ↗](https://app.zerops.io)
+<Dropdown>
+<DropdownItem title="Import manually or fork the recipe">
 
-
-2. In the **Projects** box click on **Import a project** and paste in the following YAML config ([source ↗](https://github.com/zeropsio/recipe-gleam/blob/main/zerops-project-import.yaml)):
+Or import manually — log in to [Zerops GUI ↗](https://app.zerops.io), click **Import a project** in the Projects box, and paste this YAML ([source ↗](https://github.com/zeropsio/recipe-gleam/blob/main/zerops-project-import.yaml)):
 
 ```yaml
 project:
   name: recipe-gleam
+  # location: eu-central   # eu-central (EU, Prague, default) or us-east-1 (US East, New York)
   tags:
     - zerops-recipe
 
@@ -44,50 +47,39 @@ services:
     priority: 1
 ```
 
-3. Click on **Import project** and wait until all pipelines have finished.
+Click **Import project** and wait for all pipelines to finish. The subdomain URL in the **IP Addresses & Public Routing** box should return `Hello, World!`.
 
-**That's it, your application is now up and running! :star: Let's check it works:**
+To fork and build on top: [fork the repository ↗](https://github.com/zeropsio/recipe-gleam), replace `buildFromGit` with your fork's URL, then push — Zerops rebuilds on every push.
 
-1. A _subdomain_ should have been enabled and visible in the project's **IP addressed & Public Routing Overview** box. Its format should look similar to this `https://api-808-3000.prg1.zerops.app`.
-2. Click or the `subdomain` URL to open it in a browser and you should see
+</DropdownItem>
+</Dropdown>
 
+---
+
+## 2. Deploy your own project
+
+Already have a Gleam repo? Add a `zerops.yml` file to its root, then [create a Gleam service](/gleam/how-to/create) in Zerops and point it at your repository.
+
+```yaml
+zerops:
+  - setup: app         # matches your service hostname in Zerops
+    build:
+      base: gleam@latest
+      buildCommands:
+        - gleam export erlang-shipment
+      deployFiles:
+        - build/erlang-shipment
+    run:
+      base: gleam@latest
+      ports:
+        - port: 3000
+          httpSupport: true
+      start: ./build/erlang-shipment/entrypoint.sh run
 ```
-{"message":"This is a simple Gleam application running in Zerops.io, each request adds an entry to the PostgreSQL database and returns a count. See the source repository (https://github.com/zeropsio/recipe-gleam) for more information.","newEntry":"e64be640-d6c2-4be8-93ac-d1e40e56fa06","count":1}
-```
 
-:::tip
-Do you have any questions? Check the step-by-step tutorial, browse the documentation and join our **[Discord](https://discord.com/invite/WDvCZ54)** community to get help from our team and other members.
-:::
+See the [full `zerops.yml` reference](/gleam/how-to/build-pipeline) for all available options.
 
-## How to start
-
-It doesn't matter whether it's your first curious introduction to Zerops, you have already mastered the basics and are looking for a tiny detail or inspiration. Below, choose a section that fits your needs:
-
-<DocCardList
-  colSize={4}
-  items={[
-    {
-      type: 'link',
-      href: '/gleam/how-to/create',
-      label: 'Care for details?',
-      customProps: {
-        icon: Icons['academic-cap-solid'],
-        description:
-          'Dive in all Zerops has to offer for your Gleam application.',
-      },
-    },
-    {
-      type: 'link',
-      href: 'https://github.com/zeropsio?q=gleam&type=all&language=&sort=',
-      label: 'Gleam recipes',
-      customProps: {
-        icon: Icons['github'],
-        description:
-          'Get inspired by already existing repositories, ready to be imported to Zerops.',
-      },
-    },
-  ]}
-/>
+---
 
 ## Feature Highlights
 
@@ -106,11 +98,10 @@ It doesn't matter whether it's your first curious introduction to Zerops, you ha
     {
       type: 'link',
       href: '/gleam/how-to/build-pipeline#add-zeropsyaml-to-your-repository',
-      label: 'Zerops.yaml',
+      label: 'zerops.yml reference',
       customProps: {
         icon: Icons['puzzle'],
-        description:
-          'See a full example of zerops.yaml file to create your own app.',
+        description: 'Full reference for all zerops.yml options for Gleam.',
       },
     },
     {
@@ -120,7 +111,7 @@ It doesn't matter whether it's your first curious introduction to Zerops, you ha
       customProps: {
         icon: Icons['adjustments'],
         description:
-          'Set up scaling of your Gleam application so that it runs smoothly while using only necessary resources.',
+          'Set up scaling so your app runs smoothly while using only the resources it needs.',
       },
     },
   ]}
@@ -152,24 +143,11 @@ It doesn't matter whether it's your first curious introduction to Zerops, you ha
 
 ## When in doubt, reach out
 
-Don't know how to start or got stuck during the process? You might not be the first one, visit the FAQ section to find out.
-
-In case you haven't found an answer (and also if you have), we and our community are looking forward to hearing from you on Discord.
-
-Have you build something that others might find useful? Don't hesitate to share your knowledge!
+Don't know how to start or got stuck? You might not be the first one — join our community on Discord.
 
 <DocCardList
   colSize={6}
   items={[
-    /* {
-      type: 'link',
-      href: '/gleam/faq',
-      label: 'FAQ',
-      customProps: {
-        icon: Icons['chat-bubble-left-right'],
-        description: 'Most common questions in one place.',
-      },
-    }, */
     {
       type: 'link',
       href: 'https://discord.com/invite/WDvCZ54',

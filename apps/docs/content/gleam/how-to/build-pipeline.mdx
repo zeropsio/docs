@@ -53,8 +53,8 @@ zerops:
 
       # OPTIONAL. Sets the internal port(s) your app listens on:
       ports:
-        # port number
         - port: 3000
+          httpSupport: true   # default: false — enable for HTTP/S traffic
 
       # OPTIONAL. Customise the runtime Gleam environment by installing additional
       # dependencies to the base Gleam runtime environment.
@@ -473,7 +473,7 @@ zerops:
 You can change the base environment when you need to. Just simply modify the `zerops.yaml` in your repository.
 :::
 
-If you need to install more technologies to the runtime environment, set multiple values as a yaml array. For example:
+If you need to install additional tools in the runtime environment, add them via `prepareCommands` using `zsc add`. For example:
 
 ```yaml
 zerops:
@@ -487,9 +487,7 @@ zerops:
 
     # ==== how to run your application ====
     run:
-      # OPTIONAL. Sets the base technology for the runtime environment:
-      base:
-        - gleam@latest
+      base: gleam@latest
       prepareCommands:
         - zsc add go@latest
       ...
@@ -529,11 +527,28 @@ For example, to connect to a Gleam service with hostname = "app" and port = 3000
 
 Each port has following attributes:
 
-| parameter   | description                                                                                                                                                                                                                                                                                                            |
-| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| port        | Defines the port number. You can set any port number between _10_ and _65435_. Ports outside this interval are reserved for internal Zerops systems.                                                                                                                                                                   |
-| protocol    | **Optional.** Defines the protocol. Allowed values are `TCP` or `UDP`. Default value is `TCP`.                                                                                                                                                                                                                         |
-| httpSupport | **Optional.** `httpSupport = true` is the default setting for TCP protocol. Set `httpSupport = false` if a web server isn't running on the port. Zerops uses this information for the configuration of [public access](/features/access). `httpSupport = true` is available only in combination with the TCP protocol. |
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">parameter</th>
+      <th className="w-fit">description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit">port</td>
+      <td className="w-fit">Defines the port number. You can set any port number between _10_ and _65435_. Ports outside this interval are reserved for internal Zerops systems.</td>
+    </tr>
+    <tr>
+      <td className="w-fit">protocol</td>
+      <td className="w-fit">**Optional.** Defines the protocol. Allowed values are `tcp` or `udp`. Default value is `tcp`.</td>
+    </tr>
+    <tr>
+      <td className="w-fit">httpSupport</td>
+      <td className="w-fit">**Optional.** `httpSupport` defaults to `false`. Set to `true` if a web server is running on the port — required for HTTP/S public access via subdomains or custom domains. Available only with the `tcp` protocol.</td>
+    </tr>
+  </tbody>
+</table>
 
 ### prepareCommands
 
@@ -776,9 +791,20 @@ zerops:
 Configures the health check to run a local command.
 Following attributes are available:
 
-| Parameter   | Description                                                                                                                                                                                                                                                                                                                     |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **command** | Defines a local command to be run.<br/>The command has access to the same [environment variables](/gleam/how-to/create#set-secret-environment-variables) as your Gleam application.<br/>A single string is required. If you need to run multiple commands create a shell script or, use a multiline format as in the example below. |
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Parameter</th>
+      <th className="w-fit">Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit">**command**</td>
+      <td className="w-fit">Defines a local command to be run.<br/>The command has access to the same [environment variables](/gleam/how-to/create#set-secret-environment-variables) as your Gleam application.<br/>A single string is required. If you need to run multiple commands create a shell script or, use a multiline format as in the example below.</td>
+    </tr>
+  </tbody>
+</table>
 
 **Example:**
 
@@ -819,10 +845,9 @@ zerops:
     # ==== how to run your application ====
     run:
       crontab:
-        # REQUIRED. Sets the command to execute:
         - command: ""
-        # REQUIRED. Sets the interval time to execute:
           timing: "0 * * * *"
+          allContainers: false
 ```
 
 Read more about setting up [cron](/zerops-yaml/cron) in Zerops.
@@ -897,9 +922,20 @@ Read more about how the [readiness check works](/gleam/how-to/deploy-process#rea
 Configures the readiness check to run a local command.
 Following attributes are available:
 
-| Parameter   | Description                                                                                                                                                                                                                                                                                                                     |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **command** | Defines a local command to be run.<br/>The command has access to the same [environment variables](/gleam/how-to/create#set-secret-environment-variables) as your Gleam application.<br/>A single string is required. If you need to run multiple commands create a shell script or, use a multiline format as in the example below. |
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Parameter</th>
+      <th className="w-fit">Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit">**command**</td>
+      <td className="w-fit">Defines a local command to be run.<br/>The command has access to the same [environment variables](/gleam/how-to/create#set-secret-environment-variables) as your Gleam application.<br/>A single string is required. If you need to run multiple commands create a shell script or, use a multiline format as in the example below.</td>
+    </tr>
+  </tbody>
+</table>
 
 **Example:**
 

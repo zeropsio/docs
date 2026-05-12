@@ -7,33 +7,120 @@ Zerops autoscales vertically (CPU/RAM/disk) and horizontally (container count). 
 
 ## When to Scale Which Way
 
-| Symptom | Scale type | Why |
-|---------|-----------|-----|
-| CPU/memory pressure on existing containers | Vertical (CPU/RAM) | More resources per container |
-| High request volume, stateless service | Horizontal (containers) | Distribute load across more instances |
-| Disk filling up | Vertical (disk) | More storage per container |
-| Latency-sensitive workload on SHARED CPU | CPU mode → DEDICATED | Guaranteed cores, no burstable throttling |
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Symptom</th>
+      <th className="w-fit">Scale type</th>
+      <th className="w-fit">Why</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit">CPU/memory pressure on existing containers</td>
+      <td className="w-fit">Vertical (CPU/RAM)</td>
+      <td className="w-fit">More resources per container</td>
+    </tr>
+    <tr>
+      <td className="w-fit">High request volume, stateless service</td>
+      <td className="w-fit">Horizontal (containers)</td>
+      <td className="w-fit">Distribute load across more instances</td>
+    </tr>
+    <tr>
+      <td className="w-fit">Disk filling up</td>
+      <td className="w-fit">Vertical (disk)</td>
+      <td className="w-fit">More storage per container</td>
+    </tr>
+    <tr>
+      <td className="w-fit">Latency-sensitive workload on SHARED CPU</td>
+      <td className="w-fit">CPU mode → DEDICATED</td>
+      <td className="w-fit">Guaranteed cores, no burstable throttling</td>
+    </tr>
+  </tbody>
+</table>
 
 ## Applicability Matrix
 
-| Service type | Vertical autoscaling | Horizontal scaling | Notes |
-|---|---|---|---|
-| **Runtime** (Node.js, Go, PHP, Python, Java, etc.) | Yes | Yes (1-10 containers) | Full autoscaling |
-| **Linux containers** (Alpine, Ubuntu) | Yes | Yes (1-10 containers) | Same as runtimes |
-| **Managed DB** (PostgreSQL, MariaDB) | Yes | No (fixed: NON_HA=1, HA=3) | Mode immutable after creation |
-| **Managed cache** (KeyDB/Valkey) | Yes | No (fixed: NON_HA=1, HA=3) | Mode immutable after creation |
-| **Shared storage** | No (automatic, not configurable) | No (fixed: NON_HA=1, HA=3) | DO NOT set verticalAutoscaling in import.yml |
-| **Object storage** | No | No | Fixed size at creation, no verticalAutoscaling |
-| **Docker** | No (manual, triggers VM restart) | Yes (VM count changeable, triggers restart) | No autoscaling at all |
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Service type</th>
+      <th className="w-fit">Vertical autoscaling</th>
+      <th className="w-fit">Horizontal scaling</th>
+      <th className="w-fit">Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit">**Runtime** (Node.js, Go, PHP, Python, Java, etc.)</td>
+      <td className="w-fit">Yes</td>
+      <td className="w-fit">Yes (1-10 containers)</td>
+      <td className="w-fit">Full autoscaling</td>
+    </tr>
+    <tr>
+      <td className="w-fit">**Linux containers** (Alpine, Ubuntu)</td>
+      <td className="w-fit">Yes</td>
+      <td className="w-fit">Yes (1-10 containers)</td>
+      <td className="w-fit">Same as runtimes</td>
+    </tr>
+    <tr>
+      <td className="w-fit">**Managed DB** (PostgreSQL, MariaDB)</td>
+      <td className="w-fit">Yes</td>
+      <td className="w-fit">No (fixed: NON_HA=1, HA=3)</td>
+      <td className="w-fit">Mode immutable after creation</td>
+    </tr>
+    <tr>
+      <td className="w-fit">**Managed cache** (KeyDB/Valkey)</td>
+      <td className="w-fit">Yes</td>
+      <td className="w-fit">No (fixed: NON_HA=1, HA=3)</td>
+      <td className="w-fit">Mode immutable after creation</td>
+    </tr>
+    <tr>
+      <td className="w-fit">**Shared storage**</td>
+      <td className="w-fit">No (automatic, not configurable)</td>
+      <td className="w-fit">No (fixed: NON_HA=1, HA=3)</td>
+      <td className="w-fit">DO NOT set verticalAutoscaling in import.yml</td>
+    </tr>
+    <tr>
+      <td className="w-fit">**Object storage**</td>
+      <td className="w-fit">No</td>
+      <td className="w-fit">No</td>
+      <td className="w-fit">Fixed size at creation, no verticalAutoscaling</td>
+    </tr>
+    <tr>
+      <td className="w-fit">**Docker**</td>
+      <td className="w-fit">No (manual, triggers VM restart)</td>
+      <td className="w-fit">Yes (VM count changeable, triggers restart)</td>
+      <td className="w-fit">No autoscaling at all</td>
+    </tr>
+  </tbody>
+</table>
 
 ## Vertical Autoscaling
 
 ### CPU Modes
 
-| Mode | Behavior | Best for |
-|---|---|---|
-| **SHARED** | Physical core shared with up to 10 tenants. Performance ranges 1/10 to 10/10 depending on neighbors | Dev, staging, low-traffic production |
-| **DEDICATED** | Exclusive full physical core(s). Consistent performance | Production, CPU-intensive workloads |
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Mode</th>
+      <th className="w-fit">Behavior</th>
+      <th className="w-fit">Best for</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit">**SHARED**</td>
+      <td className="w-fit">Physical core shared with up to 10 tenants. Performance ranges 1/10 to 10/10 depending on neighbors</td>
+      <td className="w-fit">Dev, staging, low-traffic production</td>
+    </tr>
+    <tr>
+      <td className="w-fit">**DEDICATED**</td>
+      <td className="w-fit">Exclusive full physical core(s). Consistent performance</td>
+      <td className="w-fit">Production, CPU-intensive workloads</td>
+    </tr>
+  </tbody>
+</table>
 
 - CPU mode can be changed **once per hour**
 - **startCpuCoreCount**: cores allocated at container start (default: 2). Increase for apps with heavy initialization
@@ -47,10 +134,30 @@ Zerops autoscales vertically (CPU/RAM/disk) and horizontally (container count). 
 
 RAM is monitored every **10 seconds**. Two independent thresholds control scale-up -- whichever provides **more free memory** wins:
 
-| Threshold | Field | Default | Behavior |
-|---|---|---|---|
-| **Absolute** | `minFreeRamGB` | 0.0625 GB (64 MB) | Scale up when free RAM drops below this fixed amount |
-| **Percentage** | `minFreeRamPercent` | 0% (disabled) | Scale up when free RAM drops below this % of granted RAM |
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Threshold</th>
+      <th className="w-fit">Field</th>
+      <th className="w-fit">Default</th>
+      <th className="w-fit">Behavior</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit">**Absolute**</td>
+      <td className="w-fit">`minFreeRamGB`</td>
+      <td className="w-fit">0.0625 GB (64 MB)</td>
+      <td className="w-fit">Scale up when free RAM drops below this fixed amount</td>
+    </tr>
+    <tr>
+      <td className="w-fit">**Percentage**</td>
+      <td className="w-fit">`minFreeRamPercent`</td>
+      <td className="w-fit">0% (disabled)</td>
+      <td className="w-fit">Scale up when free RAM drops below this % of granted RAM</td>
+    </tr>
+  </tbody>
+</table>
 
 Both thresholds serve dual purpose: prevent OOM crashes and preserve space for kernel disk caching. Swap is enabled as a safety net but does not replace proper threshold configuration.
 
@@ -61,25 +168,91 @@ Both thresholds serve dual purpose: prevent OOM crashes and preserve space for k
 
 ### Resource Limits (Defaults)
 
-| Resource | Min | Max |
-|---|---|---|
-| CPU cores | 1 | 8 |
-| RAM | 0.125 GB | 48 GB |
-| Disk | 1 GB | 250 GB |
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Resource</th>
+      <th className="w-fit">Min</th>
+      <th className="w-fit">Max</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit">CPU cores</td>
+      <td className="w-fit">1</td>
+      <td className="w-fit">8</td>
+    </tr>
+    <tr>
+      <td className="w-fit">RAM</td>
+      <td className="w-fit">0.125 GB</td>
+      <td className="w-fit">48 GB</td>
+    </tr>
+    <tr>
+      <td className="w-fit">Disk</td>
+      <td className="w-fit">1 GB</td>
+      <td className="w-fit">250 GB</td>
+    </tr>
+  </tbody>
+</table>
 
 PostgreSQL and MariaDB override RAM minimum to **0.25 GB**.
 
 ### Scaling Behavior Parameters
 
-| Parameter | CPU | RAM | Disk |
-|---|---|---|---|
-| Collection interval | 10s | 10s | 10s |
-| Scale-up window | 20s | 10s | 10s |
-| Scale-down window | 60s | 120s | 300s |
-| Scale-up percentile | 60th | 50th | 50th |
-| Scale-down percentile | 40th | 50th | 50th |
-| Minimum step | 1 (0.1 cores) | 0.125 GB | 0.5 GB |
-| Maximum step | 40 | 32 GB | 128 GB |
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Parameter</th>
+      <th className="w-fit">CPU</th>
+      <th className="w-fit">RAM</th>
+      <th className="w-fit">Disk</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit">Collection interval</td>
+      <td className="w-fit">10s</td>
+      <td className="w-fit">10s</td>
+      <td className="w-fit">10s</td>
+    </tr>
+    <tr>
+      <td className="w-fit">Scale-up window</td>
+      <td className="w-fit">20s</td>
+      <td className="w-fit">10s</td>
+      <td className="w-fit">10s</td>
+    </tr>
+    <tr>
+      <td className="w-fit">Scale-down window</td>
+      <td className="w-fit">60s</td>
+      <td className="w-fit">120s</td>
+      <td className="w-fit">300s</td>
+    </tr>
+    <tr>
+      <td className="w-fit">Scale-up percentile</td>
+      <td className="w-fit">60th</td>
+      <td className="w-fit">50th</td>
+      <td className="w-fit">50th</td>
+    </tr>
+    <tr>
+      <td className="w-fit">Scale-down percentile</td>
+      <td className="w-fit">40th</td>
+      <td className="w-fit">50th</td>
+      <td className="w-fit">50th</td>
+    </tr>
+    <tr>
+      <td className="w-fit">Minimum step</td>
+      <td className="w-fit">1 (0.1 cores)</td>
+      <td className="w-fit">0.125 GB</td>
+      <td className="w-fit">0.5 GB</td>
+    </tr>
+    <tr>
+      <td className="w-fit">Maximum step</td>
+      <td className="w-fit">40</td>
+      <td className="w-fit">32 GB</td>
+      <td className="w-fit">128 GB</td>
+    </tr>
+  </tbody>
+</table>
 
 Scaling uses exponential growth: small increments initially, larger jumps under sustained high load.
 
@@ -113,10 +286,27 @@ Applies to **runtimes and Linux containers only**. New containers are added when
 
 Container count is **fixed by deployment mode**, set at creation, **immutable**:
 
-| Mode | Containers | Use case |
-|---|---|---|
-| `NON_HA` | 1 | Development, non-critical |
-| `HA` | 3 (on separate physical machines) | Production, automatic failover |
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Mode</th>
+      <th className="w-fit">Containers</th>
+      <th className="w-fit">Use case</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit">`NON_HA`</td>
+      <td className="w-fit">1</td>
+      <td className="w-fit">Development, non-critical</td>
+    </tr>
+    <tr>
+      <td className="w-fit">`HA`</td>
+      <td className="w-fit">3 (on separate physical machines)</td>
+      <td className="w-fit">Production, automatic failover</td>
+    </tr>
+  </tbody>
+</table>
 
 HA recovery: failed container is disconnected, new one created on different hardware, data synchronized from healthy copies, failed container removed.
 

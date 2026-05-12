@@ -405,7 +405,7 @@ zerops:
 You can change the base environment when you need to. Just simply modify the `zerops.yaml` in your repository.
 :::
 
-If you need to install more technologies to the runtime environment, set multiple values as a yaml array. For example:
+If you need to install additional tools in the runtime environment, add them via `prepareCommands` using `zsc add`. For example:
 
 ```yaml
 zerops:
@@ -419,9 +419,7 @@ zerops:
 
     # ==== how to run your application ====
     run:
-      # OPTIONAL. Sets the base technology for the runtime environment:
-      base:
-        - ubuntu@24.04
+      base: ubuntu@24.04
       prepareCommands:
         - zsc add nodejs@latest
       ...
@@ -456,11 +454,11 @@ Each port has following attributes:
     </tr>
     <tr>
       <td className="w-fit">protocol</td>
-      <td className="w-fit"><strong>Optional.</strong> Defines the protocol. Allowed values are <code>TCP</code> or <code>UDP</code>. Default value is <code>TCP</code>.</td>
+      <td className="w-fit"><strong>Optional.</strong> Defines the protocol. Allowed values are <code>tcp</code> or <code>udp</code>. Default value is <code>tcp</code>.</td>
     </tr>
     <tr>
       <td className="w-fit">httpSupport</td>
-      <td className="w-fit"><strong>Optional.</strong> <code>httpSupport = true</code> is the default setting for TCP protocol. Set <code>httpSupport = false</code> if a web server isn't running on the port. Zerops uses this information for the configuration of <a href="/features/access">public access</a>. <code>httpSupport = true</code> is available only in combination with the TCP protocol.</td>
+      <td className="w-fit"><strong>Optional.</strong> <code>httpSupport</code> defaults to <code>false</code>. Set to <code>true</code> if a web server is running on the port — required for HTTP/S public access via subdomains or custom domains. Available only with the <code>tcp</code> protocol.</td>
     </tr>
   </tbody>
 </table>
@@ -761,10 +759,9 @@ zerops:
     # ==== how to run your application ====
     run:
       crontab:
-        # REQUIRED. Sets the command to execute:
         - command: ""
-        # REQUIRED. Sets the interval time to execute:
           timing: "0 * * * *"
+          allContainers: false
 ```
 
 Read more about setting up [cron](/zerops-yaml/cron) in Zerops.

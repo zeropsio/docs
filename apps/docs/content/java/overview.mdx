@@ -1,5 +1,5 @@
 ---
-title: Java Overview
+title: Java Getting Started
 description: Learn about working with Java with ease in Zerops.
 ---
 
@@ -9,27 +9,29 @@ import LargeCardList from '@site/src/components/LargeCardList';
 import LargeCard from '@site/src/components/LargeCard';
 import CustomCard from '@site/src/components/CustomCard';
 import DeployButton from '@site/src/components/DeployButton';
+import { Dropdown, DropdownItem } from '/src/components/Dropdown';
 
-# Java overview
+[Java ↗](https://www.java.com/en/) is a high-level, class-based, object-oriented programming language designed to have as few implementation dependencies as possible.
 
-[Java ↗](https://www.java.com/en/) is a high-level, class-based, object-oriented programming language that is designed to have as few implementation dependencies as possible.
+## 1. Try a Zerops Recipe
 
+A **recipe** is a minimal working app in a public GitHub repository, already wired up with a `zerops.yml` — no setup needed on your part, just deploy and see it run.
 
-As said, there is no need for coding yet, we have created a [Github repository ↗](https://github.com/zeropsio/recipe-java-hello-world), a **_recipe_**, containing the most simple Java web application. The repo will be used as a source from which the app will be built.
-
-<CustomCard title="Feel free to deploy the recipe yourself" emoji="🚀">
-  This is the most bare-bones example of Java running in Zerops — as few libraries as possible,
-  just a simple endpoint with connect, read and write to a Zerops PostgreSQL database.
+<CustomCard title="Deploy the Java recipe" emoji="🚀">
+  A bare-bones Java app with a single endpoint, connected to a PostgreSQL database. One click, no changes needed.
 
   <DeployButton link="java" badgeWidth="200" />
 </CustomCard>
 
-1. Log in/sign up to [Zerops GUI ↗](https://app.zerops.io)
-2. In the **Projects** box click on **Import a project** and paste in the following YAML config ([source ↗](https://github.com/zeropsio/recipe-java-hello-world/blob/main/import-project/description.yaml)):
+<Dropdown>
+<DropdownItem title="Import manually or fork the recipe">
+
+Or import manually — log in to [Zerops GUI ↗](https://app.zerops.io), click **Import a project** in the Projects box, and paste this YAML ([source ↗](https://github.com/zeropsio/recipe-java-hello-world/blob/main/import-project/description.yaml)):
 
 ```yaml
 project:
   name: my-first-project
+  # location: eu-central   # eu-central (EU, Prague, default) or us-east-1 (US East, New York)
 services:
   - hostname: helloworld
     type: java@latest
@@ -39,39 +41,39 @@ services:
     enableSubdomainAccess: true
 ```
 
-3. Click on **Import project** and wait until all pipelines have finished.
+Click **Import project** and wait for all pipelines to finish. The subdomain URL in the **IP Addresses & Public Routing** box should return `Hello, World!`.
 
-**That's it, your application is now up and running! :star: Let's check it works:**
+To fork and build on top: [fork the repository ↗](https://github.com/zeropsio/recipe-java-hello-world), replace `buildFromGit` with your fork's URL, then push — Zerops rebuilds on every push.
 
-1. A _subdomain_ should have been enabled and visible in the project's **IP addressed & Public Routing Overview** box. Its format should look similar to this `https://helloworld-24-8080.prg1.zerops.app`.
-2. Click or the `subdomain` URL to open it in a browser and you should see
+</DropdownItem>
+</Dropdown>
 
+---
+
+## 2. Deploy your own project
+
+Already have a Java repo? Add a `zerops.yml` file to its root, then [create a Java service](/java/how-to/create) in Zerops and point it at your repository.
+
+```yaml
+zerops:
+  - setup: app         # matches your service hostname in Zerops
+    build:
+      base: java@latest
+      buildCommands:
+        - ./mvnw clean install
+      deployFiles:
+        - target/app.jar
+    run:
+      base: java@latest
+      ports:
+        - port: 8080
+          httpSupport: true
+      start: java -jar app.jar
 ```
-Hello, World!
-```
 
-:::tip
-Do you have any questions? Check the step-by-step tutorial, browse the documentation and join our **[Discord](https://discord.com/invite/WDvCZ54)** community to get help from our team and other members.
-:::
+See the [full `zerops.yml` reference](/java/how-to/build-pipeline) for all available options.
 
-
-## How to start
-
-<DocCardList
-  colSize={6}
-  items={[
-    {
-      type: 'link',
-      href: '/java/how-to/create',
-      label: 'Care for details?',
-      customProps: {
-        icon: Icons['academic-cap-solid'],
-        description:
-          'Dive in all Zerops has to offer for your Java application.',
-      },
-    },
-  ]}
-/>
+---
 
 ## Feature Highlights
 
@@ -90,11 +92,10 @@ Do you have any questions? Check the step-by-step tutorial, browse the documenta
     {
       type: 'link',
       href: '/java/how-to/build-pipeline#add-zeropsyaml-to-your-repository',
-      label: 'zerops.yaml',
+      label: 'zerops.yml reference',
       customProps: {
         icon: Icons['puzzle'],
-        description:
-          'See a full example of zerops.yaml file to create your own app.',
+        description: 'Full reference for all zerops.yml options for Java.',
       },
     },
     {
@@ -104,7 +105,7 @@ Do you have any questions? Check the step-by-step tutorial, browse the documenta
       customProps: {
         icon: Icons['adjustments'],
         description:
-          'Set up scaling of your Java application so that it runs smoothly while using only necessary resources.',
+          'Set up scaling so your app runs smoothly while using only the resources it needs.',
       },
     },
   ]}
@@ -136,24 +137,11 @@ Do you have any questions? Check the step-by-step tutorial, browse the documenta
 
 ## When in doubt, reach out
 
-Don't know how to start or got stuck during the process? You might not be the first one, visit the FAQ section to find out.
-
-In case you haven't found an answer (and also if you have), we and our community are looking forward to hearing from you on Discord.
-
-Have you build something that others might find useful? Don't hesitate to share your knowledge!
+Don't know how to start or got stuck? You might not be the first one — join our community on Discord.
 
 <DocCardList
   colSize={6}
   items={[
-    /* {
-      type: 'link',
-      href: '/java/faq',
-      label: 'FAQ',
-      customProps: {
-        icon: Icons['chat-bubble-left-right'],
-        description: 'Most common questions in one place.',
-      },
-    }, */
     {
       type: 'link',
       href: 'https://discord.com/invite/WDvCZ54',

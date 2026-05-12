@@ -15,16 +15,66 @@ Override any php.ini directive via `PHP_INI_{directive}` env vars in `run.envVar
 
 Zerops overrides several stock PHP values for production use:
 
-| Directive | Zerops default | Stock PHP | Why |
-|-----------|---------------|-----------|-----|
-| `upload_max_filesize` | **1024M** | 2M | Generous upload limit (L7 balancer is the real gate) |
-| `post_max_size` | **1024M** | 8M | Matches upload limit |
-| `display_errors` | **off** | on | Production: errors to logs, not browser |
-| `error_reporting` | **22527** | 32767 | E_ALL & ~E_DEPRECATED & ~E_STRICT |
-| `log_errors` | **1** | 0 | Errors go to log files |
-| `output_buffering` | **4096** | 0 | Buffered output for performance |
-| `date.timezone` | **UTC** | (empty) | Consistent timezone |
-| `sendmail_path` | `/usr/sbin/sendmail -t -i` | (empty) | System sendmail wired |
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Directive</th>
+      <th className="w-fit">Zerops default</th>
+      <th className="w-fit">Stock PHP</th>
+      <th className="w-fit">Why</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit">`upload_max_filesize`</td>
+      <td className="w-fit">**1024M**</td>
+      <td className="w-fit">2M</td>
+      <td className="w-fit">Generous upload limit (L7 balancer is the real gate)</td>
+    </tr>
+    <tr>
+      <td className="w-fit">`post_max_size`</td>
+      <td className="w-fit">**1024M**</td>
+      <td className="w-fit">8M</td>
+      <td className="w-fit">Matches upload limit</td>
+    </tr>
+    <tr>
+      <td className="w-fit">`display_errors`</td>
+      <td className="w-fit">**off**</td>
+      <td className="w-fit">on</td>
+      <td className="w-fit">Production: errors to logs, not browser</td>
+    </tr>
+    <tr>
+      <td className="w-fit">`error_reporting`</td>
+      <td className="w-fit">**22527**</td>
+      <td className="w-fit">32767</td>
+      <td className="w-fit">E_ALL & ~E_DEPRECATED & ~E_STRICT</td>
+    </tr>
+    <tr>
+      <td className="w-fit">`log_errors`</td>
+      <td className="w-fit">**1**</td>
+      <td className="w-fit">0</td>
+      <td className="w-fit">Errors go to log files</td>
+    </tr>
+    <tr>
+      <td className="w-fit">`output_buffering`</td>
+      <td className="w-fit">**4096**</td>
+      <td className="w-fit">0</td>
+      <td className="w-fit">Buffered output for performance</td>
+    </tr>
+    <tr>
+      <td className="w-fit">`date.timezone`</td>
+      <td className="w-fit">**UTC**</td>
+      <td className="w-fit">(empty)</td>
+      <td className="w-fit">Consistent timezone</td>
+    </tr>
+    <tr>
+      <td className="w-fit">`sendmail_path`</td>
+      <td className="w-fit">`/usr/sbin/sendmail -t -i`</td>
+      <td className="w-fit">(empty)</td>
+      <td className="w-fit">System sendmail wired</td>
+    </tr>
+  </tbody>
+</table>
 
 ### Example
 
@@ -51,15 +101,44 @@ Config files are written to `/etc/php*/php-fpm.d/www.conf` by `zerops-zenv` at c
 
 Pre-forks a pool of workers. Good for consistent traffic.
 
-| Variable | Default |
-|----------|---------|
-| `PHP_FPM_PM` | `dynamic` |
-| `PHP_FPM_PM_MAX_CHILDREN` | `20` |
-| `PHP_FPM_PM_START_SERVERS` | `2` |
-| `PHP_FPM_PM_MIN_SPARE_SERVERS` | `1` |
-| `PHP_FPM_PM_MAX_SPARE_SERVERS` | `3` |
-| `PHP_FPM_PM_MAX_SPAWN_RATE` | `32` |
-| `PHP_FPM_PM_MAX_REQUESTS` | `500` |
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Variable</th>
+      <th className="w-fit">Default</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit">`PHP_FPM_PM`</td>
+      <td className="w-fit">`dynamic`</td>
+    </tr>
+    <tr>
+      <td className="w-fit">`PHP_FPM_PM_MAX_CHILDREN`</td>
+      <td className="w-fit">`20`</td>
+    </tr>
+    <tr>
+      <td className="w-fit">`PHP_FPM_PM_START_SERVERS`</td>
+      <td className="w-fit">`2`</td>
+    </tr>
+    <tr>
+      <td className="w-fit">`PHP_FPM_PM_MIN_SPARE_SERVERS`</td>
+      <td className="w-fit">`1`</td>
+    </tr>
+    <tr>
+      <td className="w-fit">`PHP_FPM_PM_MAX_SPARE_SERVERS`</td>
+      <td className="w-fit">`3`</td>
+    </tr>
+    <tr>
+      <td className="w-fit">`PHP_FPM_PM_MAX_SPAWN_RATE`</td>
+      <td className="w-fit">`32`</td>
+    </tr>
+    <tr>
+      <td className="w-fit">`PHP_FPM_PM_MAX_REQUESTS`</td>
+      <td className="w-fit">`500`</td>
+    </tr>
+  </tbody>
+</table>
 
 High-traffic example:
 

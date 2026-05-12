@@ -9,17 +9,52 @@ Zerops Object Storage is S3-compatible (MinIO). Always set `AWS_USE_PATH_STYLE_E
 
 When you create an Object Storage service, Zerops auto-generates these env vars (prefix with hostname for cross-service access, e.g. `${storage_apiUrl}`):
 
-| Variable | Description |
-|----------|-------------|
-| `apiUrl` | S3 endpoint URL — full `https://...` URL ready for any S3 SDK's `endpoint` option |
-| `apiHost` | S3 endpoint host only (no scheme); use only if the client library needs host separately |
-| `accessKeyId` | S3 access key |
-| `secretAccessKey` | S3 secret key |
-| `bucketName` | Auto-generated bucket name (hostname + random prefix, immutable) |
-| `quotaGBytes` | Bucket quota in GB |
-| `projectId` | Project ID (Zerops-generated) |
-| `serviceId` | Service ID (Zerops-generated) |
-| `hostname` | Service hostname |
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Variable</th>
+      <th className="w-fit">Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit">`apiUrl`</td>
+      <td className="w-fit">S3 endpoint URL — full `https://...` URL ready for any S3 SDK's `endpoint` option</td>
+    </tr>
+    <tr>
+      <td className="w-fit">`apiHost`</td>
+      <td className="w-fit">S3 endpoint host only (no scheme); use only if the client library needs host separately</td>
+    </tr>
+    <tr>
+      <td className="w-fit">`accessKeyId`</td>
+      <td className="w-fit">S3 access key</td>
+    </tr>
+    <tr>
+      <td className="w-fit">`secretAccessKey`</td>
+      <td className="w-fit">S3 secret key</td>
+    </tr>
+    <tr>
+      <td className="w-fit">`bucketName`</td>
+      <td className="w-fit">Auto-generated bucket name (hostname + random prefix, immutable)</td>
+    </tr>
+    <tr>
+      <td className="w-fit">`quotaGBytes`</td>
+      <td className="w-fit">Bucket quota in GB</td>
+    </tr>
+    <tr>
+      <td className="w-fit">`projectId`</td>
+      <td className="w-fit">Project ID (Zerops-generated)</td>
+    </tr>
+    <tr>
+      <td className="w-fit">`serviceId`</td>
+      <td className="w-fit">Service ID (Zerops-generated)</td>
+    </tr>
+    <tr>
+      <td className="w-fit">`hostname`</td>
+      <td className="w-fit">Service hostname</td>
+    </tr>
+  </tbody>
+</table>
 
 **Use `${storage_apiUrl}` as the S3 endpoint** — it carries the complete `https://` scheme and is what every S3 SDK's `endpoint` option expects. The `apiHost` variant is host-only; if a client library requires host separately, combine `https://${storage_apiHost}` manually — **never `http://`**. The object-storage gateway rejects plaintext HTTP with a 301 redirect to the HTTPS equivalent, and most S3 SDKs don't follow the redirect automatically. The symptom of a misconfigured endpoint is `UnknownError` or connection-refused on the first bucket call.
 
@@ -129,14 +164,40 @@ Each service = one bucket (auto-named, immutable). Need multiple buckets? Create
 
 ## When to Use Object Storage
 
-| Scenario | Use Object Storage? |
-|----------|-------------------|
-| User uploads (avatars, documents) | Yes — lost on deploy |
-| Media files (images, videos) | Yes — serve via public URL |
-| Build artifacts | No — deploy via zerops.yaml |
-| Temporary files | No — container disk is fine |
-| Logs | No — use Zerops logging |
-| Database dumps | Yes — for backup storage |
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Scenario</th>
+      <th className="w-fit">Use Object Storage?</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit">User uploads (avatars, documents)</td>
+      <td className="w-fit">Yes — lost on deploy</td>
+    </tr>
+    <tr>
+      <td className="w-fit">Media files (images, videos)</td>
+      <td className="w-fit">Yes — serve via public URL</td>
+    </tr>
+    <tr>
+      <td className="w-fit">Build artifacts</td>
+      <td className="w-fit">No — deploy via zerops.yaml</td>
+    </tr>
+    <tr>
+      <td className="w-fit">Temporary files</td>
+      <td className="w-fit">No — container disk is fine</td>
+    </tr>
+    <tr>
+      <td className="w-fit">Logs</td>
+      <td className="w-fit">No — use Zerops logging</td>
+    </tr>
+    <tr>
+      <td className="w-fit">Database dumps</td>
+      <td className="w-fit">Yes — for backup storage</td>
+    </tr>
+  </tbody>
+</table>
 
 ## Gotchas
 1. **`forcePathStyle: true` / `AWS_USE_PATH_STYLE_ENDPOINT: true` is REQUIRED**: Zerops uses MinIO which doesn't support virtual-hosted style

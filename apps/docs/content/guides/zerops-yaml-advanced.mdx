@@ -14,12 +14,32 @@ Health checks run **continuously** on every container after startup. Two types (
 - **`httpGet`**: GET to `localhost:{port}{path}`. Success = 2xx. Runs **inside** the container. Use `host` for custom Host header, `scheme: https` only if app requires TLS.
 - **`exec`**: Shell command, success = exit 0. Has access to all env vars. Use YAML `|` for multi-command scripts.
 
-| Parameter | Purpose |
-|-----------|---------|
-| `failureTimeout` | Seconds of consecutive failures before container restart |
-| `disconnectTimeout` | Seconds before failing container is removed from load balancer |
-| `recoveryTimeout` | Seconds of success before restarted container receives traffic again |
-| `execPeriod` | Interval in seconds between check attempts |
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Parameter</th>
+      <th className="w-fit">Purpose</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit">`failureTimeout`</td>
+      <td className="w-fit">Seconds of consecutive failures before container restart</td>
+    </tr>
+    <tr>
+      <td className="w-fit">`disconnectTimeout`</td>
+      <td className="w-fit">Seconds before failing container is removed from load balancer</td>
+    </tr>
+    <tr>
+      <td className="w-fit">`recoveryTimeout`</td>
+      <td className="w-fit">Seconds of success before restarted container receives traffic again</td>
+    </tr>
+    <tr>
+      <td className="w-fit">`execPeriod`</td>
+      <td className="w-fit">Interval in seconds between check attempts</td>
+    </tr>
+  </tbody>
+</table>
 
 **Failure sequence**: repeated failures -> `disconnectTimeout` removes from LB -> `failureTimeout` triggers restart -> `recoveryTimeout` gates traffic reconnection.
 
@@ -49,10 +69,27 @@ deploy:
 
 ## temporaryShutdown
 
-| Value | Behavior | Downtime |
-|-------|----------|----------|
-| `false` (default) | New containers start first, old removed after readiness | None (zero-downtime) |
-| `true` | All old containers stop, then new ones start | Yes |
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Value</th>
+      <th className="w-fit">Behavior</th>
+      <th className="w-fit">Downtime</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit">`false` (default)</td>
+      <td className="w-fit">New containers start first, old removed after readiness</td>
+      <td className="w-fit">None (zero-downtime)</td>
+    </tr>
+    <tr>
+      <td className="w-fit">`true`</td>
+      <td className="w-fit">All old containers stop, then new ones start</td>
+      <td className="w-fit">Yes</td>
+    </tr>
+  </tbody>
+</table>
 
 Use `true` when: exclusive DB migration access needed, or brief downtime acceptable. Use `false` for: production web services, APIs, user-facing apps.
 
@@ -96,13 +133,42 @@ Each entry: `command` (required), `name` (required), `workingDir` (optional), `i
 
 ## initCommands vs prepareCommands
 
-| Feature | `run.initCommands` | `run.prepareCommands` |
-|---------|-------------------|----------------------|
-| **When** | Every container start/restart | Only when building runtime image |
-| **Cached** | Never | Yes (base layer cache) |
-| **Use for** | Migrations, cache warming, cleanup | OS packages, system deps |
-| **Deploy files** | Present in `/var/www` | **Not available** -- DO NOT reference app files |
-| **Reruns on** | Restart, scaling, deploy | Only when commands change |
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Feature</th>
+      <th className="w-fit">`run.initCommands`</th>
+      <th className="w-fit">`run.prepareCommands`</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit">**When**</td>
+      <td className="w-fit">Every container start/restart</td>
+      <td className="w-fit">Only when building runtime image</td>
+    </tr>
+    <tr>
+      <td className="w-fit">**Cached**</td>
+      <td className="w-fit">Never</td>
+      <td className="w-fit">Yes (base layer cache)</td>
+    </tr>
+    <tr>
+      <td className="w-fit">**Use for**</td>
+      <td className="w-fit">Migrations, cache warming, cleanup</td>
+      <td className="w-fit">OS packages, system deps</td>
+    </tr>
+    <tr>
+      <td className="w-fit">**Deploy files**</td>
+      <td className="w-fit">Present in `/var/www`</td>
+      <td className="w-fit">**Not available** -- DO NOT reference app files</td>
+    </tr>
+    <tr>
+      <td className="w-fit">**Reruns on**</td>
+      <td className="w-fit">Restart, scaling, deploy</td>
+      <td className="w-fit">Only when commands change</td>
+    </tr>
+  </tbody>
+</table>
 
 ---
 

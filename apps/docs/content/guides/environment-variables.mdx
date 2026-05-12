@@ -9,12 +9,42 @@ Zerops manages environment variables at two scopes (project and service) with st
 
 ## Scope Hierarchy
 
-| Scope | Defined In | Visibility | Editable Without Redeploy |
-|-------|-----------|------------|--------------------------|
-| **Project** | import.yml `project.envVariables`, GUI | All services (auto-inherited) | Yes (restart required) |
-| **Service secret** | import.yml `envSecrets`, GUI | Single service | Yes (restart required) |
-| **Service basic (build)** | zerops.yml `build.envVariables` | Build container only | No (redeploy required) |
-| **Service basic (runtime)** | zerops.yml `run.envVariables` | Runtime container only | No (redeploy required) |
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Scope</th>
+      <th className="w-fit">Defined In</th>
+      <th className="w-fit">Visibility</th>
+      <th className="w-fit">Editable Without Redeploy</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit">**Project**</td>
+      <td className="w-fit">import.yml `project.envVariables`, GUI</td>
+      <td className="w-fit">All services (auto-inherited)</td>
+      <td className="w-fit">Yes (restart required)</td>
+    </tr>
+    <tr>
+      <td className="w-fit">**Service secret**</td>
+      <td className="w-fit">import.yml `envSecrets`, GUI</td>
+      <td className="w-fit">Single service</td>
+      <td className="w-fit">Yes (restart required)</td>
+    </tr>
+    <tr>
+      <td className="w-fit">**Service basic (build)**</td>
+      <td className="w-fit">zerops.yml `build.envVariables`</td>
+      <td className="w-fit">Build container only</td>
+      <td className="w-fit">No (redeploy required)</td>
+    </tr>
+    <tr>
+      <td className="w-fit">**Service basic (runtime)**</td>
+      <td className="w-fit">zerops.yml `run.envVariables`</td>
+      <td className="w-fit">Runtime container only</td>
+      <td className="w-fit">No (redeploy required)</td>
+    </tr>
+  </tbody>
+</table>
 
 ## Variable Precedence
 
@@ -30,10 +60,27 @@ When the same key exists at multiple levels:
 
 Build and runtime run in **separate containers**. Variables from one phase are not visible in the other unless explicitly referenced with prefixes:
 
-| Want to access | From | Use prefix |
-|---------------|------|-----------|
-| Runtime var `API_KEY` | Build container | `${RUNTIME_API_KEY}` |
-| Build var `BUILD_ID` | Runtime container | `${BUILD_BUILD_ID}` |
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Want to access</th>
+      <th className="w-fit">From</th>
+      <th className="w-fit">Use prefix</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit">Runtime var `API_KEY`</td>
+      <td className="w-fit">Build container</td>
+      <td className="w-fit">`${RUNTIME_API_KEY}`</td>
+    </tr>
+    <tr>
+      <td className="w-fit">Build var `BUILD_ID`</td>
+      <td className="w-fit">Runtime container</td>
+      <td className="w-fit">`${BUILD_BUILD_ID}`</td>
+    </tr>
+  </tbody>
+</table>
 
 ```yaml
 zerops:
@@ -124,10 +171,24 @@ Cross-service references (`${hostname_varname}`) are **resolved at container sta
 
 `envIsolation` does NOT control whether cross-service vars auto-inject — they do, in every mode. It controls something narrower: how `${hostname_varname}` templates inside zerops.yml and import.yml *resolve* during platform interpolation.
 
-| Mode | Behavior |
-|------|----------|
-| `service` (default) | Service-scoped: `${hostname_varname}` templates inside that service's YAML resolve by following the hostname prefix. The OS env in every container still contains every other service's vars as auto-injected keys. |
-| `none` (legacy) | Cross-service references can be written without the `${hostname_varname}` prefix (e.g. `${password}` resolves to the nearest match). Do not use for new projects — ambiguous, error-prone. |
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Mode</th>
+      <th className="w-fit">Behavior</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit">`service` (default)</td>
+      <td className="w-fit">Service-scoped: `${hostname_varname}` templates inside that service's YAML resolve by following the hostname prefix. The OS env in every container still contains every other service's vars as auto-injected keys.</td>
+    </tr>
+    <tr>
+      <td className="w-fit">`none` (legacy)</td>
+      <td className="w-fit">Cross-service references can be written without the `${hostname_varname}` prefix (e.g. `${password}` resolves to the nearest match). Do not use for new projects — ambiguous, error-prone.</td>
+    </tr>
+  </tbody>
+</table>
 
 Set in import.yml at project or service level:
 ```yaml
@@ -230,10 +291,27 @@ run:
       - ./templates/settings.json
 ```
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `delimiter` | Yes | Wrapping characters (e.g., `%%` makes `%%VAR%%`). String or array |
-| `target` | Yes | Files or directories to process. String or array |
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Parameter</th>
+      <th className="w-fit">Required</th>
+      <th className="w-fit">Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit">`delimiter`</td>
+      <td className="w-fit">Yes</td>
+      <td className="w-fit">Wrapping characters (e.g., `%%` makes `%%VAR%%`). String or array</td>
+    </tr>
+    <tr>
+      <td className="w-fit">`target`</td>
+      <td className="w-fit">Yes</td>
+      <td className="w-fit">Files or directories to process. String or array</td>
+    </tr>
+  </tbody>
+</table>
 
 **DO NOT** expect directory targets to recurse into subdirectories. `./config/` processes only files directly in `config/`, not `config/jwt/`. Specify each subdirectory explicitly.
 

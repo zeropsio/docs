@@ -7,22 +7,68 @@ Before going to production: (1) databases to HA mode, (2) minContainers: 2 on ap
 
 ## Database
 
-| Item | Dev | Production |
-|------|-----|------------|
-| Mode | `NON_HA` | `HA` (must recreate) |
-| Backups | Optional | Enabled |
-| Connection | Single primary | Primary + read replicas |
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Item</th>
+      <th className="w-fit">Dev</th>
+      <th className="w-fit">Production</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit">Mode</td>
+      <td className="w-fit">`NON_HA`</td>
+      <td className="w-fit">`HA` (must recreate)</td>
+    </tr>
+    <tr>
+      <td className="w-fit">Backups</td>
+      <td className="w-fit">Optional</td>
+      <td className="w-fit">Enabled</td>
+    </tr>
+    <tr>
+      <td className="w-fit">Connection</td>
+      <td className="w-fit">Single primary</td>
+      <td className="w-fit">Primary + read replicas</td>
+    </tr>
+  </tbody>
+</table>
 
 **HA is immutable** — cannot switch after creation. Delete and recreate with `mode: HA`.
 
 ## Application Services
 
-| Item | Dev | Production |
-|------|-----|------------|
-| minContainers | 1 | 2+ |
-| Health checks | Optional | Enabled |
-| Logging | Console/debug | Structured (syslog) |
-| Debug mode | Enabled | Disabled |
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Item</th>
+      <th className="w-fit">Dev</th>
+      <th className="w-fit">Production</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit">minContainers</td>
+      <td className="w-fit">1</td>
+      <td className="w-fit">2+</td>
+    </tr>
+    <tr>
+      <td className="w-fit">Health checks</td>
+      <td className="w-fit">Optional</td>
+      <td className="w-fit">Enabled</td>
+    </tr>
+    <tr>
+      <td className="w-fit">Logging</td>
+      <td className="w-fit">Console/debug</td>
+      <td className="w-fit">Structured (syslog)</td>
+    </tr>
+    <tr>
+      <td className="w-fit">Debug mode</td>
+      <td className="w-fit">Enabled</td>
+      <td className="w-fit">Disabled</td>
+    </tr>
+  </tbody>
+</table>
 
 ```yaml
 - hostname: app
@@ -53,12 +99,32 @@ Remove entirely or disable `enableSubdomainAccess`. Use VPN + pgAdmin/DBeaver lo
 
 **Container filesystem survives restarts but is replaced on every deploy** — files stored on disk persist through reload/restart/stop+start but are lost on deploy or container replacement (scale-up/down).
 
-| Use case | Solution |
-|----------|----------|
-| User uploads | Object Storage (S3) |
-| Media files | Object Storage (S3) |
-| Temp files | Container disk (OK) |
-| Build artifacts | Deploy via zerops.yaml |
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Use case</th>
+      <th className="w-fit">Solution</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit">User uploads</td>
+      <td className="w-fit">Object Storage (S3)</td>
+    </tr>
+    <tr>
+      <td className="w-fit">Media files</td>
+      <td className="w-fit">Object Storage (S3)</td>
+    </tr>
+    <tr>
+      <td className="w-fit">Temp files</td>
+      <td className="w-fit">Container disk (OK)</td>
+    </tr>
+    <tr>
+      <td className="w-fit">Build artifacts</td>
+      <td className="w-fit">Deploy via zerops.yaml</td>
+    </tr>
+  </tbody>
+</table>
 
 ```yaml
 - hostname: storage
@@ -71,12 +137,32 @@ Remove entirely or disable `enableSubdomainAccess`. Use VPN + pgAdmin/DBeaver lo
 
 **File-based sessions break with multiple containers and are lost on deploy.**
 
-| Use case | Solution |
-|----------|----------|
-| PHP sessions | Redis/Valkey |
-| Laravel sessions | Redis driver |
-| Django sessions | Redis backend |
-| Express sessions | Redis store |
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Use case</th>
+      <th className="w-fit">Solution</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit">PHP sessions</td>
+      <td className="w-fit">Redis/Valkey</td>
+    </tr>
+    <tr>
+      <td className="w-fit">Laravel sessions</td>
+      <td className="w-fit">Redis driver</td>
+    </tr>
+    <tr>
+      <td className="w-fit">Django sessions</td>
+      <td className="w-fit">Redis backend</td>
+    </tr>
+    <tr>
+      <td className="w-fit">Express sessions</td>
+      <td className="w-fit">Redis store</td>
+    </tr>
+  </tbody>
+</table>
 
 ```yaml
 - hostname: cache
@@ -120,14 +206,40 @@ Remove entirely or disable `enableSubdomainAccess`. Use VPN + pgAdmin/DBeaver lo
 
 ## HA Checklist
 
-| Item | Recommendation |
-|------|---------------|
-| Core package | **Serious Core** for production (better SLA, dedicated resources) |
-| CPU mode | `cpuMode: DEDICATED` for consistent performance under load |
-| Environment separation | Separate projects for dev/staging/prod |
-| Stateless design | Sessions in Valkey, uploads in Object Storage — no local state |
-| Database mode | `mode: HA` for all managed services (immutable — plan before creation) |
-| Min containers | `minContainers: 2` on all app services for zero-downtime deploys |
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Item</th>
+      <th className="w-fit">Recommendation</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit">Core package</td>
+      <td className="w-fit">**Serious Core** for production (better SLA, dedicated resources)</td>
+    </tr>
+    <tr>
+      <td className="w-fit">CPU mode</td>
+      <td className="w-fit">`cpuMode: DEDICATED` for consistent performance under load</td>
+    </tr>
+    <tr>
+      <td className="w-fit">Environment separation</td>
+      <td className="w-fit">Separate projects for dev/staging/prod</td>
+    </tr>
+    <tr>
+      <td className="w-fit">Stateless design</td>
+      <td className="w-fit">Sessions in Valkey, uploads in Object Storage — no local state</td>
+    </tr>
+    <tr>
+      <td className="w-fit">Database mode</td>
+      <td className="w-fit">`mode: HA` for all managed services (immutable — plan before creation)</td>
+    </tr>
+    <tr>
+      <td className="w-fit">Min containers</td>
+      <td className="w-fit">`minContainers: 2` on all app services for zero-downtime deploys</td>
+    </tr>
+  </tbody>
+</table>
 
 ## Health Check Pattern
 

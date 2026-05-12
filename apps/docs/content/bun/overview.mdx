@@ -7,29 +7,31 @@ import DocCardList from '@theme/DocCardList';
 import Icons from '@theme/Icon';
 import LargeCardList from '@site/src/components/LargeCardList';
 import LargeCard from '@site/src/components/LargeCard';
-import DeployButton from '@site/src/components/DeployButton';
 import CustomCard from '@site/src/components/CustomCard';
+import DeployButton from '@site/src/components/DeployButton';
+import { Dropdown, DropdownItem } from '/src/components/Dropdown';
 
+[Bun ↗](https://bun.sh/) is an all-in-one JavaScript runtime and toolkit designed for speed.
 
-[Bun ↗](https:/bun.org/en) is an asynchronous event-driven JavaScript runtime, which is designed to build scalable network applications.
+## 1. Try a Zerops Recipe
 
-As said, there is no need for coding yet, we have created a [Github repository ↗](https://github.com/zeropsio/recipe-bun), a **_recipe_**, containing the most simple Bun web application. The repo will be used as a source from which the app will be built.
+A **recipe** is a minimal working app in a public GitHub repository, already wired up with a `zerops.yml` — no setup needed on your part, just deploy and see it run.
 
-<CustomCard title="Feel free to deploy the recipe yourself" emoji="🚀">
-  This is the most bare-bones example of Bun app running in Zerops — as few libraries as possible,
-  just a simple endpoint with connect, read and write to a Zerops PostgreSQL database.
+<CustomCard title="Deploy the Bun recipe" emoji="🚀">
+  A bare-bones Bun app with a single endpoint, connected to a PostgreSQL database. One click, no changes needed.
 
   <DeployButton link="bun" badgeWidth="200" />
 </CustomCard>
 
-1. Log in/sign up to [Zerops GUI ↗](https://app.zerops.io)
+<Dropdown>
+<DropdownItem title="Import manually or fork the recipe">
 
-
-2. In the **Projects** box click on **Import a project** and paste in the following YAML config ([source ↗](https://github.com/zeropsio/recipe-bun/blob/main/zerops-project-import.yaml)):
+Or import manually — log in to [Zerops GUI ↗](https://app.zerops.io), click **Import a project** in the Projects box, and paste this YAML ([source ↗](https://github.com/zeropsio/recipe-bun/blob/main/zerops-project-import.yaml)):
 
 ```yaml
 project:
   name: recipe-bun
+  # location: eu-central   # eu-central (EU, Prague, default) or us-east-1 (US East, New York)
   tags:
     - zerops-recipe
 
@@ -45,51 +47,43 @@ services:
     priority: 1
 ```
 
-3. Click on **Import project** and wait until all pipelines have finished.
+Click **Import project** and wait for all pipelines to finish. The subdomain URL in the **IP Addresses & Public Routing** box should return `Hello, World!`.
 
-**That's it, your application is now up and running! :star: Let's check it works:**
+To fork and build on top: [fork the repository ↗](https://github.com/zeropsio/recipe-bun), replace `buildFromGit` with your fork's URL, then push — Zerops rebuilds on every push.
 
-1. A _subdomain_ should have been enabled and visible in the project's **IP addressed & Public Routing Overview** box. Its format should look similar to this `https://api-806-3000.prg1.zerops.app`.
-2. Click or the `subdomain` URL to open it in a browser and you should see
+</DropdownItem>
+</Dropdown>
 
+---
+
+## 2. Deploy your own project
+
+Already have a Bun repo? Add a `zerops.yml` file to its root, then [create a Bun service](/bun/how-to/create) in Zerops and point it at your repository.
+
+```yaml
+zerops:
+  - setup: app         # matches your service hostname in Zerops
+    build:
+      base: bun@latest
+      buildCommands:
+        - bun i
+        - bun run build
+      deployFiles:
+        - dist
+        - package.json
+        - node_modules
+      cache: node_modules
+    run:
+      base: bun@latest
+      ports:
+        - port: 3000
+          httpSupport: true
+      start: bun start
 ```
-{"message":"This is a simple, basic Bun application running in Zerops.io,\n          each request adds an entry to the PostgreSQL database and returns a count.\n          See the source repository (https://github.com/zeropsio/recipe-bun) for more information.","newEntry":"dfd1e873-bfc8-4f36-af07-e32561820b93","count":"1"}
-```
 
-:::tip
-Do you have any questions? Check the step-by-step tutorial, browse the documentation and join our **[Discord](https://discord.com/invite/WDvCZ54)** community to get help from our team and other members.
-:::
+See the [full `zerops.yml` reference](/bun/how-to/build-pipeline) for all available options.
 
-
-## How to start
-
-It doesn't matter whether it's your first curious introduction to Zerops, you have already mastered the basics and are looking for a tiny detail or inspiration. Below, choose a section that fits your needs:
-
-<DocCardList
-  colSize={4}
-  items={[
-    {
-      type: 'link',
-      href: '/bun/how-to/create',
-      label: 'Care for details?',
-      customProps: {
-        icon: Icons['academic-cap-solid'],
-        description:
-          'Dive in all Zerops has to offer for your Bun application.',
-      },
-    },
-    {
-      type: 'link',
-      href: 'https://github.com/zeropsio?q=Bun&type=all&language=&sort=',
-      label: 'Bun recipes',
-      customProps: {
-        icon: Icons['github'],
-        description:
-          'Get inspired by already existing repositories, ready to be imported to Zerops.',
-      },
-    },
-  ]}
-/>
+---
 
 ## Feature Highlights
 
@@ -101,18 +95,17 @@ It doesn't matter whether it's your first curious introduction to Zerops, you ha
       href: '/bun/how-to/create',
       label: 'Create Bun service',
       customProps: {
-        icon: Icons['Bun'],
+        icon: Icons['bun'],
         description: 'Start with creating a Bun service using GUI or zCLI.',
       },
     },
     {
       type: 'link',
       href: '/bun/how-to/build-pipeline#add-zeropsyaml-to-your-repository',
-      label: 'Zerops.yaml',
+      label: 'zerops.yml reference',
       customProps: {
         icon: Icons['puzzle'],
-        description:
-          'See a full example of zerops.yaml file to create your own app.',
+        description: 'Full reference for all zerops.yml options for Bun.',
       },
     },
     {
@@ -122,7 +115,7 @@ It doesn't matter whether it's your first curious introduction to Zerops, you ha
       customProps: {
         icon: Icons['adjustments'],
         description:
-          'Set up scaling of your Bun application so that it runs smoothly while using only necessary resources.',
+          'Set up scaling so your app runs smoothly while using only the resources it needs.',
       },
     },
   ]}
@@ -154,11 +147,7 @@ It doesn't matter whether it's your first curious introduction to Zerops, you ha
 
 ## When in doubt, reach out
 
-Don't know how to start or got stuck during the process? You might not be the first one, visit the FAQ section to find out.
-
-In case you haven't found an answer (and also if you have), we and our community are looking forward to hearing from you on Discord.
-
-Have you build something that others might find useful? Don't hesitate to share your knowledge!
+Don't know how to start or got stuck? You might not be the first one — join our community on Discord.
 
 <DocCardList
   colSize={6}

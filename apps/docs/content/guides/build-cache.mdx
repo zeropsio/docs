@@ -9,10 +9,27 @@ Zerops uses a two-layer build cache: base layer (OS + prepareCommands) and build
 
 ## Two-Layer Architecture
 
-| Layer | Contains | Cached when |
-|-------|----------|-------------|
-| **Base layer** | OS, installed packages, prepareCommands output | prepareCommands unchanged |
-| **Build layer** | Files from `cache:` attribute after buildCommands | cache config unchanged |
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Layer</th>
+      <th className="w-fit">Contains</th>
+      <th className="w-fit">Cached when</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit">**Base layer**</td>
+      <td className="w-fit">OS, installed packages, prepareCommands output</td>
+      <td className="w-fit">prepareCommands unchanged</td>
+    </tr>
+    <tr>
+      <td className="w-fit">**Build layer**</td>
+      <td className="w-fit">Files from `cache:` attribute after buildCommands</td>
+      <td className="w-fit">cache config unchanged</td>
+    </tr>
+  </tbody>
+</table>
 
 Both layers are currently **coupled** -- invalidating the base layer also invalidates the build layer (cascade invalidation).
 
@@ -68,15 +85,44 @@ Any change to these zerops.yml fields invalidates **both layers**:
 
 ## Per-Runtime Cache Recommendations
 
-| Runtime | Recommended `cache:` paths |
-|---------|---------------------------|
-| Node.js / Bun | `node_modules`, `.next`, `.turbo`, `package-lock.json` |
-| Go | `cache: true` (modules live outside /build/source) |
-| PHP | `vendor`, `composer.lock` |
-| Python | `cache: true` (pip installs globally) or `.venv` |
-| Rust | `target` |
-| Java | `cache: true` (.m2 lives outside /build/source) |
-| .NET | `cache: true` (NuGet outside /build/source) |
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Runtime</th>
+      <th className="w-fit">Recommended `cache:` paths</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit">Node.js / Bun</td>
+      <td className="w-fit">`node_modules`, `.next`, `.turbo`, `package-lock.json`</td>
+    </tr>
+    <tr>
+      <td className="w-fit">Go</td>
+      <td className="w-fit">`cache: true` (modules live outside /build/source)</td>
+    </tr>
+    <tr>
+      <td className="w-fit">PHP</td>
+      <td className="w-fit">`vendor`, `composer.lock`</td>
+    </tr>
+    <tr>
+      <td className="w-fit">Python</td>
+      <td className="w-fit">`cache: true` (pip installs globally) or `.venv`</td>
+    </tr>
+    <tr>
+      <td className="w-fit">Rust</td>
+      <td className="w-fit">`target`</td>
+    </tr>
+    <tr>
+      <td className="w-fit">Java</td>
+      <td className="w-fit">`cache: true` (.m2 lives outside /build/source)</td>
+    </tr>
+    <tr>
+      <td className="w-fit">.NET</td>
+      <td className="w-fit">`cache: true` (NuGet outside /build/source)</td>
+    </tr>
+  </tbody>
+</table>
 
 ---
 

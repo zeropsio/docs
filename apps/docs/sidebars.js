@@ -168,7 +168,7 @@ module.exports = {
     {
       type: 'category',
       label: 'Runtimes & Web Servers',
-      collapsible: false,
+      collapsible: true,
       customProps: {
         sidebar_is_group_headline: true,
       },
@@ -296,7 +296,7 @@ module.exports = {
     {
       type: 'category',
       label: 'Linux Containers & VMs',
-      collapsible: false,
+      collapsible: true,
       customProps: {
         sidebar_is_group_headline: true,
       },
@@ -333,7 +333,7 @@ module.exports = {
     {
       type: 'category',
       label: 'Databases, Search Engines & Message Brokers',
-      collapsible: false,
+      collapsible: true,
       customProps: {
         sidebar_is_group_headline: true,
       },
@@ -442,7 +442,7 @@ module.exports = {
     {
       type: 'category',
       label: 'Storages',
-      collapsible: false,
+      collapsible: true,
       customProps: {
         sidebar_is_group_headline: true,
       },
@@ -499,6 +499,15 @@ module.exports = {
       label: 'Cron',
       customProps: {
         sidebar_icon: 'arrow-path',
+      },
+      className: 'homepage-sidebar-item',
+    },
+    {
+      type: 'doc',
+      id: 'references/zeropsyml-generator',
+      label: 'zerops.yml Generator',
+      customProps: {
+        sidebar_icon: 'sparkles',
       },
       className: 'homepage-sidebar-item',
     },
@@ -909,7 +918,7 @@ module.exports = {
         {
           type: 'doc',
           id: 'nodejs/how-to/build-pipeline',
-          label: 'Configure build & deploy pipeline',
+          label: 'zerops.yml',
         },
         {
           type: 'doc',
@@ -1048,7 +1057,7 @@ module.exports = {
         {
           type: 'doc',
           id: 'php/how-to/build-pipeline',
-          label: 'Configure build & deploy pipeline',
+          label: 'zerops.yml',
         },
         {
           type: 'doc',
@@ -1173,7 +1182,7 @@ module.exports = {
         {
           type: 'doc',
           id: 'python/how-to/build-pipeline',
-          label: 'Configure build & deploy pipeline',
+          label: 'zerops.yml',
         },
         {
           type: 'doc',
@@ -1298,7 +1307,7 @@ module.exports = {
           {
             type: 'doc',
             id: 'go/how-to/build-pipeline',
-            label: 'Configure build & deploy pipeline',
+            label: 'zerops.yml',
           },
           {
             type: 'doc',
@@ -1423,7 +1432,7 @@ module.exports = {
           {
             type: 'doc',
             id: 'rust/how-to/build-pipeline',
-            label: 'Configure build & deploy pipeline',
+            label: 'zerops.yml',
           },
           {
             type: 'doc',
@@ -1548,7 +1557,7 @@ module.exports = {
           {
             type: 'doc',
             id: 'dotnet/how-to/build-pipeline',
-            label: 'Configure build & deploy pipeline',
+            label: 'zerops.yml',
           },
           {
             type: 'doc',
@@ -1673,7 +1682,7 @@ module.exports = {
           {
             type: 'doc',
             id: 'java/how-to/build-pipeline',
-            label: 'Configure build & deploy pipeline',
+            label: 'zerops.yml',
           },
           {
             type: 'doc',
@@ -1803,7 +1812,7 @@ module.exports = {
           {
             type: 'doc',
             id: 'nginx/how-to/build-pipeline',
-            label: 'Configure build & deploy pipeline',
+            label: 'zerops.yml',
           },
           {
             type: 'doc',
@@ -1952,7 +1961,7 @@ module.exports = {
             {
               type: 'doc',
               id: 'ubuntu/how-to/build-pipeline',
-              label: 'Configure build & deploy pipeline',
+              label: 'zerops.yml',
             },
             {
               type: 'doc',
@@ -2077,7 +2086,7 @@ module.exports = {
               {
                 type: 'doc',
                 id: 'alpine/how-to/build-pipeline',
-                label: 'Configure build & deploy pipeline',
+                label: 'zerops.yml',
               },
               {
                 type: 'doc',
@@ -2755,7 +2764,7 @@ module.exports = {
           {
             type: 'doc',
             id: 'deno/how-to/build-pipeline',
-            label: 'Configure build & deploy pipeline',
+            label: 'zerops.yml',
           },
           {
             type: 'doc',
@@ -2880,7 +2889,7 @@ module.exports = {
           {
             type: 'doc',
             id: 'bun/how-to/build-pipeline',
-            label: 'Configure build & deploy pipeline',
+            label: 'zerops.yml',
           },
           {
             type: 'doc',
@@ -3005,7 +3014,7 @@ module.exports = {
           {
             type: 'doc',
             id: 'gleam/how-to/build-pipeline',
-            label: 'Configure build & deploy pipeline',
+            label: 'zerops.yml',
           },
           {
             type: 'doc',
@@ -3130,7 +3139,7 @@ module.exports = {
           {
             type: 'doc',
             id: 'elixir/how-to/build-pipeline',
-            label: 'Configure build & deploy pipeline',
+            label: 'zerops.yml',
           },
           {
             type: 'doc',
