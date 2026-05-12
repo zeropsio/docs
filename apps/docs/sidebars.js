@@ -639,6 +639,15 @@ module.exports = {
           },
           className: 'homepage-sidebar-item',
         },
+        {
+          type: 'doc',
+          id: 'references/networking/zerops-ca',
+          label: 'Zerops CA',
+          customProps: {
+            sidebar_icon: 'key',
+          },
+          className: 'homepage-sidebar-item',
+        },
       ]
     },
     {

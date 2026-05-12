@@ -1,0 +1,111 @@
+---
+title: Zerops Certificate Authority
+description: Trust the Zerops CA to verify TLS connections to managed databases and other Zerops-signed TLS endpoints.
+---
+
+Zerops issues TLS certificates for its managed services (for example PostgreSQL via pgBouncer, or Valkey TLS ports) from its own internal Certificate Authority. When you connect to one of these endpoints over TLS from outside Zerops &mdash; your laptop, CI runner, or another piece of infrastructure &mdash; the client needs to trust the Zerops CA in order to verify the certificate and complete the handshake.
+
+## Download the CA
+
+The Zerops root CA is published as a single PEM file at:
+
+```
+https://app.zerops.io/ca
+```
+
+Fetch it directly:
+
+```bash
+curl -L -o zerops-ca.pem https://app.zerops.io/ca
+```
+
+The downloaded file is a standard PEM-encoded certificate. You can inspect it with `openssl`:
+
+```bash
+openssl x509 -in zerops-ca.pem -noout -subject -issuer -dates
+```
+
+## Inside Zerops
+
+If your application or client runs **inside** a Zerops container, you do not need to download anything &mdash; the CA is already available on the local filesystem at:
+
+```
+/etc/zerops-zembed/ca.crt
+```
+
+Point your TLS client at that path the same way you would point it at a downloaded copy (`sslrootcert=/etc/zerops-zembed/ca.crt`, `--cacert /etc/zerops-zembed/ca.crt`, etc.). It is the same certificate that `https://app.zerops.io/ca` serves.
+
+The Zerops CA is also pre-installed into the system trust store of **every Zerops container**, so most TLS libraries will verify Zerops-signed certificates without any explicit `--cacert` / `sslrootcert` configuration. You can confirm this in your own container with any of the following:
+
+```bash
+# 1) Subject hash → matching symlink in the system trust dir (Debian/Ubuntu)
+ls -l "/etc/ssl/certs/$(openssl x509 -noout -subject_hash -in /etc/zerops-zembed/ca.crt).0"
+# e.g. /etc/ssl/certs/59e8696a.0 -> service-intermediate.pem
+
+# 2) Verify the CA file against the merged system bundle
+openssl verify -CAfile /etc/ssl/certs/ca-certificates.crt /etc/zerops-zembed/ca.crt
+# expected: /etc/zerops-zembed/ca.crt: OK
+
+# 3) End-to-end: handshake against a Zerops-signed endpoint without -CAfile
+openssl s_client -connect <service-hostname>:6380 -verify_return_error </dev/null
+# look for: Verify return code: 0 (ok)
+```
+
+## When to use it
+
+Use the Zerops CA whenever your client needs to verify a TLS certificate issued by Zerops. The most common cases are:
+
+- Connecting to a [managed PostgreSQL](/postgresql/how-to/connect#method-2-connect-via-direct-ip-access) over the public TLS port (`6432`, via pgBouncer)
+- Connecting to [managed Valkey](/valkey/overview) on its TLS ports (`6380`, or `7001` in HA setups)
+- Any other Zerops-signed TLS endpoint reached from outside the project's private network
+
+The same CA also signs internal TLS endpoints, so it can be useful when verifying certificates from inside a Zerops project too.
+
+:::note
+You do **not** need the CA for HTTPS traffic on `.zerops.app` subdomains or on custom domains &mdash; those use publicly-trusted certificates (Let's Encrypt by default), which every operating system already trusts.
+:::
+
+## Usage examples
+
+### psql (PostgreSQL)
+
+Pass the CA via `sslrootcert` and require certificate verification with `sslmode=verify-full`:
+
+```bash
+psql "host=<public-ip> port=6432 user=<user> dbname=db \
+      sslmode=verify-full sslrootcert=./zerops-ca.pem"
+```
+
+Or as a connection string:
+
+```
+postgresql://<user>:<password>@<public-ip>:6432/db?sslmode=verify-full&sslrootcert=./zerops-ca.pem
+```
+
+### redis-cli (Valkey)
+
+```bash
+redis-cli --tls --cacert ./zerops-ca.pem \
+  -h <public-ip> -p 6380 -a <password>
+```
+
+### openssl s_client (debugging)
+
+To confirm the TLS handshake and inspect the served certificate chain:
+
+```bash
+openssl s_client -connect <public-ip>:6432 \
+  -CAfile ./zerops-ca.pem -servername <public-ip>
+```
+
+### System-wide trust
+
+To trust the Zerops CA system-wide (so clients pick it up automatically without an explicit flag):
+
+- **Debian/Ubuntu:** copy to `/usr/local/share/ca-certificates/zerops-ca.crt` and run `sudo update-ca-certificates`
+- **macOS:** `sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain zerops-ca.pem`
+- **Alpine:** copy to `/usr/local/share/ca-certificates/zerops-ca.crt` and run `update-ca-certificates`
+
+:::tip
+For application code, most TLS libraries accept a custom CA bundle without modifying system trust &mdash; for example `PGSSLROOTCERT` for libpq, `tls.RootCAs` in Go, or the `ca` option in Node's `tls` module.
+:::
