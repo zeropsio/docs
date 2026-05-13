@@ -1,14 +1,28 @@
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import * as globModule from 'glob'
+// Shared MDX -> markdown converters (also used by the per-page markdown-source
+// plugin). Single source of truth so the LLM bundle and the per-page .md route
+// produce consistent output.
+import * as C from './apps/docs/src/plugins/markdown-source/converters'
 
 const frontmatterRegex = /^\n*---(\n.+)*?\n---\n/
 const frontmatterBlockRegex = /^\s*---\n([\s\S]*?)\n---\n/
-const mdxComponentRegex = /<[^>]+>/g
-const imageRegex = /!\[.*?\]\(.*?\)/g
-const importRegex = /^import\s+.*?from\s+['"].*?['"];?/gm
 
 const contentDir = path.resolve('apps/docs/content')
+const dataJsonPath = path.resolve('apps/docs/static/data.json')
+
+// Lazy data.json loader for UnorderedCodeList resolution.
+let dataJsonCache: Record<string, unknown> | null = null
+function getDataJson(): Record<string, unknown> {
+  if (dataJsonCache) return dataJsonCache
+  try {
+    dataJsonCache = JSON.parse(fs.readFileSync(dataJsonPath, 'utf-8'))
+  } catch {
+    dataJsonCache = {}
+  }
+  return dataJsonCache ?? {}
+}
 
 const sliceExt = (file: string) => {
   return file.split('.').slice(0, -1).join('.')
@@ -32,58 +46,83 @@ function capitalizeDelimiter(str: string): string {
 }
 
 function cleanMarkdownContent(content: string): string {
+  // 1. Strip frontmatter
   let cleaned = content.replace(frontmatterRegex, '')
-  
-  // Remove JSX-style comments
-  cleaned = cleaned.replace(/{\/\*[\s\S]*?\*\/}/g, '')
-  
-  // Remove <br/> tags
+
+  // 2. Drop JSX comments, normalize <br>, drop import lines, drop images.
+  cleaned = cleaned.replace(/\{\/\*[\s\S]*?\*\/\}/g, '')
   cleaned = cleaned.replace(/<br\s*\/?>/g, '\n')
-  
-  cleaned = cleaned.replace(/<FAQItem\s+question="([^"]+)"\s*>([\s\S]*?)<\/FAQItem>/g, (match, question, answer) => {
-    return `Question: ${question}\nAnswer: ${answer}\n`
-  })
-  cleaned = cleaned.replace(/<FAQ>([\s\S]*?)<\/FAQ>/g, (match, content) => {
-    return content
-  })
-  
+  cleaned = cleaned.replace(/^import\s+.*?from\s+['"].*?['"];?\s*$/gm, '')
+  cleaned = cleaned.replace(/<Image\s+[^>]*\/?>/g, '')
+  cleaned = cleaned.replace(/<img\s+[^>]*\/?>/g, '')
+  cleaned = cleaned.replace(/!\[[^\]]*\]\([^)]+\)/g, '')
+  cleaned = cleaned.replace(/<figure[^>]*>([\s\S]*?)<\/figure>/g, '')
+  cleaned = cleaned.replace(/<Head>[\s\S]*?<\/Head>/g, '')
+
+  // 3. Convert HTML <a> tags to markdown links (mirrors the plugin's step 12).
+  cleaned = cleaned.replace(
+    /<a\s+[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/g,
+    (_m, href, text) => {
+      const inner = String(text)
+        .replace(/<code>(.*?)<\/code>/g, '`$1`')
+        .replace(/<strong>(.*?)<\/strong>/g, '**$1**')
+        .replace(/<em>(.*?)<\/em>/g, '*$1*')
+        .replace(/<b>(.*?)<\/b>/g, '**$1**')
+        .replace(/<[^>]+>/g, '')
+        .trim()
+      return `[${inner}](${href})`
+    }
+  )
+
+  // 4. Shared converter chain (same module the per-page .md route uses).
+  cleaned = C.convertFAQToMarkdown(cleaned)
+  cleaned = C.convertTabsToMarkdown(cleaned)
+  cleaned = C.convertNoteToMarkdown(cleaned)
+  cleaned = C.convertAsciiGraphToMarkdown(cleaned)
+  cleaned = C.convertDocCardListToMarkdown(cleaned)
+  cleaned = C.convertCustomCardToMarkdown(cleaned)
+  cleaned = C.convertDropdownToMarkdown(cleaned)
+  cleaned = C.convertSectionLandscapeToMarkdown(cleaned)
+  cleaned = C.convertExpandableTableToMarkdown(cleaned)
+  cleaned = C.convertUnorderedCodeListStandalone(cleaned, getDataJson, null)
+  cleaned = C.convertCodingAgentsTopologyToMarkdown(cleaned)
+  cleaned = C.convertIntroAgentVisualToMarkdown(cleaned)
+  cleaned = C.convertDeployButtonToMarkdown(cleaned)
+  cleaned = C.convertVideoToMarkdown(cleaned)
+  cleaned = C.convertBadgeToMarkdown(cleaned)
+  cleaned = C.convertButtonToMarkdown(cleaned)
+  cleaned = C.convertLinkToMarkdown(cleaned)
+  cleaned = C.dropSilentComponents(cleaned)
+  cleaned = C.convertDetailsToMarkdown(cleaned)
+
+  // 5. Final catch-all: strip any remaining unknown uppercase JSX components
+  // while preserving markdown tables (the LLM corpus reads tables as data).
   const sections = cleaned.split(/(\|.*\|\n\|.*\|\n(\|.*\|\n)*)/)
-  let processedContent = ''
-  
-  for (let i = 0; i < sections.length; i++) {
-    const section = sections[i]
+  let processed = ''
+  for (const section of sections) {
     if (!section) continue
-    
     if (section.trim().startsWith('|')) {
-      processedContent += section
+      processed += section
     } else {
-      let processedSection = section
-      processedSection = processedSection.replace(mdxComponentRegex, '')
-      processedSection = processedSection.replace(imageRegex, '')
-      processedSection = processedSection.replace(importRegex, '')
-      processedContent += processedSection
+      processed += section.replace(
+        /<[A-Z][a-zA-Z]*[\s\S]*?(?:\/>|<\/[A-Z][a-zA-Z]*>)/g,
+        ''
+      )
     }
   }
-  
-  const lines = processedContent
-    .split('\n')
-    .map((line) => line.replace(/[ \t]+$/g, ''))
-  const processedLines: string[] = []
-  let lastLineWasEmpty = false
-  
+
+  // 6. Collapse trailing whitespace + consecutive blank lines.
+  const lines = processed.split('\n').map((line) => line.replace(/[ \t]+$/g, ''))
+  const out: string[] = []
+  let lastEmpty = false
   for (const line of lines) {
-    if (!line) continue
-    const trimmedLine = line.trim()
-    
-    if (trimmedLine === '' && lastLineWasEmpty) {
-      continue
-    }
-    
-    processedLines.push(line)
-    lastLineWasEmpty = trimmedLine === ''
+    const trimmed = line.trim()
+    if (trimmed === '' && lastEmpty) continue
+    out.push(line)
+    lastEmpty = trimmed === ''
   }
-  
-  return processedLines.join('\n')
+
+  return out.join('\n')
 }
 
 function hasFrontmatterFlag(content: string, flag: string): boolean {

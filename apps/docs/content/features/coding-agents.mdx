@@ -1,143 +1,219 @@
 ---
 title: 'Infrastructure for Coding Agents'
-description: 'Zerops gives coding agents the project infrastructure real app work needs: runtimes, managed services, private networking, deploys, logs, verification, and handoff.'
+description: 'Real project infrastructure for coding agents — runtimes, managed services, private networking, deploys, logs, and verification, exposed through MCP.'
 ---
 
 import Icons from '@theme/Icon';
+import CodingAgentsTopology from '@site/src/components/CodingAgentsTopology';
+import IntroAgentVisual from '@site/src/components/IntroAgentVisual';
 
-Coding agents can write code anywhere. Real application work needs more than an editor or a sandbox: the agent needs a project to operate, services to connect to, deploys to run, logs to inspect, and evidence that the requested behavior works.
+Zerops was built on the idea of **environment parity** — giving developers the full development lifecycle, from remote development to highly available production, with the observability and developer tools for maximum flexibility, and sensible defaults so the configs stay reasonable. Turns out that's **exactly what coding agents need** to produce and iterate on production-ready applications.
 
-Zerops gives the agent that infrastructure surface. A Zerops project contains the runtimes, managed services, private networking, env vars, deployment pipeline, logs, and public access that the app actually uses. The agent can work against the same kind of infrastructure a human developer or staging release would use, not a pasted description of it.
+<br/><br/>
 
-**ZCP MCP** is the MCP tool layer that lets an agent read and operate one Zerops project through bounded project-scoped tools. The useful split is simple: **you hold product intent and judgment, Zerops holds project reality, and the MCP layer lets the agent work with that reality.**
+## What is it
 
-<div className="zcp-agent-flow" aria-label="How coding-agent work moves through Zerops infrastructure">
-  <div className="zcp-agent-flow__node zcp-agent-flow__node--intent">
-    <span>You</span>
-    <strong>Product intent</strong>
-    <p>Outcome, constraints, acceptance criteria, credentials, approvals.</p>
-  </div>
-  <div className="zcp-agent-flow__node zcp-agent-flow__node--agent">
-    <span>Coding agent</span>
-    <strong>App work</strong>
-    <p>Code changes, config wiring, deploy decisions, visible reasoning.</p>
-  </div>
-  <div className="zcp-agent-flow__node zcp-agent-flow__node--mcp">
-    <span>ZCP MCP</span>
-    <strong>Project-scoped tools</strong>
-    <p>Live state, operations, evidence, optional workflow instructions.</p>
-  </div>
-  <div className="zcp-agent-flow__node zcp-agent-flow__node--project">
-    <span>Zerops project</span>
-    <strong>Project reality</strong>
-    <p>Runtimes, services, private network, env refs, deploys, logs, URLs.</p>
-  </div>
-  <div className="zcp-agent-flow__node zcp-agent-flow__node--proof">
-    <span>Result</span>
-    <strong>Proof or blocker</strong>
-    <p>URL, endpoint result, UI state, worker result, stored data, evidence.</p>
-  </div>
-</div>
+An **[MCP server](/zcp/overview)** for your agent — running locally or in a remote container — that makes use of the flexibility and processes Zerops provides. There's no "Zerops system prompt" hogging your context window. The MCP server is a thin layer that makes **your agent a Zerops platform power user** — when needed — so it understands:
 
-## For agent work that has to run
+- how networking, scaling, debugging, build & deployment, environment variables, and service provisioning work on the platform
+- the development loop: start a dev server → implement → deploy to stage → verify
 
-Use this when a coding agent is expected to produce a running Zerops app, not just files, a patch, or a preview artifact.
+The depth of the platform underneath is what gives the agent room to actually work. A single agent can scaffold and iterate on projects with multiple runtimes (`app`, `api`, `worker`) backed by multiple [managed services](/features/infrastructure) (object storage `storage`, Postgres `db`, Elasticsearch `search`, NATS `broker`, Valkey `cache`) — just as easily as it can work on a simple Next.js presentational website.
 
-You still decide the product outcome, stack constraints, acceptance criteria, repository policy, external credentials, and risky approvals. The agent gets the Zerops state and operations needed to use or create services, wire the app to managed infrastructure, deploy, verify, recover from failures, and report proof or a blocker.
+A **[recipe ecosystem](https://app.zerops.io/recipes)** covering the most popular frameworks — pre-prepared for the whole lifecycle — gives the agent a baseline to start from, or a guide for setting up any stack on Zerops.
 
-The agent can run in a Zerops-hosted workspace or from your local editor or CLI. The workspace is not the point; real infrastructure is.
+<IntroAgentVisual />
 
-## What infrastructure gives the agent
+<Note type="tip" title="Platform-first, not agent-first">
 
-Without project infrastructure, an app prompt turns into an operations runbook. With Zerops infrastructure and ZCP MCP, the prompt can stay closer to the product because the agent can read and operate the project directly.
+Most coding-agent platforms went agent-first, then bolted on infrastructure — where it runs, how it reaches the database, how its output becomes production-ready, which third-party services to wire up. **Zerops went platform-first.** The complete development lifecycle existed before coding agents did; we taught them to operate it — **not just how to call APIs, but how to ship software the way a senior developer would.**
 
-| Capability             | What the agent gets                                                                 | Why it matters                                                                 |
-| ---------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| **Live project state** | Runtime services, managed services, env-var keys, recent events, and deploy status. | The agent does not need a pasted service map or stale chat memory.             |
-| **Real dependencies**  | Managed Postgres, Valkey, NATS, object storage, search, mail, and other services.   | Product requirements can become real infrastructure, not local mocks.          |
-| **Private networking** | Services reachable by project hostnames and injected credentials.                   | App wiring follows the platform model the runtime actually uses.               |
-| **Deploy pipeline**    | Builds and deploys through Zerops instead of a preview-only sandbox.                | The first working result is already running on the platform.                   |
-| **Logs and events**    | Build logs, runtime logs, service status, and platform events.                      | Failure becomes an evidence surface instead of guesswork.                      |
-| **Verification target**| Real URLs, endpoints, workers, databases, and stored objects.                       | Done means behavior proof, not just "the agent wrote code."                   |
-| **Delivery path**      | Direct deploy, git handoff, CI setup, packaging, or production promotion.           | Verified work can move into the team's normal release process.                 |
+</Note>
 
-A healthy run ends in one of two states: proof or a blocker. Proof is an inspectable URL, endpoint response, UI state, worker result, or stored data that shows the requested behavior works. A blocker names the missing credential, decision, unsupported fit, or repeated failure with the relevant evidence.
+<br/><br/>
 
-## What the MCP layer adds
+## Main features
 
-Zerops is the infrastructure: runtimes, managed services, private networking, env vars, deploys, logs, and public access. ZCP MCP is the tool surface for one selected Zerops project.
+### Your agent, your subscription
 
-The tools give the agent operations, not judgment: discover services, manage configuration, deploy, inspect logs and events, recover from failures, and verify behavior against real services. Running `zcp` remotely or locally changes the workspace, filesystem, and network boundary, not the project model.
+Bring whichever agent you already use. Claude Code today; Codex, Gemini CLI, opencode, and any MCP-capable client next. The container is a regular Ubuntu — install your own CLI tools, drop in your `.claude` / `.cursor` configs, attach your IDE over SSH. **Zerops doesn't resell tokens or proxy your model calls** — sign in with your own Anthropic / OpenAI / Google subscription and the agent talks to its provider directly.
 
-Generated workflow instructions are a separate layer. They teach sequencing: inspect state before changing things, choose the runtime target, use existing services or create missing ones, wire app code and Zerops config together, deploy, read failure evidence, verify requested behavior, and stop with proof or a blocker.
+### An ordinary Zerops project underneath
 
-You can also use ZCP MCP without the workflow instructions for custom MCP clients, scripts, dashboards, policy-gated clients, or narrow operational tasks. Then your client owns sequencing, verification, and when to ask a human.
+The agent operates inside a normal Zerops project — same shape as production. Managed databases (PostgreSQL, MariaDB, ClickHouse), key-value stores (KeyDB, Valkey), search (Elasticsearch, Meilisearch, Typesense), vector store (Qdrant), message queues (NATS, Kafka), object and shared storage, managed Nginx — all on a private network, addressable by hostname. The same pipeline that deploys here can deploy to a separate HA production project with no `zcp` service attached. Not a sandbox the work outgrows.
 
-For setup and tool details:
+### Human ↔ agent handover
 
-- [MCP overview](/zcp/overview)
-- [Remote or local setup](/zcp/setup/choose-workspace)
-- [MCP tools](/zcp/reference/mcp-operations)
+The agent and the human share the same workspace — same filesystem, same SSH key, same Cloud IDE in the browser, same remote-dev attach from your local IDE. Take over mid-session, set something up before the agent runs, debug in the same container the agent just left. Nothing reaches production until you merge the PR — the agent opens it, you gate it.
 
-## Remote or local
+### Recipes for any stack
 
-Remote setup runs `zcp` inside a Zerops `zcp@1` service and can include the bundled coding agent and Browser VS Code. Local setup runs `zcp` on your machine so app files and git credentials stay local, with private service access through Zerops VPN.
+Runtimes for Bun, Deno, Node.js, Go, Python, Rust, Java, .NET, PHP, Elixir, Gleam — with curated recipes for the framework on top: Next.js, Nuxt, Astro, Svelte, React, Vue, Angular, Solid, Qwik, Analog, NestJS, Laravel, and more. Pick a recipe, select the **AI Agent** environment, and the project comes up with a working dev runtime, a stage runtime, the right managed services wired in, and a coding agent briefed on the Zerops surface.
 
-Both paths expose the same project-scoped Zerops operations. Choose by where the agent and source tree should live, not by which infrastructure the app gets. For the broader human development model, see [Local & Remote Development](/features/local-remote-development).
+<br/><br/>
 
-## Why Zerops is legible to agents
+## How it works in practice
 
-Agents reason over text and tool results. Zerops is useful for agents because the platform is explicit in the same places it is useful for humans:
+The agent reaches your project's private network one of two ways:
 
-- `zerops.yaml` is structured application and deploy configuration.
-- Services have names, ports, env vars, and dependencies the agent can inspect.
-- Managed-service references use platform-visible hostnames and credentials.
-- Logs, deploy events, and service status are queryable.
-- Runtime files can be reached through SSH or workspace mounts when that setup is used.
-- Development, staging, and production can use the same Zerops-managed service types and platform model.
+- **Remote** — a `zcp` service deployed into the project runs the agent. You attach to it with Claude Code's IDE extension, with any IDE that supports remote development (Cursor, Windsurf, VS Code Remote), or by running [`zcli vpn up`](/references/networking/vpn) and ssh-ing into `zcp` to drive the rest of the project from a shell.
+- **Local** — install the `zcp` MCP on your machine and run `zcli vpn up` to join the network. From there your IDE, agent, and shell can ssh directly into any container.
 
-The MCP layer packages those surfaces into agent-friendly operations, but the underlying value is the project infrastructure itself.
+Either way, the agent reaches [managed services by hostname](/references/networking/internal-access) (`db:5432`, `cache:6379`), deploys through the [Zerops pipeline](/features/pipeline), and reads logs and events the same way you would.
 
-## Boundaries and permissions
+<CodingAgentsTopology />
 
-The boundary is the project. The MCP server uses a project-scoped Zerops token, so the agent can operate only the project selected for that setup. Account-wide, organization-wide, and cross-project actions stay outside that token.
+The agent runs through two workflows. **Bootstrap** settles which services and runtime targets the app needs. **Develop** is the short work loop — edit code on `appdev`, deploy to `appstage`, check it's reachable, verify behavior against `db:5432` and `cache:6379`, fix from evidence. A session ends with a URL you can open, or a specific blocker — failure category, attempts, what's still needed. Same hostnames, same managed services, same pipeline as production — just at smaller scale. See [Workflows in depth](/zcp/reference/agent-workflow) for both.
 
-Mutating operations still need to fit your agent policy and team rules. Destructive actions have extra confirmation gates. Git providers, CI, payment services, and production release credentials remain separate.
+<AsciiGraph ariaLabel="Develop workflow loop">{`    `}<span className="ascii-graph__highlight">{`zcp (local or remote)`}</span>{`
+             │
+             ▼
+    edit code on `}<span className="ascii-graph__highlight">{`appdev`}</span>{`   ◀───────────────────────┐
+       └ dev server, hot reload                    │
+             │                                     │
+             ▼                                     │
+    deploy to `}<span className="ascii-graph__highlight">{`appstage`}</span>{`                             │
+             │                                     │
+             ▼                                     │
+    check reachability                             │
+             │                                     │
+             ▼                                     │
+    verify behavior   ─── fail ─────┐              │
+             │                      │              │
+             │ pass                 ▼              │
+             ▼               read logs / events    │
+    URL (proof)             fix from evidence ─────┘`}</AsciiGraph>
 
-For production, use coding-agent access in development or staging projects. Production should receive promoted work through your release or CI process, not through an agent session with broad project operations. See [Production boundary](/zcp/security/production-policy).
+Once the loop produces verified work, the agent doesn't push to production — it opens a PR from the dev project. **A human review gates the merge**, then a release tag or merge triggers automatic CI/CD into a [separate production project](/zcp/security/production-policy) that has no `zcp` service at all.
 
-Security details live in reference:
+<AsciiGraph ariaLabel="From dev project through GitHub PR to prod project">{`      Dev project                 GitHub                  Prod project
 
-- [Trust model](/zcp/security/trust-model)
-- [Tokens and credentials](/zcp/security/tokens-and-project-access)
+┌─────────────────────┐       ┌──────────────┐       ┌─────────────────────┐
+│  appdev             │       │              │       │   app    (HA)       │
+│  appstage           │       │  Pull        │       │                     │
+│                     │ push  │  Request     │ CI/CD │   db     (HA)       │
+│  db, cache          │ ────▶ │              │ ────▶ │                     │
+│                     │       │  `}<span className="ascii-graph__highlight">{`+ human`}</span>{`     │       │   cache  (HA)       │
+│  `}<span className="ascii-graph__highlight">{`zcp service`}</span>{`        │       │    `}<span className="ascii-graph__highlight">{`review`}</span>{`    │       │                     │
+│                     │       │              │       │   (no zcp service)  │
+└─────────────────────┘       └──────────────┘       └─────────────────────┘`}</AsciiGraph>
 
-## What this is not
+<br/><br/>
 
-Infrastructure for coding agents is not a prompt-to-prototype generator, an isolated code execution sandbox, or a cloud IDE with autocomplete. Those can be useful, but they do not by themselves give an agent the operational surface of a real app project.
+## Where does this fit in the agent landscape
 
-The claim is narrower: when the output must become a verified app on Zerops, the agent needs project infrastructure plus a safe way to read and operate it.
+With the model clear, here's where ZCP sits among adjacent tools. People say "agent infrastructure," "infra for Claude agents," "agent hosting," or "agent sandboxes" to mean different things — usually one of the categories below.
 
-## How it differs from adjacent tools
+<section className="zcp-landscape-section">
+  <header>
+    <h4>PaaS MCPs</h4>
+    <div className="zcp-landscape-section__logos">
+      <img src="/img/landscape/aws.png" alt="AWS" />
+      <img src="/img/landscape/railway.png" alt="Railway" />
+      <img src="/img/landscape/fly.png" alt="Fly.io" />
+      <img src="/img/landscape/render.svg" alt="Render" />
+    </div>
+    <p className="zcp-landscape-section__examples">AWS MCP servers · Railway MCP · Fly.io MCP · Render MCP</p>
+  </header>
+  <p>Most major PaaS providers have shipped an MCP — provision services, deploy code, list resources, read operational state. Great for "let my agent ship to my Railway account." These are *deploy and operate* surfaces, driven from outside the platform — and they reflect what's underneath: platforms optimized for day-one deploy that tuck the infrastructure behind a wall. Once an agent needs to actually *develop* against that infrastructure — debug a failed health check, follow real logs, hit Postgres from inside the network, inspect what a build is doing, run the dev loop before it ships anything — the wall stops it. That's by design on those platforms, not a missing feature.</p>
 
-Most adjacent products solve a real part of agent work. The gap is usually what happens after code exists: where the app runs, which services it uses, whether the environment matches the release target, and how failures are diagnosed.
+  <p>ZCP exposes the full **Bootstrap and Develop** loop as MCP-addressable primitives because Zerops was built around the development lifecycle from the start — not a dev loop retrofitted onto a deploy-first platform.</p>
+</section>
 
-|                       | Persistent workspace | Real services | Deploy pipeline | Env parity | Standard tooling |
-| --------------------- | :------------------: | :-----------: | :-------------: | :--------: | :--------------: |
-| One-shot generators   |          -           |       -       |        -        |     -      |        -         |
-| Replit                |          ✓           |       ~       |        ~        |     -      |        -         |
-| E2B                   |          -           |       -       |        -        |     -      |        ✓         |
-| Codespaces / Gitpod   |          ✓           |       -       |        -        |     -      |        ✓         |
-| Cloudflare-style      |          -           |       ~       |        ~        |     -      |        -         |
-| **ZCP**               |        **✓**         |     **✓**     |      **✓**      |   **✓**    |      **✓**       |
+<section className="zcp-landscape-section">
+  <header>
+    <h4>Cloud VPS MCPs</h4>
+    <div className="zcp-landscape-section__logos">
+      <img src="/img/landscape/hetzner.ico" alt="Hetzner" />
+      <img src="/img/landscape/digitalocean.png" alt="DigitalOcean" />
+      <img src="/img/landscape/linode.png" alt="Linode" />
+      <img src="/img/landscape/vultr.png" alt="Vultr" />
+    </div>
+    <p className="zcp-landscape-section__examples">Hetzner Cloud MCP · DigitalOcean MCP · Linode MCP · raw SSH/server MCPs</p>
+  </header>
+  <p>"Let your agent manage your Hetzner VPS." An MCP gives the agent access to a Linux box — provision it, SSH in, install Docker and Postgres and nginx, set up systemd units, point a domain at it. Maximum control, lowest cost, full Linux to play with. The same reason senior developers reach for managed platforms applies here: even if you *can* harden SSH, write nginx configs, tune `pg_hba.conf`, rotate TLS, set firewall rules, run fail2ban, and stay on top of CVEs across kernel, OpenSSL, Docker, Postgres, and nginx — you usually don't want to. Each layer is its own domain with its own gotchas, each is a security surface that drifts the moment you stop tending it, and every project becomes a snowflake. Hand that work to an agent and you also hand it the blast radius: misconfigured firewall, debug endpoint left open, port 5432 exposed to the internet, keys never rotated. ZCP is the inverse trade-off — the **guardrails** of a managed platform. Private networking, TLS, isolated services, safe defaults, managed backups, no exposed ports unless you opt in — all built in. The agent operates through [bounded MCP tools](/zcp/reference/mcp-operations) instead of `sudo` on a fresh Ubuntu box, so the mistakes that matter on a VPS aren't reachable from where it sits.</p>
+</section>
 
-`~` means the category can cover part of the need, but not as one project model for agent-driven app work. Zerops does not replace the coding agent, and the MCP layer does not replace the developer. The difference is where the agent works: against the project infrastructure that will run the app.
+<section className="zcp-landscape-section">
+  <header>
+    <h4>Cloud dev environments with AI</h4>
+    <div className="zcp-landscape-section__logos">
+      <img src="/img/landscape/github.png" alt="GitHub Codespaces" />
+      <img src="/img/landscape/gitpod.ico" alt="Gitpod" />
+      <img src="/img/landscape/coder.svg" alt="Coder" />
+    </div>
+    <p className="zcp-landscape-section__examples">GitHub Codespaces + Copilot Workspace · Gitpod · Coder</p>
+  </header>
+  <p>A managed Linux container in the cloud with your editor and an AI assistant attached. Solves "where the agent runs" so state survives between sessions and machine setup stops being a question. The `zcp` service is the closest thing in this category — managed Linux container, Cloud IDE, your agent of choice — except it lives *inside* a Zerops project, addressing the project's runtimes, database, and cache by hostname, with deploys and logs as primitives the agent can call.</p>
+</section>
+
+<section className="zcp-landscape-section">
+  <header>
+    <h4>Bundled agent platforms</h4>
+    <div className="zcp-landscape-section__logos">
+      <img src="/img/landscape/replit.png" alt="Replit Agent" />
+      <img src="/img/landscape/lovable.png" alt="Lovable" />
+      <img src="/img/landscape/bolt.png" alt="Bolt.new" />
+      <img src="/img/landscape/v0.png" alt="v0" />
+      <img src="/img/landscape/devin.ico" alt="Devin" />
+      <img src="/img/landscape/openhands.png" alt="OpenHands" />
+    </div>
+    <p className="zcp-landscape-section__examples">Replit Agent · Lovable · Bolt.new · v0 · Devin · OpenHands</p>
+  </header>
+  <p>The agent, the workspace, the stack, and (often) the hosting target are fused into one closed product. Fast for prototypes. Decisions are made for you. Switching agents usually means switching platforms, and production-grade primitives — multi-environment promotion, private networking, real observability — tend to be limited or absent. **ZCP doesn't bundle**: the agent and model stay yours on your own subscription, and the platform underneath is normal Zerops with the full stack of managed services, networking, deploys, and observability.</p>
+</section>
+
+<section className="zcp-landscape-section">
+  <header>
+    <h4>Local coding agents</h4>
+    <div className="zcp-landscape-section__logos">
+      <img src="/img/landscape/cursor.png" alt="Cursor" />
+      <img src="/img/landscape/claude.png" alt="Claude Code" />
+      <img src="/img/landscape/windsurf.png" alt="Windsurf" />
+      <img src="/img/landscape/zed.png" alt="Zed" />
+      <img src="/img/landscape/aider.png" alt="Aider" />
+      <img src="/img/landscape/cline.png" alt="Cline" />
+    </div>
+    <p className="zcp-landscape-section__examples">Cursor · Windsurf · Zed · Claude Code · Codex CLI · Aider · Cline</p>
+  </header>
+  <p>The agent runs on your machine, edits your local checkout, runs local commands. Excellent at code changes. Anything beyond your machine — databases, networking, deploy targets, runtime logs — is yours to wire in. Install the ZCP MCP locally and run `zcli vpn up`, and any of these agents can now reach a real Zerops project alongside your local code: services addressed by hostname, deploys, logs, events.</p>
+</section>
+
+<section className="zcp-landscape-section">
+  <header>
+    <h4>Code-execution sandboxes</h4>
+    <div className="zcp-landscape-section__logos">
+      <img src="/img/landscape/e2b.ico" alt="E2B" />
+      <img src="/img/landscape/modal.png" alt="Modal" />
+      <img src="/img/landscape/daytona.ico" alt="Daytona" />
+      <img src="/img/landscape/codesandbox.svg" alt="CodeSandbox SDK" />
+    </div>
+    <p className="zcp-landscape-section__examples">E2B · Modal · Daytona · CodeSandbox SDK</p>
+  </header>
+  <p>Ephemeral Linux environments that AI *applications* spin up — often per request — to execute generated code safely. The right primitive when you're building a product that needs a model to run untrusted code and hand back the output. They're a building block for AI applications, not somewhere a coding agent settles in to iterate on your project. Different shape from ZCP; they show up here because the names cluster nearby.</p>
+</section>
+
+<section className="zcp-landscape-section">
+  <header>
+    <h4>Agent SDKs and frameworks</h4>
+    <div className="zcp-landscape-section__logos">
+      <img src="/img/landscape/cloudflare.png" alt="Cloudflare Agents" />
+      <img src="/img/landscape/vercel.ico" alt="Vercel AI SDK" />
+      <img src="/img/landscape/mastra.png" alt="Mastra" />
+      <img src="/img/landscape/anthropic.ico" alt="Anthropic Agent SDK" />
+    </div>
+    <p className="zcp-landscape-section__examples">Cloudflare Agents · Vercel AI SDK · Mastra · Anthropic Agent SDK</p>
+  </header>
+  <p>Libraries for building and shipping agents to *your* users — tool calling, memory, orchestration, model providers, sometimes hosting. They're how somebody would build a product like ZCP, not where a coding agent runs against a project. Same disambiguation — adjacent on the shelf, different shape.</p>
+</section>
+
+<br/><br/>
 
 ## Where to start
 
 <DocCardList items={[
-{ type: 'link', href: '/zcp/quickstart', label: 'Quickstart', customProps: { icon: Icons['rocket-launch'], description: 'Try the guided path with a hosted agent workspace.' } },
-{ type: 'link', href: '/zcp/overview', label: 'MCP overview', customProps: { icon: Icons['sparkles'], description: 'Understand the layer that gives agents project-scoped Zerops operations.' } },
-{ type: 'link', href: '/zcp/setup/choose-workspace', label: 'Remote or local setup', customProps: { icon: Icons['computer-desktop'], description: 'Choose where the agent and zcp process should run.' } },
-{ type: 'link', href: '/zcp/workflows/build-with-zcp', label: 'Build and ship', customProps: { icon: Icons['circle-stack'], description: 'Shape app work, delivery, packaging, and production promotion.' } },
-{ type: 'link', href: '/features/local-remote-development', label: 'Local & Remote Development', customProps: { icon: Icons['computer-desktop'], description: 'The broader development story: VPN, Cloud IDE, and native IDE over SSH.' } },
+  { type: 'link', href: '/zcp/quickstart', label: 'Quickstart', customProps: { icon: Icons['rocket-launch'], description: 'AI Agent recipe, Claude Code, and a real product change in about five minutes.' } },
+  { type: 'link', href: '/zcp/overview', label: 'ZCP MCP overview', customProps: { icon: Icons['sparkles'], description: 'What the `zcp` MCP gives the agent, where it runs, and how workflow-guided runs end in proof or blocker.' } },
+  { type: 'link', href: '/zcp/setup/choose-workspace', label: 'Remote or local setup', customProps: { icon: Icons['computer-desktop'], description: 'Choose where the `zcp` MCP runs — inside Zerops with bundled tools, or beside your local editor.' } },
+  { type: 'link', href: '/zcp/workflows/build-with-zcp', label: 'Build and ship', customProps: { icon: Icons['circle-stack'], description: 'Runtime layout, development, delivery, packaging, and production promotion.' } },
 ]} />

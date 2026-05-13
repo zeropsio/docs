@@ -1,5 +1,6 @@
 const fs = require('fs-extra');
 const path = require('path');
+const C = require('./converters');
 
 /**
  * Docusaurus plugin to copy raw markdown files to build output
@@ -34,8 +35,9 @@ function extractFrontmatter(content) {
     const titleMatch = frontmatter.match(/^title:\s*(.+)$/m);
     const descMatch = frontmatter.match(/^description:\s*(.+)$/m);
 
-    const title = titleMatch ? titleMatch[1].trim() : null;
-    const description = descMatch ? descMatch[1].trim() : null;
+    const stripQuotes = (s) => s.trim().replace(/^['"]([\s\S]*)['"]$/, '$1');
+    const title = titleMatch ? stripQuotes(titleMatch[1]) : null;
+    const description = descMatch ? stripQuotes(descMatch[1]) : null;
 
     // Remove frontmatter from content
     const contentWithoutFrontmatter = content.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, '');
@@ -520,6 +522,57 @@ function cleanMarkdownForDisplay(content, filepath, siteDir, docsDir) {
     // 14. Convert Tabs/TabItem components to readable markdown (preserve content)
     content = convertTabsToMarkdown(content);
 
+    // --- Custom-component converters (order matters) -----------------------
+    // 14a. Note callouts -> Docusaurus admonitions (with title preserved)
+    content = C.convertNoteToMarkdown(content);
+
+    // 14b. ASCII diagram blocks -> fenced code blocks, JSX template literals
+    // and inline <span> highlights unwrapped to plain text.
+    content = C.convertAsciiGraphToMarkdown(content);
+
+    // 14c. DocCardList items array -> markdown bullet list of links
+    content = C.convertDocCardListToMarkdown(content);
+
+    // 14d. CustomCard -> ### heading + body
+    content = C.convertCustomCardToMarkdown(content);
+
+    // 14e. Dropdown / DropdownItem -> #### per item
+    content = C.convertDropdownToMarkdown(content);
+
+    // 14f. Landscape section (coding-agents.mdx) -> heading + examples + body
+    content = C.convertSectionLandscapeToMarkdown(content);
+
+    // 14g. ExpandableTable -> unwrap to inner table (will be picked up by
+    // convertHtmlTablesToMarkdown next build, but at this point tables have
+    // already been converted; this is mostly a safety net).
+    content = C.convertExpandableTableToMarkdown(content);
+
+    // 14h. Standalone UnorderedCodeList (not inside a table) -> bullet list
+    content = C.convertUnorderedCodeListStandalone(content, getDataJson, siteDir);
+
+    // 14i. CodingAgentsTopology / IntroAgentVisual -> placeholders pointing at the live page
+    content = C.convertCodingAgentsTopologyToMarkdown(content);
+    content = C.convertIntroAgentVisualToMarkdown(content);
+
+    // 14j. DeployButton -> markdown link to recipe deploy URL
+    content = C.convertDeployButtonToMarkdown(content);
+
+    // 14k. Video -> text link to video src
+    content = C.convertVideoToMarkdown(content);
+
+    // 14l. Badge -> *[Optional]* / *[Required]* inline label
+    content = C.convertBadgeToMarkdown(content);
+
+    // 14m. Button -> unwrap (leaves children, typically a <Link>)
+    content = C.convertButtonToMarkdown(content);
+
+    // 14n. Link -> [text](href). Run AFTER Button so unwrapped children render.
+    content = C.convertLinkToMarkdown(content);
+
+    // 14o. Drop components with no useful markdown representation
+    content = C.dropSilentComponents(content);
+    // -------------------------------------------------------------------
+
     // 15. Convert details/summary components to readable markdown (preserve content)
     content = convertDetailsToMarkdown(content);
 
@@ -624,12 +677,61 @@ async function copyImageDirectories(docsDir, buildDir) {
 }
 
 module.exports = function markdownSourcePlugin(context, options) {
+    const docsDir = path.join(context.siteDir, 'content');
+
+    // Resolve a `.md` URL path back to a source file under content/.
+    // Returns the absolute path or null when no source exists.
+    function resolveSourcePath(urlPath) {
+        const stripped = urlPath.replace(/^\//, '').replace(/\.md$/, '');
+        const mdxCandidate = path.join(docsDir, `${stripped}.mdx`);
+        if (fs.existsSync(mdxCandidate)) return mdxCandidate;
+        const mdCandidate = path.join(docsDir, `${stripped}.md`);
+        if (fs.existsSync(mdCandidate)) return mdCandidate;
+        return null;
+    }
+
     return {
         name: 'markdown-source-plugin',
 
         // Provide theme components from the plugin (eliminates need for manual copying)
         getThemePath() {
             return path.resolve(__dirname, './theme');
+        },
+
+        // Dev-mode middleware: postBuild doesn't run during `docusaurus start`,
+        // so without this the Copy/View as Markdown buttons hit the SPA fallback
+        // (HTML shell + 404). Intercept `.md` requests and produce the same
+        // cleaned output the production build would.
+        configureWebpack(_config, isServer) {
+            if (isServer) return {};
+            return {
+                devServer: {
+                    setupMiddlewares: (middlewares, devServer) => {
+                        devServer.app.get(/\.md$/, (req, res, next) => {
+                            try {
+                                const sourcePath = resolveSourcePath(req.path);
+                                if (!sourcePath) return next();
+                                const content = fs.readFileSync(sourcePath, 'utf8');
+                                const relPath = path.relative(docsDir, sourcePath);
+                                const cleaned = cleanMarkdownForDisplay(
+                                    content,
+                                    relPath,
+                                    context.siteDir,
+                                    docsDir
+                                );
+                                res.setHeader(
+                                    'Content-Type',
+                                    'text/markdown; charset=utf-8'
+                                );
+                                res.send(cleaned);
+                            } catch (err) {
+                                next(err);
+                            }
+                        });
+                        return middlewares;
+                    },
+                },
+            };
         },
 
         async postBuild({ outDir }) {
