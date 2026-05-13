@@ -55,7 +55,7 @@ const RECIPES = [
 ];
 
 function buildLayout() {
-    const g = make(W, 40);
+    const g = make(W, 41);
     const logos = [];
 
     box(g, { x: 2, y: 0, w: 16, h: 8, topLabel: 'ZCP MCP' });
@@ -100,29 +100,29 @@ function buildLayout() {
     vline(g, 74, 18, 18);
     ch(g, 74, 19, '▼');
 
-    box(g, { x: 0, y: 17, w: 60, h: 22, topLabel: 'complex project' });
+    box(g, { x: 0, y: 17, w: 60, h: 23, topLabel: 'complex project' });
 
-    box(g, { x:  3, y: 20, w: 14, h: 3, lines: ['zcp'], align: 'center', hl: true });
+    box(g, { x:  3, y: 20, w: 14, h: 4, lines: ['zcp', 'Ubuntu'], align: 'center', hl: true, subtitle: true });
 
-    box(g, { x:  3, y: 24, w: 14, h: 4, lines: ['appdev',    'Bun'],    align: 'center', subtitle: true });
-    box(g, { x: 23, y: 24, w: 14, h: 4, lines: ['apidev',    'Golang'], align: 'center', subtitle: true });
-    box(g, { x: 43, y: 24, w: 14, h: 4, lines: ['workerdev', 'Python'], align: 'center', subtitle: true });
+    box(g, { x:  3, y: 25, w: 14, h: 4, lines: ['appdev',    'Bun'],    align: 'center', subtitle: true });
+    box(g, { x: 23, y: 25, w: 14, h: 4, lines: ['apidev',    'Golang'], align: 'center', subtitle: true });
+    box(g, { x: 43, y: 25, w: 14, h: 4, lines: ['workerdev', 'Python'], align: 'center', subtitle: true });
 
-    box(g, { x:  3, y: 29, w: 14, h: 4, lines: ['appstage',    'Bun'],    align: 'center', subtitle: true });
-    box(g, { x: 23, y: 29, w: 14, h: 4, lines: ['apistage',    'Golang'], align: 'center', subtitle: true });
-    box(g, { x: 43, y: 29, w: 14, h: 4, lines: ['workerstage', 'Python'], align: 'center', subtitle: true });
+    box(g, { x:  3, y: 30, w: 14, h: 4, lines: ['appstage',    'Bun'],    align: 'center', subtitle: true });
+    box(g, { x: 23, y: 30, w: 14, h: 4, lines: ['apistage',    'Golang'], align: 'center', subtitle: true });
+    box(g, { x: 43, y: 30, w: 14, h: 4, lines: ['workerstage', 'Python'], align: 'center', subtitle: true });
 
-    box(g, { x:  3, y: 34, w: 10, h: 4, lines: ['db',      'Postgres'], align: 'center', subtitle: true });
-    box(g, { x: 14, y: 34, w: 10, h: 4, lines: ['search',  'Elastic'],  align: 'center', subtitle: true });
-    box(g, { x: 25, y: 34, w: 10, h: 4, lines: ['broker',  'NATS'],     align: 'center', subtitle: true });
-    box(g, { x: 36, y: 34, w: 10, h: 4, lines: ['cache',   'Valkey'],   align: 'center', subtitle: true });
-    box(g, { x: 47, y: 34, w: 10, h: 4, lines: ['storage', 'S3'],       align: 'center', subtitle: true });
+    box(g, { x:  3, y: 35, w: 10, h: 4, lines: ['db',      'Postgres'], align: 'center', subtitle: true });
+    box(g, { x: 14, y: 35, w: 10, h: 4, lines: ['search',  'Elastic'],  align: 'center', subtitle: true });
+    box(g, { x: 25, y: 35, w: 10, h: 4, lines: ['broker',  'NATS'],     align: 'center', subtitle: true });
+    box(g, { x: 36, y: 35, w: 10, h: 4, lines: ['cache',   'Valkey'],   align: 'center', subtitle: true });
+    box(g, { x: 47, y: 35, w: 10, h: 4, lines: ['storage', 'S3'],       align: 'center', subtitle: true });
 
-    box(g, { x: 64, y: 17, w: 22, h: 17, topLabel: 'simple project' });
+    box(g, { x: 64, y: 17, w: 22, h: 18, topLabel: 'simple project' });
 
-    box(g, { x: 69, y: 20, w: 12, h: 3, lines: ['zcp'],                  align: 'center', hl: true });
-    box(g, { x: 69, y: 24, w: 12, h: 4, lines: ['appdev',   'Node.js'],  align: 'center', subtitle: true });
-    box(g, { x: 69, y: 29, w: 12, h: 4, lines: ['appstage', 'Node.js'],  align: 'center', subtitle: true });
+    box(g, { x: 69, y: 20, w: 12, h: 4, lines: ['zcp', 'Ubuntu'],        align: 'center', hl: true, subtitle: true });
+    box(g, { x: 69, y: 25, w: 12, h: 4, lines: ['appdev',   'Node.js'],  align: 'center', subtitle: true });
+    box(g, { x: 69, y: 30, w: 12, h: 4, lines: ['appstage', 'Node.js'],  align: 'center', subtitle: true });
 
     verify(g);
     return { grid: g, logos };

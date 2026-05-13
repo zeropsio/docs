@@ -1,9 +1,9 @@
 ---
 title: 'Workflows in depth'
-description: 'The bootstrap and develop process behind workflow-guided ZCP MCP agent runs.'
+description: 'The bootstrap and develop process behind generated-workflow ZCP MCP agent runs.'
 ---
 
-Use this page when you want to understand the process behind workflow-guided agent work. Normal prompts should still describe outcomes. The workflow exists so the agent can read the project, prepare the right runtime and services, make the app change, deploy, verify, recover from evidence, and stop with proof or a concrete blocker.
+Use this page when you want the process and exact labels behind a run that follows the generated workflow. Normal prompts should still describe outcomes. The workflow exists so the agent can read the project, prepare the right runtime and services, make the app change, deploy, verify, recover from evidence, and stop with proof or a concrete blocker.
 
 The useful mental split is:
 
@@ -12,7 +12,7 @@ The useful mental split is:
 | **Bootstrap** | Where the app should run and which services it depends on. | Runtime target and managed dependencies are known. |
 | **Develop** | Code, `zerops.yaml`, env wiring, deploy, verification, recovery, and delivery choice. | The requested behavior is proved, or the blocker is concrete. |
 
-Bootstrap is not a marketing or onboarding step. It is the workflow's name for "make the project layout safe to work in before changing app code."
+For the loop itself, see [How it works](/zcp/concept/how-it-works). This page catalogs the exact phases, routes, layouts, labels, and gates.
 
 ## Session layers
 
@@ -28,7 +28,7 @@ The `zcp` service is the control surface, not the app runtime.
 
 ## What drives the workflow
 
-The workflow-guided experience is made from four pieces:
+The generated workflow is made from four pieces:
 
 | Piece | Role |
 | ----- | ---- |
@@ -75,42 +75,13 @@ Bootstrap ends when the app runtime target and managed dependencies are known. I
 
 ## Runtime layouts
 
-Runtime layout describes which app runtime services the workflow should use. Zerops service scaling mode, such as `HA` or `NON_HA`, is a separate service setting.
+Runtime layout describes which app runtime services the workflow should use. Exact layout labels (`standard`, `dev`, `simple`, `local-stage`, `local-only`) and the runtime names they map to live in the [Glossary](/zcp/glossary#runtime-layout). The user-facing three (dev, dev + stage, stage / linked target) are in [Build and ship → Choose the runtime layout](/zcp/workflows/build-with-zcp#choose-the-runtime-layout). Service scaling mode (`HA`/`NON_HA`) is a separate service setting.
 
-| Layout | Meaning | Typical names |
-| ------ | ------- | ------------- |
-| `standard` | Separate dev and stage runtime services. Development usually starts on dev; stage is explicit. | `appdev` + `appstage` |
-| `dev` | One mutable development runtime. | `appdev` |
-| `simple` | One runtime with no dev/stage split. | `app` |
-| `local-stage` | Local source directory linked to one Zerops runtime for deploys. | local directory + `appstage` |
-| `local-only` | Local source directory with no linked deploy target yet. | local directory |
-
-In `standard`, stage is explicit. Work scoped to `appdev` does not silently touch `appstage`; promotion or stage verification happens when the user asks for it.
+In `standard`, stage is explicit. Work scoped to `appdev` does not silently touch `appstage`; a release or stage verification happens when the user asks for it.
 
 ## Develop
 
-Develop is the main app-work loop. It begins after bootstrap has a runtime target and dependencies. It closes only when runtime reachability and requested behavior both pass, or when the agent has a blocker that needs a human decision.
-
-```mermaid
-flowchart TD
-  scope["1. Name runtime target"]
-  change["2. Change code/config"]
-  deploy["3. Direct deploy"]
-  serve["4. Start or restart if needed"]
-  reach{"5. Runtime reachable?"}
-  behavior{"6. Requested behavior works?"}
-  done(["Proof"])
-  fix["7. Categorize failure<br/>read evidence, fix"]
-  blocker(["Blocker"])
-
-  scope --> change --> deploy --> serve --> reach
-  reach -- yes --> behavior
-  reach -- no --> fix
-  behavior -- yes --> done
-  behavior -- no --> fix
-  fix --> deploy
-  fix --> blocker
-```
+Develop is the main app-work loop. It begins after bootstrap has a runtime target and dependencies. It closes only when runtime reachability and requested behavior both pass, or when the agent has a blocker that needs a human decision. The loop itself is in [How it works → The work loop](/zcp/concept/how-it-works#the-work-loop). The labeled steps are:
 
 1. **Name runtime target.** State which runtime is in scope: `appdev`, `appstage`, `app`, or a linked local target.
 2. **Change code and config.** Edit app files, `zerops.yaml`, env references, migrations, seeds, framework config, or local `.env` bridge when needed.
@@ -124,19 +95,9 @@ Reachability and requested behavior are separate gates. A green deploy with a br
 
 ## Failure categories
 
-Failure categories point the agent to the first useful evidence surface.
+Failure categories (`build`, `start`, `verify`, `network`, `config`, `credential`, `other`) point the agent to the first useful evidence surface. The full read-first / avoid playbook is in [Troubleshooting → Evidence order](/zcp/reference/troubleshooting#evidence-order); the term definitions are in the [Glossary](/zcp/glossary#failure-category).
 
-| Category | What it means | Read first |
-| -------- | ------------- | ---------- |
-| `build` | Build phase failed. | Build logs, build commands, dependency manifests, deploy file list. |
-| `start` | Build passed, but runtime start or prepare failed. | Prepare/runtime logs, start command, ports, env references. |
-| `verify` | Runtime exists, but reachability or behavior failed. | Failing check detail, HTTP response, request-time runtime logs, behavior evidence. |
-| `network` | Transport, DNS, VPN, SSH, or service-to-service reach failed. | VPN, SSH, DNS, subdomain readiness, service status, named transport error. |
-| `config` | `zerops.yaml`, env vars, setup block, or service settings mismatch. | Field-level rejection, setup name, env reference, service settings. |
-| `credential` | Zerops, git, SSH, managed-service, or external API credential failed. | The named credential surface. |
-| `other` | No known category matched. | Raw event/log evidence; stop if repeated without a new signal. |
-
-Categorization is what turns retries into evidence-driven fixes. The practical recovery flow lives in [Troubleshooting](/zcp/reference/troubleshooting).
+Categorization is what turns retries into evidence-driven fixes.
 
 ## Delivery after proof
 
@@ -150,7 +111,7 @@ Delivery mode applies after a verified deploy. It does not replace the first pro
 
 Git-push capability, delivery mode, and build integration are separate. A project can have git-push configured while still using direct deploy for a given session.
 
-Packaging and production promotion are deliberate handoffs after proof. Packaging turns a verified runtime into a git-backed import bundle. Production promotion moves verified work into a separate production project through GUI setup, git/CI triggers, or the team's release process.
+Packaging and production release are deliberate handoffs after proof. Packaging turns a verified runtime into a git-backed import bundle. A production release moves verified work into a separate production project through GUI setup, git/CI triggers, or the team's release process.
 
 ## Generated files and state
 
@@ -190,16 +151,11 @@ A clear blocker is acceptable completion only when it names the runtime in scope
 
 ## Confirmation gates
 
-Some operations pause because the loss is not safely reversible from inside the conversation:
-
-- **Service deletion** requires explicit user approval in the current conversation, by service name.
-- **Destructive import override** first refuses and names what would be replaced; a second call must acknowledge the same targets.
-
-See [Tokens and credentials](/zcp/security/tokens-and-project-access#what-zcp-enforces-for-destructive-actions) for the user-facing confirmation flow.
+Two operations pause because the loss is not safely reversible from inside the conversation: **service deletion** (named approval) and **destructive import override** (refuse-then-acknowledge). See [Tokens and credentials → What ZCP enforces for destructive actions](/zcp/security/tokens-and-project-access#what-zcp-enforces-for-destructive-actions) for the user-facing confirmation flow.
 
 ## Auditing a workflow
 
-A workflow-guided run is well-shaped if the evidence answers:
+A workflow run is well-shaped if the evidence answers:
 
 | Question | Evidence |
 | -------- | -------- |
@@ -208,10 +164,10 @@ A workflow-guided run is well-shaped if the evidence answers:
 | Which runtime was developed and deployed? | Runtime target, deploy result, events, and logs. |
 | What proved reachability? | Verify output, service status, public URL, or HTTP probe. |
 | What proved behavior? | Endpoint, UI flow, job result, database/object state, or other requested proof. |
-| What controls future delivery? | Delivery mode, git-push state, build integration, package bundle, or production handoff note. |
+| What controls future delivery? | Delivery mode, git-push state, build integration, package bundle, or production release handoff note. |
 
 ## Related reference
 
-- [ZCP MCP tools](/zcp/reference/mcp-operations) - operation names and direct tool calls.
-- [Troubleshooting](/zcp/reference/troubleshooting) - recovery order when a run gets stuck.
-- [Glossary](/zcp/glossary) - exact terms used across the ZCP MCP reference.
+- [ZCP MCP tools](/zcp/reference/mcp-operations) — operation names and direct tool calls.
+- [Troubleshooting](/zcp/reference/troubleshooting) — recovery order when a run gets stuck.
+- [Glossary](/zcp/glossary) — exact terms used across the ZCP MCP reference.

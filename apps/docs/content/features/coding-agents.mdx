@@ -9,11 +9,11 @@ import IntroAgentVisual from '@site/src/components/IntroAgentVisual';
 
 Zerops was built on the idea of **environment parity** — giving developers the full development lifecycle, from remote development to highly available production, with the observability and developer tools for maximum flexibility, and sensible defaults so the configs stay reasonable. Turns out that's **exactly what coding agents need** to produce and iterate on production-ready applications.
 
-<br/><br/>
+<br/>
 
 ## What is it
 
-An **[MCP server](/zcp/overview)** for your agent — running locally or in a remote container — that makes use of the flexibility and processes Zerops provides. There's no "Zerops system prompt" hogging your context window. The MCP server is a thin layer that makes **your agent a Zerops platform power user** — when needed — so it understands:
+An **[MCP server](/zcp/overview)** for your agents — with an optional remote cloud development environment container to run them in — that makes use of the flexibility and processes Zerops provides. There's no "Zerops system prompt" hogging your context window. The MCP server is a thin layer that makes **your agent a Zerops platform power user** — when needed — so it understands:
 
 - how networking, scaling, debugging, build & deployment, environment variables, and service provisioning work on the platform
 - the development loop: start a dev server → implement → deploy to stage → verify
@@ -84,7 +84,7 @@ The agent runs through two workflows. **Bootstrap** settles which services and r
              ▼               read logs / events    │
     URL (proof)             fix from evidence ─────┘`}</AsciiGraph>
 
-Once the loop produces verified work, the agent doesn't push to production — it opens a PR from the dev project. **A human review gates the merge**, then a release tag or merge triggers automatic CI/CD into a [separate production project](/zcp/security/production-policy) that has no `zcp` service at all.
+Once the loop produces verified work, the agent doesn't push to production. It hands off — through whichever path your team uses: a tag push, a protected-branch merge, a manual `zcli` release, a pull request, or a CI job. **A human gates the release**, and the production deploy runs into a [separate production project](/zcp/security/production-policy) that has no `zcp` service at all.
 
 <AsciiGraph ariaLabel="From dev project through GitHub PR to prod project">{`      Dev project                 GitHub                  Prod project
 
@@ -131,7 +131,7 @@ With the model clear, here's where ZCP sits among adjacent tools. People say "ag
     </div>
     <p className="zcp-landscape-section__examples">Hetzner Cloud MCP · DigitalOcean MCP · Linode MCP · raw SSH/server MCPs</p>
   </header>
-  <p>"Let your agent manage your Hetzner VPS." An MCP gives the agent access to a Linux box — provision it, SSH in, install Docker and Postgres and nginx, set up systemd units, point a domain at it. Maximum control, lowest cost, full Linux to play with. The same reason senior developers reach for managed platforms applies here: even if you *can* harden SSH, write nginx configs, tune `pg_hba.conf`, rotate TLS, set firewall rules, run fail2ban, and stay on top of CVEs across kernel, OpenSSL, Docker, Postgres, and nginx — you usually don't want to. Each layer is its own domain with its own gotchas, each is a security surface that drifts the moment you stop tending it, and every project becomes a snowflake. Hand that work to an agent and you also hand it the blast radius: misconfigured firewall, debug endpoint left open, port 5432 exposed to the internet, keys never rotated. ZCP is the inverse trade-off — the **guardrails** of a managed platform. Private networking, TLS, isolated services, safe defaults, managed backups, no exposed ports unless you opt in — all built in. The agent operates through [bounded MCP tools](/zcp/reference/mcp-operations) instead of `sudo` on a fresh Ubuntu box, so the mistakes that matter on a VPS aren't reachable from where it sits.</p>
+  <p>"Let your agent manage your Hetzner VPS." An MCP gives the agent access to a Linux box — provision it, SSH in, install Docker and Postgres and nginx, set up systemd units, point a domain at it. Maximum control, lowest cost, full Linux to play with. The same reason senior developers reach for managed platforms applies here: even if you *can* harden SSH, write nginx configs, tune `pg_hba.conf`, rotate TLS, set firewall rules, run fail2ban, and stay on top of CVEs across kernel, OpenSSL, Docker, Postgres, and nginx — you usually don't want to. Each layer is its own domain with its own gotchas, each is a security surface that drifts the moment you stop tending it, and every project becomes a snowflake. Hand that work to an agent and you also hand it the blast radius: misconfigured firewall, debug endpoint left open, port 5432 exposed to the internet, keys never rotated. ZCP is the inverse trade-off — the **guardrails** of a managed platform. Private networking, TLS, isolated services, safe defaults, managed backups, no exposed ports unless you opt in — all built in. The agent operates through [project-scoped MCP tools](/zcp/reference/mcp-operations) instead of `sudo` on a fresh Ubuntu box, so the mistakes that matter on a VPS aren't reachable from where it sits.</p>
 </section>
 
 <section className="zcp-landscape-section">
@@ -160,7 +160,7 @@ With the model clear, here's where ZCP sits among adjacent tools. People say "ag
     </div>
     <p className="zcp-landscape-section__examples">Replit Agent · Lovable · Bolt.new · v0 · Devin · OpenHands</p>
   </header>
-  <p>The agent, the workspace, the stack, and (often) the hosting target are fused into one closed product. Fast for prototypes. Decisions are made for you. Switching agents usually means switching platforms, and production-grade primitives — multi-environment promotion, private networking, real observability — tend to be limited or absent. **ZCP doesn't bundle**: the agent and model stay yours on your own subscription, and the platform underneath is normal Zerops with the full stack of managed services, networking, deploys, and observability.</p>
+  <p>The agent, the workspace, the stack, and (often) the hosting target are fused into one closed product. Fast for prototypes. Decisions are made for you. Switching agents usually means switching platforms, and production-grade primitives — a real dev/stage/prod release flow, private networking, observability — tend to be limited or absent. **ZCP doesn't bundle**: the agent and model stay yours on your own subscription, and the platform underneath is normal Zerops with the full stack of managed services, networking, deploys, and observability.</p>
 </section>
 
 <section className="zcp-landscape-section">
@@ -213,7 +213,7 @@ With the model clear, here's where ZCP sits among adjacent tools. People say "ag
 
 <DocCardList items={[
   { type: 'link', href: '/zcp/quickstart', label: 'Quickstart', customProps: { icon: Icons['rocket-launch'], description: 'AI Agent recipe, Claude Code, and a real product change in about five minutes.' } },
-  { type: 'link', href: '/zcp/overview', label: 'ZCP MCP overview', customProps: { icon: Icons['sparkles'], description: 'What the `zcp` MCP gives the agent, where it runs, and how workflow-guided runs end in proof or blocker.' } },
+  { type: 'link', href: '/zcp/overview', label: 'ZCP MCP overview', customProps: { icon: Icons['sparkles'], description: 'What the `zcp` MCP gives the agent, where it runs, and how a run ends in proof or a blocker.' } },
   { type: 'link', href: '/zcp/setup/choose-workspace', label: 'Remote or local setup', customProps: { icon: Icons['computer-desktop'], description: 'Choose where the `zcp` MCP runs — inside Zerops with bundled tools, or beside your local editor.' } },
-  { type: 'link', href: '/zcp/workflows/build-with-zcp', label: 'Build and ship', customProps: { icon: Icons['circle-stack'], description: 'Runtime layout, development, delivery, packaging, and production promotion.' } },
+  { type: 'link', href: '/zcp/workflows/build-with-zcp', label: 'Build and ship', customProps: { icon: Icons['circle-stack'], description: 'Runtime layout, development, delivery, packaging, and production release.' } },
 ]} />

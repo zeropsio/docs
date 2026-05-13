@@ -44,9 +44,7 @@ There are three separate credential surfaces people often mix together:
 | Agent subscription or model API key | You / the agent provider     | Lets the coding agent run. Zerops does not provide it. |
 | Git or CI credentials               | You / your repository system | Lets finished work push to git or deploy through CI.   |
 
-Remote setup injects `ZCP_API_KEY` into the `zcp` service. Local setup reads it from the `.mcp.json` env block. In both paths, the agent account is still authenticated through the agent's own login flow.
-
-Details: [Tokens and credentials](/zcp/security/tokens-and-project-access).
+In both setups, the agent account is still authenticated through the agent's own login flow. For where each credential lives (remote injection vs `.mcp.json`), rotation, rejected token shapes, and `GIT_TOKEN` / `ZEROPS_TOKEN`, see [Tokens and credentials](/zcp/security/tokens-and-project-access).
 
 ## What the token lets the agent do
 
@@ -81,14 +79,7 @@ This is why development and staging projects are the right place for ZCP. Produc
 
 Most project operations do not get an extra ZCP-specific confirmation prompt. Deploys, env changes, restarts, scaling, and public-access changes are normal project operations and are audited through platform evidence.
 
-ZCP MCP adds hard gates where the loss is not safely reversible from the conversation:
-
-| Operation                                                 | Gate                                                                                                                                       |
-| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| Service deletion                                          | Requires explicit same-conversation approval that names the service. Remote setup also blocks deleting the `zcp` service it is running in. |
-| Wholesale service replacement after failed deploy history | Requires the agent to read failure evidence first, summarize what would be replaced, and ask for explicit confirmation.                    |
-
-Approval from an old chat does not carry forward. A new conversation needs a new approval.
+ZCP MCP adds hard gates where the loss is not safely reversible from the conversation: **service deletion** (explicit same-conversation approval by service name; remote setup also blocks deleting the `zcp` service it is running in) and **wholesale service replacement after failed deploy history** (refuse-then-acknowledge with failure evidence first). Approval from an old chat does not carry forward. The full enforcement rules are in [Tokens and credentials → What ZCP enforces for destructive actions](/zcp/security/tokens-and-project-access#what-zcp-enforces-for-destructive-actions).
 
 ## Audit evidence
 

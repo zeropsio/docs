@@ -1,15 +1,15 @@
 ---
 title: 'How it works'
-description: 'The operating loop for live state, runtime target, service setup, app work, verification, recovery, and delivery.'
+description: 'The work loop: live state, runtime target, service setup, app work, verification, recovery, and delivery.'
 ---
 
-The ZCP MCP setup gives a coding agent an operating loop for Zerops app work. The agent reads live state, chooses the app runtime and dependencies, changes the app, deploys through Zerops, verifies real behavior, and returns proof or a blocker.
+The ZCP MCP setup gives a coding agent a **work loop** for Zerops app work. The agent reads live state, chooses the app runtime and dependencies, changes the app, deploys through Zerops, verifies real behavior, and returns proof or a blocker.
 
-The loop is carried by bounded Zerops operations, Zerops-specific knowledge, and instructions for what to inspect, what to change, when to ask, and what counts as done. You describe the product outcome; the agent uses the loop to make its decisions visible while it works.
+The loop is carried by project-scoped Zerops operations, Zerops-specific knowledge, and instructions for what to inspect, what to change, when to ask, and what counts as done. You describe the product outcome; the agent uses the loop to make its decisions visible while it works.
 
 The source of truth is the real project: runtimes, managed services, env references, logs, events, and deploy results. A separate preview sandbox is not the source of truth.
 
-## The control loop
+## The work loop
 
 ```mermaid
 flowchart TD
@@ -73,19 +73,19 @@ Chat history is not the source of truth. If the agent sounds confused, starts fr
 Read current project status and tell me where this project stands before changing anything.
 ```
 
-## What the workflow coordinates
+## What the workflow handles
 
-The generated workflow is opinionated about the concerns an agent must resolve during app work. You usually do not name them in the prompt. The tools and instructions supply the state, guidance, operations, and done criteria so the agent can work from evidence.
+The workflow handles the things an agent must resolve during app work so you do not have to name them in the prompt. The tools and instructions supply the state, guidance, operations, and verification surface so the agent can work from evidence.
 
-| Concern          | What the agent gets                                                                                                 | What that means for you                                                       |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| What the workflow handles | What the agent gets                                                                                                 | What that means for you                                                       |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
 | Live state       | Services, env-var keys, Zerops references, recent events, logs, verification output, and saved work state.          | You do not have to paste a service inventory or reconstruct what happened.    |
 | Runtime target   | Rules for choosing the app runtime that should receive code changes.                                                | The agent can identify where app work belongs before editing or deploying.    |
 | Managed services | Knowledge and env wiring patterns for database, cache, queue, search, storage, mail, and similar services.          | Product intent can imply real dependencies without a manual wiring checklist. |
 | Service setup    | Operations for using existing services or creating missing runtimes and dependencies.                               | Runtime layout and dependencies can be established before app work starts.    |
 | App wiring       | Zerops-specific rules for `zerops.yaml`, env references, ports, commands, public access, and build/deploy behavior. | The app is wired for Zerops rather than for a generic cloud template.         |
 | Deploy evidence  | Build logs, runtime logs, platform events, service status, HTTP checks, and structured verification output.         | A failed deploy becomes a diagnosis surface instead of guesswork.             |
-| Behavior proof   | A done gate based on the requested behavior, not only on a successful build or reachable root URL.                  | The final answer can point to what was actually checked.                      |
+| Behavior proof   | The proof gate is the requested behavior, not only a successful build or reachable root URL.                        | The final answer can point to what was actually checked.                      |
 | Delivery handoff | Direct proof first; then git push, CI, or human handoff when that is the chosen delivery choice.                    | Shipping setup follows a verified running result.                             |
 
 The exact labels for layouts, delivery modes, and setup routes live in the [Glossary](/zcp/glossary) and [Workflows in depth](/zcp/reference/agent-workflow).
@@ -119,16 +119,7 @@ The first functional deploy goes directly through MCP so the agent has a running
 
 ## Recovery is evidence-driven
 
-When something fails, the agent has the evidence surface that matches the failure:
-
-| Failure pattern          | Useful evidence                                                                                              |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------ |
-| Build failed             | Build logs, build commands, dependency manifests, deploy file list.                                          |
-| Runtime failed to start  | Runtime or prepare logs, start command, ports, env references.                                               |
-| Route or behavior failed | Verify output, HTTP response, runtime logs at request time, stored state.                                    |
-| Network access failed    | VPN, SSH, DNS, subdomain readiness, service status, named transport error.                                   |
-| Config was rejected      | Field-level rejection, `zerops.yaml`, setup name, env reference, service settings.                           |
-| Credential failed        | The named credential surface: Zerops token, git token, SSH, managed-service credential, or external API key. |
+When something fails, the workflow puts the agent on the matching evidence surface — build logs for build failures, prepare/runtime logs for start failures, verify output and request-time logs for behavior failures, transport surfaces for network failures, field-level rejection for config, and the named credential surface for credential failures. The full categories, what to read first, and what to avoid live in [Troubleshooting](/zcp/reference/troubleshooting).
 
 Retrying the same deploy without new evidence is not progress. The loop pushes toward one of three outcomes: fix from a cause, ask for the missing decision, or report a blocker with the category, evidence read, and attempts made.
 
@@ -149,13 +140,7 @@ The final answer should make proof inspectable: runtime name, URL or endpoint, b
 
 ## Delivery happens after proof
 
-Delivery choice controls how future changes ship after a verified runtime exists:
-
-| Choice             | Use when                                                                       |
-| ------------------ | ------------------------------------------------------------------------------ |
-| Keep direct deploy | Early development, demos, dev/stage iteration, or agent-owned runtime changes. |
-| Push to git        | You want commits, review, repository history, or a repo-triggered build.       |
-| External handoff   | CI, release management, or a human owns the next deploy.                       |
+Delivery choice controls how future changes ship after a verified runtime exists: keep direct deploy, push to git, or hand off to CI/release/human action. The user-facing version of this choice and what to tell the agent for each option lives in [Build and ship → Choose delivery after proof](/zcp/workflows/build-with-zcp#choose-delivery-after-proof).
 
 Packaging a running service turns a deployed runtime into a re-importable bundle for another Zerops project. It is useful for handoff or reuse after proof, not for deploying the next app change; see [Package a running service](/zcp/workflows/package-running-service).
 
@@ -186,5 +171,5 @@ That is the practical difference between "the agent wrote code" and "the app tas
 
 ## Next steps
 
-- [Build and ship](/zcp/workflows/build-with-zcp) - normal app work after setup.
-- [Workflows in depth](/zcp/reference/agent-workflow) - process gates, generated files, runtime layouts, delivery terms, and completion evidence.
+- [Build and ship](/zcp/workflows/build-with-zcp) — normal app work after setup.
+- [Workflows in depth](/zcp/reference/agent-workflow) — process gates, generated files, runtime layouts, delivery labels, and completion evidence.
