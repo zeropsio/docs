@@ -9311,18 +9311,18 @@ Remember that only publicly accessible objects will be cached by the CDN. Privat
 # Features > Coding Agents
 
 
-Zerops was built on the idea of **environment parity** — to give developers the whole development lifecycle, from remote development to highly available production, with all the observability and developer tools for maximum flexibility, while keeping the configs reasonable. And it turns out that this is **exactly what coding agents need** to produce and iterate on production-ready applications.
+Zerops was built on the idea of **environment parity** — giving developers the full development lifecycle, from remote development to highly available production, with the observability and developer tools for maximum flexibility, and sensible defaults so the configs stay reasonable. Turns out that's **exactly what coding agents need** to produce and iterate on production-ready applications.
 
 ## What is it
 
-An **[MCP server](/zcp/overview)** for your agent that can run locally or on a remote container that makes use of the flexibility and processes Zerops allows. There is no "Zerops system prompt" hogging your context window. The MCP server is a thin layer that makes **your agent a Zerops platform power user** — when needed — so it understands:
+An **[MCP server](/zcp/overview)** for your agents — with an optional remote cloud development environment container to run them in — that makes use of the flexibility and processes Zerops provides. There's no "Zerops system prompt" hogging your context window. The MCP server is a thin layer that makes **your agent a Zerops platform power user** — when needed — so it understands:
 
 - how networking, scaling, debugging, build & deployment, environment variables, and service provisioning work on the platform
 - the development loop: start a dev server → implement → deploy to stage → verify
 
-It's the depth and flexibility of the platform that then give the agent its superpowers. A single agent can scaffold and iterate on projects with multiple runtimes (`app`, `api`, `worker`) backed by multiple [managed services](/features/infrastructure) (object storage `storage`, Postgres `db`, Elasticsearch `search`, NATS `broker`, Valkey `cache`) — end-to-end coverage from development to highly available production — just as easily as it can work on a simple Next.js presentational website.
+The depth of the platform underneath is what gives the agent room to actually work. A single agent can scaffold and iterate on projects with multiple runtimes (`app`, `api`, `worker`) backed by multiple [managed services](/features/infrastructure) (object storage `storage`, Postgres `db`, Elasticsearch `search`, NATS `broker`, Valkey `cache`) — just as easily as it can work on a simple Next.js presentational website.
 
-A **[recipe ecosystem](https://app.zerops.io/recipes)** covering the most popular frameworks — pre-prepared for the whole lifecycle — gives the agent a baseline to start from, or a guide for setting up any given stack end-to-end on Zerops.
+A **[recipe ecosystem](https://app.zerops.io/recipes)** covering the most popular frameworks — pre-prepared for the whole lifecycle — gives the agent a baseline to start from, or a guide for setting up any stack on Zerops.
 
 ```text
   ┌─ ZCP MCP ────┐    ┌─ recipes for any stack ────────────────────────────────┐
@@ -9347,6 +9347,7 @@ A **[recipe ecosystem](https://app.zerops.io/recipes)** covering the most popula
 │         ▼                                                │    │         ▼          │
 │  ┌────────────┐                                          │    │    ┌──────────┐    │
 │  │    zcp     │                                          │    │    │   zcp    │    │
+│  │   Ubuntu   │                                          │    │    │  Ubuntu  │    │
 │  └────────────┘                                          │    │    └──────────┘    │
 │                                                          │    │                    │
 │  ┌────────────┐      ┌────────────┐      ┌────────────┐  │    │    ┌──────────┐    │
@@ -9375,21 +9376,21 @@ Most coding-agent platforms went agent-first, then bolted on infrastructure — 
 
 ## Main features
 
-### Bring your own agent and your own subscription
+### Your agent, your subscription
 
-Currently Claude Code, with Codex, Gemini CLI, opencode, and any other MCP-capable agent coming soon. Modify the full Linux Ubuntu container the agent runs on; configure the agent your way. **Zerops doesn't resell tokens** — sign in with your own subscription. We just provide the infrastructure to run the coding agents and what they build.
+Bring whichever agent you already use. Claude Code today; Codex, Gemini CLI, opencode, and any MCP-capable client next. The container is a regular Ubuntu — install your own CLI tools, drop in your `.claude` / `.cursor` configs, attach your IDE over SSH. **Zerops doesn't resell tokens or proxy your model calls** — sign in with your own Anthropic / OpenAI / Google subscription and the agent talks to its provider directly.
 
-### Run locally or remote, access however you want
+### An ordinary Zerops project underneath
 
-The **[`zcp` service](/zcp/setup/hosted-workspace)** — a `zcp@1` Linux container the agent can live inside, on the project's private network, with a bundled coding agent CLI and Browser VS Code as options. The **[`zcp` MCP](/zcp/setup/local-agent-bridge)** — an MCP server that exposes one project's Zerops operations through bounded, tagged tools that any MCP-capable agent client can call. Use one, the other, or both. The project surface stays the same.
+The agent operates inside a normal Zerops project — same shape as production. Managed databases (PostgreSQL, MariaDB, ClickHouse), key-value stores (KeyDB, Valkey), search (Elasticsearch, Meilisearch, Typesense), vector store (Qdrant), message queues (NATS, Kafka), object and shared storage, managed Nginx — all on a private network, addressable by hostname. The same pipeline that deploys here can deploy to a separate HA production project with no `zcp` service attached. Not a sandbox the work outgrows.
 
-### Seamless handover between human and AI
+### Human ↔ agent handover
 
-The agent runs on the same cloud development environment a human would use, and it operates on it just as a human developer would. The human can jump in at any time through any access — Cloud IDE, your local IDE over SSH, or your terminal.
+The agent and the human share the same workspace — same filesystem, same SSH key, same Cloud IDE in the browser, same remote-dev attach from your local IDE. Take over mid-session, set something up before the agent runs, debug in the same container the agent just left. Nothing reaches production until you merge the PR — the agent opens it, you gate it.
 
-### Use any technological stack you want
+### Recipes for any stack
 
-Zerops provides a curated set of recipes for most popular frameworks and programming languages. Pick one, select the **AI Agent** environment, and within minutes you have a fully working setup: Cloud IDE, authorized coding agent, and Zerops knowledge so the agent knows exactly how to develop, debug, and deploy on it.
+Runtimes for Bun, Deno, Node.js, Go, Python, Rust, Java, .NET, PHP, Elixir, Gleam — with curated recipes for the framework on top: Next.js, Nuxt, Astro, Svelte, React, Vue, Angular, Solid, Qwik, Analog, NestJS, Laravel, and more. Pick a recipe, select the **AI Agent** environment, and the project comes up with a working dev runtime, a stage runtime, the right managed services wired in, and a coding agent briefed on the Zerops surface.
 
 ## How it works in practice
 
@@ -9492,7 +9493,7 @@ The agent runs through two workflows. **Bootstrap** settles which services and r
     zcp (local or remote)
              │
              ▼
-    edit code on appdev   ◀───────────────────────┐
+    edit code on appdev   ◀────────────────────────┐
        └ dev server, hot reload                    │
              │                                     │
              ▼                                     │
@@ -9509,7 +9510,7 @@ The agent runs through two workflows. **Bootstrap** settles which services and r
     URL (proof)             fix from evidence ─────┘
 ```
 
-Once the loop produces verified work, the agent doesn't push to production — it opens a PR from the dev project. **A human review gates the merge**, then a release tag or merge triggers automatic CI/CD into a [separate production project](/zcp/security/production-policy) that has no `zcp` service at all.
+Once the loop produces verified work, the agent doesn't push to production. It hands off — through whichever path your team uses: a tag push, a protected-branch merge, a manual `zcli` release, a pull request, or a CI job. **A human gates the release**, and the production deploy runs into a [separate production project](/zcp/security/production-policy) that has no `zcp` service at all.
 
 ```text
       Dev project                 GitHub                  Prod project
@@ -9529,18 +9530,6 @@ Once the loop produces verified work, the agent doesn't push to production — i
 
 With the model clear, here's where ZCP sits among adjacent tools. People say "agent infrastructure," "infra for Claude agents," "agent hosting," or "agent sandboxes" to mean different things — usually one of the categories below.
 
-#### Local coding agents
-
-_Cursor · Windsurf · Zed · Claude Code · Codex CLI · Aider · Cline_
-
-The agent runs on your machine, edits your local checkout, runs local commands. Excellent at code changes. Anything beyond your machine — databases, networking, deploy targets, runtime logs — is yours to wire in. Install the ZCP MCP locally and run `zcli vpn up`, and any of these agents now reaches a real Zerops project alongside your local code: services addressed by hostname, deploys, logs, events.
-
-#### Cloud dev environments with AI
-
-_GitHub Codespaces + Copilot Workspace · Gitpod · Coder_
-
-A managed Linux container in the cloud with your editor and an AI assistant attached. Solves "where the agent runs" so state survives between sessions and machine setup stops being a question. The `zcp` service is the closest thing in this category — managed Linux container, Cloud IDE, your agent of choice — except it lives *inside* a Zerops project, addressing the project's runtimes, database, and cache by hostname, with deploys and logs as primitives the agent can call.
-
 #### PaaS MCPs
 
 _AWS MCP servers · Railway MCP · Fly.io MCP · Render MCP_
@@ -9551,13 +9540,25 @@ Most major PaaS providers have shipped an MCP — provision services, deploy cod
 
 _Hetzner Cloud MCP · DigitalOcean MCP · Linode MCP · raw SSH/server MCPs_
 
-"Let your agent manage your Hetzner VPS." An MCP gives the agent access to a Linux box — provision it, SSH in, install Docker and Postgres and nginx, set up systemd units, point a domain at it. Maximum control, lowest cost, full Linux to play with. The same reason senior developers reach for managed platforms applies here: even if you *can* harden SSH, write nginx configs, tune `pg_hba.conf`, rotate TLS, set firewall rules, run fail2ban, and stay on top of CVEs across kernel, OpenSSL, Docker, Postgres, and nginx — you usually don't want to. Each layer is its own domain with its own gotchas, each is a security surface that drifts the moment you stop tending it, and every project becomes a snowflake. Hand that work to an agent and you also hand it the blast radius: misconfigured firewall, debug endpoint left open, port 5432 exposed to the internet, keys never rotated. ZCP is the inverse trade-off — the **guardrails** of a managed platform. Private networking, TLS, isolated services, safe defaults, managed backups, no exposed ports unless you opt in — all built in. The agent operates through [bounded MCP tools](/zcp/reference/mcp-operations) instead of `sudo` on a fresh Ubuntu box, so the mistakes that matter on a VPS aren't reachable from where it sits.
+"Let your agent manage your Hetzner VPS." An MCP gives the agent access to a Linux box — provision it, SSH in, install Docker and Postgres and nginx, set up systemd units, point a domain at it. Maximum control, lowest cost, full Linux to play with. The same reason senior developers reach for managed platforms applies here: even if you *can* harden SSH, write nginx configs, tune `pg_hba.conf`, rotate TLS, set firewall rules, run fail2ban, and stay on top of CVEs across kernel, OpenSSL, Docker, Postgres, and nginx — you usually don't want to. Each layer is its own domain with its own gotchas, each is a security surface that drifts the moment you stop tending it, and every project becomes a snowflake. Hand that work to an agent and you also hand it the blast radius: misconfigured firewall, debug endpoint left open, port 5432 exposed to the internet, keys never rotated. ZCP is the inverse trade-off — the **guardrails** of a managed platform. Private networking, TLS, isolated services, safe defaults, managed backups, no exposed ports unless you opt in — all built in. The agent operates through [project-scoped MCP tools](/zcp/reference/mcp-operations) instead of `sudo` on a fresh Ubuntu box, so the mistakes that matter on a VPS aren't reachable from where it sits.
+
+#### Cloud dev environments with AI
+
+_GitHub Codespaces + Copilot Workspace · Gitpod · Coder_
+
+A managed Linux container in the cloud with your editor and an AI assistant attached. Solves "where the agent runs" so state survives between sessions and machine setup stops being a question. The `zcp` service is the closest thing in this category — managed Linux container, Cloud IDE, your agent of choice — except it lives *inside* a Zerops project, addressing the project's runtimes, database, and cache by hostname, with deploys and logs as primitives the agent can call.
 
 #### Bundled agent platforms
 
 _Replit Agent · Lovable · Bolt.new · v0 · Devin · OpenHands_
 
-The agent, the workspace, the stack, and (often) the hosting target are fused into one closed product. Fast for prototypes, decisions are made for you. Switching agents usually means switching platforms, and production-grade primitives — multi-environment promotion, private networking, real observability — tend to be limited or absent. **ZCP doesn't bundle**: the agent and model stay yours on your own subscription, and the platform underneath is normal Zerops with the full stack of managed services, networking, deploys, and observability.
+The agent, the workspace, the stack, and (often) the hosting target are fused into one closed product. Fast for prototypes. Decisions are made for you. Switching agents usually means switching platforms, and production-grade primitives — a real dev/stage/prod release flow, private networking, observability — tend to be limited or absent. **ZCP doesn't bundle**: the agent and model stay yours on your own subscription, and the platform underneath is normal Zerops with the full stack of managed services, networking, deploys, and observability.
+
+#### Local coding agents
+
+_Cursor · Windsurf · Zed · Claude Code · Codex CLI · Aider · Cline_
+
+The agent runs on your machine, edits your local checkout, runs local commands. Excellent at code changes. Anything beyond your machine — databases, networking, deploy targets, runtime logs — is yours to wire in. Install the ZCP MCP locally and run `zcli vpn up`, and any of these agents can now reach a real Zerops project alongside your local code: services addressed by hostname, deploys, logs, events.
 
 #### Code-execution sandboxes
 
@@ -9574,9 +9575,9 @@ Libraries for building and shipping agents to *your* users — tool calling, mem
 ## Where to start
 
 - [Quickstart](/zcp/quickstart) — AI Agent recipe, Claude Code, and a real product change in about five minutes.
-- [ZCP MCP overview](/zcp/overview) — What the `zcp` MCP gives the agent, where it runs, and how workflow-guided runs end in proof or blocker.
+- [ZCP MCP overview](/zcp/overview) — What the `zcp` MCP gives the agent, where it runs, and how a run ends in proof or a blocker.
 - [Remote or local setup](/zcp/setup/choose-workspace) — Choose where the `zcp` MCP runs — inside Zerops with bundled tools, or beside your local editor.
-- [Build and ship](/zcp/workflows/build-with-zcp) — Runtime layout, development, delivery, packaging, and production promotion.
+- [Build and ship](/zcp/workflows/build-with-zcp) — Runtime layout, development, delivery, packaging, and production release.
 
 
 ----------------------------------------
@@ -38847,13 +38848,13 @@ For advanced configurations or custom requirements:
 # Zcp > Concept > How It Works
 
 
-The ZCP MCP setup gives a coding agent an operating loop for Zerops app work. The agent reads live state, chooses the app runtime and dependencies, changes the app, deploys through Zerops, verifies real behavior, and returns proof or a blocker.
+The ZCP MCP setup gives a coding agent a **work loop** for Zerops app work. The agent reads live state, chooses the app runtime and dependencies, changes the app, deploys through Zerops, verifies real behavior, and returns proof or a blocker.
 
-The loop is carried by bounded Zerops operations, Zerops-specific knowledge, and instructions for what to inspect, what to change, when to ask, and what counts as done. You describe the product outcome; the agent uses the loop to make its decisions visible while it works.
+The loop is carried by project-scoped Zerops operations, Zerops-specific knowledge, and instructions for what to inspect, what to change, when to ask, and what counts as done. You describe the product outcome; the agent uses the loop to make its decisions visible while it works.
 
 The source of truth is the real project: runtimes, managed services, env references, logs, events, and deploy results. A separate preview sandbox is not the source of truth.
 
-## The control loop
+## The work loop
 
 ```mermaid
 flowchart TD
@@ -38938,19 +38939,19 @@ Chat history is not the source of truth. If the agent sounds confused, starts fr
 Read current project status and tell me where this project stands before changing anything.
 ```
 
-## What the workflow coordinates
+## What the workflow handles
 
-The generated workflow is opinionated about the concerns an agent must resolve during app work. You usually do not name them in the prompt. The tools and instructions supply the state, guidance, operations, and done criteria so the agent can work from evidence.
+The workflow handles the things an agent must resolve during app work so you do not have to name them in the prompt. The tools and instructions supply the state, guidance, operations, and verification surface so the agent can work from evidence.
 
-| Concern          | What the agent gets                                                                                                 | What that means for you                                                       |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| What the workflow handles | What the agent gets                                                                                                 | What that means for you                                                       |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
 | Live state       | Services, env-var keys, Zerops references, recent events, logs, verification output, and saved work state.          | You do not have to paste a service inventory or reconstruct what happened.    |
 | Runtime target   | Rules for choosing the app runtime that should receive code changes.                                                | The agent can identify where app work belongs before editing or deploying.    |
 | Managed services | Knowledge and env wiring patterns for database, cache, queue, search, storage, mail, and similar services.          | Product intent can imply real dependencies without a manual wiring checklist. |
 | Service setup    | Operations for using existing services or creating missing runtimes and dependencies.                               | Runtime layout and dependencies can be established before app work starts.    |
 | App wiring       | Zerops-specific rules for `zerops.yaml`, env references, ports, commands, public access, and build/deploy behavior. | The app is wired for Zerops rather than for a generic cloud template.         |
 | Deploy evidence  | Build logs, runtime logs, platform events, service status, HTTP checks, and structured verification output.         | A failed deploy becomes a diagnosis surface instead of guesswork.             |
-| Behavior proof   | A done gate based on the requested behavior, not only on a successful build or reachable root URL.                  | The final answer can point to what was actually checked.                      |
+| Behavior proof   | The proof gate is the requested behavior, not only a successful build or reachable root URL.                        | The final answer can point to what was actually checked.                      |
 | Delivery handoff | Direct proof first; then git push, CI, or human handoff when that is the chosen delivery choice.                    | Shipping setup follows a verified running result.                             |
 | Delivery handoff | Direct proof first; then git push, CI, or human handoff when that is the chosen delivery choice.                    | Shipping setup follows a verified running result.                             |
 
@@ -38985,17 +38986,7 @@ The first functional deploy goes directly through MCP so the agent has a running
 
 ## Recovery is evidence-driven
 
-When something fails, the agent has the evidence surface that matches the failure:
-
-| Failure pattern          | Useful evidence                                                                                              |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------ |
-| Build failed             | Build logs, build commands, dependency manifests, deploy file list.                                          |
-| Runtime failed to start  | Runtime or prepare logs, start command, ports, env references.                                               |
-| Route or behavior failed | Verify output, HTTP response, runtime logs at request time, stored state.                                    |
-| Network access failed    | VPN, SSH, DNS, subdomain readiness, service status, named transport error.                                   |
-| Config was rejected      | Field-level rejection, `zerops.yaml`, setup name, env reference, service settings.                           |
-| Credential failed        | The named credential surface: Zerops token, git token, SSH, managed-service credential, or external API key. |
-| Credential failed        | The named credential surface: Zerops token, git token, SSH, managed-service credential, or external API key. |
+When something fails, the workflow puts the agent on the matching evidence surface — build logs for build failures, prepare/runtime logs for start failures, verify output and request-time logs for behavior failures, transport surfaces for network failures, field-level rejection for config, and the named credential surface for credential failures. The full categories, what to read first, and what to avoid live in [Troubleshooting](/zcp/reference/troubleshooting).
 
 Retrying the same deploy without new evidence is not progress. The loop pushes toward one of three outcomes: fix from a cause, ask for the missing decision, or report a blocker with the category, evidence read, and attempts made.
 
@@ -39016,14 +39007,7 @@ The final answer should make proof inspectable: runtime name, URL or endpoint, b
 
 ## Delivery happens after proof
 
-Delivery choice controls how future changes ship after a verified runtime exists:
-
-| Choice             | Use when                                                                       |
-| ------------------ | ------------------------------------------------------------------------------ |
-| Keep direct deploy | Early development, demos, dev/stage iteration, or agent-owned runtime changes. |
-| Push to git        | You want commits, review, repository history, or a repo-triggered build.       |
-| External handoff   | CI, release management, or a human owns the next deploy.                       |
-| External handoff   | CI, release management, or a human owns the next deploy.                       |
+Delivery choice controls how future changes ship after a verified runtime exists: keep direct deploy, push to git, or hand off to CI/release/human action. The user-facing version of this choice and what to tell the agent for each option lives in [Build and ship → Choose delivery after proof](/zcp/workflows/build-with-zcp#choose-delivery-after-proof).
 
 Packaging a running service turns a deployed runtime into a re-importable bundle for another Zerops project. It is useful for handoff or reuse after proof, not for deploying the next app change; see [Package a running service](/zcp/workflows/package-running-service).
 
@@ -39055,8 +39039,8 @@ That is the practical difference between "the agent wrote code" and "the app tas
 
 ## Next steps
 
-- [Build and ship](/zcp/workflows/build-with-zcp) - normal app work after setup.
-- [Workflows in depth](/zcp/reference/agent-workflow) - process gates, generated files, runtime layouts, delivery terms, and completion evidence.
+- [Build and ship](/zcp/workflows/build-with-zcp) — normal app work after setup.
+- [Workflows in depth](/zcp/reference/agent-workflow) — process gates, generated files, runtime layouts, delivery labels, and completion evidence.
 
 
 ----------------------------------------
@@ -39072,7 +39056,7 @@ Use these definitions when a page, workflow status, agent handoff, or policy nee
 
 **MCP server** - the Model Context Protocol server exposed by the `zcp` binary.
 
-**ZCP MCP tools** - the bounded Zerops operations exposed to an agent or MCP-capable client. In MCP clients, this usually appears as the `zerops` server.
+**ZCP MCP tools** - the project-scoped Zerops operations exposed to an agent or MCP-capable client. In MCP clients, this usually appears as the `zerops` server.
 
 **`zcp` binary** - the executable that can run inside remote setup or on your machine in local setup.
 
@@ -39122,7 +39106,7 @@ Use these definitions when a page, workflow status, agent handoff, or policy nee
 
 **Runtime target** - the app runtime selected for the current change, such as `appdev`, `appstage`, `app`, or a linked local target.
 
-**Runtime layout** - which app runtime services the workflow should use:
+<span id="runtime-layout"></span>**Runtime layout** - which app runtime services the workflow should use:
 
 - `standard` - dev runtime plus explicit stage runtime.
 - `dev` - one mutable development runtime.
@@ -39158,7 +39142,7 @@ Use these definitions when a page, workflow status, agent handoff, or policy nee
 
 **Package a running service** - workflow that turns one verified runtime and its managed dependencies into a re-importable, git-backed Zerops bundle.
 
-**Production promotion** - handoff from verified dev or stage work into a separate production Zerops project through production infrastructure setup, production deploy trigger setup, and repeatable releases.
+**Production release** - the release operation that moves verified dev or stage work into a separate production Zerops project. It is set up once per project (production infrastructure) and once per runtime (production deploy trigger), then runs every release.
 
 **Production boundary** - policy that production should live in a separate Zerops project without a `zcp` service and receive promoted work through CI, release process, or human action.
 
@@ -39168,7 +39152,7 @@ Use these definitions when a page, workflow status, agent handoff, or policy nee
 
 **Public subdomain access** - Zerops `.zerops.app` URL access for an eligible HTTP runtime. Workers and non-HTTP services do not get useful public URLs.
 
-**Failure category** - label that points to the first useful evidence surface:
+<span id="failure-category"></span>**Failure category** - label that points to the first useful evidence surface:
 
 - `build` - build phase failed.
 - `start` - build passed, but runtime start or prepare failed.
@@ -39200,23 +39184,28 @@ Use these definitions when a page, workflow status, agent handoff, or policy nee
 # Zcp > Overview
 
 
-Zerops provides the project infrastructure: runtimes, managed services, networking, env vars, deploys, logs, and public access. ZCP MCP is the project-scoped tool layer that lets a coding agent work with that infrastructure through MCP.
+:::info Public preview
+ZCP MCP is a public preview and is under active development. If you hit a bug, confusing behavior, or a missing workflow, please report it on [Discord](/discord); feedback from real projects is especially useful.
+:::
 
-For the broader feature concept — why coding agents need project infrastructure rather than a sandbox or generated artifact — start with [Infrastructure for Coding Agents](/features/coding-agents).
+This section covers, in order:
 
-With the generated workflow instructions enabled, an app task should end in proof or a blocker. Proof means a deployed runtime plus the URL, endpoint response, UI state, worker result, or stored data that shows the requested behavior works. A blocker means the agent read the relevant Zerops evidence and names the missing credential, decision, unsupported fit, or repeated failure.
+- **How a run unfolds.** [Quickstart](/zcp/quickstart) for hands-on; [How it works](/zcp/concept/how-it-works) for the work loop.
+- **Where the agent runs.** [Remote or local setup](/zcp/setup/choose-workspace), [Trust model](/zcp/security/trust-model), and [Production boundary](/zcp/security/production-policy).
+- **What you decide while working.** [Build and ship](/zcp/workflows/build-with-zcp), [Package a running service](/zcp/workflows/package-running-service), [Promote to production](/zcp/workflows/promote-to-production).
+- **Exact labels when they matter.** [Workflows in depth](/zcp/reference/agent-workflow), [ZCP MCP tools](/zcp/reference/mcp-operations), [Troubleshooting](/zcp/reference/troubleshooting), [Glossary](/zcp/glossary).
+
+For the broader feature concept — why coding agents need real project infrastructure rather than a sandbox or generated artifact — start with [Infrastructure for Coding Agents](/features/coding-agents).
+
+With the generated workflow instructions enabled, an app task ends in proof or a blocker. **Proof** is a deployed runtime plus the URL, endpoint response, UI state, worker result, or stored data that shows the requested behavior works. A **blocker** is the agent reading the relevant Zerops evidence and naming the missing credential, decision, unsupported fit, or repeated failure.
 
 Your prompt can stay about the product. Name the stack, runtime layout, acceptance criteria, delivery path, external credentials, or risky approval only when those decisions matter.
-
-:::info Public preview
-ZCP MCP is a public preview and is currently under active development. If you hit a bug, confusing behavior, or a missing workflow, please report it on [Discord](/discord); feedback from real projects is especially useful.
-:::
 
 ## What the agent gets
 
 **Current state.** Services, runtime layout, managed dependencies, env-var keys and references, logs, events, deploy history, verification state, and saved work state.
 
-**Zerops operations.** Tools for discovering services, changing env vars, managing runtimes, deploying, verifying, scaling, public access, and delivery setup.
+**Zerops operations.** Project-scoped tools for discovering services, changing env vars, managing runtimes, deploying, verifying, scaling, public access, and delivery setup.
 
 **Workflow.** The generated instructions combine service setup and app development: inspect state, choose the runtime target, use or create services, wire code and `zerops.yaml`, deploy, verify, and choose delivery. The Zerops work stays behind the product task instead of becoming another checklist.
 
@@ -39249,33 +39238,8 @@ To start, add remote setup in Zerops or initialize local setup beside your edito
 **Workspace freedom.** The `zcp@1` service is still a normal Zerops service. You can install another agent CLI, add private MCP servers or helper tools, edit `CLAUDE.md`, add team dotfiles, and adapt the workspace. Details live in [What remote workspace gives you](/zcp/setup/hosted-workspace#make-customization-persistent).
 
 :::caution Production boundary
-Use this setup for development or staging work. Production should stay in a separate Zerops project and receive promoted work through your CI or release process; see [Promote to production](/zcp/workflows/promote-to-production) for the practical flow and [Production boundary](/zcp/security/production-policy) for the policy.
+Use this setup for development or staging work. Production should stay in a separate Zerops project and receive released work through your CI or release process; see [Promote to production](/zcp/workflows/promote-to-production) for the practical flow and [Production boundary](/zcp/security/production-policy) for the policy.
 :::
-
-## Start here
-
-First-read pages:
-
-| If you want to                            | Read                                                     |
-| ----------------------------------------- | -------------------------------------------------------- |
-| Try the guided hands-on path              | [Quickstart](/zcp/quickstart)                            |
-| Understand the agent operating loop       | [How it works](/zcp/concept/how-it-works)                |
-| Compare remote and local setup            | [Remote or local setup](/zcp/setup/choose-workspace)     |
-| Start building after setup                | [Build and ship](/zcp/workflows/build-with-zcp)          |
-| Start building after setup                | [Build and ship](/zcp/workflows/build-with-zcp)          |
-
-Specific tasks and reference:
-
-| If you want to                           | Read                                                                        |
-| ---------------------------------------- | --------------------------------------------------------------------------- |
-| Understand remote workspace              | [What remote workspace gives you](/zcp/setup/hosted-workspace)              |
-| Use your local editor or CLI agent       | [Run locally](/zcp/setup/local-agent-bridge)                                 |
-| Decide how finished work ships           | [Build and ship](/zcp/workflows/build-with-zcp#choose-delivery-after-proof)     |
-| Understand token access and boundaries   | [Trust model](/zcp/security/trust-model)                                    |
-| Understand the feature concept           | [Infrastructure for Coding Agents](/features/coding-agents)                 |
-| Understand workflow-guided runs          | [Workflows in depth](/zcp/reference/agent-workflow)                         |
-| Diagnose a stuck session                 | [Troubleshooting](/zcp/reference/troubleshooting)                           |
-| Diagnose a stuck session                 | [Troubleshooting](/zcp/reference/troubleshooting)                           |
 
 ## What stays outside
 
@@ -39355,9 +39319,9 @@ If the agent cannot finish, useful output names the blocker: missing credential,
 
 ## Next steps
 
+- [Build and ship](/zcp/workflows/build-with-zcp) — Runtime layout, development work, delivery, packaging, and production release.
 - [How it works](/zcp/concept/how-it-works) — Live state, runtime fit, app wiring, deploy evidence, behavior proof, and blockers.
-- [Remote or local setup](/zcp/setup/choose-workspace) — Choose whether the agent workspace runs inside Zerops or beside your local files and tools.
-- [Build and ship](/zcp/workflows/build-with-zcp) — Runtime layout, development work, delivery, packaging, and production promotion.
+- [Trust model](/zcp/security/trust-model) — What the project-scoped token lets the agent do, and where the safety boundary sits.
 
 
 ----------------------------------------
@@ -39365,7 +39329,7 @@ If the agent cannot finish, useful output names the blocker: missing credential,
 # Zcp > Reference > Agent Workflow
 
 
-Use this page when you want to understand the process behind workflow-guided agent work. Normal prompts should still describe outcomes. The workflow exists so the agent can read the project, prepare the right runtime and services, make the app change, deploy, verify, recover from evidence, and stop with proof or a concrete blocker.
+Use this page when you want the process and exact labels behind a run that follows the generated workflow. Normal prompts should still describe outcomes. The workflow exists so the agent can read the project, prepare the right runtime and services, make the app change, deploy, verify, recover from evidence, and stop with proof or a concrete blocker.
 
 The useful mental split is:
 
@@ -39375,7 +39339,7 @@ The useful mental split is:
 | **Develop** | Code, `zerops.yaml`, env wiring, deploy, verification, recovery, and delivery choice. | The requested behavior is proved, or the blocker is concrete. |
 | **Develop** | Code, `zerops.yaml`, env wiring, deploy, verification, recovery, and delivery choice. | The requested behavior is proved, or the blocker is concrete. |
 
-Bootstrap is not a marketing or onboarding step. It is the workflow's name for "make the project layout safe to work in before changing app code."
+For the loop itself, see [How it works](/zcp/concept/how-it-works). This page catalogs the exact phases, routes, layouts, labels, and gates.
 
 ## Session layers
 
@@ -39392,7 +39356,7 @@ The `zcp` service is the control surface, not the app runtime.
 
 ## What drives the workflow
 
-The workflow-guided experience is made from four pieces:
+The generated workflow is made from four pieces:
 
 | Piece | Role |
 | ----- | ---- |
@@ -39444,44 +39408,13 @@ Bootstrap ends when the app runtime target and managed dependencies are known. I
 
 ## Runtime layouts
 
-Runtime layout describes which app runtime services the workflow should use. Zerops service scaling mode, such as `HA` or `NON_HA`, is a separate service setting.
+Runtime layout describes which app runtime services the workflow should use. Exact layout labels (`standard`, `dev`, `simple`, `local-stage`, `local-only`) and the runtime names they map to live in the [Glossary](/zcp/glossary#runtime-layout). The user-facing three (dev, dev + stage, stage / linked target) are in [Build and ship → Choose the runtime layout](/zcp/workflows/build-with-zcp#choose-the-runtime-layout). Service scaling mode (`HA`/`NON_HA`) is a separate service setting.
 
-| Layout | Meaning | Typical names |
-| ------ | ------- | ------------- |
-| `standard` | Separate dev and stage runtime services. Development usually starts on dev; stage is explicit. | `appdev` + `appstage` |
-| `dev` | One mutable development runtime. | `appdev` |
-| `simple` | One runtime with no dev/stage split. | `app` |
-| `local-stage` | Local source directory linked to one Zerops runtime for deploys. | local directory + `appstage` |
-| `local-only` | Local source directory with no linked deploy target yet. | local directory |
-| `local-only` | Local source directory with no linked deploy target yet. | local directory |
-
-In `standard`, stage is explicit. Work scoped to `appdev` does not silently touch `appstage`; promotion or stage verification happens when the user asks for it.
+In `standard`, stage is explicit. Work scoped to `appdev` does not silently touch `appstage`; a release or stage verification happens when the user asks for it.
 
 ## Develop
 
-Develop is the main app-work loop. It begins after bootstrap has a runtime target and dependencies. It closes only when runtime reachability and requested behavior both pass, or when the agent has a blocker that needs a human decision.
-
-```mermaid
-flowchart TD
-  scope["1. Name runtime target"]
-  change["2. Change code/config"]
-  deploy["3. Direct deploy"]
-  serve["4. Start or restart if needed"]
-  reach{"5. Runtime reachable?"}
-  behavior{"6. Requested behavior works?"}
-  done(["Proof"])
-  fix["7. Categorize failure
-read evidence, fix"]
-  blocker(["Blocker"])
-
-  scope --> change --> deploy --> serve --> reach
-  reach -- yes --> behavior
-  reach -- no --> fix
-  behavior -- yes --> done
-  behavior -- no --> fix
-  fix --> deploy
-  fix --> blocker
-```
+Develop is the main app-work loop. It begins after bootstrap has a runtime target and dependencies. It closes only when runtime reachability and requested behavior both pass, or when the agent has a blocker that needs a human decision. The loop itself is in [How it works → The work loop](/zcp/concept/how-it-works#the-work-loop). The labeled steps are:
 
 1. **Name runtime target.** State which runtime is in scope: `appdev`, `appstage`, `app`, or a linked local target.
 2. **Change code and config.** Edit app files, `zerops.yaml`, env references, migrations, seeds, framework config, or local `.env` bridge when needed.
@@ -39495,20 +39428,9 @@ Reachability and requested behavior are separate gates. A green deploy with a br
 
 ## Failure categories
 
-Failure categories point the agent to the first useful evidence surface.
+Failure categories (`build`, `start`, `verify`, `network`, `config`, `credential`, `other`) point the agent to the first useful evidence surface. The full read-first / avoid playbook is in [Troubleshooting → Evidence order](/zcp/reference/troubleshooting#evidence-order); the term definitions are in the [Glossary](/zcp/glossary#failure-category).
 
-| Category | What it means | Read first |
-| -------- | ------------- | ---------- |
-| `build` | Build phase failed. | Build logs, build commands, dependency manifests, deploy file list. |
-| `start` | Build passed, but runtime start or prepare failed. | Prepare/runtime logs, start command, ports, env references. |
-| `verify` | Runtime exists, but reachability or behavior failed. | Failing check detail, HTTP response, request-time runtime logs, behavior evidence. |
-| `network` | Transport, DNS, VPN, SSH, or service-to-service reach failed. | VPN, SSH, DNS, subdomain readiness, service status, named transport error. |
-| `config` | `zerops.yaml`, env vars, setup block, or service settings mismatch. | Field-level rejection, setup name, env reference, service settings. |
-| `credential` | Zerops, git, SSH, managed-service, or external API credential failed. | The named credential surface. |
-| `other` | No known category matched. | Raw event/log evidence; stop if repeated without a new signal. |
-| `other` | No known category matched. | Raw event/log evidence; stop if repeated without a new signal. |
-
-Categorization is what turns retries into evidence-driven fixes. The practical recovery flow lives in [Troubleshooting](/zcp/reference/troubleshooting).
+Categorization is what turns retries into evidence-driven fixes.
 
 ## Delivery after proof
 
@@ -39523,7 +39445,7 @@ Delivery mode applies after a verified deploy. It does not replace the first pro
 
 Git-push capability, delivery mode, and build integration are separate. A project can have git-push configured while still using direct deploy for a given session.
 
-Packaging and production promotion are deliberate handoffs after proof. Packaging turns a verified runtime into a git-backed import bundle. Production promotion moves verified work into a separate production project through GUI setup, git/CI triggers, or the team's release process.
+Packaging and production release are deliberate handoffs after proof. Packaging turns a verified runtime into a git-backed import bundle. A production release moves verified work into a separate production project through GUI setup, git/CI triggers, or the team's release process.
 
 ## Generated files and state
 
@@ -39564,16 +39486,11 @@ A clear blocker is acceptable completion only when it names the runtime in scope
 
 ## Confirmation gates
 
-Some operations pause because the loss is not safely reversible from inside the conversation:
-
-- **Service deletion** requires explicit user approval in the current conversation, by service name.
-- **Destructive import override** first refuses and names what would be replaced; a second call must acknowledge the same targets.
-
-See [Tokens and credentials](/zcp/security/tokens-and-project-access#what-zcp-enforces-for-destructive-actions) for the user-facing confirmation flow.
+Two operations pause because the loss is not safely reversible from inside the conversation: **service deletion** (named approval) and **destructive import override** (refuse-then-acknowledge). See [Tokens and credentials → What ZCP enforces for destructive actions](/zcp/security/tokens-and-project-access#what-zcp-enforces-for-destructive-actions) for the user-facing confirmation flow.
 
 ## Auditing a workflow
 
-A workflow-guided run is well-shaped if the evidence answers:
+A workflow run is well-shaped if the evidence answers:
 
 | Question | Evidence |
 | -------- | -------- |
@@ -39582,14 +39499,14 @@ A workflow-guided run is well-shaped if the evidence answers:
 | Which runtime was developed and deployed? | Runtime target, deploy result, events, and logs. |
 | What proved reachability? | Verify output, service status, public URL, or HTTP probe. |
 | What proved behavior? | Endpoint, UI flow, job result, database/object state, or other requested proof. |
-| What controls future delivery? | Delivery mode, git-push state, build integration, package bundle, or production handoff note. |
-| What controls future delivery? | Delivery mode, git-push state, build integration, package bundle, or production handoff note. |
+| What controls future delivery? | Delivery mode, git-push state, build integration, package bundle, or production release handoff note. |
+| What controls future delivery? | Delivery mode, git-push state, build integration, package bundle, or production release handoff note. |
 
 ## Related reference
 
-- [ZCP MCP tools](/zcp/reference/mcp-operations) - operation names and direct tool calls.
-- [Troubleshooting](/zcp/reference/troubleshooting) - recovery order when a run gets stuck.
-- [Glossary](/zcp/glossary) - exact terms used across the ZCP MCP reference.
+- [ZCP MCP tools](/zcp/reference/mcp-operations) — operation names and direct tool calls.
+- [Troubleshooting](/zcp/reference/troubleshooting) — recovery order when a run gets stuck.
+- [Glossary](/zcp/glossary) — exact terms used across the ZCP MCP reference.
 
 
 ----------------------------------------
@@ -39597,15 +39514,48 @@ A workflow-guided run is well-shaped if the evidence answers:
 # Zcp > Reference > Index
 
 
-Use reference pages when exact labels matter. Day-to-day app work starts in [Build and ship](/zcp/workflows/build-with-zcp).
+Reference pages exist for the moments when an exact label, tool name, or recovery step matters. For day-to-day app work, start in [Build and ship](/zcp/workflows/build-with-zcp); for the loop itself, [How it works](/zcp/concept/how-it-works).
 
-| Need | Page |
-|---|---|
-| Understand what sits behind workflow-guided agent runs: generated instructions, state, process gates, and completion evidence | [Workflows in depth](/zcp/reference/agent-workflow) |
-| Use ZCP MCP tools directly or look up operation names for a custom MCP integration | [ZCP MCP tools](/zcp/reference/mcp-operations) |
-| Recover a stuck or confused session | [Troubleshooting](/zcp/reference/troubleshooting) |
-| Disambiguate ZCP, remote setup, local setup, `zcp`, zCLI, and credential names | [Glossary](/zcp/glossary) |
-| Disambiguate ZCP, remote setup, local setup, `zcp`, zCLI, and credential names | [Glossary](/zcp/glossary) |
+- [Workflows in depth](/zcp/reference/agent-workflow) — Catalog of phases, routes, layouts, and labels behind a generated-workflow run.
+- [ZCP MCP tools](/zcp/reference/mcp-operations) — Exact tool names and surface for custom MCP clients or agent policy.
+- [Troubleshooting](/zcp/reference/troubleshooting) — When the agent is stuck, a session was interrupted, deploys keep failing, or you are taking over manually.
+- [Glossary](/zcp/glossary) — Definitions for terms across pages and workflow status (`appdev`, `local-stage`, `delivery mode`, etc.).
+
+## Common scenarios
+
+<div className="zcp-claim-grid">
+
+<div className="zcp-claim-card">
+
+<span>SCENARIO</span>
+
+### Debugging a stuck deploy
+
+[Troubleshooting → Evidence order](/zcp/reference/troubleshooting#evidence-order) names what to read first; [Workflows in depth → Failure categories](/zcp/reference/agent-workflow#failure-categories) maps the labels.
+
+</div>
+
+<div className="zcp-claim-card">
+
+<span>SCENARIO</span>
+
+### Building a custom MCP client
+
+[ZCP MCP tools](/zcp/reference/mcp-operations) for the tool surface; [Workflows in depth → What drives the workflow](/zcp/reference/agent-workflow#what-drives-the-workflow) for what the generated workflow adds on top of bare tools.
+
+</div>
+
+<div className="zcp-claim-card">
+
+<span>SCENARIO</span>
+
+### Auditing a finished run
+
+[Workflows in depth → Completion evidence](/zcp/reference/agent-workflow#completion-evidence) for what should be in the final answer; [Trust model → Audit evidence](/zcp/security/trust-model#audit-evidence) for what Zerops records platform-side.
+
+</div>
+
+</div>
 
 
 ----------------------------------------
@@ -39621,7 +39571,7 @@ ZCP MCP is the MCP server exposed by the `zcp` binary. Any MCP-capable client ca
 
 The MCP server exposes operations. It does not, by itself, decide the whole app lifecycle.
 
-Workflow-guided Claude Code uses generated instructions to decide sequencing: inspect state before changing things, choose the runtime target, use existing services or create missing ones, deploy, read failure evidence, verify requested behavior, and stop with proof or a blocker.
+Claude Code with the generated workflow uses its instructions to decide sequencing: inspect state before changing things, choose the runtime target, use existing services or create missing ones, deploy, read failure evidence, verify requested behavior, and stop with proof or a blocker.
 
 Tool-only use is valid when you want a custom MCP client, script, dashboard, policy-gated agent, or narrow operational task. In that setup, your integration owns the sequencing:
 
@@ -39713,7 +39663,7 @@ See [Tokens and credentials](/zcp/security/tokens-and-project-access#what-zcp-en
 
 ## Related reference
 
-- [Workflows in depth](/zcp/reference/agent-workflow) - how workflow-guided runs use these tools.
+- [Workflows in depth](/zcp/reference/agent-workflow) - how a generated-workflow run uses these tools.
 - [Troubleshooting](/zcp/reference/troubleshooting) - evidence order when a run gets stuck.
 - [Tokens and credentials](/zcp/security/tokens-and-project-access) - token scope, storage, and confirmation gates.
 
@@ -39826,7 +39776,7 @@ Use the MCP setup in development or staging. Keep production in a separate Zerop
 
 Zerops does not prevent you from adding `zcp` to production. The policy exists because ZCP MCP gives a coding agent operational access. In production, that is the wrong blast radius for normal app development.
 
-The production boundary does not make ZCP output disposable. The intended path is production-shaped dev or stage infrastructure, verified behavior, and then a controlled production promotion outside the agent loop.
+The production boundary does not make ZCP output disposable. The intended path is production-shaped dev or stage infrastructure, verified behavior, and then a controlled production release outside the agent loop.
 
 ## Recommended project layout
 
@@ -39849,7 +39799,7 @@ This separation matters even when the same source repository deploys to both pro
 
 ## What stage proves
 
-Stage is the production-like rehearsal inside development or staging. It is where the agent proves the change before promotion leaves the ZCP loop.
+Stage is the production-like rehearsal inside development or staging. It is where the agent proves the change before the release leaves the ZCP loop.
 
 Use stage to match production where it matters:
 
@@ -39861,9 +39811,9 @@ Use stage to match production where it matters:
 
 Stage is not production. It should use non-production data and non-production secrets. A green stage means the change is ready for release, not that the agent should deploy to production itself.
 
-## Promotion
+## The release
 
-After stage verifies, ZCP's job is done for that change. Promotion happens outside the agent loop:
+After stage verifies, ZCP's job is done for that change. The production release happens outside the agent loop:
 
 - CI deploys a merged commit or release tag to the production project.
 - A release pipeline runs `zcli push` with a production-scoped `ZEROPS_TOKEN`.
@@ -39898,7 +39848,7 @@ If a production deploy fails, investigate in the production project with product
 
 ## Acceptable agent involvement
 
-The agent can still help before production promotion:
+The agent can still help before the production release:
 
 - make the code change in development,
 - deploy and verify dev/stage runtimes,
@@ -39910,7 +39860,7 @@ ZCP's involvement stops at the handoff. Production execution belongs to the rele
 
 ## Related security
 
-- [Promote to production](/zcp/workflows/promote-to-production) - practical production promotion paths after ZCP proof.
+- [Promote to production](/zcp/workflows/promote-to-production) - practical production release paths after ZCP proof.
 - [Trust model](/zcp/security/trust-model) - the boundary that makes this policy enforceable.
 - [Tokens and credentials](/zcp/security/tokens-and-project-access) - production and development credentials stay separate.
 
@@ -40134,9 +40084,7 @@ There are three separate credential surfaces people often mix together:
 | Git or CI credentials               | You / your repository system | Lets finished work push to git or deploy through CI.   |
 | Git or CI credentials               | You / your repository system | Lets finished work push to git or deploy through CI.   |
 
-Remote setup injects `ZCP_API_KEY` into the `zcp` service. Local setup reads it from the `.mcp.json` env block. In both paths, the agent account is still authenticated through the agent's own login flow.
-
-Details: [Tokens and credentials](/zcp/security/tokens-and-project-access).
+In both setups, the agent account is still authenticated through the agent's own login flow. For where each credential lives (remote injection vs `.mcp.json`), rotation, rejected token shapes, and `GIT_TOKEN` / `ZEROPS_TOKEN`, see [Tokens and credentials](/zcp/security/tokens-and-project-access).
 
 ## What the token lets the agent do
 
@@ -40171,15 +40119,7 @@ This is why development and staging projects are the right place for ZCP. Produc
 
 Most project operations do not get an extra ZCP-specific confirmation prompt. Deploys, env changes, restarts, scaling, and public-access changes are normal project operations and are audited through platform evidence.
 
-ZCP MCP adds hard gates where the loss is not safely reversible from the conversation:
-
-| Operation                                                 | Gate                                                                                                                                       |
-| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| Service deletion                                          | Requires explicit same-conversation approval that names the service. Remote setup also blocks deleting the `zcp` service it is running in. |
-| Wholesale service replacement after failed deploy history | Requires the agent to read failure evidence first, summarize what would be replaced, and ask for explicit confirmation.                    |
-| Wholesale service replacement after failed deploy history | Requires the agent to read failure evidence first, summarize what would be replaced, and ask for explicit confirmation.                    |
-
-Approval from an old chat does not carry forward. A new conversation needs a new approval.
+ZCP MCP adds hard gates where the loss is not safely reversible from the conversation: **service deletion** (explicit same-conversation approval by service name; remote setup also blocks deleting the `zcp` service it is running in) and **wholesale service replacement after failed deploy history** (refuse-then-acknowledge with failure evidence first). Approval from an old chat does not carry forward. The full enforcement rules are in [Tokens and credentials → What ZCP enforces for destructive actions](/zcp/security/tokens-and-project-access#what-zcp-enforces-for-destructive-actions).
 
 ## Audit evidence
 
@@ -40304,7 +40244,7 @@ Taking over is straightforward in this setup. You open the same workspace, termi
 
 ## What it includes
 
-- **`zcp@1` workspace service.** Runs ZCP inside Zerops and gives the agent bounded operations.
+- **`zcp@1` workspace service.** Runs ZCP inside Zerops and gives the agent project-scoped operations.
 - **Platform-injected `ZCP_API_KEY`.** Zerops injects the token into the workspace; you normally do not set it by hand.
 - **Bundled Claude Code when enabled.** The **Include Coding Agent** option installs and preconfigures Claude Code. You authenticate with your own Claude subscription login or API key.
 - **Browser VS Code when enabled.** The **Cloud IDE** option gives you a browser editor, terminal, and a place to supervise or take over the agent session.
@@ -40384,8 +40324,8 @@ Tools installed inside the `zcp` service may see workspace environment variables
 | `ZCP_API_KEY`        | Injected by Zerops into the `zcp` workspace.                                                                                |
 | Agent account        | Your Claude subscription login or model API credential. Zerops wires the agent to ZCP, but the agent account remains yours. |
 | Git credentials      | Configured inside the workspace when the agent should commit or push from remote setup.                                     |
-| Production promotion | A separate production project and release process.                                                                          |
-| Production promotion | A separate production project and release process.                                                                          |
+| Production release   | A separate production project and release process.                                                                          |
+| Production release   | A separate production project and release process.                                                                          |
 
 ## Runtime file access
 
@@ -40556,7 +40496,7 @@ Keep `.env` out of git. It contains real connection values.
 
 ## 8. Link a deploy target
 
-Local setup needs a Zerops runtime when the agent should deploy from your working directory. A stage runtime is the usual target because it lets local work prove itself before production promotion.
+Local setup needs a Zerops runtime when the agent should deploy from your working directory. A stage runtime is the usual target because it lets local work prove itself before the production release.
 
 If there is exactly one runtime, the agent can use it automatically. If multiple runtimes exist, it should ask which one to link:
 
@@ -40590,18 +40530,6 @@ The MCP server does not own your git credentials. In local setup, your local git
 
 ----------------------------------------
 
-# Zcp > Workflows > Build And Verify App
-
-
-This page moved to [Build and ship](/zcp/workflows/build-with-zcp).
-
-- Use [Development](/zcp/workflows/build-with-zcp#develop-with-live-project-context) for app work, deploy, and verification.
-- Use [How it works -> Verification has two layers](/zcp/concept/how-it-works#verification-has-two-layers) for the deeper verification model.
-- Use [Troubleshooting](/zcp/reference/troubleshooting) for symptoms and recovery moves.
-
-
-----------------------------------------
-
 # Zcp > Workflows > Build With Zcp
 
 
@@ -40612,7 +40540,7 @@ Build a task board.
 Tasks should stay saved after refresh.
 ```
 
-A prompt can be that short when the outcome is enough. Add detail when it changes behavior, architecture, stack, runtime layout, acceptance criteria, credentials, delivery, packaging, or production promotion.
+A prompt can be that short when the outcome is enough. Add detail when it changes behavior, architecture, stack, runtime layout, acceptance criteria, credentials, delivery, packaging, or the production release.
 
 The expected output is a verified running change, not only generated files. The agent should prove the request against a real runtime, real managed services when used, and the logs, events, and checks that explain what happened.
 
@@ -40644,7 +40572,7 @@ The expected output is a verified running change, not only generated files. The 
       <ul>
         <li>Direct deploy, git, or CI</li>
         <li>Optional package bundle</li>
-        <li>Production promotion</li>
+        <li>Production release</li>
       </ul>
     </section>
   </div>
@@ -40661,7 +40589,7 @@ The main user-facing choice is runtime layout. Let the agent infer it from the p
 | Runtime layout            | Use when                                                                                  | What to tell the agent                                  |
 | ------------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------- |
 | **Dev**                   | You want one mutable runtime for fast iteration, experiments, or early app work.          | `Build a small Node.js API on dev.`                     |
-| **Dev + stage**           | You want a development runtime plus a separate runtime for review or promotion rehearsal. | `Build a Node.js API with PostgreSQL on dev+stage.`     |
+| **Dev + stage**           | You want a development runtime plus a separate runtime for review or release rehearsal.  | `Build a Node.js API with PostgreSQL on dev+stage.`     |
 | **Stage / linked target** | You work from local files or a single target runtime and want the workflow to use that target. | `Use appstage as the deploy target for this local app.` |
 | **Stage / linked target** | You work from local files or a single target runtime and want the workflow to use that target. | `Use appstage as the deploy target for this local app.` |
 
@@ -40715,9 +40643,9 @@ The agent may still ask which runtime to package, which half of a dev+stage pair
 
 Packaging is not the next deploy of the same app. For the next app change, keep using the normal build/deploy/verify loop. Use packaging when the output you want is a git-backed import bundle; see [Package a running service](/zcp/workflows/package-running-service).
 
-## 5. Prepare production promotion {#prepare-production-promotion}
+## 5. Prepare the production release {#prepare-production-release}
 
-Production promotion is where authority changes. The agent prepares verified work and release evidence; production execution belongs to Zerops project settings, CI, release tooling, or a deliberate human action with production credentials.
+The production release is where authority changes. The agent prepares verified work and release evidence; production execution belongs to Zerops project settings, CI, release tooling, or a deliberate human action with production credentials.
 
 The useful split is:
 
@@ -40738,31 +40666,9 @@ For a completed app task, the agent should report:
 - the deploy or verification target,
 - the URL, endpoint, UI state, job result, or stored data that proves the requested behavior,
 - managed services, env vars, or delivery settings it touched,
-- the delivery preference, packaging output, or production promotion state that now applies.
+- the delivery preference, packaging output, or production release state that now applies.
 
 If the task is incomplete, the final answer should name the blocker, the evidence read, what was tried, and the decision or credential needed from you.
-
-
-----------------------------------------
-
-# Zcp > Workflows > Create Or Adopt Services
-
-
-This page moved to [Build and ship](/zcp/workflows/build-with-zcp).
-
-- Use [Runtime layout](/zcp/workflows/build-with-zcp#choose-the-runtime-layout) for existing services, missing services, and the handoff from setup into app work.
-- Use [Workflows in depth](/zcp/reference/agent-workflow) for workflow process details and exact labels.
-
-
-----------------------------------------
-
-# Zcp > Workflows > Delivery Handoff
-
-
-This page moved to [Build and ship](/zcp/workflows/build-with-zcp).
-
-- Use [Delivery after proof](/zcp/workflows/build-with-zcp#choose-delivery-after-proof) for the user-facing choices: keep direct deploy, push verified work to git, or hand off to CI/release tooling.
-- Use [Workflows in depth](/zcp/reference/agent-workflow#delivery-after-proof) for delivery labels and workflow context.
 
 
 ----------------------------------------
@@ -40795,7 +40701,7 @@ Package a runtime when you need:
 Do not use packaging for:
 
 - the next app deploy; use the normal build, deploy, and verify loop,
-- production promotion; production needs its own infrastructure, credentials, domains, and release trigger,
+- the production release; production needs its own infrastructure, credentials, domains, and release trigger,
 - moving managed-service data; backups and restores are separate.
 
 For production setup, follow [Promote to production](/zcp/workflows/promote-to-production). Packaging can help create a reusable app bundle, but it does not decide production infrastructure or release policy.
@@ -40855,7 +40761,7 @@ Before opening the new project to users:
 # Zcp > Workflows > Promote To Production
 
 
-Use this after the agent has proved work in development or stage. Production promotion is the point where authority changes: the agent can prepare proof, source changes, and setup notes, but production execution belongs to Zerops project settings, CI, release tooling, or a deliberate human action with production credentials.
+Use this after the agent has proved work in development or stage. The production release is the point where authority changes: the agent can prepare proof, source changes, and setup notes, but production execution belongs to Zerops project settings, CI, release tooling, or a deliberate human action with production credentials.
 
 Production should be a separate Zerops project without a `zcp` service. That keeps the development agent out of the production blast radius while still letting verified work reach production.
 
