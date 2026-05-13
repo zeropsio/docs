@@ -1220,14 +1220,34 @@ html[data-theme='dark'] .zcp-feature-card p { color: #cbd5e1; }
 
 /* AsciiGraph — blended with page, no code-block chrome */
 
+/* Pinned webfont so box-drawing characters (│ ─ ▼ └ ┘) line up at exactly
+   1ch on every platform. The system-monospace fallbacks (SF Mono, Consolas,
+   Roboto Mono) substitute a different font for those glyphs and the diagrams
+   drift, badly on Android. */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/JetBrainsMono-Regular.woff2') format('woff2');
+}
+
+:root {
+  --ascii-graph-font: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', 'Courier New', monospace;
+}
+
 .ascii-graph {
   background: transparent;
   border: none;
   color: #475569;
   display: block;
-  font-family: var(--ifm-font-family-monospace);
+  font-family: var(--ascii-graph-font);
   font-size: 0.88rem;
   line-height: 1.4;
+  /* Disable contextual alternates / ligatures so adjacent glyphs never
+     collapse or shift. */
+  font-variant-ligatures: none;
+  font-feature-settings: 'liga' 0, 'calt' 0;
   margin: 2.5rem auto 3rem;
   max-width: 100%;
   overflow-x: auto;
@@ -1320,9 +1340,11 @@ html[data-theme='dark'] .ascii-graph__highlight {
   overflow-x: auto;
   /* Lock font + line-height to .ascii-graph values so that 1ch / 1lh on
      absolutely-positioned children align with the pre's character grid. */
-  font-family: var(--ifm-font-family-monospace);
+  font-family: var(--ascii-graph-font);
   font-size: 0.88rem;
   line-height: 1.4;
+  font-variant-ligatures: none;
+  font-feature-settings: 'liga' 0, 'calt' 0;
 }
 
 .intro-ascii__frame {
