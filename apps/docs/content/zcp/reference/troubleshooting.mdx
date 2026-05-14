@@ -1,0 +1,94 @@
+---
+title: 'Troubleshooting'
+description: 'A recovery playbook for stuck ZCP MCP sessions: status first, evidence order, local setup checks, and stop conditions.'
+---
+
+Use troubleshooting when the agent is confused, a session was interrupted, deploy keeps failing, verification does not match the final answer, or you are taking over manually.
+
+Start from current state, not chat memory:
+
+```text
+Read current project status and tell me where things stand before changing anything.
+```
+
+That should make the agent read live services, saved workflow state, recent deploys, logs, events, and verification output before it edits anything else.
+
+## Find where the run is stuck
+
+| Stuck point | Ask for | What you should get |
+| ----------- | ------- | ------------------- |
+| Agent lost context | Current project status and services in scope. | Runtime target, managed services, last deploy, last verify result, and any saved workflow state. |
+| Service setup is unclear | Runtime target and dependency plan. | Which existing services will be used, which missing services are needed, and what needs human approval. |
+| Deploy failed | Failure category plus build logs, runtime logs, and recent service events. | A cause or next diagnostic step, not another blind deploy. |
+| Runtime is reachable but app behavior fails | The failing behavior check and request-time runtime logs. | Endpoint/UI/job/data evidence tied to the product request. |
+| Local app cannot reach services | VPN state, generated `.env`, and selected runtime/setup. | Whether MCP auth works separately from private service access. |
+| Delivery is ambiguous | Delivery mode, git-push state, build integration, or handoff note. | What will happen after proof: direct deploy, git push, CI, package, or production handoff. |
+
+Useful prompt:
+
+```text
+Show me the runtime in scope, failure category, evidence read, fixes tried, and the next decision needed.
+```
+
+## Evidence order
+
+The useful evidence depends on the failure category surfaced by deploy or verify tools.
+
+| Category | Read first | Avoid |
+| -------- | ---------- | ----- |
+| `build` | Build logs, build commands, dependency manifests, deploy file list. | Runtime logs; the runtime did not start yet. |
+| `start` | Prepare/runtime logs, start command, ports, env references. | Rebuilding without checking why the process exited. |
+| `verify` | Failing check detail, HTTP response, request-time runtime logs, stored state. | Calling a green deploy "done" before behavior passes. |
+| `network` | VPN, SSH, DNS, subdomain readiness, service status, transport error. | Editing app code before proving connectivity. |
+| `config` | Field-level rejection, `zerops.yaml`, setup name, env references, service settings. | Guessing from service names or dashboard memory. |
+| `credential` | The named credential surface: `ZCP_API_KEY`, git, SSH, managed-service, CI, or external API. | Rotating unrelated secrets. |
+| `other` | Raw events/logs and the exact phase that failed. | Repeating the same attempt after the same unknown reason. |
+
+Failure categories come from the deploy/verify evidence surface. They are not a verdict; they tell the agent where the next useful signal is.
+
+## Local setup checks
+
+Local setup has two separate connections:
+
+- MCP uses `ZCP_API_KEY` to talk to the Zerops API.
+- Your local app and shell use `zcli vpn up` to reach private service hostnames such as `db` or `cache`.
+
+That means MCP can work while the app cannot reach the database.
+
+| Symptom | Check |
+| ------- | ----- |
+| Agent does not list the `zerops` MCP server. | Relaunch the agent from the directory containing `.mcp.json`. |
+| MCP startup says the token reaches multiple projects. | Replace `ZCP_API_KEY` with a single-project token. |
+| Re-running `zcp init` made MCP disappear. | Re-add the `ZCP_API_KEY` env block to `.mcp.json` and restart the agent. |
+| Local app cannot reach `db`, `cache`, or storage hostnames. | Run `zcli vpn up <project-id>` again. |
+| Local app reads stale credentials. | Regenerate `.env`; it is a snapshot, not a live sync. |
+| `zcp` is not found after install. | Add `~/.local/bin` or the install target to `PATH`, then restart the shell/agent. |
+
+For local setup details, use [Run locally](/zcp/setup/local-agent-bridge).
+
+## Manual takeover
+
+If you take over from the agent, read evidence in this order:
+
+1. Service list and runtime target.
+2. Service-scoped events for the runtime in question.
+3. Build logs for build failures, runtime logs for start or request failures.
+4. Verify output for reachability and requested behavior.
+5. Git history only when delivery uses git-push or CI.
+
+Do not inspect every service first. Start with the runtime in scope and expand only when the evidence points to a dependency.
+
+## When to stop
+
+Stop the loop when:
+
+- the same failure repeats without new evidence,
+- the agent needs an external credential,
+- the target runtime or stage choice is ambiguous,
+- a destructive action would delete or replace a service,
+- production release authority is needed,
+- the request no longer fits the current project layout.
+
+A blocker is acceptable only when it names the runtime in scope, failure category, evidence read, fixes attempted, and the human decision or credential still needed.
+
+Before destructive recovery, read service-scoped events, logs, deploy/verify result, and git history when delivery uses git-push. Token scope and destructive confirmations are covered in [Tokens and credentials](/zcp/security/tokens-and-project-access).

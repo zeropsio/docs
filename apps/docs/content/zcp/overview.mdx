@@ -1,0 +1,152 @@
+---
+title: 'ZCP MCP for Zerops projects'
+description: 'How the ZCP MCP server lets a coding agent work with one real Zerops project.'
+---
+
+import Image from '/src/components/Image';
+
+:::info Public preview
+ZCP MCP is a public preview and is under active development. If you hit a bug, confusing behavior, or a missing workflow, please report it on <a href="/discord" target="_blank" rel="noopener noreferrer">Discord</a>; feedback from real projects is especially useful.
+:::
+
+This section covers, in order:
+
+<div className="zcp-claim-grid">
+
+<div className="zcp-claim-card">
+
+<span>GET STARTED</span>
+
+<h3>Quickstart and concept</h3>
+
+[Quickstart](/zcp/quickstart) for hands-on; [How it works](/zcp/concept/how-it-works) for the work loop.
+
+</div>
+
+<div className="zcp-claim-card">
+
+<span>SETUP</span>
+
+<h3>Remote or local workspace</h3>
+
+[Remote or local setup](/zcp/setup/choose-workspace), [Trust model](/zcp/security/trust-model), and [Production boundary](/zcp/security/production-policy).
+
+</div>
+
+<div className="zcp-claim-card">
+
+<span>WORKFLOWS</span>
+
+<h3>Build, package, promote</h3>
+
+[Build and ship](/zcp/workflows/build-with-zcp), [Package a running service](/zcp/workflows/package-running-service), [Promote to production](/zcp/workflows/promote-to-production).
+
+</div>
+
+<div className="zcp-claim-card">
+
+<span>REFERENCE</span>
+
+<h3>Troubleshooting and lookup</h3>
+
+[Workflows in depth](/zcp/reference/agent-workflow), [ZCP MCP tools](/zcp/reference/mcp-operations), [Troubleshooting](/zcp/reference/troubleshooting), [Glossary](/zcp/glossary).
+
+</div>
+
+</div>
+
+For the broader feature concept — why coding agents need real project infrastructure rather than a sandbox or generated artifact — start with [Infrastructure for Coding Agents](/features/coding-agents).
+
+With the generated workflow instructions enabled, an app task ends in proof or a blocker. **Proof** is a deployed runtime plus the URL, endpoint response, UI state, worker result, or stored data that shows the requested behavior works. A **blocker** is the agent reading the relevant Zerops evidence and naming the missing credential, decision, unsupported fit, or repeated failure.
+
+Your prompt can stay about the product. Name the stack, runtime layout, acceptance criteria, delivery path, external credentials, or risky approval only when those decisions matter.
+
+## What the agent gets
+
+<div className="zcp-claim-grid">
+
+<div className="zcp-claim-card">
+
+<span>STATE</span>
+
+### Current state
+
+Services, runtime layout, managed dependencies, env-var keys and references, logs, events, deploy history, verification state, and saved work state.
+
+</div>
+
+<div className="zcp-claim-card">
+
+<span>CONTROLS</span>
+
+### Zerops operations
+
+Project-scoped tools for discovering services, changing env vars, managing runtimes, deploying, verifying, scaling, public access, and delivery setup.
+
+</div>
+
+<div className="zcp-claim-card">
+
+<span>INSTRUCTIONS</span>
+
+### Workflow
+
+The generated instructions combine service setup and app development: inspect state, choose the runtime target, use or create services, wire code and `zerops.yaml`, deploy, verify, and choose delivery. The Zerops work stays behind the product task instead of becoming another checklist.
+
+</div>
+
+<div className="zcp-claim-card">
+
+<span>EVIDENCE</span>
+
+### Evidence-based completion
+
+A build or deploy is not the finish line. A completed app task should end with a working URL, endpoint result, UI proof, or a blocker backed by logs, events, and verification evidence.
+
+</div>
+
+</div>
+
+## What you no longer have to script
+
+Without this layer, an app prompt often turns into an operations runbook. With MCP tools and workflow instructions enabled, you should not need to paste:
+
+- the service map, runtime target, dev/stage state, or managed-service inventory,
+- database credentials, private hostnames, env-var references, or generated connection strings,
+- build logs, runtime logs, event timelines, or a guess about why the last deploy failed,
+- a deploy/verify/recovery script for every task,
+- a recap after the chat loses context; the agent can read current workflow status.
+
+**You still own the decisions that need human judgment:** product intent, technology constraints, acceptance criteria, external credentials, repository policy, and approval for destructive actions.
+
+## Where it runs
+
+The **same `zcp` binary** runs in both setups. In [remote setup](/zcp/setup/hosted-workspace), Zerops packages it as a `zcp@1` service with Browser VS Code and bundled agent wiring. In [local setup](/zcp/setup/local-agent-bridge), you install it on your machine and connect your own editor or CLI agent. The project surface is the same; the workspace, network access, deploy source, and safety profile differ.
+
+To start, add remote setup in Zerops or initialize local setup beside your editor or CLI agent. The [Quickstart](/zcp/quickstart) uses remote setup because it needs no local install.
+
+<figure style={{ textAlign: 'center', margin: '1.5rem 0' }}>
+  <Image
+    lightImage="/img/zcp/remote-setup-claude-code.jpg"
+    darkImage="/img/zcp/remote-setup-claude-code.jpg"
+    alt="Remote setup with the zcp service in Zerops and Claude Code running in browser VS Code"
+    style={{ width: '95%', height: 'auto' }}
+    caption="Remote setup keeps the zcp service, browser workspace, and bundled agent inside Zerops."
+  />
+</figure>
+
+## Your agent, credentials, and workspace
+
+**Agent account.** Remote setup can include a bundled agent CLI, currently Claude Code, already configured for MCP. Zerops wires the agent to the tools; you still authenticate with your own subscription login or API credentials.
+
+**Zerops token.** The MCP server connects through `ZCP_API_KEY`, a Zerops token limited to one project. Remote setup gets it from the platform; local setup reads it from `.mcp.json`. Token details live in [Tokens and credentials](/zcp/security/tokens-and-project-access).
+
+**Workspace freedom.** The `zcp@1` service is still a normal Zerops service. You can install another agent CLI, add private MCP servers or helper tools, edit `CLAUDE.md`, add team dotfiles, and adapt the workspace. Details live in [What remote workspace gives you](/zcp/setup/hosted-workspace#make-customization-persistent).
+
+:::caution Production boundary
+Use this setup for development or staging work. Production should stay in a separate Zerops project and receive released work through your CI or release process; see [Promote to production](/zcp/workflows/promote-to-production) for the practical flow and [Production boundary](/zcp/security/production-policy) for the policy.
+:::
+
+## What stays outside
+
+This section is not a replacement for Zerops platform references. The Zerops [build and deploy pipeline](/features/pipeline), [permissions](/features/rbac), networking, scaling, and service references remain canonical for platform behavior.

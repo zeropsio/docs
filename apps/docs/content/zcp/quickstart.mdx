@@ -1,0 +1,126 @@
+---
+title: 'Quickstart'
+description: 'Try ZCP with a ready-made AI Agent recipe, Browser VS Code, Claude Code, and one product change.'
+---
+
+import Image from '/src/components/Image';
+import Icons from '@theme/Icon';
+
+Use this when you want the fastest hands-on ZCP loop: deploy an **AI Agent** recipe, authorize Claude Code, open Browser VS Code, and ask for one product change.
+
+Some [Zerops recipes](https://app.zerops.io/recipes) include an **AI Agent** environment. That preset creates app services, managed services, the `zcp@1` workspace, Browser VS Code, and bundled agent wiring in one deploy.
+
+This quickstart uses [Laravel showcase](https://app.zerops.io/recipes/laravel-showcase?environment=ai-agent) because it includes real managed services. The same flow works for other recipes that offer AI Agent (local variants exist too).
+
+## Prerequisites
+
+- A Zerops account with permission to create a project.
+- A Claude Code subscription login or API authentication. Zerops wires Claude Code to ZCP, but your agent subscription or model credentials stay yours.
+
+## 1. Choose the AI Agent recipe
+
+1. Open the [Zerops recipes catalog](https://app.zerops.io/recipes).
+2. Open a recipe with an **AI Agent** environment. For example, open [Laravel showcase](https://app.zerops.io/recipes/laravel-showcase?environment=ai-agent).
+3. Select **AI Agent**.
+4. Keep **Coding Agent** and **Cloud IDE** enabled.
+5. Deploy the recipe.
+
+<figure style={{ textAlign: 'center', margin: '1.5rem 0' }}>
+  <Image
+    lightImage="/img/zcp/quickstart-laravel-ai-agent-recipe.png"
+    darkImage="/img/zcp/quickstart-laravel-ai-agent-recipe.png"
+    alt="Laravel showcase recipe with the AI Agent environment selected and ZCP configuration enabled"
+    style={{ width: '95%', height: 'auto' }}
+    caption="The AI Agent environment adds app services plus remote setup with Coding Agent and Cloud IDE enabled."
+  />
+</figure>
+
+The deploy creates app runtimes, managed dependencies, and a `zcp@1` workspace. In this recipe it appears as the `zcp` service. The agent, terminal, and browser IDE run there. App code still deploys to the app runtimes, not to `zcp`.
+
+## 2. Authorize Claude Code
+
+When provisioning finishes, the dashboard opens the Claude Code authentication flow. Use your own Claude Code subscription login or API credentials.
+
+This is separate from `ZCP_API_KEY`, the Zerops token used by ZCP. Your Claude login or API key is used only by the bundled agent.
+
+If you close the prompt, open the `zcp` service in the dashboard. Its panel shows the browser workspace, web terminal, SSH access, desktop editor access, and agent authorization state.
+
+<figure style={{ textAlign: 'center', margin: '1.5rem 0' }}>
+  <Image
+    lightImage="/img/zcp/quickstart-zcp-service-ready.png"
+    darkImage="/img/zcp/quickstart-zcp-service-ready.png"
+    alt="Claude Code authorization dialog shown over the ZCP service control plane and Browser VS Code terminal"
+    style={{ width: '100%', height: 'auto' }}
+    caption="Claude Code opens an authorization flow inside the workspace. Use your own Claude login or API credentials; ZCP credentials are handled separately."
+  />
+</figure>
+
+## 3. Open the workspace
+
+After authentication, continue into **Browser VS Code**. The workspace opens with files, ZCP configuration, terminal access, and the Claude Code panel.
+
+<figure style={{ textAlign: 'center', margin: '1.5rem 0' }}>
+  <Image
+    lightImage="/img/zcp/quickstart-cloud-ide-claude-code.jpg"
+    darkImage="/img/zcp/quickstart-cloud-ide-claude-code.jpg"
+    alt="Browser VS Code workspace with the Claude Code panel open"
+    style={{ width: '95%', height: 'auto' }}
+    caption="Remote setup keeps the browser IDE and bundled agent inside Zerops."
+  />
+</figure>
+
+You are now inside the remote workspace. The agent can read live state, use the MCP tools, reach private services, and deploy app changes to the runtimes created by the recipe.
+
+## 4. Ask for a product outcome
+
+In Claude Code, ask for the app behavior in natural language. A good first prompt is intentionally short:
+
+```text
+Build a task board for my team.
+Tasks should stay saved after refresh.
+```
+
+The agent should deploy, verify, read evidence, and return proof for the app task. Add detail only when it changes the work.
+
+Add details when they change the product, stack, runtime layout, acceptance criteria, or delivery preference:
+
+```text
+In this Laravel app, add a task board backed by the existing PostgreSQL service.
+A user can create a task, refresh the page, and still see it.
+```
+
+:::note Prompt shape
+
+Quickstart prompts are short so you can see what ZCP carries behind the request. Longer, detailed prompts are fine for larger engineering work, especially when they change product behavior, stack, runtime layout, acceptance criteria, delivery preference, credentials, or safety approvals.
+:::
+
+## 5. Read the proof
+
+The final answer should give you a real URL, endpoint, UI state, stored result, or blocker. Open the URL and try the behavior the agent says it verified.
+
+For the task-board prompt, create a task, refresh the page, and confirm the task is still there. If it disappears, the app is not done; ask the agent to verify that exact behavior again and continue from current evidence rather than starting over.
+
+If the agent cannot finish, useful output names the blocker: missing credential, missing decision, unsupported runtime choice, or repeated failure it could not recover from.
+
+## Next steps
+
+<DocCardList items={[
+  {
+    type: 'link',
+    href: '/zcp/workflows/build-with-zcp',
+    label: 'Build and ship',
+    customProps: { icon: Icons['circle-stack'], description: 'Runtime layout, development work, delivery, packaging, and production release.' },
+  },
+  {
+    type: 'link',
+    href: '/zcp/concept/how-it-works',
+    label: 'How it works',
+    customProps: { icon: Icons['cog-six-tooth'], description: 'Live state, runtime fit, app wiring, deploy evidence, behavior proof, and blockers.' },
+  },
+  {
+    type: 'link',
+    href: '/zcp/security/trust-model',
+    label: 'Trust model',
+    customProps: { icon: Icons['users'], description: 'What the project-scoped token lets the agent do, and where the safety boundary sits.' },
+  },
+]} />

@@ -57,6 +57,15 @@ module.exports = {
       ],
     },
     {
+      type: 'doc',
+      id: 'features/coding-agents',
+      label: 'Infrastructure for Coding Agents',
+      customProps: {
+        sidebar_icon: 'sparkles',
+      },
+      className: 'homepage-sidebar-item',
+    },
+    {
       type: 'category',
       link: {
         type: 'doc',
@@ -106,6 +115,15 @@ module.exports = {
     },
     {
       type: 'doc',
+      id: 'features/local-remote-development',
+      label: 'Local & Remote Development',
+      customProps: {
+        sidebar_icon: 'computer-desktop',
+      },
+      className: 'homepage-sidebar-item',
+    },
+    {
+      type: 'doc',
       id: 'features/rbac',
       label: 'Roles & Permissions',
       customProps: {
@@ -140,23 +158,23 @@ module.exports = {
       },
       className: 'homepage-sidebar-item',
     },
-//    {
-//      type: 'html',
-//      value: 'Perfectly suited for',
-//      customProps: {
-//        sidebar_is_group_divider: true,
-//      },
-//      className: 'homepage-sidebar-item',
-//    },
-//    {
-//      type: 'ref',
-//      id: 'frameworks/laravel',
-//      label: 'Laravel',
-//      customProps: {
-//        sidebar_icon: 'laravel',
-//      },
-//      className: 'homepage-sidebar-item  service-sidebar-item',
-//    },
+    //    {
+    //      type: 'html',
+    //      value: 'Perfectly suited for',
+    //      customProps: {
+    //        sidebar_is_group_divider: true,
+    //      },
+    //      className: 'homepage-sidebar-item',
+    //    },
+    //    {
+    //      type: 'ref',
+    //      id: 'frameworks/laravel',
+    //      label: 'Laravel',
+    //      customProps: {
+    //        sidebar_icon: 'laravel',
+    //      },
+    //      className: 'homepage-sidebar-item  service-sidebar-item',
+    //    },
     {
       type: 'html',
       value: 'All Supported Services',
@@ -290,7 +308,6 @@ module.exports = {
           },
           className: 'homepage-sidebar-item  service-sidebar-item',
         },
-
       ],
     },
     {
@@ -357,76 +374,76 @@ module.exports = {
           className: 'homepage-sidebar-item  service-sidebar-item',
         },
         {
-          type: "ref",
-          id: "valkey/overview",
-          label: "Valkey (Redis)",
+          type: 'ref',
+          id: 'valkey/overview',
+          label: 'Valkey (Redis)',
           customProps: {
-            sidebar_icon: "valkey",
+            sidebar_icon: 'valkey',
           },
-          className: "homepage-sidebar-item  service-sidebar-item",
+          className: 'homepage-sidebar-item  service-sidebar-item',
         },
         {
-          type: "ref",
-          id: "elasticsearch/overview",
-          label: "Elasticsearch",
+          type: 'ref',
+          id: 'elasticsearch/overview',
+          label: 'Elasticsearch',
           customProps: {
-            sidebar_icon: "elasticsearch",
+            sidebar_icon: 'elasticsearch',
           },
-          className: "homepage-sidebar-item  service-sidebar-item",
+          className: 'homepage-sidebar-item  service-sidebar-item',
         },
         {
-          type: "ref",
-          id: "typesense/overview",
-          label: "Typesense",
+          type: 'ref',
+          id: 'typesense/overview',
+          label: 'Typesense',
           customProps: {
-            sidebar_icon: "typesense",
+            sidebar_icon: 'typesense',
           },
-          className: "homepage-sidebar-item  service-sidebar-item",
+          className: 'homepage-sidebar-item  service-sidebar-item',
         },
         {
-          type: "ref",
-          id: "meilisearch/overview",
-          label: "Meilisearch",
+          type: 'ref',
+          id: 'meilisearch/overview',
+          label: 'Meilisearch',
           customProps: {
-            sidebar_icon: "meilisearch",
+            sidebar_icon: 'meilisearch',
           },
-          className: "homepage-sidebar-item  service-sidebar-item",
+          className: 'homepage-sidebar-item  service-sidebar-item',
         },
         {
-          type: "ref",
-          id: "qdrant/overview",
-          label: "Qdrant",
+          type: 'ref',
+          id: 'qdrant/overview',
+          label: 'Qdrant',
           customProps: {
-            sidebar_icon: "qdrant",
+            sidebar_icon: 'qdrant',
           },
-          className: "homepage-sidebar-item  service-sidebar-item",
+          className: 'homepage-sidebar-item  service-sidebar-item',
         },
         {
-          type: "ref",
-          id: "nats/overview",
-          label: "NATS",
+          type: 'ref',
+          id: 'nats/overview',
+          label: 'NATS',
           customProps: {
-            sidebar_icon: "nats",
+            sidebar_icon: 'nats',
           },
-          className: "homepage-sidebar-item  service-sidebar-item",
+          className: 'homepage-sidebar-item  service-sidebar-item',
         },
         {
-          type: "ref",
-          id: "kafka/overview",
-          label: "Kafka",
+          type: 'ref',
+          id: 'kafka/overview',
+          label: 'Kafka',
           customProps: {
-            sidebar_icon: "kafka",
+            sidebar_icon: 'kafka',
           },
-          className: "homepage-sidebar-item  service-sidebar-item",
+          className: 'homepage-sidebar-item  service-sidebar-item',
         },
         {
-          type: "ref",
-          id: "clickhouse/overview",
-          label: "Clickhouse",
+          type: 'ref',
+          id: 'clickhouse/overview',
+          label: 'Clickhouse',
           customProps: {
-            sidebar_icon: "clickhouse",
+            sidebar_icon: 'clickhouse',
           },
-          className: "homepage-sidebar-item  service-sidebar-item",
+          className: 'homepage-sidebar-item  service-sidebar-item',
         },
         {
           type: 'ref',
@@ -557,7 +574,150 @@ module.exports = {
           },
           className: 'homepage-sidebar-item',
         },
-      ]
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Zerops Control Plane MCP',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'zcp/overview',
+          label: 'Overview',
+          customProps: {
+            sidebar_icon: 'sparkles',
+          },
+          className: 'homepage-sidebar-item',
+        },
+        {
+          type: 'doc',
+          id: 'zcp/quickstart',
+          label: 'Quickstart',
+          customProps: {
+            sidebar_icon: 'rocket-launch',
+          },
+          className: 'homepage-sidebar-item',
+        },
+        {
+          type: 'doc',
+          id: 'zcp/concept/how-it-works',
+          label: 'How it works',
+          customProps: {
+            sidebar_icon: 'cog-six-tooth',
+          },
+          className: 'homepage-sidebar-item',
+        },
+        {
+          type: 'category',
+          label: 'Remote or local setup',
+          link: {
+            type: 'doc',
+            id: 'zcp/setup/choose-workspace',
+          },
+          customProps: {
+            sidebar_icon: 'computer-desktop',
+          },
+          className: 'homepage-sidebar-item',
+          items: [
+            {
+              type: 'doc',
+              id: 'zcp/setup/hosted-workspace',
+              label: 'What remote workspace gives you',
+            },
+            {
+              type: 'doc',
+              id: 'zcp/setup/local-agent-bridge',
+              label: 'Run locally',
+            },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Build and ship',
+          link: {
+            type: 'doc',
+            id: 'zcp/workflows/build-with-zcp',
+          },
+          customProps: {
+            sidebar_icon: 'circle-stack',
+          },
+          className: 'homepage-sidebar-item',
+          items: [
+            {
+              type: 'doc',
+              id: 'zcp/workflows/package-running-service',
+              label: 'Package a running service',
+            },
+            {
+              type: 'doc',
+              id: 'zcp/workflows/promote-to-production',
+              label: 'Promote to production',
+            },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Security',
+          link: {
+            type: 'doc',
+            id: 'zcp/security/trust-model',
+          },
+          customProps: {
+            sidebar_icon: 'users',
+          },
+          className: 'homepage-sidebar-item',
+          items: [
+            {
+              type: 'doc',
+              id: 'zcp/security/tokens-and-project-access',
+              label: 'Tokens and credentials',
+            },
+            {
+              type: 'doc',
+              id: 'zcp/security/production-policy',
+              label: 'Production boundary',
+            },
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Reference',
+          link: {
+            type: 'doc',
+            id: 'zcp/reference/index',
+          },
+          customProps: {
+            sidebar_icon: 'command-line',
+          },
+          className: 'homepage-sidebar-item',
+          items: [
+            {
+              type: 'doc',
+              id: 'zcp/reference/agent-workflow',
+              label: 'Workflows in depth',
+            },
+            {
+              type: 'doc',
+              id: 'zcp/reference/mcp-operations',
+              label: 'MCP tools',
+            },
+            {
+              type: 'doc',
+              id: 'zcp/reference/troubleshooting',
+              label: 'Troubleshooting',
+            },
+            {
+              type: 'doc',
+              id: 'zcp/glossary',
+              label: 'Glossary',
+            },
+          ],
+        },
+      ],
     },
     {
       type: 'category',
@@ -648,7 +808,7 @@ module.exports = {
           },
           className: 'homepage-sidebar-item',
         },
-      ]
+      ],
     },
     {
       type: 'category',
@@ -724,7 +884,7 @@ module.exports = {
           },
           className: 'homepage-sidebar-item',
         },
-      ]
+      ],
     },
     {
       type: 'category',
@@ -761,7 +921,7 @@ module.exports = {
           },
           className: 'homepage-sidebar-item',
         },
-      ]
+      ],
     },
     {
       type: 'html',
@@ -962,15 +1122,15 @@ module.exports = {
         },
       ],
     },
-      {
-        type: 'doc',
-        id: 'nodejs/faq',
-        label: 'FAQ',
-        customProps: {
-          sidebar_is_title: true,
-          sidebar_icon: 'chat-bubble-left-right',
-        },
+    {
+      type: 'doc',
+      id: 'nodejs/faq',
+      label: 'FAQ',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'chat-bubble-left-right',
       },
+    },
   ],
   php: [
     {
@@ -1228,639 +1388,639 @@ module.exports = {
     },
   ],
   go: [
-      {
-        type: 'ref',
-        id: 'homepage',
-        label: 'Back to home',
-        customProps: {
-          sidebar_is_back_link: true,
-          sidebar_icon: 'back-arrow',
-        },
+    {
+      type: 'ref',
+      id: 'homepage',
+      label: 'Back to home',
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: 'back-arrow',
       },
-      {
-        type: 'doc',
-        id: 'go/overview',
-        label: 'Go',
-        customProps: {
-          sidebar_is_title: true,
-          sidebar_icon: 'go',
-        },
+    },
+    {
+      type: 'doc',
+      id: 'go/overview',
+      label: 'Go',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'go',
       },
-      {
-        type: 'category',
-        label: 'Management',
-        collapsible: false,
-        customProps: {
-          sidebar_is_group_headline: true,
-        },
-        items: [
-          {
-            type: 'doc',
-            id: 'go/how-to/create',
-            label: 'Create Go service',
-          },
-          {
-            type: 'doc',
-            id: 'go/how-to/upgrade',
-            label: 'Upgrade Go service',
-          },
-          {
-            type: 'doc',
-            id: 'go/how-to/controls',
-            label: 'Stop, start & delete Go runtime service',
-          },
-        ],
+    },
+    {
+      type: 'category',
+      label: 'Management',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
       },
-      {
-        type: 'category',
-        label: 'Configuration & Environment',
-        collapsible: false,
-        customProps: {
-          sidebar_is_group_headline: true,
+      items: [
+        {
+          type: 'doc',
+          id: 'go/how-to/create',
+          label: 'Create Go service',
         },
-        items: [
-          {
-            type: 'doc',
-            id: 'go/how-to/env-variables',
-            label: 'Manage environment variables',
-          },
-          {
-            type: 'doc',
-            id: 'go/how-to/customize-runtime',
-            label: 'Customize Go runtime',
-          },
-          {
-            type: 'doc',
-            id: 'go/how-to/scaling',
-            label: 'Scale Go runtime service',
-          },
-        ],
-      },
-      {
-        type: 'category',
-        label: 'Build & Deployment',
-        collapsible: false,
-        customProps: {
-          sidebar_is_group_headline: true,
+        {
+          type: 'doc',
+          id: 'go/how-to/upgrade',
+          label: 'Upgrade Go service',
         },
-        items: [
-          {
-            type: 'doc',
-            id: 'go/how-to/build-pipeline',
-            label: 'Configure build & deploy pipeline',
-          },
-          {
-            type: 'doc',
-            id: 'go/how-to/trigger-pipeline',
-            label: 'Trigger build pipeline',
-          },
-          {
-            type: 'doc',
-            id: 'go/how-to/build-process',
-            label: 'Build process',
-          },
-          {
-            type: 'doc',
-            id: 'go/how-to/deploy-process',
-            label: 'Deploy process',
-          },
-        ],
-      },
-      {
-        type: 'category',
-        label: 'Maintenance & Monitoring',
-        collapsible: false,
-        customProps: {
-          sidebar_is_group_headline: true,
+        {
+          type: 'doc',
+          id: 'go/how-to/controls',
+          label: 'Stop, start & delete Go runtime service',
         },
-        items: [
-          {
-            type: 'doc',
-            id: 'go/how-to/logs',
-            label: 'Setup & access logs',
-          },
-          {
-            type: 'doc',
-            id: 'go/how-to/filebrowser',
-            label: 'Browse container files',
-          },
-          {
-            type: 'doc',
-            id: 'go/how-to/shared-storage',
-            label: 'Connect / disconnect shared storage',
-          },
-        ],
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Configuration & Environment',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
       },
-    ],
+      items: [
+        {
+          type: 'doc',
+          id: 'go/how-to/env-variables',
+          label: 'Manage environment variables',
+        },
+        {
+          type: 'doc',
+          id: 'go/how-to/customize-runtime',
+          label: 'Customize Go runtime',
+        },
+        {
+          type: 'doc',
+          id: 'go/how-to/scaling',
+          label: 'Scale Go runtime service',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Build & Deployment',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'go/how-to/build-pipeline',
+          label: 'Configure build & deploy pipeline',
+        },
+        {
+          type: 'doc',
+          id: 'go/how-to/trigger-pipeline',
+          label: 'Trigger build pipeline',
+        },
+        {
+          type: 'doc',
+          id: 'go/how-to/build-process',
+          label: 'Build process',
+        },
+        {
+          type: 'doc',
+          id: 'go/how-to/deploy-process',
+          label: 'Deploy process',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Maintenance & Monitoring',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'go/how-to/logs',
+          label: 'Setup & access logs',
+        },
+        {
+          type: 'doc',
+          id: 'go/how-to/filebrowser',
+          label: 'Browse container files',
+        },
+        {
+          type: 'doc',
+          id: 'go/how-to/shared-storage',
+          label: 'Connect / disconnect shared storage',
+        },
+      ],
+    },
+  ],
   rust: [
-      {
-        type: 'ref',
-        id: 'homepage',
-        label: 'Back to home',
-        customProps: {
-          sidebar_is_back_link: true,
-          sidebar_icon: 'back-arrow',
-        },
+    {
+      type: 'ref',
+      id: 'homepage',
+      label: 'Back to home',
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: 'back-arrow',
       },
-      {
-        type: 'doc',
-        id: 'rust/overview',
-        label: 'Rust',
-        customProps: {
-          sidebar_is_title: true,
-          sidebar_icon: 'rust',
-        },
+    },
+    {
+      type: 'doc',
+      id: 'rust/overview',
+      label: 'Rust',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'rust',
       },
-      {
-        type: 'category',
-        label: 'Management',
-        collapsible: false,
-        customProps: {
-          sidebar_is_group_headline: true,
-        },
-        items: [
-          {
-            type: 'doc',
-            id: 'rust/how-to/create',
-            label: 'Create Rust service',
-          },
-          {
-            type: 'doc',
-            id: 'rust/how-to/upgrade',
-            label: 'Upgrade Rust service',
-          },
-          {
-            type: 'doc',
-            id: 'rust/how-to/controls',
-            label: 'Stop, start & delete Rust runtime service',
-          },
-        ],
+    },
+    {
+      type: 'category',
+      label: 'Management',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
       },
-      {
-        type: 'category',
-        label: 'Configuration & Environment',
-        collapsible: false,
-        customProps: {
-          sidebar_is_group_headline: true,
+      items: [
+        {
+          type: 'doc',
+          id: 'rust/how-to/create',
+          label: 'Create Rust service',
         },
-        items: [
-          {
-            type: 'doc',
-            id: 'rust/how-to/env-variables',
-            label: 'Manage environment variables',
-          },
-          {
-            type: 'doc',
-            id: 'rust/how-to/customize-runtime',
-            label: 'Customize Rust runtime',
-          },
-          {
-            type: 'doc',
-            id: 'rust/how-to/scaling',
-            label: 'Scale Rust runtime service',
-          },
-        ],
-      },
-      {
-        type: 'category',
-        label: 'Build & Deployment',
-        collapsible: false,
-        customProps: {
-          sidebar_is_group_headline: true,
+        {
+          type: 'doc',
+          id: 'rust/how-to/upgrade',
+          label: 'Upgrade Rust service',
         },
-        items: [
-          {
-            type: 'doc',
-            id: 'rust/how-to/build-pipeline',
-            label: 'Configure build & deploy pipeline',
-          },
-          {
-            type: 'doc',
-            id: 'rust/how-to/trigger-pipeline',
-            label: 'Trigger build pipeline',
-          },
-          {
-            type: 'doc',
-            id: 'rust/how-to/build-process',
-            label: 'Build process',
-          },
-          {
-            type: 'doc',
-            id: 'rust/how-to/deploy-process',
-            label: 'Deploy process',
-          },
-        ],
-      },
-      {
-        type: 'category',
-        label: 'Maintenance & Monitoring',
-        collapsible: false,
-        customProps: {
-          sidebar_is_group_headline: true,
+        {
+          type: 'doc',
+          id: 'rust/how-to/controls',
+          label: 'Stop, start & delete Rust runtime service',
         },
-        items: [
-          {
-            type: 'doc',
-            id: 'rust/how-to/logs',
-            label: 'Setup & access logs',
-          },
-          {
-            type: 'doc',
-            id: 'rust/how-to/filebrowser',
-            label: 'Browse container files',
-          },
-          {
-            type: 'doc',
-            id: 'rust/how-to/shared-storage',
-            label: 'Connect / disconnect shared storage',
-          },
-        ],
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Configuration & Environment',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
       },
-    ],
-    dotnet: [
-      {
-        type: 'ref',
-        id: 'homepage',
-        label: 'Back to home',
-        customProps: {
-          sidebar_is_back_link: true,
-          sidebar_icon: 'back-arrow',
+      items: [
+        {
+          type: 'doc',
+          id: 'rust/how-to/env-variables',
+          label: 'Manage environment variables',
         },
-      },
-      {
-        type: 'doc',
-        id: 'dotnet/overview',
-        label: '.NET',
-        customProps: {
-          sidebar_is_title: true,
-          sidebar_icon: 'dotnet',
+        {
+          type: 'doc',
+          id: 'rust/how-to/customize-runtime',
+          label: 'Customize Rust runtime',
         },
-      },
-      {
-        type: 'category',
-        label: 'Management',
-        collapsible: false,
-        customProps: {
-          sidebar_is_group_headline: true,
+        {
+          type: 'doc',
+          id: 'rust/how-to/scaling',
+          label: 'Scale Rust runtime service',
         },
-        items: [
-          {
-            type: 'doc',
-            id: 'dotnet/how-to/create',
-            label: 'Create .NET service',
-          },
-          {
-            type: 'doc',
-            id: 'dotnet/how-to/upgrade',
-            label: 'Upgrade .NET service',
-          },
-          {
-            type: 'doc',
-            id: 'dotnet/how-to/controls',
-            label: 'Stop, start & delete .NET runtime service',
-          },
-        ],
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Build & Deployment',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
       },
-      {
-        type: 'category',
-        label: 'Configuration & Environment',
-        collapsible: false,
-        customProps: {
-          sidebar_is_group_headline: true,
+      items: [
+        {
+          type: 'doc',
+          id: 'rust/how-to/build-pipeline',
+          label: 'Configure build & deploy pipeline',
         },
-        items: [
-          {
-            type: 'doc',
-            id: 'dotnet/how-to/env-variables',
-            label: 'Manage environment variables',
-          },
-          {
-            type: 'doc',
-            id: 'dotnet/how-to/customize-runtime',
-            label: 'Customize .NET runtime',
-          },
-          {
-            type: 'doc',
-            id: 'dotnet/how-to/scaling',
-            label: 'Scale .NET runtime service',
-          },
-        ],
-      },
-      {
-        type: 'category',
-        label: 'Build & Deployment',
-        collapsible: false,
-        customProps: {
-          sidebar_is_group_headline: true,
+        {
+          type: 'doc',
+          id: 'rust/how-to/trigger-pipeline',
+          label: 'Trigger build pipeline',
         },
-        items: [
-          {
-            type: 'doc',
-            id: 'dotnet/how-to/build-pipeline',
-            label: 'Configure build & deploy pipeline',
-          },
-          {
-            type: 'doc',
-            id: 'dotnet/how-to/trigger-pipeline',
-            label: 'Trigger build pipeline',
-          },
-          {
-            type: 'doc',
-            id: 'dotnet/how-to/build-process',
-            label: 'Build process',
-          },
-          {
-            type: 'doc',
-            id: 'dotnet/how-to/deploy-process',
-            label: 'Deploy process',
-          },
-        ],
-      },
-      {
-        type: 'category',
-        label: 'Maintenance & Monitoring',
-        collapsible: false,
-        customProps: {
-          sidebar_is_group_headline: true,
+        {
+          type: 'doc',
+          id: 'rust/how-to/build-process',
+          label: 'Build process',
         },
-        items: [
-          {
-            type: 'doc',
-            id: 'dotnet/how-to/logs',
-            label: 'Setup & access logs',
-          },
-          {
-            type: 'doc',
-            id: 'dotnet/how-to/filebrowser',
-            label: 'Browse container files',
-          },
-          {
-            type: 'doc',
-            id: 'dotnet/how-to/shared-storage',
-            label: 'Connect / disconnect shared storage',
-          },
-        ],
+        {
+          type: 'doc',
+          id: 'rust/how-to/deploy-process',
+          label: 'Deploy process',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Maintenance & Monitoring',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
       },
-    ],
+      items: [
+        {
+          type: 'doc',
+          id: 'rust/how-to/logs',
+          label: 'Setup & access logs',
+        },
+        {
+          type: 'doc',
+          id: 'rust/how-to/filebrowser',
+          label: 'Browse container files',
+        },
+        {
+          type: 'doc',
+          id: 'rust/how-to/shared-storage',
+          label: 'Connect / disconnect shared storage',
+        },
+      ],
+    },
+  ],
+  dotnet: [
+    {
+      type: 'ref',
+      id: 'homepage',
+      label: 'Back to home',
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: 'back-arrow',
+      },
+    },
+    {
+      type: 'doc',
+      id: 'dotnet/overview',
+      label: '.NET',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'dotnet',
+      },
+    },
+    {
+      type: 'category',
+      label: 'Management',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'dotnet/how-to/create',
+          label: 'Create .NET service',
+        },
+        {
+          type: 'doc',
+          id: 'dotnet/how-to/upgrade',
+          label: 'Upgrade .NET service',
+        },
+        {
+          type: 'doc',
+          id: 'dotnet/how-to/controls',
+          label: 'Stop, start & delete .NET runtime service',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Configuration & Environment',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'dotnet/how-to/env-variables',
+          label: 'Manage environment variables',
+        },
+        {
+          type: 'doc',
+          id: 'dotnet/how-to/customize-runtime',
+          label: 'Customize .NET runtime',
+        },
+        {
+          type: 'doc',
+          id: 'dotnet/how-to/scaling',
+          label: 'Scale .NET runtime service',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Build & Deployment',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'dotnet/how-to/build-pipeline',
+          label: 'Configure build & deploy pipeline',
+        },
+        {
+          type: 'doc',
+          id: 'dotnet/how-to/trigger-pipeline',
+          label: 'Trigger build pipeline',
+        },
+        {
+          type: 'doc',
+          id: 'dotnet/how-to/build-process',
+          label: 'Build process',
+        },
+        {
+          type: 'doc',
+          id: 'dotnet/how-to/deploy-process',
+          label: 'Deploy process',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Maintenance & Monitoring',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'dotnet/how-to/logs',
+          label: 'Setup & access logs',
+        },
+        {
+          type: 'doc',
+          id: 'dotnet/how-to/filebrowser',
+          label: 'Browse container files',
+        },
+        {
+          type: 'doc',
+          id: 'dotnet/how-to/shared-storage',
+          label: 'Connect / disconnect shared storage',
+        },
+      ],
+    },
+  ],
   java: [
-      {
-        type: 'ref',
-        id: 'homepage',
-        label: 'Back to home',
-        customProps: {
-          sidebar_is_back_link: true,
-          sidebar_icon: 'back-arrow',
-        },
+    {
+      type: 'ref',
+      id: 'homepage',
+      label: 'Back to home',
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: 'back-arrow',
       },
-      {
-        type: 'doc',
-        id: 'java/overview',
-        label: 'Java',
-        customProps: {
-          sidebar_is_title: true,
-          sidebar_icon: 'java',
-        },
+    },
+    {
+      type: 'doc',
+      id: 'java/overview',
+      label: 'Java',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'java',
       },
-      {
-        type: 'category',
-        label: 'Management',
-        collapsible: false,
-        customProps: {
-          sidebar_is_group_headline: true,
-        },
-        items: [
-          {
-            type: 'doc',
-            id: 'java/how-to/create',
-            label: 'Create Java service',
-          },
-          {
-            type: 'doc',
-            id: 'java/how-to/upgrade',
-            label: 'Upgrade Java service',
-          },
-          {
-            type: 'doc',
-            id: 'java/how-to/controls',
-            label: 'Stop, start & delete Java runtime service',
-          },
-        ],
+    },
+    {
+      type: 'category',
+      label: 'Management',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
       },
-      {
-        type: 'category',
-        label: 'Configuration & Environment',
-        collapsible: false,
-        customProps: {
-          sidebar_is_group_headline: true,
+      items: [
+        {
+          type: 'doc',
+          id: 'java/how-to/create',
+          label: 'Create Java service',
         },
-        items: [
-          {
-            type: 'doc',
-            id: 'java/how-to/env-variables',
-            label: 'Manage environment variables',
-          },
-          {
-            type: 'doc',
-            id: 'java/how-to/customize-runtime',
-            label: 'Customize Java runtime',
-          },
-          {
-            type: 'doc',
-            id: 'java/how-to/scaling',
-            label: 'Scale Java runtime service',
-          },
-        ],
-      },
-      {
-        type: 'category',
-        label: 'Build & Deployment',
-        collapsible: false,
-        customProps: {
-          sidebar_is_group_headline: true,
+        {
+          type: 'doc',
+          id: 'java/how-to/upgrade',
+          label: 'Upgrade Java service',
         },
-        items: [
-          {
-            type: 'doc',
-            id: 'java/how-to/build-pipeline',
-            label: 'Configure build & deploy pipeline',
-          },
-          {
-            type: 'doc',
-            id: 'java/how-to/trigger-pipeline',
-            label: 'Trigger build pipeline',
-          },
-          {
-            type: 'doc',
-            id: 'java/how-to/build-process',
-            label: 'Build process',
-          },
-          {
-            type: 'doc',
-            id: 'java/how-to/deploy-process',
-            label: 'Deploy process',
-          },
-        ],
-      },
-      {
-        type: 'category',
-        label: 'Maintenance & Monitoring',
-        collapsible: false,
-        customProps: {
-          sidebar_is_group_headline: true,
+        {
+          type: 'doc',
+          id: 'java/how-to/controls',
+          label: 'Stop, start & delete Java runtime service',
         },
-        items: [
-          {
-            type: 'doc',
-            id: 'java/how-to/logs',
-            label: 'Setup & access logs',
-          },
-          {
-            type: 'doc',
-            id: 'java/how-to/filebrowser',
-            label: 'Browse container files',
-          },
-          {
-            type: 'doc',
-            id: 'java/how-to/shared-storage',
-            label: 'Connect / disconnect shared storage',
-          },
-        ],
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Configuration & Environment',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
       },
-    ],
+      items: [
+        {
+          type: 'doc',
+          id: 'java/how-to/env-variables',
+          label: 'Manage environment variables',
+        },
+        {
+          type: 'doc',
+          id: 'java/how-to/customize-runtime',
+          label: 'Customize Java runtime',
+        },
+        {
+          type: 'doc',
+          id: 'java/how-to/scaling',
+          label: 'Scale Java runtime service',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Build & Deployment',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'java/how-to/build-pipeline',
+          label: 'Configure build & deploy pipeline',
+        },
+        {
+          type: 'doc',
+          id: 'java/how-to/trigger-pipeline',
+          label: 'Trigger build pipeline',
+        },
+        {
+          type: 'doc',
+          id: 'java/how-to/build-process',
+          label: 'Build process',
+        },
+        {
+          type: 'doc',
+          id: 'java/how-to/deploy-process',
+          label: 'Deploy process',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Maintenance & Monitoring',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'java/how-to/logs',
+          label: 'Setup & access logs',
+        },
+        {
+          type: 'doc',
+          id: 'java/how-to/filebrowser',
+          label: 'Browse container files',
+        },
+        {
+          type: 'doc',
+          id: 'java/how-to/shared-storage',
+          label: 'Connect / disconnect shared storage',
+        },
+      ],
+    },
+  ],
   nginx: [
-      {
-        type: 'ref',
-        id: 'homepage',
-        label: 'Back to home',
-        customProps: {
-          sidebar_is_back_link: true,
-          sidebar_icon: 'back-arrow',
-        },
+    {
+      type: 'ref',
+      id: 'homepage',
+      label: 'Back to home',
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: 'back-arrow',
       },
-      {
-        type: 'doc',
-        id: 'nginx/overview',
-        label: 'Nginx Static',
-        customProps: {
-          sidebar_is_title: true,
-          sidebar_icon: 'nginx',
-        },
+    },
+    {
+      type: 'doc',
+      id: 'nginx/overview',
+      label: 'Nginx Static',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'nginx',
       },
-      {
-        type: 'category',
-        label: 'Management',
-        collapsible: false,
-        customProps: {
-          sidebar_is_group_headline: true,
-        },
-        items: [
-          {
-            type: 'doc',
-            id: 'nginx/how-to/create',
-            label: 'Create Nginx static service',
-          },
-          {
-            type: 'doc',
-            id: 'nginx/how-to/upgrade',
-            label: 'Upgrade Nginx service',
-          },
-          {
-            type: 'doc',
-            id: 'nginx/how-to/controls',
-            label: 'Stop, start & delete Nginx static service',
-          },
-        ],
+    },
+    {
+      type: 'category',
+      label: 'Management',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
       },
-      {
-        type: 'category',
-        label: 'Configuration & Environment',
-        collapsible: false,
-        customProps: {
-          sidebar_is_group_headline: true,
+      items: [
+        {
+          type: 'doc',
+          id: 'nginx/how-to/create',
+          label: 'Create Nginx static service',
         },
-        items: [
-          {
-            type: 'doc',
-            id: 'nginx/how-to/env-variables',
-            label: 'Manage environment variables',
-          },
-          {
-            type: 'doc',
-            id: 'nginx/how-to/customize-runtime',
-            label: 'Customize Nginx static runtime',
-          },
-          {
-            type: 'doc',
-            id: 'nginx/how-to/customize-web-server',
-            label: 'Customize web server',
-          },
-          {
-            type: 'doc',
-            id: 'nginx/how-to/scaling',
-            label: 'Scale Nginx static service',
-          },
-        ],
-      },
-      {
-        type: 'category',
-        label: 'Build & Deployment',
-        collapsible: false,
-        customProps: {
-          sidebar_is_group_headline: true,
+        {
+          type: 'doc',
+          id: 'nginx/how-to/upgrade',
+          label: 'Upgrade Nginx service',
         },
-        items: [
-          {
-            type: 'doc',
-            id: 'nginx/how-to/build-pipeline',
-            label: 'Configure build & deploy pipeline',
-          },
-          {
-            type: 'doc',
-            id: 'nginx/how-to/trigger-pipeline',
-            label: 'Trigger build pipeline',
-          },
-          {
-            type: 'doc',
-            id: 'nginx/how-to/deploy-process',
-            label: 'Deploy process',
-          },
-        ],
-      },
-      {
-        type: 'category',
-        label: 'Maintenance & Monitoring',
-        collapsible: false,
-        customProps: {
-          sidebar_is_group_headline: true,
+        {
+          type: 'doc',
+          id: 'nginx/how-to/controls',
+          label: 'Stop, start & delete Nginx static service',
         },
-        items: [
-          {
-            type: 'doc',
-            id: 'nginx/how-to/logs',
-            label: 'Setup & access logs',
-          },
-          {
-            type: 'doc',
-            id: 'nginx/how-to/filebrowser',
-            label: 'Browse container files',
-          },
-          {
-            type: 'doc',
-            id: 'nginx/how-to/shared-storage',
-            label: 'Connect / disconnect shared storage',
-          },
-        ],
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Configuration & Environment',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
       },
-      {
-        type: 'doc',
-        id: 'nginx/faq',
-        label: 'FAQ',
-        customProps: {
-          sidebar_is_title: true,
-          sidebar_icon: 'chat-bubble-left-right',
+      items: [
+        {
+          type: 'doc',
+          id: 'nginx/how-to/env-variables',
+          label: 'Manage environment variables',
         },
+        {
+          type: 'doc',
+          id: 'nginx/how-to/customize-runtime',
+          label: 'Customize Nginx static runtime',
+        },
+        {
+          type: 'doc',
+          id: 'nginx/how-to/customize-web-server',
+          label: 'Customize web server',
+        },
+        {
+          type: 'doc',
+          id: 'nginx/how-to/scaling',
+          label: 'Scale Nginx static service',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Build & Deployment',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
       },
-    ],
+      items: [
+        {
+          type: 'doc',
+          id: 'nginx/how-to/build-pipeline',
+          label: 'Configure build & deploy pipeline',
+        },
+        {
+          type: 'doc',
+          id: 'nginx/how-to/trigger-pipeline',
+          label: 'Trigger build pipeline',
+        },
+        {
+          type: 'doc',
+          id: 'nginx/how-to/deploy-process',
+          label: 'Deploy process',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Maintenance & Monitoring',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'nginx/how-to/logs',
+          label: 'Setup & access logs',
+        },
+        {
+          type: 'doc',
+          id: 'nginx/how-to/filebrowser',
+          label: 'Browse container files',
+        },
+        {
+          type: 'doc',
+          id: 'nginx/how-to/shared-storage',
+          label: 'Connect / disconnect shared storage',
+        },
+      ],
+    },
+    {
+      type: 'doc',
+      id: 'nginx/faq',
+      label: 'FAQ',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'chat-bubble-left-right',
+      },
+    },
+  ],
   static: [
     {
       type: 'ref',
@@ -1881,256 +2041,256 @@ module.exports = {
       },
     },
   ],
-    ubuntu: [
+  ubuntu: [
+    {
+      type: 'ref',
+      id: 'homepage',
+      label: 'Back to home',
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: 'back-arrow',
+      },
+    },
+    {
+      type: 'doc',
+      id: 'ubuntu/overview',
+      label: 'Ubuntu',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'ubuntu',
+      },
+    },
+    {
+      type: 'category',
+      label: 'Management',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
         {
-          type: 'ref',
-          id: 'homepage',
-          label: 'Back to home',
-          customProps: {
-            sidebar_is_back_link: true,
-            sidebar_icon: 'back-arrow',
-          },
+          type: 'doc',
+          id: 'ubuntu/how-to/create',
+          label: 'Create Ubuntu service',
         },
         {
           type: 'doc',
-          id: 'ubuntu/overview',
-          label: 'Ubuntu',
-          customProps: {
-            sidebar_is_title: true,
-            sidebar_icon: 'ubuntu',
-          },
+          id: 'ubuntu/how-to/upgrade',
+          label: 'Upgrade Ubuntu service',
         },
         {
-          type: 'category',
-          label: 'Management',
-          collapsible: false,
-          customProps: {
-            sidebar_is_group_headline: true,
-          },
-          items: [
-            {
-              type: 'doc',
-              id: 'ubuntu/how-to/create',
-              label: 'Create Ubuntu service',
-            },
-            {
-              type: 'doc',
-              id: 'ubuntu/how-to/upgrade',
-              label: 'Upgrade Ubuntu service',
-            },
-            {
-              type: 'doc',
-              id: 'ubuntu/how-to/controls',
-              label: 'Stop, start & delete Ubuntu runtime service',
-            },
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Configuration & Environment',
-          collapsible: false,
-          customProps: {
-            sidebar_is_group_headline: true,
-          },
-          items: [
-            {
-              type: 'doc',
-              id: 'ubuntu/how-to/env-variables',
-              label: 'Manage environment variables',
-            },
-            {
-              type: 'doc',
-              id: 'ubuntu/how-to/customize-runtime',
-              label: 'Customize Ubuntu runtime',
-            },
-            {
-              type: 'doc',
-              id: 'ubuntu/how-to/scaling',
-              label: 'Scale Ubuntu runtime service',
-            },
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Build & Deployment',
-          collapsible: false,
-          customProps: {
-            sidebar_is_group_headline: true,
-          },
-          items: [
-            {
-              type: 'doc',
-              id: 'ubuntu/how-to/build-pipeline',
-              label: 'Configure build & deploy pipeline',
-            },
-            {
-              type: 'doc',
-              id: 'ubuntu/how-to/trigger-pipeline',
-              label: 'Trigger build pipeline',
-            },
-            {
-              type: 'doc',
-              id: 'ubuntu/how-to/build-process',
-              label: 'Build process',
-            },
-            {
-              type: 'doc',
-              id: 'ubuntu/how-to/deploy-process',
-              label: 'Deploy process',
-            },
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Maintenance & Monitoring',
-          collapsible: false,
-          customProps: {
-            sidebar_is_group_headline: true,
-          },
-          items: [
-            {
-              type: 'doc',
-              id: 'ubuntu/how-to/logs',
-              label: 'Setup & access logs',
-            },
-            {
-              type: 'doc',
-              id: 'ubuntu/how-to/filebrowser',
-              label: 'Browse container files',
-            },
-            {
-              type: 'doc',
-              id: 'ubuntu/how-to/shared-storage',
-              label: 'Connect / disconnect shared storage',
-            },
-          ],
+          type: 'doc',
+          id: 'ubuntu/how-to/controls',
+          label: 'Stop, start & delete Ubuntu runtime service',
         },
       ],
-      alpine: [
-          {
-            type: 'ref',
-            id: 'homepage',
-            label: 'Back to home',
-            customProps: {
-              sidebar_is_back_link: true,
-              sidebar_icon: 'back-arrow',
-            },
-          },
-          {
-            type: 'doc',
-            id: 'alpine/overview',
-            label: 'Alpine',
-            customProps: {
-              sidebar_is_title: true,
-              sidebar_icon: 'alpine',
-            },
-          },
-          {
-            type: 'category',
-            label: 'Management',
-            collapsible: false,
-            customProps: {
-              sidebar_is_group_headline: true,
-            },
-            items: [
-              {
-                type: 'doc',
-                id: 'alpine/how-to/create',
-                label: 'Create Alpine service',
-              },
-              {
-                type: 'doc',
-                id: 'alpine/how-to/upgrade',
-                label: 'Upgrade Alpine service',
-              },
-              {
-                type: 'doc',
-                id: 'alpine/how-to/controls',
-                label: 'Stop, start & delete Alpine runtime service',
-              },
-            ],
-          },
-          {
-            type: 'category',
-            label: 'Configuration & Environment',
-            collapsible: false,
-            customProps: {
-              sidebar_is_group_headline: true,
-            },
-            items: [
-              {
-                type: 'doc',
-                id: 'alpine/how-to/env-variables',
-                label: 'Manage environment variables',
-              },
-              {
-                type: 'doc',
-                id: 'alpine/how-to/customize-runtime',
-                label: 'Customize Alpine runtime',
-              },
-              {
-                type: 'doc',
-                id: 'alpine/how-to/scaling',
-                label: 'Scale Alpine runtime service',
-              },
-            ],
-          },
-          {
-            type: 'category',
-            label: 'Build & Deployment',
-            collapsible: false,
-            customProps: {
-              sidebar_is_group_headline: true,
-            },
-            items: [
-              {
-                type: 'doc',
-                id: 'alpine/how-to/build-pipeline',
-                label: 'Configure build & deploy pipeline',
-              },
-              {
-                type: 'doc',
-                id: 'alpine/how-to/trigger-pipeline',
-                label: 'Trigger build pipeline',
-              },
-              {
-                type: 'doc',
-                id: 'alpine/how-to/build-process',
-                label: 'Build process',
-              },
-              {
-                type: 'doc',
-                id: 'alpine/how-to/deploy-process',
-                label: 'Deploy process',
-              },
-            ],
-          },
-          {
-            type: 'category',
-            label: 'Maintenance & Monitoring',
-            collapsible: false,
-            customProps: {
-              sidebar_is_group_headline: true,
-            },
-            items: [
-              {
-                type: 'doc',
-                id: 'alpine/how-to/logs',
-                label: 'Setup & access logs',
-              },
-              {
-                type: 'doc',
-                id: 'alpine/how-to/filebrowser',
-                label: 'Browse container files',
-              },
-              {
-                type: 'doc',
-                id: 'alpine/how-to/shared-storage',
-                label: 'Connect / disconnect shared storage',
-              },
-            ],
-          },
-        ],
+    },
+    {
+      type: 'category',
+      label: 'Configuration & Environment',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'ubuntu/how-to/env-variables',
+          label: 'Manage environment variables',
+        },
+        {
+          type: 'doc',
+          id: 'ubuntu/how-to/customize-runtime',
+          label: 'Customize Ubuntu runtime',
+        },
+        {
+          type: 'doc',
+          id: 'ubuntu/how-to/scaling',
+          label: 'Scale Ubuntu runtime service',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Build & Deployment',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'ubuntu/how-to/build-pipeline',
+          label: 'Configure build & deploy pipeline',
+        },
+        {
+          type: 'doc',
+          id: 'ubuntu/how-to/trigger-pipeline',
+          label: 'Trigger build pipeline',
+        },
+        {
+          type: 'doc',
+          id: 'ubuntu/how-to/build-process',
+          label: 'Build process',
+        },
+        {
+          type: 'doc',
+          id: 'ubuntu/how-to/deploy-process',
+          label: 'Deploy process',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Maintenance & Monitoring',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'ubuntu/how-to/logs',
+          label: 'Setup & access logs',
+        },
+        {
+          type: 'doc',
+          id: 'ubuntu/how-to/filebrowser',
+          label: 'Browse container files',
+        },
+        {
+          type: 'doc',
+          id: 'ubuntu/how-to/shared-storage',
+          label: 'Connect / disconnect shared storage',
+        },
+      ],
+    },
+  ],
+  alpine: [
+    {
+      type: 'ref',
+      id: 'homepage',
+      label: 'Back to home',
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: 'back-arrow',
+      },
+    },
+    {
+      type: 'doc',
+      id: 'alpine/overview',
+      label: 'Alpine',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'alpine',
+      },
+    },
+    {
+      type: 'category',
+      label: 'Management',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'alpine/how-to/create',
+          label: 'Create Alpine service',
+        },
+        {
+          type: 'doc',
+          id: 'alpine/how-to/upgrade',
+          label: 'Upgrade Alpine service',
+        },
+        {
+          type: 'doc',
+          id: 'alpine/how-to/controls',
+          label: 'Stop, start & delete Alpine runtime service',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Configuration & Environment',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'alpine/how-to/env-variables',
+          label: 'Manage environment variables',
+        },
+        {
+          type: 'doc',
+          id: 'alpine/how-to/customize-runtime',
+          label: 'Customize Alpine runtime',
+        },
+        {
+          type: 'doc',
+          id: 'alpine/how-to/scaling',
+          label: 'Scale Alpine runtime service',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Build & Deployment',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'alpine/how-to/build-pipeline',
+          label: 'Configure build & deploy pipeline',
+        },
+        {
+          type: 'doc',
+          id: 'alpine/how-to/trigger-pipeline',
+          label: 'Trigger build pipeline',
+        },
+        {
+          type: 'doc',
+          id: 'alpine/how-to/build-process',
+          label: 'Build process',
+        },
+        {
+          type: 'doc',
+          id: 'alpine/how-to/deploy-process',
+          label: 'Deploy process',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Maintenance & Monitoring',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'alpine/how-to/logs',
+          label: 'Setup & access logs',
+        },
+        {
+          type: 'doc',
+          id: 'alpine/how-to/filebrowser',
+          label: 'Browse container files',
+        },
+        {
+          type: 'doc',
+          id: 'alpine/how-to/shared-storage',
+          label: 'Connect / disconnect shared storage',
+        },
+      ],
+    },
+  ],
   docker: [
     {
       type: 'ref',
@@ -2543,26 +2703,26 @@ module.exports = {
       },
     },
   ],
-    clickhouse: [
-      {
-        type: 'ref',
-        id: 'homepage',
-        label: 'Back to home',
-        customProps: {
-          sidebar_is_back_link: true,
-          sidebar_icon: 'back-arrow',
-        },
+  clickhouse: [
+    {
+      type: 'ref',
+      id: 'homepage',
+      label: 'Back to home',
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: 'back-arrow',
       },
-      {
-        type: 'doc',
-        id: 'clickhouse/overview',
-        label: 'Zerops Clickhouse Service',
-        customProps: {
-          sidebar_is_title: true,
-          sidebar_icon: 'clickhouse',
-        },
+    },
+    {
+      type: 'doc',
+      id: 'clickhouse/overview',
+      label: 'Zerops Clickhouse Service',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'clickhouse',
       },
-    ],
+    },
+  ],
   sharedstorage: [
     {
       type: 'ref',
@@ -2685,693 +2845,693 @@ module.exports = {
     },
   ],
   deno: [
-      {
-        type: 'ref',
-        id: 'homepage',
-        label: 'Back to home',
-        customProps: {
-          sidebar_is_back_link: true,
-          sidebar_icon: 'back-arrow',
-        },
+    {
+      type: 'ref',
+      id: 'homepage',
+      label: 'Back to home',
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: 'back-arrow',
       },
-      {
-        type: 'doc',
-        id: 'deno/overview',
-        label: 'Deno',
-        customProps: {
-          sidebar_is_title: true,
-          sidebar_icon: 'deno',
-        },
+    },
+    {
+      type: 'doc',
+      id: 'deno/overview',
+      label: 'Deno',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'deno',
       },
-      {
-        type: 'category',
-        label: 'Management',
-        collapsible: false,
-        customProps: {
-          sidebar_is_group_headline: true,
-        },
-        items: [
-          {
-            type: 'doc',
-            id: 'deno/how-to/create',
-            label: 'Create Deno service',
-          },
-          {
-            type: 'doc',
-            id: 'deno/how-to/upgrade',
-            label: 'Upgrade Deno service',
-          },
-          {
-            type: 'doc',
-            id: 'deno/how-to/controls',
-            label: 'Stop, start & delete Deno runtime service',
-          },
-        ],
+    },
+    {
+      type: 'category',
+      label: 'Management',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
       },
-      {
-        type: 'category',
-        label: 'Configuration & Environment',
-        collapsible: false,
-        customProps: {
-          sidebar_is_group_headline: true,
+      items: [
+        {
+          type: 'doc',
+          id: 'deno/how-to/create',
+          label: 'Create Deno service',
         },
-        items: [
-          {
-            type: 'doc',
-            id: 'deno/how-to/env-variables',
-            label: 'Manage environment variables',
-          },
-          {
-            type: 'doc',
-            id: 'deno/how-to/customize-runtime',
-            label: 'Customize Deno runtime',
-          },
-          {
-            type: 'doc',
-            id: 'deno/how-to/scaling',
-            label: 'Scale Deno runtime service',
-          },
-        ],
-      },
-      {
-        type: 'category',
-        label: 'Build & Deployment',
-        collapsible: false,
-        customProps: {
-          sidebar_is_group_headline: true,
+        {
+          type: 'doc',
+          id: 'deno/how-to/upgrade',
+          label: 'Upgrade Deno service',
         },
-        items: [
-          {
-            type: 'doc',
-            id: 'deno/how-to/build-pipeline',
-            label: 'Configure build & deploy pipeline',
-          },
-          {
-            type: 'doc',
-            id: 'deno/how-to/trigger-pipeline',
-            label: 'Trigger build pipeline',
-          },
-          {
-            type: 'doc',
-            id: 'deno/how-to/build-process',
-            label: 'Build process',
-          },
-          {
-            type: 'doc',
-            id: 'deno/how-to/deploy-process',
-            label: 'Deploy process',
-          },
-        ],
-      },
-      {
-        type: 'category',
-        label: 'Maintenance & Monitoring',
-        collapsible: false,
-        customProps: {
-          sidebar_is_group_headline: true,
+        {
+          type: 'doc',
+          id: 'deno/how-to/controls',
+          label: 'Stop, start & delete Deno runtime service',
         },
-        items: [
-          {
-            type: 'doc',
-            id: 'deno/how-to/logs',
-            label: 'Setup & access logs',
-          },
-          {
-            type: 'doc',
-            id: 'deno/how-to/filebrowser',
-            label: 'Browse container files',
-          },
-          {
-            type: 'doc',
-            id: 'deno/how-to/shared-storage',
-            label: 'Connect / disconnect shared storage',
-          },
-        ],
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Configuration & Environment',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
       },
-    ],
+      items: [
+        {
+          type: 'doc',
+          id: 'deno/how-to/env-variables',
+          label: 'Manage environment variables',
+        },
+        {
+          type: 'doc',
+          id: 'deno/how-to/customize-runtime',
+          label: 'Customize Deno runtime',
+        },
+        {
+          type: 'doc',
+          id: 'deno/how-to/scaling',
+          label: 'Scale Deno runtime service',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Build & Deployment',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'deno/how-to/build-pipeline',
+          label: 'Configure build & deploy pipeline',
+        },
+        {
+          type: 'doc',
+          id: 'deno/how-to/trigger-pipeline',
+          label: 'Trigger build pipeline',
+        },
+        {
+          type: 'doc',
+          id: 'deno/how-to/build-process',
+          label: 'Build process',
+        },
+        {
+          type: 'doc',
+          id: 'deno/how-to/deploy-process',
+          label: 'Deploy process',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Maintenance & Monitoring',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'deno/how-to/logs',
+          label: 'Setup & access logs',
+        },
+        {
+          type: 'doc',
+          id: 'deno/how-to/filebrowser',
+          label: 'Browse container files',
+        },
+        {
+          type: 'doc',
+          id: 'deno/how-to/shared-storage',
+          label: 'Connect / disconnect shared storage',
+        },
+      ],
+    },
+  ],
   bun: [
-      {
-        type: 'ref',
-        id: 'homepage',
-        label: 'Back to home',
-        customProps: {
-          sidebar_is_back_link: true,
-          sidebar_icon: 'back-arrow',
-        },
+    {
+      type: 'ref',
+      id: 'homepage',
+      label: 'Back to home',
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: 'back-arrow',
       },
-      {
-        type: 'doc',
-        id: 'bun/overview',
-        label: 'Bun',
-        customProps: {
-          sidebar_is_title: true,
-          sidebar_icon: 'bun',
-        },
+    },
+    {
+      type: 'doc',
+      id: 'bun/overview',
+      label: 'Bun',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'bun',
       },
-      {
-        type: 'category',
-        label: 'Management',
-        collapsible: false,
-        customProps: {
-          sidebar_is_group_headline: true,
-        },
-        items: [
-          {
-            type: 'doc',
-            id: 'bun/how-to/create',
-            label: 'Create Bun service',
-          },
-          {
-            type: 'doc',
-            id: 'bun/how-to/upgrade',
-            label: 'Upgrade Bun service',
-          },
-          {
-            type: 'doc',
-            id: 'bun/how-to/controls',
-            label: 'Stop, start & delete Bun runtime service',
-          },
-        ],
+    },
+    {
+      type: 'category',
+      label: 'Management',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
       },
-      {
-        type: 'category',
-        label: 'Configuration & Environment',
-        collapsible: false,
-        customProps: {
-          sidebar_is_group_headline: true,
+      items: [
+        {
+          type: 'doc',
+          id: 'bun/how-to/create',
+          label: 'Create Bun service',
         },
-        items: [
-          {
-            type: 'doc',
-            id: 'bun/how-to/env-variables',
-            label: 'Manage environment variables',
-          },
-          {
-            type: 'doc',
-            id: 'bun/how-to/customize-runtime',
-            label: 'Customize Bun runtime',
-          },
-          {
-            type: 'doc',
-            id: 'bun/how-to/scaling',
-            label: 'Scale Bun runtime service',
-          },
-        ],
-      },
-      {
-        type: 'category',
-        label: 'Build & Deployment',
-        collapsible: false,
-        customProps: {
-          sidebar_is_group_headline: true,
+        {
+          type: 'doc',
+          id: 'bun/how-to/upgrade',
+          label: 'Upgrade Bun service',
         },
-        items: [
-          {
-            type: 'doc',
-            id: 'bun/how-to/build-pipeline',
-            label: 'Configure build & deploy pipeline',
-          },
-          {
-            type: 'doc',
-            id: 'bun/how-to/trigger-pipeline',
-            label: 'Trigger build pipeline',
-          },
-          {
-            type: 'doc',
-            id: 'bun/how-to/build-process',
-            label: 'Build process',
-          },
-          {
-            type: 'doc',
-            id: 'bun/how-to/deploy-process',
-            label: 'Deploy process',
-          },
-        ],
-      },
-      {
-        type: 'category',
-        label: 'Maintenance & Monitoring',
-        collapsible: false,
-        customProps: {
-          sidebar_is_group_headline: true,
+        {
+          type: 'doc',
+          id: 'bun/how-to/controls',
+          label: 'Stop, start & delete Bun runtime service',
         },
-        items: [
-          {
-            type: 'doc',
-            id: 'bun/how-to/logs',
-            label: 'Setup & access logs',
-          },
-          {
-            type: 'doc',
-            id: 'bun/how-to/filebrowser',
-            label: 'Browse container files',
-          },
-          {
-            type: 'doc',
-            id: 'bun/how-to/shared-storage',
-            label: 'Connect / disconnect shared storage',
-          },
-        ],
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Configuration & Environment',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
       },
-    ],
+      items: [
+        {
+          type: 'doc',
+          id: 'bun/how-to/env-variables',
+          label: 'Manage environment variables',
+        },
+        {
+          type: 'doc',
+          id: 'bun/how-to/customize-runtime',
+          label: 'Customize Bun runtime',
+        },
+        {
+          type: 'doc',
+          id: 'bun/how-to/scaling',
+          label: 'Scale Bun runtime service',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Build & Deployment',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'bun/how-to/build-pipeline',
+          label: 'Configure build & deploy pipeline',
+        },
+        {
+          type: 'doc',
+          id: 'bun/how-to/trigger-pipeline',
+          label: 'Trigger build pipeline',
+        },
+        {
+          type: 'doc',
+          id: 'bun/how-to/build-process',
+          label: 'Build process',
+        },
+        {
+          type: 'doc',
+          id: 'bun/how-to/deploy-process',
+          label: 'Deploy process',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Maintenance & Monitoring',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'bun/how-to/logs',
+          label: 'Setup & access logs',
+        },
+        {
+          type: 'doc',
+          id: 'bun/how-to/filebrowser',
+          label: 'Browse container files',
+        },
+        {
+          type: 'doc',
+          id: 'bun/how-to/shared-storage',
+          label: 'Connect / disconnect shared storage',
+        },
+      ],
+    },
+  ],
   gleam: [
-      {
-        type: 'ref',
-        id: 'homepage',
-        label: 'Back to home',
-        customProps: {
-          sidebar_is_back_link: true,
-          sidebar_icon: 'back-arrow',
-        },
+    {
+      type: 'ref',
+      id: 'homepage',
+      label: 'Back to home',
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: 'back-arrow',
       },
-      {
-        type: 'doc',
-        id: 'gleam/overview',
-        label: 'Gleam',
-        customProps: {
-          sidebar_is_title: true,
-          sidebar_icon: 'gleam',
-        },
+    },
+    {
+      type: 'doc',
+      id: 'gleam/overview',
+      label: 'Gleam',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'gleam',
       },
-      {
-        type: 'category',
-        label: 'Management',
-        collapsible: false,
-        customProps: {
-          sidebar_is_group_headline: true,
-        },
-        items: [
-          {
-            type: 'doc',
-            id: 'gleam/how-to/create',
-            label: 'Create Gleam service',
-          },
-          {
-            type: 'doc',
-            id: 'gleam/how-to/upgrade',
-            label: 'Upgrade Gleam service',
-          },
-          {
-            type: 'doc',
-            id: 'gleam/how-to/controls',
-            label: 'Stop, start & delete Gleam runtime service',
-          },
-        ],
+    },
+    {
+      type: 'category',
+      label: 'Management',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
       },
-      {
-        type: 'category',
-        label: 'Configuration & Environment',
-        collapsible: false,
-        customProps: {
-          sidebar_is_group_headline: true,
+      items: [
+        {
+          type: 'doc',
+          id: 'gleam/how-to/create',
+          label: 'Create Gleam service',
         },
-        items: [
-          {
-            type: 'doc',
-            id: 'gleam/how-to/env-variables',
-            label: 'Manage environment variables',
-          },
-          {
-            type: 'doc',
-            id: 'gleam/how-to/customize-runtime',
-            label: 'Customize Gleam runtime',
-          },
-          {
-            type: 'doc',
-            id: 'gleam/how-to/scaling',
-            label: 'Scale Gleam runtime service',
-          },
-        ],
-      },
-      {
-        type: 'category',
-        label: 'Build & Deployment',
-        collapsible: false,
-        customProps: {
-          sidebar_is_group_headline: true,
+        {
+          type: 'doc',
+          id: 'gleam/how-to/upgrade',
+          label: 'Upgrade Gleam service',
         },
-        items: [
-          {
-            type: 'doc',
-            id: 'gleam/how-to/build-pipeline',
-            label: 'Configure build & deploy pipeline',
-          },
-          {
-            type: 'doc',
-            id: 'gleam/how-to/trigger-pipeline',
-            label: 'Trigger build pipeline',
-          },
-          {
-            type: 'doc',
-            id: 'gleam/how-to/build-process',
-            label: 'Build process',
-          },
-          {
-            type: 'doc',
-            id: 'gleam/how-to/deploy-process',
-            label: 'Deploy process',
-          },
-        ],
-      },
-      {
-        type: 'category',
-        label: 'Maintenance & Monitoring',
-        collapsible: false,
-        customProps: {
-          sidebar_is_group_headline: true,
+        {
+          type: 'doc',
+          id: 'gleam/how-to/controls',
+          label: 'Stop, start & delete Gleam runtime service',
         },
-        items: [
-          {
-            type: 'doc',
-            id: 'gleam/how-to/logs',
-            label: 'Setup & access logs',
-          },
-          {
-            type: 'doc',
-            id: 'gleam/how-to/filebrowser',
-            label: 'Browse container files',
-          },
-          {
-            type: 'doc',
-            id: 'gleam/how-to/shared-storage',
-            label: 'Connect / disconnect shared storage',
-          },
-        ],
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Configuration & Environment',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
       },
-    ],
+      items: [
+        {
+          type: 'doc',
+          id: 'gleam/how-to/env-variables',
+          label: 'Manage environment variables',
+        },
+        {
+          type: 'doc',
+          id: 'gleam/how-to/customize-runtime',
+          label: 'Customize Gleam runtime',
+        },
+        {
+          type: 'doc',
+          id: 'gleam/how-to/scaling',
+          label: 'Scale Gleam runtime service',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Build & Deployment',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'gleam/how-to/build-pipeline',
+          label: 'Configure build & deploy pipeline',
+        },
+        {
+          type: 'doc',
+          id: 'gleam/how-to/trigger-pipeline',
+          label: 'Trigger build pipeline',
+        },
+        {
+          type: 'doc',
+          id: 'gleam/how-to/build-process',
+          label: 'Build process',
+        },
+        {
+          type: 'doc',
+          id: 'gleam/how-to/deploy-process',
+          label: 'Deploy process',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Maintenance & Monitoring',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'gleam/how-to/logs',
+          label: 'Setup & access logs',
+        },
+        {
+          type: 'doc',
+          id: 'gleam/how-to/filebrowser',
+          label: 'Browse container files',
+        },
+        {
+          type: 'doc',
+          id: 'gleam/how-to/shared-storage',
+          label: 'Connect / disconnect shared storage',
+        },
+      ],
+    },
+  ],
   elixir: [
-      {
-        type: 'ref',
-        id: 'homepage',
-        label: 'Back to home',
-        customProps: {
-          sidebar_is_back_link: true,
-          sidebar_icon: 'back-arrow',
-        },
+    {
+      type: 'ref',
+      id: 'homepage',
+      label: 'Back to home',
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: 'back-arrow',
       },
-      {
-        type: 'doc',
-        id: 'elixir/overview',
-        label: 'Elixir',
-        customProps: {
-          sidebar_is_title: true,
-          sidebar_icon: 'elixir',
-        },
+    },
+    {
+      type: 'doc',
+      id: 'elixir/overview',
+      label: 'Elixir',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'elixir',
       },
-      {
-        type: 'category',
-        label: 'Management',
-        collapsible: false,
-        customProps: {
-          sidebar_is_group_headline: true,
-        },
-        items: [
-          {
-            type: 'doc',
-            id: 'elixir/how-to/create',
-            label: 'Create Elixir service',
-          },
-          {
-            type: 'doc',
-            id: 'elixir/how-to/upgrade',
-            label: 'Upgrade Elixir service',
-          },
-          {
-            type: 'doc',
-            id: 'elixir/how-to/controls',
-            label: 'Stop, start & delete Elixir runtime service',
-          },
-        ],
+    },
+    {
+      type: 'category',
+      label: 'Management',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
       },
-      {
-        type: 'category',
-        label: 'Configuration & Environment',
-        collapsible: false,
-        customProps: {
-          sidebar_is_group_headline: true,
+      items: [
+        {
+          type: 'doc',
+          id: 'elixir/how-to/create',
+          label: 'Create Elixir service',
         },
-        items: [
-          {
-            type: 'doc',
-            id: 'elixir/how-to/env-variables',
-            label: 'Manage environment variables',
-          },
-          {
-            type: 'doc',
-            id: 'elixir/how-to/customize-runtime',
-            label: 'Customize Elixir runtime',
-          },
-          {
-            type: 'doc',
-            id: 'elixir/how-to/scaling',
-            label: 'Scale Elixir runtime service',
-          },
-        ],
-      },
-      {
-        type: 'category',
-        label: 'Build & Deployment',
-        collapsible: false,
-        customProps: {
-          sidebar_is_group_headline: true,
+        {
+          type: 'doc',
+          id: 'elixir/how-to/upgrade',
+          label: 'Upgrade Elixir service',
         },
-        items: [
-          {
-            type: 'doc',
-            id: 'elixir/how-to/build-pipeline',
-            label: 'Configure build & deploy pipeline',
-          },
-          {
-            type: 'doc',
-            id: 'elixir/how-to/trigger-pipeline',
-            label: 'Trigger build pipeline',
-          },
-          {
-            type: 'doc',
-            id: 'elixir/how-to/build-process',
-            label: 'Build process',
-          },
-          {
-            type: 'doc',
-            id: 'elixir/how-to/deploy-process',
-            label: 'Deploy process',
-          },
-        ],
-      },
-      {
-        type: 'category',
-        label: 'Maintenance & Monitoring',
-        collapsible: false,
-        customProps: {
-          sidebar_is_group_headline: true,
+        {
+          type: 'doc',
+          id: 'elixir/how-to/controls',
+          label: 'Stop, start & delete Elixir runtime service',
         },
-        items: [
-          {
-            type: 'doc',
-            id: 'elixir/how-to/logs',
-            label: 'Setup & access logs',
-          },
-          {
-            type: 'doc',
-            id: 'elixir/how-to/filebrowser',
-            label: 'Browse container files',
-          },
-          {
-            type: 'doc',
-            id: 'elixir/how-to/shared-storage',
-            label: 'Connect / disconnect shared storage',
-          },
-        ],
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Configuration & Environment',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
       },
-    ],
-//  laravel: [
-//    {
-//      type: 'ref',
-//      id: 'homepage',
-//      label: 'Back to home',
-//      customProps: {
-//        sidebar_is_back_link: true,
-//        sidebar_icon: 'back-arrow',
-//      },
-//    },
-//    {
-//      type: 'doc',
-//      id: 'frameworks/laravel',
-//      label: 'Laravel',
-//      customProps: {
-//        sidebar_is_title: true,
-//        sidebar_icon: 'laravel',
-//      },
-//    },
-//    {
-//      type: 'doc',
-//      id: 'frameworks/laravel/introduction',
-//      label: 'Quickstart Guide',
-//      customProps: {
-//        sidebar_icon: 'rocket-launch',
-//      },
-//    },
-//    {
-//      type: 'category',
-//      label: 'Features',
-//      collapsible: false,
-//      customProps: {
-//        sidebar_is_group_headline: true,
-//      },
-//      items: [
-//        {
-//          type: 'doc',
-//          id: 'frameworks/laravel/env-variables',
-//          label: 'Environment Variables',
-//        },
-////        {
-////          type: 'doc',
-////          id: 'frameworks/laravel/local-development',
-////          label: 'Local Development',
-////        },
-//        {
-//          type: 'doc',
-//          id: 'frameworks/laravel/migrations',
-//          label: 'Database Migrations',
-//        },
-//        {
-//          type: 'doc',
-//          id: 'frameworks/laravel/redis',
-//          label: 'Cache & Queue with Redis',
-//        },
-//        {
-//          type: 'doc',
-//          id: 'frameworks/laravel/cron',
-//          label: 'Schedule Jobs & CRON',
-//        },
-//        {
-//          type: 'doc',
-//          id: 'frameworks/laravel/smtp',
-//          label: 'SMTP Configuration',
-//        },
-//        {
-//          type: 'doc',
-//          id: 'frameworks/laravel/logs',
-//          label: 'Logs',
-//        },
-//      ],
-//    },
-//      {
-//        type: 'html',
-//        value: 'Recipes',
-//        customProps: {
-//          sidebar_is_group_divider: true,
-//        },
-//        className: 'homepage-sidebar-item',
-//      },
-//    {
-//      type: 'category',
-//      label: 'Minimal',
-//      collapsible: true,
-//      customProps: {
-//        sidebar_is_group_headline: true,
-//      },
-//      items: [
-//        {
-//          type: 'doc',
-//          id: 'frameworks/laravel/recipes/minimal-local',
-//          label: 'Local Development',
-//        },
-//        {
-//          type: 'doc',
-//          id: 'frameworks/laravel/recipes/minimal-devel',
-//          label: 'Stage Environment',
-//        },
-//        {
-//          type: 'doc',
-//          id: 'frameworks/laravel/recipes/minimal-prod',
-//          label: 'Production',
-//        },
-//      ],
-//    },
-//    {
-//      type: 'category',
-//      label: 'Jetstream',
-//      collapsible: true,
-//      customProps: {
-//        sidebar_is_group_headline: true,
-//      },
-//      items: [
-//        {
-//          type: 'doc',
-//          id: 'frameworks/laravel/recipes/jetstream-local',
-//          label: 'Local Development',
-//        },
-//        {
-//          type: 'doc',
-//          id: 'frameworks/laravel/recipes/jetstream-devel',
-//          label: 'Stage Environment',
-//        },
-//        {
-//          type: 'doc',
-//          id: 'frameworks/laravel/recipes/jetstream-prod',
-//          label: 'Production',
-//        },
-//      ],
-//    },
-//    {
-//      type: 'category',
-//      label: 'Filament',
-//      collapsible: true,
-//      customProps: {
-//        sidebar_is_group_headline: true,
-//      },
-//      items: [
-//        {
-//          type: 'doc',
-//          id: 'frameworks/laravel/recipes/filament-local',
-//          label: 'Local Development',
-//        },
-//        {
-//          type: 'doc',
-//          id: 'frameworks/laravel/recipes/filament-devel',
-//          label: 'Stage Environment',
-//        },
-//        {
-//          type: 'doc',
-//          id: 'frameworks/laravel/recipes/filament-prod',
-//          label: 'Production',
-//        },
-//      ],
-//    },
-//    {
-//      type: 'category',
-//      label: 'Twill CMS',
-//      collapsible: true,
-//      customProps: {
-//        sidebar_is_group_headline: true,
-//      },
-//      items: [
-//        {
-//          type: 'doc',
-//          id: 'frameworks/laravel/recipes/twill-local',
-//          label: 'Local Development',
-//        },
-//        {
-//          type: 'doc',
-//          id: 'frameworks/laravel/recipes/twill-devel',
-//          label: 'Stage Environment',
-//        },
-//        {
-//          type: 'doc',
-//          id: 'frameworks/laravel/recipes/twill-prod',
-//          label: 'Production',
-//        },
-//      ],
-//    },
-//    {
-//      type: 'doc',
-//      id: 'frameworks/laravel/faq',
-//      label: 'FAQ',
-//      customProps: {
-//        sidebar_is_title: true,
-//        sidebar_icon: 'chat-bubble-left-right',
-//      },
-//    },
-//  ],
+      items: [
+        {
+          type: 'doc',
+          id: 'elixir/how-to/env-variables',
+          label: 'Manage environment variables',
+        },
+        {
+          type: 'doc',
+          id: 'elixir/how-to/customize-runtime',
+          label: 'Customize Elixir runtime',
+        },
+        {
+          type: 'doc',
+          id: 'elixir/how-to/scaling',
+          label: 'Scale Elixir runtime service',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Build & Deployment',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'elixir/how-to/build-pipeline',
+          label: 'Configure build & deploy pipeline',
+        },
+        {
+          type: 'doc',
+          id: 'elixir/how-to/trigger-pipeline',
+          label: 'Trigger build pipeline',
+        },
+        {
+          type: 'doc',
+          id: 'elixir/how-to/build-process',
+          label: 'Build process',
+        },
+        {
+          type: 'doc',
+          id: 'elixir/how-to/deploy-process',
+          label: 'Deploy process',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Maintenance & Monitoring',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'elixir/how-to/logs',
+          label: 'Setup & access logs',
+        },
+        {
+          type: 'doc',
+          id: 'elixir/how-to/filebrowser',
+          label: 'Browse container files',
+        },
+        {
+          type: 'doc',
+          id: 'elixir/how-to/shared-storage',
+          label: 'Connect / disconnect shared storage',
+        },
+      ],
+    },
+  ],
+  //  laravel: [
+  //    {
+  //      type: 'ref',
+  //      id: 'homepage',
+  //      label: 'Back to home',
+  //      customProps: {
+  //        sidebar_is_back_link: true,
+  //        sidebar_icon: 'back-arrow',
+  //      },
+  //    },
+  //    {
+  //      type: 'doc',
+  //      id: 'frameworks/laravel',
+  //      label: 'Laravel',
+  //      customProps: {
+  //        sidebar_is_title: true,
+  //        sidebar_icon: 'laravel',
+  //      },
+  //    },
+  //    {
+  //      type: 'doc',
+  //      id: 'frameworks/laravel/introduction',
+  //      label: 'Quickstart Guide',
+  //      customProps: {
+  //        sidebar_icon: 'rocket-launch',
+  //      },
+  //    },
+  //    {
+  //      type: 'category',
+  //      label: 'Features',
+  //      collapsible: false,
+  //      customProps: {
+  //        sidebar_is_group_headline: true,
+  //      },
+  //      items: [
+  //        {
+  //          type: 'doc',
+  //          id: 'frameworks/laravel/env-variables',
+  //          label: 'Environment Variables',
+  //        },
+  ////        {
+  ////          type: 'doc',
+  ////          id: 'frameworks/laravel/local-development',
+  ////          label: 'Local Development',
+  ////        },
+  //        {
+  //          type: 'doc',
+  //          id: 'frameworks/laravel/migrations',
+  //          label: 'Database Migrations',
+  //        },
+  //        {
+  //          type: 'doc',
+  //          id: 'frameworks/laravel/redis',
+  //          label: 'Cache & Queue with Redis',
+  //        },
+  //        {
+  //          type: 'doc',
+  //          id: 'frameworks/laravel/cron',
+  //          label: 'Schedule Jobs & CRON',
+  //        },
+  //        {
+  //          type: 'doc',
+  //          id: 'frameworks/laravel/smtp',
+  //          label: 'SMTP Configuration',
+  //        },
+  //        {
+  //          type: 'doc',
+  //          id: 'frameworks/laravel/logs',
+  //          label: 'Logs',
+  //        },
+  //      ],
+  //    },
+  //      {
+  //        type: 'html',
+  //        value: 'Recipes',
+  //        customProps: {
+  //          sidebar_is_group_divider: true,
+  //        },
+  //        className: 'homepage-sidebar-item',
+  //      },
+  //    {
+  //      type: 'category',
+  //      label: 'Minimal',
+  //      collapsible: true,
+  //      customProps: {
+  //        sidebar_is_group_headline: true,
+  //      },
+  //      items: [
+  //        {
+  //          type: 'doc',
+  //          id: 'frameworks/laravel/recipes/minimal-local',
+  //          label: 'Local Development',
+  //        },
+  //        {
+  //          type: 'doc',
+  //          id: 'frameworks/laravel/recipes/minimal-devel',
+  //          label: 'Stage Environment',
+  //        },
+  //        {
+  //          type: 'doc',
+  //          id: 'frameworks/laravel/recipes/minimal-prod',
+  //          label: 'Production',
+  //        },
+  //      ],
+  //    },
+  //    {
+  //      type: 'category',
+  //      label: 'Jetstream',
+  //      collapsible: true,
+  //      customProps: {
+  //        sidebar_is_group_headline: true,
+  //      },
+  //      items: [
+  //        {
+  //          type: 'doc',
+  //          id: 'frameworks/laravel/recipes/jetstream-local',
+  //          label: 'Local Development',
+  //        },
+  //        {
+  //          type: 'doc',
+  //          id: 'frameworks/laravel/recipes/jetstream-devel',
+  //          label: 'Stage Environment',
+  //        },
+  //        {
+  //          type: 'doc',
+  //          id: 'frameworks/laravel/recipes/jetstream-prod',
+  //          label: 'Production',
+  //        },
+  //      ],
+  //    },
+  //    {
+  //      type: 'category',
+  //      label: 'Filament',
+  //      collapsible: true,
+  //      customProps: {
+  //        sidebar_is_group_headline: true,
+  //      },
+  //      items: [
+  //        {
+  //          type: 'doc',
+  //          id: 'frameworks/laravel/recipes/filament-local',
+  //          label: 'Local Development',
+  //        },
+  //        {
+  //          type: 'doc',
+  //          id: 'frameworks/laravel/recipes/filament-devel',
+  //          label: 'Stage Environment',
+  //        },
+  //        {
+  //          type: 'doc',
+  //          id: 'frameworks/laravel/recipes/filament-prod',
+  //          label: 'Production',
+  //        },
+  //      ],
+  //    },
+  //    {
+  //      type: 'category',
+  //      label: 'Twill CMS',
+  //      collapsible: true,
+  //      customProps: {
+  //        sidebar_is_group_headline: true,
+  //      },
+  //      items: [
+  //        {
+  //          type: 'doc',
+  //          id: 'frameworks/laravel/recipes/twill-local',
+  //          label: 'Local Development',
+  //        },
+  //        {
+  //          type: 'doc',
+  //          id: 'frameworks/laravel/recipes/twill-devel',
+  //          label: 'Stage Environment',
+  //        },
+  //        {
+  //          type: 'doc',
+  //          id: 'frameworks/laravel/recipes/twill-prod',
+  //          label: 'Production',
+  //        },
+  //      ],
+  //    },
+  //    {
+  //      type: 'doc',
+  //      id: 'frameworks/laravel/faq',
+  //      label: 'FAQ',
+  //      customProps: {
+  //        sidebar_is_title: true,
+  //        sidebar_icon: 'chat-bubble-left-right',
+  //      },
+  //    },
+  //  ],
 };

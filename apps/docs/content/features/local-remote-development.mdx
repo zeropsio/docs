@@ -1,0 +1,138 @@
+---
+title: Local & Remote Development
+description: Three ways to develop on Zerops — local with VPN, Cloud IDE, or your native IDE over SSH. Same network, same managed services, same pipeline as production.
+---
+
+import Icons from '@theme/Icon';
+
+Zerops development is network-first. Keep your editor on your laptop, work fully inside Zerops, or use a native editor over SSH — in each case you join the same project-private network with the same hostnames, credentials, managed services, and deploy pipeline that staging and production use. What changes between environments is policy: credentials, resources, access rules, data, and release authority — not the platform underneath.
+
+## How development on Zerops works
+
+Every project ships with a private network. Services reach each other by hostname (`db:5432`, `api:3000`, `redis:6379`), with credentials injected as environment variables.
+
+The development question is how you get onto that network. Three paths give you the same project-private reach, with different filesystem, tooling, and credential boundaries.
+
+- **Local + VPN.** Your laptop joins the private network via WireGuard. Editor, toolchain, and processes stay where they are. A hosted workspace is not required.
+- **Cloud IDE.** A Linux workspace in the project, accessed through VS Code Server in the dashboard. Zero local setup.
+- **Native IDE over SSH.** SSH from your local VS Code, JetBrains Gateway, Cursor, or plain `ssh` into a workspace or directly into a runtime service container.
+
+Switch paths without reprovisioning the project. A teammate on Local + VPN and another in the Cloud IDE are hitting the same `db:5432`.
+
+<AsciiGraph ariaLabel="Three access paths converging on the project private network">{`   Laptop + editor          Browser tab          Laptop + native IDE
+          │                      │                        │
+     `}<span className="ascii-graph__highlight">{`zcli vpn up`}</span>{`          `}<span className="ascii-graph__highlight">{`VS Code Server`}</span>{`             `}<span className="ascii-graph__highlight">{`zcli vpn up`}</span>{`
+     (WireGuard)          on the project             + `}<span className="ascii-graph__highlight">{`ssh apidev`}</span>{`
+          │                      │                        │
+          └──────────────────────┴────────────────────────┘
+                                 │
+                                 ▼
+         ┌─────────── project private network ───────────┐
+         │                                               │
+         │     `}<span className="ascii-graph__highlight">{`api:3000`}</span>{`      `}<span className="ascii-graph__highlight">{`db:5432`}</span>{`      `}<span className="ascii-graph__highlight">{`cache:6379`}</span>{`     │
+         │                                               │
+         └───────────────────────────────────────────────┘`}</AsciiGraph>
+
+## Local + VPN
+
+**Best for:** keeping your existing editor, dotfiles, and toolchain — and offloading just the dependencies that are painful to run locally.
+
+```bash
+zcli vpn up <project-id>
+
+psql "postgresql://app:secret@db:5432/myapp"
+redis-cli -h cache -p 6379
+ssh apidev
+```
+
+Your laptop can reach project services by hostname: Postgres, Valkey, S3-compatible storage, runtime containers, and any other service in the project. You can keep your normal dev loop and point it at `db:5432` instead of a local mock or Docker Compose dependency.
+
+You do not need a hosted workspace, `zcli push`, or a new editor for this path.
+
+**Source control.** Use git on your laptop the way you always have. Commits, pushes, SSH agent against GitHub, your existing credentials — nothing about Zerops sits between you and the remote.
+
+:::info Complete VPN setup
+See the [VPN reference guide](/references/networking/vpn).
+:::
+
+## Cloud IDE in Zerops
+
+**Best for:** zero local setup, working from a machine that isn't yours, or wanting a pristine environment that doesn't touch your laptop.
+
+A hosted workspace is a normal Zerops service in the project. It gives you a project-contained Linux environment with private-network access, optional Browser VS Code, `zcli`, git tooling, database CLIs, and shell utilities.
+
+The workspace can also mount runtime service files, so you can inspect or edit code that runs in another container without moving it to your laptop:
+
+```bash
+ls /var/www/apidev
+ls /var/www/frontenddev
+vim /var/www/apidev/src/server.ts
+```
+
+The dev server in the runtime container hot-reloads, the database is the same `db:5432`, and staging deploys still go through the Zerops deploy pipeline.
+
+The Cloud IDE itself is configurable. Two access methods:
+
+- **VPN Only.** The IDE is reachable through `zcli vpn up`, no public exposure. Most secure.
+- **Public Access.** The IDE is reachable on a `.zerops.app` subdomain, gated by an auto-generated password.
+
+**Source control.** The hosted workspace isn't on your laptop, so your local SSH keys don't follow it. Two patterns work:
+
+- **GitHub via `gh`.** The GitHub CLI is preinstalled. Run `gh auth login` once and `gh` handles HTTPS auth, PR creation, and review flows from the container.
+- **Token in env vars.** Save a fine-grained personal access token to the workspace service's secret environment variables; `git` reads it through a credential helper.
+
+Either pattern keeps your token in the workspace service, not in your project's source.
+
+## Native IDE over SSH
+
+**Best for:** native editor UX without carrying the toolchain or databases on your laptop.
+
+Once `zcli vpn up` is connected, every container on the project's private network is reachable from your laptop over SSH. Any editor that speaks Remote SSH can use it: VS Code Remote SSH, JetBrains Gateway, Cursor, Zed, or plain `vim`.
+
+```bash
+ssh apidev               # any runtime service in the project
+ssh frontenddev
+```
+
+In this path, a hosted workspace is convenient but not required. You can connect straight to `apidev`, edit the source there, and run the dev server in the same container. A hosted workspace is only a convenience layer when you want shared tools, runtime file mounts, or Cloud IDE.
+
+**Source control.** SSH agent forwarding works the same way it does to any other machine. Add your local SSH key to your agent (`ssh-add`), and `git push` from inside `apidev` or the workspace service uses your laptop's GitHub key over the forwarded agent socket — no token storage required.
+
+```ssh-config
+# Local ~/.ssh/config
+Host apidev.zerops
+    HostName apidev
+    ForwardAgent yes
+```
+
+:::info SSH access details
+See the [SSH reference guide](/references/networking/ssh).
+:::
+
+## Picking a path
+
+|                       | Local + VPN        | Cloud IDE                  | Native IDE over SSH               |
+| --------------------- | ------------------ | -------------------------- | --------------------------------- |
+| Editor runs           | Local              | Browser                    | Local                             |
+| Toolchain             | Local              | Hosted workspace           | Hosted workspace or service container |
+| Network entry         | WireGuard VPN      | Browser into the project   | WireGuard VPN, then SSH           |
+| Hosted workspace required | No              | Yes                        | No (convenience)                  |
+| Git auth              | Local credentials  | `gh` or token in env       | SSH agent forwarding              |
+| Best for              | Keeping your setup | Disposable environments    | Native UX, lighter laptop         |
+
+## Why this is not just a cloud IDE
+
+If you've used GitHub Codespaces or Gitpod, Cloud IDE looks similar: a Linux container in the cloud, accessed from a browser or local IDE. Two structural differences matter.
+
+**You don't have to be in the editor.** Codespaces and Gitpod are editor-first. Zerops is network-first. Cloud IDE is one way to reach the project's private network; `zcli vpn up` lets you skip the editor environment entirely and consume the project's managed services from your existing local setup. The hosted workspace itself is just another Zerops service — SSH in, install packages, run processes, configure it however you want.
+
+**Your dev environment runs the same platform as production.** On a CDE, your dev container is one platform and the deployment target is another — making "works on my machine" a fact of life. On Zerops, dev Postgres, queue, cache, or object storage is the same managed service type the app meets later in stage and prod, on the same private network, with the same `zerops.yaml`. Policy differs across environments; the platform underneath doesn't.
+
+## Where to start
+
+<DocCardList items={[
+  { type: 'link', href: '/references/networking/vpn', label: 'VPN reference', customProps: { icon: Icons['link'], description: 'Connect your laptop to a Zerops project-private network.' } },
+  { type: 'link', href: '/references/networking/ssh', label: 'SSH reference', customProps: { icon: Icons['command-line'], description: 'Use a native editor or shell over SSH.' } },
+  { type: 'link', href: '/features/pipeline', label: 'Build & deploy pipeline', customProps: { icon: Icons['circle-stack'], description: 'Build and deploy from the same project model.' } },
+  { type: 'link', href: '/features/coding-agents', label: 'Infrastructure for Coding Agents', customProps: { icon: Icons['sparkles'], description: 'The sibling feature: agents working on Zerops projects through the same access model.' } },
+]} />

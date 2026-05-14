@@ -1,0 +1,81 @@
+---
+title: 'Package a running service'
+description: 'Turn a running Zerops service into a re-importable bundle.'
+---
+
+Use packaging when a verified runtime should become a re-importable Zerops bundle. It is a handoff or reuse task after the app already works, not the normal way to deploy the next change.
+
+You can ask for it directly:
+
+```text
+Package appstage as a buildFromGit import bundle.
+Commit it and push it to git.
+```
+
+The result is a single git repo that contains the app source, [`zerops.yaml`](/zerops-yaml/specification), and a project [import file](/references/import) named `zerops-project-import.yaml`. The import file uses `buildFromGit:` so a fresh Zerops project can rebuild the app from the repo instead of carrying source code inside YAML.
+
+Packaging starts from a deployed Zerops runtime. If important source changes exist only on your laptop, deploy or push them first so the runtime and git repo match what you want to package.
+
+## When to package
+
+Package a runtime when you need:
+
+- a running runtime and its managed dependencies reproduced in another Zerops project,
+- a reusable starter, demo, handoff, customer project, or clean staging baseline,
+- a repo commit that carries the Zerops import shape next to the app source,
+- the destination project to build from git.
+
+Do not use packaging for:
+
+- the next app deploy; use the normal build, deploy, and verify loop,
+- the production release; production needs its own infrastructure, credentials, domains, and release trigger,
+- moving managed-service data; backups and restores are separate.
+
+For production setup, follow [Promote to production](/zcp/workflows/promote-to-production). Packaging can help create a reusable app bundle, but it does not decide production infrastructure or release policy.
+
+## What the agent prepares
+
+The agent packages **one** runtime. If the project has dev and stage runtimes, it asks which one to use because they can have different env values, start commands, or `setup:` blocks.
+
+Managed services come along as dependencies when the runtime's `zerops.yaml` needs their env references. You do not pick databases, caches, queues, or search services one by one.
+
+The workflow then prepares:
+
+- `zerops-project-import.yaml` - the project and service shape for the destination project,
+- `zerops.yaml` - the runtime build and run configuration,
+- a git commit and push when git delivery is configured or explicitly requested.
+
+If the runtime has no usable `zerops.yaml` or git remote, the agent has to fix that first. A bundle is only useful when the destination project can pull source and build it from git.
+
+## Env vars need review
+
+Project env vars are the main place where the agent may ask you to decide. Each value gets one bucket:
+
+| Bucket | Use for | Bundle result |
+| --- | --- | --- |
+| `infrastructure` | Values derived from managed services, such as database or cache references. | Omitted from project envs; the new managed service provides fresh values. |
+| `auto-secret` | App-owned signing or encryption keys that can be regenerated. | Fresh generated secret on import. |
+| `external-secret` | Third-party credentials such as Stripe, OpenAI, Mailgun, or GitHub. | `REPLACE_ME` placeholder. |
+| `plain-config` | Literal non-secret config such as log level, feature flags, or public app settings. | Copied as-is. |
+
+Do not treat this as a key-name guessing game. The agent should inspect source code and ask when classification changes behavior. For example, regenerating a Laravel `APP_KEY`, Django `SECRET_KEY`, or session secret can break existing encrypted state. If state continuity matters, carry the existing value instead of generating a new one.
+
+## What is not included
+
+| Not included | What to do instead |
+| --- | --- |
+| Managed-service data | Restore from [Backup](/features/backup) or another migration path. |
+| Real third-party secrets | Fill placeholders in the destination project before deploying. |
+| Production domains, scaling, backups, and release triggers | Configure them in the destination project. |
+| A repeatable production release process | Use your CI or release workflow; see [Promote to production](/zcp/workflows/promote-to-production). |
+
+## Use the bundle
+
+After the bundle is pushed, import `zerops-project-import.yaml` in the destination project through the dashboard or with `zcli project project-import zerops-project-import.yaml`.
+
+Before opening the new project to users:
+
+- fill `REPLACE_ME` values,
+- restore or seed data when needed,
+- review service scaling and public access,
+- run a normal deploy and verification pass in the destination project.

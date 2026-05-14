@@ -9,6 +9,7 @@ import MDXDetails from './Details';
 import DocCard from '@theme/DocCard';
 import DocCardList from '@theme/DocCardList';
 import ExpandableTable from '@site/src/components/ExpandableTable';
+import AsciiGraph from '@site/src/components/AsciiGraph';
 
 const components = {
   // Re-use the default mapping
@@ -25,6 +26,7 @@ const components = {
   DocCardList,
   Note,
   ExpandableTable,
+  AsciiGraph,
 };
 
 export default components;

@@ -1,0 +1,103 @@
+---
+title: 'ZCP MCP tools'
+description: 'Use ZCP MCP as a direct MCP tool surface: what the tools do, what they do not decide, and which operations exist.'
+---
+
+Most app work should be phrased as an outcome: build this, fix that, deploy and prove it. Operation names matter when you configure agent-client policy, debug an MCP integration, build a custom client, or use ZCP MCP pragmatically as a set of project-scoped Zerops tools.
+
+ZCP MCP is the MCP server exposed by the `zcp` binary. Any MCP-capable client can connect to it and call tools such as `zerops_discover`, `zerops_logs`, `zerops_events`, `zerops_deploy`, or `zerops_verify`.
+
+## Tool-only use
+
+The MCP server exposes operations. It does not, by itself, decide the whole app lifecycle.
+
+Claude Code with the generated workflow uses its instructions to decide sequencing: inspect state before changing things, choose the runtime target, use existing services or create missing ones, deploy, read failure evidence, verify requested behavior, and stop with proof or a blocker.
+
+Tool-only use is valid when you want a custom MCP client, script, dashboard, policy-gated agent, or narrow operational task. In that setup, your integration owns the sequencing:
+
+- which project services are in scope,
+- when a deploy is allowed,
+- what counts as verification,
+- which logs or events should be read after failure,
+- when to ask a human,
+- when to stop.
+
+Tool-level gates still apply. Service deletion requires explicit named approval, and destructive import override requires an acknowledgement of the exact targets.
+
+If you use Claude Code but do not want the generated workflow guidance, keep the MCP connection and remove the ZCP-managed workflow block from `CLAUDE.md`, or keep your own policy outside the ZCP markers. What you lose is the generated instruction layer that makes the agent plan around live state, deploy with bounded retries, verify behavior, and report proof or a concrete blocker.
+
+Generated files and workflow state are documented in [Workflows in depth](/zcp/reference/agent-workflow#generated-files-and-state).
+
+## What the tools can do
+
+| Area | Tools | Typical use |
+| ---- | ----- | ----------- |
+| Discover | `zerops_discover` | Read services, service metadata, env-var keys, and project topology. |
+| Observe | `zerops_logs`, `zerops_events`, `zerops_verify`, `zerops_process` | Diagnose deploys, read runtime/build evidence, run health checks, and watch async processes. |
+| Deploy | `zerops_deploy` | Push source through Zerops build/deploy pipeline and return build/deploy evidence. |
+| Configure | `zerops_env`, `zerops_subdomain`, `zerops_scale`, `zerops_manage` | Change env vars, public subdomain access, scaling, lifecycle, reload/restart, and storage attachment. |
+| Import/export | `zerops_import`, `zerops_export`, `zerops_preprocess` | Import project/service YAML, read export YAML, and expand Zerops preprocessor expressions. |
+| Workspace | `zerops_mount` | Mount or unmount runtime filesystems in remote setup. |
+| Workflow | `zerops_workflow` | Track, recover, or configure workflow sessions and packaging/export flow. |
+| Destructive | `zerops_delete` | Delete one named service after explicit user approval. |
+
+Recipe-authoring and ZCP-internal maintenance operations are intentionally out of scope for this public reference.
+
+## Read-only operations
+
+| Operation | Purpose |
+| --------- | ------- |
+| `zerops_discover` | Read services, ports, env-var keys, and current state. |
+| `zerops_export` | Read platform project/service export YAML and service metadata. |
+| `zerops_logs` | Read runtime/build logs filtered by service, severity, time, or search. |
+| `zerops_events` | Read service activity, deploys, builds, scaling, and failures. |
+| `zerops_verify` | Run service health, recent error log, and HTTP-readiness checks. |
+| `zerops_knowledge` | Fetch ZCP MCP guidance or platform knowledge for the current state. |
+| `zerops_process` | Check a known async process; cancel is a mutating action. |
+
+## Mutating operations
+
+| Operation | Purpose |
+| --------- | ------- |
+| `zerops_deploy` | Ship code through the Zerops build and deploy pipeline. |
+| `zerops_env` | Read, set, delete, or generate env vars and local `.env` files. |
+| `zerops_manage` | Start, stop, restart, reload, or connect storage. |
+| `zerops_scale` | Change CPU, RAM, disk, CPU mode, or container autoscaling where supported. `HA`/`NON_HA` is set at service creation. |
+| `zerops_subdomain` | Enable or disable public subdomain access. |
+| `zerops_delete` | Delete a service. Explicit named approval is required. |
+
+## Operational setup
+
+| Operation | Purpose |
+| --------- | ------- |
+| `zerops_workflow` | Track, recover, or configure workflow sessions; also carries the package-running-service export flow. |
+| `zerops_import` | Import project/service definitions. Destructive override is gated. |
+| `zerops_mount` | Mount or unmount runtime filesystems in remote setup. |
+| `zerops_preprocess` | Expand Zerops preprocessor expressions. |
+
+## Remote and local tool differences
+
+The operation names are the same, but the filesystem and network boundary differ.
+
+| Area | Remote setup | Local setup |
+| ---- | ------------ | ----------- |
+| Files | Runtime files through SSHFS or remote containers. | Local working directory. |
+| Deploy source | Remote service or batch deploy inside Zerops. | Local `workingDir`. |
+| Dev server | Remote setup can run or inspect remote dev processes. | Your local tool owns the dev server. |
+| Env bridge | Env vars are already available in Zerops. | `.env` generation resolves Zerops references for local use. |
+| Git | Workspace-managed credentials. | User's local git credentials. |
+
+## Confirmation gates
+
+Two operations require explicit care:
+
+- **Service deletion** requires explicit user approval in the current conversation, by service name.
+- **Destructive import override** first refuses and names what would be replaced; a second call must acknowledge the same targets.
+
+See [Tokens and credentials](/zcp/security/tokens-and-project-access#what-zcp-enforces-for-destructive-actions) for the user-facing confirmation flow.
+
+## Related reference
+
+- [Workflows in depth](/zcp/reference/agent-workflow) - how a generated-workflow run uses these tools.
+- [Troubleshooting](/zcp/reference/troubleshooting) - evidence order when a run gets stuck.
+- [Tokens and credentials](/zcp/security/tokens-and-project-access) - token scope, storage, and confirmation gates.

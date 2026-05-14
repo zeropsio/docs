@@ -17,6 +17,18 @@ const config = {
   favicon: "favicon.ico",
   organizationName: "zerops",
   projectName: "zerops/docs",
+  headTags: [
+    {
+      tagName: "link",
+      attributes: {
+        rel: "preload",
+        href: "/fonts/JetBrainsMono-Regular.woff2",
+        as: "font",
+        type: "font/woff2",
+        crossorigin: "anonymous",
+      },
+    },
+  ],
   plugins: [
     './src/plugins/markdown-source',
     require.resolve("docusaurus-plugin-image-zoom"),
@@ -57,6 +69,9 @@ const config = {
     },
   ],
   themes: ["@docusaurus/theme-mermaid"],
+  markdown: {
+    mermaid: true,
+  },
   themeConfig: {
     mermaid: {
       theme: {

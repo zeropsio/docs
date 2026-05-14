@@ -1,0 +1,110 @@
+---
+title: 'Trust model'
+description: 'How MCP access is limited, and how remote and local setup change the surrounding blast radius.'
+---
+
+The trust model starts with one rule: one ZCP process operates one Zerops project. `ZCP_API_KEY` decides that boundary at startup, and ZCP refuses tokens that resolve to no project or multiple projects.
+
+That boundary is strong on the Zerops side. It does not make the agent harmless. A valid token can still deploy, change env vars, restart services, read logs, scale services, and change public access when Zerops permissions allow it. Treat it like an operations credential.
+
+## Boundary summary
+
+| Question                             | Answer                                                                                      |
+| ------------------------------------ | ------------------------------------------------------------------------------------------- |
+| What project can ZCP see?            | Exactly one project resolved from `ZCP_API_KEY` at startup.                                 |
+| What can ZCP change?                 | Whatever Zerops RBAC grants that token inside the project.                                  |
+| What is outside reach?               | Other projects, organization-wide settings, billing, and any operation Zerops RBAC rejects. |
+| What network can remote setup reach? | Private services from inside the `zcp` service.                                             |
+| What network can local setup reach?  | The Zerops API directly, plus private services only when your laptop VPN is up.             |
+| Who owns the agent login?            | You. The agent subscription or model API key is separate from `ZCP_API_KEY`.                |
+
+Zerops [RBAC](/features/rbac) remains the authority. ZCP does not bypass platform permissions; it exposes project operations to the agent only through the token it was given.
+
+## Remote and local blast radius
+
+Remote setup and local setup share the same Zerops boundary, but not the same surroundings.
+
+| Area                       | Remote setup                                                                 | Local setup                                                     |
+| -------------------------- | ---------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| Agent location             | Inside the `zcp@1` service when **Include Coding Agent** is enabled          | On your machine through your editor or CLI agent                |
+| Files visible to the agent | Workspace files and mounted runtime files                                    | Local files and anything your client permits                    |
+| Private service access     | Private network without laptop VPN                                           | `zcli vpn up <project-id>` from your machine                    |
+| Local machine exposure     | No direct access to your laptop                                              | Agent client runs as your local user                            |
+| Best safety posture        | Keep ZCP in a development/staging project and avoid mounting unrelated files | Restrict client permissions, shell access, and filesystem scope |
+
+Remote setup is contained inside Zerops by design. Local setup is supervise-the-client by design. Either can be right, but local setup requires more attention to your agent client's local permissions.
+
+## Credential ownership
+
+There are three separate credential surfaces people often mix together:
+
+| Credential                          | Owner                        | Purpose                                                |
+| ----------------------------------- | ---------------------------- | ------------------------------------------------------ |
+| `ZCP_API_KEY`                       | Zerops token                 | Lets ZCP operate one Zerops project.                   |
+| Agent subscription or model API key | You / the agent provider     | Lets the coding agent run. Zerops does not provide it. |
+| Git or CI credentials               | You / your repository system | Lets finished work push to git or deploy through CI.   |
+
+In both setups, the agent account is still authenticated through the agent's own login flow. For where each credential lives (remote injection vs `.mcp.json`), rotation, rejected token shapes, and `GIT_TOKEN` / `ZEROPS_TOKEN`, see [Tokens and credentials](/zcp/security/tokens-and-project-access).
+
+## What the token lets the agent do
+
+The agent can perform normal operational work when the token has permission:
+
+- discover runtime and managed services,
+- create or adjust services when the task requires it,
+- read and write service env vars,
+- deploy app code to runtime services,
+- read build logs, runtime logs, and service events,
+- restart, reload, stop, start, or scale services,
+- enable or disable public access,
+- prepare delivery such as git push or CI handoff.
+
+This is why development and staging projects are the right place for ZCP. Production should be a separate project without a `zcp` service; see [Production boundary](/zcp/security/production-policy).
+
+## Remote setup specifics
+
+- **`zcp` service is not the app.** It is the workspace and control surface. Deploys target app runtimes, not the `zcp` service.
+- **The service has operational reach.** A terminal in the `zcp` service can use the same ZCP access as the agent. Review the dashboard's additional changes before deploying the service; they are what give the workspace its operating surface.
+- **Network reach is broader than file reach.** The workspace can reach private services, but it only sees runtime files that are mounted into it.
+- **Do not hand-edit `ZCP_API_KEY`.** Remote setup gets the value from Zerops. Manual replacement can break the intended one-project boundary.
+
+## Local setup specifics
+
+- **The agent inherits local reach.** ZCP MCP is limited to one project, but the local agent client can read files, run commands, and use credentials allowed by your client settings.
+- **Each local directory has its own config.** `.mcp.json` and `.zcp/state/` belong to one app directory. Launching from the wrong directory can connect the wrong token or no token.
+- **VPN is outside MCP authority.** Bringing up Zerops VPN needs your operating-system approval. The tools cannot grant that for the agent.
+- **`.env` files are snapshots.** They contain real project credentials and should stay out of git.
+
+## Human confirmation gates
+
+Most project operations do not get an extra ZCP-specific confirmation prompt. Deploys, env changes, restarts, scaling, and public-access changes are normal project operations and are audited through platform evidence.
+
+ZCP MCP adds hard gates where the loss is not safely reversible from the conversation: **service deletion** (explicit same-conversation approval by service name; remote setup also blocks deleting the `zcp` service it is running in) and **wholesale service replacement after failed deploy history** (refuse-then-acknowledge with failure evidence first). Approval from an old chat does not carry forward. The full enforcement rules are in [Tokens and credentials → What ZCP enforces for destructive actions](/zcp/security/tokens-and-project-access#what-zcp-enforces-for-destructive-actions).
+
+## Audit evidence
+
+Zerops records platform-side evidence. It does not record the agent's private reasoning, every shell edit, browser-helper action, or prompt history outside your agent client.
+
+When taking over from an agent, read evidence in this order:
+
+1. service-scoped events,
+2. build logs,
+3. runtime logs,
+4. deploy and verification output,
+5. git history when delivery uses git-push.
+
+| Surface        | What it proves                                                            | What it does not prove                       |
+| -------------- | ------------------------------------------------------------------------- | -------------------------------------------- |
+| Service events | Deploy lifecycle, failures, restarts, scaling, and public-access changes. | The exact source edit that caused the event. |
+| Build logs     | Dependency install, build commands, compile/package failures.             | Runtime request behavior after deploy.       |
+| Runtime logs   | Start crashes, port binding, request-time app errors.                     | Why the build failed.                        |
+| Verify output  | Whether reachability and requested behavior passed.                       | That unrelated app flows work.               |
+| Git history    | Source changes pushed during git-push delivery.                           | Uncommitted shell edits.                     |
+
+Filter by service hostname when possible. Project-level timelines can include unrelated services and older failures.
+
+## Related security
+
+- [Tokens and credentials](/zcp/security/tokens-and-project-access) - token scope, storage, rotation, and confirmation gates.
+- [Remote or local setup](/zcp/setup/choose-workspace) - compare blast radius before setup.
+- [Production boundary](/zcp/security/production-policy) - keep production outside the agent loop.

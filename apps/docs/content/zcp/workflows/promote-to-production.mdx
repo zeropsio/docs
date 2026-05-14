@@ -1,0 +1,131 @@
+---
+title: 'Promote to production'
+description: 'Move verified dev or stage work into a production Zerops project without putting the zcp service in production.'
+---
+
+import Icons from '@theme/Icon';
+
+Use this after the agent has proved work in development or stage. The production release is the point where authority changes: the agent can prepare proof, source changes, and setup notes, but production execution belongs to Zerops project settings, CI, release tooling, or a deliberate human action with production credentials.
+
+Production should be a separate Zerops project without a `zcp` service. That keeps the development agent out of the production blast radius while still letting verified work reach production.
+
+## The simple production path
+
+There are three different jobs. Two are setup work; one is the repeatable release operation.
+
+| Job | How often | Simplest path |
+| --- | --- | --- |
+| **Create production infrastructure** | Once per production project | Export the verified Zerops project as YAML in the GUI, edit it for production, then import it as a new project. |
+| **Connect the production deploy trigger** | Once per production runtime | In the production project, connect the git repository in the Zerops GUI and trigger builds from release tags. |
+| **Release an app change** | Every release | Verify in dev/stage, push source to git, then create the release tag or use your team's release process. |
+
+This page uses the GUI path because it is the clearest path available today. More customized teams can replace the GUI trigger with GitHub Actions or another CI system later.
+
+## 1. Create production infrastructure
+
+Do this once when you need a production project for a verified app.
+
+1. Open the development or staging project that contains the verified runtime.
+2. Use **Export project as yaml**.
+3. Edit the exported YAML for production.
+4. Import the edited YAML as a new Zerops project.
+
+Before import, review the YAML as production infrastructure, not as a blind copy of the development project:
+
+- remove the `zcp` service,
+- remove dev-only runtimes and tools such as Mailpit or Adminer,
+- keep the runtime and managed services that production actually needs,
+- choose production `mode` values before creation, especially `HA` for databases that need it,
+- set production `minContainers`, autoscaling, and core package,
+- replace development secrets with production secrets or placeholders,
+- plan managed-service data restore or migrations,
+- configure production domains, DNS, public access, SMTP, object storage, backups, queues, search, and cache as needed.
+
+Before opening production traffic, get familiar with the deeper Zerops production surface: service modes, scaling, deploy pipeline, health checks, backups, public access, and domains. If the app should use a real domain, follow [Public Access Configuration](/references/networking/public-access).
+
+Project export/import creates the production infrastructure. Do not rely on it as the code delivery mechanism. The app source should be in git, and the first production code deploy should come through the production deploy trigger.
+
+## 2. Connect the production deploy trigger
+
+Do this once for each production runtime that should build from git.
+
+The simplest path is the Zerops GitHub or GitLab integration in the production project:
+
+1. Open the production runtime service.
+2. Connect the git repository.
+3. Choose **New tag** as the production trigger.
+4. Add a tag filter if your team uses one, for example `v*`.
+5. Keep production env vars and secrets in the production Zerops project.
+
+For stage, a branch trigger can be convenient. For production, a tag trigger is easier to reason about: a normal source push can update stage, while a deliberate release tag updates production.
+
+If your team needs approvals, custom tests, generated artifacts, or stricter audit, use GitHub Actions or another CI system instead. In that setup, store a production-scoped `ZEROPS_TOKEN` in the CI secret store and run the production deploy from CI.
+
+## 3. Release an app change
+
+This is the repeatable operation after production infrastructure and the deploy trigger exist. The exact release command is yours: define it in your repository instructions, agent skill, CI guide, or team release checklist.
+
+For example, if production deploys from release tags, the user instruction can be as direct as:
+
+```text
+Create the release tag for production and push it to git.
+```
+
+Use the wording that matches your CI/CD. The release step can be a manual CLI action, a `git push`, a tag push, a pull request, a protected branch merge, or a CI job. That part is your team preference and production setup, not a rule from these docs.
+
+The important rule is that the agent should name what it pushed and whether that push triggers stage, production, both, or neither. If production release requires a tag, the final answer should say the tag name or the exact tag command.
+
+## What not to carry into production
+
+Do not copy these from the development project into production:
+
+- the `zcp` service,
+- development `ZCP_API_KEY`,
+- local `.mcp.json`,
+- development secrets,
+- test data unless it is intentionally migrated,
+- dev-only utilities such as Mailpit or Adminer,
+- `.zerops.app` preview routing as the final public entry point.
+
+Use production-specific domains, secrets, backup policy, scaling, and release credentials.
+
+## What the agent should hand you
+
+A useful release handoff from the agent contains:
+
+- runtime and project where the change was verified,
+- URL, endpoint, UI state, job result, or stored data that proves the requested behavior,
+- commit, branch, PR, or suggested release tag,
+- whether the git push triggers stage, production, both, or neither,
+- services to keep, remove, or change before importing production infrastructure,
+- env vars, managed services, migrations, or delivery settings touched,
+- external secrets still needed,
+- managed-service data that must be restored or migrated,
+- production blockers that need a human decision.
+
+If the answer only says that files were changed, the release handoff is incomplete. Ask for the verification evidence and the exact release artifact.
+
+Production hardening belongs in your team's production checklist. This page only defines the handoff from verified dev or stage work into production authority.
+
+## Related production references
+
+<DocCardList items={[
+  {
+    type: 'link',
+    href: '/zcp/security/production-policy',
+    label: 'Production boundary',
+    customProps: { icon: Icons['firewall'], description: 'Why production stays outside the agent loop.' },
+  },
+  {
+    type: 'link',
+    href: '/references/import',
+    label: 'Import & Export YAML Configuration',
+    customProps: { icon: Icons['document-text'], description: 'Project export and import reference.' },
+  },
+  {
+    type: 'link',
+    href: '/references/networking/public-access',
+    label: 'Public Access Configuration',
+    customProps: { icon: Icons['globe-europe'], description: 'Custom domains, DNS, SSL, and production public access.' },
+  },
+]} />
