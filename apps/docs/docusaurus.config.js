@@ -255,6 +255,7 @@ const config = {
         },
         sitemap: {
           filename: "sitemap-docs.xml",
+          ignorePatterns: ["/guides/**"],
         },
       },
     ],
