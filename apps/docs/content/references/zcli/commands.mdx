@@ -319,6 +319,65 @@ Shows the current zCLI version.
 zcli version
 ```
 
+### upgrade
+
+Replaces the running zCLI binary in place with a newer release. Downloads the matching asset from GitHub Releases, verifies it against the release's `checksums.txt`, then atomically swaps the binary.
+
+:::note Availability
+The `upgrade` command is available in zCLI `v1.1.0` and later. On earlier versions, install the newer release via [install.sh](#downgrading-below-v110) (or your package manager) first.
+:::
+
+```sh
+zcli upgrade [flags]
+```
+
+**Flags:**
+- `--check` - Print the current and latest version, then exit without installing. Intended for scripts and package managers.
+- `--yes` - Skip the confirmation prompt.
+- `--version string` - Install a specific release tag (e.g. `v1.1.0`) instead of the latest. Allows downgrades.
+- `--pick-version` - Open an interactive picker listing every release. Mutually exclusive with `--version`.
+- `--include-pre-release` - Include pre-release and `-rc` tags in the `--pick-version` picker. Stable releases only by default.
+- `--no-cache` - Bypass the on-disk version cache and resolve `latest` directly from the release API. Useful right after a release goes out, before the local cache refreshes.
+- `--download-timeout string` - Overall timeout for the binary download as a Go duration (e.g. `5m`, `90s`). `0` disables the timeout. Default `2m`.
+
+**Examples:**
+```sh
+# Interactive upgrade to the latest release
+zcli upgrade
+
+# Unattended upgrade, suitable for scripts
+zcli upgrade --yes
+
+# Install a specific tag (and accept downgrade)
+zcli upgrade --version v1.1.0 --yes
+
+# Pick from a table of every release
+zcli upgrade --pick-version
+```
+
+#### Exit codes for `--check`
+
+`zcli upgrade --check` is designed for scripting. It prints `Current:`, `Latest:` (and `Target:` when `--version` is set) on stdout and exits with:
+
+- `0` - up to date.
+- `1` - a newer release is available.
+- `2` - lookup failed (network, invalid `--version` tag, etc.); the error is on stderr.
+- `3` - the resolved target predates `v1.1.0` (the first release that ships `checksums.txt`) and cannot be installed by `zcli upgrade`. Use the install script instead - see below.
+
+#### Package-manager installs
+
+When zCLI is installed through a package manager (`npm`, Homebrew, `nix`, `.deb`), `zcli upgrade` refuses to swap the binary and prints the channel-appropriate command instead - for example `npm install -g @zerops/zcli` or `brew upgrade zcli`. `--check` still works against any install.
+
+#### Downgrading below v1.1.0
+
+Releases before `v1.1.0` don't ship the `checksums.txt` asset that `zcli upgrade` verifies against, so they can only be installed via the install script:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/zeropsio/zcli/main/install.sh | sh -s -- v1.0.67
+```
+
+`zcli upgrade --version <old-tag>` and `--pick-version` will print this hint when the chosen target requires the install script.
+
 ### show-debug-logs
 
 Displays debug logs for troubleshooting.
