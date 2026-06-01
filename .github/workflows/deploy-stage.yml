@@ -1,0 +1,50 @@
+name: Deploy to stage
+
+# Manually deploy the branch you run this from to one of the docs stage
+# services in the docs-prod project (8OhtUz1ISOCzykK3CUplng).
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Stage service to deploy to'
+        required: true
+        default: docsstage1
+        type: choice
+        options:
+          - docsstage1
+          - docsstage2
+          - docsstage3
+
+jobs:
+  deploy:
+    name: deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve service ID
+        id: svc
+        run: |
+          case "${{ github.event.inputs.target }}" in
+            docsstage1) id=FXMA8YzYSQqVTTlBmAMmpQ ;;
+            docsstage2) id=wz153TNtQluTG0XBXzXHbg ;;
+            docsstage3) id=VNNJrIhWRCO1924gAXHkHg ;;
+            *) echo "Unknown target '${{ github.event.inputs.target }}'" && exit 1 ;;
+          esac
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+
+      - name: Install Zerops CLI
+        run: |
+          curl -L https://github.com/zeropsio/zcli/releases/latest/download/zcli-linux-amd64 -o /usr/local/bin/zcli
+          chmod +x /usr/local/bin/zcli
+
+      - name: Login to Zerops
+        run: zcli login "${{ secrets.ZEROPS_TOKEN }}"
+
+      - name: Deploy to Zerops
+        run: |
+          zcli push \
+            --service-id "${{ steps.svc.outputs.id }}" \
+            --setup docs \
+            --version-name "${GITHUB_REF_NAME}-$(echo "${GITHUB_SHA}" | cut -c1-7)"
