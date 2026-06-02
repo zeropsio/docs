@@ -48,13 +48,16 @@ DNS TTL: 30 seconds. Geo-steering routes to nearest node. EU Prague is fallback 
 Wildcard must be at end. Use `$` suffix for exact file match.
 
 ### Purge via zsc
+
+Signature: `zsc cdn purge <domain> [path]` — the **domain is required first**; the path/pattern is the optional second arg (defaults to `*`). Works for **Static-Mode CDN only** — Object-Storage CDN content is purged via the REST API, not `zsc`. Run from a container whose CDN domain is active.
 ```bash
-zsc cdn purge /*              # Purge all cached content
-zsc cdn purge /images/*       # Purge directory
-zsc cdn purge /style.css$     # Purge exact file
+zsc cdn purge example.com               # Purge all cached content for the domain
+zsc cdn purge example.com "/images/*"   # Purge a directory
+zsc cdn purge example.com "/style.css$" # Purge exact file
 ```
 
 ## Gotchas
 1. **30-day fixed TTL**: Cannot be changed — `Cache-Control: max-age=3600` has no effect on CDN
 2. **No wildcard domains on static CDN**: `*.domain.com` is not supported
 3. **Purge wildcards at end only**: `/images/*.jpg` is invalid — use `/images/*`
+4. **CDN URLs are project-scoped env vars**: `${storageCdnUrl}`, `${staticCdnUrl}`, `${apiCdnUrl}` are referenced directly with no hostname prefix (unlike service vars like `${storage_apiUrl}`)

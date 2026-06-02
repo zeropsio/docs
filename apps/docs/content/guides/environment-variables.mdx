@@ -30,10 +30,10 @@ Total order for the bare key (highest wins): **system/platform > yaml-baked `run
 
 Build and runtime run in **separate containers**. Variables from one phase are not visible in the other unless explicitly referenced with prefixes:
 
-| Want to access | From | Use prefix |
-|---------------|------|-----------|
-| Runtime var `API_KEY` | Build container | `${RUNTIME_API_KEY}` |
-| Build var `BUILD_ID` | Runtime container | `${BUILD_BUILD_ID}` |
+| Want to access | From | How |
+|---------------|------|-----|
+| Runtime var `API_KEY` | Build container | `${RUNTIME_API_KEY}` — runtime `run.envVariables` are known at build time, so the build can read them |
+| Build var `BUILD_ID` | Runtime container | **Not available.** The build container is destroyed after build and its vars are not carried into the runtime env store — `${BUILD_BUILD_ID}` reaches the runtime process as the literal string `${BUILD_BUILD_ID}`. Persist the value into a deployed file, or recompute it at runtime. |
 
 ```yaml
 zerops:
@@ -66,7 +66,7 @@ const host = process.env.DB_HOST;
 
 - The reference **resolves at container start**, independent of isolation mode — the referenced var does not need to exist at definition time.
 - An **unresolved ref stays literal** (`${db_hostname}` reaches the process verbatim) — no error, no blank. A wrong hostname/var on the right-hand side becomes a literal string and the app fails at connect time.
-- **Hostname transformation**: dashes become underscores. Service `my-db` variable `port` is `${my_db_port}`.
+- **Hostname charset**: service hostnames are lowercase alphanumeric only (`[a-z0-9]`) — the platform rejects dashes, underscores, and uppercase with `serviceStackNameInvalid`. So a ref is simply `${hostname_varname}` with the literal hostname (service `cache` → `${cache_port}`); there is no dash-to-underscore rewrite to reason about, because a dashed hostname cannot exist.
 
 Only legacy `envIsolation=none` auto-injects every sibling's vars as bare `<host>_KEY` OS env vars without a ref — see Isolation Modes. New projects are `service`; rely on explicit refs.
 
@@ -161,7 +161,7 @@ The frontend consumes `API_URL` via plain `${API_URL}` in `build.envVariables` (
 - Defined via GUI, import.yml `envSecrets`, or `dotEnvSecrets`
 - **Read is privilege-gated** -- masked in GUI; via API an admin/write token returns the value verbatim, a read-only token returns `REDACTED` (keyed on `sensitive=true`). In-container the value is plaintext (the app needs it). Project-level `sensitive=true` does NOT persist — only service-level is a true secret surface.
 - Can be updated without redeploy, but the service **must be restarted** to pick it up.
-- Overridden by yaml-baked `run.envVariables` with the same key (yaml owns the key).
+- A yaml-baked `run.envVariables` key and a secret on the **same key cannot coexist** — the platform rejects the secret with `userDataDuplicateKey`. The yaml owns the key; edit the yaml and redeploy to change it.
 
 ### dotEnvSecrets
 
@@ -209,7 +209,7 @@ An env-store change (secret or project) propagates to the container in ~5–10s 
 
 ## System-Generated Variables
 
-Zerops auto-generates variables per service (e.g., `hostname`, `PATH`, DB connection strings). Cannot be deleted. Some read-only (`hostname`), others editable (`PATH`). Reference them from another service with an explicit `${hostname_varname}`.
+Zerops auto-generates variables per service (e.g., `hostname`, `PATH`, DB connection strings). Some are **hard-reserved** and rejected if you try to set them — `PATH` (uppercase) returns `userDataUseOfSystemKey` in any `envVariables` block. Overridable platform vars include `envIsolation` / `sshIsolation` / `zeropsSubdomainHost` (and the CDN URLs) — but never `PATH`. Reference any of them from another service with an explicit `${hostname_varname}`.
 
 ## Common Mistakes
 

@@ -43,7 +43,7 @@ deploy:
 
 **DO NOT** confuse with healthCheck -- readiness gates a deploy; healthCheck monitors continuously after.
 
-> **Dev/stage distinction**: In dev+stage pairs, healthCheck and readinessCheck belong ONLY on the stage entry. Dev services use `start: zsc noop --silent` — the agent controls server lifecycle via SSH. Adding healthCheck to dev causes unwanted container restarts during iteration.
+> **Dev/stage distinction**: In dev+stage pairs, healthCheck and readinessCheck belong ONLY on the stage entry. **Dynamic-runtime dev services OMIT `run.start` entirely** — the runtime container idles and the agent controls the server lifecycle via SSH. (A `start: zsc noop --silent` placeholder is the retired convention and is now rejected by a blocking recipe gate.) Adding healthCheck to dev causes unwanted container restarts during iteration.
 
 ---
 
@@ -69,7 +69,7 @@ run:
       allContainers: false
 ```
 
-Parameters: `command` (required), `timing` (required, 5-field cron: `min hour dom mon dow`), `workingDir` (default `/var/www`), `allContainers` (`false` = one container, `true` = all containers).
+Parameters: `command` (required), `timing` (required, 5-field cron: `min hour dom mon dow`), `allContainers` (**required** by the schema — `false` = one container, `true` = all containers), `workingDir` (optional, default `/var/www`).
 
 Cron runs inside the runtime container with full env var access. When `allContainers: false`, Zerops picks **one** container (good for DB jobs). Use `true` for cache clearing or log rotation everywhere. Minimum granularity is 1 minute.
 
@@ -90,7 +90,7 @@ run:
         - litestream restore -if-replica-exists -if-db-not-exists $DB_NAME
 ```
 
-Each entry: `command` (required), `name` (required), `workingDir` (optional), `initCommands` (optional, per-process init). **DO NOT** use both `start` and `startCommands`.
+Each entry: `command` (**required** — the only field the schema requires), `name` (optional, distinguishes processes in logs), `workingDir` (optional), `initCommands` (optional, per-process init). **DO NOT** use both `start` and `startCommands`.
 
 ---
 
@@ -178,7 +178,7 @@ Configuration is **merged at the section level** -- child values override parent
 Available runtimes and versions are listed in **Service Stacks (live)** -- injected by `zerops_knowledge` and workflow responses. Some key rules:
 
 - PHP: build `php@X`, run `php-nginx@X` or `php-apache@X` (different bases)
-- Deno, Gleam: REQUIRES `os: ubuntu` (not available on Alpine)
+- Deno: REQUIRES `os: ubuntu` (no Alpine build exists). Gleam runs on both Alpine and Ubuntu.
 - Static sites: build `nodejs@latest`, run `static`
 - `@latest` = newest stable version
 

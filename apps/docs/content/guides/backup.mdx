@@ -8,6 +8,8 @@ Zerops auto-backs up databases and storage daily (00:00-01:00 UTC) with X25519 e
 ## Supported Services
 MariaDB, PostgreSQL, Qdrant, Elasticsearch, NATS, Meilisearch, Shared Storage.
 
+**ClickHouse**: not on the standard auto-backup path — back it up with the native `BACKUP ALL ...` SQL command (super user), stored as `.tar.gz`.
+
 **Not supported**: Runtimes, Object Storage (use S3 lifecycle policies), Valkey/KeyDB (in-memory).
 
 ## Schedule Options
@@ -40,15 +42,15 @@ End-to-end with X25519 per-project keys. Decrypted only on download.
 7 days after service or project deletion before backups are permanently removed.
 
 ## Backup Formats by Service
-| Service | Format |
-|---------|--------|
-| PostgreSQL | pg_dump |
-| MariaDB | mysqldump |
-| Elasticsearch | elasticdump (.gz) |
-| Meilisearch | .dump |
-| Qdrant | .snapshot |
-| NATS | .tar.gz |
-| Shared Storage | filesystem archive |
+| Service | Tool → Format |
+|---------|---------------|
+| PostgreSQL | `pg_dump` → `.zip` (per-schema custom-format `-Fc` dumps) |
+| MariaDB | `mariabackup` → `.xb.gz` (xbstream + gzip) — **not** `mysqldump` (that is the manual-export tool, a different operation) |
+| Elasticsearch | elasticdump → `.gz` |
+| Meilisearch | `.dump` |
+| Qdrant | `.snapshot` |
+| NATS | `.tar.gz` |
+| Shared Storage | tar → `.tar.gz` |
 
 ## Gotchas
 1. **Object Storage has no Zerops backup**: Use S3 lifecycle policies or external backup

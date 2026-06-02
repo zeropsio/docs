@@ -18,12 +18,13 @@ Zerops supports ELK (APM + logs) and Prometheus/Grafana stacks; expose `/metrics
 | `logstash` | Log collection |
 
 ### APM Configuration
-```yaml
-envVariables:
-  ELASTIC_APM_ACTIVE: "true"
-  ELASTIC_APM_SERVICE_NAME: my-app
-  ELASTIC_APM_SERVER_URL: https://apmserver.zerops.app
-  ELASTIC_APM_SECRET_TOKEN: <your-secret>
+
+Set these on your app as service env vars (GUI or `run.envVariables`). Copy the real APM server URL from the `apmserver` service's subdomain in the GUI — it's a generated subdomain (`apmserver-<subdomainHost>-<port>.<region>.zerops.app`), **not** a fixed `apmserver.zerops.app` host:
+```
+ELASTIC_APM_ACTIVE=true
+ELASTIC_APM_SERVICE_NAME=my-app
+ELASTIC_APM_SERVER_URL=https://<apmserver-subdomain-from-gui>
+ELASTIC_APM_SECRET_TOKEN=<your-secret>
 ```
 
 ## Prometheus + Grafana Stack Services
@@ -37,12 +38,12 @@ envVariables:
 
 ### Custom Metrics
 1. Expose HTTP `/metrics` endpoint in your app
-2. Set env var: `ZEROPS_PROMETHEUS_PORT=8080` (comma-separated for multiple ports)
+2. Set env var: `ZEROPS_PROMETHEUS_PORT=<port your /metrics endpoint listens on>` (e.g. `9090`; comma-separated for multiple ports)
 3. Prometheus auto-discovers and scrapes
 
 ## Built-in Metrics
 - Service scaling & resource usage
-- PostgreSQL (with `pg_stat_statements` extension)
+- PostgreSQL (some metrics require the `pg_stat_statements` extension — superuser `CREATE EXTENSION` + restart)
 - MariaDB
 - Valkey
 

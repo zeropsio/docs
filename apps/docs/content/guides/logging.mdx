@@ -18,9 +18,10 @@ Zerops captures stdout/stderr as logs; use syslog output format for severity fil
 
 ### CLI
 ```bash
-zcli service log <service-name>                  # Runtime logs
-zcli service log <service-name> --showBuildLogs  # Build logs
+zcli service log -S <service-id>                     # Runtime logs (select via -S/--service-id, NOT a positional name)
+zcli service log -S <service-id> --show-build-logs   # Build logs
 ```
+Agents in this ecosystem read runtime logs via the `zerops_logs` MCP tool — it fetches **runtime logs only** (no build-log flag); build logs surface by auto-attachment on a deploy-failure response.
 
 ## Severity Filtering
 Logs must output to **syslog format** for severity filtering to work. Plain stdout/stderr logs appear as "info" level.
@@ -57,7 +58,7 @@ Certificate paths:
 
 ## Gotchas
 1. **Syslog format required**: Without syslog formatting, all logs appear as same severity — no filtering possible
-2. **Build logs separate**: Use `--showBuildLogs` flag in CLI — not shown by default
+2. **Build logs separate**: Use `--show-build-logs` (kebab-case) in CLI — not shown by default
 3. **Source name must be `s_src`**: Using `s_sys` (common default) will not capture Zerops logs
 4. **UDP for Logstash**: Zerops forwards logs via UDP syslog — ensure Logstash listens on UDP
 5. **Custom certs path**: Place custom CA certs in `/etc/syslog-ng/user.crt`

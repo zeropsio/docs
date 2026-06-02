@@ -3,30 +3,29 @@ title: "Choosing a Runtime Base on Zerops"
 description: "**Use Alpine** as the default base for all services. Use Ubuntu only when you need system packages not available in Alpine. Use Docker only for pre-built images."
 ---
 
-**Use Alpine** as the default base for all services. Use Ubuntu only when you need system packages not available in Alpine. Use Docker only for pre-built images.
+**Use Alpine** as the default base for all services. Switch to Ubuntu only for **glibc** needs (musl incompatibility): CGO-enabled Go, glibc-built Python/C-extension wheels, or the **Deno** runtime (no Alpine build). Needing a package is NOT itself a reason — both bases install packages (`sudo apk add` / `sudo apt-get install`). Use Docker only for pre-built images.
 
 ## Decision Matrix
 
 | Need | Choice | Why |
 |------|--------|-----|
 | **Any standard app** | **Alpine** (default) | ~5MB, fast, secure, sufficient for 95% of apps |
-| System packages (apt) | Ubuntu | Full Debian ecosystem, ~100MB |
+| glibc / CGO / C-extensions / Deno | Ubuntu | musl-incompatible binaries; Deno has no Alpine build (~100MB) |
 | Pre-built Docker images | Docker | VM-based, bring your own image |
-| CGO / native libs | Ubuntu | Better glibc compatibility than Alpine's musl |
 
 ## Alpine (Default)
 
 - Size: ~5MB base
-- Package manager: `apk add`
-- Best for: All runtimes (Node.js, Python, Go, Rust, Java, PHP, etc.)
+- Package manager: `sudo apk add --no-cache <pkg>` (sudo required — containers run as the `zerops` user)
+- Best for: nearly all runtimes (Node.js, Python, Go, Rust, Java, PHP, Gleam, etc.). Exception: **Deno** has no Alpine build — it requires `os: ubuntu`
 - Zerops uses Alpine as default base for all managed runtimes
 
 ## Ubuntu
 
 - Size: ~100MB base
-- Package manager: `apt-get install`
-- Version: 24.04 LTS
-- Use when: You need packages not available in Alpine, or need glibc (not musl)
+- Package manager: `sudo apt-get update && sudo apt-get install -y <pkg>` (sudo required)
+- Version: 24.04 LTS (22.04 also available)
+- Use when: you need glibc (musl incompatibility) — CGO-linked Go, glibc-built C-extensions, or the Deno runtime (no Alpine build). Needing a package is NOT a reason — both bases install packages
 - Example: Go apps with CGO, Python packages with C extensions that don't compile on musl
 
 ## Docker

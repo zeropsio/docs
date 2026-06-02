@@ -22,9 +22,9 @@ Zerops autoscales vertically (CPU/RAM/disk) and horizontally (container count). 
 | **Linux containers** (Alpine, Ubuntu) | Yes | Yes (1-10 containers) | Same as runtimes |
 | **Managed DB** (PostgreSQL, MariaDB) | Yes | No (fixed: NON_HA=1, HA=3) | Mode immutable after creation |
 | **Managed cache** (KeyDB/Valkey) | Yes | No (fixed: NON_HA=1, HA=3) | Mode immutable after creation |
-| **Shared storage** | No (automatic, not configurable) | No (fixed: NON_HA=1, HA=3) | DO NOT set verticalAutoscaling in import.yml |
+| **Shared storage** | Yes (cpu/ram/disk configurable) | No (fixed: NON_HA=1, HA=3) | Accepts verticalAutoscaling in import.yml |
 | **Object storage** | No | No | Fixed size at creation, no verticalAutoscaling |
-| **Docker** | No (manual, triggers VM restart) | Yes (VM count changeable, triggers restart) | No autoscaling at all |
+| **Docker** | No (manual, triggers VM restart) | Manual only (change VM count, triggers restart) | No automatic autoscaling |
 
 ## Vertical Autoscaling
 
@@ -191,7 +191,7 @@ zerops_scale serviceHostname="worker" cpuMode="SHARED" minCpu=1 maxCpu=8 minRam=
 
 ## Common Mistakes
 
-**DO NOT** add `verticalAutoscaling` to **object-storage** or **shared-storage** services in import.yml -- causes import failure. Object storage has a fixed `objectStorageSize` only. Shared storage is managed automatically.
+**DO NOT** add `verticalAutoscaling` to **object-storage** services in import.yml -- causes import failure (object storage has a fixed `objectStorageSize` only). **Shared storage**, by contrast, DOES accept a `verticalAutoscaling` block (cpu/ram/disk) in import.yml -- the import schema permits it.
 
 **DO NOT** set `minContainers` or `maxContainers` for managed services (DB, cache, shared-storage) -- container count is fixed by `mode` (NON_HA=1, HA=3). Setting these causes import failure.
 

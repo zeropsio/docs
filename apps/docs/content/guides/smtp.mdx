@@ -24,14 +24,28 @@ Only port **587** (STARTTLS) is allowed for outbound email — ports 25 and 465 
 | Amazon SES | `email-smtp.{region}.amazonaws.com` | 587 | Access key | Secret key |
 
 ## Configuration Example
+
+Non-secret SMTP settings belong in `run.envVariables` (zerops.yaml); the password is a secret in `envSecrets` (import.yaml, service level). These live in **different files** — a bare top-level `envVariables:`/`envSecrets:` block is rejected (`envVariables` is valid only under `build`/`run`).
+
 ```yaml
-envVariables:
-  SMTP_HOST: smtp.sendgrid.net
-  SMTP_PORT: "587"
-  SMTP_USER: apikey
-envSecrets:
-  SMTP_PASSWORD: <sendgrid-api-key>
+zerops:
+  - setup: app
+    run:
+      envVariables:
+        SMTP_HOST: smtp.sendgrid.net
+        SMTP_PORT: "587"
+        SMTP_USER: apikey
 ```
+
+```yaml
+services:
+  - hostname: app
+    type: nodejs@22
+    envSecrets:
+      SMTP_PASSWORD: <sendgrid-api-key>
+```
+
+A change to `envSecrets` requires a **service restart** to take effect.
 
 ## Gotchas
 1. **Port 25 is permanently blocked**: Cannot be unblocked — use 587 with STARTTLS

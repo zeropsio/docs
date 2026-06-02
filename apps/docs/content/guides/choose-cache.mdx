@@ -9,15 +9,16 @@ description: "**Use Valkey.** KeyDB development has stalled and is effectively d
 
 | Need | Choice | Why |
 |------|--------|-----|
-| **Any caching need** | **Valkey** (default) | Active development, full HA, Redis-compatible |
+| **Any caching need** | **Valkey** (default) | Active development, optional HA, Redis-compatible |
 | Legacy KeyDB apps | KeyDB | Only if migrating existing KeyDB deployment |
 
 ## Valkey (Default Choice)
 
 - Redis-compatible drop-in replacement
-- HA: 3 nodes (1 master + 2 replicas) with automatic failover
-- Ports: 6379 (non-TLS), 6380 (TLS), 7000 (read replica non-TLS), 7001 (read replica TLS)
-- Connection: `redis://${user}:${password}@${hostname}:6379`
+- Version: use `valkey@7.2` — the platform rejects `valkey@8` at import (`serviceStackTypeNotFound`)
+- Mode: default **NON_HA** (single node), immutable after creation. HA (3 nodes — 1 master + 2 replicas, automatic failover) is opt-in via `mode: HA`
+- Ports: 6379 (non-TLS), 6380 (TLS); **HA-only**: 7000 (read replica non-TLS), 7001 (read replica TLS)
+- Connection: `redis://${hostname}:6379` — Valkey runs **unauthenticated** on Zerops; there are NO `user`/`password` env vars. Do **not** template `${cache_user}`/`${cache_password}` — they don't exist and produce a broken DSN
 - HA detail: Ports 6379/6380 on replicas forward traffic to current master (Zerops-specific, not native Valkey)
 
 ## KeyDB (Deprecated)
