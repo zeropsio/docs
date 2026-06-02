@@ -27,6 +27,15 @@ module.exports = {
       className: 'homepage-sidebar-item',
     },
     {
+      type: 'doc',
+      id: 'quickstart',
+      label: 'Quickstart',
+      customProps: {
+        sidebar_icon: 'rocket-launch',
+      },
+      className: 'homepage-sidebar-item',
+    },
+    {
       type: 'html',
       value: 'Features',
       customProps: {
