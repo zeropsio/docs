@@ -495,7 +495,7 @@ module.exports = {
     },
     {
       type: 'html',
-      value: 'Zerops.yml',
+      value: 'Zerops.yaml',
       customProps: {
         sidebar_is_group_divider: true,
       },

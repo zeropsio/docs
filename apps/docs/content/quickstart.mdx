@@ -10,7 +10,7 @@ import TabItem from '@theme/TabItem';
 
 In this guide, we'll go from zero to a live, production-ready app with a managed database, a public URL, and auto-deploy on every git push. Takes about 10 minutes.
 
-You'll deploy a working recipe first, then swap in your own code in Step 7.
+You'll deploy a working recipe first, then swap in your own code in Step 6.
 
 By the end of this tutorial, we'll have:
 
@@ -20,7 +20,7 @@ By the end of this tutorial, we'll have:
 - **All services on a private network** talking to each other by hostname, zero config
 
 :::tip Before we start
-Sign up at [app.zerops.io](https://app.zerops.io) and you get **$65 in free credits**, no credit card needed. A simple app with a database costs roughly $3-5/month, so credits go a long way.
+Sign up at [app.zerops.io](https://app.zerops.io). You get $15 in promo credits on sign up, no credit card needed. Verify your account with a $10 payment and get an additional $50, bringing your total to $65 in credits. A simple app with a database costs roughly $3-5/month, so credits go a long way.
 :::
 
 ---
@@ -57,34 +57,26 @@ See the [ZCP guide](/zcp/quickstart) for a dedicated walkthrough. The rest of th
 You can, but we'd recommend starting with a recipe even if you plan to replace all the code. Recipes give you a correct `zerops.yaml` and infrastructure config as a starting point. Doing it from scratch means figuring all of that out yourself, which takes a while.
 :::
 
----
-
-## 1. Sign up and land on the welcome screen
-
-Head to [app.zerops.io](https://app.zerops.io) and create an account.
-
-After signing up, you'll land on the welcome screen with three sections:
-
-- **Top center**: the Zerops showcase recipe, a full multi-service app you can deploy in one click
-- **Left side**: a recipe grid with all supported stacks
-- **Right side**: a manual project creator for when you want full control or want to add ZCP
-
-For the first two paths, find your stack in the recipe grid on the left and click it. For the showcase, click **Deploy showcase-recipe-small-prod** at the top.
+<video src="/vids/three-panel-welcome-screen.webm" autoPlay muted loop playsInline style={{width: '100%', borderRadius: '8px', marginBottom: '1rem'}} />
 
 ---
 
-## 2. Choose your recipe variant and deploy
+## 1. Pick a recipe and deploy
 
-After clicking a recipe, you'll see the available variants for that stack.
+Go to [app.zerops.io/recipes](https://app.zerops.io/recipes). You don't need an account first - the recipes page works even when you're not logged in.
+
+Browse the recipe grid and click the stack that matches what you're building. You'll see the available variants for that stack.
 
 For example, clicking **Next.js** shows two options:
 
 - **Next Static Hello World**: a static export served by Nginx, no database. Good for frontend-only apps.
 - **Next SSR Hello World**: server-side rendering with a PostgreSQL database. Good for full-stack apps.
 
-Pick the one that matches what you're building. You'll see a full breakdown of what gets created, services, resource sizes, and the exact price before committing anything.
+Pick the variant that fits. You'll see a full breakdown of what gets created, services, resource sizes, and the exact price before committing anything.
 
-Select **Small Production** and hit **Deploy**.
+Select **Small Production** and hit **Deploy**. If you're not signed in yet, Zerops creates your account and starts the deploy in the same step.
+
+![Recipe pre-deploy breakdown showing services, resource sizes and exact price](/img/screenshots/recipe-predeploy-breakdown.png)
 
 :::info What is a recipe exactly?
 A recipe is a working app with infrastructure already configured: managed database, environment variables, `zerops.yaml`, everything connected and ready. It's a correct starting point, not a finished product. We'll swap the code for our own later.
@@ -92,17 +84,17 @@ A recipe is a working app with infrastructure already configured: managed databa
 
 ---
 
-## 3. Watch the pipeline run
+## 2. Watch the pipeline run
 
 After hitting Deploy, you'll land on the main dashboard. On the right side you'll immediately see a pipeline running, no need to navigate anywhere.
 
 You'll see it go through these steps in real time:
 
 1. Initializing build container
-2. Run build commands from zerops.yml
+2. Run build commands from zerops.yaml
 3. Create app version and upgrade service
 4. Done
-
+![Pipeline running](/img/screenshots/pipeline-running-dashboard.png)
 :::tip Good to know
 The build container is **temporary and free**. Zerops spins it up, builds the app, saves the output, and deletes it. You're only charged for the running app.
 :::
@@ -113,7 +105,7 @@ At this point, your app is running privately; next we make it public.
 
 ---
 
-## 4. Look at what just got created
+## 3. Look at what just got created
 
 Click into your new project. Depending on the recipe you picked, you'll see something like:
 
@@ -124,26 +116,26 @@ Click into your new project. Depending on the recipe you picked, you'll see some
 All of these are already talking to each other on a private network. Nothing to configure.
 
 :::tip The private network moment
-Coming from Vercel and Supabase, you're probably used to copying long database URLs and pasting them as environment variables. On Zerops, your app connects to the database with just `DB_HOST: db`. That's it. No IP address. No connection string. It's on the same private network. This is the thing that catches most people off guard the first time.
+Coming from Vercel and Supabase, you're probably used to copying long database URLs and pasting them as environment variables. On Zerops, services talk to each other on a private network using simple hostnames: `DB_HOST` is just `db`, not a long URL. You still set credentials in `zerops.yaml` (`DB_USER`, `DB_PASSWORD`, and the rest); Zerops fills in the values. No IP address to manage.
 :::
 
 ---
 
-## 5. Make it public
+## 4. Your public URL (and custom domains)
 
-The app is running but not publicly accessible yet.
+If you deployed via a recipe, the Zerops subdomain is already enabled. Your app is public as soon as the pipeline finishes. Open the URL from your app service; it looks something like `app-2437-3000.prg1.zerops.app`.
+
+You only need to turn on the subdomain yourself when you create a service manually:
 
 1. Click into your app service
 2. Click **Subdomain, domains and IP access**
 3. Toggle on the Zerops subdomain
 
-You'll get a live URL that looks something like `app-2437-3000.prg1.zerops.app`. Open it and your app is on the internet.
-
-When you're ready for production, you can point a custom domain at it. Zerops handles the SSL certificate automatically.
+When you're ready for production, point a custom domain at your app. Zerops handles the SSL certificate automatically.
 
 ---
 
-## 6. (Optional now) Connect GitHub and auto-deploy
+## 5. (Optional now) Connect GitHub and auto-deploy
 
 Now let's connect a GitHub repo so every push deploys automatically.
 
@@ -156,9 +148,11 @@ Now let's connect a GitHub repo so every push deploys automatically.
 
 From now on, every push to main triggers a build and deploy automatically. Zero downtime, Zerops runs the new version alongside the old one, waits for a health check, then switches traffic over.
 
+You can also trigger deploys manually with the Zerops CLI: `zcli push`.
+
 ---
 
-## 7. Make it yours
+## 6. Make it yours
 
 Now let's replace the recipe code with our own.
 
@@ -169,7 +163,7 @@ Fork the recipe's GitHub repo, swap the app code with your own, and push. The `z
 
 1. Fork the recipe repo from [github.com/zeropsio](https://github.com/zeropsio)
 2. Replace the app code
-3. Connect your fork to Zerops (same steps as Step 6)
+3. Connect your fork to Zerops (same steps as Step 5)
 4. Push and it deploys automatically
 
 </TabItem>
@@ -181,7 +175,7 @@ Usually it's just:
 
 - Add a `zerops.yaml` to the repo root, copying from the recipe
 - Adjust the build and run commands for your stack
-- Connect your repo (Step 6) and push
+- Connect your repo (Step 5) and push
 
 :::tip Next.js developers, one thing to know
 Add `output: 'standalone'` to your `next.config.mjs` before deploying. This bundles everything Next.js needs into `.next/standalone` so you don't need to ship `node_modules` separately. The Next.js SSR recipe already does this, so you can copy the pattern directly from it.
