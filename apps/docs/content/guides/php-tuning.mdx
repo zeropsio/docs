@@ -3,13 +3,13 @@ title: "PHP Runtime Tuning on Zerops"
 description: "Override php.ini via `PHP_INI_*` env vars, FPM via `PHP_FPM_*`. Both require **restart** (not reload). Zerops defaults: upload/post = 1024M, FPM dynamic 20/2/1/3. Upload bottleneck is L7 balancer (50MB subdomain), not PHP."
 ---
 
-Override php.ini via `PHP_INI_*` env vars, FPM via `PHP_FPM_*`. Both require **restart** (not reload). Zerops defaults: upload/post = 1024M, FPM dynamic 20/2/1/3. Upload bottleneck is L7 balancer (50MB subdomain), not PHP.
+Override php.ini via `PHP_INI_*` env vars, FPM via `PHP_FPM_*`. **Applying a change depends on the channel**: values in `run.envVariables` are baked into the app version → changing one requires a **redeploy**; values set via `zerops_env`/GUI service env → changing one requires a **restart** (never reload — see Gotchas). Zerops defaults: upload/post = 1024M, FPM dynamic 20/2/1/3. Upload bottleneck is L7 balancer (50MB subdomain), not PHP.
 
 ## PHP Configuration (`PHP_INI_*`)
 
 Override any php.ini directive via `PHP_INI_{directive}` env vars in `run.envVariables` or via `zerops_env` API.
 
-**Requires restart** to take effect. Reload writes config files (`/etc/php*/conf.d/overwrite.ini`) but FPM master does not re-read INI on reload.
+To apply a CHANGE: if the value lives in `run.envVariables` (baked into the app version), **redeploy**; if set via `zerops_env`/GUI service env, **restart**. A plain reload rewrites the config files (`/etc/php*/conf.d/overwrite.ini`) but the FPM master does not re-read INI on reload, so reload alone never applies the change.
 
 ### Zerops Platform Defaults
 
@@ -43,7 +43,7 @@ zerops:
 
 ## PHP-FPM (`PHP_FPM_*`)
 
-Configure FPM process management via `PHP_FPM_*` env vars. **Requires restart** — same as PHP_INI.
+Configure FPM process management via `PHP_FPM_*` env vars — same change semantics as `PHP_INI_*`: redeploy for `run.envVariables`, restart for `zerops_env`/GUI service env, never reload.
 
 Config files are written to `/etc/php*/php-fpm.d/www.conf` by `zerops-zenv` at container startup.
 
@@ -64,12 +64,13 @@ Pre-forks a pool of workers. Good for consistent traffic.
 High-traffic example:
 
 ```yaml
-envVariables:
-  PHP_FPM_PM_MAX_CHILDREN: 50
-  PHP_FPM_PM_START_SERVERS: 10
-  PHP_FPM_PM_MIN_SPARE_SERVERS: 5
-  PHP_FPM_PM_MAX_SPARE_SERVERS: 15
-  PHP_FPM_PM_MAX_REQUESTS: 1000
+run:
+  envVariables:
+    PHP_FPM_PM_MAX_CHILDREN: 50
+    PHP_FPM_PM_START_SERVERS: 10
+    PHP_FPM_PM_MIN_SPARE_SERVERS: 5
+    PHP_FPM_PM_MAX_SPARE_SERVERS: 15
+    PHP_FPM_PM_MAX_REQUESTS: 1000
 ```
 
 ### Ondemand Mode
@@ -77,11 +78,12 @@ envVariables:
 Spawns workers only when requests arrive. Saves memory for low-traffic sites.
 
 ```yaml
-envVariables:
-  PHP_FPM_PM: ondemand
-  PHP_FPM_PM_MAX_CHILDREN: 20
-  PHP_FPM_PM_PROCESS_IDLE_TIMEOUT: 60s
-  PHP_FPM_PM_MAX_REQUESTS: 500
+run:
+  envVariables:
+    PHP_FPM_PM: ondemand
+    PHP_FPM_PM_MAX_CHILDREN: 20
+    PHP_FPM_PM_PROCESS_IDLE_TIMEOUT: 60s
+    PHP_FPM_PM_MAX_REQUESTS: 500
 ```
 
 Available parameters for ondemand:
@@ -129,6 +131,6 @@ run:
 
 ## Gotchas
 
-- **Reload does NOT apply changes** -- `PHP_INI_*` and `PHP_FPM_*` both require restart. Zerops reload rewrites config files via `zerops-zenv` but does not signal FPM to re-read them.
+- **Reload never applies the change** -- a value in `run.envVariables` needs a **redeploy** (it's baked into the app version); a value in `zerops_env`/GUI service env needs a **restart**. Reload rewrites config files via `zerops-zenv` but does not signal FPM to re-read them.
 - **Upload fails at 50MB on subdomain** -- this is the L7 balancer limit, not PHP. Use a custom domain for larger uploads.
 - **`post_max_size` must be >= `upload_max_filesize`** -- PHP silently drops the POST body if it exceeds `post_max_size`, even if the file itself is under `upload_max_filesize`.

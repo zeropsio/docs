@@ -34,16 +34,26 @@ Before going to production: (1) databases to HA mode, (2) minContainers: 2 on ap
 ## Dev Services to Remove
 
 ### Mailpit → Production SMTP
-```yaml
-- hostname: mailpit
-  type: go@1
-  buildFromGit: https://github.com/zeropsio/recipe-mailpit
 
-envVariables:
-  SMTP_HOST: smtp.sendgrid.net
-  SMTP_PORT: "587"
-envSecrets:
-  SMTP_PASSWORD: your-production-key
+Mailpit (the dev mail catcher) is defined as:
+```yaml
+services:
+  - hostname: mailpit
+    type: alpine@3.20
+    buildFromGit: https://github.com/zeropsio/recipe-mailpit
+```
+For production, point your app at a real provider — non-secret settings in the app's `run.envVariables` (zerops.yaml), the key in `envSecrets` (import.yaml). They are different files; a bare top-level `envVariables:` block is schema-invalid.
+```yaml
+run:
+  envVariables:
+    SMTP_HOST: smtp.sendgrid.net
+    SMTP_PORT: "587"
+```
+```yaml
+services:
+  - hostname: app
+    envSecrets:
+      SMTP_PASSWORD: your-production-key
 ```
 
 ### Adminer → Remove or Restrict
@@ -127,29 +137,11 @@ Remove entirely or disable `enableSubdomainAccess`. Use VPN + pgAdmin/DBeaver lo
 | Environment separation | Separate projects for dev/staging/prod |
 | Stateless design | Sessions in Valkey, uploads in Object Storage — no local state |
 | Database mode | `mode: HA` for all managed services (immutable — plan before creation) |
-| Min containers | `minContainers: 2` on all app services for zero-downtime deploys |
+| Min containers | `minContainers: 2+` on app services for throughput + crash-tolerance (rolling deploys are already zero-downtime at any count via the default `temporaryShutdown: false` — don't conflate the two) |
 
 ## Health Check Pattern
 
-Combined readiness + runtime health check for production services:
-
-```yaml
-zerops:
-  - setup: app
-    deploy:
-      readinessCheck:
-        httpGet:
-          port: 3000
-          path: /health
-    run:
-      healthCheck:
-        httpGet:
-          port: 3000
-          path: /health
-      start: node server.js
-```
-
-Readiness check gates traffic during deploy. Health check runs continuously — unhealthy containers are restarted after 5-minute retry window.
+Production services should pair a `deploy.readinessCheck` (gates traffic during deploy) with a `run.healthCheck` (continuous — the LB routes around an unhealthy container). The combined pattern, params, and behavior are in `zerops://guides/readiness-health-checks`.
 
 ## Gotchas
 1. **HA is immutable**: Must delete and recreate service to switch modes
