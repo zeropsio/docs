@@ -84,36 +84,9 @@ Default behavior (`temporaryShutdown: false`):
 5. Old container processes terminated
 6. Old containers deleted
 
-### temporaryShutdown Behavior
+### Deploy strategy & checks
 
-| Setting | Behavior | Downtime |
-|---------|----------|----------|
-| `false` (default) | New containers start BEFORE old ones stop | **Zero downtime** |
-| `true` | Old containers stop BEFORE new ones start | **Temporary downtime** |
-
-Use `temporaryShutdown: true` only when you cannot run two versions simultaneously (e.g., database migrations, singleton locks).
-
----
-
-## Readiness Check vs Health Check
-
-| Aspect | Readiness Check | Health Check |
-|--------|----------------|--------------|
-| When | **During deploy only** | **Continuously after deploy** |
-| Purpose | Gates traffic to new containers | Detects runtime failures |
-| Location | `deploy.readinessCheck` | `run.healthCheck` |
-| Failure action | Container marked failed after timeout, replaced | Container restarted |
-
-### Readiness Check Mechanics
-
-1. Application starts via `start` command
-2. Readiness check runs (httpGet or exec)
-3. If **fails** -- wait `retryPeriod` seconds (default 5s), retry
-4. If **succeeds** -- container marked active, receives traffic
-5. If still failing after `failureTimeout` (default 300s / 5 min) -- container deleted, new one created
-
-**httpGet**: succeeds on HTTP `2xx`, follows `3xx` redirects, 5-second per-request timeout
-**exec.command**: succeeds on exit code 0, 5-second per-command timeout
+`temporaryShutdown` (in the `deploy` block) controls cutover order: `false` (default) starts new containers before removing old ones (zero-downtime); `true` stops old before new (downtime, use only when two versions cannot coexist — exclusive DB migrations, singleton locks). The **readiness check** gates traffic to the new container during a deploy; the **health check** monitors the live app continuously. For check behavior, params, the httpGet/exec timeouts, and the production pattern, see `zerops://guides/readiness-health-checks`.
 
 ---
 
@@ -123,7 +96,7 @@ Typical pipeline events in chronological order:
 
 1. **`stack.build` process RUNNING** -- build container created, pipeline started
 2. **`stack.build` process FINISHED** -- build complete, artifact uploaded
-3. **`appVersion` build event ACTIVE** -- deploy started, containers launching
+3. **`appVersion` build event ACTIVE** -- the new version is deployed and running (this is the terminal success state, NOT "launching")
 4. **Service status returns to RUNNING** -- all containers active, deploy complete
 
 **Terminal states:**
@@ -152,18 +125,15 @@ Zerops keeps **10 most recent versions**. Older auto-deleted. Any archived versi
 
 ## Gotchas
 
-1. **Build and run are SEPARATE containers** -- build output does not automatically appear in runtime. You must specify `deployFiles`
-2. **initCommands run on EVERY container start** -- including restarts and horizontal scaling, not just deploys
-3. **initCommands failures do NOT cancel deploy** -- app starts regardless of init exit code
-4. **prepareCommands in build vs run** -- `build.prepareCommands` customizes build env, `run.prepareCommands` creates custom runtime image. Different containers, different purposes
-5. **deployFiles land in `/var/www`** -- tilde syntax (`dist/~`) extracts contents directly to `/var/www/` (strips directory). Without tilde, `dist` → `/var/www/dist/` (preserved). **CRITICAL**: `run.start` path must match — `dist/~` + `start: bun dist/index.js` BREAKS because the file is at `/var/www/index.js`, not `/var/www/dist/index.js`
+1. **initCommands run on EVERY container start** -- including restarts and horizontal scaling, not just deploys
+2. **initCommands failures DO fail the deploy** -- `run.initCommands` run during runtime-prepare, BEFORE the start command, and are deploy-gating: a non-zero exit aborts the deploy. The platform emits `RUN.INIT COMMANDS FINISHED WITH ERROR` in the runtime log and surfaces the failed command + exit code on the `stack.build` process (`commandExec` / "init command failed"). The new appVersion goes to `DEPLOY_FAILED` and is **never activated**; the start command never runs and the previously-active version keeps serving. **Diagnose via `appVersion.status` (`DEPLOY_FAILED`) + `activationDate` (`null`), NOT the service status** — the service stays `ACTIVE` on the old version, so service-status alone reads as "fine". Keep init commands idempotent and exit 0.
 
 ## SSHFS Mount and Deploy Interaction
 
 When using SSHFS (`zerops_mount`) for dev workflows, deploy replaces the container. This has important consequences:
 
 1. **After deploy, run container only has `deployFiles` content.** All other files (including zerops.yml if not in deployFiles) are gone. Use `deployFiles: [.]` for dev services to ensure zerops.yml and source files survive the deploy cycle.
-2. **SSHFS mount auto-reconnects after deploy.** No explicit remount is needed — the SSHFS reconnect mechanism handles the container replacement transparently. The mount only becomes truly stale during stop (container not running); after start it auto-reconnects again.
+2. **SSHFS mount auto-reconnects only while the service is running.** Usually no remount is needed, but if the mount goes stale after a deploy (stat/ls returns empty, writes hang), recover it explicitly with `zerops_mount action="mount"`. A stopped service has no live mount until it starts again.
 3. **zerops.yml must be in deployFiles** for dev self-deploy lifecycle. Without it, subsequent deploys from the container fail because zerops.yml is missing.
 
 **Two kinds of "mount" (disambiguation):**

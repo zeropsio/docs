@@ -1,0 +1,48 @@
+---
+title: Shared Storage Integration on Zerops
+description: "Guide: Shared Storage Integration on Zerops"
+---
+
+Shared storage is a managed SeaweedFS volume mounted as a POSIX filesystem at `/mnt/<storageHostname>` into one or more runtime services — for files that must be shared *between containers/services* (shared config, plugin directories, a common working set). It is mounted via the import.yaml `mount:` field; there is **no `zerops.yaml` mount**. For high-write workloads or user uploads, prefer Object Storage (S3) instead — shared storage is POSIX/NFS-style and not built for high-throughput churn.
+
+## Mounting — import.yaml `mount:` is the only config-file mechanism
+
+Declare the storage service, then list it under the runtime's service-level `mount:`. This auto-connects the storage at provision — import alone is sufficient, no second step:
+
+```yaml
+services:
+  - hostname: storage
+    type: shared-storage
+  - hostname: app
+    type: nodejs@22
+    buildFromGit: https://github.com/myorg/myapp   # mount: requires buildFromGit
+    mount:
+      - storage          # list one or more shared-storage hostnames
+```
+
+After deploy, the runtime has `/mnt/storage` (SeaweedFS FUSE, writable). Multiple volumes can be mounted to one service (`/mnt/files1`, `/mnt/files2`, …).
+
+**There is NO `zerops.yaml` mount field.** A `mount:` under `run:` is silently stripped by the platform — it even passes yaml validation (validation-passing ≠ honored), but produces no mount and no connection. Mounting is import.yaml-only (or `connect-storage`, below).
+
+## Connecting a storage to a runtime that missed the import mount
+
+A runtime that was READY_TO_DEPLOY at import time (e.g. a stage service created but not yet deployed) does NOT pick up the import `mount:`. Once it's ACTIVE, connect explicitly:
+
+```
+zerops_manage action="connect-storage" serviceHostname="app" storageHostname="storage"
+```
+
+This registers the connection, but the FUSE mount materializes **only on the next fresh deploy (new container creation)** — a plain restart does NOT bring it up. Redeploy the service after connecting.
+
+## Constraints & behavior
+
+- **Mount path**: always `/mnt/<storageHostname>`. Runtime containers only — NOT available during build or `run.prepareCommands` phases.
+- **Mounting overwrites** any existing content in the mount directory.
+- **Capacity**: max 60 GB total (raise via support request); file size is unbounded within the 60 GB. `verticalAutoscaling` floors: RAM 0.5 GB, disk 5 GB.
+- **HA**: 1:1 replication with auto-failover; during a master failover the mount is briefly unavailable (~30s).
+- **POSIX**: standard filesystem ops (with minor permission-setting limits). Filesystem operations are logged to runtime logs tagged `zerops-mount-<serviceHostname>`. `df` can report misleading numbers — use the Zerops GUI for accurate storage metrics.
+- **No env vars**: shared storage exposes no connection variables — it's a filesystem, not a networked service.
+
+## Shared storage vs object storage
+
+Use **shared storage** when you need a POSIX filesystem shared across services (shared config, plugin/extension directories, a common scratch area). Use **object storage** (S3/MinIO) for user uploads, media, and any high-throughput or write-heavy file operations — and for anything that must survive independent of any single service. Don't reach for shared storage as a generic uploads bucket.

@@ -1,0 +1,89 @@
+---
+title: Readiness & Health Checks on Zerops
+description: "Guide: Readiness & Health Checks on Zerops"
+---
+
+Two distinct mechanisms, often confused. **Readiness check** (`deploy.readinessCheck`) runs ONLY during a deploy — it gates when the new container starts receiving traffic; if it never passes, the deploy fails and the old version keeps serving. **Health check** (`run.healthCheck`) runs CONTINUOUSLY on the live app — it disconnects an unhealthy container from the load balancer, restarts it, and reconnects it on recovery. Both support `httpGet` or `exec` (mutually exclusive within one block). The field shape lives in the zerops.yml schema; this guide owns the behavior.
+
+---
+
+## The distinction (the #1 confusion)
+
+| | Readiness check | Health check |
+|---|---|---|
+| Location | `deploy.readinessCheck` | `run.healthCheck` |
+| When it runs | **During a deploy only** | **Continuously, after startup** |
+| Purpose | Gate traffic to a NEW container | Detect runtime failure of a LIVE container |
+| On failure | Deploy fails; new appVersion not activated; old version keeps serving | Container removed from LB → restarted → reconnected on recovery |
+
+A readiness check makes a deploy wait for the app to actually answer before cutting traffic over. A health check keeps a degraded container out of rotation while it's live. Use both on production services.
+
+## Readiness check (`deploy.readinessCheck`)
+
+Checks the **new** container at `localhost`. Until it passes, traffic stays on the old container.
+
+```yaml
+deploy:
+  readinessCheck:
+    httpGet: { port: 3000, path: /health }
+    failureTimeout: 60   # seconds until the container is marked failed
+    retryPeriod: 10      # seconds between attempts
+```
+
+Mechanics: `start` runs → readiness check runs → on fail, wait `retryPeriod` and retry → on success, the container is marked active and receives traffic → if still failing after `failureTimeout`, the container is deleted and the deploy fails (the previous appVersion stays active). Set `failureTimeout`/`retryPeriod` explicitly — there is no fixed schema default to rely on.
+
+## Health check (`run.healthCheck`)
+
+Runs on every container continuously after startup.
+
+```yaml
+run:
+  healthCheck:
+    httpGet: { port: 3000, path: /health }
+    failureTimeout: 30     # consecutive-failure seconds before restart (reset by a success)
+    disconnectTimeout: 30  # seconds before a failing container is pulled from the LB
+    recoveryTimeout: 30    # seconds of success before a restarted container takes traffic again
+    execPeriod: 10         # seconds between attempts
+```
+
+**Failure sequence**: repeated failures → `disconnectTimeout` removes the container from the load balancer → `failureTimeout` triggers a restart → `recoveryTimeout` gates traffic reconnection once it's healthy again.
+
+## httpGet vs exec (both checks)
+
+- **`httpGet`** — GET to `localhost:{port}{path}`, triggered **inside** the container. Success = HTTP `2xx` (follows `3xx` redirects), 5-second per-request timeout. `host` sets a custom Host header; `scheme: https` only if the app demands TLS internally (default is plain HTTP — the L7 balancer terminates SSL upstream).
+- **`exec`** — a local shell command, success = exit `0`, 5-second per-command timeout. Has access to all env vars. Use a YAML `|` block for multi-step scripts.
+
+**DO NOT** put both `httpGet` and `exec` in the same check block — they are mutually exclusive.
+
+## temporaryShutdown (deploy container ordering)
+
+Readiness gating only buys zero-downtime when the old container stays up during cutover — that is `temporaryShutdown` (in the `deploy` block):
+
+| Value | Behavior | Downtime |
+|---|---|---|
+| `false` (default) | New containers start and pass readiness BEFORE old ones are removed | None (zero-downtime rolling deploy) |
+| `true` | Old containers stop BEFORE new ones start | Yes |
+
+Use `true` only when you cannot run two versions simultaneously (exclusive DB-migration access, singleton locks). Rolling cutover is zero-downtime at any `minContainers` value — don't conflate replica count with the deploy strategy.
+
+## Dev/stage placement
+
+In dev+stage pairs, `healthCheck` and `readinessCheck` belong ONLY on the **stage** entry. Dynamic-runtime dev services run `start: zsc noop --silent` (a no-op keepalive that idles the container while the agent drives the real dev server's lifecycle) — adding a `healthCheck` to a dev service causes unwanted container restarts during iteration.
+
+## Production pattern
+
+Combine both on a production service so deploys wait for readiness and the LB routes around runtime failures:
+
+```yaml
+zerops:
+  - setup: app
+    deploy:
+      readinessCheck:
+        httpGet: { port: 3000, path: /health }
+    run:
+      healthCheck:
+        httpGet: { port: 3000, path: /health }
+      start: node server.js
+```
+
+Without health checks, the load balancer cannot route around an unhealthy container — it keeps sending traffic to a degraded instance.

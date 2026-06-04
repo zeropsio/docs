@@ -22,14 +22,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: zeropsio/actions@main
+      - uses: zeropsio/actions@v1.0.2
         with:
           access-token: ${{ secrets.ZEROPS_TOKEN }}
-          service-id: <service-id>
+          service-id: ${{ secrets.ZEROPS_SERVICE_ID }}
 ```
 
 - `access-token`: From Settings → Access Token Management
 - `service-id`: From service URL or three-dot menu → Copy Service ID
+- The compact `zeropsio/actions` wrapper exposes only `access-token`/`service-id` — it **cannot pass `--setup`**. For a multi-setup `zerops.yaml`, install zcli and run `zcli push --service-id "${{ secrets.ZEROPS_SERVICE_ID }}" --setup <name>` instead
 
 ## GitLab Integration (Webhook)
 
@@ -40,15 +41,13 @@ jobs:
 4. Choose trigger: **New tag** (optional regex) or **Push to branch**
 
 ## Skip Pipeline
-Include `ci skip` or `skip ci` in commit message (case-insensitive).
+Include `[ci skip]` or `[skip ci]` (with the square brackets) in the commit message (case-insensitive).
 
 ## Disconnect
 Service detail → Build, Deploy, Run → Stop automatic build trigger.
 
 ## Gotchas
-1. **Full repo access required**: Webhook integration needs full access to create/manage webhooks
-2. **`ci skip` in commit message**: Prevents pipeline trigger — useful for docs-only changes
-3. **Service ID not obvious**: Find it in service URL or three-dot menu → Copy Service ID
+1. **External/CI deploys leave ZCP unaware**: a webhook or CI `zcli push` does not record the deploy in ZCP local state — the service stays at `deployState=never-deployed`. Bridge it with `zerops_workflow action="record-deploy" targetService="<hostname>"` when you return to the ZCP develop flow
 
 ## GitLab CI
 

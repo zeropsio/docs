@@ -22,9 +22,9 @@ Zerops autoscales vertically (CPU/RAM/disk) and horizontally (container count). 
 | **Linux containers** (Alpine, Ubuntu) | Yes | Yes (1-10 containers) | Same as runtimes |
 | **Managed DB** (PostgreSQL, MariaDB) | Yes | No (fixed: NON_HA=1, HA=3) | Mode immutable after creation |
 | **Managed cache** (KeyDB/Valkey) | Yes | No (fixed: NON_HA=1, HA=3) | Mode immutable after creation |
-| **Shared storage** | No (automatic, not configurable) | No (fixed: NON_HA=1, HA=3) | DO NOT set verticalAutoscaling in import.yml |
+| **Shared storage** | Yes (cpu/ram/disk configurable) | No (fixed: NON_HA=1, HA=3) | Accepts verticalAutoscaling in import.yml |
 | **Object storage** | No | No | Fixed size at creation, no verticalAutoscaling |
-| **Docker** | No (manual, triggers VM restart) | Yes (VM count changeable, triggers restart) | No autoscaling at all |
+| **Docker** | No (manual, triggers VM restart) | Manual only (change VM count, triggers restart) | No automatic autoscaling |
 
 ## Vertical Autoscaling
 
@@ -122,15 +122,9 @@ HA recovery: failed container is disconnected, new one created on different hard
 
 PostgreSQL HA exposes read replica port **5433** for distributing SELECT queries.
 
-## Configuring Thresholds via zerops_scale
+## Autoscaling Thresholds
 
-Threshold parameters can be set via the `zerops_scale` MCP tool, not just import.yml:
-
-```
-zerops_scale serviceHostname="api" minFreeRamGB=0.5 minFreeRamPercent=5 minFreeCpuCores=0.2
-```
-
-All four threshold parameters (`minFreeRamGB`, `minFreeRamPercent`, `minFreeCpuCores`, `minFreeCpuPercent`) are optional and can be combined with any other scaling parameters in a single call.
+The dual-threshold trigger controls WHEN vertical scaling fires. All four fields (`minFreeRamGB`, `minFreeRamPercent`, `minFreeCpuCores`, `minFreeCpuPercent`) are optional and live in the `verticalAutoscaling` block (see import.yml Syntax below). (*In ZCP they can also be set live: `zerops_scale serviceHostname="api" minFreeRamGB=0.5 minFreeRamPercent=5 minFreeCpuCores=0.2`, combinable with any other scaling parameter in one call.*)
 
 ## Docker Services
 - Run in **VMs**, not containers. **No autoscaling** -- resources fixed at creation
@@ -174,28 +168,30 @@ services:
 
 ## Strategy Presets
 
-**Development** — SHARED CPU, min resources, 1 container. Cost-effective for dev/staging:
-```
-zerops_scale serviceHostname="api" cpuMode="SHARED" minCpu=1 maxCpu=2 minRam=0.25 maxRam=1 minContainers=1 maxContainers=1
+**Development** — SHARED CPU, min resources, single container (cost-effective for dev/staging):
+```yaml
+minContainers: 1
+maxContainers: 1
+verticalAutoscaling: { cpuMode: SHARED, minCpu: 1, maxCpu: 2, minRam: 0.25, maxRam: 1 }
 ```
 
 **Production** — DEDICATED CPU, higher minimums, multiple containers for HA:
-```
-zerops_scale serviceHostname="api" cpuMode="DEDICATED" minCpu=2 maxCpu=8 minRam=2 maxRam=8 minContainers=2 maxContainers=6
+```yaml
+minContainers: 2
+maxContainers: 6
+verticalAutoscaling: { cpuMode: DEDICATED, minCpu: 2, maxCpu: 8, minRam: 2, maxRam: 8 }
 ```
 
-**Burst workloads** — Wide autoscaling range, SHARED CPU:
+**Burst workloads** — wide autoscaling range, SHARED CPU:
+```yaml
+minContainers: 1
+maxContainers: 10
+verticalAutoscaling: { cpuMode: SHARED, minCpu: 1, maxCpu: 8, minRam: 1, maxRam: 16 }
 ```
-zerops_scale serviceHostname="worker" cpuMode="SHARED" minCpu=1 maxCpu=8 minRam=1 maxRam=16 minContainers=1 maxContainers=10
-```
+
+(*In ZCP, the same presets apply live via `zerops_scale serviceHostname=... cpuMode=... minCpu=... ...`.*)
 
 ## Common Mistakes
-
-**DO NOT** add `verticalAutoscaling` to **object-storage** or **shared-storage** services in import.yml -- causes import failure. Object storage has a fixed `objectStorageSize` only. Shared storage is managed automatically.
-
-**DO NOT** set `minContainers` or `maxContainers` for managed services (DB, cache, shared-storage) -- container count is fixed by `mode` (NON_HA=1, HA=3). Setting these causes import failure.
-
-**DO NOT** use `DEDICATED` CPU for low-traffic or dev services -- wastes resources. Use `SHARED` and switch to `DEDICATED` only when consistent performance matters.
 
 **DO NOT** set `minFreeRamGB: 0` and `minFreeRamPercent: 0` simultaneously -- the API rejects this with "Invalid custom autoscaling value". Always keep at least the default absolute threshold (0.0625 GB).
 
