@@ -25,38 +25,127 @@ Import configuration version:
 
 Zerops offers Valkey in two deployment configurations to meet different availability requirements.
 
-### Non-HA Setup
+### Single Setup
 - Single node deployment on port `6379` (non-TLS) and `6380` (TLS)
-- No backup mechanism beyond Zerops infrastructure reliability
-- Data persists unless the hardware node fails
 - Suitable for development or non-critical workloads
+
+See [Persistence](#persistence) for how data is stored and recovered.
 
 ### HA (High Availability) Setup
 
-Our HA implementation uses a unique approach to ensure high availability while maintaining compatibility with all Redis clients:
+The HA deployment is a 3-node cluster with automatic failover, fronted by an HAProxy load balancer on every node.
 
-- 3-node configuration (1 master + 2 replicas)
-- Access ports:
-  - `6379` - read/write operations (non-TLS, routed to master)
-  - `6380` - read/write operations over TLS (routed to master)
-  - `7000` - read-only operations (non-TLS)
-  - `7001` - read-only operations over TLS
-- Implementation details:
-  - All nodes are configured identically and listen on standard ports
-  - First node in the cluster is designated as the master
-  - On replica nodes, ports `6379`/`6380` traffic is forwarded to the master
-  - Ports `7000`/`7001` are mapped locally to each node for direct replica access
-  - When a master fails, a replica is promoted and routing is updated automatically
-  - DNS entries are updated for seamless client connection
-  - This implementation provides traffic forwarding to master (not natively supported by Valkey)
+- 3-node configuration: 1 primary + 2 replicas
+- Client-facing ports (available on every node):
+  - `6379` &mdash; read/write (non-TLS), routed to the current primary
+  - `6380` &mdash; read/write over TLS, routed to the current primary
+  - `7000` &mdash; read-only (non-TLS), load-balanced across replicas
+  - `7001` &mdash; read-only over TLS, load-balanced across replicas
+- Failover is handled by a built-in [Sentinel](https://valkey.io/topics/sentinel/) cluster. When the primary becomes unreachable, a replica is promoted automatically and HAProxy starts routing writes to it.
+- TLS is terminated at HAProxy.
+- Connect your application to the standard ports &mdash; the address never changes when the primary moves.
 
 :::note
-Be aware that replica data may lag slightly behind the master due to asynchronous replication.
+Replica reads (ports `7000`/`7001`) can lag slightly behind the primary due to asynchronous replication.
 :::
 
+**Failover client impact:** expect roughly 10–15 seconds of write unavailability while a new primary is elected and HAProxy reconverges. Read traffic on surviving replicas is unaffected.
+
 :::tip Trusting the TLS certificate
-The certificates served on the TLS ports (`6380` and `7001`) are signed by the Zerops Certificate Authority. To verify them from outside Zerops, download and trust the [Zerops CA](/references/networking/zerops-ca) &mdash; e.g. `redis-cli --tls --cacert ./zerops-ca.pem -h <ip> -p 6380`.
+The certificates served on the TLS ports (`6380` and `7001`) are signed by the Zerops Certificate Authority. To verify them from outside Zerops, download and trust the [Zerops CA](/references/networking/zerops-ca) &mdash; e.g. `redis-cli --tls --cacert ./zerops-ca.pem -h <ip> -p 6380 -a <password>`.
 :::
+
+## Connecting
+
+Zerops generates the connection details as environment variables on the Valkey service. Reference them from another service in the same project as `${<hostname>_<variable>}` &mdash; for a service named `db`, the connection string is `${db_connectionString}`. The examples below assume the hostname `db`.
+
+| Variable | Example value | Notes |
+|---|---|---|
+| `hostname` | `db` | Service hostname; reachable as `db.zerops` inside the project |
+| `port` | `6379` | Plain (non-TLS) port |
+| `portTls` | `6380` | TLS port |
+| `password` | *(generated)* | Password for the `default` user (sensitive) |
+| `connectionString` | `redis://default:<password>@db.zerops:6379` | Ready-to-use non-TLS URL |
+| `connectionTlsString` | `rediss://default:<password>@db.zerops:6380` | Ready-to-use TLS URL |
+
+In **HA mode** four additional variables expose the read-only replica endpoints (load-balanced across replicas):
+
+| Variable | Example value | Notes |
+|---|---|---|
+| `portReplicas` | `7000` | Read-only plain port |
+| `portTlsReplicas` | `7001` | Read-only TLS port |
+| `connectionStringReplicas` | `redis://default:<password>@db.zerops:7000` | Read-only non-TLS URL |
+| `connectionTlsStringReplicas` | `rediss://default:<password>@db.zerops:7001` | Read-only TLS URL |
+
+The connection string format is `redis://default:<password>@<hostname>.zerops:<port>` (or `rediss://` for TLS). The username is always `default`.
+
+:::note Authentication
+Valkey requires a password. It is generated automatically, exposed as the sensitive `${db_password}` variable, and already embedded in the `connectionString` variables above. Connect with it directly &mdash; e.g. `redis-cli -h db.zerops -p 6379 -a "$db_password"`.
+
+Services created **without** a `password` variable (older deployments) keep working without authentication and are unaffected. **All deployments created since this release require the password.**
+:::
+
+Idle connections are closed after 5 minutes of inactivity. Use a client connection pool or TCP keep-alive if your application holds long-lived idle connections.
+
+## Persistence
+
+Valkey persists data to disk with **AOF (append-only file)**, so the dataset survives restarts and is rebuilt automatically on startup.
+
+- **AOF is enabled** (`appendonly yes`) and synced to disk **every second** (`appendfsync everysec`). After an unclean crash you lose at most ~1 second of the most recent writes.
+- **RDB snapshots are disabled** (`save ""`) &mdash; durability relies on AOF, not periodic snapshots.
+
+**Durability by mode:**
+- **Single:** the AOF lives on the node's local disk. Data survives service restarts but is lost if the underlying hardware node fails and no backup exists.
+- **HA:** writes are additionally replicated to two replicas, so the dataset survives the loss of any single node via automatic failover.
+
+:::note Backups
+Platform-managed encrypted backups are available for both Single and HA setups. They are **disabled by default** &mdash; enable them on the service if you need point-in-time recovery beyond AOF and replication.
+:::
+
+## Memory and Autoscaling
+
+You don't set `maxmemory` directly. Zerops sizes it at **80% of the container's available RAM** &mdash; precisely 80% of the *smaller* of your configured maximum RAM and the cgroup-allocated RAM. It is re-evaluated and adjusted automatically about every 30 seconds, so `maxmemory` tracks the container as it scales vertically (subject to the `noeviction` caveat below). The remaining 20% covers Valkey's internal overhead (fork on AOF rewrite / replica sync, fragmentation) and the OS.
+
+:::warning Keep minimum free RAM above 20% when customizing autoscaling
+If you edit the autoscaling configuration, keep the **minimum free RAM above 20%**. Zerops caps `maxmemory` at 80% of available RAM, so the dataset alone can never push free RAM below 20%. If your minimum free RAM threshold is at or below 20%, the scale-up trigger may **never fire at all** &mdash; free RAM never crosses it, so the service stays stuck at its current size and starts evicting keys (or rejecting writes under `noeviction`) instead of scaling up. Setting the threshold above 20% lets the dataset's growth toward the 80% cap cross the trigger, so the service scales up in time and keeps headroom for the fork during an AOF rewrite or replica sync. The built-in profiles all keep this threshold above 20%.
+:::
+
+:::note Check the logs for OOM events
+Watch the service's runtime logs for out-of-memory events &mdash; typically the kernel OOM-killer terminating and restarting Valkey when a fork during an AOF rewrite or replica sync briefly inflates memory. Recurring OOMs mean the reserved headroom isn't enough for your workload's peaks. Raise the **minimum free RAM** (more headroom) or the **minimum RAM** (a higher floor) until they stop.
+:::
+
+## Tunable Parameters
+
+Two Valkey settings are exposed as **editable** environment variables on the Valkey service. Update them from the service's *Environment variables* page (or via `zcli`/API) and Zerops applies the change live &mdash; **no service restart**, no client reconnect. In HA mode the change is rolled out to every node.
+
+### `VALKEY_MAXMEMORY_POLICY`
+
+Default: `allkeys-lru`. Controls what Valkey does when the dataset reaches `maxmemory`.
+
+| Value | Behavior | When to use |
+|---|---|---|
+| `noeviction` | Reject writes with an OOM error | Datasets where every key must be preserved (session storage without TTL, job queues). Requires careful capacity planning. |
+| `allkeys-lru` | Evict least-recently-used keys | General-purpose caching &mdash; the safe default |
+| `allkeys-lfu` | Evict least-frequently-used keys | Hot/cold workloads where access frequency matters more than recency |
+| `allkeys-random` | Evict random keys | Uniform access patterns (rare) |
+| `volatile-lru` | Evict LRU keys *with a TTL set* | Mixed workloads: persistent keys without TTL are protected, cache keys with TTL are evictable |
+| `volatile-lfu` | Evict LFU keys with a TTL | Same as `volatile-lru`, frequency-based |
+| `volatile-random` | Evict random keys with a TTL | Rarely appropriate |
+| `volatile-ttl` | Evict keys with the shortest remaining TTL | When TTL reflects priority |
+
+:::warning `noeviction` and vertical autoscaling
+With `noeviction`, automatic vertical **scale-down** of the container is disabled &mdash; Valkey cannot free memory through eviction, so a smaller allocation would cause all writes to fail with OOM errors. Scale-up still works normally. Switch to one of the eviction policies above if you want automatic scale-down.
+:::
+
+### `VALKEY_LAZYFREE_LAZY_USER_DEL`
+
+Default: `yes`. Allowed values: `yes`, `no`.
+
+When `yes`, client `DEL` commands free memory asynchronously (equivalent to `UNLINK`), keeping Valkey responsive even when deleting very large keys (e.g. a sorted set with millions of members). Set to `no` only if your application specifically relies on synchronous deletes &mdash; the overhead of lazy-free is otherwise negligible.
+
+## Metrics
+
+Prometheus-compatible metrics are exported by default for scraping, on the port given by the `ZEROPS_PROMETHEUS_PORT` variable (`db:9121`).
 
 ## Learn More
 
