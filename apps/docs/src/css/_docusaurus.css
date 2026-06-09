@@ -318,10 +318,30 @@ th {
 }
 
 td {
-  width: 100%;
   padding: 8px;
   border: 1px solid #b6b9bd;
   @apply bg-[#F2F5F7] dark:bg-[#1B1B1F];
+}
+
+/* Infima's default is `table { display: block; overflow: auto }`, which turns
+   the <table> into a block scroll-container whose actual grid becomes an
+   anonymous, shrink-to-fit table box. `width: 100%` then only sizes the outer
+   block — it never reaches the grid — so the table refuses to fill the page,
+   and forcing a cell width (the old `td { width: 100% }`) just bloats one
+   column instead of widening the table. On tablet/desktop, restore a real
+   table box so `width: 100%` + auto layout distribute columns and fill the
+   parent. Below 768px we keep Infima's display:block + overflow-x scroll so
+   wide tables stay swipeable on mobile. */
+@media (min-width: 768px) {
+  table {
+    display: table;
+    table-layout: auto;
+  }
+
+  th,
+  td {
+    overflow-wrap: anywhere;
+  }
 }
 
 @keyframes shimmer {
