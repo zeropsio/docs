@@ -9378,7 +9378,7 @@ Most coding-agent platforms went agent-first, then bolted on infrastructure — 
 
 ### Your agent, your subscription
 
-Bring whichever agent you already use. Claude Code today; Codex, Gemini CLI, opencode, and any MCP-capable client next. The container is a regular Ubuntu — install your own CLI tools, drop in your `.claude` / `.cursor` configs, attach your IDE over SSH. **Zerops doesn't resell tokens or proxy your model calls** — sign in with your own Anthropic / OpenAI / Google subscription and the agent talks to its provider directly.
+ZCP supports multiple coding agents including Claude Code (Anthropic), Codex (OpenAI), Antigravity, and Grok Build. The container is a regular Ubuntu — install your own CLI tools, drop in your `.claude` / `.cursor` configs, attach your IDE over SSH. **Zerops doesn't resell tokens or proxy your model calls** — sign in with your own Anthropic / OpenAI / Google subscription and the agent talks to its provider directly.
 
 ### An ordinary Zerops project underneath
 
@@ -9396,7 +9396,7 @@ Runtimes for Bun, Deno, Node.js, Go, Python, Rust, Java, .NET, PHP, Elixir, Glea
 
 The agent reaches your project's private network one of two ways:
 
-- **Remote** — a `zcp` service deployed into the project runs the agent. You attach to it with Claude Code's IDE extension, with any IDE that supports remote development (Cursor, Windsurf, VS Code Remote), or by running [`zcli vpn up`](/references/networking/vpn) and ssh-ing into `zcp` to drive the rest of the project from a shell.
+- **Remote** — a `zcp` service deployed into the project runs the agent. You attach to it with your agent's IDE extension or terminal, with any IDE that supports remote development (Cursor, Windsurf, VS Code Remote), or by running [`zcli vpn up`](/references/networking/vpn) and ssh-ing into `zcp` to drive the rest of the project from a shell.
 - **Local** — install the `zcp` MCP on your machine and run `zcli vpn up` to join the network. From there your IDE, agent, and shell can ssh directly into any container.
 
 Either way, the agent reaches [managed services by hostname](/references/networking/internal-access) (`db:5432`, `cache:6379`), deploys through the [Zerops pipeline](/features/pipeline), and reads logs and events the same way you would.
@@ -9534,47 +9534,47 @@ With the model clear, here's where ZCP sits among adjacent tools. People say "ag
 
 _AWS MCP servers · Railway MCP · Fly.io MCP · Render MCP_
 
-Most major PaaS providers have shipped an MCP — provision services, deploy code, list resources, read operational state. Great for "let my agent ship to my Railway account." These are *deploy and operate* surfaces, driven from outside the platform — and they reflect what's underneath: platforms optimized for day-one deploy that tuck the infrastructure behind a wall. Once an agent needs to actually *develop* against that infrastructure — debug a failed health check, follow real logs, hit Postgres from inside the network, inspect what a build is doing, run the dev loop before it ships anything — the wall stops it. That's by design on those platforms, not a missing feature.
+Most major PaaS providers have shipped an MCP — provision services, deploy code, list resources, read operational state. Great for "let my agent ship to my Railway account." These are *deploy and operate* surfaces, driven from outside the platform — and they reflect what's underneath: platforms optimized for day-one deploy that tuck the infrastructure behind a wall. Log and metric read tools landed across the category in 2025 (and AWS only just hit GA), but the **in-network, in-container** surface an agent needs to actually *develop* — hit Postgres from inside the network, follow a build live, drive the dev loop before it ships anything — is still on the other side of the wall.
 
 #### Cloud VPS MCPs
 
 _Hetzner Cloud MCP · DigitalOcean MCP · Linode MCP · raw SSH/server MCPs_
 
-"Let your agent manage your Hetzner VPS." An MCP gives the agent access to a Linux box — provision it, SSH in, install Docker and Postgres and nginx, set up systemd units, point a domain at it. Maximum control, lowest cost, full Linux to play with. The same reason senior developers reach for managed platforms applies here: even if you *can* harden SSH, write nginx configs, tune `pg_hba.conf`, rotate TLS, set firewall rules, run fail2ban, and stay on top of CVEs across kernel, OpenSSL, Docker, Postgres, and nginx — you usually don't want to. Each layer is its own domain with its own gotchas, each is a security surface that drifts the moment you stop tending it, and every project becomes a snowflake. Hand that work to an agent and you also hand it the blast radius: misconfigured firewall, debug endpoint left open, port 5432 exposed to the internet, keys never rotated. ZCP is the inverse trade-off — the **guardrails** of a managed platform. Private networking, TLS, isolated services, safe defaults, managed backups, no exposed ports unless you opt in — all built in. The agent operates through [project-scoped MCP tools](/zcp/reference/mcp-operations) instead of `sudo` on a fresh Ubuntu box, so the mistakes that matter on a VPS aren't reachable from where it sits.
+"Let your agent manage your Hetzner VPS." Two shapes cluster here: vendor-API MCPs (DigitalOcean ships an official one) that provision services from outside the box, and community-built SSH MCPs (Hetzner, Linode, Vultr) that give the agent shell access — provision it, SSH in, install Docker and Postgres and nginx, set up systemd units, point a domain at it. Maximum control, lowest cost, full Linux to play with. The same reason senior developers reach for managed platforms applies here: even if you *can* harden SSH, write nginx configs, tune `pg_hba.conf`, rotate TLS, set firewall rules, run fail2ban, and stay on top of CVEs across kernel, OpenSSL, Docker, Postgres, and nginx — you usually don't want to. Each layer is its own domain with its own gotchas, each is a security surface that drifts the moment you stop tending it, and every project becomes a snowflake. Hand that work to an agent and you also hand it the blast radius: misconfigured firewall, debug endpoint left open, port 5432 exposed to the internet, keys never rotated. ZCP is the inverse trade-off — the **guardrails** of a managed platform. Private networking, TLS, isolated services, safe defaults, managed backups, no exposed ports unless you opt in — all built in. The agent operates through [project-scoped MCP tools](/zcp/reference/mcp-operations) instead of `sudo` on a fresh Ubuntu box, so the mistakes that matter on a VPS aren't reachable from where it sits.
 
 #### Cloud dev environments with AI
 
-_GitHub Codespaces + Copilot Workspace · Gitpod · Coder_
+_GitHub Codespaces + Copilot Coding Agent · Ona (ex-Gitpod) · Coder_
 
-A managed Linux container in the cloud with your editor and an AI assistant attached. Solves "where the agent runs" so state survives between sessions and machine setup stops being a question. The `zcp` service is the closest thing in this category — managed Linux container, Cloud IDE, your agent of choice — except it lives *inside* a Zerops project, addressing the project's runtimes, database, and cache by hostname, with deploys and logs as primitives the agent can call.
+A managed Linux container in the cloud with your editor and an AI assistant attached. Solves "where the agent runs" so state survives between sessions and machine setup stops being a question. The category itself is repositioning toward **governed agent runtimes** — Copilot Coding Agent (the productized successor to Workspace), Coder Agents, and Ona (Gitpod's rebrand after it shut down the SaaS in late 2025) all point the same way. The `zcp` service is the closest thing in this category — managed Linux container, Cloud IDE, your agent of choice — except it lives *inside* a Zerops project, addressing the project's runtimes, database, and cache by hostname, with deploys and logs as primitives the agent can call.
 
 #### Bundled agent platforms
 
-_Replit Agent · Lovable · Bolt.new · v0 · Devin · OpenHands_
+_Replit Agent · Lovable · Bolt.new · v0 · Devin_
 
-The agent, the workspace, the stack, and (often) the hosting target are fused into one closed product. Fast for prototypes. Decisions are made for you. Switching agents usually means switching platforms, and production-grade primitives — a real dev/stage/prod release flow, private networking, observability — tend to be limited or absent. **ZCP doesn't bundle**: the agent and model stay yours on your own subscription, and the platform underneath is normal Zerops with the full stack of managed services, networking, deploys, and observability.
+The agent, the workspace, the stack, and (often) the hosting target are fused into one closed product. Fast for prototypes. Decisions are made for you. Switching agents usually means switching platforms, and production-grade primitives — a real dev/stage/prod release flow, private networking, observability — are **uneven** across this category: v0, Bolt, and Devin have moved upmarket with deploy/auth/DB primitives, others have not. **ZCP doesn't bundle**: the agent and model stay yours on your own subscription, and the platform underneath is normal Zerops with the full stack of managed services, networking, deploys, and observability.
 
 #### Local coding agents
 
-_Cursor · Windsurf · Zed · Claude Code · Codex CLI · Aider · Cline_
+_Cursor · Windsurf · Zed · Claude Code · Codex · Antigravity · Grok Build · Aider · Cline_
 
-The agent runs on your machine, edits your local checkout, runs local commands. Excellent at code changes. Anything beyond your machine — databases, networking, deploy targets, runtime logs — is yours to wire in. Install the ZCP MCP locally and run `zcli vpn up`, and any of these agents can now reach a real Zerops project alongside your local code: services addressed by hostname, deploys, logs, events.
+The agent runs on your machine, edits your local checkout, runs local commands. Excellent at code changes. **MCP** is now native across these tools, so external reach — databases, networking, deploy targets, runtime logs — comes through plugins instead of bare hands. The agent still lives on your laptop, though: anything off-machine has to be reached, not *inhabited*. Install the ZCP MCP locally and run `zcli vpn up`, and any of these agents can now reach a real Zerops project alongside your local code: services addressed by hostname, deploys, logs, events.
 
 #### Code-execution sandboxes
 
 _E2B · Modal · Daytona · CodeSandbox SDK_
 
-Ephemeral Linux environments that AI *applications* spin up — often per request — to execute generated code safely. The right primitive when you're building a product that needs a model to run untrusted code and hand back the output. They're a building block for AI applications, not somewhere a coding agent settles in to iterate on your project. Different shape from ZCP; they show up here because the names cluster nearby.
+Mostly ephemeral Linux environments that AI *applications* spin up — often per request — to execute generated code safely (E2B, Modal). The right primitive when you're building a product that needs a model to run untrusted code and hand back the output. Some have pivoted toward **stateful, resumable agent workspaces** — Daytona now explicitly markets "every agent a computer," and CodeSandbox SDK's hibernation/resume sits between ephemeral and persistent. Still a different shape from ZCP; they show up here because the names cluster nearby.
 
 #### Agent SDKs and frameworks
 
-_Cloudflare Agents · Vercel AI SDK · Mastra · Anthropic Agent SDK_
+_Cloudflare Agents · Vercel AI SDK · Mastra · Claude Agent SDK_
 
 Libraries for building and shipping agents to *your* users — tool calling, memory, orchestration, model providers, sometimes hosting. They're how somebody would build a product like ZCP, not where a coding agent runs against a project. Same disambiguation — adjacent on the shelf, different shape.
 
 ## Where to start
 
-- [Quickstart](/zcp/quickstart) — AI Agent recipe, Claude Code, and a real product change in about five minutes.
+- [Quickstart](/zcp/quickstart) — AI Agent recipe, bundled coding agent, and a real product change in about five minutes.
 - [ZCP MCP overview](/zcp/overview) — What the `zcp` MCP gives the agent, where it runs, and how a run ends in proof or a blocker.
 - [Remote or local setup](/zcp/setup/choose-workspace) — Choose where the `zcp` MCP runs — inside Zerops with bundled tools, or beside your local editor.
 - [Build and ship](/zcp/workflows/build-with-zcp) — Runtime layout, development, delivery, packaging, and production release.
@@ -10652,9 +10652,9 @@ In **Pipelines & CI/CD settings** section of your service detail:
 - **Re-deploy last pipeline** - With optional secret env variable updates
 - **Trigger new pipeline** - From git repo or with custom configuration
 
-#### Using import YAML
+#### Using Import YAML
 
-Add `buildFromGit: <repo-url>` to your service configuration for one-time build during import. See [import documentation](/references/import#service-basic-configuration).
+Add `buildFromGit: <repo-url>` to your service configuration for one-time build during import. See [Import YAML documentation](/references/import#service-basic-configuration).
 
 ## Build phase
 
@@ -15458,7 +15458,7 @@ When using SSHFS (`zerops_mount`) for dev workflows, deploy replaces the contain
 # Guides > Environment Variables
 
 
-Zerops manages environment variables at two scopes (project and service) with strict build/runtime isolation. Variables are set via zerops.yml, import.yml, or GUI. **Both project-level vars AND cross-service vars (`${hostname_varname}`) auto-inject as OS env vars into every container in the project** — no declaration required. `run.envVariables` exists only for mode flags and framework-convention renames. Re-declaring an auto-injected var under its own name creates a literal-string self-shadow. Secret vars are write-only after creation. Changes require service restart.
+Zerops manages environment variables at two scopes (project and service) with strict build/runtime isolation. Variables are set via zerops.yml, import.yml, or GUI. **Project vars auto-inherit into every service** — read them directly, no declaration. **Cross-service (sibling) vars do NOT auto-inject under the default `envIsolation=service`** — reference a sibling's value explicitly as `${hostname_varname}` in `run.envVariables` (only legacy `none` mode injects siblings as bare vars). Secret reads are privilege-gated (an admin token returns the value; a read-only token gets `REDACTED`). A running process keeps its boot-time env — restart it (not reload) to pick up a changed value.
 
 ---
 
@@ -15466,21 +15466,21 @@ Zerops manages environment variables at two scopes (project and service) with st
 
 | Scope | Defined In | Visibility | Editable Without Redeploy |
 |-------|-----------|------------|--------------------------|
-| **Project** | import.yml `project.envVariables`, GUI | All services (auto-inherited) | Yes (restart required) |
-| **Service secret** | import.yml `envSecrets`, GUI | Single service | Yes (restart required) |
+| **Project** | import.yml `project.envVariables`, GUI | All services (auto-inherited) | Yes (restart to apply) |
+| **Service secret** | import.yml `envSecrets`, GUI | Single service | Yes (restart to apply) |
 | **Service basic (build)** | zerops.yml `build.envVariables` | Build container only | No (redeploy required) |
 | **Service basic (runtime)** | zerops.yml `run.envVariables` | Runtime container only | No (redeploy required) |
 | **Service basic (runtime)** | zerops.yml `run.envVariables` | Runtime container only | No (redeploy required) |
 
 ## Variable Precedence
 
-When the same key exists at multiple levels:
+Total order for the bare key (highest wins): **system/platform > yaml-baked `run.envVariables` > service secret/userData > project**.
 
-1. **Service basic (build/runtime)** wins over service secret
-2. **Service-level** wins over project-level
-3. Build and runtime are **separate environments** -- same key can have different values in each
+1. **yaml-baked `run.envVariables` owns its key** — a service secret/userData set on the same key is **rejected** (`userDataDuplicateKey`); the two never coexist. To change a yaml-baked value, edit `zerops.yml` and redeploy.
+2. **Service-level** wins over **project-level**.
+3. Build and runtime are **separate environments** -- same key can have different values in each.
 
-**DO NOT** create a secret and a basic runtime variable with the same key expecting both to persist. The basic runtime variable from zerops.yml silently overrides the secret.
+**DO NOT** set a secret/service var on a key already declared in `run.envVariables` — the platform rejects it. The yaml var owns the key; edit the yaml and redeploy instead.
 
 ## Build/Runtime Isolation
 
@@ -15503,104 +15503,62 @@ zerops:
         API_KEY: "12345-abcde"
 ```
 
-## Cross-Service References — Auto-Injected Project-Wide
+## Cross-Service References — Explicit `${hostname_varname}` Required
 
-**Every service's variables are automatically injected as OS environment variables into every other service's containers** — both runtime and build. A worker container sees `db_hostname`, `db_password`, `queue_user`, `storage_apiUrl`, etc. as real OS env vars at container start. Zero declaration in zerops.yml required.
+Under the default `envIsolation=service`, a service does **NOT** automatically see another service's variables — **not even a managed database's connection vars**. To use a sibling's value, reference it explicitly in `run.envVariables`; the left-hand key is the name your app reads, the right-hand `${hostname_varname}` is the source:
 
-Read them directly in application code:
+```yaml
+run:
+  envVariables:
+    DB_HOST: ${db_hostname}
+    DB_PASS: ${db_password}
+    DATABASE_URL: ${db_connectionString}
+    CACHE_URL: ${cache_connectionString}
+```
 
 ```javascript
-// Node — lowercase native names match the platform
-const host = process.env.db_hostname;
-const pwd  = process.env.db_password;
-const natsUser = process.env.queue_user;
+// App reads the names you mapped above:
+const host = process.env.DB_HOST;
 ```
 
-```php
-// PHP
-$host = getenv('db_hostname');
-```
+- The reference **resolves at container start**, independent of isolation mode — the referenced var does not need to exist at definition time.
+- An **unresolved ref stays literal** (`${db_hostname}` reaches the process verbatim) — no error, no blank. A wrong hostname/var on the right-hand side becomes a literal string and the app fails at connect time.
+- **Hostname transformation**: dashes become underscores. Service `my-db` variable `port` is `${my_db_port}`.
 
-`run.envVariables` and `build.envVariables` have **two legitimate uses only**:
-
-1. **Mode flags** — per-setup values that don't come from another service:
-   ```yaml
-   run:
-     envVariables:
-       NODE_ENV: production
-       APP_ENV: local
-   ```
-
-2. **Framework-convention renames** — forward a platform var under a different name because the framework config expects it. The key on the left MUST DIFFER from the source var name on the right:
-   ```yaml
-   run:
-     envVariables:
-       DB_HOST: ${db_hostname}          # TypeORM expects uppercase DB_HOST
-       DATABASE_URL: ${db_connectionString}
-   ```
-
-**Do NOT re-declare auto-injected vars under their own name.** It is always wrong and never useful:
-
-```yaml
-run:
-  envVariables:
-    db_hostname: ${db_hostname}        # SELF-SHADOW — see next section
-    db_password: ${db_password}        # SELF-SHADOW
-    queue_hostname: ${queue_hostname}  # SELF-SHADOW
-    API_URL: ${API_URL}                # SELF-SHADOW (project-level variant)
-```
-
-The referenced variable does **not** need to exist at definition time — Zerops resolves at container start.
-
-### Self-Shadow Trap
-
-Writing `varname: ${varname}` in `run.envVariables` creates a literal-string self-shadow. The platform's interpolator sees the service-level variable of that name first, can't recurse back to the auto-injected value, and the resolved OS env var becomes the literal string `${varname}`:
-
-```yaml
-run:
-  envVariables:
-    db_hostname: ${db_hostname}        # OS env: db_hostname='${db_hostname}' (literal)
-    db_password: ${db_password}        # OS env: db_password='${db_password}' (literal)
-```
-
-At runtime, the worker tries to connect to `"${db_hostname}:5432"` and crashes. The fix is to **delete the entire block** — those vars are already in the container's env without any declaration.
-
-This applies identically to project-level vars (`${API_URL}`, `${APP_SECRET}`) and cross-service vars (`${db_hostname}`, `${queue_user}`) — both auto-propagate, both self-shadow under the same rule.
-
-**Hostname transformation**: dashes become underscores. Service `my-db` variable `port` is `${my_db_port}`.
+Only legacy `envIsolation=none` auto-injects every sibling's vars as bare `<host>_KEY` OS env vars without a ref — see Isolation Modes. New projects are `service`; rely on explicit refs.
 
 ### Cross-Service References in API vs Runtime
 
-Cross-service references (`${hostname_varname}`) are **resolved at container start time**, not at definition time. This means:
+Cross-service references (`${hostname_varname}`) are **resolved at container start time**, not at definition time:
 
-- **`zerops_discover` with `includeEnvs=true`** returns the **literal template** (e.g., `${db_password}`), NOT the resolved value. This is expected — the API stores templates, not resolved values.
+- **`zerops_discover` with `includeEnvs=true`** returns the **literal template** (e.g., `${db_password}`), NOT the resolved value. The service-env API stores templates, not resolved values, and returns only the service's own user-set + intrinsic vars — yaml-baked `run.envVariables` come from the app-version, project vars from the project scope. Assemble across scopes (or read in-container) for the effective env.
 - **Inside the running container**, environment variables contain the actual resolved values.
-- **Restarting a service does NOT change** what `zerops_discover` returns — it always shows templates. To verify resolved values, check from inside the container (e.g., via SSH or application endpoint).
+- **Restarting a service does NOT change** what `zerops_discover` returns — it always shows templates. To verify resolved values, check from inside the container.
 
 ### Isolation Modes (envIsolation)
 
-`envIsolation` does NOT control whether cross-service vars auto-inject — they do, in every mode. It controls something narrower: how `${hostname_varname}` templates inside zerops.yml and import.yml *resolve* during platform interpolation.
+`envIsolation` is a project-scope setting that controls whether sibling-service vars are auto-injected.
 
 | Mode | Behavior |
 |------|----------|
-| `service` (default) | Service-scoped: `${hostname_varname}` templates inside that service's YAML resolve by following the hostname prefix. The OS env in every container still contains every other service's vars as auto-injected keys. |
-| `none` (legacy) | Cross-service references can be written without the `${hostname_varname}` prefix (e.g. `${password}` resolves to the nearest match). Do not use for new projects — ambiguous, error-prone. |
-| `none` (legacy) | Cross-service references can be written without the `${hostname_varname}` prefix (e.g. `${password}` resolves to the nearest match). Do not use for new projects — ambiguous, error-prone. |
+| `service` (default) | **Siblings are isolated.** A service sees only its own vars + project vars + the explicit `${hostname_varname}` refs it declares in `run.envVariables`. Managed-service connection vars also require an explicit ref. |
+| `none` (legacy) | Every service's vars are auto-injected into every other container as bare `<host>_KEY` OS env vars (source-side, directional). Ambiguous and broad — avoid for new projects. |
+| `none` (legacy) | Every service's vars are auto-injected into every other container as bare `<host>_KEY` OS env vars (source-side, directional). Ambiguous and broad — avoid for new projects. |
 
 Set in import.yml at project or service level:
 ```yaml
 project:
-  envIsolation: none       # legacy — avoid
+  envIsolation: none       # legacy — avoid; default is service
 services:
   - hostname: db
-    envIsolation: none     # legacy — avoid
+    envIsolation: none     # per-service: expose THIS service's vars to siblings
 ```
 
-**Default (`service`) is the right choice.** The auto-inject behavior above applies under the default.
+**Default (`service`) is the right choice.** Wire cross-service explicitly with `${hostname_varname}` — it works in both modes, so code stays correct if isolation ever changes.
 
 ## Project Variables -- Auto-Inherited
 
-Project variables are **automatically available in every service, in both runtime AND build containers**. The platform injects them as OS env vars at container start in every service's runtime container and also in every service's build container during the build phase. From zerops.yaml's point of view they are referenced **directly by name** with `${VAR_NAME}` — **no `RUNTIME_` prefix in either scope**. The `RUNTIME_` prefix is reserved for a different use case: lifting a single service's service-level runtime variable into that same service's build context. Project-scope vars are broader than service-scope and do not need lifting.
+Project variables are **automatically available in every service, in both runtime AND build containers** — injected as OS env vars at container start. From application code, read them directly (`process.env.API_URL`). From zerops.yaml, reference them by name with `${VAR_NAME}` — **no `RUNTIME_` prefix** (that prefix is only for lifting a service's own runtime var into its build context).
 
 **In shell commands** (buildCommands, initCommands, start) project vars are directly readable:
 ```yaml
@@ -15610,31 +15568,15 @@ build:
     - VITE_API_URL=$API_URL npm run build         # or pass it forward by shell prefix
 ```
 
-**In `build.envVariables` YAML** (to compose a derived var that the bundler consumes) reference the project var directly without prefix:
+**In `build.envVariables` / `run.envVariables` YAML** (to forward a project var under a framework-conventional name) reference it directly without prefix:
 ```yaml
 build:
   envVariables:
-    VITE_API_URL: ${API_URL}         # project var API_URL read as-is, NO RUNTIME_ prefix
-```
-
-**In `run.envVariables` YAML** (to forward a project var under a framework-conventional name without creating a shadow), reference directly without prefix:
-```yaml
+    VITE_API_URL: ${API_URL}              # project var API_URL read as-is
 run:
   envVariables:
-    CORS_ALLOWED_ORIGIN: ${FRONTEND_URL}     # project var FRONTEND_URL forwarded under a different name
+    CORS_ALLOWED_ORIGIN: ${FRONTEND_URL}  # forwarded under a different name
 ```
-
-**DO NOT** re-reference an auto-injected variable under its SAME name — that's a self-shadow loop. Applies to BOTH project-level vars AND cross-service vars:
-
-```yaml
-envVariables:
-  PROJECT_NAME: ${PROJECT_NAME}           # project-level self-shadow
-  API_URL: ${API_URL}                     # project-level self-shadow
-  db_hostname: ${db_hostname}             # cross-service self-shadow
-  queue_user: ${queue_user}               # cross-service self-shadow
-```
-
-All four resolve to the literal string `${VAR_NAME}` inside the container — the framework tries to connect to `"${db_hostname}:5432"` and crashes. The fix is to delete those lines entirely — the platform already injects the real value as an OS env var.
 
 To **override** a project variable for one service, define a service-level variable with the same key and a DIFFERENT VALUE (not a reference to the project var):
 ```yaml
@@ -15643,9 +15585,25 @@ run:
     LOG_LEVEL: debug    # overrides project-level LOG_LEVEL for this service
 ```
 
+### Self-Shadow Trap — same name on both sides
+
+Writing `varname: ${varname}` (the left key identical to the source on the right) is always wrong:
+
+```yaml
+run:
+  envVariables:
+    API_URL: ${API_URL}            # project-level self-shadow
+    db_hostname: ${db_hostname}    # cross-service self-shadow
+```
+
+The interpolator sees the service-level variable of that name first, can't recurse back to the inherited/referenced value, and the OS env var resolves to the literal string `${varname}` — the app then connects to `"${db_hostname}:5432"` and crashes.
+
+- For a **project var** you only want to read: delete the line — it already auto-inherits.
+- For a **cross-service** value: use a **different** left-hand name (`DB_HOST: ${db_hostname}`), never the same name.
+
 ### Typical pattern: project-level URL constants for dual-runtime recipes
 
-Dual-runtime recipes (frontend SPA + backend API on the same platform) use project-level URL constants as the single source of truth for cross-service URLs. The constants are derived from `${zeropsSubdomainHost}` (a platform-generated project-scope env var present from project creation) and the services' known hostnames:
+Dual-runtime recipes (frontend SPA + backend API) use project-level URL constants as the single source of truth for cross-service URLs, derived from `${zeropsSubdomainHost}` (a platform-generated project-scope var present from project creation):
 
 ```yaml
 project:
@@ -15654,14 +15612,14 @@ project:
     FRONTEND_URL: https://appstage-${zeropsSubdomainHost}.prg1.zerops.app
 ```
 
-The platform resolves `${zeropsSubdomainHost}` when injecting the value into services at container start. The frontend consumes `API_URL` via plain `${API_URL}` in `build.envVariables` (baking it into the bundle at compile time) — **no `RUNTIME_` prefix**. The API consumes `FRONTEND_URL` via plain `${FRONTEND_URL}` in `run.envVariables` (for CORS allow-list). The same names must be set on the workspace project via `zerops_env project=true action=set` after provision, so workspace verification doesn't see literal `${FRONTEND_URL}` strings.
+The frontend consumes `API_URL` via plain `${API_URL}` in `build.envVariables` (baked into the bundle at compile time). The API consumes `FRONTEND_URL` via plain `${FRONTEND_URL}` in `run.envVariables` (CORS allow-list). Set the same names on the workspace project via `zerops_env project=true action=set` after provision.
 
 ## Secret Variables
 
 - Defined via GUI, import.yml `envSecrets`, or `dotEnvSecrets`
-- **Write-only after creation** -- values masked in GUI, cannot be read back via API
-- Can be updated without redeploy, but service **must be restarted**
-- Overridden by basic (zerops.yml) variables with the same key
+- **Read is privilege-gated** -- masked in GUI; via API an admin/write token returns the value verbatim, a read-only token returns `REDACTED` (keyed on `sensitive=true`). In-container the value is plaintext (the app needs it). Project-level `sensitive=true` does NOT persist — only service-level is a true secret surface.
+- Can be updated without redeploy, but the service **must be restarted** to pick it up.
+- Overridden by yaml-baked `run.envVariables` with the same key (yaml owns the key).
 
 ### dotEnvSecrets
 
@@ -15704,22 +15662,22 @@ run:
 
 ## Restart Requirement
 
-Env var changes (secret or project) take effect only on container start. The running process does **not** receive updated values.
+An env-store change (secret or project) propagates to the container in ~5–10s without a redeploy, but the **running process keeps its boot-time environ** — only newly-spawned processes see it.
 
-**DO NOT** expect hot-reload of env vars. After changing secrets or project vars in GUI, **restart the service**. For zerops.yml `envVariables` changes, a **full redeploy** is required.
+**DO NOT** expect hot-reload of env vars. After changing secrets or project vars, **restart the service** (not reload — reload does not re-read env for the running process; PHP-FPM keeps its boot config). For `zerops.yml` `run.envVariables` changes, a **full redeploy** is required (they are baked into the app version).
 
 ## System-Generated Variables
 
-Zerops auto-generates variables per service (e.g., `hostname`, `PATH`, DB connection strings). Cannot be deleted. Some read-only (`hostname`), others editable (`PATH`). Can be referenced by other services using `${hostname_varname}`.
+Zerops auto-generates variables per service (e.g., `hostname`, `PATH`, DB connection strings). Cannot be deleted. Some read-only (`hostname`), others editable (`PATH`). Reference them from another service with an explicit `${hostname_varname}`.
 
 ## Common Mistakes
 
-- **DO NOT** re-reference auto-injected vars under their own name — self-shadow loop. Applies to BOTH project-level (`API_URL: ${API_URL}`) AND cross-service (`db_hostname: ${db_hostname}`, `queue_user: ${queue_user}`).
-- **DO NOT** declare cross-service vars you only want to READ — they are already in the container's OS env. Read via `process.env.db_hostname` / `getenv('db_hostname')` directly. Declare in `run.envVariables` only to RENAME (e.g. `DB_HOST: ${db_hostname}`) or to set mode flags.
-- **DO NOT** forget restart after GUI/API env changes — process won't see new values
-- **DO NOT** expect `envReplace` to recurse subdirectories — it does not
-- **DO NOT** rely on reading secret values back — they are write-only after creation
-- **DO NOT** create both secret and basic vars with same key — basic silently wins
+- **DO NOT** expect a sibling's vars to appear automatically under default `service` isolation — reference them explicitly as `${hostname_varname}` in `run.envVariables` (the bare `<host>_KEY` injected form is `none`-only legacy).
+- **DO NOT** re-reference a var under its SAME name -- self-shadow loop. Project vars auto-inherit (read directly); cross-service uses a DIFFERENT left-hand name (`DB_HOST: ${db_hostname}`).
+- **DO NOT** set a secret/service var on a key already in `run.envVariables` -- rejected (`userDataDuplicateKey`); the yaml owns the key, edit yaml + redeploy.
+- **DO NOT** assume secret values are unreadable -- API read is privilege-gated (admin verbatim, read-only `REDACTED`), not unconditionally write-only.
+- **DO NOT** forget restart after GUI/API env changes -- the running process won't see new values.
+- **DO NOT** expect `envReplace` to recurse subdirectories -- it does not.
 
 
 ----------------------------------------
@@ -15927,7 +15885,7 @@ http://postgres:5432
 - Service discovery is automatic — no manual network config
 - VPN uses same hostnames: `http://api:3000` from local machine (both `api` and `api.zerops` resolve — VPN sets up DNS search domain)
 
-**Cross-service env vars**: prefix with hostname — e.g., `app_API_TOKEN`. Zerops auto-generates connection vars for managed services.
+**Cross-service env vars**: under the default `envIsolation=service`, reference a sibling's var explicitly as `${hostname_varname}` in `run.envVariables` (e.g. `${app_API_TOKEN}`) — siblings are NOT auto-injected. The bare `<host>_KEY` injected form only appears under legacy `envIsolation=none`. Zerops auto-generates connection vars for managed services — reference them the same way (`${db_*}`).
 
 **DO NOT** use `https://` for service-to-service calls — SSL terminates at the L7 balancer, internal network is already isolated.
 
@@ -16508,7 +16466,7 @@ Zerops offers three public access methods: zerops.app subdomains (dev only, 50MB
 - **Not for production** — use for development/testing only
 - Auto-provisioned SSL
 - Pre-configure via import YAML: `enableSubdomainAccess: true` (works for all runtime/web types)
-- **Activate routing via API:** `zerops_subdomain enable` (only works on deployed/ACTIVE services) — call once after the first deploy of each new service, even if `enableSubdomainAccess: true` was set in import. Import pre-configures routing but does NOT activate L7 balancer; without the explicit enable call, the subdomain returns 502. Re-deploys do NOT deactivate it. Use `zerops_discover` to check current status and get the URL (`subdomainEnabled` + `subdomainUrl` fields).
+- **Activate routing:** `zerops_deploy` **auto-enables** the subdomain on the first deploy for eligible service modes (dev/stage/simple/standard/local-stage) and waits HTTP-ready — the deploy response carries `subdomainAccessEnabled: true` and the URL. Use `zerops_subdomain enable` only as an explicit recovery/ops command if auto-enable was skipped (a worker / non-HTTP service, or launch-production which deliberately opts out in favor of a custom domain). Import's `enableSubdomainAccess: true` pre-configures intent; deploy activates the L7 balancer. Re-deploys do NOT deactivate it. Use `zerops_discover` to check current status and get the URL (`subdomainEnabled` + `subdomainUrl` fields).
 - **Port-specific subdomains**: If HTTP ports are defined in zerops.yml, each port gets its own subdomain: `{hostname}-{subdomainHost_prefix}-{port}.{subdomainHost_rest}`. Example: hostname `appdev`, subdomainHost `1df2.prg1.zerops.app`, port 3000 → actual URL `https://appdev-1df2-3000.prg1.zerops.app`. Port 80 omits the port suffix: `https://appdev-1df2.prg1.zerops.app`
 - **Internal network fallback**: Every service is accessible internally via `http://{hostname}:{port}` (e.g., `http://appdev:3000`). Use this to verify the app is running when subdomain access is uncertain — `curl http://appdev:3000/health` from the ZCP container or any other service in the project
 - Works for: nodejs, static, nginx, go, python, php, java, rust, dotnet, and all other runtime types
@@ -17227,7 +17185,7 @@ Fully managed S3 compatible storage running on a separate infrastructure and per
 
 - [zCLI](/references/cli)
 - [zerops.yaml](/zerops-yaml/specification)
-- [Import file](/references/import)
+- [Import YAML](/references/import)
 
 ## Feature highlights
 
@@ -26341,6 +26299,10 @@ Direct IP Access uses [pgBouncer](https://www.pgbouncer.org/) for connection poo
 
 Internally, port `5432` is available without SSL (and port `5433` for reads in HA mode). Externally, connections are secured with TLS through pgBouncer (port `6432`) before being routed to your PostgreSQL service. The read replica port is not available for external connections.
 
+:::tip Trusting the TLS certificate
+The TLS certificate served on port `6432` is signed by the Zerops Certificate Authority. To verify it from outside Zerops, download and trust the [Zerops CA](/references/networking/zerops-ca) &mdash; e.g. `psql "... sslmode=verify-full sslrootcert=./zerops-ca.pem"`.
+:::
+
 #### Enable external access
 
 1. Navigate to your PostgreSQL service in the Zerops GUI and choose the **Public Access through IP Addresses** section
@@ -28552,6 +28514,498 @@ For advanced configurations or custom requirements:
 
 ----------------------------------------
 
+# Quickstart
+
+
+With this guide, we'll go from zero to a live app with a managed database, a public URL, and auto-deploy on every git push. Takes about 5 minutes.
+
+Here's what we're building together: a page with a button that says **"I followed the Zerops quickstart"**. Every developer who finishes this guide and clicks it gets counted. It's a real app: Express backend, PostgreSQL database, static frontend, all running on **Zerops**.
+
+**See it live before you build it:** [app-25be-3000.prg1.zerops.app](https://app-25be-3000.prg1.zerops.app/)
+[Video: /vids/quickstart-app.webm](/vids/quickstart-app.webm)
+
+:::info Two ways to use this guide
+**Just want to see how Zerops works?** Follow along as-is. The feedback app covers everything: frontend, backend, managed database, private networking, auto-deploy.
+
+**Already have an app?** Pick a recipe matching your stack in Step 1 instead of Node.js. The steps are identical. Then in Step 5, replace the feedback app code with your own. The `zerops.yml` structure stays the same.
+:::
+
+:::tip Before we start
+Sign up at [app.zerops.io](https://app.zerops.io). You get $15 in promo credits on signup, no credit card needed. Verify your account with a $10 payment and get an additional $50, bringing your total to $65 in credits. A simple app with a database costs roughly $3-5/month, so credits go a long way.
+:::
+
+---
+
+## 1. Deploy the recipe
+
+Go to [app.zerops.io/recipes](https://app.zerops.io/recipes). No account needed, the recipes page works even when you're not logged in.
+
+For this guide, find and click **Node.js**. You'll see **Node.js Hello World**, a Node.js app with Express connected to a PostgreSQL database.
+
+Hit **Deploy nodejs-hello-world-small-prod**. If you're not signed in yet, Zerops creates your account and kicks off the deploy in the same step.
+
+:::info What's a recipe?
+A recipe is a working app with infrastructure already configured: managed database, environment variables, `zerops.yaml`, everything connected. It's a correct starting point, not a finished product. We'll swap the code out in Step 5.
+:::
+
+:::note Want a different stack?
+Everything in this guide works the same way for Next.js, Python, Go, Laravel, and more. Just pick the recipe that matches your stack instead. The steps are identical.
+:::
+
+---
+
+## 2. Watch it build
+
+After hitting Deploy, you'll land on the dashboard. On the right side you'll see a pipeline already running.
+
+It goes through these steps in real time:
+
+1. Initializing build container
+2. Running build commands from `zerops.yaml`
+3. Creating app version and upgrading service
+4. Done
+
+:::tip Good to know
+The build container is **temporary and free**. Zerops spins it up, runs your build, saves the output, and deletes it. You're only billed for the running app.
+:::
+
+Once the pipeline finishes, your app is live.
+
+---
+
+## 3. See what got created
+
+Click into your new project. You'll see:
+
+- **app**: your Node.js service, already running
+- **db**: a managed PostgreSQL database, already running
+- **Project core**: load balancer, firewall, logger, all managed by Zerops
+
+All of these are already talking to each other on a private network. Nothing to configure.
+
+:::tip Coming from Vercel and Supabase?
+You're probably used to copying a long database URL and pasting it as an environment variable. On Zerops, services talk to each other by hostname. `DB_HOST` is just `db`, not a URL. You still set credentials in `zerops.yaml`, Zerops fills in the values. No connection strings to manage.
+:::
+
+---
+
+## 4. Open your live app
+
+The Zerops subdomain is already enabled when you deploy from a recipe. Click into your **app** service and open the URL. It looks something like `app-2437-3000.prg1.zerops.app`.
+
+The default recipe app will be there. Next step, we replace it with the feedback app.
+
+When you're ready for production, point a custom domain at your app. Zerops handles the SSL certificate automatically.
+
+---
+
+## 5. Swap in the feedback app
+
+Clone the recipe repo and open it in your editor:
+
+```bash
+git clone https://github.com/zeropsio/recipe-nodejs
+cd recipe-nodejs
+npm install
+```
+
+The repo uses TypeScript. You only need to touch two files: `src/app.ts` and `src/db.ts`. Leave `src/index.ts` and `src/config.ts` exactly as they are.
+
+**Replace `src/db.ts`** with this:
+
+```ts
+
+export const connectDB = async () => {
+  const client = new Client({
+    host: config.db.host,
+    port: config.db.port,
+    user: config.db.username,
+    password: config.db.password,
+    database: config.db.database,
+  });
+
+  await client.connect();
+
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS clicks (
+      id SERIAL PRIMARY KEY,
+      clicked_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
+
+  return client;
+};
+```
+
+**Replace `src/app.ts`** with this:
+
+```ts
+
+const app = express();
+
+app.use(express.static(path.join(__dirname, '../public')));
+
+app.get('/count', async (_, res) => {
+  const client = await connectDB();
+  const result = await client.query('SELECT COUNT(*) FROM clicks');
+  await client.end();
+  res.json({ count: parseInt(result.rows[0].count) });
+});
+
+app.post('/click', async (_, res) => {
+  const client = await connectDB();
+  await client.query('INSERT INTO clicks DEFAULT VALUES');
+  const result = await client.query('SELECT COUNT(*) FROM clicks');
+  await client.end();
+  res.json({ count: parseInt(result.rows[0].count) });
+});
+
+app.get('/status', (_, res) => {
+  res.status(200).send({ status: 'UP' });
+});
+
+export default app;
+```
+
+**Create a `public/` folder** at the repo root and add `public/index.html`:
+
+```html
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Zerops Quickstart</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: sans-serif;
+        background: #ffffff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        padding: 3rem 1.5rem;
+      }
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        margin-bottom: 2.5rem;
+        opacity: 0.45;
+      }
+      .logo-dot {
+        width: 18px;
+        height: 18px;
+        background: #3bbdb2;
+        border-radius: 4px;
+      }
+      .logo-text {
+        font-size: 13px;
+        color: #1a1a1a;
+        letter-spacing: 0.06em;
+        font-weight: 600;
+      }
+      h1 {
+        font-size: 1.6rem;
+        font-weight: 500;
+        color: #111;
+        text-align: center;
+        margin-bottom: 0.6rem;
+        line-height: 1.3;
+      }
+      .subtitle {
+        font-size: 0.9rem;
+        color: #777;
+        text-align: center;
+        max-width: 360px;
+        line-height: 1.6;
+        margin-bottom: 2.5rem;
+      }
+      button {
+        background: #3bbdb2;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 0.85rem 1.8rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition:
+          transform 0.1s,
+          background 0.15s;
+        font-family: sans-serif;
+      }
+      button:hover {
+        background: #2ea39a;
+      }
+      button:active {
+        transform: scale(0.97);
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+      .count {
+        margin-top: 1.1rem;
+        font-size: 0.82rem;
+        color: #aaa;
+        text-align: center;
+      }
+      .count-num {
+        color: #3bbdb2;
+        font-weight: 700;
+      }
+      .avatars {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 7px;
+        margin-top: 1.8rem;
+        max-width: 400px;
+      }
+      .avatar {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        font-weight: 700;
+        color: #fff;
+        opacity: 0;
+        transform: scale(0.5);
+        transition:
+          opacity 0.3s,
+          transform 0.3s;
+      }
+      .avatar.visible {
+        opacity: 1;
+        transform: scale(1);
+      }
+      .divider {
+        width: 40px;
+        height: 1px;
+        background: #ddd;
+        margin: 2rem 0 1.2rem;
+      }
+      .stack-pills {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .pill {
+        font-size: 11px;
+        padding: 3px 10px;
+        border-radius: 20px;
+        border: 0.5px solid #d0cec8;
+        color: #999;
+        background: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="logo">
+      <div class="logo-dot"></div>
+      <span class="logo-text">zerops</span>
+    </div>
+    <h1>You made it. 🎉</h1>
+    <p class="subtitle">
+      You just deployed a real app: managed database, private network,
+      auto-deploy. Let us know you made it through.
+    </p>
+    <button id="btn">👋 I followed the Zerops quickstart</button>
+    <p class="count">
+      <span class="count-num" id="count">...</span>
+      <span id="count-label"></span>
+    </p>
+    <div class="avatars" id="avatars"></div>
+    <div class="divider"></div>
+    <div class="stack-pills">
+      <span class="pill">Node.js 20</span>
+      <span class="pill">PostgreSQL 16</span>
+      <span class="pill">Zerops</span>
+    </div>
+
+    <script>
+      const colors = [
+        '#3BBDB2',
+        '#0891b2',
+        '#7c3aed',
+        '#db2777',
+        '#d97706',
+        '#3BBDB2',
+        '#2563eb',
+        '#9333ea',
+      ];
+      const letters = 'ABCDEFGHJKLMNPRSTUVWXYZ';
+      const btn = document.getElementById('btn');
+      const countEl = document.getElementById('count');
+      const countLabel = document.getElementById('count-label');
+      const avatarsEl = document.getElementById('avatars');
+
+      function initials(seed) {
+        return (
+          letters[(seed * 7) % letters.length] +
+          letters[(seed * 13 + 5) % letters.length]
+        );
+      }
+
+      function addAvatar(seed, animate) {
+        const av = document.createElement('div');
+        av.className = 'avatar' + (animate ? '' : ' visible');
+        av.style.background = colors[seed % colors.length];
+        av.textContent = initials(seed);
+        av.title = 'builder_' + (1000 + seed);
+        avatarsEl.appendChild(av);
+        if (animate)
+          requestAnimationFrame(() =>
+            requestAnimationFrame(() => av.classList.add('visible'))
+          );
+      }
+
+      async function loadCount() {
+        const res = await fetch('/count');
+        const { count } = await res.json();
+        countEl.textContent = count;
+        countLabel.textContent = `developer${count === 1 ? '' : 's'} deployed this`;
+        for (let i = 0; i < Math.min(count, 20); i++)
+          addAvatar(i * 3 + 5, false);
+      }
+
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        const res = await fetch('/click', { method: 'POST' });
+        const { count } = await res.json();
+        countEl.textContent = count;
+        countLabel.textContent = `developer${count === 1 ? '' : 's'} deployed this`;
+        btn.textContent = "🎉 You're in!";
+        addAvatar(count, true);
+      });
+
+      loadCount();
+    </script>
+  </body>
+</html>
+```
+
+The `zerops.yml` already exists in the repo. Update `deployFiles` to include the `public` folder:
+
+```yaml
+zerops:
+  - setup: app
+    build:
+      base: nodejs@20
+      prepareCommands:
+        - npm install -g typescript
+      buildCommands:
+        - npm i
+        - npm run build
+      deployFiles:
+        - ./dist
+        - ./node_modules
+        - ./public
+        - ./package.json
+    run:
+      base: nodejs@20
+      ports:
+        - port: 3000
+          httpSupport: true
+      envVariables:
+        NODE_ENV: production
+        DB_NAME: db
+        DB_HOST: db
+        DB_USER: db
+        DB_PASS: ${db_password}
+      start: npm run start:prod
+      healthCheck:
+        httpGet:
+          port: 3000
+          path: /status
+```
+
+Before pushing, point the repo at your own GitHub remote:
+
+```bash
+git remote set-url origin https://github.com/your-username/your-repo.git
+git push -u origin main
+```
+
+Then move on to Step 6 to connect it to Zerops.
+
+:::note Want to build something else instead?
+Skip the feedback app. Clone the repo, keep the `zerops.yml` as-is, and replace `src/app.ts` with your own routes. The DB connection, build pipeline, and env variables all stay the same.
+:::
+
+---
+
+## 6. Connect GitHub and auto-deploy
+
+1. Click into your **app** service
+2. Scroll down to **Pipelines & CI/CD settings**
+3. Click **GitHub** to connect your repo
+4. Select your repo and set **Trigger on** to **Push to Branch**, pick `main`
+5. In the **"Which `setup` from zerops.yml to use"** field, type `app`
+6. Click **Activate pipeline trigger**
+
+That's it. Every push to main now builds and deploys automatically. Zero downtime, Zerops runs the new version alongside the old one, waits for a health check, then switches traffic over.
+
+You can also trigger deploys manually with the Zerops CLI: `zcli push`.
+
+---
+
+## You're live 🎉
+
+Open your app URL. You should see the feedback button app: a big button, a live click count pulled from the database, all running on Zerops.
+
+Here's what's running:
+
+- A real app on production infrastructure
+- A managed PostgreSQL database with no setup, no connection strings, no SDK
+- Auto-deploy on every git push with zero downtime
+- All services on a private network, secure by default
+- Full Linux containers you can SSH into and install anything on
+
+None of the infrastructure needed manual configuration.
+
+---
+
+## If something breaks
+
+Got a 502 or an app crash on startup? Start here.
+
+**Check the runtime logs first.** Dashboard, click your app service, click the three-dot menu, then **Runtime log**. The error will be there, usually in the last few lines.
+
+Two things come up most often on a first deploy:
+
+:::tip Debug locally with VPN
+Install zcli first (see [CLI reference](/references/cli)), then run `zcli vpn up [your-project-id]` and your laptop joins the project's private network. You can connect to `db:5432` directly from your local machine using TablePlus, psql, or any database client. Disable SSL when connecting over VPN, security is handled by the tunnel itself. If `db` doesn't resolve, try `db.zerops` instead.
+:::
+
+---
+
+## What's next
+
+- **[SSH into your container](/references/networking/ssh)**: `zcli service shell [service-name]` for full Linux access
+- **[Custom domain](/references/networking/public-access)**: add your domain, SSL is automatic
+- **[Autoscaling](/features/scaling)**: set min and max CPU and RAM, Zerops scales within that range automatically
+- **[Add more services](/features/infrastructure)**: queues, search engines, object storage, just add them to your project
+- **[Try ZCP](/zcp/quickstart)**: Zerops' AI agent that can deploy, debug, and operate your project
+
+:::note Stuck?
+Jump into the [Zerops Discord](https://docs.zerops.io/discord). The community is active and the team is there.
+:::
+
+
+----------------------------------------
+
 # References > Api
 
 
@@ -30731,11 +31185,11 @@ Versions listed on the same line are aliases of the same underlying version.
 # References > Import
 
 
-The Zerops YAML configuration provides powerful capabilities for both importing and exporting projects and services. This documentation covers how to define your infrastructure as code and move configurations between environments.
+The Import YAML configuration provides powerful capabilities for both importing and exporting projects and services. This documentation covers how to define your infrastructure as code and move configurations between environments.
 
 ## YAML Configuration Basics
 
-The Zerops YAML configuration can be used to create or replicate services in Zerops. You can import configurations in two ways:
+The Import YAML configuration can be used to create or replicate services in Zerops. You can import configurations in two ways:
 
 - **Using the GUI**:
   - **For projects**: In the Zerops dashboard, click on **Import a project** in the Projects section
@@ -31539,6 +31993,47 @@ The exported YAML files are compatible with:
 - The `zcli project service-import` command (for single service exports)
 
 This allows you to easily move configurations between environments or create new instances of your infrastructure.
+
+## Editor support (JSON Schema)
+
+Zerops publishes an official [JSON Schema ↗](https://json-schema.org/) for the Import YAML:
+
+```
+https://api.app-prg1.zerops.io/api/rest/public/settings/import-project-yml-json-schema.json
+```
+
+With the schema attached, your editor gives you:
+
+- **Autocomplete** for every key and nested field (project, services, autoscaling, nginx, embedded `zeropsYaml`, …)
+- **Inline documentation** on hover
+- **Validation** — typos, wrong types, and missing required fields are flagged as you type
+- **Enum suggestions** for fields like `corePackage`, `mode`, `cpuMode`, service `type`, and more
+
+### Auto-detection via SchemaStore
+
+The schema is registered with [SchemaStore ↗](https://www.schemastore.org/), so most YAML-aware editors apply it automatically — no setup required — when the file matches:
+
+- `zerops-import.yml`, `zerops-import.yaml`
+- `zerops-*-import.yml`, `zerops-*-import.yaml` (e.g., `zerops-project-import.yaml`, `zerops-service-import.yaml`)
+
+This covers VS Code (with the [YAML extension by Red Hat ↗](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml)), all JetBrains IDEs, and any editor backed by [`yaml-language-server` ↗](https://github.com/redhat-developer/yaml-language-server) (Neovim, Helix, Sublime LSP, …).
+
+### Manual attachment
+
+If your file is named differently, add a modeline at the top:
+
+```yaml
+# yaml-language-server: $schema=https://api.app-prg1.zerops.io/api/rest/public/settings/import-project-yml-json-schema.json
+project:
+  name: project0
+services:
+  - hostname: app
+    type: nodejs@22
+    # ...
+```
+
+The same URL works in any editor that lets you map a schema to a file pattern manually (e.g., `yaml.schemas` in VS Code `settings.json`, or JetBrains' **JSON Schema Mappings** panel).
+
 
 ----------------------------------------
 
@@ -33647,6 +34142,119 @@ Each Zerops project runs a **WireGuard server**, while the **zCLI** (Zerops Comm
 
 ----------------------------------------
 
+# References > Networking > Zerops Ca
+
+
+Zerops issues TLS certificates for its managed services (for example PostgreSQL via pgBouncer, or Valkey TLS ports) from its own internal Certificate Authority. When you connect to one of these endpoints over TLS from outside Zerops &mdash; your laptop, CI runner, or another piece of infrastructure &mdash; the client needs to trust the Zerops CA in order to verify the certificate and complete the handshake.
+
+## Download the CA
+
+The Zerops root CA is published as a single PEM file at:
+
+```
+https://app.zerops.io/ca
+```
+
+Fetch it directly:
+
+```bash
+curl -L -o zerops-ca.pem https://app.zerops.io/ca
+```
+
+The downloaded file is a standard PEM-encoded certificate. You can inspect it with `openssl`:
+
+```bash
+openssl x509 -in zerops-ca.pem -noout -subject -issuer -dates
+```
+
+## Inside Zerops
+
+If your application or client runs **inside** a Zerops container, you do not need to download anything &mdash; the CA is already available on the local filesystem at:
+
+```
+/etc/zerops-zembed/ca.crt
+```
+
+Point your TLS client at that path the same way you would point it at a downloaded copy (`sslrootcert=/etc/zerops-zembed/ca.crt`, `--cacert /etc/zerops-zembed/ca.crt`, etc.). It is the same certificate that `https://app.zerops.io/ca` serves.
+
+The Zerops CA is also pre-installed into the system trust store of **every Zerops container**, so most TLS libraries will verify Zerops-signed certificates without any explicit `--cacert` / `sslrootcert` configuration. You can confirm this in your own container with any of the following:
+
+```bash
+# 1) Subject hash → matching symlink in the system trust dir (Debian/Ubuntu)
+ls -l "/etc/ssl/certs/$(openssl x509 -noout -subject_hash -in /etc/zerops-zembed/ca.crt).0"
+# e.g. /etc/ssl/certs/59e8696a.0 -> service-intermediate.pem
+
+# 2) Verify the CA file against the merged system bundle
+openssl verify -CAfile /etc/ssl/certs/ca-certificates.crt /etc/zerops-zembed/ca.crt
+# expected: /etc/zerops-zembed/ca.crt: OK
+
+# 3) End-to-end: handshake against a Zerops-signed endpoint without -CAfile
+openssl s_client -connect <service-hostname>:6380 -verify_return_error </dev/null
+# look for: Verify return code: 0 (ok)
+```
+
+## When to use it
+
+Use the Zerops CA whenever your client needs to verify a TLS certificate issued by Zerops. The most common cases are:
+
+- Connecting to a [managed PostgreSQL](/postgresql/how-to/connect#method-2-connect-via-direct-ip-access) over the public TLS port (`6432`, via pgBouncer)
+- Connecting to [managed Valkey](/valkey/overview) on its TLS ports (`6380`, or `7001` in HA setups)
+- Any other Zerops-signed TLS endpoint reached from outside the project's private network
+
+The same CA also signs internal TLS endpoints, so it can be useful when verifying certificates from inside a Zerops project too.
+
+:::note
+You do **not** need the CA for HTTPS traffic on `.zerops.app` subdomains or on custom domains &mdash; those use publicly-trusted certificates (Let's Encrypt by default), which every operating system already trusts.
+:::
+
+## Usage examples
+
+### psql (PostgreSQL)
+
+Pass the CA via `sslrootcert` and require certificate verification with `sslmode=verify-full`:
+
+```bash
+psql "host=<public-ip> port=6432 user=<user> dbname=db \
+      sslmode=verify-full sslrootcert=./zerops-ca.pem"
+```
+
+Or as a connection string:
+
+```
+postgresql://<user>:<password>@<public-ip>:6432/db?sslmode=verify-full&sslrootcert=./zerops-ca.pem
+```
+
+### redis-cli (Valkey)
+
+```bash
+redis-cli --tls --cacert ./zerops-ca.pem \
+  -h <public-ip> -p 6380 -a <password>
+```
+
+### openssl s_client (debugging)
+
+To confirm the TLS handshake and inspect the served certificate chain:
+
+```bash
+openssl s_client -connect <public-ip>:6432 \
+  -CAfile ./zerops-ca.pem -servername <public-ip>
+```
+
+### System-wide trust
+
+To trust the Zerops CA system-wide (so clients pick it up automatically without an explicit flag):
+
+- **Debian/Ubuntu:** copy to `/usr/local/share/ca-certificates/zerops-ca.crt` and run `sudo update-ca-certificates`
+- **macOS:** `sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain zerops-ca.pem`
+- **Alpine:** copy to `/usr/local/share/ca-certificates/zerops-ca.crt` and run `update-ca-certificates`
+
+:::tip
+For application code, most TLS libraries accept a custom CA bundle without modifying system trust &mdash; for example `PGSSLROOTCERT` for libpq, `tls.RootCAs` in Go, or the `ca` option in Node's `tls` module.
+:::
+
+
+----------------------------------------
+
 # References > Smtp
 
 
@@ -34006,7 +34614,7 @@ zcli project list
 
 ### project project-import
 
-Creates a new project with one or more services from a YAML definition.
+Creates a new project with one or more services from an [Import YAML](/references/import) definition.
 
 ```sh
 zcli project project-import <importYamlPath> [flags]
@@ -34018,7 +34626,7 @@ zcli project project-import <importYamlPath> [flags]
 
 ### project service-import
 
-Creates one or more services in an existing project from a YAML definition.
+Creates one or more services in an existing project from an [Import YAML](/references/import) definition.
 
 ```sh
 zcli project service-import <importYamlPath> [flags]
@@ -34178,6 +34786,65 @@ Shows the current zCLI version.
 ```sh
 zcli version
 ```
+
+### upgrade
+
+Replaces the running zCLI binary in place with a newer release. Downloads the matching asset from GitHub Releases, verifies it against the release's `checksums.txt`, then atomically swaps the binary.
+
+:::note Availability
+The `upgrade` command is available in zCLI `v1.1.0` and later. On earlier versions, install the newer release via [install.sh](#downgrading-below-v110) (or your package manager) first.
+:::
+
+```sh
+zcli upgrade [flags]
+```
+
+**Flags:**
+- `--check` - Print the current and latest version, then exit without installing. Intended for scripts and package managers.
+- `--yes` - Skip the confirmation prompt.
+- `--version string` - Install a specific release tag (e.g. `v1.1.0`) instead of the latest. Allows downgrades.
+- `--pick-version` - Open an interactive picker listing every release. Mutually exclusive with `--version`.
+- `--include-pre-release` - Include pre-release and `-rc` tags in the `--pick-version` picker. Stable releases only by default.
+- `--no-cache` - Bypass the on-disk version cache and resolve `latest` directly from the release API. Useful right after a release goes out, before the local cache refreshes.
+- `--download-timeout string` - Overall timeout for the binary download as a Go duration (e.g. `5m`, `90s`). `0` disables the timeout. Default `2m`.
+
+**Examples:**
+```sh
+# Interactive upgrade to the latest release
+zcli upgrade
+
+# Unattended upgrade, suitable for scripts
+zcli upgrade --yes
+
+# Install a specific tag (and accept downgrade)
+zcli upgrade --version v1.1.0 --yes
+
+# Pick from a table of every release
+zcli upgrade --pick-version
+```
+
+#### Exit codes for `--check`
+
+`zcli upgrade --check` is designed for scripting. It prints `Current:`, `Latest:` (and `Target:` when `--version` is set) on stdout and exits with:
+
+- `0` - up to date.
+- `1` - a newer release is available.
+- `2` - lookup failed (network, invalid `--version` tag, etc.); the error is on stderr.
+- `3` - the resolved target predates `v1.1.0` (the first release that ships `checksums.txt`) and cannot be installed by `zcli upgrade`. Use the install script instead - see below.
+
+#### Package-manager installs
+
+When zCLI is installed through a package manager (`npm`, Homebrew, `nix`, `.deb`), `zcli upgrade` refuses to swap the binary and prints the channel-appropriate command instead - for example `npm install -g @zerops/zcli` or `brew upgrade zcli`. `--check` still works against any install.
+
+#### Downgrading below v1.1.0
+
+Releases before `v1.1.0` don't ship the `checksums.txt` asset that `zcli upgrade` verifies against, so they can only be installed via the install script:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/zeropsio/zcli/main/install.sh | sh -s -- v1.0.67
+```
+
+`zcli upgrade --version <old-tag>` and `--pick-version` will print this hint when the chosen target requires the install script.
 
 ### show-debug-logs
 
@@ -38833,6 +39500,10 @@ Our HA implementation uses a unique approach to ensure high availability while m
 Be aware that replica data may lag slightly behind the master due to asynchronous replication.
 :::
 
+:::tip Trusting the TLS certificate
+The certificates served on the TLS ports (`6380` and `7001`) are signed by the Zerops Certificate Authority. To verify them from outside Zerops, download and trust the [Zerops CA](/references/networking/zerops-ca) &mdash; e.g. `redis-cli --tls --cacert ./zerops-ca.pem -h <ip> -p 6380`.
+:::
+
 ## Learn More
 
 - [Official Valkey Documentation](https://valkey.io/docs) - Comprehensive guide to Valkey features
@@ -39072,7 +39743,7 @@ Use these definitions when a page, workflow status, agent handoff, or policy nee
 
 **Remote setup** - the `zcp` binary running inside a Zerops `zcp@1` service.
 
-**Include Coding Agent** - remote setup option that adds the bundled agent CLI, currently Claude Code, and preconfigures it to use ZCP MCP tools.
+**Include Coding Agent** - remote setup option that adds a bundled agent CLI (Claude Code, Codex, Antigravity, or Grok Build) and preconfigures it to use ZCP MCP tools.
 
 **Cloud IDE** - browser-based VS Code served by remote setup.
 
@@ -39184,16 +39855,51 @@ Use these definitions when a page, workflow status, agent handoff, or policy nee
 # Zcp > Overview
 
 
-:::info Public preview
-ZCP MCP is a public preview and is under active development. If you hit a bug, confusing behavior, or a missing workflow, please report it on [Discord](/discord); feedback from real projects is especially useful.
-:::
-
 This section covers, in order:
 
-- **How a run unfolds.** [Quickstart](/zcp/quickstart) for hands-on; [How it works](/zcp/concept/how-it-works) for the work loop.
-- **Where the agent runs.** [Remote or local setup](/zcp/setup/choose-workspace), [Trust model](/zcp/security/trust-model), and [Production boundary](/zcp/security/production-policy).
-- **What you decide while working.** [Build and ship](/zcp/workflows/build-with-zcp), [Package a running service](/zcp/workflows/package-running-service), [Promote to production](/zcp/workflows/promote-to-production).
-- **Exact labels when they matter.** [Workflows in depth](/zcp/reference/agent-workflow), [ZCP MCP tools](/zcp/reference/mcp-operations), [Troubleshooting](/zcp/reference/troubleshooting), [Glossary](/zcp/glossary).
+<div className="zcp-claim-grid">
+
+<div className="zcp-claim-card">
+
+<span>GET STARTED</span>
+
+<h3>Quickstart and concept</h3>
+
+[Quickstart](/zcp/quickstart) for hands-on; [How it works](/zcp/concept/how-it-works) for the work loop.
+
+</div>
+
+<div className="zcp-claim-card">
+
+<span>SETUP</span>
+
+<h3>Remote or local workspace</h3>
+
+[Remote or local setup](/zcp/setup/choose-workspace), [Trust model](/zcp/security/trust-model), and [Production boundary](/zcp/security/production-policy).
+
+</div>
+
+<div className="zcp-claim-card">
+
+<span>WORKFLOWS</span>
+
+<h3>Build, package, promote</h3>
+
+[Build and ship](/zcp/workflows/build-with-zcp), [Package a running service](/zcp/workflows/package-running-service), [Promote to production](/zcp/workflows/promote-to-production).
+
+</div>
+
+<div className="zcp-claim-card">
+
+<span>REFERENCE</span>
+
+<h3>Troubleshooting and lookup</h3>
+
+[Workflows in depth](/zcp/reference/agent-workflow), [ZCP MCP tools](/zcp/reference/mcp-operations), [Troubleshooting](/zcp/reference/troubleshooting), [Glossary](/zcp/glossary).
+
+</div>
+
+</div>
 
 For the broader feature concept — why coding agents need real project infrastructure rather than a sandbox or generated artifact — start with [Infrastructure for Coding Agents](/features/coding-agents).
 
@@ -39203,13 +39909,49 @@ Your prompt can stay about the product. Name the stack, runtime layout, acceptan
 
 ## What the agent gets
 
-**Current state.** Services, runtime layout, managed dependencies, env-var keys and references, logs, events, deploy history, verification state, and saved work state.
+<div className="zcp-claim-grid">
 
-**Zerops operations.** Project-scoped tools for discovering services, changing env vars, managing runtimes, deploying, verifying, scaling, public access, and delivery setup.
+<div className="zcp-claim-card">
 
-**Workflow.** The generated instructions combine service setup and app development: inspect state, choose the runtime target, use or create services, wire code and `zerops.yaml`, deploy, verify, and choose delivery. The Zerops work stays behind the product task instead of becoming another checklist.
+<span>STATE</span>
 
-**Evidence-based completion.** A build or deploy is not the finish line. A completed app task should end with a working URL, endpoint result, UI proof, or a blocker backed by logs, events, and verification evidence.
+### Current state
+
+Services, runtime layout, managed dependencies, env-var keys and references, logs, events, deploy history, verification state, and saved work state.
+
+</div>
+
+<div className="zcp-claim-card">
+
+<span>CONTROLS</span>
+
+### Zerops operations
+
+Project-scoped tools for discovering services, changing env vars, managing runtimes, deploying, verifying, scaling, public access, and delivery setup.
+
+</div>
+
+<div className="zcp-claim-card">
+
+<span>INSTRUCTIONS</span>
+
+### Workflow
+
+The generated instructions combine service setup and app development: inspect state, choose the runtime target, use or create services, wire code and `zerops.yaml`, deploy, verify, and choose delivery. The Zerops work stays behind the product task instead of becoming another checklist.
+
+</div>
+
+<div className="zcp-claim-card">
+
+<span>EVIDENCE</span>
+
+### Evidence-based completion
+
+A build or deploy is not the finish line. A completed app task should end with a working URL, endpoint result, UI proof, or a blocker backed by logs, events, and verification evidence.
+
+</div>
+
+</div>
 
 ## What you no longer have to script
 
@@ -39231,7 +39973,7 @@ To start, add remote setup in Zerops or initialize local setup beside your edito
 
 ## Your agent, credentials, and workspace
 
-**Agent account.** Remote setup can include a bundled agent CLI, currently Claude Code, already configured for MCP. Zerops wires the agent to the tools; you still authenticate with your own subscription login or API credentials.
+**Agent account.** ZCP supports multiple coding agents including Claude Code (Anthropic), Codex (OpenAI), Antigravity, and Grok Build. Remote setup can bundle one of these, already configured for MCP. Zerops wires the agent to the tools; you still authenticate with your own subscription login or API credentials.
 
 **Zerops token.** The MCP server connects through `ZCP_API_KEY`, a Zerops token limited to one project. Remote setup gets it from the platform; local setup reads it from `.mcp.json`. Token details live in [Tokens and credentials](/zcp/security/tokens-and-project-access).
 
@@ -39251,7 +39993,9 @@ This section is not a replacement for Zerops platform references. The Zerops [bu
 # Zcp > Quickstart
 
 
-Use this when you want the fastest hands-on ZCP loop: deploy an **AI Agent** recipe, authorize Claude Code, open Browser VS Code, and ask for one product change.
+Use this when you want the fastest hands-on ZCP loop: deploy an **AI Agent** recipe, authorize your coding agent, open Browser VS Code, and ask for one product change.
+
+ZCP supports multiple coding agents including Claude Code (Anthropic), Codex (OpenAI), Antigravity, and Grok Build. The screenshots below use Claude Code as the walkthrough example.
 
 Some [Zerops recipes](https://app.zerops.io/recipes) include an **AI Agent** environment. That preset creates app services, managed services, the `zcp@1` workspace, Browser VS Code, and bundled agent wiring in one deploy.
 
@@ -39260,7 +40004,7 @@ This quickstart uses [Laravel showcase](https://app.zerops.io/recipes/laravel-sh
 ## Prerequisites
 
 - A Zerops account with permission to create a project.
-- A Claude Code subscription login or API authentication. Zerops wires Claude Code to ZCP, but your agent subscription or model credentials stay yours.
+- A subscription login or API credentials for your chosen coding agent (Claude Code, Codex, Antigravity, or Grok Build). Zerops wires the agent to ZCP, but your agent subscription or model credentials stay yours.
 
 ## 1. Choose the AI Agent recipe
 
@@ -39272,23 +40016,23 @@ This quickstart uses [Laravel showcase](https://app.zerops.io/recipes/laravel-sh
 
 The deploy creates app runtimes, managed dependencies, and a `zcp@1` workspace. In this recipe it appears as the `zcp` service. The agent, terminal, and browser IDE run there. App code still deploys to the app runtimes, not to `zcp`.
 
-## 2. Authorize Claude Code
+## 2. Authorize your coding agent
 
-When provisioning finishes, the dashboard opens the Claude Code authentication flow. Use your own Claude Code subscription login or API credentials.
+When provisioning finishes, the dashboard opens the authentication flow for your bundled agent. If you are using Claude Code (as in the screenshots below), use your own Claude Code subscription login or API credentials.
 
-This is separate from `ZCP_API_KEY`, the Zerops token used by ZCP. Your Claude login or API key is used only by the bundled agent.
+This is separate from `ZCP_API_KEY`, the Zerops token used by ZCP. Your agent login or API key is used only by the bundled agent.
 
 If you close the prompt, open the `zcp` service in the dashboard. Its panel shows the browser workspace, web terminal, SSH access, desktop editor access, and agent authorization state.
 
 ## 3. Open the workspace
 
-After authentication, continue into **Browser VS Code**. The workspace opens with files, ZCP configuration, terminal access, and the Claude Code panel.
+After authentication, continue into **Browser VS Code**. The workspace opens with files, ZCP configuration, terminal access, and your coding agent panel (the Claude Code panel in the screenshots below).
 
 You are now inside the remote workspace. The agent can read live state, use the MCP tools, reach private services, and deploy app changes to the runtimes created by the recipe.
 
 ## 4. Ask for a product outcome
 
-In Claude Code, ask for the app behavior in natural language. A good first prompt is intentionally short:
+In your coding agent, ask for the app behavior in natural language. A good first prompt is intentionally short:
 
 ```text
 Build a task board for my team.
@@ -40236,7 +40980,7 @@ A remote workspace puts the agent, terminal, and optional browser IDE inside Zer
 
 The `zcp@1` service runs the same `zcp` binary used by local setup, but broad shell permissions and private service access stay in a clean Zerops service instead of on your laptop.
 
-Use remote setup when you want the default workspace, a safer boundary for broad agent permissions, or a preconfigured environment with Claude Code and Browser VS Code.
+Use remote setup when you want the default workspace, a safer boundary for broad agent permissions, or a preconfigured environment with a bundled coding agent and Browser VS Code.
 
 App code still deploys to your app runtime services. The `zcp` service is the workspace and control surface; it is not the application runtime.
 
@@ -40246,7 +40990,7 @@ Taking over is straightforward in this setup. You open the same workspace, termi
 
 - **`zcp@1` workspace service.** Runs ZCP inside Zerops and gives the agent project-scoped operations.
 - **Platform-injected `ZCP_API_KEY`.** Zerops injects the token into the workspace; you normally do not set it by hand.
-- **Bundled Claude Code when enabled.** The **Include Coding Agent** option installs and preconfigures Claude Code. You authenticate with your own Claude subscription login or API key.
+- **Bundled coding agent when enabled.** The **Include Coding Agent** option installs and preconfigures one of the supported agents: Claude Code (Anthropic), Codex (OpenAI), Antigravity, or Grok Build. You authenticate with your own subscription login or API credentials.
 - **Browser VS Code when enabled.** The **Cloud IDE** option gives you a browser editor, terminal, and a place to supervise or take over the agent session.
 - **Private networking.** The workspace can reach managed services by hostname without laptop VPN.
 - **Open workspace model.** You can add other agent CLIs, private MCP servers, helper processes, dotfiles, package installs, or a derived team image.
@@ -40257,7 +41001,7 @@ For the local alternative, see [Run locally](/zcp/setup/local-agent-bridge). For
 
 ### First-time trial
 
-Use the [Quickstart](/zcp/quickstart) when you want the guided recipe route. It covers the recipe catalog, **AI Agent** environment, Claude Code authentication, Browser VS Code, first product prompt, and proof.
+Use the [Quickstart](/zcp/quickstart) when you want the guided recipe route. It covers the recipe catalog, **AI Agent** environment, coding agent authentication, Browser VS Code, first product prompt, and proof.
 
 After provisioning, continue with a product prompt in [Build and ship](/zcp/workflows/build-with-zcp).
 
@@ -40265,7 +41009,7 @@ After provisioning, continue with a product prompt in [Build and ship](/zcp/work
 
 Use this when you want a guided stack baseline for development or staging. A recipe with an **AI Agent** environment creates app services, managed services, and the `zcp@1` workspace together.
 
-Keep **Coding Agent** enabled when you want bundled Claude Code. Keep **Cloud IDE** enabled when you want Browser VS Code.
+Keep **Coding Agent** enabled when you want a bundled coding agent. Keep **Cloud IDE** enabled when you want Browser VS Code.
 
 ### New Zerops setup with remote setup enabled
 
@@ -40274,7 +41018,7 @@ Use this when you want blank services or a custom stack.
 1. Open [Add new project](https://app.zerops.io/dashboard/project-add).
 2. Enter the project name, region, and tags.
 3. Enable the `zcp@1` remote setup service.
-4. Keep **Include Coding Agent** enabled if you want bundled Claude Code.
+4. Keep **Include Coding Agent** enabled if you want a bundled coding agent.
 5. Keep **Cloud IDE** enabled if you want browser VS Code.
 6. Create the project.
 
@@ -40295,9 +41039,9 @@ For a returning remote workspace, open the existing `zcp` service:
 1. Open the project in the [Zerops dashboard](https://app.zerops.io/).
 2. Open the `zcp` service.
 3. Use **Browser VS Code** when **Cloud IDE** is enabled.
-4. Complete the Claude Code login or API-token flow if prompted.
+4. Complete your coding agent login or API-token flow if prompted (Claude Code, Codex, Antigravity, or Grok Build).
 
-After authentication, Claude Code is connected to ZCP and ready to work from the Browser VS Code terminal. If the workspace was already authorized, use the same route to resume, supervise, or take over work.
+After authentication, your coding agent is connected to ZCP and ready to work from the Browser VS Code terminal. If the workspace was already authorized, use the same route to resume, supervise, or take over work.
 
 First load can take a minute while the image, Cloud IDE, and bundled agent finish starting. If the page opens before the service is ready, wait until the service is running and reload.
 
@@ -40309,7 +41053,7 @@ Editors that support remote development can connect to the workspace or runtime 
 
 This keeps the agent and private network inside Zerops while letting you use a desktop editor UI. Broader editor patterns live in [Local & Remote Development](/features/local-remote-development#native-ide-over-ssh).
 
-You can also install another agent CLI or additional MCP servers inside the `zcp` service. The bundled Claude Code flow is a convenience, not a closed product boundary.
+You can also install another agent CLI or additional MCP servers inside the `zcp` service. The bundled agent flow is a convenience, not a closed product boundary.
 
 ## Advanced customization guardrails
 
@@ -40322,7 +41066,7 @@ Tools installed inside the `zcp` service may see workspace environment variables
 | Agent workspace      | The `zcp@1` service: agent CLI, browser VS Code, shell tools, MCP servers, helper processes, dotfiles.                      |
 | App code deploys     | Your app runtime services; not the `zcp` workspace service.                                                                 |
 | `ZCP_API_KEY`        | Injected by Zerops into the `zcp` workspace.                                                                                |
-| Agent account        | Your Claude subscription login or model API credential. Zerops wires the agent to ZCP, but the agent account remains yours. |
+| Agent account        | Your agent subscription login or model API credential. Zerops wires the agent to ZCP, but the agent account remains yours. |
 | Git credentials      | Configured inside the workspace when the agent should commit or push from remote setup.                                     |
 | Production release   | A separate production project and release process.                                                                          |
 | Production release   | A separate production project and release process.                                                                          |
@@ -40362,7 +41106,7 @@ Use it when the agent should work next to local files, local data, your desktop 
 
 [Remote setup](/zcp/setup/hosted-workspace) is the safer default when the agent does not need local files or tools. Use local setup when local control is the point.
 
-:::warning Public preview
+:::warning Local setup maturity
 Local setup has more moving parts than remote setup and may change faster. The binary install path, `.mcp.json` shape, and files written by `zcp init` are still settling between releases.
 :::
 
@@ -41857,6 +42601,44 @@ For more detailed information on specific configurations, refer to the runtime-s
 :::
 
 *Need help? Join our [Discord community](https://discord.gg/zeropsio).*
+
+## Editor support (JSON Schema)
+
+Zerops publishes an official [JSON Schema ↗](https://json-schema.org/) for `zerops.yaml`:
+
+```
+https://api.app-prg1.zerops.io/api/rest/public/settings/zerops-yml-json-schema.json
+```
+
+With the schema attached, your editor gives you:
+
+- **Autocomplete** for every key and nested field
+- **Inline documentation** on hover
+- **Validation** — typos, wrong types, and missing required fields are flagged as you type
+- **Enum suggestions** for fields like `base` or `cache`
+
+### Auto-detection via SchemaStore
+
+The schema is registered with [SchemaStore ↗](https://www.schemastore.org/), so most YAML-aware editors apply it automatically — no setup required — when the file is named:
+
+- `zerops.yml`
+- `zerops.yaml`
+
+This covers VS Code (with the [YAML extension by Red Hat ↗](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml)), all JetBrains IDEs, and any editor backed by [`yaml-language-server` ↗](https://github.com/redhat-developer/yaml-language-server) (Neovim, Helix, Sublime LSP, …).
+
+### Manual attachment
+
+If your file is named differently, add a modeline at the top:
+
+```yaml
+# yaml-language-server: $schema=https://api.app-prg1.zerops.io/api/rest/public/settings/zerops-yml-json-schema.json
+zerops:
+  - setup: app
+    # ...
+```
+
+The same URL works in any editor that lets you map a schema to a file pattern manually (e.g., `yaml.schemas` in VS Code `settings.json`, or JetBrains' **JSON Schema Mappings** panel).
+
 
 ----------------------------------------
 

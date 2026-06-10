@@ -1,204 +1,483 @@
 ---
 title: Quickstart
-description: Go from zero to a live, production-ready app with a managed database, a public URL, and auto-deploy on every git push. Takes about 10 minutes.
+description: Deploy a live app with a managed database and a public URL. Takes about 5 minutes.
 sidebar_label: Quickstart
 sidebar_position: 1
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import Video from '@site/src/components/Video';
 
-In this guide, we'll go from zero to a live, production-ready app with a managed database, a public URL, and auto-deploy on every git push. Takes about 10 minutes.
+With this guide, we'll go from zero to a live app with a managed database, a public URL, and auto-deploy on every git push. Takes about 5 minutes.
 
-You'll deploy a working recipe first, then swap in your own code in Step 6.
+Here's what we're building together: a page with a button that says **"I followed the Zerops quickstart"**. Every developer who finishes this guide and clicks it gets counted. It's a real app: Express backend, PostgreSQL database, static frontend, all running on **Zerops**.
 
-By the end of this tutorial, we'll have:
+**See it live before you build it:** [app-25be-3000.prg1.zerops.app](https://app-25be-3000.prg1.zerops.app/)
+<Video
+  src="/vids/quickstart-app.webm"
+  type="video/webm"
+/>
 
-- **A real app running live** with a public URL
-- **A managed database** with no setup, no connection strings, no SDK
-- **Auto-deploy on every git push** so pushing to main builds and deploys automatically
-- **All services on a private network** talking to each other by hostname, zero config
+:::info Two ways to use this guide
+**Just want to see how Zerops works?** Follow along as-is. The feedback app covers everything: frontend, backend, managed database, private networking, auto-deploy.
+
+**Already have an app?** Pick a recipe matching your stack in Step 1 instead of Node.js. The steps are identical. Then in Step 5, replace the feedback app code with your own. The `zerops.yml` structure stays the same.
+:::
 
 :::tip Before we start
-Sign up at [app.zerops.io](https://app.zerops.io). You get $15 in promo credits on sign up, no credit card needed. Verify your account with a $10 payment and get an additional $50, bringing your total to $65 in credits. A simple app with a database costs roughly $3-5/month, so credits go a long way.
+Sign up at [app.zerops.io](https://app.zerops.io). You get $15 in promo credits on signup, no credit card needed. Verify your account with a $10 payment and get an additional $50, bringing your total to $65 in credits. A simple app with a database costs roughly $3-5/month, so credits go a long way.
 :::
 
 ---
 
-## Pick your path
+## 1. Deploy the recipe
 
-This guide follows the recipe path, the fastest and most reliable way to get started on Zerops. Recipes are working apps with the right infrastructure already configured. We'll deploy one, then swap in our own code.
+Go to [app.zerops.io/recipes](https://app.zerops.io/recipes). No account needed, the recipes page works even when you're not logged in.
 
-<Tabs>
-<TabItem value="stack" label="🎯 I know my stack" default>
+For this guide, find and click **Node.js**. You'll see **Node.js Hello World**, a Node.js app with Express connected to a PostgreSQL database.
 
-Pick a recipe matching your tech stack. Next.js, Node.js, Python, Go, Laravel and more are all available.
-
-On the welcome screen, find your stack in the **recipe grid on the left** and click it.
-
-</TabItem>
-<TabItem value="showcase" label="👀 Show me what Zerops can do">
-
-Deploy the showcase recipe, a full multi-service app with a frontend, background worker, PostgreSQL, Valkey, NATS and S3.
-
-On the welcome screen, click **Deploy showcase-recipe-small-prod** at the top.
-
-</TabItem>
-<TabItem value="existing" label="🤖 I have an existing app">
-
-Create a project with ZCP. Zerops' AI agent will look at your codebase and bootstrap the right config for you.
-
-See the [ZCP guide](/zcp/quickstart) for a dedicated walkthrough. The rest of this guide covers the first two paths.
-
-</TabItem>
-</Tabs>
-
-:::note Want to start from a blank project?
-You can, but we'd recommend starting with a recipe even if you plan to replace all the code. Recipes give you a correct `zerops.yaml` and infrastructure config as a starting point. Doing it from scratch means figuring all of that out yourself, which takes a while.
-:::
-
-<video src="/vids/three-panel-welcome-screen.webm" autoPlay muted loop playsInline style={{width: '100%', borderRadius: '8px', marginBottom: '1rem'}} />
-
----
-
-## 1. Pick a recipe and deploy
-
-Go to [app.zerops.io/recipes](https://app.zerops.io/recipes). You don't need an account first - the recipes page works even when you're not logged in.
-
-Browse the recipe grid and click the stack that matches what you're building. You'll see the available variants for that stack.
-
-For example, clicking **Next.js** shows two options:
-
-- **Next Static Hello World**: a static export served by Nginx, no database. Good for frontend-only apps.
-- **Next SSR Hello World**: server-side rendering with a PostgreSQL database. Good for full-stack apps.
-
-Pick the variant that fits. You'll see a full breakdown of what gets created, services, resource sizes, and the exact price before committing anything.
-
-Select **Small Production** and hit **Deploy**. If you're not signed in yet, Zerops creates your account and starts the deploy in the same step.
+Hit **Deploy nodejs-hello-world-small-prod**. If you're not signed in yet, Zerops creates your account and kicks off the deploy in the same step.
 
 ![Recipe pre-deploy breakdown showing services, resource sizes and exact price](/img/screenshots/recipe-predeploy-breakdown.png)
 
-:::info What is a recipe exactly?
-A recipe is a working app with infrastructure already configured: managed database, environment variables, `zerops.yaml`, everything connected and ready. It's a correct starting point, not a finished product. We'll swap the code for our own later.
+:::info What's a recipe?
+A recipe is a working app with infrastructure already configured: managed database, environment variables, `zerops.yaml`, everything connected. It's a correct starting point, not a finished product. We'll swap the code out in Step 5.
+:::
+
+:::note Want a different stack?
+Everything in this guide works the same way for Next.js, Python, Go, Laravel, and more. Just pick the recipe that matches your stack instead. The steps are identical.
 :::
 
 ---
 
-## 2. Watch the pipeline run
+## 2. Watch it build
 
-After hitting Deploy, you'll land on the main dashboard. On the right side you'll immediately see a pipeline running, no need to navigate anywhere.
+After hitting Deploy, you'll land on the dashboard. On the right side you'll see a pipeline already running.
 
-You'll see it go through these steps in real time:
+It goes through these steps in real time:
 
 1. Initializing build container
-2. Run build commands from zerops.yaml
-3. Create app version and upgrade service
+2. Running build commands from `zerops.yaml`
+3. Creating app version and upgrading service
 4. Done
-![Pipeline running](/img/screenshots/pipeline-running-dashboard.png)
+
+![Pipeline running on the dashboard](/img/screenshots/pipeline-running-dashboard.png)
+
 :::tip Good to know
-The build container is **temporary and free**. Zerops spins it up, builds the app, saves the output, and deletes it. You're only charged for the running app.
+The build container is **temporary and free**. Zerops spins it up, runs your build, saves the output, and deletes it. You're only billed for the running app.
 :::
 
-Once it's done, your project is live.
-
-At this point, your app is running privately; next we make it public.
+Once the pipeline finishes, your app is live.
 
 ---
 
-## 3. Look at what just got created
+## 3. See what got created
 
-Click into your new project. Depending on the recipe you picked, you'll see something like:
+Click into your new project. You'll see:
 
-- **app**: your app service (static or SSR, depending on what you chose)
-- **db**: a managed PostgreSQL database, already running (SSR recipes only)
-- **Project core**: load balancer, firewall, logger, all managed by Zerops, always there
+- **app**: your Node.js service, already running
+- **db**: a managed PostgreSQL database, already running
+- **Project core**: load balancer, firewall, logger, all managed by Zerops
 
 All of these are already talking to each other on a private network. Nothing to configure.
 
-:::tip The private network moment
-Coming from Vercel and Supabase, you're probably used to copying long database URLs and pasting them as environment variables. On Zerops, services talk to each other on a private network using simple hostnames: `DB_HOST` is just `db`, not a long URL. You still set credentials in `zerops.yaml` (`DB_USER`, `DB_PASSWORD`, and the rest); Zerops fills in the values. No IP address to manage.
+:::tip Coming from Vercel and Supabase?
+You're probably used to copying a long database URL and pasting it as an environment variable. On Zerops, services talk to each other by hostname. `DB_HOST` is just `db`, not a URL. You still set credentials in `zerops.yaml`, Zerops fills in the values. No connection strings to manage.
 :::
 
 ---
 
-## 4. Your public URL (and custom domains)
+## 4. Open your live app
 
-If you deployed via a recipe, the Zerops subdomain is already enabled. Your app is public as soon as the pipeline finishes. Open the URL from your app service; it looks something like `app-2437-3000.prg1.zerops.app`.
+The Zerops subdomain is already enabled when you deploy from a recipe. Click into your **app** service and open the URL. It looks something like `app-2437-3000.prg1.zerops.app`.
 
-You only need to turn on the subdomain yourself when you create a service manually:
-
-1. Click into your app service
-2. Click **Subdomain, domains and IP access**
-3. Toggle on the Zerops subdomain
+The default recipe app will be there. Next step, we replace it with the feedback app.
 
 When you're ready for production, point a custom domain at your app. Zerops handles the SSL certificate automatically.
 
 ---
 
-## 5. (Optional now) Connect GitHub and auto-deploy
+## 5. Swap in the feedback app
 
-Now let's connect a GitHub repo so every push deploys automatically.
+Clone the recipe repo and open it in your editor:
 
-1. Click into your app service
-2. Go to **Pipelines and CI/CD settings**
-3. Click **Connect with a GitHub repository**
-4. Authorize Zerops and select your repo and branch (usually `main`)
-5. Check **"Trigger once after the activation?"** so the first deploy kicks off right away
+```bash
+git clone https://github.com/zeropsio/recipe-nodejs
+cd recipe-nodejs
+npm install
+```
+
+The repo uses TypeScript. You only need to touch two files: `src/app.ts` and `src/db.ts`. Leave `src/index.ts` and `src/config.ts` exactly as they are.
+
+**Replace `src/db.ts`** with this:
+
+```ts
+import { Client } from 'pg';
+import { config } from './config';
+
+export const connectDB = async () => {
+  const client = new Client({
+    host: config.db.host,
+    port: config.db.port,
+    user: config.db.username,
+    password: config.db.password,
+    database: config.db.database,
+  });
+
+  await client.connect();
+
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS clicks (
+      id SERIAL PRIMARY KEY,
+      clicked_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
+
+  return client;
+};
+```
+
+**Replace `src/app.ts`** with this:
+
+```ts
+import express from 'express';
+import path from 'path';
+import { connectDB } from './db';
+
+const app = express();
+
+app.use(express.static(path.join(__dirname, '../public')));
+
+app.get('/count', async (_, res) => {
+  const client = await connectDB();
+  const result = await client.query('SELECT COUNT(*) FROM clicks');
+  await client.end();
+  res.json({ count: parseInt(result.rows[0].count) });
+});
+
+app.post('/click', async (_, res) => {
+  const client = await connectDB();
+  await client.query('INSERT INTO clicks DEFAULT VALUES');
+  const result = await client.query('SELECT COUNT(*) FROM clicks');
+  await client.end();
+  res.json({ count: parseInt(result.rows[0].count) });
+});
+
+app.get('/status', (_, res) => {
+  res.status(200).send({ status: 'UP' });
+});
+
+export default app;
+```
+
+**Create a `public/` folder** at the repo root and add `public/index.html`:
+
+```html
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Zerops Quickstart</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: sans-serif;
+        background: #ffffff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        padding: 3rem 1.5rem;
+      }
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        margin-bottom: 2.5rem;
+        opacity: 0.45;
+      }
+      .logo-dot {
+        width: 18px;
+        height: 18px;
+        background: #3bbdb2;
+        border-radius: 4px;
+      }
+      .logo-text {
+        font-size: 13px;
+        color: #1a1a1a;
+        letter-spacing: 0.06em;
+        font-weight: 600;
+      }
+      h1 {
+        font-size: 1.6rem;
+        font-weight: 500;
+        color: #111;
+        text-align: center;
+        margin-bottom: 0.6rem;
+        line-height: 1.3;
+      }
+      .subtitle {
+        font-size: 0.9rem;
+        color: #777;
+        text-align: center;
+        max-width: 360px;
+        line-height: 1.6;
+        margin-bottom: 2.5rem;
+      }
+      button {
+        background: #3bbdb2;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 0.85rem 1.8rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition:
+          transform 0.1s,
+          background 0.15s;
+        font-family: sans-serif;
+      }
+      button:hover {
+        background: #2ea39a;
+      }
+      button:active {
+        transform: scale(0.97);
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+      .count {
+        margin-top: 1.1rem;
+        font-size: 0.82rem;
+        color: #aaa;
+        text-align: center;
+      }
+      .count-num {
+        color: #3bbdb2;
+        font-weight: 700;
+      }
+      .avatars {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 7px;
+        margin-top: 1.8rem;
+        max-width: 400px;
+      }
+      .avatar {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        font-weight: 700;
+        color: #fff;
+        opacity: 0;
+        transform: scale(0.5);
+        transition:
+          opacity 0.3s,
+          transform 0.3s;
+      }
+      .avatar.visible {
+        opacity: 1;
+        transform: scale(1);
+      }
+      .divider {
+        width: 40px;
+        height: 1px;
+        background: #ddd;
+        margin: 2rem 0 1.2rem;
+      }
+      .stack-pills {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .pill {
+        font-size: 11px;
+        padding: 3px 10px;
+        border-radius: 20px;
+        border: 0.5px solid #d0cec8;
+        color: #999;
+        background: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="logo">
+      <div class="logo-dot"></div>
+      <span class="logo-text">zerops</span>
+    </div>
+    <h1>You made it. 🎉</h1>
+    <p class="subtitle">
+      You just deployed a real app: managed database, private network,
+      auto-deploy. Let us know you made it through.
+    </p>
+    <button id="btn">👋 I followed the Zerops quickstart</button>
+    <p class="count">
+      <span class="count-num" id="count">...</span>
+      <span id="count-label"></span>
+    </p>
+    <div class="avatars" id="avatars"></div>
+    <div class="divider"></div>
+    <div class="stack-pills">
+      <span class="pill">Node.js 20</span>
+      <span class="pill">PostgreSQL 16</span>
+      <span class="pill">Zerops</span>
+    </div>
+
+    <script>
+      const colors = [
+        '#3BBDB2',
+        '#0891b2',
+        '#7c3aed',
+        '#db2777',
+        '#d97706',
+        '#3BBDB2',
+        '#2563eb',
+        '#9333ea',
+      ];
+      const letters = 'ABCDEFGHJKLMNPRSTUVWXYZ';
+      const btn = document.getElementById('btn');
+      const countEl = document.getElementById('count');
+      const countLabel = document.getElementById('count-label');
+      const avatarsEl = document.getElementById('avatars');
+
+      function initials(seed) {
+        return (
+          letters[(seed * 7) % letters.length] +
+          letters[(seed * 13 + 5) % letters.length]
+        );
+      }
+
+      function addAvatar(seed, animate) {
+        const av = document.createElement('div');
+        av.className = 'avatar' + (animate ? '' : ' visible');
+        av.style.background = colors[seed % colors.length];
+        av.textContent = initials(seed);
+        av.title = 'builder_' + (1000 + seed);
+        avatarsEl.appendChild(av);
+        if (animate)
+          requestAnimationFrame(() =>
+            requestAnimationFrame(() => av.classList.add('visible'))
+          );
+      }
+
+      async function loadCount() {
+        const res = await fetch('/count');
+        const { count } = await res.json();
+        countEl.textContent = count;
+        countLabel.textContent = `developer${count === 1 ? '' : 's'} deployed this`;
+        for (let i = 0; i < Math.min(count, 20); i++)
+          addAvatar(i * 3 + 5, false);
+      }
+
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        const res = await fetch('/click', { method: 'POST' });
+        const { count } = await res.json();
+        countEl.textContent = count;
+        countLabel.textContent = `developer${count === 1 ? '' : 's'} deployed this`;
+        btn.textContent = "🎉 You're in!";
+        addAvatar(count, true);
+      });
+
+      loadCount();
+    </script>
+  </body>
+</html>
+```
+
+The `zerops.yml` already exists in the repo. Update `deployFiles` to include the `public` folder:
+
+```yaml
+zerops:
+  - setup: app
+    build:
+      base: nodejs@20
+      prepareCommands:
+        - npm install -g typescript
+      buildCommands:
+        - npm i
+        - npm run build
+      deployFiles:
+        - ./dist
+        - ./node_modules
+        - ./public
+        - ./package.json
+    run:
+      base: nodejs@20
+      ports:
+        - port: 3000
+          httpSupport: true
+      envVariables:
+        NODE_ENV: production
+        DB_NAME: db
+        DB_HOST: db
+        DB_USER: db
+        DB_PASS: ${db_password}
+      start: npm run start:prod
+      healthCheck:
+        httpGet:
+          port: 3000
+          path: /status
+```
+
+Before pushing, point the repo at your own GitHub remote:
+
+```bash
+git remote set-url origin https://github.com/your-username/your-repo.git
+git push -u origin main
+```
+
+Then move on to Step 6 to connect it to Zerops.
+
+:::note Want to build something else instead?
+Skip the feedback app. Clone the repo, keep the `zerops.yml` as-is, and replace `src/app.ts` with your own routes. The DB connection, build pipeline, and env variables all stay the same.
+:::
+
+---
+
+## 6. Connect GitHub and auto-deploy
+
+1. Click into your **app** service
+2. Scroll down to **Pipelines & CI/CD settings**
+3. Click **GitHub** to connect your repo
+4. Select your repo and set **Trigger on** to **Push to Branch**, pick `main`
+5. In the **"Which `setup` from zerops.yml to use"** field, type `app`
 6. Click **Activate pipeline trigger**
 
-From now on, every push to main triggers a build and deploy automatically. Zero downtime, Zerops runs the new version alongside the old one, waits for a health check, then switches traffic over.
+That's it. Every push to main now builds and deploys automatically. Zero downtime, Zerops runs the new version alongside the old one, waits for a health check, then switches traffic over.
 
 You can also trigger deploys manually with the Zerops CLI: `zcli push`.
 
 ---
 
-## 6. Make it yours
+## You're live 🎉
 
-Now let's replace the recipe code with our own.
+Open your app URL. You should see the feedback button app: a big button, a live click count pulled from the database, all running on Zerops.
 
-<Tabs>
-<TabItem value="replace" label="Option A: Replace the code" default>
+Here's what's running:
 
-Fork the recipe's GitHub repo, swap the app code with your own, and push. The `zerops.yaml` and all the infrastructure stay exactly the same.
-
-1. Fork the recipe repo from [github.com/zeropsio](https://github.com/zeropsio)
-2. Replace the app code
-3. Connect your fork to Zerops (same steps as Step 5)
-4. Push and it deploys automatically
-
-</TabItem>
-<TabItem value="integrate" label="Option B: Apply patterns to your existing codebase">
-
-Read the recipe README. There's always a section called something like "Integrating your own app" that tells you exactly what to add.
-
-Usually it's just:
-
-- Add a `zerops.yaml` to the repo root, copying from the recipe
-- Adjust the build and run commands for your stack
-- Connect your repo (Step 5) and push
-
-:::tip Next.js developers, one thing to know
-Add `output: 'standalone'` to your `next.config.mjs` before deploying. This bundles everything Next.js needs into `.next/standalone` so you don't need to ship `node_modules` separately. The Next.js SSR recipe already does this, so you can copy the pattern directly from it.
-:::
-
-</TabItem>
-</Tabs>
-
-If you already have a repo, use Option B; if you're starting fresh, use Option A.
-
----
-
-## Deployment complete 🎉
-
-Here's what you've set up:
-
-- A real app running on production infrastructure
-- A managed database with no setup, no connection strings, no SDK
+- A real app on production infrastructure
+- A managed PostgreSQL database with no setup, no connection strings, no SDK
 - Auto-deploy on every git push with zero downtime
 - All services on a private network, secure by default
-- Full Linux containers, SSH in anytime and install anything
+- Full Linux containers you can SSH into and install anything on
 
-And none of the infrastructure needed manual configuration.
+None of the infrastructure needed manual configuration.
 
 ---
 
@@ -206,9 +485,7 @@ And none of the infrastructure needed manual configuration.
 
 Got a 502 or an app crash on startup? Start here.
 
-### Check the runtime logs first
-
-Dashboard, click your app service, click the three-dot menu, then **Runtime log**. The error will be right there, usually in the last few lines.
+**Check the runtime logs first.** Dashboard, click your app service, click the three-dot menu, then **Runtime log**. The error will be there, usually in the last few lines.
 
 Two things come up most often on a first deploy:
 
@@ -227,32 +504,29 @@ Your environment variables aren't set correctly in `zerops.yaml`. Copy this exac
 
 ```yaml
 DB_HOST: db
-DB_PORT: "5432"
-DB_USER: ${db_user}
-DB_PASSWORD: ${db_password}
 DB_NAME: db
+DB_USER: db
+DB_PASS: ${db_password}
 ```
 
-The `${db_user}` and `${db_password}` syntax is how Zerops pulls in the credentials it auto-generates for your managed database.
+The `${db_password}` syntax is how Zerops pulls in the credentials it auto-generates for your managed database.
 
 </TabItem>
 </Tabs>
 
 :::tip Debug locally with VPN
-Install zcli first (see [CLI reference](/references/cli)), then run `zcli vpn up [your-project-id]` and your laptop joins the project's private network. You can then connect to `db:5432` directly from your local machine using TablePlus, psql, or any database client. Disable SSL when connecting over VPN, security is handled by the tunnel itself. If `db` doesn't resolve, try `db.zerops` instead.
+Install zcli first (see [CLI reference](/references/cli)), then run `zcli vpn up [your-project-id]` and your laptop joins the project's private network. You can connect to `db:5432` directly from your local machine using TablePlus, psql, or any database client. Disable SSL when connecting over VPN, security is handled by the tunnel itself. If `db` doesn't resolve, try `db.zerops` instead.
 :::
 
 ---
 
 ## What's next
 
-You now have a live app, managed database, and auto-deploy. Next steps:
-
-- **[SSH into your container](/references/networking/ssh)**: `zcli service shell [service-name]` for full Linux access, install anything
+- **[SSH into your container](/references/networking/ssh)**: `zcli service shell [service-name]` for full Linux access
 - **[Custom domain](/references/networking/public-access)**: add your domain, SSL is automatic
-- **[Autoscaling](/features/scaling)**: set min and max CPU and RAM, Zerops scales within that range on its own
+- **[Autoscaling](/features/scaling)**: set min and max CPU and RAM, Zerops scales within that range automatically
 - **[Add more services](/features/infrastructure)**: queues, search engines, object storage, just add them to your project
-- **[Try ZCP](/zcp/quickstart)**: an AI agent inside your project that can deploy, debug, and operate it
+- **[Try ZCP](/zcp/quickstart)**: Zerops' AI agent that can deploy, debug, and operate your project
 
 :::note Stuck?
 Jump into the [Zerops Discord](https://docs.zerops.io/discord). The community is active and the team is there.
