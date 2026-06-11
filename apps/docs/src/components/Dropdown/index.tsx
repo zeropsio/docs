@@ -4,9 +4,10 @@ import React, { ReactNode, useState, useRef, useEffect } from 'react';
 interface DropdownItemProps {
     title: ReactNode;
     children: ReactNode;
+    wrap?: boolean;
 }
 
-export function DropdownItem({ title, children }: DropdownItemProps) {
+export function DropdownItem({ title, children, wrap = true }: DropdownItemProps) {
     const [isOpen, setIsOpen] = useState(false);
     const answerRef = useRef<HTMLDivElement>(null);
     const [height, setHeight] = useState<number | undefined>(0);
@@ -40,7 +41,11 @@ export function DropdownItem({ title, children }: DropdownItemProps) {
                     style={{ height: height }}
                     role="region"
                 >
-                    <p className="px-0.75 m-[11px] mt-1 -mb-1">{children}</p>
+                    {wrap ? (
+                        <p className="px-0.75 m-[11px] mt-1 -mb-1">{children}</p>
+                    ) : (
+                        <div>{children}</div>
+                    )}
                 </div>
             </div>
         </div>

@@ -1,108 +1,43 @@
 ---
-title: Manage PostgreSQL Users, Databases and Plugins in Zerops
-description: Learn how to manage PostgreSQL users, databases, plugins, and use database administration tools in Zerops.
+title: Manage & data
+description: Manage PostgreSQL users, databases, and extensions in Zerops, and back up, restore, export, and import your data.
 ---
 
 import { Dropdown, DropdownItem } from '/src/components/Dropdown';
 
-This guide covers how to manage your PostgreSQL databases in Zerops, including default setup, database management tools, plugins, and best practices.
+This guide covers the default database setup, installing extensions, backups, and moving data in and out. For connecting and management tools, see [Connect](/postgresql/how-to/connect).
 
-## Default Database and User
+## Default database and user
 
-Zerops creates a default database and user automatically when a new PostgreSQL service is [created](/postgresql/how-to/create).
+Zerops creates a default database and user automatically when a PostgreSQL service is [created](/postgresql/how-to/create).
 
-### Database
+- **Database name**: `db`
+- **User**: `db`
+- **Password**: randomly generated
+- **Encoding**: `UTF8` (locale `C.UTF-8`)
 
-- **Name**: `db`
-- **Encoding**: `C.UTF-8`
-
-### DB User
-
-- **Username**: `db`
-- **Password**: Generated randomly
+Both names are fixed; they don't follow the service hostname. Besides the `db` user, Zerops also creates a `postgres` superuser for you (see [Extensions](#extensions)).
 
 :::info
-For connection methods and environment variables, see the [Connect to PostgreSQL in Zerops](/postgresql/how-to/connect) page.
+For connection methods, ports, and environment variables, see [Connect to PostgreSQL](/postgresql/how-to/connect).
 :::
 
-:::caution Important notes
-- When changing passwords, update both the database user password and the environment variable separately - they don't automatically synchronize.
-- While both `postgresql://` and `postgres://` URI formats are valid, Zerops uses the `postgresql://` format. If your software requires `postgres://`, create a custom environment variable with this format.
-- Internal connections on ports `5432`/`5433` don't use SSL/TLS — security is provided by the project's private network. For TLS-encrypted connection pooling, connect to pgBouncer on port `6432` instead. See [Connection ports and TLS](/postgresql/how-to/connect#connection-ports-and-tls).
-:::
+## Extensions
 
-## Database Management Tools
+### List available extensions
 
-You can use any PostgreSQL management tool of your choice to administer your databases in Zerops. For convenience, Zerops provides a ready-to-use recipe for [Adminer](https://www.adminer.org) — a lightweight, full-featured web-based database management tool that supports PostgreSQL.
-
-### Installing Adminer
-
-You can install Adminer with a simple one-click import in Zerops:
-
-1. In Zerops GUI, open your project and select **Import services** from the left menu
-2. Copy and paste the following YAML configuration:
-
-```yaml
-services:
-  - hostname: adminer
-    type: php-apache@8.5
-    maxContainers: 1
-    enableSubdomainAccess: true
-    buildFromGit: https://github.com/zeropsio/recipe-adminer
-```
-
-### Accessing Adminer
-
-After installation, you can access Adminer via VPN:
-
-1. [Start the Zerops VPN](/references/networking/vpn)
-2. Type `http://adminer` in your browser
-
-:::tip
-Try `http://adminer.zerops` if you encounter any connection issues.
-:::
-
-:::caution
-Do not use https when connecting to management tools via VPN.
-:::
-
-## Database Tools on Your Workstation
-
-You can use various database management tools from your local workstation to connect to your PostgreSQL database in Zerops:
-
-1. **Establish a secure tunnel** using the [Zerops VPN](/references/networking/vpn) to create an encrypted connection to your Zerops project
-2. **Obtain the [connection details](/postgresql/how-to/connect#connection-details)** from Zerops GUI
-    - Environment variables are not available through VPN connections
-3. Connect with your **preferred database tool**
-    - Do not use SSL/TLS on ports `5432`/`5433` — the VPN tunnel already encrypts the connection
-    - **Desktop Database Tools** - popular GUI tools like pgAdmin, DBeaver, DataGrip, or any other PostgreSQL-compatible client will work with Zerops
-    - **Command Line with psql** - connect using the standard PostgreSQL command-line client with the credential obtained above:
-        ```sh
-        psql -h [hostname] -U [user] -d [database_name]
-        ```
-
-:::tip
-    Try `{hostname}.zerops` instead of just `{hostname}` if you encounter any connection issues.
-:::
-
-## How to install and manage PostgreSQL plugins
-
-### Viewing available plugins
-You can list all available PostgreSQL plugins by running the following query *(superuser privileges not required)*:
+Any user can list the extensions available to install (superuser not required):
 
 ```sql
 SELECT * FROM pg_available_extensions ORDER BY name;
 ```
 
-### Installing plugins (requires superuser)
+### Install an extension (requires superuser)
 
-1. **Connect with superuser credentials**:
-   - Use the `superUser` (user `postgres`) and `superUserPassword` environment variables from your PostgreSQL service
+1. **Connect as the superuser.** Use the `superUser` (user `postgres`) and `superUserPassword` environment variables from your service.
+2. **Switch to your service database.** As the superuser you start in the `postgres` database, not your service database.
+3. **Create the extensions** you need:
 
-2. **Switch to your service database**:
-   When logging in as the superuser, you're initially in the `postgres` database, not your service database.
-
-3. **Install required extensions**:
    ```sql
    CREATE EXTENSION pg_stat_statements;
    CREATE EXTENSION vector;
@@ -110,16 +45,14 @@ SELECT * FROM pg_available_extensions ORDER BY name;
    ```
 
 :::warning
-Currently, it is not possible to add new plugins that are not already listed in `pg_available_extensions`.
+You can only install extensions already listed in `pg_available_extensions`; new extensions cannot be added.
 :::
 
-When working with text search functionality, you'll need to reference the correct `stop`, `dict`, and `affix` files when creating dictionaries in your database. These files are essential for proper text search configuration.
-
-Zerops PostgreSQL includes the following dictionary files:
+When configuring text search dictionaries, reference the correct `stop`, `dict`, and `affix` files. Zerops PostgreSQL ships the following:
 
 <Dropdown>
 <DropdownItem title="Available dictionary files">
-**Stop word files** - used to remove common words that don't add significant meaning:
+**Stop word files**, used to remove common words that don't add significant meaning:
 ```
 czech.stop
 danish.stop
@@ -140,7 +73,7 @@ spanish.stop
 swedish.stop
 turkish.stop
 ```
-**Dictionary and affix files** - used for stemming and word normalization:
+**Dictionary and affix files**, used for stemming and word normalization:
 ```
 cs_CZ.affix
 cs_CZ.dict
@@ -157,4 +90,73 @@ unaccent.rules
 ```
 </DropdownItem>
 </Dropdown>
-For more information on text search dictionaries, refer to the [PostgreSQL documentation](https://www.postgresql.org/docs/16/textsearch-dictionaries.html).
+
+See the [PostgreSQL text search documentation](https://www.postgresql.org/docs/current/textsearch-dictionaries.html) for more.
+
+## Backups
+
+Zerops automatically backs up PostgreSQL services with full encryption. For scheduling, retention, tagging, storage quotas, and manual backups (and the CLI tools), see [Zerops Backups](/features/backup). This section covers the PostgreSQL specifics.
+
+### Backup format
+
+- **Format**: `.zip` containing per-schema `.dump` files
+- **Tooling**: `pg_dump`, custom format (`-Fc`), files named `schemaName.dump`
+- **Storage**: encrypted, in isolated object storage
+
+### Restore a backup
+
+1. **Download** the backup `.zip` from the GUI
+2. **Extract** it to get the per-schema `.dump` files
+3. **Prepare** the target (clean existing data, or use a fresh instance)
+4. **Restore** each schema with `pg_restore`. The dumps are custom format (`-Fc`), so plain `psql` can't read them:
+
+   ```sh
+   pg_restore -d [database_name] schemaName.dump
+   ```
+
+   See the [official PostgreSQL backup documentation](https://www.postgresql.org/docs/current/backup-dump.html) for restore options. To use a web UI like [Adminer](/postgresql/how-to/connect#database-management-tools), first convert a dump to plain SQL with `pg_restore -f schema.sql schemaName.dump` and import that SQL file.
+
+### High availability
+
+For HA services:
+- Backups run on a randomly selected healthy node
+- Other nodes stay operational during the backup
+- Manual backups typically run on the primary node
+
+### Best practices
+
+- Take a manual backup with a protected tag before migrations or major schema changes
+- Test your restore process periodically in a non-production environment
+- Monitor backup storage usage in the Project Overview
+- Use descriptive tags like `pre-migration-v2`
+- Mind schema dependency order when restoring
+
+## Export & import data
+
+To move data in and out, first connect to your database, either over the [VPN](/postgresql/how-to/connect#connect-via-zerops-vpn) for a local tool or via [Adminer](/postgresql/how-to/connect#database-management-tools) in the browser.
+
+### With Adminer or a desktop tool
+
+Once connected, use the tool's built-in export/import functions. See [Database management tools](/postgresql/how-to/connect#database-management-tools) and [Desktop tools and psql](/postgresql/how-to/connect#desktop-tools-and-psql).
+
+### With the command line
+
+Export data and schema with [pg_dump](https://www.postgresql.org/docs/current/app-pgdump.html):
+
+```sh
+pg_dump [database_name] > dump.sql
+```
+
+Import a plain SQL dump with `psql`:
+
+```sh
+psql [database_name] < dump.sql
+```
+
+For a custom-format dump (`pg_dump -Fc`, the format Zerops backups use), use [pg_restore](https://www.postgresql.org/docs/current/app-pgrestore.html):
+
+```sh
+pg_restore -d [database_name] dump.dump
+```
+
+See [Desktop tools and psql](/postgresql/how-to/connect#desktop-tools-and-psql) for how to reach the database and pass the password with `PGPASSWORD`.

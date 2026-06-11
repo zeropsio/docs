@@ -1,26 +1,20 @@
 ---
-title: Connect to PostgreSQL in Zerops
-description: Learn how to connect to your PostgreSQL database in Zerops from various environments.
+title: Connect to PostgreSQL
+description: Connect to your PostgreSQL database in Zerops, covering ports, TLS, connection pooling, environment variables, VPN, public access, and management tools.
 ---
 
-This guide covers how to connect to your PostgreSQL database in Zerops, both from services within the same project and from outside the Zerops environment.
+This guide covers everything about reaching your PostgreSQL database in Zerops: connection details, ports and TLS, connection pooling, connecting from other services or from your workstation, and the database tools you can use.
 
-## Connection Options Overview
+## Connection options at a glance
 
-Zerops provides several ways to connect to PostgreSQL:
+- **Internal**: between services in the same project, over the private network.
+- **Remote**: from outside Zerops, either through the [VPN](#connect-via-zerops-vpn) (your machine joins the private network) or through [public IP access](#connect-via-public-ip) (TLS through pgBouncer).
 
-1. **Internal connections** - Between services in the same Zerops project (via private network)
-2. **Remote connections**:
-   - **VPN access** - From your local machine via Zerops VPN
-   - **Direct IP access** - Enables external applications to connect using TLS encryption by opening public ports on IPv6 (available by default) or IPv4 (requires add-on activation if not already enabled)
+## Connection details
 
-## Connection Details
+Find your connection details in the service detail page under **Peek access details** (hostname, port, user, password, connection string). The full list of connection-related environment variables lives under **Environment variables** in the same service detail.
 
-You'll find PostgreSQL connection details in the service detail page under the **Peek access details** button (shows hostname, port, user, password, and connection string).
-
-The full list of connection-related environment variables is available in the service detail under **Environment variables**.
-
-### Connection Parameters
+### Connection parameters
 
 <ExpandableTable>
 <table className="w-full my-1.5">
@@ -53,7 +47,7 @@ The full list of connection-related environment variables is available in the se
     </tr>
     <tr>
       <td className="w-fit font-semibold whitespace-nowrap">User</td>
-      <td className="w-fit">Identical to hostname</td>
+      <td className="w-fit">`db` (default)</td>
       <td className="w-fit">Same as internal</td>
       <td className="w-fit">`user`</td>
     </tr>
@@ -77,7 +71,7 @@ The full list of connection-related environment variables is available in the se
     </tr>
     <tr>
       <td className="w-fit font-semibold whitespace-nowrap">Database name</td>
-      <td className="w-fit">db</td>
+      <td className="w-fit">`db` (default)</td>
       <td className="w-fit">Same as internal</td>
       <td className="w-fit">`dbName`</td>
     </tr>
@@ -85,16 +79,8 @@ The full list of connection-related environment variables is available in the se
 </table>
 </ExpandableTable>
 
-:::tip
-If you're running PostgreSQL in High Availability (HA) mode, configure your application to route read queries to port **5433**. This distributes the load across all replicas, reducing pressure on the primary node and improving overall throughput.
-:::
-
 :::warning
-Zerops creates a system user named `zps` with full privileges for maintenance purposes. Do not delete, change the password, or remove privileges from this user, as it will disrupt Zerops' ability to maintain the database cluster.
-:::
-
-:::info
-For more information about default PostgreSQL setup, users, and databases, see [Manage PostgreSQL Users and Databases](/postgresql/how-to/manage).
+Zerops creates a system user named `zps` with full privileges for maintenance. Do not delete it, change its password, or remove its privileges, as doing so disrupts Zerops' ability to maintain the database cluster.
 :::
 
 ## Connection ports and TLS
@@ -112,12 +98,12 @@ PostgreSQL on Zerops exposes three ports, each for a different purpose:
   <tbody>
     <tr>
       <td className="w-fit"><code>5432</code></td>
-      <td className="w-fit">Primary node — read and write</td>
+      <td className="w-fit">Primary node (read and write)</td>
       <td className="w-fit">Not supported (plaintext)</td>
     </tr>
     <tr>
       <td className="w-fit"><code>5433</code></td>
-      <td className="w-fit">Read-only replicas — distributes reads (HA mode only)</td>
+      <td className="w-fit">Read-only replicas, distributing reads (HA mode only)</td>
       <td className="w-fit">Not supported (plaintext)</td>
     </tr>
     <tr>
@@ -128,89 +114,131 @@ PostgreSQL on Zerops exposes three ports, each for a different purpose:
   </tbody>
 </table>
 
-- **Ports `5432` and `5433` do not support TLS.** Connect with `sslmode=disable`. Inside a project these ports are reachable only on the private network, and over the [VPN](#method-1-connect-via-zerops-vpn) the tunnel already encrypts the traffic — requesting TLS on them fails the handshake. Every "do not use SSL/TLS" note elsewhere in these docs refers to `5432`/`5433`.
+- **Ports `5432` and `5433` do not support TLS.** Connect with `sslmode=disable`. Inside a project these ports are reachable only on the private network, and over the [VPN](#connect-via-zerops-vpn) the tunnel already encrypts the traffic, so requesting TLS on them fails the handshake.
 - **Port `6432` (pgBouncer) requires TLS.** Connect with at least `sslmode=require`; the connection is always encrypted. pgBouncer presents a certificate signed by the [Zerops CA](/references/networking/zerops-ca) but does not force the client to validate it, so `sslmode=require` is enough. If you want to verify the server's identity, use `sslmode=verify-full` together with the Zerops CA. This holds whether you reach `6432` from inside the project or over a public IP.
 
 ## Connection pooling with pgBouncer
 
-Port `6432` puts [pgBouncer](https://www.pgbouncer.org/) in front of PostgreSQL and multiplexes many client connections onto a small pool of server connections. This is valuable for applications that open many short-lived connections — serverless functions, PHP-FPM, or anything with high connection churn — and **we recommend connecting through `6432` rather than `5432` for these workloads, including for internal service-to-service connections.**
+Port `6432` puts [pgBouncer](https://www.pgbouncer.org/) in front of PostgreSQL and multiplexes many client connections onto a small pool of server connections. This is valuable for applications that open many short-lived connections (serverless functions, PHP-FPM, or anything with high connection churn), and **we recommend connecting through `6432` rather than `5432` for these workloads, including for internal service-to-service connections.**
 
 A few things to know:
 
-- **Transaction pooling.** A server connection is returned to the pool after each transaction, not when the client disconnects. Prepared statements are supported (cached per server connection), but session-scoped features that span transactions — session-level `SET`, advisory locks held across statements, `LISTEN`/`NOTIFY` — won't behave as expected. Use a direct `5432` connection for those.
+- **Transaction pooling.** A server connection is returned to the pool after each transaction, not when the client disconnects. Prepared statements are supported (cached per server connection), but session-scoped features that span transactions (session-level `SET`, advisory locks held across statements, `LISTEN`/`NOTIFY`) won't behave as expected. Use a direct `5432` connection for those.
 - **TLS is required** on `6432` (see [above](#connection-ports-and-tls)), even for internal connections.
 - **HA mode.** pgBouncer pools connections to the primary (writes). Read routing across replicas on port `5433` is separate and is not pooled.
 
-## Connect from Services in the Same Project
+## Connect from services in the same project
 
-All services within a Zerops project share a dedicated private network. There are two ways to implement connections between services in the same project:
+All services in a project share a private network, so other services reach PostgreSQL directly by its hostname. There are two ways to wire it up.
 
-### Method 1: Direct Connection Parameters
+### Direct connection parameters
 
-You can directly use the connection parameters from Peek Access Details:
+Use the parameters from **Peek access details**:
 
+```ini
+host = db          # your PostgreSQL service hostname
+port = 5432        # 5433 for read-only replicas in HA mode
+user = db          # default user
+password = **********
 ```
-host = database1
-port = 5432
-user = database1
-password = ********** (find under Peek Access Details)
-```
 
-For read operations in HA mode, use port `5433` instead of `5432` with the same credentials.
+### Environment variables (recommended)
 
-### Method 2: Environment Variables (Recommended)
+Zerops generates connection environment variables for every PostgreSQL service. To use one service's variables from another, prefix the variable name with the service hostname and an underscore. For example, to read the `connectionString` of service `db`, reference `db_connectionString`.
 
-For better maintainability, Zerops creates environment variables for each PostgreSQL service that you can use in your application configuration. List of service environment variables is available in Zerops GUI. Go to a PostgreSQL service detail and choose **Environment variables**.
+For read-only connections (HA mode only), use `connectionStringReplicas` instead.
 
-To use variables from one service in another, prefix the variable name with the service hostname and underscore - to access the `connectionString` variable of `postgresql1`, use `postgresql1_connectionString`.
-
-For read-only connections (HA mode only), use the `connectionStringReplicas` variable instead.
-
-For more details on how to use environment variables, and instructions for adding your own custom variables, see the [Environment Variables](/features/env-variables) documentation.
+See the [Environment Variables](/features/env-variables) documentation for details and for adding your own variables.
 
 :::caution Important notes
-- When changing passwords, update both the database user password and the environment variable separately - they don't automatically synchronize.
-- While both `postgresql://` and `postgres://` URI formats are valid, Zerops uses the `postgresql://` format. If your software requires `postgres://`, create a custom environment variable with this format.
-- Internal connections on ports `5432`/`5433` don't use SSL/TLS — security is provided by the project's private network. For TLS-encrypted [connection pooling](#connection-pooling-with-pgbouncer), connect to pgBouncer on port `6432` instead.
+- When changing a password, update both the database user and the environment variable, since they don't synchronize automatically.
+- Zerops uses the `postgresql://` URI scheme. If your software requires the shorter `postgres://`, create a custom environment variable with that format.
+- Internal connections on `5432`/`5433` don't use SSL/TLS. Security comes from the private network. For TLS-encrypted [connection pooling](#connection-pooling-with-pgbouncer), connect to pgBouncer on `6432`.
 :::
 
-## Connect Remotely
+## Connect remotely
 
-Zerops offers two methods for connecting to your PostgreSQL database from outside the Zerops environment:
+There are two ways to reach PostgreSQL from outside Zerops: the VPN (recommended for development) and public IP access (for external applications).
 
-### Method 1: Connect via Zerops VPN
+### Connect via Zerops VPN
 
-You can securely connect to PostgreSQL from your local workstation via Zerops VPN:
+The VPN puts your workstation on the project's private network, so you connect exactly as an internal service would.
 
 1. [Install & set up zCLI](/references/cli)
 2. [Start the Zerops VPN](/references/networking/vpn#start-vpn)
-3. Use the connection details from Access Details in the PostgreSQL service detail in Zerops GUI
+3. Use the connection details from **Peek access details** in the service detail
 4. When finished, [stop the Zerops VPN](/references/networking/vpn#stop-vpn)
 
 :::warning Important notes
-* Connect to ports `5432`/`5433` without SSL/TLS when using the VPN — the tunnel already encrypts the traffic.
-* If your connection over VPN doesn't work, try adding `.zerops` suffix to the service hostname (e.g., `database1.zerops`). For additional help, check the [VPN troubleshooting page](/references/networking/vpn#troubleshooting).
+* Connect to `5432`/`5433` without SSL/TLS over the VPN, since the tunnel already encrypts the traffic.
+* Environment variables are **not** available over the VPN; copy the access details from the GUI.
+* If a connection doesn't work, try the `.zerops` suffix on the hostname (e.g. `db.zerops`). See the [VPN troubleshooting page](/references/networking/vpn#troubleshooting).
 :::
 
-### Method 2: Connect via Direct IP Access
+### Connect via public IP
 
-Public access always goes through [pgBouncer](https://www.pgbouncer.org/) on port `6432` over TLS (see [Connection ports and TLS](#connection-ports-and-tls)), which also pools your connections before routing them to PostgreSQL. The read-only replica port (`5433`) is not exposed for public access — route reads through your application logic instead.
+Public access always goes through pgBouncer on port `6432` over TLS (see [Connection ports and TLS](#connection-ports-and-tls)), which also pools your connections. The read-only replica port (`5433`) is **not** exposed publicly. Route reads through your application logic instead.
 
 :::tip Trusting the TLS certificate
-The TLS certificate served on port `6432` is signed by the Zerops Certificate Authority. To verify it from outside Zerops, download and trust the [Zerops CA](/references/networking/zerops-ca) &mdash; e.g. `psql "... sslmode=verify-full sslrootcert=./zerops-ca.pem"`.
+The certificate on `6432` is signed by the Zerops Certificate Authority. To verify it from outside Zerops, download and trust the [Zerops CA](/references/networking/zerops-ca), for example `psql "... sslmode=verify-full sslrootcert=./zerops-ca.pem"`.
 :::
 
-#### Enable external access
+To enable public access:
 
-1. Navigate to your PostgreSQL service in the Zerops GUI and choose the **Public Access through IP Addresses** section
-2. Choose either IPv6 (available by default) or IPv4 (requires the [unique IPv4](/references/networking/public-access#ipv4-configuration) add-on)
-3. Open one or more ports and point them to your PostgreSQL service (the system will direct them through pgBouncer)
-   - Choose any port from 10-65435 (except 80 and 443)
-   - Select destination service and internal port
-   - Each public port can be mapped to any internal service port
-   - Multiple public ports can point to the same internal port if needed
-   - Port configurations can be set independently for IPv4 and IPv6
-4. Optionally enable firewall protection for additional security
-5. Click the **Publish X IP access change(s)** button to apply your settings
+1. Open your PostgreSQL service in the GUI and go to **Public Access through IP Addresses**
+2. Choose IPv6 (available by default) or IPv4 (requires the [unique IPv4](/references/networking/public-access#ipv4-configuration) add-on)
+3. Open one or more ports pointing to your service (routed through pgBouncer):
+   - Any port from 10–65435 (except 80 and 443)
+   - Each public port can map to any internal port; multiple public ports can share one internal port
+   - IPv4 and IPv6 can be configured independently
+4. Optionally enable firewall protection
+5. Click **Publish X IP access change(s)** to apply
 
-For database management tools and how to manage users and databases, see [Manage PostgreSQL Users and Databases](/postgresql/how-to/manage).
+## Database management tools
+
+You can use any PostgreSQL-compatible tool to administer your database. For a zero-setup option, Zerops provides a ready-to-use recipe for [Adminer](https://www.adminer.org), a lightweight, full-featured web-based tool that supports PostgreSQL.
+
+### Install Adminer
+
+In the GUI, open your project, select **Import services**, and paste:
+
+```yaml title="zerops-import.yaml"
+services:
+  - hostname: adminer
+    type: php-apache@8.5
+    maxContainers: 1
+    enableSubdomainAccess: true
+    buildFromGit: https://github.com/zeropsio/recipe-adminer
+```
+
+Then [start the VPN](/references/networking/vpn) and open `http://adminer` in your browser (try `http://adminer.zerops` if it doesn't resolve).
+
+:::caution
+Do not use `https` when reaching management tools over the VPN.
+:::
+
+### Desktop tools and psql
+
+Popular desktop clients (pgAdmin, DBeaver, DataGrip, or any PostgreSQL-compatible tool) work with Zerops over the VPN:
+
+1. [Start the Zerops VPN](/references/networking/vpn) to open an encrypted tunnel to your project
+2. Copy the [connection details](#connection-details) from the GUI (environment variables aren't available over the VPN)
+3. Connect without SSL/TLS on `5432`/`5433`, since the tunnel already encrypts the connection
+
+For the `psql` command-line client:
+
+```sh
+psql -h [hostname] -U [user] -d [database_name]
+```
+
+`psql` has no password flag, so it prompts you. To pass the password non-interactively, use `PGPASSWORD`:
+
+```sh
+PGPASSWORD=[password] psql -h [hostname] -U [user] -d [database_name]
+```
+
+:::tip
+Try `[hostname].zerops` instead of `[hostname]` if you hit connection issues over the VPN.
+:::
+
+To move data in and out with these tools, see [Export & import data](/postgresql/how-to/manage#export--import-data).
