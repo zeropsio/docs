@@ -42,6 +42,8 @@ The hostname is fixed after the service is created and cannot be changed later.
 
 Zerops automatically scales PostgreSQL services based on actual database usage. Configure the scaling parameters to match your database needs and control costs.
 
+**Profile**: Choose a [scaling profile](/postgresql/how-to/scale#scaling-profiles) matched to your workload (OLTP, OLAP, or write-heavy). The profile sets sensible autoscaling defaults and tunes the PostgreSQL configuration for that workload; you can override individual values afterwards.
+
 **CPU Mode**: Choose between shared (cost-effective) or dedicated (consistent performance).
 
 **Resource Limits**: Set minimum and maximum resources for CPU, RAM, and disk to control costs and ensure performance.
@@ -75,7 +77,7 @@ Zerops uses a YAML format file to describe the project infrastructure.
 
 #### Basic example
 
-Create a directory `my-project`. Create a `description.yaml` file inside the directory with the following content:
+Create a directory `my-project`. Create a `zerops-import.yaml` file inside the directory with the following content:
 
 ```yaml
 # Basic project data
@@ -86,17 +88,17 @@ project:
 services:
   - # service name
     hostname: postgresql1
-    # service type and version number in postgresql@{version} format
-    type: postgresql@12
-    # mode of operation "HA"/"NON_HA"
-    mode: NON_HA
+    # service type, mode and version number in postgresql:{mode}@{version} format
+    type: postgresql:single@18
+    # autoscaling profile for the service. If not set, a default profile will be used.
+    profile: oltp-staging
 ```
 
 The YAML file describes your future project infrastructure. The project will contain one PostgreSQL service in the single container mode with default [auto scaling](/postgresql/how-to/scale) configuration. The hostname will be set to `postgresql1`.
 
 #### Full example
 
-Create a directory `my-project`. Create a `description.yaml` file inside the directory with the following content:
+Create a directory `my-project`. Create a `zerops-import.yaml` file inside the directory with the following content:
 
 ```yaml
 # Basic project data
@@ -113,11 +115,11 @@ project:
 services:
   - # first service hostname
     hostname: postgresql1
-    # service type and version number in postgresql@{version} format
-    type: postgresql@12
-    # mode of operation "HA"/"NON_HA"
-    mode: HA
-    # optional: vertical auto-scaling customization
+    # service type, mode and version number in postgresql:{mode}@{version} format
+    type: postgresql:ha@18
+    # autoscaling profile for the service. If not set, a default profile will be used.
+    profile: oltp-staging
+    # optional: vertical auto-scaling customization (overrides values from profile)
     verticalAutoscaling:
       cpuMode: DEDICATED
       minCpu: 2
@@ -131,10 +133,10 @@ services:
       minFreeRamPercent: 20
   - # second service hostname
     hostname: postgresql2
-    # service type and version number in postgresql@{version} format
-    type: postgresql@12
-    # mode of operation "HA"/"non_HA"
-    mode: NON_HA
+    # service type, mode and version number in postgresql:{mode}@{version} format
+    type: postgresql:single@18
+    # autoscaling profile for the service. If not set, a default profile will be used.
+    profile: oltp-hobby
 ```
 
 The YAML file describes your future project infrastructure. The project will contain two PostgreSQL services.
@@ -143,14 +145,14 @@ The hostname of the first service will be set to `postgresql1`. The [high availa
 
 The hostname of the second service will be set to `postgresql2`. The [single container](/features/scaling#single-container-mode) mode will be chosen and the default [auto scaling configuration](/postgresql/how-to/scale) will be set.
 
-#### Description of description.yaml parameters
+#### Description of zerops-import.yaml parameters
 
 The `project:` section is required. Only one project can be defined.
 
 <table className="w-full my-1.5">
   <thead>
     <tr>
-      <th className="w-fit"><strong>Parameter</strong></th>
+      <th className="w-fit" style={{ minWidth: '105px' }}><strong>Parameter</strong></th>
       <th className="w-fit"><strong>Description</strong></th>
       <th className="w-fit"><strong>Limitations</strong></th>
     </tr>
@@ -180,7 +182,7 @@ At least one service in the `services:` section is required. You can create a pr
 <table className="w-full my-1.5">
   <thead>
     <tr>
-      <th className="w-fit">Parameter</th>
+      <th className="w-fit" style={{ minWidth: '160px' }}>Parameter</th>
       <th className="w-fit">Description</th>
     </tr>
   </thead>
@@ -215,10 +217,10 @@ At least one service in the `services:` section is required. You can create a pr
     </tr>
 <tr>
   <td className="w-fit">
-    <b>mode</b>
+    <b>type — HA / single</b>
   </td>
   <td className="w-fit">
-    Defines the operation mode of the PostgreSQL service.
+    The HA vs. single-container mode is selected through the <code>:ha</code> or <code>:single</code> part of the service <code>type</code>. The standalone <code>mode</code> field is deprecated.
     <br />
     <br />
     <b>HA</b>
@@ -238,18 +240,34 @@ At least one service in the `services:` section is required. You can create a pr
     In HA mode, a dedicated read replica port (<code>5433</code>) is available, allowing you to route read queries to replicas for better performance. See <a href="/postgresql/how-to/connect#connection-parameters">Connection Parameters</a> for details.
     <br />
     <br />
-    <b>NON_HA</b>
+    <b>Single</b>
     <br />
     Zerops will create a PostgreSQL database installed in a single
     container. Useful for non-essential data or dev environments.
     <br />
     <br />
     Your data is stored only in a single container. If the container or the
-    the underlying physical machine fails, your data since the last backup are
+    underlying physical machine fails, your data since the last backup is
     lost. Zerops doesn't provide any automatic repairs of a single node
     PostgreSQL services.
   </td>
 </tr>
+    <tr>
+      <td className="w-fit">
+        <b>profile</b>
+      </td>
+      <td className="w-fit">
+        <b>Optional.</b> The <a href="/postgresql/how-to/scale#scaling-profiles">autoscaling profile</a> for the service. Sets the autoscaling envelope (min/max resources and headroom) and tunes the PostgreSQL configuration for your workload type. If omitted, a default is used (<code>oltp-staging</code> for single, <code>oltp-production</code> for HA). Can be changed at any time.
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit">
+        <b>profileOverrides</b>
+      </td>
+      <td className="w-fit">
+        <b>Optional.</b> Only valid when <code>profile: custom</code>. Overrides individual PostgreSQL configuration values on top of the custom profile. See the <a href="/postgresql/how-to/scale#custom-profile">custom profile reference</a> for the full list of overridable keys.
+      </td>
+    </tr>
     <tr>
       <td className="w-fit">
         <b>verticalAutoscaling</b>
@@ -262,7 +280,7 @@ At least one service in the `services:` section is required. You can create a pr
     </tr>
     <tr>
       <td className="w-fit">
-        <b> - cpuMode</b>
+        <b>cpuMode</b>
       </td>
       <td className="w-fit">
         <b>Optional.</b> Accepts `SHARED`, `DEDICATED` values. Default is `SHARED`
@@ -270,7 +288,7 @@ At least one service in the `services:` section is required. You can create a pr
     </tr>
     <tr>
       <td className="w-fit">
-        <b> - minCpu/maxCpu</b>
+        <b>minCpu/maxCpu</b>
       </td>
       <td className="w-fit">
         <b>Optional.</b> Set the minCpu or maxCpu in CPU cores (integer).
@@ -278,7 +296,7 @@ At least one service in the `services:` section is required. You can create a pr
     </tr>
     <tr>
       <td className="w-fit">
-        <b> - minRam/maxRam</b>
+        <b>minRam/maxRam</b>
       </td>
       <td className="w-fit">
         <b>Optional.</b> Set the minRam or maxRam in GB (float).
@@ -286,7 +304,7 @@ At least one service in the `services:` section is required. You can create a pr
     </tr>
     <tr>
       <td className="w-fit">
-        <b> - minDisk/maxDisk</b>
+        <b>minDisk/maxDisk</b>
       </td>
       <td className="w-fit">
         <b>Optional.</b> Set the minDisk or maxDisk in GB (float).
@@ -296,12 +314,12 @@ At least one service in the `services:` section is required. You can create a pr
 </table>
 
 :::caution
-The PostgreSQL service **hostname** and **mode** are fixed after the service is created. They can't be changed later.
+The PostgreSQL service **hostname** and **mode** (the `:ha` / `:single` part of the service `type`) are fixed after the service is created and can't be changed later. The autoscaling **profile**, by contrast, can be changed at any time.
 :::
 
-### Create a project based on the description.yaml
+### Create a project based on the zerops-import.yaml
 
-When you have your `description.yaml` ready, use the `zcli project project-import` command to create a new project and the service infrastructure.
+When you have your `zerops-import.yaml` ready, use the `zcli project project-import zerops-import.yaml` command to create a new project and the service infrastructure.
 
 ```sh
 Usage:
@@ -314,11 +332,11 @@ Flags:
       --working-dir string   Sets a custom working directory. The default working directory is the current directory. (default "./")
 ```
 
-Zerops will create a project and one or more services based on the `description.yaml` content.
+Zerops will create a project and one or more services based on the `zerops-import.yaml` content.
 
-The maximum size of the `description.yaml` file is 100 kB.
+The maximum size of the `zerops-import.yaml` file is 100 kB.
 
-You don't specify the project name in the `zcli project project-import` command, because the project name is defined in the `description.yaml`.
+You don't specify the project name in the `zcli project project-import` command, because the project name is defined in the `zerops-import.yaml`.
 
 If you have access to more than one client, you must specify the client ID for which the project is to be created. The `clientID` is located in the Zerops GUI under the client name on the project dashboard page.
 
@@ -335,7 +353,7 @@ If you have access to more than one client, you must specify the client ID for w
 
 #### Example
 
-Create a directory `my-project` if it doesn't exist. Create an `import.yaml` file inside the `my-project` directory with following content:
+Create a directory `my-project` if it doesn't exist. Create a `zerops-import.yaml` file inside the `my-project` directory with following content:
 
 ```bash
 # array of project services
@@ -343,17 +361,15 @@ services:
   -
     # service name
     hostname: postgresql1
-    # service type and version number in postgresql@{version} format
-    type: postgresql@12
-    # mode of operation "HA"/"NON_HA"
-    mode: NON_HA
+    # service type, mode and version number in postgresql:{mode}@{version} format
+    type: postgresql:single@18
 ```
 
 The YAML file describes the list of one or more services that you want to add to your existing project. In the example above, one PostgreSQL service in the [single container](/features/scaling#single-container-mode) with default [auto scaling](/postgresql/how-to/scale) configuration will be added to your project. The hostname of the new service will be set to `postgresql1`.
 
-The content of the `services:` section of `import.yaml` is identical to the [project description file](#create-a-project-description-file). The `import.yaml` never contains the `project:` section because the project already exists.
+The content of the `services:` section of `zerops-import.yaml` is identical to the [project description file](#create-a-project-description-file). The `zerops-import.yaml` doesn't contain the `project:` section because the project already exists.
 
-When your `import.yaml` is ready, use the `zcli project service-import` command to add one or more services to your existing Zerops project.
+When your `zerops-import.yaml` is ready, use the `zcli project service-import zerops-import.yaml` command to add one or more services to your existing Zerops project.
 
 ```sh
 Usage:
@@ -365,6 +381,6 @@ Flags:
                            command will be executed.
 ```
 
-zCLI commands are interactive, when you press enter after `zcli project service-import importYamlPath`, you will be given a list of your projects to choose from.
+zCLI commands are interactive, when you press enter after `zcli project service-import zerops-import.yaml`, you will be given a list of your projects to choose from.
 
-The maximum size of the `import.yaml` file is 100 kB.
+The maximum size of the `zerops-import.yaml` file is 100 kB.

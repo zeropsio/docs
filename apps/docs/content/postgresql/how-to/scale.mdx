@@ -5,6 +5,7 @@ description: Get to know how Zerops scales your PostgreSQL service.
 
 import Image from '/src/components/Image';
 import ResourceTable from '/src/components/ResourceTable';
+import { Dropdown, DropdownItem } from '/src/components/Dropdown';
 
 Zerops automatically scales your PostgreSQL service based on actual database usage. When your database needs more power, resources increase. When demand drops, resources scale down to reduce costs.
 
@@ -15,6 +16,182 @@ For complete scaling details across all services, see [Automatic Scaling and Hig
 ## How PostgreSQL scaling works
 
 PostgreSQL services use **vertical scaling** to adjust CPU, RAM, and disk resources within containers based on usage patterns. Unlike runtime services, PostgreSQL does not use horizontal scaling (adding/removing containers). Instead, PostgreSQL services use deployment modes for high availability.
+
+## Scaling profiles
+
+A **scaling profile** is the starting point for a PostgreSQL service. Each profile sets two things at once:
+
+1. **The autoscaling envelope** — the default minimum/maximum CPU, RAM, and disk, and the free-resource headroom that controls how eagerly the autoscaler reacts.
+2. **The PostgreSQL configuration** — memory, WAL, planner, autovacuum, and replication settings tuned for a specific workload shape.
+
+A profile name combines a **workload type** with a **tier**, e.g. `oltp-production`.
+
+### Workload types
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit" style={{ minWidth: '105px' }}>Type</th>
+      <th className="w-fit">Tuned for</th>
+      <th className="w-fit">Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit"><b>OLTP</b></td>
+      <td className="w-fit">Transactional workloads — web apps, APIs, order processing, auth. Short transactions and point lookups.</td>
+      <td className="w-fit">The default and most general-purpose type. Synchronous replication in HA.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><b>OLAP</b></td>
+      <td className="w-fit">Analytical workloads — reporting, dashboards, large aggregations.</td>
+      <td className="w-fit">Larger sort/hash memory, aggressive query parallelism, higher-resolution planner statistics. <b>Asynchronous</b> replication in HA (synchronous commits would throttle bulk loads).</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><b>WriteHeavy</b></td>
+      <td className="w-fit">High-volume ingestion — IoT telemetry, event logging, metrics.</td>
+      <td className="w-fit">Commit batching, WAL compression, and aggressive autovacuum to keep up with write volume. Synchronous replication in HA.</td>
+    </tr>
+  </tbody>
+</table>
+
+### Tiers
+
+The tier sets the size of the autoscaling envelope (and, in HA, the replication topology). Available tiers depend on the deployment mode:
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit" style={{ minWidth: '165px' }}>Profile</th>
+      <th className="w-fit">Mode</th>
+      <th className="w-fit">Use it for</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit"><code>oltp-hobby</code></td>
+      <td className="w-fit">Single</td>
+      <td className="w-fit">Side projects, prototypes, learning. Runs hot with minimal headroom to keep costs low.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>oltp-staging</code></td>
+      <td className="w-fit">Single / HA</td>
+      <td className="w-fit">Staging, internal tools, early-stage apps. Moderate headroom. <b>Default for single.</b></td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>oltp-production</code></td>
+      <td className="w-fit">Single / HA</td>
+      <td className="w-fit">Business-critical transactional workloads. Generous headroom for traffic spikes. <b>Default for HA.</b></td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>oltp-enterprise</code></td>
+      <td className="w-fit">HA only</td>
+      <td className="w-fit">High-throughput OLTP at scale. Highest connection limits and the most aggressive headroom.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>olap-production</code></td>
+      <td className="w-fit">Single / HA</td>
+      <td className="w-fit">Analytical / warehouse workloads.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>writeheavy-production</code></td>
+      <td className="w-fit">Single / HA</td>
+      <td className="w-fit">Ingestion pipelines and write-heavy workloads.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>custom</code></td>
+      <td className="w-fit">Single / HA</td>
+      <td className="w-fit">OLTP-based profile that lets you override individual PostgreSQL settings — see <a href="#custom-profile">Custom profile</a>.</td>
+    </tr>
+  </tbody>
+</table>
+
+:::note
+In **HA** mode the OLTP and WriteHeavy profiles run with two synchronous standbys, so an acknowledged `COMMIT` survives a node failure. OLAP runs with asynchronous standbys, trading a small potential window of recent writes for ingest speed.
+:::
+
+### Setting a profile
+
+Set the profile when you create the service in the GUI, or with the `profile` field in your [import YAML](/postgresql/how-to/create#create-a-project-description-file):
+
+```yaml
+services:
+  - hostname: db
+    type: postgresql:ha@18
+    profile: oltp-production
+```
+
+If you don't set one, the default is used (`oltp-staging` for single, `oltp-production` for HA). **The profile can be changed at any time**, from both the GUI and a re-import.
+
+### Overriding the autoscaling envelope
+
+The resource limits a profile sets are defaults. You can override any of them — CPU mode, min/max CPU/RAM/disk, and the free-resource thresholds — **without switching to the custom profile**, using the [`verticalAutoscaling`](/postgresql/how-to/create#full-example) block in your import YAML or the **Automatic scaling configuration** in the GUI. These overrides apply on top of any profile.
+
+### Custom profile
+
+The `custom` profile uses the **OLTP** tuning as its base and additionally lets you override individual PostgreSQL configuration values through `profileOverrides`:
+
+```yaml
+services:
+  - hostname: db
+    type: postgresql:single@18
+    profile: custom
+    profileOverrides:
+      random_page_cost: 1.1
+      default_statistics_target: 200
+      autovacuum_max_workers: 5
+      max_parallel_workers_per_gather: 4
+```
+
+Settings that Zerops derives from the container's resources or that are required for the managed cluster to operate — `shared_buffers`, `max_connections`, JIT on/off, the pooler limits, and the replication/Patroni settings — are managed automatically and **cannot** be overridden. Refer to the [PostgreSQL configuration documentation](https://www.postgresql.org/docs/current/runtime-config.html) for the meaning, valid range, and units of each parameter.
+
+<Dropdown>
+<DropdownItem title="Overridable configuration keys">
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Key</th>
+      <th className="w-fit" style={{ minWidth: '80px' }}>Type</th>
+      <th className="w-fit">Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td className="w-fit"><code>work_mem</code></td><td className="w-fit">integer</td><td className="w-fit">Memory per sort/hash operation before spilling to disk</td></tr>
+    <tr><td className="w-fit"><code>hash_mem_multiplier</code></td><td className="w-fit">integer</td><td className="w-fit">Multiplier applied to work_mem for hash-based operations</td></tr>
+    <tr><td className="w-fit"><code>maintenance_work_mem</code></td><td className="w-fit">integer</td><td className="w-fit">Memory for maintenance operations (VACUUM, CREATE INDEX, REINDEX)</td></tr>
+    <tr><td className="w-fit"><code>autovacuum_work_mem</code></td><td className="w-fit">integer</td><td className="w-fit">Memory used by each autovacuum worker</td></tr>
+    <tr><td className="w-fit"><code>temp_buffers</code></td><td className="w-fit">integer</td><td className="w-fit">Per-session memory for accessing temporary tables</td></tr>
+    <tr><td className="w-fit"><code>temp_file_limit</code></td><td className="w-fit">integer</td><td className="w-fit">Maximum total disk space a session may use for temporary files</td></tr>
+    <tr><td className="w-fit"><code>effective_cache_size</code></td><td className="w-fit">integer</td><td className="w-fit">Planner's assumption of total cache available (shared_buffers + OS cache)</td></tr>
+    <tr><td className="w-fit"><code>effective_io_concurrency</code></td><td className="w-fit">integer</td><td className="w-fit">Estimated number of concurrent disk I/O operations the storage can handle</td></tr>
+    <tr><td className="w-fit"><code>maintenance_io_concurrency</code></td><td className="w-fit">integer</td><td className="w-fit">Concurrent disk I/O operations for maintenance (VACUUM, prefetch)</td></tr>
+    <tr><td className="w-fit"><code>random_page_cost</code></td><td className="w-fit">number</td><td className="w-fit">Planner's estimated cost of a non-sequential page fetch</td></tr>
+    <tr><td className="w-fit"><code>default_statistics_target</code></td><td className="w-fit">integer</td><td className="w-fit">Default number of samples used by ANALYZE for column statistics</td></tr>
+    <tr><td className="w-fit"><code>jit_above_cost</code></td><td className="w-fit">number</td><td className="w-fit">Query plan cost above which JIT compilation is considered</td></tr>
+    <tr><td className="w-fit"><code>max_worker_processes</code></td><td className="w-fit">integer</td><td className="w-fit">Maximum number of background worker processes</td></tr>
+    <tr><td className="w-fit"><code>max_parallel_workers</code></td><td className="w-fit">integer</td><td className="w-fit">Maximum parallel workers that can be active at one time cluster-wide</td></tr>
+    <tr><td className="w-fit"><code>max_parallel_workers_per_gather</code></td><td className="w-fit">integer</td><td className="w-fit">Maximum parallel workers a single Gather node can start</td></tr>
+    <tr><td className="w-fit"><code>max_parallel_maintenance_workers</code></td><td className="w-fit">integer</td><td className="w-fit">Maximum parallel workers for maintenance (CREATE INDEX, VACUUM)</td></tr>
+    <tr><td className="w-fit"><code>wal_compression</code></td><td className="w-fit">string</td><td className="w-fit">Compression algorithm for full-page WAL images (off/pglz/lz4/zstd)</td></tr>
+    <tr><td className="w-fit"><code>wal_buffers</code></td><td className="w-fit">integer</td><td className="w-fit">Shared memory used to buffer WAL data not yet written to disk</td></tr>
+    <tr><td className="w-fit"><code>wal_writer_delay</code></td><td className="w-fit">integer</td><td className="w-fit">Interval at which the WAL writer flushes WAL to disk</td></tr>
+    <tr><td className="w-fit"><code>wal_writer_flush_after</code></td><td className="w-fit">integer</td><td className="w-fit">WAL bytes written before the WAL writer triggers a flush</td></tr>
+    <tr><td className="w-fit"><code>commit_delay</code></td><td className="w-fit">integer</td><td className="w-fit">Artificial delay before a WAL flush during commit to batch concurrent commits</td></tr>
+    <tr><td className="w-fit"><code>commit_siblings</code></td><td className="w-fit">integer</td><td className="w-fit">Minimum number of concurrent open transactions required for commit_delay to apply</td></tr>
+    <tr><td className="w-fit"><code>max_wal_size</code></td><td className="w-fit">integer</td><td className="w-fit">Soft upper limit on WAL size that triggers a checkpoint</td></tr>
+    <tr><td className="w-fit"><code>min_wal_size</code></td><td className="w-fit">integer</td><td className="w-fit">Minimum WAL size kept for future reuse before recycling segments</td></tr>
+    <tr><td className="w-fit"><code>autovacuum_max_workers</code></td><td className="w-fit">integer</td><td className="w-fit">Maximum autovacuum worker processes running concurrently</td></tr>
+    <tr><td className="w-fit"><code>autovacuum_naptime</code></td><td className="w-fit">integer</td><td className="w-fit">Delay between autovacuum runs on any given database</td></tr>
+    <tr><td className="w-fit"><code>autovacuum_vacuum_scale_factor</code></td><td className="w-fit">number</td><td className="w-fit">Fraction of table size added to the autovacuum threshold</td></tr>
+    <tr><td className="w-fit"><code>autovacuum_analyze_scale_factor</code></td><td className="w-fit">number</td><td className="w-fit">Fraction of table size added to the auto-analyze threshold</td></tr>
+    <tr><td className="w-fit"><code>autovacuum_vacuum_cost_delay</code></td><td className="w-fit">integer</td><td className="w-fit">Cost-based delay inserted by autovacuum between I/O operations</td></tr>
+    <tr><td className="w-fit"><code>autovacuum_vacuum_cost_limit</code></td><td className="w-fit">integer</td><td className="w-fit">Accumulated vacuum cost at which an autovacuum worker sleeps</td></tr>
+    <tr><td className="w-fit"><code>vacuum_cost_delay</code></td><td className="w-fit">integer</td><td className="w-fit">Cost-based delay inserted by manual VACUUM between I/O operations (milliseconds, 0 disables)</td></tr>
+    <tr><td className="w-fit"><code>idle_in_transaction_session_timeout</code></td><td className="w-fit">integer</td><td className="w-fit">Terminate sessions that stay idle in a transaction longer than this</td></tr>
+  </tbody>
+</table>
+</DropdownItem>
+</Dropdown>
 
 ## Configure scaling
 
@@ -97,7 +274,7 @@ Navigate to your PostgreSQL service and select **Service containers & Overview**
 
 ## Technical details
 
-Zerops monitors database usage and automatically adjusts resources based on predefined thresholds and timing parameters. The scaling behavior follows the same principles as other services in the platform.
+Zerops monitors database usage and automatically adjusts resources based on predefined thresholds and timing parameters. The scaling behavior follows the same principles as other services on the platform.
 
 For complete technical specifications including:
 - Resource monitoring intervals and thresholds

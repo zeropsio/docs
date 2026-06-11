@@ -4,7 +4,6 @@ description: Learn how to manage PostgreSQL users, databases, plugins, and use d
 ---
 
 import { Dropdown, DropdownItem } from '/src/components/Dropdown';
-import TabbedCodeBlocks from '/src/components/TabbedCodeBlock';
 
 This guide covers how to manage your PostgreSQL databases in Zerops, including default setup, database management tools, plugins, and best practices.
 
@@ -14,12 +13,12 @@ Zerops creates a default database and user automatically when a new PostgreSQL s
 
 ### Database
 
-- **Name**: Identical to the service hostname
-- **Encoding**: `utf8mb4`
+- **Name**: `db`
+- **Encoding**: `C.UTF-8`
 
 ### DB User
 
-- **Username**: Identical to the service hostname
+- **Username**: `db`
 - **Password**: Generated randomly
 
 :::info
@@ -29,58 +28,38 @@ For connection methods and environment variables, see the [Connect to PostgreSQL
 :::caution Important notes
 - When changing passwords, update both the database user password and the environment variable separately - they don't automatically synchronize.
 - While both `postgresql://` and `postgres://` URI formats are valid, Zerops uses the `postgresql://` format. If your software requires `postgres://`, create a custom environment variable with this format.
-- Do not use SSL/TLS protocols for internal connections. Security is assured by the project's private network.
+- Internal connections on ports `5432`/`5433` don't use SSL/TLS — security is provided by the project's private network. For TLS-encrypted connection pooling, connect to pgBouncer on port `6432` instead. See [Connection ports and TLS](/postgresql/how-to/connect#connection-ports-and-tls).
 :::
 
 ## Database Management Tools
 
-You can use any PostgreSQL management tool of your choice to administer your databases in Zerops. For convenience, Zerops provides ready-to-use recipes for two popular web-based database management tools:
+You can use any PostgreSQL management tool of your choice to administer your databases in Zerops. For convenience, Zerops provides a ready-to-use recipe for [Adminer](https://www.adminer.org) — a lightweight, full-featured web-based database management tool that supports PostgreSQL.
 
-* [Adminer](https://www.adminer.org) - a lightweight database management tool by Jakub Vrána
-* [phpMyAdmin](https://www.phpmyadmin.net) - a popular free database administration tool that works with both MySQL and PostgreSQL databases
+### Installing Adminer
 
-### Installing Management Tools
-
-You can install these tools with a simple one-click import in Zerops:
+You can install Adminer with a simple one-click import in Zerops:
 
 1. In Zerops GUI, open your project and select **Import services** from the left menu
-2. Copy and paste one of the following YAML configurations:
+2. Copy and paste the following YAML configuration:
 
-<TabbedCodeBlocks
-  tabs={[
-    {
-      label: 'Adminer',
-      language: 'yaml',
-      code: `services:
+```yaml
+services:
   - hostname: adminer
     type: php-apache@8.5
-    enableSubdomainAccess: true
-    buildFromGit: https://github.com/zeropsio/recipe-adminer`
-    },
-    {
-      label: 'phpMyAdmin',
-      language: 'yaml',
-      code: `services:
-  - hostname: phpmyadmin
-    type: php-apache@8.1+2.4
-    minContainers: 1
     maxContainers: 1
-    documentRoot: public
-    buildFromGit: https://github.com/zeropsio/recipe-phpmyadmin@main`
-    }
-  ]}
-  defaultTab="Adminer"
-/>
+    enableSubdomainAccess: true
+    buildFromGit: https://github.com/zeropsio/recipe-adminer
+```
 
-### Accessing Management Tools
+### Accessing Adminer
 
-After installation, you can access these tools via VPN:
+After installation, you can access Adminer via VPN:
 
 1. [Start the Zerops VPN](/references/networking/vpn)
-2. Type `http://adminer` or `http://phpmyadmin` in your browser
+2. Type `http://adminer` in your browser
 
 :::tip
-Try `http://adminer.zerops` or `http://phpmyadmin.zerops` if you encounter any connection issues.
+Try `http://adminer.zerops` if you encounter any connection issues.
 :::
 
 :::caution
@@ -95,7 +74,7 @@ You can use various database management tools from your local workstation to con
 2. **Obtain the [connection details](/postgresql/how-to/connect#connection-details)** from Zerops GUI
     - Environment variables are not available through VPN connections
 3. Connect with your **preferred database tool**
-    - Do not use SSL/TLS (security is provided by the VPN)
+    - Do not use SSL/TLS on ports `5432`/`5433` — the VPN tunnel already encrypts the connection
     - **Desktop Database Tools** - popular GUI tools like pgAdmin, DBeaver, DataGrip, or any other PostgreSQL-compatible client will work with Zerops
     - **Command Line with psql** - connect using the standard PostgreSQL command-line client with the credential obtained above:
         ```sh

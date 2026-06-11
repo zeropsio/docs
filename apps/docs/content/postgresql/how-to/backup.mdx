@@ -29,7 +29,13 @@ To restore a PostgreSQL backup:
 1. **Download** the backup file (`.zip`) from the Zerops UI
 2. **Extract** the zip file to access the individual schema dump files
 3. **Prepare** your target environment (clean existing data or use a new instance)
-4. **Restore** using PostgreSQL native tools. Follow the [official PostgreSQL backup documentation](https://www.postgresql.org/docs/current/backup-dump.html) for detailed restore procedures, or use web-based management tools like phpMyAdmin or Adminer as described in [PostgreSQL Management](/postgresql/how-to/manage).
+4. **Restore** each schema with `pg_restore`. The dumps are in PostgreSQL's custom format (`-Fc`), so `pg_restore` is required — plain `psql` can't read them:
+
+   ```sh
+   pg_restore -d [database_name] schemaName.dump
+   ```
+
+   See the [official PostgreSQL backup documentation](https://www.postgresql.org/docs/current/backup-dump.html) for detailed restore options. If you'd rather use a web UI like [Adminer](/postgresql/how-to/manage), first convert a dump to plain SQL with `pg_restore -f schema.sql schemaName.dump` and import that SQL file.
 
 For assistance with the restoration process, contact Zerops support.
 

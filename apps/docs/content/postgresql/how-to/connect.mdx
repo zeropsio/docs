@@ -28,7 +28,7 @@ The full list of connection-related environment variables is available in the se
     <tr>
       <th className="w-fit">Parameter</th>
       <th className="w-fit">Internal</th>
-      <th className="w-fit">External (TLS)</th>
+      <th className="w-fit">Public IP (TLS)</th>
       <th className="w-fit">Env Variable</th>
     </tr>
   </thead>
@@ -97,6 +97,50 @@ Zerops creates a system user named `zps` with full privileges for maintenance pu
 For more information about default PostgreSQL setup, users, and databases, see [Manage PostgreSQL Users and Databases](/postgresql/how-to/manage).
 :::
 
+## Connection ports and TLS
+
+PostgreSQL on Zerops exposes three ports, each for a different purpose:
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Port</th>
+      <th className="w-fit">Purpose</th>
+      <th className="w-fit" style={{ minWidth: '105px' }}>TLS</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit"><code>5432</code></td>
+      <td className="w-fit">Primary node — read and write</td>
+      <td className="w-fit">Not supported (plaintext)</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>5433</code></td>
+      <td className="w-fit">Read-only replicas — distributes reads (HA mode only)</td>
+      <td className="w-fit">Not supported (plaintext)</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>6432</code></td>
+      <td className="w-fit">pgBouncer connection pooler</td>
+      <td className="w-fit"><b>Required</b></td>
+    </tr>
+  </tbody>
+</table>
+
+- **Ports `5432` and `5433` do not support TLS.** Connect with `sslmode=disable`. Inside a project these ports are reachable only on the private network, and over the [VPN](#method-1-connect-via-zerops-vpn) the tunnel already encrypts the traffic — requesting TLS on them fails the handshake. Every "do not use SSL/TLS" note elsewhere in these docs refers to `5432`/`5433`.
+- **Port `6432` (pgBouncer) requires TLS.** Connect with at least `sslmode=require`; the connection is always encrypted. pgBouncer presents a certificate signed by the [Zerops CA](/references/networking/zerops-ca) but does not force the client to validate it, so `sslmode=require` is enough. If you want to verify the server's identity, use `sslmode=verify-full` together with the Zerops CA. This holds whether you reach `6432` from inside the project or over a public IP.
+
+## Connection pooling with pgBouncer
+
+Port `6432` puts [pgBouncer](https://www.pgbouncer.org/) in front of PostgreSQL and multiplexes many client connections onto a small pool of server connections. This is valuable for applications that open many short-lived connections — serverless functions, PHP-FPM, or anything with high connection churn — and **we recommend connecting through `6432` rather than `5432` for these workloads, including for internal service-to-service connections.**
+
+A few things to know:
+
+- **Transaction pooling.** A server connection is returned to the pool after each transaction, not when the client disconnects. Prepared statements are supported (cached per server connection), but session-scoped features that span transactions — session-level `SET`, advisory locks held across statements, `LISTEN`/`NOTIFY` — won't behave as expected. Use a direct `5432` connection for those.
+- **TLS is required** on `6432` (see [above](#connection-ports-and-tls)), even for internal connections.
+- **HA mode.** pgBouncer pools connections to the primary (writes). Read routing across replicas on port `5433` is separate and is not pooled.
+
 ## Connect from Services in the Same Project
 
 All services within a Zerops project share a dedicated private network. There are two ways to implement connections between services in the same project:
@@ -127,7 +171,7 @@ For more details on how to use environment variables, and instructions for addin
 :::caution Important notes
 - When changing passwords, update both the database user password and the environment variable separately - they don't automatically synchronize.
 - While both `postgresql://` and `postgres://` URI formats are valid, Zerops uses the `postgresql://` format. If your software requires `postgres://`, create a custom environment variable with this format.
-- Do not use SSL/TLS protocols for internal connections. Security is assured by the project's private network.
+- Internal connections on ports `5432`/`5433` don't use SSL/TLS — security is provided by the project's private network. For TLS-encrypted [connection pooling](#connection-pooling-with-pgbouncer), connect to pgBouncer on port `6432` instead.
 :::
 
 ## Connect Remotely
@@ -144,15 +188,13 @@ You can securely connect to PostgreSQL from your local workstation via Zerops VP
 4. When finished, [stop the Zerops VPN](/references/networking/vpn#stop-vpn)
 
 :::warning Important notes
-* Do not use SSL/TLS protocols when connecting over VPN. Security is provided by the VPN tunnel.
+* Connect to ports `5432`/`5433` without SSL/TLS when using the VPN — the tunnel already encrypts the traffic.
 * If your connection over VPN doesn't work, try adding `.zerops` suffix to the service hostname (e.g., `database1.zerops`). For additional help, check the [VPN troubleshooting page](/references/networking/vpn#troubleshooting).
 :::
 
 ### Method 2: Connect via Direct IP Access
 
-Direct IP Access uses [pgBouncer](https://www.pgbouncer.org/) for connection pooling and TLS termination.
-
-Internally, port `5432` is available without SSL (and port `5433` for reads in HA mode). Externally, connections are secured with TLS through pgBouncer (port `6432`) before being routed to your PostgreSQL service. The read replica port is not available for external connections.
+Public access always goes through [pgBouncer](https://www.pgbouncer.org/) on port `6432` over TLS (see [Connection ports and TLS](#connection-ports-and-tls)), which also pools your connections before routing them to PostgreSQL. The read-only replica port (`5433`) is not exposed for public access — route reads through your application logic instead.
 
 :::tip Trusting the TLS certificate
 The TLS certificate served on port `6432` is signed by the Zerops Certificate Authority. To verify it from outside Zerops, download and trust the [Zerops CA](/references/networking/zerops-ca) &mdash; e.g. `psql "... sslmode=verify-full sslrootcert=./zerops-ca.pem"`.
