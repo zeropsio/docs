@@ -2435,37 +2435,27 @@ module.exports = {
         {
           type: 'doc',
           id: 'postgresql/how-to/create',
-          label: 'Create PostgreSQL service',
+          label: 'Create & import',
         },
         {
           type: 'doc',
           id: 'postgresql/how-to/connect',
-          label: 'Connect to PostgreSQL',
-        },
-        {
-          type: 'doc',
-          id: 'postgresql/how-to/manage',
-          label: 'Manage users, databases & plugins',
-        },
-        {
-          type: 'doc',
-          id: 'postgresql/how-to/export-import-data',
-          label: 'Export and import data',
-        },
-        {
-          type: 'doc',
-          id: 'postgresql/how-to/backup',
-          label: 'Backup data',
+          label: 'Connect',
         },
         {
           type: 'doc',
           id: 'postgresql/how-to/scale',
-          label: 'Scale PostgreSQL service',
+          label: 'Scale & profiles',
+        },
+        {
+          type: 'doc',
+          id: 'postgresql/how-to/manage',
+          label: 'Manage & data',
         },
         {
           type: 'doc',
           id: 'postgresql/how-to/control',
-          label: 'Stop, start and delete PostgreSQL service',
+          label: 'Stop, start & delete',
         },
       ],
     },
@@ -2489,15 +2479,6 @@ module.exports = {
     //        },
     //      ],
     //    },
-    {
-      type: 'doc',
-      id: 'postgresql/faq',
-      label: 'FAQ',
-      customProps: {
-        sidebar_is_title: true,
-        sidebar_icon: 'chat-bubble-left-right',
-      },
-    },
   ],
   elasticsearch: [
     {

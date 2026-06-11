@@ -1,6 +1,6 @@
 ---
-title: How Zerops scales PostgreSQL
-description: Get to know how Zerops scales your PostgreSQL service.
+title: Scale & profiles
+description: PostgreSQL scaling profiles, autoscaling configuration, and high availability on Zerops.
 ---
 
 import Image from '/src/components/Image';
@@ -17,12 +17,18 @@ For complete scaling details across all services, see [Automatic Scaling and Hig
 
 PostgreSQL services use **vertical scaling** to adjust CPU, RAM, and disk resources within containers based on usage patterns. Unlike runtime services, PostgreSQL does not use horizontal scaling (adding/removing containers). Instead, PostgreSQL services use deployment modes for high availability.
 
+:::danger Scaling can briefly interrupt the service
+When scaling changes the service's resources, Zerops regenerates the PostgreSQL configuration and applies it with an automatic **reload**. If the new values require it, the service is **restarted** instead: rolling through the cluster in HA mode, a short outage in single mode.
+
+A restart is only needed when the granted RAM crosses a memory step: `256 MiB`, `512 MiB`, `1 GiB`, `2 GiB`, `4 GiB`, then multiples of `8 GiB`. Scaling within a step reloads only; to rule out restarts entirely, keep `minRam` and `maxRam` within one step.
+:::
+
 ## Scaling profiles
 
 A **scaling profile** is the starting point for a PostgreSQL service. Each profile sets two things at once:
 
-1. **The autoscaling envelope** — the default minimum/maximum CPU, RAM, and disk, and the free-resource headroom that controls how eagerly the autoscaler reacts.
-2. **The PostgreSQL configuration** — memory, WAL, planner, autovacuum, and replication settings tuned for a specific workload shape.
+1. **The autoscaling envelope**: the default minimum/maximum CPU, RAM, and disk, plus the free-resource headroom that controls how eagerly the autoscaler reacts.
+2. **The PostgreSQL configuration**: memory, WAL, planner, autovacuum, and replication settings tuned for a specific workload shape.
 
 A profile name combines a **workload type** with a **tier**, e.g. `oltp-production`.
 
@@ -39,25 +45,25 @@ A profile name combines a **workload type** with a **tier**, e.g. `oltp-producti
   <tbody>
     <tr>
       <td className="w-fit"><b>OLTP</b></td>
-      <td className="w-fit">Transactional workloads — web apps, APIs, order processing, auth. Short transactions and point lookups.</td>
+      <td className="w-fit">Transactional workloads like web apps, APIs, order processing, and auth. Short transactions and point lookups.</td>
       <td className="w-fit">The default and most general-purpose type. Synchronous replication in HA.</td>
     </tr>
     <tr>
       <td className="w-fit"><b>OLAP</b></td>
-      <td className="w-fit">Analytical workloads — reporting, dashboards, large aggregations.</td>
+      <td className="w-fit">Analytical workloads like reporting, dashboards, and large aggregations.</td>
       <td className="w-fit">Larger sort/hash memory, aggressive query parallelism, higher-resolution planner statistics. <b>Asynchronous</b> replication in HA (synchronous commits would throttle bulk loads).</td>
     </tr>
     <tr>
       <td className="w-fit"><b>WriteHeavy</b></td>
-      <td className="w-fit">High-volume ingestion — IoT telemetry, event logging, metrics.</td>
+      <td className="w-fit">High-volume ingestion like IoT telemetry, event logging, and metrics.</td>
       <td className="w-fit">Commit batching, WAL compression, and aggressive autovacuum to keep up with write volume. Synchronous replication in HA.</td>
     </tr>
   </tbody>
 </table>
 
-### Tiers
+### Available profiles
 
-The tier sets the size of the autoscaling envelope (and, in HA, the replication topology). Available tiers depend on the deployment mode:
+The tier part of the name sets the size of the autoscaling envelope (and, in HA, the replication topology). Which profiles you can pick depends on the deployment mode:
 
 <table className="w-full my-1.5">
   <thead>
@@ -101,7 +107,7 @@ The tier sets the size of the autoscaling envelope (and, in HA, the replication 
     <tr>
       <td className="w-fit"><code>custom</code></td>
       <td className="w-fit">Single / HA</td>
-      <td className="w-fit">OLTP-based profile that lets you override individual PostgreSQL settings — see <a href="#custom-profile">Custom profile</a>.</td>
+      <td className="w-fit">OLTP-based profile that lets you override individual PostgreSQL settings. See <a href="#custom-profile">Custom profile</a>.</td>
     </tr>
   </tbody>
 </table>
@@ -112,26 +118,26 @@ In **HA** mode the OLTP and WriteHeavy profiles run with two synchronous standby
 
 ### Setting a profile
 
-Set the profile when you create the service in the GUI, or with the `profile` field in your [import YAML](/postgresql/how-to/create#create-a-project-description-file):
+Set the profile when you create the service in the GUI, or with the `profile` field in your [import YAML](/postgresql/how-to/create#import-with-yaml):
 
-```yaml
+```yaml title="zerops-import.yaml"
 services:
   - hostname: db
     type: postgresql:ha@18
     profile: oltp-production
 ```
 
-If you don't set one, the default is used (`oltp-staging` for single, `oltp-production` for HA). **The profile can be changed at any time**, from both the GUI and a re-import.
+If you don't set one, the default is used (`oltp-staging` for single, `oltp-production` for HA). **The profile can be changed at any time** in the GUI.
 
 ### Overriding the autoscaling envelope
 
-The resource limits a profile sets are defaults. You can override any of them — CPU mode, min/max CPU/RAM/disk, and the free-resource thresholds — **without switching to the custom profile**, using the [`verticalAutoscaling`](/postgresql/how-to/create#full-example) block in your import YAML or the **Automatic scaling configuration** in the GUI. These overrides apply on top of any profile.
+The resource limits a profile sets are defaults. You can override any of them (CPU mode, min/max CPU/RAM/disk, and the free-resource thresholds) **without switching to the custom profile**, using the [`verticalAutoscaling`](/postgresql/how-to/create#service-parameters) block in your import YAML or the **Automatic scaling configuration** in the GUI. These overrides apply on top of any profile.
 
 ### Custom profile
 
 The `custom` profile uses the **OLTP** tuning as its base and additionally lets you override individual PostgreSQL configuration values through `profileOverrides`:
 
-```yaml
+```yaml title="zerops-import.yaml"
 services:
   - hostname: db
     type: postgresql:single@18
@@ -140,29 +146,32 @@ services:
       random_page_cost: 1.1
       default_statistics_target: 200
       autovacuum_max_workers: 5
-      max_parallel_workers_per_gather: 4
+      work_mem: 67108864           # bytes (64 MiB)
+      autovacuum_naptime: 120000000000  # nanoseconds (2 minutes)
 ```
 
-Settings that Zerops derives from the container's resources or that are required for the managed cluster to operate — `shared_buffers`, `max_connections`, JIT on/off, the pooler limits, and the replication/Patroni settings — are managed automatically and **cannot** be overridden. Refer to the [PostgreSQL configuration documentation](https://www.postgresql.org/docs/current/runtime-config.html) for the meaning, valid range, and units of each parameter.
+Settings that Zerops derives from the container's resources or that are required for the managed cluster to operate (`shared_buffers`, `max_connections`, JIT on/off, the pooler limits, and the replication/Patroni settings) are managed automatically and **cannot** be overridden.
+
+Refer to the [PostgreSQL configuration documentation](https://www.postgresql.org/docs/current/runtime-config.html) for the meaning and valid range of each parameter, but **mind the units**: override values are plain numbers, with memory/disk sizes given in **bytes** and durations in **nanoseconds**. This differs from PostgreSQL's own conventions (kB, milliseconds, seconds). The table below shows which unit each key takes.
 
 <Dropdown>
-<DropdownItem title="Overridable configuration keys">
+<DropdownItem title="Overridable configuration keys" wrap={false}>
 <table className="w-full my-1.5">
   <thead>
     <tr>
       <th className="w-fit">Key</th>
-      <th className="w-fit" style={{ minWidth: '80px' }}>Type</th>
+      <th className="w-fit" style={{ minWidth: '115px' }}>Type / unit</th>
       <th className="w-fit">Description</th>
     </tr>
   </thead>
   <tbody>
-    <tr><td className="w-fit"><code>work_mem</code></td><td className="w-fit">integer</td><td className="w-fit">Memory per sort/hash operation before spilling to disk</td></tr>
+    <tr><td className="w-fit"><code>work_mem</code></td><td className="w-fit">bytes</td><td className="w-fit">Memory per sort/hash operation before spilling to disk</td></tr>
     <tr><td className="w-fit"><code>hash_mem_multiplier</code></td><td className="w-fit">integer</td><td className="w-fit">Multiplier applied to work_mem for hash-based operations</td></tr>
-    <tr><td className="w-fit"><code>maintenance_work_mem</code></td><td className="w-fit">integer</td><td className="w-fit">Memory for maintenance operations (VACUUM, CREATE INDEX, REINDEX)</td></tr>
-    <tr><td className="w-fit"><code>autovacuum_work_mem</code></td><td className="w-fit">integer</td><td className="w-fit">Memory used by each autovacuum worker</td></tr>
-    <tr><td className="w-fit"><code>temp_buffers</code></td><td className="w-fit">integer</td><td className="w-fit">Per-session memory for accessing temporary tables</td></tr>
-    <tr><td className="w-fit"><code>temp_file_limit</code></td><td className="w-fit">integer</td><td className="w-fit">Maximum total disk space a session may use for temporary files</td></tr>
-    <tr><td className="w-fit"><code>effective_cache_size</code></td><td className="w-fit">integer</td><td className="w-fit">Planner's assumption of total cache available (shared_buffers + OS cache)</td></tr>
+    <tr><td className="w-fit"><code>maintenance_work_mem</code></td><td className="w-fit">bytes</td><td className="w-fit">Memory for maintenance operations (VACUUM, CREATE INDEX, REINDEX)</td></tr>
+    <tr><td className="w-fit"><code>autovacuum_work_mem</code></td><td className="w-fit">bytes</td><td className="w-fit">Memory used by each autovacuum worker</td></tr>
+    <tr><td className="w-fit"><code>temp_buffers</code></td><td className="w-fit">bytes</td><td className="w-fit">Per-session memory for accessing temporary tables</td></tr>
+    <tr><td className="w-fit"><code>temp_file_limit</code></td><td className="w-fit">bytes</td><td className="w-fit">Maximum total disk space a session may use for temporary files</td></tr>
+    <tr><td className="w-fit"><code>effective_cache_size</code></td><td className="w-fit">bytes</td><td className="w-fit">Planner's assumption of total cache available (shared_buffers + OS cache)</td></tr>
     <tr><td className="w-fit"><code>effective_io_concurrency</code></td><td className="w-fit">integer</td><td className="w-fit">Estimated number of concurrent disk I/O operations the storage can handle</td></tr>
     <tr><td className="w-fit"><code>maintenance_io_concurrency</code></td><td className="w-fit">integer</td><td className="w-fit">Concurrent disk I/O operations for maintenance (VACUUM, prefetch)</td></tr>
     <tr><td className="w-fit"><code>random_page_cost</code></td><td className="w-fit">number</td><td className="w-fit">Planner's estimated cost of a non-sequential page fetch</td></tr>
@@ -173,21 +182,21 @@ Settings that Zerops derives from the container's resources or that are required
     <tr><td className="w-fit"><code>max_parallel_workers_per_gather</code></td><td className="w-fit">integer</td><td className="w-fit">Maximum parallel workers a single Gather node can start</td></tr>
     <tr><td className="w-fit"><code>max_parallel_maintenance_workers</code></td><td className="w-fit">integer</td><td className="w-fit">Maximum parallel workers for maintenance (CREATE INDEX, VACUUM)</td></tr>
     <tr><td className="w-fit"><code>wal_compression</code></td><td className="w-fit">string</td><td className="w-fit">Compression algorithm for full-page WAL images (off/pglz/lz4/zstd)</td></tr>
-    <tr><td className="w-fit"><code>wal_buffers</code></td><td className="w-fit">integer</td><td className="w-fit">Shared memory used to buffer WAL data not yet written to disk</td></tr>
-    <tr><td className="w-fit"><code>wal_writer_delay</code></td><td className="w-fit">integer</td><td className="w-fit">Interval at which the WAL writer flushes WAL to disk</td></tr>
-    <tr><td className="w-fit"><code>wal_writer_flush_after</code></td><td className="w-fit">integer</td><td className="w-fit">WAL bytes written before the WAL writer triggers a flush</td></tr>
-    <tr><td className="w-fit"><code>commit_delay</code></td><td className="w-fit">integer</td><td className="w-fit">Artificial delay before a WAL flush during commit to batch concurrent commits</td></tr>
+    <tr><td className="w-fit"><code>wal_buffers</code></td><td className="w-fit">bytes</td><td className="w-fit">Shared memory used to buffer WAL data not yet written to disk</td></tr>
+    <tr><td className="w-fit"><code>wal_writer_delay</code></td><td className="w-fit">nanoseconds</td><td className="w-fit">Interval at which the WAL writer flushes WAL to disk</td></tr>
+    <tr><td className="w-fit"><code>wal_writer_flush_after</code></td><td className="w-fit">bytes</td><td className="w-fit">WAL bytes written before the WAL writer triggers a flush</td></tr>
+    <tr><td className="w-fit"><code>commit_delay</code></td><td className="w-fit">nanoseconds</td><td className="w-fit">Artificial delay before a WAL flush during commit to batch concurrent commits</td></tr>
     <tr><td className="w-fit"><code>commit_siblings</code></td><td className="w-fit">integer</td><td className="w-fit">Minimum number of concurrent open transactions required for commit_delay to apply</td></tr>
-    <tr><td className="w-fit"><code>max_wal_size</code></td><td className="w-fit">integer</td><td className="w-fit">Soft upper limit on WAL size that triggers a checkpoint</td></tr>
-    <tr><td className="w-fit"><code>min_wal_size</code></td><td className="w-fit">integer</td><td className="w-fit">Minimum WAL size kept for future reuse before recycling segments</td></tr>
+    <tr><td className="w-fit"><code>max_wal_size</code></td><td className="w-fit">bytes</td><td className="w-fit">Soft upper limit on WAL size that triggers a checkpoint</td></tr>
+    <tr><td className="w-fit"><code>min_wal_size</code></td><td className="w-fit">bytes</td><td className="w-fit">Minimum WAL size kept for future reuse before recycling segments</td></tr>
     <tr><td className="w-fit"><code>autovacuum_max_workers</code></td><td className="w-fit">integer</td><td className="w-fit">Maximum autovacuum worker processes running concurrently</td></tr>
-    <tr><td className="w-fit"><code>autovacuum_naptime</code></td><td className="w-fit">integer</td><td className="w-fit">Delay between autovacuum runs on any given database</td></tr>
+    <tr><td className="w-fit"><code>autovacuum_naptime</code></td><td className="w-fit">nanoseconds</td><td className="w-fit">Delay between autovacuum runs on any given database</td></tr>
     <tr><td className="w-fit"><code>autovacuum_vacuum_scale_factor</code></td><td className="w-fit">number</td><td className="w-fit">Fraction of table size added to the autovacuum threshold</td></tr>
     <tr><td className="w-fit"><code>autovacuum_analyze_scale_factor</code></td><td className="w-fit">number</td><td className="w-fit">Fraction of table size added to the auto-analyze threshold</td></tr>
-    <tr><td className="w-fit"><code>autovacuum_vacuum_cost_delay</code></td><td className="w-fit">integer</td><td className="w-fit">Cost-based delay inserted by autovacuum between I/O operations</td></tr>
+    <tr><td className="w-fit"><code>autovacuum_vacuum_cost_delay</code></td><td className="w-fit">nanoseconds</td><td className="w-fit">Cost-based delay inserted by autovacuum between I/O operations</td></tr>
     <tr><td className="w-fit"><code>autovacuum_vacuum_cost_limit</code></td><td className="w-fit">integer</td><td className="w-fit">Accumulated vacuum cost at which an autovacuum worker sleeps</td></tr>
-    <tr><td className="w-fit"><code>vacuum_cost_delay</code></td><td className="w-fit">integer</td><td className="w-fit">Cost-based delay inserted by manual VACUUM between I/O operations (milliseconds, 0 disables)</td></tr>
-    <tr><td className="w-fit"><code>idle_in_transaction_session_timeout</code></td><td className="w-fit">integer</td><td className="w-fit">Terminate sessions that stay idle in a transaction longer than this</td></tr>
+    <tr><td className="w-fit"><code>vacuum_cost_delay</code></td><td className="w-fit">nanoseconds</td><td className="w-fit">Cost-based delay inserted by manual VACUUM between I/O operations (0 disables)</td></tr>
+    <tr><td className="w-fit"><code>idle_in_transaction_session_timeout</code></td><td className="w-fit">nanoseconds</td><td className="w-fit">Terminate sessions that stay idle in a transaction longer than this</td></tr>
   </tbody>
 </table>
 </DropdownItem>
@@ -226,20 +235,13 @@ You can configure scaling settings:
 - **Raise the minimum** when you need guaranteed baseline performance
 - **Set minimum = maximum** to disable automatic scaling for that specific resource
 
-**Deployment mode**: Choose the reliability configuration for your PostgreSQL service:
+**Deployment mode** (single container vs. highly available) is chosen when the service is created and cannot be changed later. See [Deployment modes](/postgresql/overview#deployment-modes).
 
-- **Single Container**: One container with vertical scaling only. Suitable for development environments.
-- **Highly Available**: Multiple containers with built-in redundancy. Recommended for production environments.
+### High availability
 
-:::warning
-Deployment mode cannot be changed after service creation.
-:::
+In HA mode, Zerops runs a 3-node cluster across separate physical machines, fronted by two database proxy containers (free of charge) that route traffic. When a container fails, Zerops automatically replaces it on a different machine and synchronizes data from the healthy copies.
 
-:::tip HA Mode
-In HA mode, a dedicated read replica port (`5433`) is available for routing read queries to replicas. This improves performance by distributing load across all database containers. See [Connection Parameters](/postgresql/how-to/connect#connection-parameters) for details.
-:::
-
-When a container fails in HA mode, Zerops automatically replaces it with a new container on a different physical machine and synchronizes data from healthy copies.
+A dedicated **read-replica port (`5433`)** lets you route read-only queries to the replicas, taking load off the primary and improving throughput. See [Connection parameters](/postgresql/how-to/connect#connection-parameters) and [Connection ports and TLS](/postgresql/how-to/connect#connection-ports-and-tls).
 
 ### Advanced settings
 

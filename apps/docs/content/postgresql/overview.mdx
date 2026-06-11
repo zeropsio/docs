@@ -1,118 +1,129 @@
 ---
-title: PostgreSQL overview
-description: Learn about working with PostgreSQL with ease in Zerops.
+title: PostgreSQL on Zerops
+description: Managed PostgreSQL on Zerops with automated backups, vertical autoscaling, optional high availability, and workload-tuned configuration.
 ---
 
 import DocCardList from '@theme/DocCardList';
 import Icons from '@theme/Icon';
-import LargeCardList from '@site/src/components/LargeCardList';
-import LargeCard from '@site/src/components/LargeCard';
+import data from '@site/static/data.json';
+import UnorderedList from '@site/src/components/UnorderedList';
 
-[PostgreSQL ↗](https://www.postgresql.org/) is a powerful, open source object-relational database system with over 35 years of active development that has earned it a strong reputation for reliability, feature robustness, and performance.
+[PostgreSQL ↗](https://www.postgresql.org/) is a powerful, open-source object-relational database with a 35-year track record for reliability, robustness, and performance. On Zerops it runs as a **fully managed service**: automated encrypted backups, vertical autoscaling, optional high availability with automatic failover, and a configuration tuned to your workload, with no server to administer.
 
-## Feature Highlights
+## Quick start
+
+Add a PostgreSQL service to your project with a `zerops-import.yaml`:
+
+```yaml title="zerops-import.yaml"
+services:
+  - hostname: db
+    # type is postgresql:{mode}@{version}
+    type: postgresql:single@18
+    # workload-tuned autoscaling profile
+    profile: oltp-staging
+```
+
+Import it with the zCLI:
+
+```bash
+zcli project service-import zerops-import.yaml
+```
+
+The moment the container boots you have a working database. See [Create & import](/postgresql/how-to/create) for the GUI flow and the full configuration reference.
+
+## What you get out of the box
+
+- **A default database and user**, both named `db` (encoding `UTF8`, locale `C.UTF-8`), with a randomly generated password.
+- **Connection details and environment variables**, including hostname, ports, and ready-made connection strings. See [Connect](/postgresql/how-to/connect).
+- **Workload-tuned configuration** via the [scaling profile](/postgresql/how-to/scale#scaling-profiles) you choose (OLTP, OLAP, or write-heavy).
+- **Automated, encrypted backups** stored in isolated object storage. See [Manage & data](/postgresql/how-to/manage#backups).
+- **Vertical autoscaling** that grows and shrinks CPU, RAM, and disk with real usage.
+
+### Supported versions
+
+<UnorderedList data={data.postgresql.readable} />
+
+## Deployment modes
+
+Choose the reliability model when you create the service. It is set through the service `type` and is **fixed for the life of the service**.
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit" style={{ minWidth: '75px' }}>Mode</th>
+      <th className="w-fit" style={{ minWidth: '200px' }}>type</th>
+      <th className="w-fit">What it is</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit"><b>Highly Available</b></td>
+      <td className="w-fit"><code>postgresql:ha@N</code></td>
+      <td className="w-fit">A 3-node cluster spread across separate physical machines, with data stored redundantly, automatic failover, and a read-replica port. Recommended for production.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><b>Single container</b></td>
+      <td className="w-fit"><code>postgresql:single@N</code></td>
+      <td className="w-fit">One container, so lower cost but no redundancy. Data since the last backup is lost if it fails. Good for development and non-critical workloads.</td>
+    </tr>
+  </tbody>
+</table>
+
+:::tip
+In HA mode, route read-only queries to the replica port (`5433`) to take load off the primary. See [Scale &amp; profiles](/postgresql/how-to/scale#high-availability) and [Connection ports and TLS](/postgresql/how-to/connect#connection-ports-and-tls).
+:::
+
+## Next steps
 
 <DocCardList
-  colSize={4}
+  colSize={6}
   items={[
     {
       type: 'link',
       href: '/postgresql/how-to/create',
-      label: 'Create PostgreSQL service',
+      label: 'Create & import',
       customProps: {
         icon: Icons['computer-desktop'],
-        description:
-          'Start with creating a PostgreSQL service using GUI or zCLI.',
+        description: 'Create a service in the GUI or with zerops-import.yaml.',
       },
     },
     {
       type: 'link',
-      href: '/postgresql/how-to/create#full-example',
-      label: 'Import config file',
-      customProps: {
-        icon: Icons['puzzle'],
-        description: 'Use an example config file to import your own app.',
-      },
-    },
-  ]}
-/>
-
-### Connect to PostgreSQL service
-
-<DocCardList
-  colSize={4}
-  items={[
-    {
-      type: 'link',
-      href: '/postgresql/how-to/manage',
-      label: 'Manage users and databases',
-      customProps: {
-        icon: Icons['circle-stack'],
-      },
-    },
-    {
-      type: 'link',
-      href: '/postgresql/how-to/connect#connect-from-services-in-the-same-project',
-      label: 'Connect from the same project',
+      href: '/postgresql/how-to/connect',
+      label: 'Connect',
       customProps: {
         icon: Icons['link'],
+        description: 'Ports, TLS, pooling, env vars, VPN, and management tools.',
       },
     },
-    {
-      type: 'link',
-      href: '/postgresql/how-to/connect#connect-remotely',
-      label: 'Connect remotely',
-      customProps: {
-        icon: Icons['globe-europe'],
-      },
-    },
-  ]}
-/>
-
-### Others
-
-<DocCardList
-  colSize={6}
-  items={[
     {
       type: 'link',
       href: '/postgresql/how-to/scale',
-      label: 'Scale postgresql service',
+      label: 'Scale & profiles',
       customProps: {
         icon: Icons['adjustments'],
+        description: 'Autoscaling, workload profiles, and high availability.',
       },
     },
     {
       type: 'link',
-      href: '/postgresql/how-to/export-import-data',
-      label: 'Export and import data',
+      href: '/postgresql/how-to/manage',
+      label: 'Manage & data',
       customProps: {
-        icon: Icons['arrow-down-tray'],
+        icon: Icons['circle-stack'],
+        description: 'Users, extensions, backups, and export/import.',
       },
     },
   ]}
 />
 
-## When in doubt, reach out
+## Need help?
 
-Don't know how to start or got stuck during the process? You might not be the first one, visit the FAQ section to find out.
-
-In case you haven't found an answer (and also if you have), we and our community are looking forward to hearing from you on Discord.
-
-Have you build something that others might find useful? Don't hesitate to share your knowledge!
+Stuck, or want to share what you built? Our core team and community are on Discord.
 
 <DocCardList
   colSize={6}
   items={[
-    /* {
-      type: 'link',
-      href: '/postgresql/faq',
-      label: 'FAQ',
-      customProps: {
-        icon: Icons['chat-bubble-left-right'],
-        description: 'Most common questions in one place.',
-      },
-    }, */
     {
       type: 'link',
       href: 'https://discord.com/invite/WDvCZ54',
@@ -120,34 +131,16 @@ Have you build something that others might find useful? Don't hesitate to share 
       customProps: {
         icon: Icons['discord'],
         description:
-          'Join our core team and Zerops community on Discord. Ask questions and share your tips with other members.',
+          'Join the Zerops community on Discord. Ask questions and share your tips.',
       },
     },
-  ]}
-/>
-
-## Popular Guides
-
-<DocCardList
-  colSize={6}
-  items={[
     {
       type: 'link',
       href: '/references/cli',
       label: 'zCLI',
       customProps: {
         icon: Icons['command-line'],
-        description:
-          'Get even more out of Zerops with the zCLI command line tool.',
-      },
-    },
-    {
-      type: 'link',
-      href: '/references/networking/vpn',
-      label: 'Zerops VPN',
-      customProps: {
-        icon: Icons['globe-europe'],
-        description: 'Connect to your services easily with Zerops VPN.',
+        description: 'Get more out of Zerops with the command-line tool.',
       },
     },
   ]}
