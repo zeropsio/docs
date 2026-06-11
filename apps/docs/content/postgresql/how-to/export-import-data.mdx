@@ -3,12 +3,11 @@ title: Export or import PostgreSQL data
 description: Learn how to export or import postgresql data in Zerops.
 ---
 
-## Use Adminer or phpMyAdmin to export or import data
-* [Adminer ↗](https://www.adminer.org) - an open source full-featured database management tool written in PHP
-* [phpMyAdmin ↗](https://www.phpmyadmin.net) - a free software tool written in PHP, intended to handle the administration of PostgreSQL over the Web
+## Use Adminer to export or import data
+* [Adminer ↗](https://www.adminer.org) - an open source, full-featured database management tool written in PHP that supports PostgreSQL
 
-1. [Install the tools to Zerops](/postgresql/how-to/manage#installing-management-tools)
-2. Use their standard export or import functions
+1. [Install Adminer to Zerops](/postgresql/how-to/manage#installing-adminer)
+2. Use its standard export or import functions
 
 ## Use a database management tool on your workstation to export or import data
 
@@ -16,7 +15,7 @@ Do you already use a database management tool that supports PostgreSQL on your w
 
 Zerops VPN client is included into zCLI, the Zerops command-line tool. To start the VPN connection, read [how to connect to PostgreSQL remotely](/postgresql/how-to/connect#connect-remotely).
 :::caution
-Do not use SSL/TLS protocols when connecting to PostgreSQL over VPN. Zerops PostgreSQL is not configured to support these protocols. The security is assured by the VPN.
+Connect to ports `5432`/`5433` without SSL/TLS — the VPN tunnel already encrypts the connection. (TLS is only used on the pgBouncer pooling port `6432`; see [Connection ports and TLS](/postgresql/how-to/connect#connection-ports-and-tls).)
 :::
 
 Once the connection to PostgreSQL is established, use the standard export or import functions of your favourite management tool.
@@ -32,11 +31,17 @@ Once the VPN session is established, you have the secured connection to the proj
 Use [psql ↗](https://www.postgresql.org/docs/current/app-psql.html) command to connect to PostgreSQL in Zerops:
 
 ```sh
-psql -h [hostname] -U [user] -p [password] -d [database_name]
+psql -h [hostname] -U [user] -d [database_name]
+```
+
+`psql` has no password flag — it will prompt you, or you can supply the password non-interactively via the `PGPASSWORD` environment variable:
+
+```sh
+PGPASSWORD=[password] psql -h [hostname] -U [user] -d [database_name]
 ```
 
 :::caution
-Do not use SSL/TLS protocols when connecting to PostgreSQL over VPN. Zerops PostgreSQL is not configured to support these protocols. The security is assured by the VPN.
+Connect to ports `5432`/`5433` without SSL/TLS — the VPN tunnel already encrypts the connection. (TLS is only used on the pgBouncer pooling port `6432`; see [Connection ports and TLS](/postgresql/how-to/connect#connection-ports-and-tls).)
 :::
 
 To export your database data and structure, use the [pg_dump ↗](https://www.postgresql.org/docs/current/backup-dump.html) command.
@@ -45,8 +50,14 @@ To export your database data and structure, use the [pg_dump ↗](https://www.po
 pg_dump [database_name] > dumpfilename.sql
 ```
 
-To import your database data and structure, use the `mysql` command.
+To import your database data and structure from a plain SQL dump, use the `psql` command.
 
 ```sh
-mysql [database_name] < dumpfilename.sql
+psql [database_name] < dumpfilename.sql
+```
+
+For a custom-format dump (created with `pg_dump -Fc`, the format used by [Zerops backups](/postgresql/how-to/backup)), use [pg_restore ↗](https://www.postgresql.org/docs/current/app-pgrestore.html) instead:
+
+```sh
+pg_restore -d [database_name] dumpfilename.dump
 ```
