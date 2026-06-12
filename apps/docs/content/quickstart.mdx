@@ -83,7 +83,7 @@ Click into your new project. You'll see:
 All of these are already talking to each other on a private network. Nothing to configure.
 
 :::tip Coming from Vercel and Supabase?
-You're probably used to copying a long database URL and pasting it as an environment variable. On Zerops, services talk to each other by hostname. `DB_HOST` is just `db`, not a URL. You still set credentials in `zerops.yaml`, Zerops fills in the values. No connection strings to manage.
+On Zerops, services talk to each other by hostname — no connection strings to copy and paste. Your `DB_HOST` is just `db`.
 :::
 
 ---
@@ -100,11 +100,15 @@ When you're ready for production, point a custom domain at your app. Zerops hand
 
 ## 5. Swap in the feedback app
 
-Clone the recipe repo and open it in your editor:
+Start from the recipe template. Click the link below, pick a name for your repo, and hit **Create repository**:
+
+**[github.com/new?template_name=recipe-nodejs&template_owner=zeropsio](https://github.com/new?template_name=recipe-nodejs&template_owner=zeropsio)**
+
+Then clone your new repo and install dependencies:
 
 ```bash
-git clone https://github.com/zeropsio/recipe-nodejs
-cd recipe-nodejs
+git clone https://github.com/your-username/your-repo.git
+cd your-repo
 npm install
 ```
 
@@ -172,6 +176,8 @@ export default app;
 ```
 
 **Create a `public/` folder** at the repo root and add `public/index.html`:
+
+<div style={{maxHeight: '400px', overflowY: 'auto', borderRadius: '8px'}}>
 
 ```html
 <!doctype html>
@@ -400,6 +406,8 @@ export default app;
 </html>
 ```
 
+</div>
+
 The `zerops.yml` already exists in the repo. Update `deployFiles` to include the `public` folder:
 
 ```yaml
@@ -425,9 +433,11 @@ zerops:
       envVariables:
         NODE_ENV: production
         DB_NAME: db
-        DB_HOST: db
-        DB_USER: db
-        DB_PASS: ${db_password}
+        DB_HOST: ${db_hostname}
+        DB_USER: ${db_user}
+        DB_PASSWORD: ${db_password}
+        # or use the full connection string:
+        # DB_CONNECTION_STRING: ${db_connectionString}
       start: npm run start:prod
       healthCheck:
         httpGet:
@@ -435,14 +445,17 @@ zerops:
           path: /status
 ```
 
-Before pushing, point the repo at your own GitHub remote:
+:::tip How Zerops env variables work
+Zerops automatically generates credentials for every managed service. The variable names are derived from the service hostname — so if your database service is named `db`, the variables are `${db_hostname}`, `${db_user}`, `${db_password}`, and `${db_connectionString}`. If you named it `postgres` instead, they'd be `${postgres_hostname}`, `${postgres_password}`, and so on.
+:::
+
+Push to your repo and move on to Step 6 to connect it to Zerops:
 
 ```bash
-git remote set-url origin https://github.com/your-username/your-repo.git
-git push -u origin main
+git add .
+git commit -m "add feedback app"
+git push
 ```
-
-Then move on to Step 6 to connect it to Zerops.
 
 :::note Want to build something else instead?
 Skip the feedback app. Clone the repo, keep the `zerops.yml` as-is, and replace `src/app.ts` with your own routes. The DB connection, build pipeline, and env variables all stay the same.
@@ -503,13 +516,13 @@ Your `node_modules` aren't being deployed. Either:
 Your environment variables aren't set correctly in `zerops.yaml`. Copy this exactly:
 
 ```yaml
-DB_HOST: db
+DB_HOST: ${db_hostname}
+DB_USER: ${db_user}
+DB_PASSWORD: ${db_password}
 DB_NAME: db
-DB_USER: db
-DB_PASS: ${db_password}
 ```
 
-The `${db_password}` syntax is how Zerops pulls in the credentials it auto-generates for your managed database.
+Variable names are derived from your database service hostname. If your db service is named `db`, use `${db_hostname}`, `${db_user}`, `${db_password}`. If you named it something else, swap `db_` for that name.
 
 </TabItem>
 </Tabs>
