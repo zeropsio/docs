@@ -104,7 +104,7 @@ Platform-managed encrypted backups are available for both Single and HA setups. 
 
 ## Memory and Autoscaling
 
-You don't set `maxmemory` directly. Zerops sizes it at **80% of the container's available RAM** &mdash; precisely 80% of the *smaller* of your configured maximum RAM and the cgroup-allocated RAM. It is re-evaluated and adjusted automatically about every 30 seconds, so `maxmemory` tracks the container as it scales vertically (subject to the `noeviction` caveat below). The remaining 20% covers Valkey's internal overhead (fork on AOF rewrite / replica sync, fragmentation) and the OS.
+You don't set `maxmemory` directly. Zerops sizes it at **80% of the container's available RAM** &mdash; precisely 80% of the *smaller* of your configured maximum RAM and the cgroup-allocated RAM. It is re-evaluated and adjusted automatically about every 30 seconds, so `maxmemory` tracks the container as it scales vertically. The remaining 20% covers Valkey's internal overhead (fork on AOF rewrite / replica sync, fragmentation) and the OS.
 
 :::warning Keep minimum free RAM above 20% when customizing autoscaling
 If you edit the autoscaling configuration, keep the **minimum free RAM above 20%**. Zerops caps `maxmemory` at 80% of available RAM, so the dataset alone can never push free RAM below 20%. If your minimum free RAM threshold is at or below 20%, the scale-up trigger may **never fire at all** &mdash; free RAM never crosses it, so the service stays stuck at its current size and starts evicting keys (or rejecting writes under `noeviction`) instead of scaling up. Setting the threshold above 20% lets the dataset's growth toward the 80% cap cross the trigger, so the service scales up in time and keeps headroom for the fork during an AOF rewrite or replica sync. The built-in profiles all keep this threshold above 20%.
@@ -116,9 +116,24 @@ Watch the service's runtime logs for out-of-memory events &mdash; typically the 
 
 ## Tunable Parameters
 
-Two Valkey settings are exposed as **editable** environment variables on the Valkey service. Update them from the service's *Environment variables* page (or via `zcli`/API) and Zerops applies the change live &mdash; **no service restart**, no client reconnect. In HA mode the change is rolled out to every node.
+Two Valkey settings are exposed as **autoscaling profile overrides**. In the GUI, open the service's **Automatic scaling configuration**, click **Adjust scaling** and set them under **Overrides**. Zerops applies the change live &mdash; **no service restart**, no client reconnect. In HA mode the change is rolled out to every node.
 
-### `VALKEY_MAXMEMORY_POLICY`
+To set the parameters at creation time, use `profileOverrides` in your import YAML (a `profile` must be selected to use overrides &mdash; available profiles are `hobby`, `staging` and `production`):
+
+```yaml
+services:
+  - hostname: redis
+    type: valkey:ha@7.2
+    profile: staging
+    profileOverrides:
+      maxmemory-policy: noeviction
+```
+
+:::note Migrating from environment variables
+Services created before profile overrides existed configure these settings via the `VALKEY_MAXMEMORY_POLICY` and `VALKEY_LAZYFREE_LAZY_USER_DEL` environment variables. Those keep working, but once a profile override is set it takes precedence over the environment variable.
+:::
+
+### `maxmemory-policy`
 
 Default: `allkeys-lru`. Controls what Valkey does when the dataset reaches `maxmemory`.
 
@@ -133,15 +148,15 @@ Default: `allkeys-lru`. Controls what Valkey does when the dataset reaches `maxm
 | `volatile-random` | Evict random keys with a TTL | Rarely appropriate |
 | `volatile-ttl` | Evict keys with the shortest remaining TTL | When TTL reflects priority |
 
-:::warning `noeviction` and vertical autoscaling
-With `noeviction`, automatic vertical **scale-down** of the container is disabled &mdash; Valkey cannot free memory through eviction, so a smaller allocation would cause all writes to fail with OOM errors. Scale-up still works normally. Switch to one of the eviction policies above if you want automatic scale-down.
+:::warning `noeviction` and memory pressure
+With `noeviction`, Valkey cannot free memory on its own &mdash; once the dataset reaches `maxmemory`, writes fail with OOM errors until the service scales up or keys are deleted. Make sure your autoscaling limits (maximum RAM) leave enough room for the dataset's growth.
 :::
 
-### `VALKEY_LAZYFREE_LAZY_USER_DEL`
+### `lazyfree-lazy-user-del`
 
-Default: `yes`. Allowed values: `yes`, `no`.
+Default: `true`. Allowed values: `true`, `false`.
 
-When `yes`, client `DEL` commands free memory asynchronously (equivalent to `UNLINK`), keeping Valkey responsive even when deleting very large keys (e.g. a sorted set with millions of members). Set to `no` only if your application specifically relies on synchronous deletes &mdash; the overhead of lazy-free is otherwise negligible.
+When `true`, client `DEL` commands free memory asynchronously (equivalent to `UNLINK`), keeping Valkey responsive even when deleting very large keys (e.g. a sorted set with millions of members). Set to `false` only if your application specifically relies on synchronous deletes &mdash; the overhead of lazy-free is otherwise negligible.
 
 ## Metrics
 
