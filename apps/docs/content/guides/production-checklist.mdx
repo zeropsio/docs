@@ -9,11 +9,11 @@ Before going to production: (1) databases to HA mode, (2) minContainers: 2 on ap
 
 | Item | Dev | Production |
 |------|-----|------------|
-| Mode | `NON_HA` | `HA` (must recreate) |
+| Deployment variant | `:single` | `:ha` (must recreate) |
 | Backups | Optional | Enabled |
 | Connection | Single primary | Primary + read replicas |
 
-**HA is immutable** — cannot switch after creation. Delete and recreate with `mode: HA`.
+**The deployment variant is immutable** — cannot switch after creation. Delete and recreate with the `:ha` type variant (e.g. `postgresql:ha@16`).
 
 ## Application Services
 
@@ -90,8 +90,7 @@ Remove entirely or disable `enableSubdomainAccess`. Use VPN + pgAdmin/DBeaver lo
 
 ```yaml
 - hostname: cache
-  type: valkey@7.2
-  mode: NON_HA  # HA for production
+  type: valkey:single@7.2  # use valkey:ha@7.2 for production
 ```
 
 ## Framework-Specific Production Settings
@@ -136,7 +135,7 @@ Remove entirely or disable `enableSubdomainAccess`. Use VPN + pgAdmin/DBeaver lo
 | CPU mode | `cpuMode: DEDICATED` for consistent performance under load |
 | Environment separation | Separate projects for dev/staging/prod |
 | Stateless design | Sessions in Valkey, uploads in Object Storage — no local state |
-| Database mode | `mode: HA` for all managed services (immutable — plan before creation) |
+| Database variant | `<svc>:ha@<ver>` for all managed services (immutable — plan before creation) |
 | Min containers | `minContainers: 2+` on app services for throughput + crash-tolerance (rolling deploys are already zero-downtime at any count via the default `temporaryShutdown: false` — don't conflate the two) |
 
 ## Health Check Pattern
