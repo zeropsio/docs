@@ -1,9 +1,9 @@
 ---
 title: "Scaling and Autoscaling"
-description: "Zerops autoscales vertically (CPU/RAM/disk) and horizontally (container count). Runtimes support both. Managed services (DB, cache, shared-storage) support vertical only with fixed container count (NON_HA=1, HA=3). Object-storage and Docker have no autoscaling. Extends grammar.md section 9 with mechanics, thresholds, YAML syntax, and common mistakes."
+description: "Zerops autoscales vertically (CPU/RAM/disk) and horizontally (container count). Runtimes support both. Managed services (DB, cache, shared-storage) support vertical only with fixed container count (`:single`=1, `:ha`=3). Object-storage and Docker have no autoscaling. Extends grammar.md section 9 with mechanics, thresholds, YAML syntax, and common mistakes."
 ---
 
-Zerops autoscales vertically (CPU/RAM/disk) and horizontally (container count). Runtimes support both. Managed services (DB, cache, shared-storage) support vertical only with fixed container count (NON_HA=1, HA=3). Object-storage and Docker have no autoscaling. Extends grammar.md section 9 with mechanics, thresholds, YAML syntax, and common mistakes.
+Zerops autoscales vertically (CPU/RAM/disk) and horizontally (container count). Runtimes support both. Managed services (DB, cache, shared-storage) support vertical only with fixed container count (`:single`=1, `:ha`=3). Object-storage and Docker have no autoscaling. Extends grammar.md section 9 with mechanics, thresholds, YAML syntax, and common mistakes.
 
 ## When to Scale Which Way
 
@@ -20,9 +20,9 @@ Zerops autoscales vertically (CPU/RAM/disk) and horizontally (container count). 
 |---|---|---|---|
 | **Runtime** (Node.js, Go, PHP, Python, Java, etc.) | Yes | Yes (1-10 containers) | Full autoscaling |
 | **Linux containers** (Alpine, Ubuntu) | Yes | Yes (1-10 containers) | Same as runtimes |
-| **Managed DB** (PostgreSQL, MariaDB) | Yes | No (fixed: NON_HA=1, HA=3) | Mode immutable after creation |
-| **Managed cache** (Valkey) | Yes | No (fixed: NON_HA=1, HA=3) | Mode immutable after creation |
-| **Shared storage** | Yes (cpu/ram/disk configurable) | No (fixed: NON_HA=1, HA=3) | Accepts verticalAutoscaling in import.yml |
+| **Managed DB** (PostgreSQL, MariaDB) | Yes | No (fixed: `:single`=1, `:ha`=3) | Variant immutable after creation |
+| **Managed cache** (Valkey) | Yes | No (fixed: `:single`=1, `:ha`=3) | Variant immutable after creation |
+| **Shared storage** | Yes (cpu/ram/disk configurable) | No (fixed: `:single`=1, `:ha`=3) | Accepts verticalAutoscaling in import.yml |
 | **Object storage** | No | No | Fixed size at creation, no verticalAutoscaling |
 | **Docker** | No (manual, triggers VM restart) | Manual only (change VM count, triggers restart) | No automatic autoscaling |
 
@@ -111,12 +111,12 @@ Applies to **runtimes and Linux containers only**. New containers are added when
 
 ### Managed Services (DB, Cache, Shared Storage)
 
-Container count is **fixed by deployment mode**, set at creation, **immutable**:
+Container count is **fixed by the deployment variant** (`:single` / `:ha` in the type), set at creation, **immutable**:
 
-| Mode | Containers | Use case |
+| Variant | Containers | Use case |
 |---|---|---|
-| `NON_HA` | 1 | Development, non-critical |
-| `HA` | 3 (on separate physical machines) | Production, automatic failover |
+| `<svc>:single` | 1 | Development, non-critical |
+| `<svc>:ha` | 3 (on separate physical machines) | Production, automatic failover |
 
 HA recovery: failed container is disconnected, new one created on different hardware, data synchronized from healthy copies, failed container removed.
 
@@ -154,8 +154,8 @@ services:
 
   # Managed DB (vertical only, no container settings)
   - hostname: db
-    type: postgresql@16
-    mode: HA
+    type: postgresql:ha@16
+    profile: oltp-production
     verticalAutoscaling:
       cpuMode: DEDICATED
       minCpu: 1

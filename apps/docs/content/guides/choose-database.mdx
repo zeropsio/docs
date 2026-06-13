@@ -3,7 +3,7 @@ title: "Choosing a Database on Zerops"
 description: "**Use PostgreSQL** for everything unless you have a specific reason not to. It's the best-supported database on Zerops with full HA, read replicas, and pgBouncer."
 ---
 
-**Use PostgreSQL** for everything unless you have a specific reason not to — the best-supported database on Zerops, with optional HA, read replicas, and pgBouncer. Default mode is **NON_HA** (single node); HA is opt-in and immutable after creation.
+**Use PostgreSQL** for everything unless you have a specific reason not to — the best-supported database on Zerops, with optional HA, read replicas, and pgBouncer. HA vs single node is set in the type (`postgresql:single@<ver>` / `postgresql:ha@<ver>`) and is immutable; legacy `mode: NON_HA`/`HA` is deprecated (`NON_HA` ≡ `:single`, `HA` ≡ `:ha`).
 
 ## Decision Matrix
 
@@ -15,6 +15,7 @@ description: "**Use PostgreSQL** for everything unless you have a specific reaso
 
 ## PostgreSQL (Default Choice)
 
+- Type + scaling: `postgresql:single@<ver>` (single node, dev) or `postgresql:ha@<ver>` (HA cluster). Add a `profile` (scaling tier): `oltp-hobby` for dev — lowest cost — up to `oltp-production` / `oltp-enterprise` for production. Omitting it applies the default (single → `oltp-staging`, HA → `oltp-production`). See [PostgreSQL scaling](/postgresql/how-to/scale)
 - Connection: the generated `${connectionString}` is `postgresql://${user}:${password}@${hostname}:5432` (no database path). Append `/${dbName}` yourself if your driver needs one — the db-name var is `dbName` (default `db`)
 
 ## MariaDB
