@@ -14,6 +14,7 @@ description: "**Use Valkey.** KeyDB development has stalled and is effectively d
 ## Valkey (Default Choice)
 
 - Redis-compatible drop-in replacement
-- Type: `valkey:single@7.2` (single) or `valkey:ha@7.2` (HA) — only v7.2 is supported (the platform rejects `valkey@8` at import, `serviceStackTypeNotFound`)
-- Profile (scaling tier): `hobby` for dev, `staging` for production; escalate to `production` only on a clear load signal
-- Connection: `redis://${hostname}:6379` — Valkey runs **unauthenticated** on Zerops; there are NO `user`/`password` env vars. Do **not** template `${cache_user}`/`${cache_password}` — they don't exist and produce a broken DSN
+- **HA vs single → the `type` variant:** `valkey:single@7.2` (default) / `valkey:ha@7.2`. Only `7.2` exists — the platform rejects `valkey@8` (`serviceStackTypeNotFound`).
+- **Scaling tier → the `profile` field:** `hobby` / `staging` *(default)* / `production`. Recommend `hobby` for dev (cheapest), `staging` for production; escalate to `production` only on a clear load signal. Omitting `profile` applies `staging`.
+- **Legacy form** (older YAML / existing services): `type: valkey@7.2` + `mode:` — `mode: NON_HA` ≡ `:single`, `mode: HA` ≡ `:ha`. Still accepted (remaps to the variant) but `mode` is deprecated; author new YAML as the variant + profile.
+- Connection: Valkey **requires auth** on Zerops — use `${cache_connectionString}` (full auth'd URL) or supply `${cache_password}` (e.g. `REDIS_PASSWORD: ${cache_password}`). There is no separate `${cache_user}` (default user + password); an unauthenticated `redis://${hostname}:6379` fails with `NOAUTH Authentication required`.

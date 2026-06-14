@@ -3,7 +3,7 @@ title: "Scaling and Autoscaling"
 description: "Zerops autoscales vertically (CPU/RAM/disk) and horizontally (container count). Runtimes support both. Managed services (DB, cache, shared-storage) support vertical only with fixed container count (`:single`=1, `:ha`=3). Object-storage and Docker have no autoscaling. Extends grammar.md section 9 with mechanics, thresholds, YAML syntax, and common mistakes."
 ---
 
-Zerops autoscales vertically (CPU/RAM/disk) and horizontally (container count). Runtimes support both. Managed services (DB, cache, shared-storage) support vertical only with fixed container count (`:single`=1, `:ha`=3). Object-storage and Docker have no autoscaling. Extends grammar.md section 9 with mechanics, thresholds, YAML syntax, and common mistakes.
+Zerops autoscales vertically (CPU/RAM/disk) and horizontally (container count). Runtimes support both. Managed services (DB, cache, shared-storage) support vertical only with fixed container count (the `:single` type variant = 1 node, `:ha` = 3). Object-storage and Docker have no autoscaling. Extends grammar.md section 9 with mechanics, thresholds, YAML syntax, and common mistakes.
 
 ## When to Scale Which Way
 
@@ -111,12 +111,14 @@ Applies to **runtimes and Linux containers only**. New containers are added when
 
 ### Managed Services (DB, Cache, Shared Storage)
 
-Container count is **fixed by the deployment variant** (`:single` / `:ha` in the type), set at creation, **immutable**:
+Container count is **fixed by the deployment variant in the type** (`postgresql:single@18` / `postgresql:ha@18`), set at creation, **immutable**:
 
 | Variant | Containers | Use case |
 |---|---|---|
-| `<svc>:single` | 1 | Development, non-critical |
-| `<svc>:ha` | 3 (on separate physical machines) | Production, automatic failover |
+| `:single` | 1 | Development, non-critical |
+| `:ha` | 3 (on separate physical machines) | Production, automatic failover |
+
+**Legacy form** you may still see in older YAML: a separate `mode:` field — `mode: NON_HA` ≡ `:single`, `mode: HA` ≡ `:ha`. Still accepted (remapped to the variant) but deprecated and ignored by validation.
 
 HA recovery: failed container is disconnected, new one created on different hardware, data synchronized from healthy copies, failed container removed.
 
@@ -155,7 +157,6 @@ services:
   # Managed DB (vertical only, no container settings)
   - hostname: db
     type: postgresql:ha@16
-    profile: oltp-production
     verticalAutoscaling:
       cpuMode: DEDICATED
       minCpu: 1

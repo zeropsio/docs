@@ -3,17 +3,20 @@ title: "Production Checklist for Zerops"
 description: "Before going to production: (1) databases to HA mode, (2) minContainers: 2 on app services, (3) replace Mailpit with real SMTP, (4) remove Adminer, (5) use Object Storage for uploads, (6) use Redis/Valkey for sessions."
 ---
 
-Before going to production: (1) databases to HA mode, (2) minContainers: 2 on app services, (3) replace Mailpit with real SMTP, (4) remove Adminer, (5) use Object Storage for uploads, (6) use Valkey for sessions.
+Before going to production: (1) databases to HA (the `:ha` type variant), (2) minContainers: 2 on app services, (3) replace Mailpit with real SMTP, (4) remove Adminer, (5) use Object Storage for uploads, (6) use Valkey for sessions.
 
 ## Database
 
 | Item | Dev | Production |
 |------|-----|------------|
-| Deployment variant | `:single` | `:ha` (must recreate) |
+| Deployment variant | `:single` (e.g. `postgresql:single@18`) | `:ha` (e.g. `postgresql:ha@18`) — must recreate |
+| Scaling profile | `oltp-hobby` | `oltp-staging` (escalate to `oltp-production` only on clear load) |
 | Backups | Optional | Enabled |
 | Connection | Single primary | Primary + read replicas |
 
-**The deployment variant is immutable** — cannot switch after creation. Delete and recreate with the `:ha` type variant (e.g. `postgresql:ha@16`).
+**HA is immutable** — cannot switch after creation. Delete and recreate with the `:ha` variant.
+
+**Legacy form** you may still see in older YAML or existing services: `type: postgresql@18` + a separate `mode:` field — `mode: NON_HA` ≡ `:single`, `mode: HA` ≡ `:ha`. Still accepted (remapped to the variant) but `mode` is deprecated and ignored by validation; author new YAML in the variant form.
 
 ## Application Services
 
@@ -90,7 +93,7 @@ Remove entirely or disable `enableSubdomainAccess`. Use VPN + pgAdmin/DBeaver lo
 
 ```yaml
 - hostname: cache
-  type: valkey:single@7.2  # use valkey:ha@7.2 for production
+  type: valkey:single@7.2  # valkey:ha@7.2 for production
 ```
 
 ## Framework-Specific Production Settings
@@ -135,7 +138,7 @@ Remove entirely or disable `enableSubdomainAccess`. Use VPN + pgAdmin/DBeaver lo
 | CPU mode | `cpuMode: DEDICATED` for consistent performance under load |
 | Environment separation | Separate projects for dev/staging/prod |
 | Stateless design | Sessions in Valkey, uploads in Object Storage — no local state |
-| Database variant | `<svc>:ha@<ver>` for all managed services (immutable — plan before creation) |
+| Database HA | the `:ha` type variant for all HA-capable managed services (immutable — plan before creation) |
 | Min containers | `minContainers: 2+` on app services for throughput + crash-tolerance (rolling deploys are already zero-downtime at any count via the default `temporaryShutdown: false` — don't conflate the two) |
 
 ## Health Check Pattern

@@ -3,7 +3,7 @@ title: "Choosing a Database on Zerops"
 description: "**Use PostgreSQL** for everything unless you have a specific reason not to. It's the best-supported database on Zerops with full HA, read replicas, and pgBouncer."
 ---
 
-**Use PostgreSQL** for everything unless you have a specific reason not to — the best-supported database on Zerops, with optional HA, read replicas, and pgBouncer. HA vs single node is set in the type (`postgresql:single@<ver>` / `postgresql:ha@<ver>`) and is immutable; legacy `mode: NON_HA`/`HA` is deprecated (`NON_HA` ≡ `:single`, `HA` ≡ `:ha`).
+**Use PostgreSQL** for everything unless you have a specific reason not to — the best-supported database on Zerops, with optional HA, read replicas, and pgBouncer.
 
 ## Decision Matrix
 
@@ -11,17 +11,51 @@ description: "**Use PostgreSQL** for everything unless you have a specific reaso
 |------|--------|-----|
 | **General-purpose** | **PostgreSQL** (default) | Optional HA, read replicas, pgBouncer, best Zerops support |
 | MySQL compatibility | MariaDB | MaxScale routing, async replication |
-| Analytics / OLAP | ClickHouse | Columnar storage, ReplicatedMergeTree, 4 protocol ports |
+| Analytics / OLAP | ClickHouse | Columnar storage, ReplicatedMergeTree |
 
-## PostgreSQL (Default Choice)
+## PostgreSQL — two import-YAML choices, both fixed for the service's life
 
-- Type + scaling: `postgresql:single@<ver>` (single node, dev) or `postgresql:ha@<ver>` (HA cluster). Add a `profile` (scaling tier) — set it explicitly and escalate only on a clear signal: `oltp-hobby` for dev, `oltp-staging` for production, moving up to `oltp-production` / `oltp-enterprise` only when load clearly needs it. Omitting it applies the default (single → `oltp-staging`, HA → `oltp-production` = dedicated CPU). See [PostgreSQL scaling](/postgresql/how-to/scale)
-- Connection: the generated `${connectionString}` is `postgresql://${user}:${password}@${hostname}:5432` (no database path). Append `/${dbName}` yourself if your driver needs one — the db-name var is `dbName` (default `db`)
+**1. HA vs single node → the `type` variant** (NOT a `mode:` field):
+
+- `postgresql:single@<ver>` — one node. Default for dev and most apps.
+- `postgresql:ha@<ver>` — 3-node cluster + proxies. Production-grade; resources start at the production tier.
+
+**2. Scaling tier → the `profile` field** (autoscaling envelope + PostgreSQL tuning preset):
+
+| Workload | `:single` profile | `:ha` profile |
+|---|---|---|
+| dev / prototype / learning — cheapest | **`oltp-hobby`** | — (HA has no hobby) |
+| staging / early-stage app | `oltp-staging` *(single default)* | `oltp-staging` |
+| business-critical transactional | `oltp-production` | `oltp-production` *(HA default)* |
+| high-throughput OLTP at scale | — | `oltp-enterprise` |
+| analytics / warehouse | `olap-production` | `olap-production` |
+| ingestion / write-heavy | `writeheavy-production` | `writeheavy-production` |
+
+**Recommended defaults — set `profile` explicitly; escalate only on a clear signal:** dev → `postgresql:single@<ver>` + `profile: oltp-hobby` (lowest cost); production → `profile: oltp-staging` (move to `oltp-production` / `oltp-enterprise` only when load clearly warrants it). Omitting `profile` applies the default — single → `oltp-staging`, **HA → `oltp-production` (dedicated CPU + high minima)** — which over-provisions HA.
+
+```yaml
+services:
+  - hostname: db                  # dev — cheapest
+    type: postgresql:single@18
+    profile: oltp-hobby
+  - hostname: db                  # production HA — default tier (profile optional)
+    type: postgresql:ha@18
+    profile: oltp-production
+```
+
+- `profileOverrides` (individual params: `work_mem`, `max_wal_size`, `autovacuum_*`, …) is valid **only** with `profile: custom`.
+- `verticalAutoscaling` (CPU mode, min/max CPU/RAM/disk) tightens the envelope on top of any profile — no need for `custom` just to resize.
+
+**Legacy form — you may still meet it** in older YAML, recipes, or existing services: `type: postgresql@<ver>` + a separate `mode:` field. The mapping is `mode: NON_HA` ≡ `:single`, `mode: HA` ≡ `:ha`. The platform still accepts the legacy form (it remaps to the variant) but `mode` is **deprecated and ignored by validation**. Author new YAML as `:single`/`:ha` + `profile`; treat a discovered `mode:` as its equivalent variant.
+
+- Connection: the generated `${connectionString}` is `postgresql://${user}:${password}@${hostname}:5432` (no database path). Append `/${dbName}` yourself if your driver needs one — the db-name var is `dbName` (default `db`).
 
 ## MariaDB
 
-- Connection: the generated `${connectionString}` is `mysql://${user}:${password}@${hostname}:3306` (no database path); append `/${dbName}` if your driver needs one
+- Type variant: `mariadb:single@<ver>` / `mariadb:ha@<ver>`. No `profile` — scale with `verticalAutoscaling`.
+- Connection: the generated `${connectionString}` is `mysql://${user}:${password}@${hostname}:3306` (no database path); append `/${dbName}` if your driver needs one.
 
 ## ClickHouse
 
-- HA: replicated databases use a `Replicated(...)` engine `ON CLUSTER`; tables use a `Replicated*MergeTree` engine (without `ON CLUSTER`)
+- Type variant: `clickhouse:single@<ver>` / `clickhouse:ha@<ver>`. No `profile` — scale with `verticalAutoscaling`.
+- HA: replicated databases use a `Replicated(...)` engine `ON CLUSTER`; tables use a `Replicated*MergeTree` engine (without `ON CLUSTER`).
