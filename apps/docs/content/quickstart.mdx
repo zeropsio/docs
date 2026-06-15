@@ -8,22 +8,18 @@ sidebar_position: 1
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Video from '@site/src/components/Video';
+import Image from '/src/components/Image';
 
-With this guide, we'll go from zero to a live app with a managed database, a public URL, and auto-deploy on every git push. Takes about 5 minutes.
+In the next 5 minutes, we'll go from zero to a live app: a managed database, a public URL, and auto-deploy on every git push, all set up for you.
 
-Here's what we're building together: a page with a button that says **"I followed the Zerops quickstart"**. Every developer who finishes this guide and clicks it gets counted. It's a real app: Express backend, PostgreSQL database, static frontend, all running on **Zerops**.
+Here's what we're building together: a page with a button that says **"I followed the Zerops quickstart"**. Every developer who finishes this guide and clicks it gets added to the wall. It's a real app, Express backend, PostgreSQL database, static frontend, running entirely on **Zerops**.
 
-**See it live before you build it:** [app-25be-3000.prg1.zerops.app](https://app-25be-3000.prg1.zerops.app/)
+Curious what you'll end up with? Here it is, live: [app-25be-3000.prg1.zerops.app](https://app-25be-3000.prg1.zerops.app/)
+
 <Video
   src="/vids/quickstart-app.webm"
   type="video/webm"
 />
-
-:::info Two ways to use this guide
-**Just want to see how Zerops works?** Follow along as-is. The feedback app covers everything: frontend, backend, managed database, private networking, auto-deploy.
-
-**Already have an app?** Pick a recipe matching your stack in Step 1 instead of Node.js. The steps are identical. Then in Step 5, replace the feedback app code with your own. The `zerops.yml` structure stays the same.
-:::
 
 :::tip Before we start
 Sign up at [app.zerops.io](https://app.zerops.io). You get $15 in promo credits on signup, no credit card needed. Verify your account with a $10 payment and get an additional $50, bringing your total to $65 in credits. A simple app with a database costs roughly $3-5/month, so credits go a long way.
@@ -39,14 +35,16 @@ For this guide, find and click **Node.js**. You'll see **Node.js Hello World**, 
 
 Hit **Deploy nodejs-hello-world-small-prod**. If you're not signed in yet, Zerops creates your account and kicks off the deploy in the same step.
 
-![Recipe pre-deploy breakdown showing services, resource sizes and exact price](/img/screenshots/recipe-predeploy-breakdown.png)
+<figure style={{ textAlign: 'center', margin: '1rem 0' }}>
+  <Image
+    lightImage="/img/screenshots/recipe-predeploy-breakdown.png"
+    alt="Recipe pre-deploy breakdown showing services, resource sizes and exact price"
+    style={{ width: '50%', maxWidth: '480px', height: 'auto' }}
+  />
+</figure>
 
 :::info What's a recipe?
-A recipe is a working app with infrastructure already configured: managed database, environment variables, `zerops.yaml`, everything connected. It's a correct starting point, not a finished product. We'll swap the code out in Step 5.
-:::
-
-:::note Want a different stack?
-Everything in this guide works the same way for Next.js, Python, Go, Laravel, and more. Just pick the recipe that matches your stack instead. The steps are identical.
+A recipe is a working app with infrastructure already configured: managed database, environment variables, `zerops.yaml`, everything connected. It's a correct starting point, not a finished product.
 :::
 
 ---
@@ -81,24 +79,42 @@ Click into your new project. You'll see:
 - **Project core**: load balancer, firewall, logger, all managed by Zerops
 
 All of these are already talking to each other on a private network. Nothing to configure.
-
-:::tip Coming from Vercel and Supabase?
-On Zerops, services talk to each other by hostname — no connection strings to copy and paste. Your `DB_HOST` is just `db`.
-:::
+![Project dashboard showing the app and db services running side by side](/img/screenshots/project-services-overview.png)
 
 ---
 
 ## 4. Open your live app
 
-The Zerops subdomain is already enabled when you deploy from a recipe. Click into your **app** service and open the URL. It looks something like `app-2437-3000.prg1.zerops.app`.
+The Zerops subdomain is already enabled when you deploy from a recipe. Click into your **app** service and open the URL.
 
-The default recipe app will be there. Next step, we replace it with the feedback app.
+The default recipe app will be there.
 
 When you're ready for production, point a custom domain at your app. Zerops handles the SSL certificate automatically.
 
 ---
 
-## 5. Swap in the feedback app
+## You're live 🎉
+
+Here's what's running:
+
+- A real app on production infrastructure
+- A managed PostgreSQL database with no setup, no connection strings, no SDK
+- All services on a private network, secure by default
+- Full Linux containers you can SSH into and install anything on
+
+None of the infrastructure needed manual configuration.
+
+:::note Stuck?
+Jump into the [Zerops Discord](https://docs.zerops.io/discord). The community is active and the team is there.
+:::
+
+---
+
+## Going further: make it yours
+
+The guided part ends here. Everything below is for when you're ready to swap this recipe for your own code, the feedback app we showed you at the top, or whatever you're building.
+
+### Deploy the feedback app
 
 Start from the recipe template. Click the link below, pick a name for your repo, and hit **Create repository**:
 
@@ -134,6 +150,7 @@ export const connectDB = async () => {
   await client.query(`
     CREATE TABLE IF NOT EXISTS clicks (
       id SERIAL PRIMARY KEY,
+      seed INTEGER NOT NULL,
       clicked_at TIMESTAMPTZ DEFAULT NOW()
     )
   `);
@@ -155,17 +172,24 @@ app.use(express.static(path.join(__dirname, '../public')));
 
 app.get('/count', async (_, res) => {
   const client = await connectDB();
-  const result = await client.query('SELECT COUNT(*) FROM clicks');
+  const result = await client.query(
+    'SELECT seed FROM clicks ORDER BY id ASC LIMIT 20'
+  );
+  const countResult = await client.query('SELECT COUNT(*) FROM clicks');
   await client.end();
-  res.json({ count: parseInt(result.rows[0].count) });
+  res.json({
+    count: parseInt(countResult.rows[0].count),
+    seeds: result.rows.map((r) => r.seed),
+  });
 });
 
 app.post('/click', async (_, res) => {
   const client = await connectDB();
-  await client.query('INSERT INTO clicks DEFAULT VALUES');
-  const result = await client.query('SELECT COUNT(*) FROM clicks');
+  const seed = Math.floor(Math.random() * 1000000);
+  await client.query('INSERT INTO clicks (seed) VALUES ($1)', [seed]);
+  const countResult = await client.query('SELECT COUNT(*) FROM clicks');
   await client.end();
-  res.json({ count: parseInt(result.rows[0].count) });
+  res.json({ count: parseInt(countResult.rows[0].count), seed });
 });
 
 app.get('/status', (_, res) => {
@@ -369,35 +393,43 @@ export default app;
       }
 
       function addAvatar(seed, animate) {
+        if (seed === undefined || seed === null || Number.isNaN(seed)) return;
+
         const av = document.createElement('div');
-        av.className = 'avatar' + (animate ? '' : ' visible');
+        av.className = 'avatar';
         av.style.background = colors[seed % colors.length];
         av.textContent = initials(seed);
-        av.title = 'builder_' + (1000 + seed);
+        av.title = 'builder_' + (1000 + (seed % 1000));
         avatarsEl.appendChild(av);
-        if (animate)
-          requestAnimationFrame(() =>
-            requestAnimationFrame(() => av.classList.add('visible'))
-          );
+
+        if (animate) {
+          // Force a reflow so the browser registers the initial (hidden) state
+          // before we add the class that triggers the transition.
+          void av.offsetWidth;
+          requestAnimationFrame(() => {
+            av.classList.add('visible');
+          });
+        } else {
+          av.classList.add('visible');
+        }
       }
 
       async function loadCount() {
         const res = await fetch('/count');
-        const { count } = await res.json();
+        const { count, seeds } = await res.json();
         countEl.textContent = count;
         countLabel.textContent = `developer${count === 1 ? '' : 's'} deployed this`;
-        for (let i = 0; i < Math.min(count, 20); i++)
-          addAvatar(i * 3 + 5, false);
+        (seeds || []).forEach((seed) => addAvatar(seed, false));
       }
 
       btn.addEventListener('click', async () => {
         btn.disabled = true;
         const res = await fetch('/click', { method: 'POST' });
-        const { count } = await res.json();
+        const { count, seed } = await res.json();
         countEl.textContent = count;
         countLabel.textContent = `developer${count === 1 ? '' : 's'} deployed this`;
         btn.textContent = "🎉 You're in!";
-        addAvatar(count, true);
+        addAvatar(seed, true);
       });
 
       loadCount();
@@ -449,7 +481,7 @@ zerops:
 Zerops automatically generates credentials for every managed service. The variable names are derived from the service hostname — so if your database service is named `db`, the variables are `${db_hostname}`, `${db_user}`, `${db_password}`, and `${db_connectionString}`. If you named it `postgres` instead, they'd be `${postgres_hostname}`, `${postgres_password}`, and so on.
 :::
 
-Push to your repo and move on to Step 6 to connect it to Zerops:
+Push to your repo and connect GitHub in the next section.
 
 ```bash
 git add .
@@ -458,12 +490,10 @@ git push
 ```
 
 :::note Want to build something else instead?
-Skip the feedback app. Clone the repo, keep the `zerops.yml` as-is, and replace `src/app.ts` with your own routes. The DB connection, build pipeline, and env variables all stay the same.
+Skip the feedback app. Pick the recipe matching your stack from [app.zerops.io/recipes](https://app.zerops.io/recipes), add a `zerops.yaml` to your repo root copying the structure from the recipe, and adjust `buildCommands`, `deployFiles`, and `start` for your stack. The database env variables (`${db_hostname}`, `${db_user}`, `${db_password}`) stay the same regardless of what you're building.
 :::
 
----
-
-## 6. Connect GitHub and auto-deploy
+### Connect GitHub and auto-deploy
 
 1. Click into your **app** service
 2. Scroll down to **Pipelines & CI/CD settings**
@@ -476,25 +506,15 @@ That's it. Every push to main now builds and deploys automatically. Zero downtim
 
 You can also trigger deploys manually with the Zerops CLI: `zcli push`.
 
----
+### Add yourself to the list
 
-## You're live 🎉
+Followed this tutorial and deployed your app?
 
-Open your app URL. You should see the feedback button app: a big button, a live click count pulled from the database, all running on Zerops.
+Open our live app URL and click **"I followed the Zerops quickstart"**. You'll show up alongside everyone else who's made it through.
 
-Here's what's running:
+Check out everyone who's already made it: [app-25be-3000.prg1.zerops.app](https://app-25be-3000.prg1.zerops.app/)
 
-- A real app on production infrastructure
-- A managed PostgreSQL database with no setup, no connection strings, no SDK
-- Auto-deploy on every git push with zero downtime
-- All services on a private network, secure by default
-- Full Linux containers you can SSH into and install anything on
-
-None of the infrastructure needed manual configuration.
-
----
-
-## If something breaks
+### If something breaks
 
 Got a 502 or an app crash on startup? Start here.
 
@@ -531,16 +551,10 @@ Variable names are derived from your database service hostname. If your db servi
 Install zcli first (see [CLI reference](/references/cli)), then run `zcli vpn up [your-project-id]` and your laptop joins the project's private network. You can connect to `db:5432` directly from your local machine using TablePlus, psql, or any database client. Disable SSL when connecting over VPN, security is handled by the tunnel itself. If `db` doesn't resolve, try `db.zerops` instead.
 :::
 
----
-
-## What's next
+### What's next
 
 - **[SSH into your container](/references/networking/ssh)**: `zcli service shell [service-name]` for full Linux access
 - **[Custom domain](/references/networking/public-access)**: add your domain, SSL is automatic
 - **[Autoscaling](/features/scaling)**: set min and max CPU and RAM, Zerops scales within that range automatically
 - **[Add more services](/features/infrastructure)**: queues, search engines, object storage, just add them to your project
 - **[Try ZCP](/zcp/quickstart)**: Zerops' AI agent that can deploy, debug, and operate your project
-
-:::note Stuck?
-Jump into the [Zerops Discord](https://docs.zerops.io/discord). The community is active and the team is there.
-:::
