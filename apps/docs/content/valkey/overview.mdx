@@ -142,7 +142,7 @@ Watch the service's runtime logs for out-of-memory events &mdash; typically the 
 
 ## Tunable Parameters
 
-Two Valkey settings are exposed as **autoscaling profile overrides**. In the GUI, open the service's **Automatic scaling configuration**, click **Adjust scaling** and set them under **Overrides**. Zerops applies the change live &mdash; **no service restart**, no client reconnect. In HA mode the change is rolled out to every node.
+The `maxmemory-policy` Valkey setting is exposed as an **autoscaling profile override**. In the GUI, open the service's **Automatic scaling configuration**, click **Adjust scaling** and set them under **Overrides**. Zerops applies the change live &mdash; **no service restart**, no client reconnect. In HA mode the change is rolled out to every node.
 
 To set the parameters at creation time, use `profileOverrides` in your import YAML (a `profile` must be selected to use overrides &mdash; available profiles are `hobby`, `staging` and `production`):
 
@@ -156,7 +156,7 @@ services:
 ```
 
 :::note Migrating from environment variables
-Services created before profile overrides existed configure these settings via the `VALKEY_MAXMEMORY_POLICY` and `VALKEY_LAZYFREE_LAZY_USER_DEL` environment variables. Those keep working, but once a profile override is set it takes precedence over the environment variable.
+Services created before profile overrides existed configure this setting via the `VALKEY_MAXMEMORY_POLICY` environment variable. It keeps working, but once a profile override is set it takes precedence over the environment variable.
 :::
 
 ### `maxmemory-policy`
@@ -177,12 +177,6 @@ Default: `allkeys-lru`. Controls what Valkey does when the dataset reaches `maxm
 :::warning `noeviction` and memory pressure
 With `noeviction`, Valkey cannot free memory on its own &mdash; once the dataset reaches `maxmemory`, writes fail with OOM errors until the service scales up or keys are deleted. Make sure your autoscaling limits (maximum RAM) leave enough room for the dataset's growth.
 :::
-
-### `lazyfree-lazy-user-del`
-
-Default: `true`. Allowed values: `true`, `false`.
-
-When `true`, client `DEL` commands free memory asynchronously (equivalent to `UNLINK`), keeping Valkey responsive even when deleting very large keys (e.g. a sorted set with millions of members). Set to `false` only if your application specifically relies on synchronous deletes &mdash; the overhead of lazy-free is otherwise negligible.
 
 ## Metrics
 
