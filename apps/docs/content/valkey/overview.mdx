@@ -85,7 +85,33 @@ Valkey requires a password. It is generated automatically, exposed as the sensit
 Services created **without** a `password` variable (older deployments) keep working without authentication and are unaffected. **All deployments created since this release require the password.**
 :::
 
-Idle connections are closed after 5 minutes of inactivity. Use a client connection pool or TCP keep-alive if your application holds long-lived idle connections.
+### Idle connection timeout
+
+Valkey closes connections that stay **idle for 5 minutes** (`timeout 300`). This is intentional on the managed instances &mdash; we avoid keeping infinite idle connections open. Older Valkey services ran with no timeout (`timeout 0`); if you connected before this change, your connections used to stay open indefinitely.
+
+"Idle" means **no commands sent on the connection** &mdash; the server resets the timer on every command, so a busy connection is never closed. The connections most likely to be affected are long-lived ones that sit waiting rather than sending commands, typically **pub/sub subscribers** and **blocking reads** (`BLPOP`, `XREAD`, …). Most clients reconnect automatically, so you may only see log lines such as `Redis subscriber socket closed; reconnecting if possible.` &mdash; but the reconnect churn can drop pub/sub messages published in the gap.
+
+To keep idle connections open, send an application-level **`PING` on an interval shorter than 300s**. A TCP keep-alive alone is **not** enough &mdash; keepalive packets live below the application layer and don't count as Valkey commands, so they don't reset the idle timer.
+
+Many clients have a built-in option for this. For example, [node-redis](https://github.com/redis/node-redis):
+
+```js
+const redisClient = createClient({
+  url: redisURL,
+  pingInterval: 10000, // send PING every 10s; keeps the connection under the 300s idle limit
+});
+```
+
+If your client has no equivalent option, run your own heartbeat on every long-lived connection:
+
+```js
+const heartbeat = setInterval(() => {
+  publisher.ping().catch(() => {});
+  subscriber.ping().catch(() => {});
+}, 60000); // any interval under 300s
+```
+
+For ordinary request/response traffic, a [connection pool](https://valkey.io/topics/clients/) that recycles connections handles this transparently.
 
 ## Persistence
 
