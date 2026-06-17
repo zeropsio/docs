@@ -28,7 +28,7 @@ module.exports = {
     },
     {
       type: 'doc',
-      id: 'quickstart',
+      id: 'quickstart/quickstart',
       label: 'Quickstart',
       customProps: {
         sidebar_icon: 'rocket-launch',

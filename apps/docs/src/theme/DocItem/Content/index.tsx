@@ -8,6 +8,8 @@ import type { Props } from '@theme/DocItem/Content';
 import { DocContextValue } from '@medusajs/docs';
 import { Badge, BadgeVariant } from 'docs-ui';
 import Head from '@docusaurus/Head';
+import { usePluginData } from '@docusaurus/useGlobalData';
+import type { OgImagesPluginData } from '@site/src/plugins/og-images/types';
 
 /**
  Title can be declared inside md content or declared through
@@ -34,6 +36,13 @@ export default function DocItemContent({ children }: Props): JSX.Element {
     frontMatter: { badge, description, image },
     metadata,
   } = useDoc() as DocContextValue;
+  const { ogImageByDocId } = usePluginData(
+    'docusaurus-plugin-og-images',
+  ) as OgImagesPluginData;
+  const ogImage =
+    image ??
+    ogImageByDocId[metadata.id] ??
+    'https://docs.zerops.io/img/docs-meta.jpg';
   const syntheticTitle = useSyntheticTitle();
 
   return (
@@ -41,14 +50,14 @@ export default function DocItemContent({ children }: Props): JSX.Element {
       <Head>
         <title>{metadata.title}</title>
         {description && <meta name="description" content={description} />}
-        <meta property="og:image" content={image} />
+        <meta property="og:image" content={ogImage} />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://docs.zerops.io" />
 
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={metadata.title} />
         <meta name="twitter:description" content={description} />
-        <meta name="twitter:image" content={image} />
+        <meta name="twitter:image" content={ogImage} />
         <meta name="twitter:url" content="https://docs.zerops.io" />
       </Head>
 
