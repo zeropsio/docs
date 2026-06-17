@@ -22,8 +22,10 @@ module.exports = function ogImagesPlugin(context) {
     name: 'docusaurus-plugin-og-images',
 
     async allContentLoaded({ actions, allContent }) {
-      const docsPlugin = allContent['docusaurus-plugin-content-docs'];
-      const loadedVersions = docsPlugin?.loadedVersions;
+      const docsInstances = allContent['docusaurus-plugin-content-docs'] ?? {};
+      const loadedVersions = Object.values(docsInstances).flatMap(
+        (content) => content?.loadedVersions ?? [],
+      );
 
       const ogImageByDocId = {};
 
