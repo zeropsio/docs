@@ -27,13 +27,23 @@ module.exports = {
       className: 'homepage-sidebar-item',
     },
     {
-      type: 'doc',
-      id: 'quickstart/quickstart',
+      type: 'category',
       label: 'Quickstart',
+      link: {
+        type: 'doc',
+        id: 'quickstart/quickstart',
+      },
       customProps: {
         sidebar_icon: 'rocket-launch',
       },
       className: 'homepage-sidebar-item',
+      items: [
+        {
+          type: 'doc',
+          id: 'quickstart/quickstart-going-further',
+          label: 'Deploy Your First App',
+        },
+      ],
     },
     {
       type: 'html',

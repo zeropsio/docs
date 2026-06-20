@@ -31,7 +31,6 @@ const config = {
   ],
   plugins: [
     './src/plugins/markdown-source',
-    './src/plugins/og-images',
     require.resolve("docusaurus-plugin-image-zoom"),
     async function tailwindPlugin() {
       return {

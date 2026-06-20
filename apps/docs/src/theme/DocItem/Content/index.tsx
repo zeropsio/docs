@@ -8,8 +8,7 @@ import type { Props } from '@theme/DocItem/Content';
 import { DocContextValue } from '@medusajs/docs';
 import { Badge, BadgeVariant } from 'docs-ui';
 import Head from '@docusaurus/Head';
-import { usePluginData } from '@docusaurus/useGlobalData';
-import type { OgImagesPluginData } from '@site/src/plugins/og-images/types';
+import { useLocation } from '@docusaurus/router';
 
 /**
  Title can be declared inside md content or declared through
@@ -36,13 +35,10 @@ export default function DocItemContent({ children }: Props): JSX.Element {
     frontMatter: { badge, description, image },
     metadata,
   } = useDoc() as DocContextValue;
-  const { ogImageByDocId } = usePluginData(
-    'docusaurus-plugin-og-images',
-  ) as OgImagesPluginData;
+  const location = useLocation();
   const ogImage =
     image ??
-    ogImageByDocId[metadata.id] ??
-    'https://docs.zerops.io/img/docs-meta.jpg';
+    `https://docs.zerops.io/og?path=${encodeURIComponent(location.pathname)}`;
   const syntheticTitle = useSyntheticTitle();
 
   return (
