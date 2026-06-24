@@ -1,0 +1,460 @@
+---
+title: Deploy Your First App
+description: Swap the recipe for your own code, deploy the feedback app, and connect GitHub for auto-deploy.
+sidebar_label: Deploy Your First App
+slug: /quickstart/deploy-your-first-app
+
+custom_edit_url: null
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+You've got a live app running on Zerops. Now let's make it actually yours.
+
+This page walks you through deploying the feedback app we showed you at the top of the quickstart - a Node.js app with a PostgreSQL database, auto-deploy on every git push, and a wall of everyone who's made it through. If you'd rather skip straight to your own code, there's a note at the bottom for that.
+
+### Deploy the feedback app
+
+Start from the recipe template. Click the link below, pick a name for your repo, and hit **Create repository**:
+
+**[github.com/new?template_name=recipe-nodejs&template_owner=zeropsio](https://github.com/new?template_name=recipe-nodejs&template_owner=zeropsio)**
+
+Then clone your new repo and install dependencies:
+
+```bash
+git clone https://github.com/your-username/your-repo.git
+cd your-repo
+npm install
+```
+
+The repo uses TypeScript. You only need to touch two files: `src/app.ts` and `src/db.ts`. Leave `src/index.ts` and `src/config.ts` exactly as they are.
+
+**Replace `src/db.ts`** with this:
+
+```ts
+import { Client } from 'pg';
+import { config } from './config';
+
+export const connectDB = async () => {
+  const client = new Client({
+    host: config.db.host,
+    port: config.db.port,
+    user: config.db.username,
+    password: config.db.password,
+    database: config.db.database,
+  });
+
+  await client.connect();
+
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS clicks (
+      id SERIAL PRIMARY KEY,
+      seed INTEGER NOT NULL,
+      clicked_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
+
+  return client;
+};
+```
+
+**Replace `src/app.ts`** with this:
+
+```ts
+import express from 'express';
+import path from 'path';
+import { connectDB } from './db';
+
+const app = express();
+
+app.use(express.static(path.join(__dirname, '../public')));
+
+app.get('/count', async (_, res) => {
+  const client = await connectDB();
+  const result = await client.query(
+    'SELECT seed FROM clicks ORDER BY id ASC LIMIT 20'
+  );
+  const countResult = await client.query('SELECT COUNT(*) FROM clicks');
+  await client.end();
+  res.json({
+    count: parseInt(countResult.rows[0].count),
+    seeds: result.rows.map((r) => r.seed),
+  });
+});
+
+app.post('/click', async (_, res) => {
+  const client = await connectDB();
+  const seed = Math.floor(Math.random() * 1000000);
+  await client.query('INSERT INTO clicks (seed) VALUES ($1)', [seed]);
+  const countResult = await client.query('SELECT COUNT(*) FROM clicks');
+  await client.end();
+  res.json({ count: parseInt(countResult.rows[0].count), seed });
+});
+
+app.get('/status', (_, res) => {
+  res.status(200).send({ status: 'UP' });
+});
+
+export default app;
+```
+
+**Create a `public/` folder** at the repo root and add `public/index.html`:
+
+<div style={{maxHeight: '400px', overflowY: 'auto', borderRadius: '8px'}}>
+
+```html
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Zerops Quickstart</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: sans-serif;
+        background: #ffffff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        padding: 3rem 1.5rem;
+      }
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        margin-bottom: 2.5rem;
+        opacity: 0.45;
+      }
+      .logo-dot {
+        width: 18px;
+        height: 18px;
+        background: #3bbdb2;
+        border-radius: 4px;
+      }
+      .logo-text {
+        font-size: 13px;
+        color: #1a1a1a;
+        letter-spacing: 0.06em;
+        font-weight: 600;
+      }
+      h1 {
+        font-size: 1.6rem;
+        font-weight: 500;
+        color: #111;
+        text-align: center;
+        margin-bottom: 0.6rem;
+        line-height: 1.3;
+      }
+      .subtitle {
+        font-size: 0.9rem;
+        color: #777;
+        text-align: center;
+        max-width: 360px;
+        line-height: 1.6;
+        margin-bottom: 2.5rem;
+      }
+      button {
+        background: #3bbdb2;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 0.85rem 1.8rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition:
+          transform 0.1s,
+          background 0.15s;
+        font-family: sans-serif;
+      }
+      button:hover {
+        background: #2ea39a;
+      }
+      button:active {
+        transform: scale(0.97);
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+      .count {
+        margin-top: 1.1rem;
+        font-size: 0.82rem;
+        color: #aaa;
+        text-align: center;
+      }
+      .count-num {
+        color: #3bbdb2;
+        font-weight: 700;
+      }
+      .avatars {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 7px;
+        margin-top: 1.8rem;
+        max-width: 400px;
+      }
+      .avatar {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        font-weight: 700;
+        color: #fff;
+        opacity: 0;
+        transform: scale(0.5);
+        transition:
+          opacity 0.3s,
+          transform 0.3s;
+      }
+      .avatar.visible {
+        opacity: 1;
+        transform: scale(1);
+      }
+      .divider {
+        width: 40px;
+        height: 1px;
+        background: #ddd;
+        margin: 2rem 0 1.2rem;
+      }
+      .stack-pills {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .pill {
+        font-size: 11px;
+        padding: 3px 10px;
+        border-radius: 20px;
+        border: 0.5px solid #d0cec8;
+        color: #999;
+        background: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="logo">
+      <div class="logo-dot"></div>
+      <span class="logo-text">zerops</span>
+    </div>
+    <h1>You made it. 🎉</h1>
+    <p class="subtitle">
+      You just deployed a real app: managed database, private network,
+      auto-deploy. Let us know you made it through.
+    </p>
+    <button id="btn">👋 I followed the Zerops quickstart</button>
+    <p class="count">
+      <span class="count-num" id="count">...</span>
+      <span id="count-label"></span>
+    </p>
+    <div class="avatars" id="avatars"></div>
+    <div class="divider"></div>
+    <div class="stack-pills">
+      <span class="pill">Node.js 20</span>
+      <span class="pill">PostgreSQL 16</span>
+      <span class="pill">Zerops</span>
+    </div>
+
+    <script>
+      const colors = [
+        '#3BBDB2',
+        '#0891b2',
+        '#7c3aed',
+        '#db2777',
+        '#d97706',
+        '#3BBDB2',
+        '#2563eb',
+        '#9333ea',
+      ];
+      const letters = 'ABCDEFGHJKLMNPRSTUVWXYZ';
+      const btn = document.getElementById('btn');
+      const countEl = document.getElementById('count');
+      const countLabel = document.getElementById('count-label');
+      const avatarsEl = document.getElementById('avatars');
+
+      function initials(seed) {
+        return (
+          letters[(seed * 7) % letters.length] +
+          letters[(seed * 13 + 5) % letters.length]
+        );
+      }
+
+      function addAvatar(seed, animate) {
+        if (seed === undefined || seed === null || Number.isNaN(seed)) return;
+
+        const av = document.createElement('div');
+        av.className = 'avatar';
+        av.style.background = colors[seed % colors.length];
+        av.textContent = initials(seed);
+        av.title = 'builder_' + (1000 + (seed % 1000));
+        avatarsEl.appendChild(av);
+
+        if (animate) {
+          void av.offsetWidth;
+          requestAnimationFrame(() => {
+            av.classList.add('visible');
+          });
+        } else {
+          av.classList.add('visible');
+        }
+      }
+
+      async function loadCount() {
+        const res = await fetch('/count');
+        const { count, seeds } = await res.json();
+        countEl.textContent = count;
+        countLabel.textContent = `developer${count === 1 ? '' : 's'} deployed this`;
+        (seeds || []).forEach((seed) => addAvatar(seed, false));
+      }
+
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        const res = await fetch('/click', { method: 'POST' });
+        const { count, seed } = await res.json();
+        countEl.textContent = count;
+        countLabel.textContent = `developer${count === 1 ? '' : 's'} deployed this`;
+        btn.textContent = "🎉 You're in!";
+        addAvatar(seed, true);
+      });
+
+      loadCount();
+    </script>
+  </body>
+</html>
+```
+
+</div>
+
+The `zerops.yml` already exists in the repo. Update `deployFiles` to include the `public` folder:
+
+```yaml
+zerops:
+  - setup: app
+    build:
+      base: nodejs@20
+      prepareCommands:
+        - npm install -g typescript
+      buildCommands:
+        - npm i
+        - npm run build
+      deployFiles:
+        - ./dist
+        - ./node_modules
+        - ./public
+        - ./package.json
+    run:
+      base: nodejs@20
+      ports:
+        - port: 3000
+          httpSupport: true
+      envVariables:
+        NODE_ENV: production
+        DB_NAME: db
+        DB_HOST: ${db_hostname}
+        DB_USER: ${db_user}
+        DB_PASSWORD: ${db_password}
+        # or use the full connection string:
+        # DB_CONNECTION_STRING: ${db_connectionString}
+      start: npm run start:prod
+      healthCheck:
+        httpGet:
+          port: 3000
+          path: /status
+```
+
+:::tip How Zerops env variables work
+Zerops automatically generates credentials for every managed service. The variable names are derived from the service hostname — so if your database service is named `db`, the variables are `${db_hostname}`, `${db_user}`, `${db_password}`, and `${db_connectionString}`. If you named it `postgres` instead, they'd be `${postgres_hostname}`, `${postgres_password}`, and so on.
+:::
+
+Push to your repo and connect GitHub in the next section.
+
+```bash
+git add .
+git commit -m "add feedback app"
+git push
+```
+
+:::note Want to build something else instead?
+Skip the feedback app. Pick the recipe matching your stack from [app.zerops.io/recipes](https://app.zerops.io/recipes), add a `zerops.yaml` to your repo root copying the structure from the recipe, and adjust `buildCommands`, `deployFiles`, and `start` for your stack. The database env variables (`${db_hostname}`, `${db_user}`, `${db_password}`) stay the same regardless of what you're building.
+:::
+
+### Connect GitHub and auto-deploy
+
+1. Click into your **app** service
+2. Scroll down to **Pipelines & CI/CD settings**
+3. Click **GitHub** to connect your repo
+4. Select your repo and set **Trigger on** to **Push to Branch**, pick `main`
+5. In the **"Which `setup` from zerops.yml to use"** field, type `app`
+6. Click **Activate pipeline trigger**
+
+That's it. Every push to main now builds and deploys automatically. Zero downtime, Zerops runs the new version alongside the old one, waits for a health check, then switches traffic over.
+
+You can also trigger deploys manually with the Zerops CLI: `zcli push`.
+
+### Add yourself to the list
+
+Deployed the feedback app? Open your live app URL and click **"I followed the Zerops quickstart"**. You'll show up alongside everyone else who's made it through.
+
+Check out everyone who's already made it: [app-25be-3000.prg1.zerops.app](https://app-25be-3000.prg1.zerops.app/)
+
+### If something breaks
+
+Got a 502 or an app crash on startup? Start here.
+
+**Check the runtime logs first.** Dashboard, click your app service, click the three-dot menu, then **Runtime log**. The error will be there, usually in the last few lines.
+
+Two things come up most often on a first deploy:
+
+<Tabs>
+<TabItem value="module" label='"Cannot find module"' default>
+
+Your `node_modules` aren't being deployed. Either:
+
+- Add `node_modules` to `deployFiles` in `zerops.yaml` (quick fix)
+- Or use `output: standalone` in `next.config.mjs` (better for Next.js, bundles everything you need)
+
+</TabItem>
+<TabItem value="db" label='"Database connection refused"'>
+
+Your environment variables aren't set correctly in `zerops.yaml`. Copy this exactly:
+
+```yaml
+DB_HOST: ${db_hostname}
+DB_USER: ${db_user}
+DB_PASSWORD: ${db_password}
+DB_NAME: db
+```
+
+Variable names are derived from your database service hostname. If your db service is named `db`, use `${db_hostname}`, `${db_user}`, `${db_password}`. If you named it something else, swap `db_` for that name.
+
+</TabItem>
+</Tabs>
+
+:::tip Debug locally with VPN
+Install zcli first (see [CLI reference](/references/cli)), then run `zcli vpn up [your-project-id]` and your machine joins the project's private network. You can connect to `db:5432` directly from your local machine using TablePlus, psql, or any database client. You can disable SSL when connecting over VPN - the tunnel itself handles security either way. If `db` doesn't resolve, try `db.zerops` instead.
+:::
+
+### What's next
+
+- **[SSH into your container](/references/networking/ssh)**: `zcli service shell [service-name]` for full Linux access
+- **[Custom domain](/references/networking/public-access)**: add your domain, SSL is automatic
+- **[Autoscaling](/features/scaling)**: set min and max CPU and RAM, Zerops scales within that range automatically
+- **[Add more services](/features/infrastructure)**: queues, search engines, object storage, just add them to your project
+- **[Try ZCP](/zcp/quickstart)**: Zerops' AI agent that can deploy, debug, and operate your project
+
+:::note Stuck?
+Jump into the [Zerops Discord](https://docs.zerops.io/discord). The community is active and the team is there.
+:::

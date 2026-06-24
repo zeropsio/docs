@@ -172,11 +172,11 @@ function TabList({
                 ],
                 !isCodeTabs && [
                   '[&:not(:last-child)]:mr-0.5 px-0.75 py-[6px] txt-compact-small-plus',
-                  'border-0 rounded-full transition-shadow duration-200 ease-ease',
+                  'rounded-full border border-solid transition-all duration-200 ease-ease',
                   selectedValue === value &&
-                    'text-medusa-fg-base shadow-card-rest dark:shadow-card-rest-dark',
+                    'text-medusa-fg-base border-[#36CBB8] bg-medusa-bg-base shadow-card-rest dark:shadow-card-rest-dark',
                   selectedValue !== value &&
-                    'text-medusa-fg-subtle hover:text-medusa-fg-base',
+                    'text-medusa-fg-subtle border-medusa-border-base bg-medusa-bg-subtle hover:text-medusa-fg-base hover:bg-medusa-bg-subtle-hover',
                   'flex gap-0.5',
                 ],
                 '!mt-0 cursor-pointer',

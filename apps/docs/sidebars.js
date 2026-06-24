@@ -27,6 +27,25 @@ module.exports = {
       className: 'homepage-sidebar-item',
     },
     {
+      type: 'category',
+      label: 'Quickstart',
+      link: {
+        type: 'doc',
+        id: 'quickstart/quickstart',
+      },
+      customProps: {
+        sidebar_icon: 'rocket-launch',
+      },
+      className: 'homepage-sidebar-item',
+      items: [
+        {
+          type: 'doc',
+          id: 'quickstart/quickstart-going-further',
+          label: 'Deploy Your First App',
+        },
+      ],
+    },
+    {
       type: 'html',
       value: 'Features',
       customProps: {
@@ -486,7 +505,7 @@ module.exports = {
     },
     {
       type: 'html',
-      value: 'Zerops.yml',
+      value: 'Zerops.yaml',
       customProps: {
         sidebar_is_group_divider: true,
       },

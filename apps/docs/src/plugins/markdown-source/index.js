@@ -610,6 +610,71 @@ function cleanMarkdownForDisplay(content, filepath, siteDir, docsDir) {
     return content;
 }
 
+/** @site/content/foo/bar.mdx → foo/bar.mdx */
+function sourceToRelativePath(source) {
+    return source.replace(/^@site\/content\//, '');
+}
+
+/** Normalize a URL path or permalink to a lookup key (e.g. /.md → /). */
+function normalizePermalinkKey(urlPath) {
+    let p = urlPath.split('?')[0].split('#')[0].replace(/\.md$/, '');
+    if (!p.startsWith('/')) {
+        p = `/${p}`;
+    }
+    if (p.length > 1 && p.endsWith('/')) {
+        p = p.slice(0, -1);
+    }
+    return p || '/';
+}
+
+/** Map permalink key to a relative path inside the build output. */
+function permalinkToDestRelative(permalink) {
+    if (permalink === '/') {
+        return '.md';
+    }
+    return `${permalink.slice(1)}.md`;
+}
+
+/** Build permalink → content-relative-path from the docs plugin. */
+function buildPermalinkToSourceMap(allContent, baseUrl) {
+    const map = {};
+    const docsInstances = allContent['docusaurus-plugin-content-docs'] ?? {};
+
+    for (const instanceContent of Object.values(docsInstances)) {
+        const loadedVersions = instanceContent?.loadedVersions ?? [];
+        for (const version of loadedVersions) {
+            for (const doc of version.docs) {
+                let permalink = doc.permalink;
+                if (baseUrl !== '/' && permalink.startsWith(baseUrl)) {
+                    permalink = permalink.slice(baseUrl.length - 1) || '/';
+                }
+                const key = normalizePermalinkKey(permalink);
+                map[key] = sourceToRelativePath(doc.source);
+            }
+        }
+    }
+
+    return map;
+}
+
+async function writeCleanedMarkdownFile({
+    sourcePath,
+    relPath,
+    destPath,
+    siteDir,
+    docsDir,
+}) {
+    await fs.ensureDir(path.dirname(destPath));
+    const content = await fs.readFile(sourcePath, 'utf8');
+    const cleanedContent = cleanMarkdownForDisplay(
+        content,
+        relPath,
+        siteDir,
+        docsDir,
+    );
+    await fs.writeFile(destPath, cleanedContent, 'utf8');
+}
+
 // Recursively find all markdown files in a directory
 function findMarkdownFiles(dir, fileList = [], baseDir = dir) {
     const files = fs.readdirSync(dir);
@@ -678,10 +743,22 @@ async function copyImageDirectories(docsDir, buildDir) {
 
 module.exports = function markdownSourcePlugin(context, options) {
     const docsDir = path.join(context.siteDir, 'content');
+    const { baseUrl } = context;
+    /** @type {Record<string, string>} */
+    const permalinkToSource = {};
 
     // Resolve a `.md` URL path back to a source file under content/.
     // Returns the absolute path or null when no source exists.
     function resolveSourcePath(urlPath) {
+        const permalink = normalizePermalinkKey(urlPath);
+        const mapped = permalinkToSource[permalink];
+        if (mapped) {
+            const mappedPath = path.join(docsDir, mapped);
+            if (fs.existsSync(mappedPath)) {
+                return mappedPath;
+            }
+        }
+
         const stripped = urlPath.replace(/^\//, '').replace(/\.md$/, '');
         const mdxCandidate = path.join(docsDir, `${stripped}.mdx`);
         if (fs.existsSync(mdxCandidate)) return mdxCandidate;
@@ -692,6 +769,13 @@ module.exports = function markdownSourcePlugin(context, options) {
 
     return {
         name: 'markdown-source-plugin',
+
+        async allContentLoaded({ allContent }) {
+            Object.assign(
+                permalinkToSource,
+                buildPermalinkToSourceMap(allContent, baseUrl),
+            );
+        },
 
         // Provide theme components from the plugin (eliminates need for manual copying)
         getThemePath() {
@@ -735,36 +819,64 @@ module.exports = function markdownSourcePlugin(context, options) {
         },
 
         async postBuild({ outDir }) {
-            const docsDir = path.join(context.siteDir, 'content');
             const buildDir = outDir;
 
             console.log('[markdown-source-plugin] Copying markdown source files...');
 
-            // Find all markdown files in docs directory
-            const mdFiles = findMarkdownFiles(docsDir);
             let copiedCount = 0;
+            const writtenSources = new Set();
 
-            // Process each markdown file to build directory
+            for (const [permalink, relFile] of Object.entries(permalinkToSource)) {
+                const sourcePath = path.join(docsDir, relFile);
+                const destPath = path.join(
+                    buildDir,
+                    permalinkToDestRelative(permalink),
+                );
+
+                try {
+                    if (!fs.existsSync(sourcePath)) {
+                        console.warn(
+                            `[markdown-source-plugin] Source not found for ${permalink}: ${relFile}`,
+                        );
+                        continue;
+                    }
+
+                    await writeCleanedMarkdownFile({
+                        sourcePath,
+                        relPath: relFile,
+                        destPath,
+                        siteDir: context.siteDir,
+                        docsDir,
+                    });
+                    writtenSources.add(relFile);
+                    copiedCount++;
+                    console.log(
+                        `  ✓ Processed: ${relFile} -> ${permalinkToDestRelative(permalink)}`,
+                    );
+                } catch (error) {
+                    console.error(`  ✗ Failed to process ${relFile}:`, error.message);
+                }
+            }
+
+            const mdFiles = findMarkdownFiles(docsDir);
             for (const mdFile of mdFiles) {
+                if (writtenSources.has(mdFile)) {
+                    continue;
+                }
+
                 const sourcePath = path.join(docsDir, mdFile);
-                // Convert .mdx to .md for the destination
                 const destFile = mdFile.replace(/\.mdx$/, '.md');
                 const destPath = path.join(buildDir, destFile);
 
                 try {
-                    // Ensure destination directory exists
-                    await fs.ensureDir(path.dirname(destPath));
-
-                    // Read the markdown file
-                    const content = await fs.readFile(sourcePath, 'utf8');
-
-                    // Pass siteDir and docsDir for import resolution
-                    const cleanedContent = cleanMarkdownForDisplay(content, mdFile, context.siteDir, docsDir);
-
-                    // Write the cleaned content
-                    await fs.writeFile(destPath, cleanedContent, 'utf8');
+                    await writeCleanedMarkdownFile({
+                        sourcePath,
+                        relPath: mdFile,
+                        destPath,
+                        siteDir: context.siteDir,
+                        docsDir,
+                    });
                     copiedCount++;
-
                     console.log(`  ✓ Processed: ${mdFile} -> ${destFile}`);
                 } catch (error) {
                     console.error(`  ✗ Failed to process ${mdFile}:`, error.message);
@@ -780,3 +892,8 @@ module.exports = function markdownSourcePlugin(context, options) {
         },
     };
 };
+
+module.exports.sourceToRelativePath = sourceToRelativePath;
+module.exports.normalizePermalinkKey = normalizePermalinkKey;
+module.exports.permalinkToDestRelative = permalinkToDestRelative;
+module.exports.buildPermalinkToSourceMap = buildPermalinkToSourceMap;
