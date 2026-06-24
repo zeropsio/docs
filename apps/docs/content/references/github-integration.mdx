@@ -106,6 +106,8 @@ As an alternative to direct integration, you can use GitHub Actions to manage yo
 1. **Create Workflow Configuration**
 
    Create a new file at `.github/workflows/deploy.yaml` in your repository:
+   
+   Basic example:
 
    ```yaml
    name: Deploy to Zerops
@@ -123,6 +125,31 @@ As an alternative to direct integration, you can use GitHub Actions to manage yo
          - name: Checkout code
            uses: actions/checkout@v7
    
+         - name: Deploy with Zerops
+           uses: zeropsio/actions@main
+           with:
+             access-token: ${{ secrets.ZEROPS_TOKEN }}
+             service-id: your-service-id
+   ```
+
+   Example with tag matching:
+   
+   ```yaml
+   name: Deploy to Zerops on Tag
+
+   on:
+     push:
+       tags:
+         - 'v[0-9]+\.[0-9]+\.[0-9]+'  # Example: v1.0.0, v2.3.4
+
+   jobs:
+     deploy:
+       runs-on: ubuntu-latest
+
+       steps:
+         - name: Checkout code
+           uses: actions/checkout@v3
+
          - name: Deploy with Zerops
            uses: zeropsio/actions@main
            with:
