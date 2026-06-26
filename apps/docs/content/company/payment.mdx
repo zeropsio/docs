@@ -28,46 +28,47 @@ Automatic top-up ensures your projects continue running without interruption by 
 
 ### How Automatic Top-ups Work
 
-When enabled, Zerops monitors your credit balance and consumption rate to determine when and how much to top up, always respecting your configured limits.
+When enabled, Zerops periodically checks your balance and tops it up by a fixed amount whenever your credit drops below a threshold you choose, up to a limit you set for each calendar month.
 Zerops initiates an automatic payment when:
 
-- Your remaining credits are sufficient for **less than 10 days** of operation at your **current consumption rate**
+- Your combined balance (credit + promo credit) drops **below your threshold**
 - You have automatic top-ups enabled
-- Your [settings](#billing-information) allow for the payment amount
+- The top-up wouldn't exceed your **calendar-month limit**
 
 :::note Important notes
-- The charge amount is estimated based on your actual usage patterns, not maximum possible amounts
-- Negative balances are included in the next auto top-up (within your maximum charge limit)
-- The system checks your balance immediately after enabling auto top-ups, potentially triggering an immediate payment
+- Each top-up charges the **fixed amount** you configured, regardless of how fast you're spending
+- Your balance is checked periodically (every few minutes), so a top-up can take a few minutes to appear after you drop below the threshold
+- The final automatic top-up of the month is reduced so the month's total lands exactly on your calendar-month limit; after the limit is reached, automatic top-ups pause until the next calendar month
 - Auto top-up limits don't affect manual payments — add any amount manually regardless of automatic settings
 :::
 
 ### Configuration Options
 
-#### Period
-The timeframe for which the maximum configured auto-charge amount is checked. Can be set to either:
+#### Threshold
+When your combined balance (credit + promo credit) drops below this value, an automatic top-up is triggered.
 
-- **Weekly**: Maximum charge amount applies to a 7-day rolling window
-- **Monthly**: Maximum charge amount applies to a 30-day rolling window
-
-#### Maximum Charge Amount
-The maximum amount that can be auto-charged in the given period. This serves as a safeguard against unexpected costs due to traffic spikes or other unforeseen circumstances.
+#### Top-up Amount
+The fixed amount charged to your saved card on each automatic top-up.
 
 - Minimum setting: $10 (matches the minimum manual payment)
 
+#### Calendar-Month Limit
+The maximum total that can be automatically charged within a single calendar month (UTC). This safeguards against unexpected costs: once the limit is reached, automatic top-ups pause until the next calendar month.
+
 <Dropdown>
 <DropdownItem title="Real-World Example">
-**Scenario:** Application with $20 weekly operating costs and initial manual top-up of $100
+**Scenario:** Application with ~$50 weekly operating costs and an initial manual top-up of $100
 
 **Your Settings:**
-- Period = Weekly
-- Maximum charge amount = $150
+- Threshold = $50
+- Top-up amount = $200
+- Calendar-month limit = $500
 
 **Expected behavior:**
-- System adds approximately $20-30 when less than 10 days of credits remain (around day 35)
-- Payments continue in small increments aligned with your usage patterns
-- During traffic spikes, payments adjust to match higher consumption (up to $150 weekly limit)
-- Payment amounts return to normal when usage decreases
+- When your balance falls below $50, Zerops charges $200 to bring it back up
+- Each top-up is exactly $200, no matter how fast you're spending, until you approach the calendar-month limit
+- After two top-ups ($400), a full $200 would exceed the $500 limit, so the next top-up is reduced to $100, bringing the month's total to exactly $500
+- Automatic top-ups then pause until the limit resets at the start of the next calendar month (UTC)
 <br/>
 </DropdownItem>
 </Dropdown>
