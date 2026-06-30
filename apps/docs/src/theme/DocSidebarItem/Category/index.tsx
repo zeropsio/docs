@@ -14,6 +14,7 @@ import {
   isSamePath,
 } from '@docusaurus/theme-common/internal';
 import Link from '@docusaurus/Link';
+import { useLocation } from '@docusaurus/router';
 import { translate } from '@docusaurus/Translate';
 import useIsBrowser from '@docusaurus/useIsBrowser';
 import DocSidebarItems from '@theme/DocSidebarItems';
@@ -44,6 +45,42 @@ function useAutoExpandActiveCategory({
       updateCollapsed(false);
     }
   }, [isActive, wasActive, collapsed, updateCollapsed]);
+}
+
+// Collapse a category when navigation leaves it (e.g. Reference → Overview).
+function useAutoCollapseInactiveCategory({
+  isActive,
+  collapsed,
+  updateCollapsed,
+  collapsible,
+}: {
+  isActive: boolean;
+  collapsed: boolean;
+  updateCollapsed: (b: boolean) => void;
+  collapsible: boolean;
+}) {
+  const { pathname } = useLocation();
+  const wasActive = usePrevious(isActive);
+  const previousPathname = usePrevious(pathname);
+  useEffect(() => {
+    if (!collapsible || collapsed || isActive) {
+      return;
+    }
+    const routeChanged =
+      previousPathname !== undefined && previousPathname !== pathname;
+    const justBecameInactive = !isActive && wasActive;
+    if (justBecameInactive || routeChanged) {
+      updateCollapsed(true);
+    }
+  }, [
+    isActive,
+    wasActive,
+    collapsed,
+    updateCollapsed,
+    collapsible,
+    pathname,
+    previousPathname,
+  ]);
 }
 
 /**
@@ -134,6 +171,12 @@ export default function DocSidebarItemCategory({
     setCollapsed(toCollapsed);
   };
   useAutoExpandActiveCategory({ isActive, collapsed, updateCollapsed });
+  useAutoCollapseInactiveCategory({
+    isActive,
+    collapsed,
+    updateCollapsed,
+    collapsible,
+  });
   useEffect(() => {
     if (
       collapsible &&

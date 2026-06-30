@@ -4,6 +4,8 @@ import { themes as prismThemes } from "prism-react-renderer"
 const reverseSidebar = require("./src/utils/reverse-sidebar")
 const excludeSidebarResults = require("./src/utils/exclude-sidebar-results")
 
+const gtagTrackingId = process.env.GTAG_TRACKING_ID
+
 /** @type {import('@medusajs/docs').MedusaDocusaurusConfig} */
 const config = {
   title: "Zerops",
@@ -250,9 +252,13 @@ const config = {
         theme: {
           customCss: require.resolve("./src/css/custom.css"),
         },
-        gtag: {
-          trackingID: "xxx",
-        },
+        ...(gtagTrackingId
+          ? {
+              gtag: {
+                trackingID: gtagTrackingId,
+              },
+            }
+          : {}),
         sitemap: {
           filename: "sitemap-docs.xml",
           ignorePatterns: ["/guides/**"],
