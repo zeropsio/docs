@@ -106,25 +106,25 @@ As an alternative to direct integration, you can use GitHub Actions to manage yo
 1. **Create Workflow Configuration**
 
    Create a new file at `.github/workflows/deploy.yaml` in your repository:
-   
+
    Basic example:
 
    ```yaml
    name: Deploy to Zerops
-   
+
    on:
      push:
        branches:
          - main
-   
+
    jobs:
      deploy:
        runs-on: ubuntu-latest
-   
+
        steps:
          - name: Checkout code
            uses: actions/checkout@v7
-   
+
          - name: Deploy with Zerops
            uses: zeropsio/actions@main
            with:
@@ -133,14 +133,14 @@ As an alternative to direct integration, you can use GitHub Actions to manage yo
    ```
 
    Example with tag matching:
-   
+
    ```yaml
    name: Deploy to Zerops on Tag
 
    on:
      push:
        tags:
-         - 'v[0-9]+\.[0-9]+\.[0-9]+'  # Example: v1.0.0, v2.3.4
+         - 'v[0-9]+\.[0-9]+\.[0-9]+' # Example: v1.0.0, v2.3.4
 
    jobs:
      deploy:
@@ -179,3 +179,34 @@ Keep your access token secure and never commit it directly to your repository. T
 :::
 
 For more information about GitHub Actions, refer to the [official GitHub Actions documentation](https://docs.github.com/en/actions).
+
+---
+
+## Advanced: Full Lifecycle Automation
+
+:::tip Reference repository
+A complete, working example of this pattern is available at [zerops-showcase-deploy](https://github.com/zeropsio/zerops-showcase-deploy), a deployment orchestrator built entirely on GitHub Actions and the Zerops API, no Zerops CLI required. Clone it as a starting point for your own multi-environment pipeline.
+:::
+
+The workflow above deploys a single service on push to one branch. This reference repo extends that into a full lifecycle: every feature branch gets its own isolated environment, every PR gets a preview, and stage and prod stay permanent with their data intact across deploys.
+
+### What it sets up
+
+| You do this                 | Pipeline creates                                   | Lifetime                    |
+| --------------------------- | -------------------------------------------------- | --------------------------- |
+| Push to a feature branch    | A full isolated environment                        | Until the branch is deleted |
+| Open/update a PR to `stage` | A full isolated preview environment                | Until the PR is closed      |
+| Merge a PR into `stage`     | Redeploys app code to the shared stage environment | Permanent, data preserved   |
+| Push/merge to `main`        | Redeploys app code to production                   | Permanent, data preserved   |
+
+Permanent environments keep their databases, caches, queues, and storage across every deploy, only the application code gets updated. Ephemeral environments are created from scratch and torn down automatically when no longer needed, so every developer gets their own isolated copy of the full stack without manual cleanup.
+
+PR previews require a `stage` branch as the pull request target; the repo's setup guide covers creating it.
+
+### How it differs from the basic workflow above
+
+The basic GitHub Actions setup deploys one service to one Zerops project. This pattern manages entire **projects** programmatically instead: it checks whether a project for a given branch or PR already exists, creates one from an import template if not, and deploys to it. The key safeguard is that it never deletes or recreates infrastructure on permanent environments, only ephemeral ones get torn down. This is a reference implementation, not a Zerops-managed service, so you own the repo, the GitHub Actions minutes, and the Zerops API calls it makes on your behalf.
+
+:::tip Full setup guide
+Required secrets, customizing the project template for your own services, and the complete workflow reference are all covered in the [repo's README](https://github.com/zeropsio/zerops-showcase-deploy#readme).
+:::

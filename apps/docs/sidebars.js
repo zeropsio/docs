@@ -633,6 +633,7 @@ module.exports = {
         {
           type: 'category',
           label: 'Remote or local setup',
+          collapsed: true,
           link: {
             type: 'doc',
             id: 'zcp/setup/choose-workspace',
@@ -657,6 +658,7 @@ module.exports = {
         {
           type: 'category',
           label: 'Build and ship',
+          collapsed: true,
           link: {
             type: 'doc',
             id: 'zcp/workflows/build-with-zcp',
@@ -681,6 +683,7 @@ module.exports = {
         {
           type: 'category',
           label: 'Security',
+          collapsed: true,
           link: {
             type: 'doc',
             id: 'zcp/security/trust-model',
@@ -705,6 +708,7 @@ module.exports = {
         {
           type: 'category',
           label: 'Reference',
+          collapsed: true,
           link: {
             type: 'doc',
             id: 'zcp/reference/index',
