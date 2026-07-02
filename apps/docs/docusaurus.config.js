@@ -1,8 +1,12 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 import "dotenv/config"
+import path from "path"
+import { fileURLToPath } from "url"
 import { themes as prismThemes } from "prism-react-renderer"
 const reverseSidebar = require("./src/utils/reverse-sidebar")
 const excludeSidebarResults = require("./src/utils/exclude-sidebar-results")
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const gtagTrackingId = process.env.GTAG_TRACKING_ID
 
@@ -50,6 +54,14 @@ const config = {
         name: "custom-webpack-plugin",
         configureWebpack() {
           return {
+            resolve: {
+              alias: {
+                "@docusaurus/theme-mermaid/client": path.resolve(
+                  __dirname,
+                  "src/mermaid/client.js"
+                ),
+              },
+            },
             devServer: {
               client: {
                 overlay: {
@@ -80,23 +92,7 @@ const config = {
         light: "base",
         dark: "base",
       },
-      options: {
-        themeVariables: {
-          background: "#ECEFF3",
-          mainBkg: "#ECEFF3",
-          primaryColor: "#ECEFF3",
-          primaryTextColor: "#030712",
-          primaryBorderColor: "#D1D5DB",
-          nodeBorder: "#D1D5DB",
-          lineColor: "#11181C",
-          fontFamily: "Inter",
-          fontSize: "14.75px",
-          tertiaryColor: "#F3F4F6",
-          tertiaryBorderColor: "#D1D5DB",
-          tertiaryTextColor: "#030712",
-          clusterBkg: "#F3F4F6",
-        },
-      },
+      options: {},
     },
     image: "img/docs-meta.jpg",
     colorMode: {

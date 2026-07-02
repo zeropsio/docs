@@ -8,7 +8,6 @@ import type { Props } from '@theme/DocItem/Content';
 import { DocContextValue } from '@medusajs/docs';
 import { Badge, BadgeVariant } from 'docs-ui';
 import Head from '@docusaurus/Head';
-import { useLocation } from '@docusaurus/router';
 
 /**
  Title can be declared inside md content or declared through
@@ -35,10 +34,12 @@ export default function DocItemContent({ children }: Props): JSX.Element {
     frontMatter: { badge, description, image },
     metadata,
   } = useDoc() as DocContextValue;
-  const location = useLocation();
+  // OG microservice indexes pages by doc id (e.g. quickstart/quickstart), not
+  // custom permalinks (e.g. /quickstart/deploy-your-first-app).
+  const ogPath = `/${metadata.id}`;
   const ogImage =
     image ??
-    `https://docs.zerops.io/og?path=${encodeURIComponent(location.pathname)}`;
+    `https://docs.zerops.io/og?path=${encodeURIComponent(ogPath)}`;
   const syntheticTitle = useSyntheticTitle();
 
   return (
