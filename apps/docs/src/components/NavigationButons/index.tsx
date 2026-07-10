@@ -15,7 +15,7 @@ interface NavigationButtonsProps {
 
 export function NavigationButtons({ prevPage, nextPage }: NavigationButtonsProps) {
     return (
-        <div className="flex justify-between mt-2 border-t pt-4">
+        <div className="doc-pagination-nav flex justify-between mt-2 border-t pt-4">
             {prevPage ? (
                 <Link
                     href={`${prevPage.href}`}
