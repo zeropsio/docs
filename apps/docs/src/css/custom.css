@@ -1508,6 +1508,7 @@ html[data-theme='dark'] .ascii-graph__highlight {
   width: fit-content;
   max-width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   /* Lock font + line-height to .ascii-graph values so that 1ch / 1lh on
      absolutely-positioned children align with the pre's character grid. */
   font-family: var(--ascii-graph-font);
@@ -1517,15 +1518,26 @@ html[data-theme='dark'] .ascii-graph__highlight {
   font-feature-settings: 'liga' 0, 'calt' 0;
 }
 
-.intro-ascii__frame {
+/* Nested .ascii-graph must NOT create its own max-width / scroll box —
+   otherwise logos (absolute on .intro-ascii) drift outside the ASCII frame
+   on narrow viewports. One shared scroll container only. */
+.intro-ascii .ascii-graph,
+.intro-ascii .intro-ascii__frame {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
   margin: 0;
+  max-width: none;
+  overflow: visible;
   padding: 0;
+  width: max-content;
 }
 
 .intro-ascii__logo {
   position: absolute;
   width: 1.7em;
   height: 1.7em;
+  max-width: none;
   transform: translate(-50%, -50%);
   object-fit: contain;
   font: inherit;
