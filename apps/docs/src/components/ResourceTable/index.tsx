@@ -27,7 +27,8 @@ const ResourceTable = ({ resources = {} }) => {
   };
 
   return (
-      <table className="w-full my-1.5 whitespace-nowrap table-fixed">
+    <div className="table-scroll-wrapper">
+      <table className="w-full my-1.5">
         <thead>
           <tr>
             <th className="w-1/6 whitespace-nowrap">&nbsp;</th>
@@ -45,6 +46,7 @@ const ResourceTable = ({ resources = {} }) => {
           ))}
         </tbody>
       </table>
+    </div>
   );
 };
 

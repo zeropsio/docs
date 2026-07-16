@@ -28,14 +28,16 @@ const Image: React.FC<ImageProps> = ({
 
   const applyFilters = colorMode === 'dark' && !darkImage && invertColors;
 
+  const { className: propsClassName, ...restProps } = props;
+
   return (
     <div className="py-0.5 text-center text-sm flex flex-col">
       <img
-        className={`mx-auto rounded-sm ${applyFilters ? 'filter invert grayscale' : ''}`}
+        className={`docs-content-image mx-auto rounded-sm ${applyFilters ? 'filter invert grayscale' : ''} ${propsClassName ?? ''}`.trim()}
         loading="lazy"
         src={useBaseUrl(imageUrl)}
         alt={alt}
-        {...props}
+        {...restProps}
       />
       {caption && <span className="pt-0.5 opacity-65">{caption}</span>}
     </div>
