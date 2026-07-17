@@ -6,11 +6,9 @@ description: Learn how to create shared storage which you can use with your othe
 import GroupCards from '@site/src/components/GroupCards';
 import Video from '@site/src/components/Video';
 
-Shared Storage provides persistent file storage that can be mounted as a POSIX-compatible filesystem to your runtime services. Built on [SeaweedFS ↗](https://github.com/seaweedfs/seaweedfs), it enables reliable data persistence and sharing across services in your infrastructure.
-
 ## Create Using Zerops GUI
 
-First, set up a project in Zerops GUI and add a runtime service. Then go to the project dashboard page and choose **Add new service** in the left menu in the **Services** block. Then add a new Shared Storage service:
+Go to your project dashboard and choose **Add new service** in the left menu in the **Services** block. Then add a new Shared Storage service:
 
 <Video
   src="/vids/services/shared-storage.webm"
@@ -19,12 +17,11 @@ First, set up a project in Zerops GUI and add a runtime service. Then go to the 
 
 ### Set a Hostname
 
-Enter a unique service identifier like "storage", "files" etc. Duplicate services with the same name in the same project are forbidden.
-
-#### Hostname Limitations:
+Enter a unique service identifier like "storage", "files" etc.
 
 - Maximum 25 characters
 - Must contain only lowercase ASCII letters (a-z) or numbers (0-9)
+- Must be unique within the project
 
 :::note
 The hostname is fixed after the service is created. It can't be changed later.
@@ -32,63 +29,49 @@ The hostname is fixed after the service is created. It can't be changed later.
 
 ### Connect to Services
 
-Select one or more project's runtime services in the Share with Services block:
+Select one or more of the project's runtime services in the **Share with Services** block:
 
 <figure style={{ textAlign: 'center', margin: '1rem 0' }}>
   <img
     src="/img/screenshots/connect_shared_storage.png"
-    alt="image"
+    alt="Selecting runtime services to share the storage with"
     width="100%"
     height="auto"
   />
 </figure>
 
-The new Shared Storage will be connected to the selected runtimes.
-
-:::note
-Runtime services can be connected and disconnected at any time even after the shared storage is created.
-:::
+Runtime services can be [connected and disconnected](/shared-storage/how-to/connect) at any time, even after the shared storage is created.
 
 ### Choose Deployment Mode
 
-Choose between **Highly Available** (recommended for production) or **Single Container** (suitable for development) deployment.
+Choose between **Highly Available** (recommended for production) and **Single Container** (suitable for development). See the [mode comparison](/shared-storage/overview#deployment-modes) and [technical details](/shared-storage/tech-details#deployment-modes).
 
 :::warning
-The Shared Storage deployment mode is fixed after the service is created. It can't be changed later.
-
-See [Technical Details](/shared-storage/tech-details#deployment-modes) for more information about deployment modes.
+The deployment mode is fixed after the service is created. It can't be changed later.
 :::
 
 ### Set Auto Scaling Configuration
 
-Configure vertical auto scaling parameters to control resource allocation and costs.
+Configure vertical auto scaling parameters to control resource allocation and costs:
 
 <figure style={{ textAlign: 'center', margin: '1rem 0' }}>
   <img
     src="/img/screenshots/shared_storage_autoscaling.png"
-    alt="image"
+    alt="Shared storage autoscaling configuration"
     width="100%"
     height="auto"
   />
 </figure>
 
 :::note
-For detailed information about auto scaling capabilities and recommendations, see [Technical Details](/shared-storage/tech-details#auto-scaling-configuration).
+Raising the disk limits does not raise the usable data capacity, which is capped at 60GB. See [Storage Capacity](/shared-storage/tech-details#storage-capacity) and [Auto Scaling Configuration](/shared-storage/tech-details#auto-scaling-configuration).
 :::
 
-## Create Using zCLI
-
-zCLI is the Zerops command-line tool. To create a new Shared Storage service via the command-line, follow these steps:
-
-1. [Install & setup zCLI](/references/cli)
-2. Create a project description file
-3. Create a project with a runtime and a Shared Storage service
-
-### Import YAML
+## Create Using Import YAML
 
 The deployment mode is part of the service type:
 
-```yaml
+```yaml title="zerops-import.yaml"
 services:
   - # Shared storage service in highly available mode
     hostname: teststorage
@@ -101,9 +84,17 @@ Use `shared-storage:single` for the single container mode.
 You can also pin the underlying engine version directly with `seaweedfs:ha@3` or `seaweedfs:single@3`.
 :::
 
-### Choose Your Runtime
+Import the file with the [zCLI](/references/cli):
 
-<GroupCards heading="Read about how to create a project description file and create a runtime service with a Shared storage." items={languages} />
+```sh
+zcli project service-import zerops-import.yaml
+```
+
+To mount the storage into a runtime service in the same import, add the `mount:` parameter to the runtime service. See the [import reference](/references/import#service-mount-shared-storage) for details and requirements.
+
+### Runtime-Specific Guides
+
+<GroupCards heading="Create a runtime service with a Shared storage via import YAML." items={languages} />
 
 export const languages = [
     { name: "Node.js", link: "/nodejs/how-to/shared-storage#create-nodejs-service-with-a-shared-storage-using-zcli" },
