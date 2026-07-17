@@ -2763,22 +2763,12 @@ module.exports = {
         {
           type: 'doc',
           id: 'shared-storage/how-to/connect',
-          label: 'Connect shared storage',
-        },
-        {
-          type: 'doc',
-          id: 'shared-storage/how-to/use',
-          label: 'Usage & Limitations',
+          label: 'Connect & mount',
         },
         {
           type: 'doc',
           id: 'shared-storage/how-to/manage',
-          label: 'Manage & Access shared storage',
-        },
-        {
-          type: 'doc',
-          id: 'shared-storage/how-to/backup',
-          label: 'Backup shared storage',
+          label: 'Manage & backups',
         },
       ],
     },

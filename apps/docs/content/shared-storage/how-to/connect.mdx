@@ -1,34 +1,50 @@
 ---
-title: Connect shared storage to a runtime service
-description: Learn how to connect shared storage to other services in Zerops.
+title: Connect & mount shared storage
+description: Learn how to connect shared storage to runtime services in Zerops and how the mount behaves.
 ---
 
-import GroupCards from '@site/src/components/GroupCards';
+This page covers how to connect an existing shared storage to runtime services, how to disconnect it, and how the mount behaves inside your containers.
 
-This page covers how to connect an existing shared storage to runtime services and how to disconnect services when needed.
+## How the mount behaves
 
-## In Zerops GUI
+Once a shared storage is connected to a runtime service, Zerops mounts it at `/mnt/<storage-hostname>` in the runtime containers. For example, `/mnt/teststorage` for a `teststorage` shared storage:
 
-### Connect a new shared storage
+<figure style={{ textAlign: 'center', margin: '1rem 0' }}>
+  <img
+    src="/img/screenshots/connect_shared_storage_2.png"
+    alt="Mounted shared storage in the file browser"
+    width="100%"
+    height="auto"
+  />
+</figure>
 
-When creating a new shared storage service, you can directly select which runtime services it should be connected to. See [Create Shared Storage](/shared-storage/how-to/create) for details about the creation process.
+- The content is shared among **all containers** of the connected runtime service; if you connect multiple runtime services, they all see the same content
+- Multiple storages can be mounted to a single service (e.g. `/mnt/files1`, `/mnt/files2`)
+- The mount point is owned by the `zerops` user and group (no sudo required)
+- Mounting removes any existing content of the mount directory
+- The mount is only available in runtime containers, not during build and prepare runtime phases
+- The mount process logs its standard output and error to the runtime service logs (tagged `zerops-mount-<service-hostname>`); individual file operations are not logged
 
-### Connect an existing shared storage
+:::note
+The `df` command may show incorrect or misleading information for shared storage mounts. Refer to the Zerops GUI for accurate storage metrics.
+:::
+
+## Connect in Zerops GUI
+
+When creating a new shared storage service, you can directly select which runtime services it should be connected to. See [Create shared storage](/shared-storage/how-to/create) for the creation process.
 
 For existing storage, go to the shared storage service detail page and select **Shared storage connections**. Toggle ON any runtime services you wish to connect to this storage.
 
 <figure style={{ textAlign: 'center', margin: '1rem 0' }}>
   <img
     src="/img/screenshots/connect_shared_storage_1.png"
-    alt="Connecting shared storage during creation"
+    alt="Connecting shared storage to runtime services"
     width="90%"
     height="auto"
   />
 </figure>
 
-## Disconnect a shared storage in Zerops GUI
-
-To disconnect storage, access the shared storage service detail page, select **Shared storage connections**, and toggle OFF the desired runtime service.
+To disconnect storage, toggle OFF the desired runtime service in the same place.
 
 :::note
 Connecting and disconnecting a shared storage is applied live; the runtime containers are not restarted.
