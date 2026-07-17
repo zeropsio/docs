@@ -14,15 +14,19 @@ Shared Storage consists of three main components:
 - **Volume Servers**: Store the actual file data
 - **Filer**: Provides a POSIX-compatible interface for file operations
 
-An **automatic vacuum process** helps maintain optimal storage performance by reclaiming space from deleted files. This process is triggered when the size of deleted content exceeds 15% (reduced from the default 30%).
+### Storage Engine Behavior
+
+SeaweedFS stores file data in append-only volumes. Files are split into chunks, and when a file is modified, new chunks are written while the old ones remain on disk until they are reclaimed. Frequent small modifications of existing files therefore cause significant write amplification, which is one of the reasons Shared Storage is [not suitable for databases](/shared-storage/how-to/use#use-cases).
+
+An **automatic vacuum process** reclaims the space occupied by deleted and superseded chunks. This process is triggered when the size of deleted content exceeds 15% (reduced from the SeaweedFS default of 30%).
 
 ### Mount Integration
 
 When connected to a runtime service:
 - Storage is mounted at `/mnt/<storage-hostname>`
 - Mount point is owned by the `zerops` user and group (no sudo required)
-- All filesystem operations are logged to runtime logs (tagged as `zerops-mount-<service-hostname>`)
-- Mounting will overwrite any existing content in the mount directory
+- The mount process logs its standard output and error to the runtime service logs (tagged as `zerops-mount-<service-hostname>`); individual file operations are not logged
+- Mounting removes any existing content of the mount directory
 - Shared storage mount is only available in runtime containers, not during build and prepare runtime phases
 
 ## Deployment Modes
@@ -33,8 +37,8 @@ Zerops provides Shared Storage in two deployment modes:
 
 Recommended for production environments where data reliability is critical.
 
-- **Architecture**: 2 volume servers with the master located on one of them
-- **Data Durability**: Data and filer metadata are replicated 1:1 across nodes
+- **Architecture**: Two containers, each running its own filer and volume server; the master server runs on the first container
+- **Data Durability**: Data and filer metadata are replicated 1:1 across both containers
 - **Fault Tolerance**:
     - If a node fails, an automatic repair process begins
     - A new container replaces the failed one
@@ -59,21 +63,27 @@ Shared Storage supports standard POSIX filesystem operations:
 
 - Create, read, update, and delete files and directories
 - Set permissions (with some limitations)
-- Standard file locking operations
+- File locking (per mount only, see the warning below)
 - Hard and symbolic links
 - Directory listing and traversal
 
 For a complete list of supported features, see the [SeaweedFS FUSE documentation](https://github.com/seaweedfs/seaweedfs/wiki/FUSE-Mount#supported-features).
+
+:::caution File locks are per-mount only
+File locks (`flock`, POSIX locks) are enforced only within a single container's mount. A process in another container can freely write to a file you hold locked. Do not rely on file locking for coordination between containers, and do not run [lock-dependent workloads such as databases](/shared-storage/how-to/use#use-cases) on Shared Storage.
+:::
 
 ## Resource Constraints
 
 ### Storage Limits
 
 - Maximum storage space: 60GB (can be increased via support request)
-- Maximum file size: Unlimited within the 60GB total storage constraint
+- Maximum file size: No fixed limit through the mount (files are stored in chunks), up to the available storage space
 - Maximum upload size via Filer UI: 64MB
 
-### Memory Usage
+### Mount Process Memory Usage
+
+The mount process runs inside each connected runtime container and consumes its memory:
 
 - Base memory consumption: ~60MB when idle
 - Peak memory usage: ~150MB under higher filesystem loads
@@ -87,7 +97,7 @@ For a complete list of supported features, see the [SeaweedFS FUSE documentation
 
 ## Auto Scaling Configuration
 
-Zerops scales Shared Storage services automatically by raising or lowering the hardware resources of each database container.
+Zerops scales Shared Storage services automatically by raising or lowering the hardware resources of each container.
 
 Vertical auto scaling has the following default configuration:
 
