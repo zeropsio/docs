@@ -128,7 +128,7 @@ services:
     override: false
   # REQUIRED. Name of your other service
   - hostname: teststorage1
-    type: shared-storage
+    type: shared-storage:ha
     ...
 ```
 </DropdownItem>
@@ -322,7 +322,7 @@ services:
 
   # A second, simpler service example
   - hostname: teststorage1
-    type: shared-storage
+    type: shared-storage:ha
 ```
 
 This example includes all possible configuration options for Zerops services. Not all options are required or applicable to every service type. The example shows two services in the same YAML file: a fully configured Node.js API service and a simpler static frontend service.
@@ -695,6 +695,8 @@ services:
 ```
 
 The `mount:` parameter allows you to mount a shared storage (which should be created inside the project) to the service.
+
+The `buildFromGit` requirement exists because an import without it only creates an empty service shell with nothing deployed yet, so there is nothing to mount the storage into. With `buildFromGit`, the import also builds and deploys the repository, and the mount is applied to the deployed service. If you import a service without `buildFromGit`, deploy your application first and then connect the shared storage [in the GUI](/shared-storage/how-to/connect).
 
 ### Service Nginx Configuration
 

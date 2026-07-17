@@ -26,7 +26,7 @@ If you connect multiple runtimes, the content of the folder will be shared among
 
 - Multiple storage volumes can be mounted to a single service (e.g., `/mnt/files1`, `/mnt/files2`, etc.)
 - Shared storage mount is only available in runtime containers, not during build and prepare runtime phases
-- All filesystem operations are automatically logged to runtime logs
+- The mount process logs its output to the runtime service logs (tagged `zerops-mount-<service-hostname>`)
 
 For technical details about mount behavior and filesystem capabilities, see the [Technical Details](/shared-storage/tech-details#mount-integration) page.
 
@@ -34,11 +34,19 @@ For technical details about mount behavior and filesystem capabilities, see the 
 
 Shared Storage is ideal for:
 
-- **Persistent filesystem-based databases**: SQLite, Prometheus DB, etc.
 - **Configuration sharing**: Deploy configurations once and share across multiple services
   - Example: Deploy Apache Airflow configurations and DAG files once and share with all worker nodes
-- **Alternative to object storage**: For applications that require filesystem semantics rather than object storage
-- **Application data**: Store and serve images, documents, and other assets
+- **Application data**: Store and serve user uploads, images, documents, and other assets (avoid huge trees of tiny files, see [performance considerations](#performance-considerations))
+- **Fallback to object storage**: For applications that strictly require filesystem semantics and cannot work with [object storage](/object-storage/overview). Be aware of the [limitations](/shared-storage/tech-details#performance-considerations) before choosing this path.
+
+:::caution Not suitable for databases
+Do **not** run databases on Shared Storage. This includes SQLite, Prometheus TSDB, and other filesystem-based databases.
+
+- File locks are enforced **per mount only**: a lock held in one container does not prevent another container from writing to the same file, which leads to data corruption.
+- The underlying storage engine is an append-only chunk store: every modification writes new chunks, so the frequent small writes typical for databases cause heavy write amplification.
+
+Use [managed databases](/postgresql/overview) instead. For storing database *backups*, prefer [object storage](/object-storage/overview): it is cheaper and better suited for write-once files.
+:::
 
 ## Performance Considerations
 

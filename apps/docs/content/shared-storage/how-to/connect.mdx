@@ -30,14 +30,29 @@ For existing storage, go to the shared storage service detail page and select **
 
 To disconnect storage, access the shared storage service detail page, select **Shared storage connections**, and toggle OFF the desired runtime service.
 
-{/*
-## Connect using zsc
+:::note
+Connecting and disconnecting a shared storage is applied live; the runtime containers are not restarted.
+:::
 
-Connect shared storage from the command line with the `zsc connectSharedStorage` command. Specify one or more storage names as parameters:
+## Mount and unmount using zsc
+
+You can also mount and unmount a shared storage from within a runtime container using the `zsc` command:
 
 ```sh
-zsc connectSharedStorage sharedstorage0
-zsc connectSharedStorage sharedDisk secondDisk
+# Mount a shared storage
+zsc shared-storage mount <storage-hostname>
+
+# Unmount a shared storage
+zsc shared-storage unmount <storage-hostname>
+
+# Wait until the storage mount is ready
+zsc shared-storage wait <storage-hostname>
 ```
 
-Run this command from within your runtime container via web terminal, SSH, or in your `zerops.yaml` file. For more details, see the [Zerops Setup Control documentation](/references/zsc).*/}
+Run these commands from your runtime container via web terminal or SSH, or as part of your `zerops.yaml` commands. For more details, see the [zsc reference](/references/zsc#shared-storage).
+
+:::caution
+The shared storage must be mounted (through the GUI connection toggle or via `zsc shared-storage mount`) before your application can access the `/mnt/<storage-hostname>` directory.
+
+Before stopping or deleting a shared storage service, you must first disconnect (unmount) it from all runtime services.
+:::
