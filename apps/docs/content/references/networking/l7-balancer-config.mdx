@@ -368,6 +368,49 @@ Configure security-related options:
 
 **Best Practice:** Keep `server_tokens` disabled to avoid revealing server information.
 
+## Forwarded Headers
+
+The balancer sets the following headers on every request proxied to your application. They are always set by the balancer itself, overwriting any values sent by the client, so your application can safely trust them:
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit whitespace-nowrap">Header</th>
+      <th className="w-fit">Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">Host</td>
+      <td className="w-fit">Host requested by the client</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">X-Real-IP</td>
+      <td className="w-fit">Client IP address</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">X-Forwarded-For</td>
+      <td className="w-fit">Client IP address appended to any existing chain</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">X-Forwarded-Proto</td>
+      <td className="w-fit">Protocol the client used (`http` or `https`)</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">X-Forwarded-Host</td>
+      <td className="w-fit">Host requested by the client</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold whitespace-nowrap">X-Forwarded-Port</td>
+      <td className="w-fit">Port the client connected to</td>
+    </tr>
+  </tbody>
+</table>
+
+:::note Security
+The `Forwarded` (RFC 7239) and `Proxy` headers are stripped from incoming requests and never reach your application. Configure your framework to read the `X-Forwarded-*` headers above instead.
+:::
+
 ## Advanced Routing Features
 
 The L7 HTTP Balancer supports sophisticated routing beyond basic domain mapping.
