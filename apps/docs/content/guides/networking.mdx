@@ -45,7 +45,10 @@ The L7 balancer is **nginx-based**, deployed as 2 HA containers per project. It 
 
 The balancer forwards client info via standard headers:
 - **`X-Forwarded-For`** / **`X-Real-IP`** — original client IP
-- **`X-Forwarded-Proto`** — `https` (original protocol)
+- **`X-Forwarded-Proto`** — original protocol (`http` or `https`)
+- **`X-Forwarded-Host`** / **`X-Forwarded-Port`** — original host and port
+
+These headers are set by the balancer itself (client-sent values are overwritten), and the `Forwarded` and `Proxy` headers are stripped from incoming requests.
 
 Your app receives plain HTTP but can inspect these headers for the real client info.
 
