@@ -1,0 +1,36 @@
+---
+title: Customise Ruby runtime environment
+description: Learn how you can customise your Ruby runtime environment in Zerops.
+---
+
+import data from '@site/static/data.json';
+import { SetVar } from '@site/src/components/content/var';
+import CustomizeRuntimeContent from '@site/src/components/content/customize-runtime.mdx';
+
+<SetVar name="serviceDisplay" value="Ruby" />
+<SetVar name="serviceVersion" value={data.ruby.base[0][1]} />
+<SetVar name="servicePath" value="ruby" />
+<SetVar name="defaultEnvironment" value="Git, RubyGems, Bundler and a full native-extension toolchain (gcc, make, libpq-dev, libyaml-dev, libffi-dev, etc.)" />
+<SetVar name="packageManager" value="bundler" />
+<SetVar name="codeLanguage" value="yaml" />
+<SetVar name="customReasons" value={[
+  '<strong>System packages for processing</strong>: When your app processes images, videos, or files (requiring packages like <code>sudo apt-get install -y imagemagick</code> on Ubuntu or <code>sudo apk add --no-cache imagemagick</code> on Alpine)',
+  '<strong>Native gem dependencies</strong>: When a gem links against a system library that isn\'t included in the default environment',
+  '<strong>Different base OS</strong>: When you need Alpine instead of Ubuntu (or vice versa) for specific compatibility requirements, selected via the base prefix (<code>ubuntu/ruby@4.0</code> or <code>alpine/ruby@4.0</code>)'
+]} />
+<SetVar name="basicSetupCode" value={`run:
+  base: {{serviceVersion}}
+  prepareCommands:
+    - sudo apt-get update
+    - sudo apt-get install -y imagemagick`} />
+<SetVar name="buildFilesCode" value={`build:
+  addToRunPrepare:
+    - Gemfile
+    - Gemfile.lock
+run:
+  base: alpine/ruby@4.0
+  prepareCommands:
+    - sudo apk add --no-cache imagemagick
+    - bundle install`} />
+
+<CustomizeRuntimeContent />
