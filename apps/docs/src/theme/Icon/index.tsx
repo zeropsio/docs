@@ -144,6 +144,7 @@ import IconDeno from './Deno';
 import IconBun from './Bun';
 import IconGleam from './Gleam';
 import IconElixir from './Elixir';
+import IconRuby from './Ruby';
 import IconQdrant from './Qdrant';
 import IconNats from './Nats';
 import IconKafka from './Kafka';
@@ -316,6 +317,7 @@ export default {
   bun: IconBun,
   gleam: IconGleam,
   elixir: IconElixir,
+  ruby: IconRuby,
   qdrant: IconQdrant,
   nats: IconNats,
   kafka: IconKafka,

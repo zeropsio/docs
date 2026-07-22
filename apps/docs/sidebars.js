@@ -311,6 +311,15 @@ module.exports = {
         },
         {
           type: 'ref',
+          id: 'ruby/overview',
+          label: 'Ruby',
+          customProps: {
+            sidebar_icon: 'ruby',
+          },
+          className: 'homepage-sidebar-item  service-sidebar-item',
+        },
+        {
+          type: 'ref',
           id: 'nginx/overview',
           label: 'Nginx static',
           customProps: {
@@ -3208,6 +3217,131 @@ module.exports = {
         {
           type: 'doc',
           id: 'gleam/how-to/shared-storage',
+          label: 'Connect / disconnect shared storage',
+        },
+      ],
+    },
+  ],
+  ruby: [
+    {
+      type: 'ref',
+      id: 'homepage',
+      label: 'Back to home',
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: 'back-arrow',
+      },
+    },
+    {
+      type: 'doc',
+      id: 'ruby/overview',
+      label: 'Ruby',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'ruby',
+      },
+    },
+    {
+      type: 'category',
+      label: 'Management',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'ruby/how-to/create',
+          label: 'Create Ruby service',
+        },
+        {
+          type: 'doc',
+          id: 'ruby/how-to/upgrade',
+          label: 'Upgrade Ruby service',
+        },
+        {
+          type: 'doc',
+          id: 'ruby/how-to/controls',
+          label: 'Stop, start & delete Ruby runtime service',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Configuration & Environment',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'ruby/how-to/env-variables',
+          label: 'Manage environment variables',
+        },
+        {
+          type: 'doc',
+          id: 'ruby/how-to/customize-runtime',
+          label: 'Customize Ruby runtime',
+        },
+        {
+          type: 'doc',
+          id: 'ruby/how-to/scaling',
+          label: 'Scale Ruby runtime service',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Build & Deployment',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'ruby/how-to/build-pipeline',
+          label: 'Configure build & deploy pipeline',
+        },
+        {
+          type: 'doc',
+          id: 'ruby/how-to/trigger-pipeline',
+          label: 'Trigger build pipeline',
+        },
+        {
+          type: 'doc',
+          id: 'ruby/how-to/build-process',
+          label: 'Build process',
+        },
+        {
+          type: 'doc',
+          id: 'ruby/how-to/deploy-process',
+          label: 'Deploy process',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Maintenance & Monitoring',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'ruby/how-to/logs',
+          label: 'Setup & access logs',
+        },
+        {
+          type: 'doc',
+          id: 'ruby/how-to/filebrowser',
+          label: 'Browse container files',
+        },
+        {
+          type: 'doc',
+          id: 'ruby/how-to/shared-storage',
           label: 'Connect / disconnect shared storage',
         },
       ],
