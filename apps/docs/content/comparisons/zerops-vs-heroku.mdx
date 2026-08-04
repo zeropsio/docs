@@ -1,0 +1,161 @@
+---
+title: Zerops vs Heroku
+description: Compare Zerops and Heroku on dyno pricing, sustaining-engineering status, SSH, horizontal scaling, and managed Postgres. Honest PaaS comparison updated August 2026.
+sidebar_label: vs Heroku
+slug: /comparisons/zerops-vs-heroku
+keywords:
+  [
+    zerops vs heroku,
+    heroku alternative,
+    zerops heroku comparison,
+    heroku pricing,
+    heroku sustaining engineering,
+    heroku dynos,
+    heroku free tier,
+    migrate from heroku,
+  ]
+---
+
+import DocCardList from '@theme/DocCardList';
+import { FAQ, FAQItem } from '/src/components/Faq';
+
+Zerops and Heroku both aim to make git-push style deploys the default way to ship apps. Heroku popularized that model and still has a mature buildpack and add-on ecosystem. Zerops is under active development, with full Linux containers, SSH, and horizontal scaling available without gating it behind higher dyno tiers.
+
+This page is a straight comparison, not a sales pitch. Where Heroku is genuinely stronger, we say so.
+
+:::info Platform direction (February 2026)
+Salesforce confirmed Heroku is moving to a **sustaining engineering** model: security patches and stability fixes continue, but no new features are planned and no new Enterprise contracts are being written. This is a real, disclosed change and relevant if you are choosing a platform for the long term.
+:::
+
+## At a glance
+
+| | Zerops | Heroku |
+|---|---|---|
+| **Platform status** | Actively developed | Sustaining engineering only (Feb 2026) |
+| **Entry price** | Free lightweight project core | $5/month (Eco, sleeps after 30 min) |
+| **Horizontal scaling** | Available by default | Requires Standard tier or above |
+| **SSH into containers** | Yes, any container | No, restricted dyno model |
+| **Managed Postgres** | Included as managed service | Starts at $50/month separately |
+| **Free tier** | Free project core | Removed November 2022 |
+
+## What Heroku is
+
+Heroku is the platform that popularized git-push deploys, now owned by Salesforce. Dynos are the unit of compute. Buildpacks and a large add-on marketplace cover a wide range of languages and services. For teams that already know Heroku, the model is familiar and well documented.
+
+## Pricing
+
+As of **August 2026**:
+
+- **Eco:** $5/month (shared, sleeps after 30 minutes of inactivity)
+- **Basic:** $7/month (no sleeping, no horizontal scaling)
+- **Standard-1X:** $25/month
+- **Standard-2X:** $50/month
+- Horizontal scaling requires **Standard** or above
+- Managed Postgres starts separately at **$50/month** for Standard-0
+- The free tier was removed in **November 2022**
+
+Zerops has a free lightweight project core. Compute is billed per minute, horizontal scaling is available by default, and managed Postgres is a first-class managed service rather than a separate add-on starting at $50/month. See [PostgreSQL on Zerops](/postgresql/overview) and [Scaling](/features/scaling).
+
+:::tip Check current numbers
+Dyno and Postgres prices change. Confirm on Heroku's own pricing page before you decide.
+:::
+
+## Where Heroku is genuinely strong
+
+- **Mature ecosystem.** Buildpacks and add-ons are extremely well documented and widely understood.
+- **Minimal surprises for existing users.** Teams that already run on Heroku know the operational shape.
+- **Long track record.** Years of production use across many stacks and company sizes.
+
+## Where Zerops differs
+
+### Active product development
+
+Zerops ships new features regularly. Heroku's disclosed sustaining-engineering model means security and stability continue, but the feature roadmap does not. If long-term platform evolution matters, that difference is material.
+
+### Full Linux containers with SSH
+
+Every Zerops container is a full Linux environment via [Incus](https://linuxcontainers.org/incus/). You can SSH into any running service. Heroku's dyno model is more restricted and does not give general SSH into production dynos.
+
+### Horizontal scaling without tier gates
+
+On Zerops, horizontal scaling is available by default. On Heroku, horizontal scaling requires Standard tier or above. Eco and Basic are limited accordingly.
+
+### Managed databases as first-class services
+
+Zerops managed databases sit on the same private network as your app and are addressed by hostname. Heroku Postgres is a separate paid add-on (Standard-0 from $50/month). See [Internal access](/references/networking/internal-access).
+
+## Quick answers
+
+<FAQ>
+  <FAQItem question="Is Zerops cheaper than Heroku?">
+    Often at small and mid scale, yes, but it depends on the dyno mix and add-ons. Heroku Eco starts at $5/month but sleeps after inactivity; Basic is $7/month with no horizontal scaling; managed Postgres starts at $50/month. Zerops has a free project core, per-minute compute, and managed Postgres as a first-class service. Compare your actual dyno and database footprint.
+  </FAQItem>
+  <FAQItem question="Is Heroku still getting new features?">
+    No. In February 2026, Salesforce confirmed Heroku is in sustaining engineering: security and stability fixes continue, but no new features are planned and no new Enterprise contracts are being written.
+  </FAQItem>
+  <FAQItem question="Does Heroku support SSH into dynos?">
+    No general SSH into production dynos. Zerops provides SSH into any running container as a full Linux environment.
+  </FAQItem>
+  <FAQItem question="Can I scale horizontally on Heroku Basic?">
+    No. Horizontal scaling on Heroku requires Standard tier or above. Zerops includes horizontal scaling by default.
+  </FAQItem>
+  <FAQItem question="When should I pick Heroku over Zerops?">
+    When your team already depends on Heroku buildpacks and add-ons, and stability with a known operational model matters more than new platform features or SSH-level container access.
+  </FAQItem>
+</FAQ>
+
+## Related comparisons
+
+<DocCardList
+  colSize={6}
+  items={[
+    {
+      type: 'link',
+      href: '/comparisons',
+      label: 'Comparisons overview',
+      customProps: {
+        disableIcon: true,
+        description:
+          'Zerops vs Railway, Render, Heroku, and Fly.io at a glance.',
+      },
+    },
+    {
+      type: 'link',
+      href: '/comparisons/zerops-vs-railway',
+      label: 'Zerops vs Railway',
+      customProps: {
+        disableIcon: true,
+        description:
+          'Usage billing, seat fees, SSH access, and owned hardware.',
+      },
+    },
+    {
+      type: 'link',
+      href: '/comparisons/zerops-vs-render',
+      label: 'Zerops vs Render',
+      customProps: {
+        disableIcon: true,
+        description:
+          'Workspace tiers, bandwidth changes, and free database expiry.',
+      },
+    },
+    {
+      type: 'link',
+      href: '/comparisons/zerops-vs-flyio',
+      label: 'Zerops vs Fly.io',
+      customProps: {
+        disableIcon: true,
+        description:
+          'Multi-region edge deploy, pay-as-you-go pricing, and networking fees.',
+      },
+    },
+  ]}
+/>
+
+## Keeping this accurate
+
+Pricing and features change often. This page reflects information verified in **August 2026**. If something is out of date, we'd like to know. The goal is accuracy, not a stacked deck. Always check each platform's own pricing page before you decide.
+
+:::note Still deciding?
+Jump into the [Zerops Discord](https://docs.zerops.io/discord) and ask. The team can walk through your specific use case.
+:::

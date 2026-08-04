@@ -957,6 +957,44 @@ module.exports = {
     },
     {
       type: 'html',
+      value: 'Comparisons',
+      customProps: {
+        sidebar_is_group_divider: true,
+      },
+      className: 'homepage-sidebar-item',
+    },
+    {
+      type: 'doc',
+      id: 'comparisons/overview',
+      label: 'Overview',
+      className: 'homepage-sidebar-item',
+    },
+    {
+      type: 'doc',
+      id: 'comparisons/zerops-vs-railway',
+      label: 'vs Railway',
+      className: 'homepage-sidebar-item',
+    },
+    {
+      type: 'doc',
+      id: 'comparisons/zerops-vs-render',
+      label: 'vs Render',
+      className: 'homepage-sidebar-item',
+    },
+    {
+      type: 'doc',
+      id: 'comparisons/zerops-vs-heroku',
+      label: 'vs Heroku',
+      className: 'homepage-sidebar-item',
+    },
+    {
+      type: 'doc',
+      id: 'comparisons/zerops-vs-flyio',
+      label: 'vs Fly.io',
+      className: 'homepage-sidebar-item',
+    },
+    {
+      type: 'html',
       value: 'Help',
       customProps: {
         sidebar_is_group_divider: true,
