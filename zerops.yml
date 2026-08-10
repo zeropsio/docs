@@ -19,6 +19,27 @@ zerops:
       initCommands:
         - sudo sed -i 's/^\(\s*text\/plain\s\+\)txt;$/\1txt md;/' /etc/nginx/mime.types
         - printf 'charset utf-8;\ncharset_types text/plain;\n' | sudo tee /etc/nginx/conf.d/charset.conf
+        # Advertise the markdown twin of every docs page as an RFC 8288 Link
+        # header, so agents that fetch over plain HTTP (or HEAD) discover it
+        # without parsing the HTML <head>. Mirrors the <link rel="alternate">
+        # emitted by src/theme/DocItem/Layout. The regex only matches
+        # extensionless paths, so assets and the .md files themselves are
+        # skipped; an empty value makes nginx omit the header entirely.
+        - printf 'map $request_uri $zerops_md_alternate {\n  default "";\n  /discord "";\n  "~^(/[^.?#]*[^./?#])$" "<$1.md>; rel=alternate; type=text/markdown";\n}\nadd_header Link $zerops_md_alternate always;\n' | sudo tee /etc/nginx/conf.d/md-alternate.conf
+        # The static base falls back to /index.html for anything unmatched,
+        # which makes a bogus /foo.md answer 200 with the 260kB HTML shell --
+        # agents read that as a successful fetch. Narrow the .md location to a
+        # real 404. Self-reverting: if the config does not look the way we
+        # expect, the substitution simply no-ops, and a failed `nginx -t`
+        # restores the original file.
+        - |
+          F=$(sudo grep -rl 'location[^{]*\.md' /etc/nginx/ 2>/dev/null | head -1)
+          if [ -n "$F" ]; then
+            sudo cp "$F" /tmp/nginx-md.bak
+            sudo perl -0777 -i -pe 's!(location[^{\n]*\.md[^{\n]*\{[^{}]*?)try_files[^;]*;!$1try_files \$uri =404;!' "$F"
+            sudo nginx -t || sudo cp /tmp/nginx-md.bak "$F"
+          fi
+          true
         - sudo service nginx reload
       routing:
         headers:
