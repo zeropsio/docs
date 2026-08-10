@@ -34,6 +34,28 @@ const config = {
         crossorigin: "anonymous",
       },
     },
+    // Agent/LLM discovery. There is no formal <link> relation for llms.txt --
+    // the convention is the well-known /llms.txt path -- but advertising it in
+    // <head> costs nothing and is picked up by some crawlers and dev tools.
+    // Per-page markdown alternates are emitted by src/theme/DocItem/Layout.
+    {
+      tagName: "link",
+      attributes: {
+        rel: "alternate",
+        type: "text/plain",
+        href: "https://docs.zerops.io/llms.txt",
+        title: "llms.txt",
+      },
+    },
+    {
+      tagName: "link",
+      attributes: {
+        rel: "alternate",
+        type: "text/plain",
+        href: "https://docs.zerops.io/llms-full.txt",
+        title: "llms-full.txt",
+      },
+    },
   ],
   plugins: [
     './src/plugins/markdown-source',
