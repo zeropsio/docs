@@ -503,10 +503,19 @@ module.exports = {
         },
         {
           type: 'ref',
+          id: 'local-storage/overview',
+          label: 'Local Storage',
+          customProps: {
+            sidebar_icon: 'circle-stack',
+          },
+          className: 'homepage-sidebar-item  service-sidebar-item',
+        },
+        {
+          type: 'ref',
           id: 'shared-storage/overview',
           label: 'Shared Storage',
           customProps: {
-            sidebar_icon: 'server',
+            sidebar_icon: 'servers-connected',
           },
           className: 'homepage-sidebar-item  service-sidebar-item',
         },
@@ -2736,6 +2745,61 @@ module.exports = {
       },
     },
   ],
+  localstorage: [
+    {
+      type: 'ref',
+      id: 'homepage',
+      label: 'Back to home',
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: 'back-arrow',
+      },
+    },
+    {
+      type: 'doc',
+      id: 'local-storage/overview',
+      label: 'Local Storage overview',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'circle-stack',
+      },
+    },
+    {
+      type: 'category',
+      label: 'How-to',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+        sidebar_icon: 'academic-cap-solid',
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'local-storage/how-to/create',
+          label: 'Create Local Storage',
+        },
+        {
+          type: 'doc',
+          id: 'local-storage/how-to/connect',
+          label: 'Mount to a service',
+        },
+        {
+          type: 'doc',
+          id: 'local-storage/how-to/manage',
+          label: 'Manage & backups',
+        },
+      ],
+    },
+    {
+      type: 'doc',
+      id: 'local-storage/tech-details',
+      label: 'Technical details',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'document-text',
+      },
+    },
+  ],
   sharedstorage: [
     {
       type: 'ref',
@@ -2752,7 +2816,7 @@ module.exports = {
       label: 'Shared storage overview',
       customProps: {
         sidebar_is_title: true,
-        sidebar_icon: 'server',
+        sidebar_icon: 'servers-connected',
       },
     },
     {

@@ -6,6 +6,15 @@ description: Managed shared disk storage on Zerops. A POSIX-compatible filesyste
 import DocCardList from '@theme/DocCardList';
 import Icons from '@theme/Icon';
 
+:::warning Shared Storage is deprecated
+Shared Storage in its current form — a managed SeaweedFS cluster connected through the import-level `mount:` field — is deprecated. It will be replaced by a standalone SeaweedFS managed service that runtime services mount themselves with [`zsc shared-storage mount`](/references/zsc#shared-storage) in their `initCommands`. Existing Shared Storage services keep working for now, but don't build new projects on it.
+
+For new projects, choose by workload:
+
+- A **persistent filesystem shared between services** — use [Local Storage](/local-storage/overview). It is a real local filesystem with correct locking, so it also covers the workloads Shared Storage was never safe for (SQLite and other filesystem-based databases).
+- **Large or highly available data** — use [Object Storage](/object-storage/overview).
+:::
+
 Zerops **Shared Storage** is a managed disk volume that mounts as a POSIX-compatible filesystem into your runtime services. Files written by one container are immediately visible to every other container that mounts the same storage, whether they belong to the same service or to different services in the project.
 
 Under the hood it runs [SeaweedFS ↗](https://github.com/seaweedfs/seaweedfs), a distributed filesystem optimized for high-volume storage. See [Technical details](/shared-storage/tech-details) for the architecture.
@@ -44,7 +53,7 @@ Do **not** run databases on Shared Storage. This includes SQLite, Prometheus TSD
 - File locks are enforced **per mount only**: a lock held in one container does not prevent another container from writing to the same file, which leads to data corruption.
 - The underlying storage engine is an append-only chunk store: every modification writes new chunks, so the frequent small writes typical for databases cause heavy write amplification.
 
-Use [managed databases](/postgresql/overview) instead. For storing database *backups*, prefer [object storage](/object-storage/overview): it is cheaper and better suited for write-once files.
+Use [managed databases](/postgresql/overview) instead. For SQLite and other filesystem-based databases, use [Local Storage](/local-storage/overview) — a local filesystem with correct locking where these workloads are safe. For storing database *backups*, prefer [object storage](/object-storage/overview): it is cheaper and better suited for write-once files.
 :::
 
 ## Deployment modes

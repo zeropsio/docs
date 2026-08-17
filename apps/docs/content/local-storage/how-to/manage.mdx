@@ -1,0 +1,55 @@
+---
+title: Manage and back up Local Storage
+description: Learn how to inspect a Local Storage volume over SSH and web shell, and how to back up and restore your data in Zerops.
+---
+
+Unlike other managed services, Local Storage is meant to be worked with directly: you can open a shell in the service's own container to inspect and modify the volume contents, and Zerops backs the volume up automatically.
+
+## Access the volume directly
+
+The Local Storage service runs one maintenance container with the volume mounted at `/data`, owned by the `zerops` user and group. You can access it like a runtime container:
+
+- **Web shell and file browser**: open the service detail page in the Zerops GUI and use the built-in terminal or file browser
+- **SSH**: connect through the [Zerops VPN](/references/networking/vpn) and [SSH](/references/networking/ssh) into the container
+
+Everything you change under `/data` is immediately visible to all runtime services that [mount the volume](/local-storage/how-to/connect) — the maintenance container is just another view of the same filesystem.
+
+:::note
+`/data` is the mount path inside the Local Storage container itself. Runtime services see the volume at their own configured `mountPath` (default `/mnt/{hostname}`).
+:::
+
+## Backups
+
+Zerops provides automated data backup for Local Storage services with full encryption. Backups are enabled by default and strongly recommended: the volume is [not replicated](/local-storage/tech-details#availability-and-failure-behavior), so on a hardware failure they may be the only copy of your data.
+
+For general backup information including configuration, scheduling, retention, tagging, quotas, and CLI tools, see the [Zerops Backups](/features/backup) documentation.
+
+### Backup format
+
+- **Format**: `.tar.gz` (archive of the volume contents)
+- **Content**: the entire volume (`/data` in the maintenance container)
+- **Storage**: encrypted and stored in isolated object storage
+
+:::caution Backups are taken from the live filesystem
+The archive is created while the volume stays mounted and writable, so files that are being written at that moment can be captured mid-write. For databases like SQLite this can produce an archive that does not restore cleanly. For guaranteed-consistent backups of a database, pause writes during the backup or use the database's own backup mechanism (e.g. `sqlite3 .backup` / `VACUUM INTO`) to produce a snapshot file the archive can pick up.
+:::
+
+### Restoring backups
+
+1. Download the backup file (`.tar.gz`) from the Zerops UI.
+2. Transfer the archive into the Local Storage container (or any runtime service that mounts the volume), for example over the [Zerops VPN](/references/networking/vpn).
+3. Extract the archive into the volume:
+
+```sh
+# in the Local Storage container
+tar -xzf backup.tar.gz -C /data
+
+# or in a connected runtime container
+tar -xzf backup.tar.gz -C /mnt/<hostname>
+```
+
+### Best practices
+
+- Regularly clean up unnecessary files to reduce backup size
+- Create manual backups with protected tags before major file operations or migrations
+- Test your restore process periodically to ensure data integrity

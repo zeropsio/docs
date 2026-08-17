@@ -3,7 +3,9 @@ title: Shared Storage Integration on Zerops
 description: "Guide: Shared Storage Integration on Zerops"
 ---
 
-Shared storage is a managed SeaweedFS volume mounted as a POSIX filesystem at `/mnt/<storageHostname>` into one or more runtime services — for files that must be shared *between containers/services* (shared config, plugin directories, a common working set). It is mounted via the import.yaml `mount:` field; there is **no `zerops.yaml` mount**. For high-write workloads or user uploads, prefer Object Storage (S3) instead — shared storage is POSIX/NFS-style and not built for high-throughput churn.
+**DEPRECATED**: Shared Storage is deprecated and will be replaced by a standalone SeaweedFS managed service mounted with `zsc shared-storage mount` in `initCommands`. For new projects, prefer **[Local Storage](/local-storage/overview)** (`run.volume` in zerops.yaml) for a persistent shared filesystem, or **Object Storage** for large or highly available data. Existing Shared Storage services keep working.
+
+Shared storage is a managed SeaweedFS volume mounted as a POSIX filesystem at `/mnt/<storageHostname>` into one or more runtime services — for files that must be shared *between containers/services* (shared config, plugin directories, a common working set). It is mounted via the import.yaml `mount:` field; there is **no `zerops.yaml` mount** (do not confuse it with `run.volume`, which mounts a Local Storage volume). For high-write workloads or user uploads, prefer Object Storage (S3) instead — shared storage is POSIX/NFS-style and not built for high-throughput churn.
 
 ## Mounting — import.yaml `mount:` is the only config-file mechanism
 
@@ -43,6 +45,6 @@ This registers the connection, but the FUSE mount materializes **only on the nex
 - **POSIX**: standard filesystem ops (with minor permission-setting limits). Filesystem operations are logged to runtime logs tagged `zerops-mount-<serviceHostname>`. `df` can report misleading numbers — use the Zerops GUI for accurate storage metrics.
 - **No env vars**: shared storage exposes no connection variables — it's a filesystem, not a networked service.
 
-## Shared storage vs object storage
+## Shared storage vs local storage vs object storage
 
-Use **shared storage** when you need a POSIX filesystem shared across services (shared config, plugin/extension directories, a common scratch area). Use **object storage** (S3/MinIO) for user uploads, media, and any high-throughput or write-heavy file operations — and for anything that must survive independent of any single service. Don't reach for shared storage as a generic uploads bucket.
+Use **local storage** (`run.volume`) when you need a persistent POSIX filesystem — it is a real single-node local filesystem with correct locking and mmap semantics, so it also covers SQLite and other filesystem-based databases that are unsafe on shared storage. Use **shared storage** (deprecated) only for existing setups that need the filesystem replicated across nodes. Use **object storage** (S3/MinIO) for user uploads, media, and any high-throughput or write-heavy file operations — and for anything that must survive independent of any single service. Don't reach for shared storage as a generic uploads bucket.

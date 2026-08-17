@@ -1,0 +1,33 @@
+---
+title: "Choosing Storage on Zerops"
+description: "**Use Object Storage** for uploads, media, and backups; **use Local Storage** for anything that needs a real filesystem (SQLite, Prometheus, Gitea, shared certs). Shared Storage is deprecated."
+---
+
+**Use Object Storage** (S3) for uploads, media, and backups. **Use Local Storage** (`run.volume`) for anything that needs a real filesystem — SQLite and other embedded databases, single-node stateful apps, filesystem state shared between services. **Shared Storage is deprecated** — don't use it in new projects.
+
+## Decision Matrix
+
+| Need | Choice | Why |
+|------|--------|-----|
+| User uploads, media, backups, logs | **Object Storage** (default) | S3 API, HA, cheapest per GB, survives independent of any service |
+| SQLite / Prometheus / filesystem-based databases | **Local Storage** | Single-kernel POSIX: locking and mmap are correct — the only Zerops storage where these workloads are safe |
+| Single-node stateful app (Gitea, etc.) | **Local Storage** | Persistent volume survives deploys and container replacement |
+| Filesystem state shared between services (certs, caches) | **Local Storage** | One volume mountable by multiple runtime services, writes visible immediately |
+| Temp/scratch files | Container disk | Fine as-is; lost on deploy |
+| Existing `mount:`-based setups | Shared Storage (deprecated) | Keeps working; migrate to Local Storage or Object Storage |
+
+## Local Storage
+
+- Service type `local-storage:single`; runtime services mount it via `run.volume` in zerops.yaml: `volume: {hostname: <storage>, mountPath: /path (default /mnt/{hostname}), readOnly: false}`. One volume per runtime service; multiple services can mount the same volume.
+- The volume is local to one physical machine: **all containers of all connected services are co-located on the volume's machine**. Not HA — on hardware failure or maintenance, Zerops moves the volume to a healthy server and every connected service goes through a small outage (stop, move, start); volume recovery is not guaranteed, so backups are strongly recommended. Horizontal scaling of connected services is capped by that machine's capacity.
+- The volume survives deploys: new containers get the same volume attached. Mounted in runtime containers only (not build/prepare).
+- Capacity = the service's max disk in `verticalAutoscaling`. Usage is billed as the service's disk usage.
+- The service's own container has the volume at `/data` with SSH/web-shell access for direct inspection. Daily `.tar.gz` backups of the live volume are on by default — pause database writes or use application-level backups (e.g. `sqlite3 .backup`) for guaranteed-consistent archives.
+
+## Object Storage
+
+See the [object-storage integration guide](/guides/object-storage-integration): S3-compatible (MinIO), `objectStorageSize` quota, `AWS_USE_PATH_STYLE_ENDPOINT: true`, `${storage_*}` env var references. Not a filesystem — no locking, no partial writes, no mmap.
+
+## Shared Storage (deprecated)
+
+A managed SeaweedFS cluster mounted at `/mnt/<hostname>` via the import-level `mount:` field. Deprecated: it will be replaced by a standalone SeaweedFS managed service mounted with `zsc shared-storage mount` in `initCommands`. Its per-mount-only locks make databases unsafe on it — that workload belongs on Local Storage. Existing services keep working.

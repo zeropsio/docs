@@ -1,0 +1,76 @@
+---
+title: Mount Local Storage to a service
+description: Learn how to mount a Local Storage volume into runtime services with the zerops.yaml volume field and how the mount behaves.
+---
+
+Runtime services mount a Local Storage volume through the `volume` field in `zerops.yaml`. The mount is part of the service's runtime configuration, so it is applied by a deploy.
+
+## The volume field
+
+```yaml title="zerops.yaml"
+zerops:
+  - setup: app
+    run:
+      base: nodejs@22
+      volume:
+        hostname: vol         # hostname of the Local Storage service
+        mountPath: /srv/data  # optional, defaults to /mnt/{hostname}
+        readOnly: false       # optional, defaults to false
+```
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Field</th>
+      <th className="w-fit">Required</th>
+      <th className="w-fit">Description</th>
+    </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <td className="w-fit font-semibold">hostname</td>
+    <td className="w-fit">yes</td>
+    <td className="w-fit">Hostname of the Local Storage service in the same project.</td>
+  </tr>
+  <tr>
+    <td className="w-fit font-semibold">mountPath</td>
+    <td className="w-fit">no</td>
+    <td className="w-fit">Absolute path the volume is mounted to inside the runtime containers. Defaults to <code>/mnt/&#123;hostname&#125;</code>. System directories (<code>/etc</code>, <code>/var</code>, <code>/var/www</code>, <code>/tmp</code>, ...) are rejected; their subdirectories are allowed.</td>
+  </tr>
+  <tr>
+    <td className="w-fit font-semibold">readOnly</td>
+    <td className="w-fit">no</td>
+    <td className="w-fit">Mounts the volume read-only. Defaults to <code>false</code>. Use it for the "one writer, many readers" pattern and to protect data from accidental writes.</td>
+  </tr>
+  </tbody>
+</table>
+
+The minimal configuration is just the hostname:
+
+```yaml
+run:
+  volume:
+    hostname: vol
+```
+
+The referenced service must exist in the project and must be a Local Storage service, otherwise the deploy fails with a validation error.
+
+## How the mount behaves
+
+- The content is shared among **all containers** of the connected runtime service, and among all other runtime services that mount the same volume
+- The mount point is owned by the `zerops` user and group, so your application can read and write without sudo
+- Writes are immediately visible to every other container — a real local filesystem, not a network mount (see [filesystem semantics](/local-storage/tech-details#filesystem-semantics))
+- The volume is mounted in runtime containers only, not during build and prepare phases
+- A runtime service mounts at most **one** Local Storage volume
+
+:::caution All connected containers share one machine
+Every container of every connected runtime service is placed on the same physical machine that holds the volume. This is what makes the shared local filesystem possible, but it ties all connected services to a single machine: a hardware failure affects them all at once, and horizontal scaling is limited by that machine's capacity. See [co-location and scheduling](/local-storage/tech-details#co-location-and-scheduling).
+:::
+
+## Change or remove the mount
+
+The `volume` field is applied by a deploy. To change the mount path, toggle `readOnly`, or disconnect from the volume, edit or remove the `volume` field in `zerops.yaml` and deploy again.
+
+:::caution
+A Local Storage service cannot be deleted while runtime services still mount its volume. Remove the `volume` field from their `zerops.yaml` and deploy them first.
+:::
