@@ -1,0 +1,170 @@
+---
+title: Local Storage on Zerops
+description: Managed persistent disk volume on Zerops. A single-machine POSIX filesystem with full locking and mmap semantics, mounted into your runtime services.
+---
+
+import DocCardList from '@theme/DocCardList';
+import Icons from '@theme/Icon';
+
+Zerops **Local Storage** is a managed service that owns a persistent, locally-attached disk volume. Runtime services in the same project mount the volume to a directory of their choosing, and every container sees the same files through a real local filesystem — no network filesystem in between.
+
+Because all connected containers run on the same physical machine and share one kernel, the volume behaves like a single local disk: file locking (`flock`, `fcntl`) works correctly across containers, memory-mapped files stay coherent, and a write in one container is immediately visible everywhere else. This is what makes SQLite (including WAL mode), Prometheus TSDB, and other filesystem-based databases safe on Local Storage — workloads that must never run on a network filesystem. See [Technical details](/local-storage/tech-details) for the full semantics.
+
+## Quick start
+
+Add a Local Storage service to your project:
+
+```yaml title="zerops-import.yaml"
+services:
+  - hostname: vol
+    type: local-storage:single
+
+  - hostname: app
+    type: nodejs@22
+    buildFromGit: https://github.com/myorg/myapp
+```
+
+Then mount it in the runtime service's `zerops.yaml`:
+
+```yaml title="zerops.yaml"
+zerops:
+  - setup: app
+    run:
+      base: nodejs@22
+      volume:
+        hostname: vol
+```
+
+After the next deploy, the volume is mounted at `/mnt/vol` in all containers of the `app` service. See [Mount to a service](/local-storage/how-to/connect) for the full `volume` configuration including a custom mount path and read-only mounts.
+
+## Use cases
+
+Local Storage is a good fit for:
+
+- **SQLite and other embedded databases**: full locking and mmap coherence make SQLite safe, including WAL mode with multiple connecting containers (a single writer is still recommended)
+- **Single-node stateful apps**: Prometheus, Gitea, and similar applications that keep their state in a local data directory
+- **Sharing filesystem state**: certificates, caches, and other files shared across containers and services within a project, with immediate visibility of writes
+- **Anything that needs a real local filesystem**: workloads that break on network filesystems because they rely on locking, mmap, inotify, or atomic renames
+
+:::caution Not highly available
+The volume lives on a single physical machine, together with every runtime service that mounts it. If that hardware fails, or when maintenance requires moving workloads elsewhere, Zerops moves the volume to a healthy server and every connected runtime service goes through a small outage — stop, move, start. Recovering the volume and its data is not guaranteed.
+
+Automated [backups](/local-storage/how-to/manage#backups) are enabled by default and strongly recommended.
+:::
+
+## Choosing a storage type
+
+The first word of each storage type names its access model:
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit" style={{ minWidth: '130px' }}>Service</th>
+      <th className="w-fit">Access model</th>
+      <th className="w-fit">Semantics</th>
+      <th className="w-fit" style={{ minWidth: '60px' }}>HA</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit"><b><a href="/object-storage/overview">Object Storage</a></b></td>
+      <td className="w-fit">S3 API over the network</td>
+      <td className="w-fit">Object semantics; best price and durability for uploads, media, and backups</td>
+      <td className="w-fit">Yes</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><b><a href="/shared-storage/overview">Shared Storage</a></b> (deprecated)</td>
+      <td className="w-fit">Network filesystem</td>
+      <td className="w-fit">POSIX-like with network filesystem caveats (per-mount locks, write amplification)</td>
+      <td className="w-fit">Yes</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><b>Local Storage</b></td>
+      <td className="w-fit">Locally attached disk, single machine</td>
+      <td className="w-fit">Full single-kernel POSIX: locking, mmap, inotify across all connected containers</td>
+      <td className="w-fit">No</td>
+    </tr>
+  </tbody>
+</table>
+
+Local Storage trades high availability for correctness and speed: it is the only storage type where lock-dependent workloads like databases are safe.
+
+## Key trade-offs
+
+- **Co-location**: all containers of every connected runtime service are placed on the same physical machine as the volume. Connecting a volume therefore ties the runtime service itself to that machine — a hardware failure affects all connected services at once, and horizontal scaling is limited by the capacity of that machine.
+- **One volume per runtime service**: a runtime service mounts at most one Local Storage volume. Multiple runtime services can mount the same volume.
+- The volume is mounted in runtime containers only — it is not available during build and prepare phases.
+- Single container mode only; there is no HA mode.
+
+## Next steps
+
+<DocCardList
+  colSize={6}
+  items={[
+    {
+      type: 'link',
+      href: '/local-storage/how-to/create',
+      label: 'Create Local Storage',
+      customProps: {
+        icon: Icons['computer-desktop'],
+        description: 'Create a service with zerops-import.yaml or in the GUI.',
+      },
+    },
+    {
+      type: 'link',
+      href: '/local-storage/how-to/connect',
+      label: 'Mount to a service',
+      customProps: {
+        icon: Icons['link'],
+        description: 'The zerops.yaml volume field and how the mount behaves.',
+      },
+    },
+    {
+      type: 'link',
+      href: '/local-storage/how-to/manage',
+      label: 'Manage & backups',
+      customProps: {
+        icon: Icons['tools'],
+        description: 'Browse the volume over SSH and web shell, back up and restore.',
+      },
+    },
+    {
+      type: 'link',
+      href: '/local-storage/tech-details',
+      label: 'Technical details',
+      customProps: {
+        icon: Icons['document-text'],
+        description: 'Filesystem semantics, co-location, and failure behavior.',
+      },
+    },
+  ]}
+/>
+
+## Need help?
+
+Stuck, or want to share what you built? Our core team and community are on Discord.
+
+<DocCardList
+  colSize={6}
+  items={[
+    {
+      type: 'link',
+      href: 'https://discord.com/invite/WDvCZ54',
+      label: 'Discord',
+      customProps: {
+        icon: Icons['discord'],
+        description:
+          'Join the Zerops community on Discord. Ask questions and share your tips.',
+      },
+    },
+    {
+      type: 'link',
+      href: '/references/cli',
+      label: 'zCLI',
+      customProps: {
+        icon: Icons['command-line'],
+        description: 'Get more out of Zerops with the command-line tool.',
+      },
+    },
+  ]}
+/>

@@ -1,0 +1,55 @@
+---
+title: Local Storage Technical Details
+description: Explore the filesystem semantics, co-location model, and failure behavior of Zerops Local Storage.
+---
+
+Zerops Local Storage is a persistent filesystem volume managed by the platform on a single physical machine, attached natively into every connected container. There is no network filesystem layer and no FUSE process — the containers see the volume as a local disk.
+
+## Architecture
+
+A Local Storage service consists of:
+
+- **A persistent volume**: a filesystem volume that holds your data. It exists independently of any container and survives container replacement.
+- **A maintenance container**: a small always-on container with the volume mounted at `/data`. It gives the service its hostname, carries [SSH and web shell access](/local-storage/how-to/manage#access-the-volume-directly), and is the source of [backups](/local-storage/how-to/manage#backups). It never runs user code.
+
+Runtime services that [mount the volume](/local-storage/how-to/connect) get it attached directly into their containers at their configured mount path.
+
+## Inside the Container
+
+The volume appears as a regular kernel mount of a local filesystem. There is no FUSE daemon and no network client involved, so no extra process consumes the container's memory and no file operation pays a network round trip.
+
+- **`df` is accurate**: the reported size is the volume's capacity and the reported usage is what is actually stored
+- **Ownership is consistent across containers**: the `zerops` user in one container is the `zerops` user in every other, so permissions behave exactly as they would for processes on a single machine
+- **Extended attributes and POSIX ACLs** are supported; filenames are case-sensitive
+
+## Filesystem Semantics
+
+All connected containers run on the same physical machine and share one kernel, so every mount is a view of the same local filesystem. This gives you full single-kernel POSIX semantics across containers — the properties that network filesystems cannot provide:
+
+- **Advisory locking works across containers**: `flock` and `fcntl` locks are enforced by the shared kernel, so a lock held in one container is visible in all others
+- **mmap coherence**: memory-mapped files stay coherent across containers. This is what makes SQLite in WAL mode safe with multiple connecting containers — WAL coordinates through an mmap'd shared-memory file, which is why [SQLite's own documentation ↗](https://sqlite.org/wal.html) states that "WAL does not work over a network filesystem". All containers mounting a Local Storage volume share one kernel, so they count as the same host
+- **Unified page cache**: a write in one container is immediately visible to reads in another, with no close-to-open consistency window
+- **Atomic rename and `O_APPEND`** behave exactly as on a local disk
+- **inotify propagates across containers**: file watchers in one container see events triggered from another
+
+This is why filesystem-based databases (SQLite, Prometheus TSDB) are safe on Local Storage while they are explicitly unsafe on [Shared Storage](/shared-storage/overview#use-cases) or any other network filesystem.
+
+:::note
+Even though locking is fully correct, a single-writer setup remains the most robust pattern for SQLite and similar databases. Use the [`readOnly` mount option](/local-storage/how-to/connect#the-volume-field) to enforce it.
+:::
+
+## Co-location and Scheduling
+
+The volume is locally attached, so every container that mounts it must run on the machine that holds it. Zerops enforces this automatically:
+
+- All containers of all connected runtime services are scheduled onto the volume's machine
+- Horizontal scaling of connected runtime services keeps working, but is limited by the free capacity of that machine
+- Connecting a volume ties the runtime service itself to a single machine: you trade away the runtime's resilience to hardware failure, not just the volume's
+
+## Availability and Failure Behavior
+
+Local Storage is **not highly available** — the volume exists once, on one machine, with no replication.
+
+The volume lives on a single physical machine, together with every runtime service that mounts it. If that hardware fails, or when maintenance requires moving workloads elsewhere, Zerops moves the volume to a healthy server and every connected runtime service goes through a small outage — stop, move, start. Recovering the volume and its data is not guaranteed.
+
+[Backups](/local-storage/how-to/manage#backups) are enabled by default and strongly recommended.

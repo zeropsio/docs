@@ -136,6 +136,7 @@ When using SSHFS (`zerops_mount`) for dev workflows, deploy replaces the contain
 2. **SSHFS mount auto-reconnects only while the service is running.** Usually no remount is needed, but if the mount goes stale after a deploy (stat/ls returns empty, writes hang), recover it explicitly with `zerops_mount action="mount"`. A stopped service has no live mount until it starts again.
 3. **zerops.yml must be in deployFiles** for dev self-deploy lifecycle. Without it, subsequent deploys from the container fail because zerops.yml is missing.
 
-**Two kinds of "mount" (disambiguation):**
+**Three kinds of "mount" (disambiguation):**
 - `zerops_mount` -- SSHFS tool, mounts service `/var/www` locally for development. This is a dev workflow tool.
-- Shared storage mount -- platform feature, attaches a shared-storage volume at `/mnt/{hostname}` via the service-level `mount:` parameter in import.yml. There is no `mount` field in zerops.yml (a `run.mount` is silently ignored). These are completely unrelated features.
+- Shared storage mount (deprecated) -- platform feature, attaches a shared-storage volume at `/mnt/{hostname}` via the service-level `mount:` parameter in import.yml. There is no `mount` field in zerops.yml (a `run.mount` is silently ignored). These are completely unrelated features.
+- Local Storage volume -- platform feature, mounts a Local Storage service's persistent volume via the `run.volume` field in zerops.yml (`volume: {hostname, mountPath, readOnly}`). The volume survives deploys: new containers get the same volume attached at the configured `mountPath`.

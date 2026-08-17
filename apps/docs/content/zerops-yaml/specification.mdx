@@ -661,6 +661,33 @@ run:
 
 Setup cron jobs. See [examples](/zerops-yaml/cron).
 
+### volume <Badge type="optional" />
+
+Mounts a [Local Storage](/local-storage/overview) service's volume into the runtime containers.
+
+```yaml
+run:
+  volume:
+    hostname: vol         # hostname of the Local Storage service
+    mountPath: /srv/data  # optional, defaults to /mnt/{hostname}
+    readOnly: false       # optional, defaults to false
+```
+
+Available parameters:
+
+#### hostname <Badge type="required" />
+Hostname of the Local Storage service in the same project.
+
+#### mountPath <Badge type="optional" />
+Absolute path the volume is mounted to inside the runtime containers. Defaults to `/mnt/{hostname}`. System directories (`/etc`, `/var`, `/var/www`, `/tmp`, ...) are rejected; their subdirectories are allowed.
+
+#### readOnly <Badge type="optional" />
+Mounts the volume read-only. Defaults to `false`.
+
+:::caution
+All containers of a service that mounts a volume are placed on the physical machine holding the volume, together with the containers of every other service mounting it. A service can mount at most one volume. See [Mount Local Storage to a service](/local-storage/how-to/connect) for details.
+:::
+
 :::note
 For more detailed information on specific configurations, refer to the runtime-specific guides linked at the beginning of this document.
 :::
