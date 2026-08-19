@@ -18,20 +18,18 @@ keywords:
 import DocCardList from '@theme/DocCardList';
 import { FAQ, FAQItem } from '/src/components/Faq';
 
-Zerops and Fly.io both run your app in containers without asking you to manage raw servers. Fly.io is built for edge and multi-region latency across 30+ global regions. Zerops focuses on a fully managed single-region platform: managed databases on a private network, SSH into any container, and fewer piecemeal fees for things like snapshots or inter-region traffic.
+Zerops and Fly.io both run your app in containers without asking you to manage raw servers. Fly.io is built for edge and multi-region latency across 30+ global regions. Zerops supports multi-region deployments but is not edge-native — the focus is on a fully managed platform: managed databases on a private network, SSH into any runtime service, and fewer piecemeal fees.
 
-This page is a straight comparison, not a sales pitch. Where Fly.io is genuinely stronger, we say so.
+Where Fly.io is genuinely stronger, this page says so.
 
 ## At a glance
 
 | | Zerops | Fly.io |
 |---|---|---|
-| **Regions** | Single-region focus | 30+ global regions, edge-native |
-| **Free tier** | Free lightweight project core | Removed in 2024, short trial only |
-| **Volume snapshots** | No separate snapshot fee | Billed since Jan 2026 ($0.08/GB/mo) |
-| **Inter-region networking** | N/A (single region) | Billed since Feb 2026 |
-| **SSH into containers** | Yes, any container | Limited, Machines-based model |
-| **Best fit** | Managed platform simplicity | Apps that need multi-region latency |
+| **Regions** | Multi-region supported; not edge-native | 30+ global regions, edge-native |
+| **Free tier** | Free promo credit | Removed in 2024, short trial only |
+| **Backups / snapshots** | Managed service backups included (5–25 GB) | Volume snapshots billed since Jan 2026 ($0.08/GB/mo) |
+| **SSH into containers** | Yes, any runtime service | Limited, Machines-based model |
 
 ## What Fly.io is
 
@@ -43,12 +41,12 @@ As of **August 2026**:
 
 - Fly.io moved to pure **pay-as-you-go** in October 2024, removing its old Hobby, Launch, and Scale plans and its permanent free allowance
 - New accounts get a short trial (around 2 machine-hours or 7 days)
-- A minimal always-on shared-CPU machine (256 MB RAM) runs about **$2/month**
+- A minimal always-on shared-CPU machine (1x sCPU, 256 MB RAM) runs about **$1.45/month**; a comparable Zerops instance (1x sCPU, 256MiB RAM, 1GiB HDD) runs about **$2.09/month**
 - Realistic small production setups often land around **$10 to $20/month** once volumes, a database, and egress are added
 - **Volume snapshots** started billing in January 2026 at **$0.08/GB/month**
 - **Inter-region private network** charges were added in February 2026
 
-Zerops has a free lightweight project core and bills the resources you run per minute. There is no separate snapshot fee of that shape, and inter-region networking fees do not apply because Zerops is single-region focused today.
+Zerops offers a free promo credit and bills the resources you run per minute. Zerops does not offer volume snapshots in the Fly.io sense — instead, managed services (databases and shared storage) get automatic backups included up to project tier limits (5 GB on the light core, 25 GB on the serious core), with overages billed at $0.1/GB/month.
 
 :::tip Check current numbers
 Machine rates, snapshot prices, and networking fees change. Confirm on Fly.io's own pricing page before you decide.
@@ -58,43 +56,43 @@ Machine rates, snapshot prices, and networking fees change. Confirm on Fly.io's 
 
 - **Multi-region by design.** If your app truly needs to run close to users across many geographies, this is a legitimate reason to pick Fly over Zerops today.
 - **Edge-native Machines.** Fine-grained control over where containers run and how they scale per region.
-- **Low entry for a tiny always-on machine.** A minimal shared-CPU Machine can start around $2/month before volumes and database costs.
+- **Low entry for a tiny always-on machine.** A minimal Fly.io Machine (1x sCPU, 256MiB RAM) starts around $1.45/month vs ~$2.09/month for a comparable Zerops instance. At 2x sCPU / 512MiB RAM, Fly.io is ~$2.80 vs Zerops ~$4.04; at 1x dCPU / 2GiB RAM, Fly.io is ~$12.10 vs Zerops ~$31.15. Fly.io is cheaper at the raw machine level — but realistic setups grow once you add volumes, a database, egress, and snapshot fees.
 
 ## Where Zerops differs
 
 ### Managed platform over edge topology
 
-Zerops focuses on a fully managed platform experience: managed databases on the same private network as your app, SSH into any container, and operational defaults that stay simple when multi-region latency is not a hard requirement. See [Project & Services Structure](/features/infrastructure) and [Internal access](/references/networking/internal-access).
+Zerops focuses on a fully managed platform experience: managed databases on the same private network as your app, SSH into any runtime service, and operational defaults that stay simple when low-latency edge proximity across dozens of regions is not a hard requirement. See [Project & Services Structure](/features/infrastructure) and [Internal access](/references/networking/internal-access).
 
 ### Full Linux containers with SSH
 
-Every Zerops container is a full Linux environment via [Incus](https://linuxcontainers.org/incus/). You can SSH into any running service. Fly.io's Machines model is more limited for general SSH into production instances.
+Every Zerops container is a full Linux environment via LXC. You can SSH into any running runtime service. Fly.io's Machines model is more limited for general SSH into production instances.
 
-### Fewer piecemeal infrastructure fees
+### Backup model vs volume snapshots
 
-Zerops does not add separate fees for volume snapshots the way Fly.io has since January 2026 ($0.08/GB/month), and it does not bill inter-region private networking (Fly.io added those charges in February 2026). If your architecture stays in one region, that simplicity usually matters more than edge placement.
+Zerops does not offer Fly.io-style volume snapshots. Instead, managed services (databases and shared storage) get automatic backups included up to project tier limits, with overages at $0.1/GB/month. Fly.io charges $0.08/GB/month for volume snapshots (since January 2026) and added inter-region private networking charges in February 2026.
 
-### Free project core vs short trial
+### Free promo credit vs short trial
 
-Zerops keeps a free lightweight project core. Fly.io removed its permanent free allowance in 2024 and replaced it with a short trial.
+Zerops offers a free promo credit. Fly.io removed its permanent free allowance in 2024 and replaced it with a short trial.
 
 ## Quick answers
 
 <FAQ>
   <FAQItem question="Is Zerops cheaper than Fly.io?">
-    It depends on the architecture. A minimal Fly.io Machine can be very cheap, but realistic production setups with volumes, a database, egress, snapshots, and (if used) inter-region networking often land higher. Zerops bills per minute with a free project core and no separate snapshot or inter-region fees. Compare the shape of your app, not only the cheapest Machine.
+    At the raw machine level Fly.io is cheaper: ~$1.45/month for a 1x sCPU / 256MiB RAM Machine vs ~$2.09/month for a comparable Zerops instance. But realistic production setups on Fly.io with volumes, a database, egress, snapshot fees (since Jan 2026), and inter-region networking (since Feb 2026) often land considerably higher. Zerops includes managed service backups up to tier limits and bills per minute with no separate snapshot fee. Compare the full shape of your app, not only the cheapest single Machine.
   </FAQItem>
   <FAQItem question="When should I pick Fly.io over Zerops?">
     When multi-region latency is a hard requirement. Fly.io runs Machines across 30+ regions and is built for edge proximity. If that is not a real need, Zerops is usually the simpler managed-platform tradeoff.
   </FAQItem>
   <FAQItem question="Does Fly.io still have a free tier?">
-    No permanent free tier. Fly.io removed it in 2024. New accounts get a short trial (around 2 machine-hours or 7 days). Zerops has a free lightweight project core.
+    No permanent free tier. Fly.io removed it in 2024. New accounts get a short trial (around 2 machine-hours or 7 days). Zerops offers a free promo credit; after that, you pay for the resources you run.
   </FAQItem>
   <FAQItem question="Does Fly.io charge for volume snapshots?">
-    Yes. Volume snapshots started billing in January 2026 at $0.08/GB/month. Inter-region private network charges were added in February 2026.
+    Yes. Volume snapshots started billing in January 2026 at $0.08/GB/month. Inter-region private network charges were added in February 2026. Zerops does not offer volume snapshots — managed services get automatic backups included up to tier limits instead.
   </FAQItem>
   <FAQItem question="Does Fly.io give SSH like Zerops?">
-    Access is more limited under the Machines model. Zerops provides SSH into any running container as a full Linux environment.
+    Access is more limited under the Machines model. Zerops provides SSH into any running runtime service as a full Linux environment.
   </FAQItem>
 </FAQ>
 
@@ -120,7 +118,7 @@ Zerops keeps a free lightweight project core. Fly.io removed its permanent free 
       customProps: {
         disableIcon: true,
         description:
-          'Usage billing, seat fees, SSH access, and owned hardware.',
+          'Usage billing, seat fees, SSH access, and dedicated hardware.',
       },
     },
     {

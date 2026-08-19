@@ -21,7 +21,7 @@ import { FAQ, FAQItem } from '/src/components/Faq';
 
 Zerops and Heroku both aim to make git-push style deploys the default way to ship apps. Heroku popularized that model and still has a mature buildpack and add-on ecosystem. Zerops is under active development, with full Linux containers, SSH, and horizontal scaling available without gating it behind higher dyno tiers.
 
-This page is a straight comparison, not a sales pitch. Where Heroku is genuinely stronger, we say so.
+Where Heroku is genuinely stronger, this page says so.
 
 :::info Platform direction (February 2026)
 Salesforce confirmed Heroku is moving to a **sustaining engineering** model: security patches and stability fixes continue, but no new features are planned and no new Enterprise contracts are being written. This is a real, disclosed change and relevant if you are choosing a platform for the long term.
@@ -32,11 +32,11 @@ Salesforce confirmed Heroku is moving to a **sustaining engineering** model: sec
 | | Zerops | Heroku |
 |---|---|---|
 | **Platform status** | Actively developed | Sustaining engineering only (Feb 2026) |
-| **Entry price** | Free lightweight project core | $5/month (Eco, sleeps after 30 min) |
+| **Entry price** | Free promo credit | $5/month (Eco, sleeps after 30 min) |
 | **Horizontal scaling** | Available by default | Requires Standard tier or above |
-| **SSH into containers** | Yes, any container | No, restricted dyno model |
-| **Managed Postgres** | Included as managed service | Starts at $50/month separately |
-| **Free tier** | Free project core | Removed November 2022 |
+| **SSH into containers** | Yes, any runtime service | No, restricted dyno model |
+| **Managed Postgres** | Paid managed service (from ~$1.35/mo) | Starts at $50/month separately |
+| **Free tier** | Free promo credit | Removed November 2022 |
 
 ## What Heroku is
 
@@ -54,7 +54,7 @@ As of **August 2026**:
 - Managed Postgres starts separately at **$50/month** for Standard-0
 - The free tier was removed in **November 2022**
 
-Zerops has a free lightweight project core. Compute is billed per minute, horizontal scaling is available by default, and managed Postgres is a first-class managed service rather than a separate add-on starting at $50/month. See [PostgreSQL on Zerops](/postgresql/overview) and [Scaling](/features/scaling).
+Zerops offers a free promo credit. Compute is billed per minute, horizontal scaling is available by default, and managed Postgres starts at around $1.35/month for the smallest non-HA instance — much less than Heroku's $50/month Standard-0. Note that Zerops Postgres does not support PITR, rollback, or forking; Heroku and Railway do. See [PostgreSQL on Zerops](/postgresql/overview) and [Scaling](/features/scaling).
 
 :::tip Check current numbers
 Dyno and Postgres prices change. Confirm on Heroku's own pricing page before you decide.
@@ -74,27 +74,27 @@ Zerops ships new features regularly. Heroku's disclosed sustaining-engineering m
 
 ### Full Linux containers with SSH
 
-Every Zerops container is a full Linux environment via [Incus](https://linuxcontainers.org/incus/). You can SSH into any running service. Heroku's dyno model is more restricted and does not give general SSH into production dynos.
+Every Zerops container is a full Linux environment via LXC. You can SSH into any running runtime service. Heroku's dyno model is more restricted and does not give general SSH into production dynos.
 
 ### Horizontal scaling without tier gates
 
 On Zerops, horizontal scaling is available by default. On Heroku, horizontal scaling requires Standard tier or above. Eco and Basic are limited accordingly.
 
-### Managed databases as first-class services
+### Managed databases on the same private network
 
-Zerops managed databases sit on the same private network as your app and are addressed by hostname. Heroku Postgres is a separate paid add-on (Standard-0 from $50/month). See [Internal access](/references/networking/internal-access).
+Zerops managed databases sit on the same private network as your app and are addressed by hostname. Heroku Postgres is a separate paid add-on starting at $50/month for Standard-0. Zerops Postgres starts around $1.35/month for the smallest non-HA instance, but does not support PITR, rollback, or forking that Heroku (and Railway) offer. See [Internal access](/references/networking/internal-access).
 
 ## Quick answers
 
 <FAQ>
   <FAQItem question="Is Zerops cheaper than Heroku?">
-    Often at small and mid scale, yes, but it depends on the dyno mix and add-ons. Heroku Eco starts at $5/month but sleeps after inactivity; Basic is $7/month with no horizontal scaling; managed Postgres starts at $50/month. Zerops has a free project core, per-minute compute, and managed Postgres as a first-class service. Compare your actual dyno and database footprint.
+    Often at small and mid scale, yes, but it depends on the dyno mix and add-ons. Heroku Eco starts at $5/month but sleeps after inactivity; Basic is $7/month with no horizontal scaling; managed Postgres starts at $50/month for Standard-0. Zerops bills compute per minute with managed Postgres starting around $1.35/month for a small non-HA instance. Compare your actual dyno and database footprint. Note that Zerops Postgres lacks PITR and forking that Heroku supports.
   </FAQItem>
   <FAQItem question="Is Heroku still getting new features?">
     No. In February 2026, Salesforce confirmed Heroku is in sustaining engineering: security and stability fixes continue, but no new features are planned and no new Enterprise contracts are being written.
   </FAQItem>
   <FAQItem question="Does Heroku support SSH into dynos?">
-    No general SSH into production dynos. Zerops provides SSH into any running container as a full Linux environment.
+    No general SSH into production dynos. Zerops provides SSH into any running runtime service as a full Linux environment.
   </FAQItem>
   <FAQItem question="Can I scale horizontally on Heroku Basic?">
     No. Horizontal scaling on Heroku requires Standard tier or above. Zerops includes horizontal scaling by default.
@@ -126,7 +126,7 @@ Zerops managed databases sit on the same private network as your app and are add
       customProps: {
         disableIcon: true,
         description:
-          'Usage billing, seat fees, SSH access, and owned hardware.',
+          'Usage billing, seat fees, SSH access, and dedicated hardware.',
       },
     },
     {

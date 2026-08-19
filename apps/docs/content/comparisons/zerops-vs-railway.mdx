@@ -18,24 +18,24 @@ keywords:
 import DocCardList from '@theme/DocCardList';
 import { FAQ, FAQItem } from '/src/components/Faq';
 
-Zerops and Railway are both developer platforms built for shipping apps without managing raw servers. Both run on owned hardware rather than reselling AWS or GCP. Where they differ is billing (seat fees vs none), how broad the managed service catalog is, and how much of the Linux environment you can reach day to day.
+Zerops and Railway are both developer platforms built for shipping apps without managing raw servers. Both run on dedicated bare metal rather than shared multi-tenant cloud VMs. Where they differ is billing (seat fees vs none), how broad the managed service catalog is, and how much of the Linux environment you can reach day to day.
 
-This page is a straight comparison, not a sales pitch. Where Railway is genuinely stronger, we say so.
+Where Railway is genuinely stronger, this page says so.
 
 ## At a glance
 
 | | Zerops | Railway |
 |---|---|---|
-| **Infrastructure** | Bare metal AMD EPYC, owned | Owned hardware (Railway Metal) |
-| **SSH into containers** | Yes, any container | Yes, added 2025 |
+| **Infrastructure** | Rented bare metal AMD EPYC | Rented hardware (Railway Metal) |
+| **SSH into containers** | Yes, any runtime service | Yes, added 2025 |
 | **Billing model** | Per minute, no seat fees | Per-second usage + per-seat plan fee |
-| **Entry price** | Free lightweight project core | $5/month (Hobby) |
-| **Free tier** | Free project core | One-time trial credit only |
-| **Managed services** | Databases, search, queues, vector DB as first-class services | Databases and add-ons on the private network |
+| **Entry price** | Free promo credit | $5/month (Hobby) |
+| **Free tier** | Free promo credit | One-time trial credit |
+| **Managed services** | Databases, search, queues, vector DB on the private network | Databases and add-ons on the private network |
 
 ## What Railway is
 
-Railway is a deployment platform focused on developer experience, usage-based billing, and fast setup. It runs on its own hardware (**Railway Metal**), not resold AWS or GCP capacity. Services sit on a private network and can talk to each other without exposing public endpoints.
+Railway is a deployment platform focused on developer experience, usage-based billing, and fast setup. It runs on dedicated hardware (**Railway Metal**). Services sit on a private network and can talk to each other without exposing public endpoints.
 
 ## Pricing
 
@@ -46,7 +46,7 @@ As of **August 2026**:
 - Both plans bill CPU, RAM, volumes, and egress **per second** on top of the included credit
 - There is no permanent free tier. New accounts get a one-time trial credit instead
 
-Zerops bills compute **per minute**, with no seat fee and no platform minimum beyond the project core. As your team grows, Railway's per-seat Pro charge scales with headcount; Zerops does not.
+Zerops bills compute **per minute**, with no seat fee. As your team grows, Railway's per-seat Pro charge scales with headcount; Zerops does not. Both platforms offer a free promo credit rather than a permanent free tier.
 
 :::tip Check current numbers
 Plan prices and included credits change. Confirm on Railway's own pricing page before you decide.
@@ -55,8 +55,8 @@ Plan prices and included credits change. Confirm on Railway's own pricing page b
 ## Where Railway is genuinely strong
 
 - **Deploy speed and DX.** Getting an app live is fast, and the dashboard is polished.
-- **SSH access.** Railway added SSH into containers in 2025, closing a gap that used to be a clear Zerops advantage.
-- **Owned hardware.** Like Zerops, Railway operates its own hardware rather than deploying customer workloads on AWS or GCP.
+- **SSH access.** Railway added SSH into containers in 2025.
+- **Dedicated hardware.** Like Zerops, Railway runs on dedicated bare metal rather than shared multi-tenant cloud VMs.
 
 ## Where Zerops differs
 
@@ -66,29 +66,29 @@ Zerops bills compute per minute with **no seat fee at all**. No per-seat charge 
 
 ### Broader managed service catalog
 
-Managed databases on both platforms sit on the same private network as your services and are addressed by hostname (for example `db`) rather than only by a connection URL. Zerops also includes more managed service types as first-class services rather than add-ons: search, queues, and vector databases. See [Project & Services Structure](/features/infrastructure) and [Internal access](/references/networking/internal-access).
+Managed databases on both platforms sit on the same private network as your services and are addressed by hostname (for example `db`) rather than only by a connection URL. Zerops also includes more managed service types built-in rather than as add-ons: search, queues, and vector databases. See [Project & Services Structure](/features/infrastructure) and [Internal access](/references/networking/internal-access).
 
 ### Full Linux containers
 
-Every Zerops container is a full Linux environment via [Incus](https://linuxcontainers.org/incus/). You can SSH into any running service. Railway also supports SSH as of 2025; the remaining difference is less about access and more about how much of the surrounding platform (managed services, networking defaults, project core) is built in.
+Every Zerops container is a full Linux environment via LXC. You can SSH into any running runtime service (not managed services like databases). Railway also supports SSH as of 2025; the remaining difference is less about access and more about how much of the surrounding platform (managed services, networking defaults) is built in.
 
 ## Quick answers
 
 <FAQ>
   <FAQItem question="Is Zerops cheaper than Railway?">
-    It depends on the workload and team size. Railway charges a plan fee (Hobby $5/month, or Pro $20/month per seat) plus per-second usage. Zerops has no seat fees and bills compute per minute with a free lightweight project core. Larger teams often see the seat fee matter more than the per-second vs per-minute difference.
+    It depends on the workload and team size. Railway charges a plan fee (Hobby $5/month, or Pro $20/month per seat) plus per-second usage. Zerops has no seat fees and bills compute per minute. Larger teams often see the seat fee matter more than the per-second vs per-minute difference.
   </FAQItem>
   <FAQItem question="Does Railway have SSH like Zerops?">
-    Yes. Railway added SSH access into containers in 2025. Zerops has offered SSH into any running container as a full Linux environment from the start.
+    Yes. Railway added SSH access into containers in 2025. Zerops has offered SSH into any running runtime service as a full Linux environment from the start. Neither platform gives SSH access into managed services like databases.
   </FAQItem>
   <FAQItem question="Does Railway run on AWS?">
-    No. Railway runs on owned hardware (Railway Metal), similar to how Zerops runs on its own bare metal AMD EPYC servers rather than reselling AWS or GCP.
+    Railway runs on dedicated bare metal (Railway Metal). They may use cloud providers for parts of their control plane, but customer workloads run on dedicated hardware. Zerops similarly runs on rented bare metal AMD EPYC hardware rather than shared multi-tenant cloud VMs.
   </FAQItem>
   <FAQItem question="Does Railway still have a free tier?">
-    No permanent free tier. New accounts get a one-time trial credit. Zerops has a free lightweight project core; you pay only for the resources you actually run.
+    No permanent free tier. New accounts get a one-time trial credit. Zerops similarly offers a free promo credit; after that, you pay for the resources you actually run.
   </FAQItem>
   <FAQItem question="When should I pick Railway over Zerops?">
-    When deploy speed and a polished day-one dashboard matter more than seat-fee cost or a broader built-in managed service catalog. Railway is genuinely strong at getting an app live quickly on owned metal.
+    When deploy speed and a polished day-one dashboard matter more than seat-fee cost or a broader built-in managed service catalog. Railway is genuinely strong at getting an app live quickly.
   </FAQItem>
 </FAQ>
 

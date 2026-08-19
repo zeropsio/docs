@@ -20,17 +20,15 @@ import { FAQ, FAQItem } from '/src/components/Faq';
 
 Zerops and Render are both PaaS platforms for deploying apps without managing raw servers. Render leans toward predictable, plan-based pricing. Zerops leans toward per-minute compute with no workspace fee and full Linux containers you can SSH into.
 
-This page is a straight comparison, not a sales pitch. Where Render is genuinely stronger, we say so.
+Where Render is genuinely stronger, this page says so.
 
 ## At a glance
 
 |                         | Zerops                                          | Render                                                                                     |
 | ----------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------ |
 | **Pricing model**       | Compute billed per minute, no workspace fee     | Flat workspace tier + separate compute                                                     |
-| **Included bandwidth**  | No separate bandwidth fee tiers                 | Cut in April 2026 (Pro: 500 GB to 25 GB)                                                   |
-| **Free database**       | Managed databases, no expiry                    | Free Postgres expires after 30 days unless upgraded, and is deleted after the grace period |
-| **SSH into containers** | Yes, any container                              | No, more restricted service model                                                          |
-| **Best fit**            | Full Linux control + permanent managed services | Predictable plan pricing, simple static sites                                              |
+| **Egress / bandwidth**  | Egress included up to project tier limits       | Reduced in April 2026 (Pro: 500 GB → 25 GB, Hobby: 100 GB → 5 GB)                         |
+| **SSH into containers** | Yes, any runtime service                        | No, more restricted service model                                                          |
 
 ## What Render is
 
@@ -45,9 +43,9 @@ Render restructured its pricing on **April 23, 2026**, replacing per-seat fees w
 - Starter-tier compute starts around **$7/month** per service
 - Standard-tier compute starts around **$25/month** per service
 - That same update reduced included bandwidth substantially: Pro-tier included bandwidth dropped from **500 GB to 25 GB**, and Hobby from **100 GB to 5 GB**
-- The free Postgres tier is **deleted after 30 days** with no grace period
+- Render's free Postgres tier is **deleted after 30 days** with no grace period; their paid Postgres tiers do not expire
 
-Zerops has no separate workspace fee layered on top of compute. You pay for the project core and the resources you run, billed per minute.
+Zerops has no separate workspace fee layered on top of compute. You pay for the resources you run, billed per minute. Egress is included up to project tier limits.
 
 :::tip Check current numbers
 Workspace tiers, bandwidth allowances, and compute rates change. Confirm on Render's own pricing page before you decide.
@@ -63,19 +61,19 @@ Workspace tiers, bandwidth allowances, and compute rates change. Confirm on Rend
 
 ### No workspace fee on top of compute
 
-Zerops does not charge a separate workspace fee layered on top of compute. Billing is per-minute resource usage plus the project core. Render's model is a flat workspace tier plus separate compute.
+Zerops does not charge a separate workspace fee layered on top of compute. Billing is per-minute resource usage. Render's model is a flat workspace tier plus separate compute.
 
-### Permanent managed databases
+### No expiring database tiers
 
-Zerops databases are permanent managed services, not free tiers with expiry dates. Render's free Postgres is deleted after 30 days with no grace period. See [PostgreSQL on Zerops](/postgresql/overview).
+Render's free Postgres tier is deleted after 30 days with no grace period. Render's paid Postgres tiers do not expire. Zerops managed Postgres is also a paid service and does not expire, billed per minute like the rest of your resources. See [PostgreSQL on Zerops](/postgresql/overview).
 
 ### Full Linux containers with SSH
 
-Every Zerops container is a full Linux environment via [Incus](https://linuxcontainers.org/incus/). You can SSH into any running service. Render uses a more locked-down service model without general SSH into production instances.
+Every Zerops container is a full Linux environment via LXC. You can SSH into any running runtime service. Render uses a more locked-down service model without general SSH into production instances.
 
-### Bandwidth without tier cliffs
+### Egress / bandwidth
 
-Zerops uses a different billing model for network traffic rather than workspace bandwidth allowances Render made in April 2026 (Pro 500 GB to 25 GB, Hobby 100 GB to 5 GB). Always compare your real traffic profile against current allowances on both sides.
+Zerops includes egress up to the limits of your project tier (100 GB on the light core, 3 TB on the serious core), with overage billed separately. Render reduced its included bandwidth substantially in April 2026 (Pro from 500 GB to 25 GB, Hobby from 100 GB to 5 GB). Compare your real traffic profile against the current allowances on both sides.
 
 ## Quick answers
 
@@ -84,13 +82,13 @@ Zerops uses a different billing model for network traffic rather than workspace 
     It depends on the workload. Render uses workspace tiers plus per-second compute, which can be easier to predict month to month. Zerops has no workspace fee and bills compute per minute. Bandwidth-heavy apps should compare Render's reduced included allowances (as of April 2026) against Zerops egress for the same traffic.
   </FAQItem>
   <FAQItem question="Does Render give you SSH into containers?">
-    No. Render uses a more restricted service model. Zerops gives full Linux containers with SSH into any running service.
+    No. Render uses a more restricted service model. Zerops gives SSH into any running runtime service via full Linux containers.
   </FAQItem>
   <FAQItem question="What happened to Render free Postgres?">
-    Free Postgres on Render is deleted after 30 days with no grace period. Zerops managed databases are permanent services without that expiry model.
+    Render's free Postgres tier is deleted after 30 days with no grace period. Render's paid Postgres tiers persist without expiring. Zerops Postgres is a paid managed service from the start and also does not expire.
   </FAQItem>
   <FAQItem question="Did Render change bandwidth limits?">
-    Yes. In April 2026, Pro-tier included bandwidth dropped from 500 GB to 25 GB, and Hobby from 100 GB to 5 GB. Confirm current allowances on Render's pricing page.
+    Yes. In April 2026, Render reduced included bandwidth substantially: Pro dropped from 500 GB to 25 GB, and Hobby from 100 GB to 5 GB. Zerops includes egress up to project tier limits with separate overage pricing. Confirm current numbers on both sides before deciding.
   </FAQItem>
   <FAQItem question="When should I pick Render over Zerops?">
     When you want month-to-month cost that maps mostly to a plan tier, or when a static site / simple service fits cleanly on Render's free or low workspace tiers.
@@ -119,7 +117,7 @@ label: 'Zerops vs Railway',
 customProps: {
 disableIcon: true,
 description:
-'Usage billing, seat fees, SSH access, and owned hardware.',
+'Usage billing, seat fees, SSH access, and dedicated hardware.',
 },
 },
 {

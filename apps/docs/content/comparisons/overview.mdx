@@ -23,7 +23,7 @@ import { FAQ, FAQItem } from '/src/components/Faq';
 
 Zerops, Railway, Render, Heroku, and Fly.io all solve the same problem: run your code without managing raw servers. They differ in how much of the machine you can reach, how pricing is structured, and what stays free after you get past day one.
 
-This section is a straight comparison, not a sales pitch. Where a competitor is genuinely stronger, we say so. Use the [quick answers](#quick-answers) below, skim the [at-a-glance table](#at-a-glance), or open a platform-specific page for the full breakdown.
+Use the [quick answers](#quick-answers) below, skim the [at-a-glance table](#at-a-glance), or open a platform-specific page for the full breakdown.
 
 ## What this section covers
 
@@ -31,7 +31,7 @@ Each comparison page looks at the same dimensions so you can judge platforms sid
 
 - **Pricing model:** seat fees, workspace tiers, per-second vs per-minute compute, and what you pay at small scale
 - **Containers and SSH:** full Linux access vs a more locked-down runtime
-- **Infrastructure:** owned bare metal vs capacity layered on a major cloud
+- **Infrastructure:** dedicated bare metal vs capacity layered on a major cloud
 - **Free tiers and trials:** what still exists in 2026, and what was removed
 - **Managed services:** databases, storage, and how they connect on the private network
 
@@ -39,12 +39,11 @@ Each comparison page looks at the same dimensions so you can judge platforms sid
 
 | | Zerops | Railway | Render | Heroku | Fly.io |
 |---|---|---|---|---|---|
-| **Infrastructure** | Owned bare metal (AMD EPYC) | Owned hardware (Railway Metal) | Cloud-provider backed | Cloud-provider backed | Own edge fleet + abstractions |
+| **Infrastructure** | Rented bare metal (AMD EPYC) | Rented hardware (Railway Metal) | Cloud-provider backed | Cloud-provider backed | Own edge fleet + abstractions |
 | **Billing** | Per-minute compute, no seat fee | Per-second usage + plan / seat fee | Workspace tier + per-second compute | Dyno plans by size | Pay-as-you-go |
-| **Entry price** | Free lightweight project core | $5/month Hobby | Free tier (limited) + paid workspaces | $5/month Eco | ~$2/month minimal machine |
-| **Free tier** | Free project core | One-time trial credit | Limited free services / static | Removed Nov 2022 | Removed 2024 (short trial) |
-| **SSH into containers** | Yes, any container | Yes (added 2025) | No (restricted model) | No (dyno model) | Limited (Machines model) |
-| **Best fit** | Full Linux control + managed services | Fast DX on owned metal | Predictable plan pricing | Mature buildpacks / add-ons | Multi-region / edge latency |
+| **Entry price** | Free promo credit, then pay for what you run | $5/month Hobby | Free tier (limited) + paid workspaces | $5/month Eco | ~$2/month minimal machine |
+| **Free tier** | Free promo credit | One-time trial credit | Limited free services / static | Removed Nov 2022 | Removed 2024 (short trial) |
+| **SSH into containers** | Yes, any runtime service | Yes (added 2025) | No (restricted model) | No (dyno model) | Limited (Machines model) |
 
 :::tip Dig into one platform
 Numbers and product details change often. Each linked page below has the longer write-up and an updated pricing snapshot for August 2026.
@@ -62,7 +61,7 @@ Numbers and product details change often. Each linked page below has the longer 
       customProps: {
         disableIcon: true,
         description:
-          'Usage billing, seat fees, SSH access, and managed services on owned hardware.',
+          'Usage billing, seat fees, SSH access, and managed services on dedicated hardware.',
       },
     },
     {
@@ -104,37 +103,37 @@ Across these comparisons, a few differences show up repeatedly:
 
 ### Full Linux containers with SSH
 
-Every Zerops container is a full Linux environment via [Incus](https://linuxcontainers.org/incus/). You can SSH into any running service. Railway added SSH in 2025. Render, Heroku, and Fly.io still use more restricted runtime models.
+Every Zerops container is a full Linux environment via LXC. You can SSH into any running runtime service. Railway added SSH in 2025. Render, Heroku, and Fly.io still use more restricted runtime models.
 
 ### Bare-metal infrastructure
 
-Zerops runs on its own bare metal AMD EPYC hardware, not resold AWS or GCP capacity. Railway also runs on owned hardware (Railway Metal). Render, Heroku, and Fly.io sit on major cloud providers or their own fleets with similar abstractions on top.
+Zerops runs on rented bare metal AMD EPYC hardware, not shared multi-tenant cloud VMs. Railway also runs on dedicated hardware (Railway Metal). Render, Heroku, and Fly.io sit on major cloud providers or their own fleets with similar abstractions on top.
 
 ### Pricing without seat fees
 
-Zerops bills compute **per minute**, with no seat fee and no platform minimum beyond the project core. The others mix plan fees, seat charges, workspace tiers, or usage credits in different ways. Details live on each comparison page.
+Zerops bills compute **per minute**, with no seat fee. The others mix plan fees, seat charges, workspace tiers, or usage credits in different ways. See comparison pages for details.
 
 ### Managed services on one private network
 
-Databases, caches, search, queues, and storage run as first-class managed services on the same private network as your app, addressed by hostname (for example `db`). See [Project & Services Structure](/features/infrastructure) and [Internal access](/references/networking/internal-access).
+Databases, caches, search, queues, and storage run as managed services on the same private network as your app, addressed by hostname (for example `db`). See [Project & Services Structure](/features/infrastructure) and [Internal access](/references/networking/internal-access).
 
 ## Quick answers
 
 <FAQ>
   <FAQItem question="Is Zerops cheaper than Railway, Render, Heroku, or Fly.io?">
-    It depends on the workload. All five platforms bill differently: flat plans, per-second usage, or a mix. Zerops has no seat fees and no platform minimum beyond the project core, and bills compute per minute. Check each comparison page for how the others structure pricing.
+    It depends on the workload. All five platforms bill differently: flat plans, per-second usage, or a mix. Zerops has no seat fees and bills compute per minute. Check each comparison page for how the others structure pricing.
   </FAQItem>
   <FAQItem question="Does Zerops give you SSH access like a VPS?">
-    Yes. Every Zerops container is a full Linux environment via Incus, and you can SSH into any running service. Railway added SSH in 2025. Render, Heroku, and Fly.io still run more restricted container models without general SSH into production instances.
+    Yes, into any running runtime service. Every Zerops container is a full Linux environment via LXC. Managed services (databases, caches, etc.) are not accessible via SSH. Railway added SSH in 2025. Render, Heroku, and Fly.io still run more restricted container models without general SSH into production instances.
   </FAQItem>
   <FAQItem question="Is Zerops built on AWS?">
-    No. Zerops runs on its own bare metal AMD EPYC hardware. Railway also runs on owned hardware (Railway Metal) rather than reselling AWS or GCP. Render, Heroku, and Fly.io run on major cloud providers or their own infrastructure layered with similar abstractions.
+    No. Zerops runs on rented bare metal AMD EPYC hardware rather than shared multi-tenant cloud VMs. Railway also runs on dedicated hardware (Railway Metal). Render, Heroku, and Fly.io run on major cloud providers or their own infrastructure layered with similar abstractions.
   </FAQItem>
   <FAQItem question="Which of these platforms still has a free tier?">
-    Render keeps a limited free tier for small services and static sites. Railway offers a one-time trial credit rather than an ongoing free plan. Heroku removed its free tier in November 2022. Fly.io removed its permanent free allowance in 2024 and replaced it with a short trial. Zerops has a free lightweight project core; you pay only for the resources you actually run.
+    Render keeps a limited free tier for small services and static sites. Railway offers a one-time trial credit. Heroku removed its free tier in November 2022. Fly.io removed its permanent free allowance in 2024 and replaced it with a short trial. Zerops offers a free promo credit; after that, you pay for the resources you actually run.
   </FAQItem>
   <FAQItem question="When should I pick Fly.io instead of Zerops?">
-    When multi-region latency is a hard requirement. Fly.io runs Machines across 30+ regions and is built for edge proximity. Zerops focuses on a fully managed single-region platform experience with managed services, SSH, and simpler operational defaults. See <a href="/comparisons/zerops-vs-flyio">Zerops vs Fly.io</a>.
+    When edge proximity across 30+ regions is a hard requirement. Fly.io is built specifically for that. Zerops supports multi-region deployments but is not edge-native — it focuses on a fully managed platform with managed services, SSH, and simpler operational defaults. See <a href="/comparisons/zerops-vs-flyio">Zerops vs Fly.io</a>.
   </FAQItem>
   <FAQItem question="Is Heroku still a good long-term choice?">
     In February 2026, Salesforce confirmed Heroku is moving to a sustaining-engineering model: security and stability fixes continue, but no new features are planned and no new Enterprise contracts are being written. That matters if you need an actively developed platform. See <a href="/comparisons/zerops-vs-heroku">Zerops vs Heroku</a>.
