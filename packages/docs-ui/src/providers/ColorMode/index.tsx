@@ -28,7 +28,10 @@ export const ColorModeProvider = ({ children }: ColorModeProviderProps) => {
       return;
     }
 
-    const theme = localStorage.getItem('theme');
+    const urlTheme = new URLSearchParams(window.location.search).get(
+      'docusaurus-theme'
+    );
+    const theme = urlTheme ?? localStorage.getItem('theme');
     if (theme && (theme === 'light' || theme === 'dark')) {
       setColorMode(theme);
     } else {
