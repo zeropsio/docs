@@ -17,7 +17,7 @@ Add a Local Storage service to your project:
 ```yaml title="zerops-import.yaml"
 services:
   - hostname: vol
-    type: local-storage:single
+    type: local-storage:single@1
 
   - hostname: app
     type: nodejs@22
@@ -41,12 +41,12 @@ After the next deploy, the volume is mounted at `/mnt/vol` in all containers of 
 
 Local Storage is a good fit for:
 
-- **SQLite and other embedded databases**: full locking and mmap coherence make SQLite safe, including WAL mode with multiple connecting containers (a single writer is still recommended)
+- **SQLite and other embedded databases**: full locking and mmap coherence make SQLite safe, including WAL mode with multiple connecting containers ([single-writer restrictions still apply](/local-storage/tech-details#filesystem-semantics))
 - **Single-node stateful apps**: Prometheus, Gitea, and similar applications that keep their state in a local data directory
 - **Sharing filesystem state**: certificates, caches, and other files shared across containers and services within a project, with immediate visibility of writes
 - **Anything that needs a real local filesystem**: workloads that break on network filesystems because they rely on locking, mmap, inotify, or atomic renames
 
-:::caution Not highly available
+:::caution Not currently highly available
 The volume lives on a single physical machine, together with every runtime service that mounts it. If that hardware fails, or when maintenance requires moving workloads elsewhere, Zerops moves the volume to a healthy server and every connected runtime service goes through a small outage — stop, move, start. Recovering the volume and its data is not guaranteed.
 
 Automated [backups](/local-storage/how-to/manage#backups) are enabled by default and strongly recommended.
@@ -82,19 +82,22 @@ The first word of each storage type names its access model:
       <td className="w-fit"><b>Local Storage</b></td>
       <td className="w-fit">Locally attached disk, single machine</td>
       <td className="w-fit">Full single-kernel POSIX: locking, mmap, inotify across all connected containers</td>
-      <td className="w-fit">No</td>
+      <td className="w-fit">Not yet</td>
     </tr>
   </tbody>
 </table>
 
-Local Storage trades high availability for correctness and speed: it is the only storage type where lock-dependent workloads like databases are safe.
+Local Storage trades high availability for correctness and speed: it is the only storage type where lock-dependent workloads like databases are safe. An HA mode may be added in the future.
+
+Already on Shared Storage? Follow the [migration guide](/local-storage/how-to/migrate-from-shared-storage) to move your data to a Local Storage volume without changing your application.
 
 ## Key trade-offs
 
 - **Co-location**: all containers of every connected runtime service are placed on the same physical machine as the volume. Connecting a volume therefore ties the runtime service itself to that machine — a hardware failure affects all connected services at once, and horizontal scaling is limited by the capacity of that machine.
 - **One volume per runtime service**: a runtime service mounts at most one Local Storage volume. Multiple runtime services can mount the same volume.
 - The volume is mounted in runtime containers only — it is not available during build and prepare phases.
-- Single container mode only; there is no HA mode.
+- **Backups are `.tar.gz` archives of the live volume**, so database files can be captured mid-write. Schedule an application-level copy (`sqlite3 .backup`) for a restorable database — see [consistent database backups](/local-storage/how-to/manage#consistent-database-backups). Snapshot-based, point-in-time backups are planned.
+- Single container mode only; there is currently no HA mode.
 
 ## Next steps
 
@@ -126,6 +129,15 @@ Local Storage trades high availability for correctness and speed: it is the only
       customProps: {
         icon: Icons['tools'],
         description: 'Browse the volume over SSH and web shell, back up and restore.',
+      },
+    },
+    {
+      type: 'link',
+      href: '/local-storage/how-to/migrate-from-shared-storage',
+      label: 'Migrate from Shared Storage',
+      customProps: {
+        icon: Icons['arrow-path'],
+        description: 'Move data from a deprecated Shared Storage to a Local Storage volume.',
       },
     },
     {

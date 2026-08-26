@@ -2788,6 +2788,11 @@ module.exports = {
           id: 'local-storage/how-to/manage',
           label: 'Manage & backups',
         },
+        {
+          type: 'doc',
+          id: 'local-storage/how-to/migrate-from-shared-storage',
+          label: 'Migrate from Shared Storage',
+        },
       ],
     },
     {

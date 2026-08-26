@@ -14,15 +14,16 @@ description: "**Use Object Storage** for uploads, media, and backups; **use Loca
 | Single-node stateful app (Gitea, etc.) | **Local Storage** | Persistent volume survives deploys and container replacement |
 | Filesystem state shared between services (certs, caches) | **Local Storage** | One volume mountable by multiple runtime services, writes visible immediately |
 | Temp/scratch files | Container disk | Fine as-is; lost on deploy |
-| Existing `mount:`-based setups | Shared Storage (deprecated) | Keeps working; migrate to Local Storage or Object Storage |
+| Existing `mount:`-based setups | Shared Storage (deprecated) | Keeps working; [migrate to Local Storage](/local-storage/how-to/migrate-from-shared-storage) or Object Storage |
 
 ## Local Storage
 
-- Service type `local-storage:single`; runtime services mount it via `run.volume` in zerops.yaml: `volume: {hostname: <storage>, mountPath: /path (default /mnt/{hostname}), readOnly: false}`. One volume per runtime service; multiple services can mount the same volume.
-- The volume is local to one physical machine: **all containers of all connected services are co-located on the volume's machine**. Not HA — on hardware failure or maintenance, Zerops moves the volume to a healthy server and every connected service goes through a small outage (stop, move, start); volume recovery is not guaranteed, so backups are strongly recommended. Horizontal scaling of connected services is capped by that machine's capacity.
+- Service type `local-storage:single@1`; runtime services mount it via `run.volume` in zerops.yaml: `volume: {hostname: <storage>, mountPath: /path (default /mnt/{hostname}), readOnly: false}`. One volume per runtime service; multiple services can mount the same volume.
+- The volume is local to one physical machine: **all containers of all connected services are co-located on the volume's machine**. Not HA today (an HA mode may be added in the future) — on hardware failure or maintenance, Zerops moves the volume to a healthy server and every connected service goes through a small outage (stop, move, start); volume recovery is not guaranteed, so backups are strongly recommended. Horizontal scaling of connected services is capped by that machine's capacity.
 - The volume survives deploys: new containers get the same volume attached. Mounted in runtime containers only (not build/prepare).
 - Capacity = the service's max disk in `verticalAutoscaling`. Usage is billed as the service's disk usage.
-- The service's own container has the volume at `/data` with SSH/web-shell access for direct inspection. Daily `.tar.gz` backups of the live volume are on by default — pause database writes or use application-level backups (e.g. `sqlite3 .backup`) for guaranteed-consistent archives.
+- The service's own container has the volume at `/data` with SSH/web-shell access for direct inspection. Daily `.tar.gz` backups of the live volume are on by default — they can capture database files mid-write, so for SQLite schedule a `run.crontab` job that writes a consistent copy onto the volume (`sqlite3 <db> ".backup <path-on-volume>"`, `allContainers: false`) and let the archive pick that copy up. Snapshot-based point-in-time backups are planned.
+- SQLite single-writer restrictions still apply: locking is correct, but only one writer at a time — keep writes in one service/container and mount `readOnly: true` elsewhere.
 
 ## Object Storage
 
