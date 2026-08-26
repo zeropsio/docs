@@ -494,6 +494,15 @@ module.exports = {
       items: [
         {
           type: 'ref',
+          id: 'storage/overview',
+          label: 'Storage overview',
+          customProps: {
+            sidebar_icon: 'archive-box',
+          },
+          className: 'homepage-sidebar-item  service-sidebar-item',
+        },
+        {
+          type: 'ref',
           id: 'object-storage/overview',
           label: 'Object Storage',
           customProps: {
@@ -2742,6 +2751,26 @@ module.exports = {
       customProps: {
         sidebar_is_title: true,
         sidebar_icon: 'clickhouse',
+      },
+    },
+  ],
+  storage: [
+    {
+      type: 'ref',
+      id: 'homepage',
+      label: 'Back to home',
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: 'back-arrow',
+      },
+    },
+    {
+      type: 'doc',
+      id: 'storage/overview',
+      label: 'Storage overview',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'archive-box',
       },
     },
   ],

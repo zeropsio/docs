@@ -41,6 +41,7 @@ export const databases = [
 ]
 
 export const storages = [
+    { name: "Storage overview", link: "/storage/overview", icon:  },
     { name: "Object storage", link: "/object-storage/overview", icon:  },
     { name: "Local storage", link: "/local-storage/overview", icon:  },
     { name: "Shared storage", link: "/shared-storage/overview", icon:  },
@@ -66,7 +67,7 @@ These services are fully managed by Zerops and offered in highly available and s
 
 ### Storages
 
-Fully managed S3 compatible storage running on a separate infrastructure and persistent disk volumes that can be mounted to multiple services.
+Fully managed S3 compatible storage running on a separate infrastructure and persistent disk volumes that can be mounted to multiple services. Runtime containers are replaced on every deploy, so persistent data belongs in one of these — see [Storage on Zerops](/storage/overview).
 
 ## Quicklinks
 
@@ -789,7 +790,7 @@ Setup cron jobs. See [examples](/zerops-yaml/cron).
 
 ### volume *[Optional]*
 
-Mounts a [Local Storage](/local-storage/overview) service's volume into the runtime containers.
+Mounts a [Local Storage](/local-storage/overview) service's volume into the runtime containers. The mount exists only in the run phase — it is not available in the build or prepare containers, so `build` and `run.prepareCommands` cannot access the volume. See [how the mount behaves](/local-storage/how-to/connect#how-the-mount-behaves).
 
 ```yaml
 run:
@@ -5106,6 +5107,78 @@ const searchResults = await client.collections('companies')
 For advanced configurations or custom requirements:
 - Join our [Discord community](https://discord.gg/zeropsio)
 - Contact support via [email](mailto:support@zerops.io)
+
+----------------------------------------
+
+# Storage > Overview
+
+
+Runtime containers on Zerops are **volatile**. Anything your application needs to keep must live outside the container — in a [managed database](/postgresql/overview), or in one of the storage services described on this page.
+
+## Container filesystem is volatile
+
+The filesystem of a runtime container survives a restart, a reload, and a stop and start, but that is all:
+
+- **Every deploy replaces the containers.** The new containers contain only the [`deployFiles`](/zerops-yaml/specification#deployfiles-) of the new build; whatever the previous containers wrote to disk is gone.
+- **Containers are replaced when the service scales.** Scaling horizontally creates and removes containers, each with its own disk.
+- **Containers do not share a filesystem.** A file written in one container is not visible in the others of the same service.
+
+Use the container disk for temporary and scratch files only. Everything else — uploads, generated files, application state, anything shared between containers — belongs in a storage service or a database.
+
+## Storage services
+
+Zerops offers three storage services. The first word of each name tells you the access model:
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit" style={{ minWidth: '130px' }}>Service</th>
+      <th className="w-fit">Access model</th>
+      <th className="w-fit">Semantics</th>
+      <th className="w-fit" style={{ minWidth: '60px' }}>HA</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit"><b>[Object Storage](/object-storage/overview)</b></td>
+      <td className="w-fit">S3 API over the network</td>
+      <td className="w-fit">Object semantics; best price and durability for uploads, media, and backups</td>
+      <td className="w-fit">Yes</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><b>[Local Storage](/local-storage/overview)</b></td>
+      <td className="w-fit">Locally attached disk, single machine</td>
+      <td className="w-fit">Full single-kernel POSIX: locking, mmap, inotify across all connected containers</td>
+      <td className="w-fit">Not yet</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><b>[Shared Storage](/shared-storage/overview)</b> (deprecated)</td>
+      <td className="w-fit">Network filesystem</td>
+      <td className="w-fit">POSIX-like with network filesystem caveats (per-mount locks, write amplification)</td>
+      <td className="w-fit">Yes</td>
+    </tr>
+  </tbody>
+</table>
+
+## Which one to use
+
+- **Uploads, media, backups, logs, exports** — [Object Storage](/object-storage/overview). Highly available, cheapest per GB, and independent of any runtime service; the default for most application data.
+- **Anything that needs a real filesystem** — [Local Storage](/local-storage/overview). SQLite and other embedded databases, single-node stateful apps such as Prometheus or Gitea, and filesystem state shared between services (certificates, caches). It is the only storage type where lock-dependent workloads are safe; see its [trade-offs](/local-storage/overview#key-trade-offs).
+- **Existing `mount:`-based setups** — [Shared Storage](/shared-storage/overview) keeps working but is deprecated. Move to Local Storage with the [migration guide](/local-storage/how-to/migrate-from-shared-storage), or to Object Storage if the data fits the S3 model.
+
+For structured data, use a [managed database](/postgresql/overview) rather than files on any storage.
+
+- [Object Storage](/object-storage/overview) — S3 compatible storage for uploads, media, and backups.
+- [Local Storage](/local-storage/overview) — Persistent local disk volume with full POSIX semantics.
+- [Shared Storage](/shared-storage/overview) — Deprecated network filesystem. See the migration guide.
+
+## Need help?
+
+Stuck, or want to share what you built? Our core team and community are on Discord.
+
+- [Discord](https://discord.com/invite/WDvCZ54) — Join the Zerops community on Discord. Ask questions and share your tips.
+- [zCLI](/references/cli) — Get more out of Zerops with the command-line tool.
+
 
 ----------------------------------------
 
@@ -18698,7 +18771,7 @@ After the next deploy, the volume is mounted at `/mnt/vol` in all containers of 
 Local Storage is a good fit for:
 
 - **SQLite and other embedded databases**: full locking and mmap coherence make SQLite safe, including WAL mode with multiple connecting containers ([single-writer restrictions still apply](/local-storage/tech-details#filesystem-semantics))
-- **Single-node stateful apps**: Prometheus, Gitea, and similar applications that keep their state in a local data directory
+- **Single-node stateful apps**: Prometheus, Gitea, and similar applications that keep their state in a local data directory — see the [Gitea recipe ↗](https://github.com/zeropsio/recipe-gitea) for a complete example built on Local Storage
 - **Sharing filesystem state**: certificates, caches, and other files shared across containers and services within a project, with immediate visibility of writes
 - **Anything that needs a real local filesystem**: workloads that break on network filesystems because they rely on locking, mmap, inotify, or atomic renames
 
@@ -18710,40 +18783,7 @@ Automated [backups](/local-storage/how-to/manage#backups) are enabled by default
 
 ## Choosing a storage type
 
-The first word of each storage type names its access model:
-
-<table className="w-full my-1.5">
-  <thead>
-    <tr>
-      <th className="w-fit" style={{ minWidth: '130px' }}>Service</th>
-      <th className="w-fit">Access model</th>
-      <th className="w-fit">Semantics</th>
-      <th className="w-fit" style={{ minWidth: '60px' }}>HA</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td className="w-fit"><b>[Object Storage](/object-storage/overview)</b></td>
-      <td className="w-fit">S3 API over the network</td>
-      <td className="w-fit">Object semantics; best price and durability for uploads, media, and backups</td>
-      <td className="w-fit">Yes</td>
-    </tr>
-    <tr>
-      <td className="w-fit"><b>[Shared Storage](/shared-storage/overview)</b> (deprecated)</td>
-      <td className="w-fit">Network filesystem</td>
-      <td className="w-fit">POSIX-like with network filesystem caveats (per-mount locks, write amplification)</td>
-      <td className="w-fit">Yes</td>
-    </tr>
-    <tr>
-      <td className="w-fit"><b>Local Storage</b></td>
-      <td className="w-fit">Locally attached disk, single machine</td>
-      <td className="w-fit">Full single-kernel POSIX: locking, mmap, inotify across all connected containers</td>
-      <td className="w-fit">Not yet</td>
-    </tr>
-  </tbody>
-</table>
-
-Local Storage trades high availability for correctness and speed: it is the only storage type where lock-dependent workloads like databases are safe. An HA mode may be added in the future.
+Local Storage trades high availability for correctness and speed: it is the only storage type where lock-dependent workloads like databases are safe. An HA mode may be added in the future. See [Storage on Zerops](/storage/overview) for a comparison with Object Storage and Shared Storage and guidance on which one to use.
 
 Already on Shared Storage? Follow the [migration guide](/local-storage/how-to/migrate-from-shared-storage) to move your data to a Local Storage volume without changing your application.
 
@@ -18760,6 +18800,7 @@ Already on Shared Storage? Follow the [migration guide](/local-storage/how-to/mi
 - [Create Local Storage](/local-storage/how-to/create) — Create a service with zerops-import.yaml or in the GUI.
 - [Mount to a service](/local-storage/how-to/connect) — The zerops.yaml volume field and how the mount behaves.
 - [Manage & backups](/local-storage/how-to/manage) — Browse the volume over SSH and web shell, back up and restore.
+- [Migrate from Shared Storage](/local-storage/how-to/migrate-from-shared-storage) — Move data from a deprecated Shared Storage to a Local Storage volume.
 - [Technical details](/local-storage/tech-details) — Filesystem semantics, co-location, and failure behavior.
 
 ## Need help?
@@ -18768,6 +18809,141 @@ Stuck, or want to share what you built? Our core team and community are on Disco
 
 - [Discord](https://discord.com/invite/WDvCZ54) — Join the Zerops community on Discord. Ask questions and share your tips.
 - [zCLI](/references/cli) — Get more out of Zerops with the command-line tool.
+
+
+----------------------------------------
+
+# Local Storage > How To > Migrate From Shared Storage
+
+
+[Shared Storage](/shared-storage/overview) is deprecated. This guide moves the data of an existing Shared Storage service to a new Local Storage volume and switches your runtime services over to it. The new volume is mounted at the **same path** the shared storage used (`/mnt/<old-hostname>`), so your application code and configuration stay untouched.
+
+The migration in short:
+
+1. Stop everything that writes to the shared storage.
+2. Create the Local Storage service and a temporary migrator service that mounts both storages.
+3. Copy the data from the old mount to the new one.
+4. Disconnect the shared storage from all services and stop it.
+5. Mount the new volume in your runtime services at the old path and deploy.
+6. Verify, then delete the migrator and the shared storage.
+
+Throughout the guide, `volume` is the hostname of the **old Shared Storage** service and `volume2` the hostname of the **new Local Storage** service. Replace them with your own.
+
+## Before you start
+
+Local Storage is a different kind of storage than the network filesystem it replaces — read its [key trade-offs](/local-storage/overview#key-trade-offs) before you migrate. One consequence for the migration: a runtime service mounts at most one Local Storage volume, so if a service mounts several shared storages, copy them into subdirectories of a single volume and point your application at the new paths.
+
+Take a fresh [backup](/shared-storage/how-to/manage#backups) of the shared storage before you begin.
+
+## 1. Stop all writers
+
+Stop every service or process that writes to the shared storage — stop the runtime services in the Zerops GUI, or put your application into a maintenance mode that disables writes. Read-only access can stay up.
+
+:::caution
+Files that change while they are being copied end up inconsistent on the new volume. Do not skip this step.
+:::
+
+## 2. Create the Local Storage and a migrator service
+
+Import the new Local Storage service together with a temporary `fsmigrator` service that has **both** storages mounted: the old shared storage through the import-level `mount` field, and the new volume through the `volume` field in its inline `zeropsYaml`.
+
+```yaml title="zerops-import.yaml"
+services:
+  # Pick a free hostname for the new Local Storage service.
+  - hostname: volume2
+    type: local-storage:single@1
+    # Created before the migrator, which mounts it.
+    priority: 10
+
+  # Temporary service used only to copy the data.
+  - hostname: fsmigrator
+    type: ubuntu@26.04
+    zeropsYaml:
+      zerops:
+        - setup: fsmigrator
+          run:
+            volume:
+              # Hostname of the new Local Storage service.
+              hostname: volume2
+    mount:
+      # Hostname of the old Shared Storage service.
+      - volume
+    # Start the container without deploying any code.
+    startWithoutCode: true
+```
+
+Import it with the [zCLI](/references/cli) or [in the GUI](/references/import):
+
+```sh
+zcli project service-import zerops-import.yaml
+```
+
+Once the migrator is running, its container has the old data at `/mnt/volume` and the empty new volume at `/mnt/volume2`.
+
+## 3. Copy the data
+
+Open a shell in the `fsmigrator` container — the [web terminal](/references/networking/ssh#web-terminal-always-available) on the service detail page in the GUI, or [SSH](/references/networking/ssh) over the [Zerops VPN](/references/networking/vpn) — and copy everything from the old mount to the new one:
+
+```sh
+cp -a /mnt/volume/. /mnt/volume2/
+```
+
+`cp -a` preserves permissions, ownership, timestamps and symlinks, and the trailing `/.` copies the *contents* of the directory including hidden files.
+
+For large trees, `rsync` is more robust — it shows progress and can be re-run to resume an interrupted copy:
+
+```sh
+sudo apt-get update && sudo apt-get install -y rsync
+rsync -aH --info=progress2 /mnt/volume/ /mnt/volume2/
+```
+
+Then check that nothing is missing, for example by comparing the sizes and file counts of both trees:
+
+```sh
+du -sh /mnt/volume /mnt/volume2
+find /mnt/volume -type f | wc -l; find /mnt/volume2 -type f | wc -l
+```
+
+:::note
+`du` and `df` can report misleading numbers for the shared storage mount. If the totals differ, compare file counts or run `diff -r /mnt/volume /mnt/volume2` before you worry about it.
+:::
+
+## 4. Disconnect and stop the shared storage
+
+On the shared storage service detail page, open **Shared storage connections** and toggle **off** every connected runtime service, including `fsmigrator`. Then stop the shared storage service.
+
+Disconnecting is applied live and does not restart the runtime containers. Keep the service stopped rather than deleted for now — it is your rollback path until the new volume is verified.
+
+## 5. Mount the new volume in your runtime services
+
+In the `zerops.yaml` of every runtime service that used the shared storage, add the `volume` field and set `mountPath` to the path the shared storage was mounted at, i.e. `/mnt/<old-shared-storage-hostname>`:
+
+```yaml title="zerops.yaml"
+zerops:
+  - setup: app
+    run:
+      volume:
+        # Hostname of the new Local Storage service.
+        hostname: volume2
+        # Important: mount at the path of the old shared storage mount,
+        # i.e. /mnt/{old-shared-storage-hostname}, so the application
+        # keeps working without any changes.
+        mountPath: /mnt/volume
+```
+
+Deploy each service with the changed `zerops.yaml` (`zcli push`, or trigger your pipeline). The volume is mounted in the new containers at `/mnt/volume`, exactly where the shared storage used to be. See [Mount to a service](/local-storage/how-to/connect) for the full `volume` field reference.
+
+If you keep your infrastructure in a `zerops-import.yaml` or a template, update it as well: replace the `shared-storage` service with the `local-storage:single@1` service and remove the `mount` field from the runtime services.
+
+## 6. Verify
+
+Start the runtime services you stopped in step 1 (if they did not start with the deploy) and check that the application works — read an existing file, write a new one, and confirm the results in the [Local Storage container](/local-storage/how-to/manage#access-the-volume-directly), where the volume is mounted at `/data`.
+
+If something is wrong, you can roll back: remove the `volume` field from `zerops.yaml`, deploy, start the shared storage service and reconnect it to the runtime services.
+
+## 7. Clean up
+
+Once everything works, delete the `fsmigrator` service and the stopped shared storage service. The Local Storage service keeps the data, and its automated [backups](/local-storage/how-to/manage#backups) take over from the shared storage ones.
 
 
 ----------------------------------------
@@ -18972,141 +19148,6 @@ The `volume` field is applied by a deploy. To change the mount path, toggle `rea
 :::caution
 A Local Storage service cannot be deleted while runtime services still mount its volume. Remove the `volume` field from their `zerops.yaml` and deploy them first.
 :::
-
-
-----------------------------------------
-
-# Local Storage > How To > Migrate From Shared Storage
-
-
-[Shared Storage](/shared-storage/overview) is deprecated. This guide moves the data of an existing Shared Storage service to a new Local Storage volume and switches your runtime services over to it. The new volume is mounted at the **same path** the shared storage used (`/mnt/<old-hostname>`), so your application code and configuration stay untouched.
-
-The migration in short:
-
-1. Stop everything that writes to the shared storage.
-2. Create the Local Storage service and a temporary migrator service that mounts both storages.
-3. Copy the data from the old mount to the new one.
-4. Disconnect the shared storage from all services and stop it.
-5. Mount the new volume in your runtime services at the old path and deploy.
-6. Verify, then delete the migrator and the shared storage.
-
-Throughout the guide, `volume` is the hostname of the **old Shared Storage** service and `volume2` the hostname of the **new Local Storage** service. Replace them with your own.
-
-## Before you start
-
-Local Storage is a different kind of storage than the network filesystem it replaces — read its [key trade-offs](/local-storage/overview#key-trade-offs) before you migrate. One consequence for the migration: a runtime service mounts at most one Local Storage volume, so if a service mounts several shared storages, copy them into subdirectories of a single volume and point your application at the new paths.
-
-Take a fresh [backup](/shared-storage/how-to/manage#backups) of the shared storage before you begin.
-
-## 1. Stop all writers
-
-Stop every service or process that writes to the shared storage — stop the runtime services in the Zerops GUI, or put your application into a maintenance mode that disables writes. Read-only access can stay up.
-
-:::caution
-Files that change while they are being copied end up inconsistent on the new volume. Do not skip this step.
-:::
-
-## 2. Create the Local Storage and a migrator service
-
-Import the new Local Storage service together with a temporary `fsmigrator` service that has **both** storages mounted: the old shared storage through the import-level `mount` field, and the new volume through the `volume` field in its inline `zeropsYaml`.
-
-```yaml title="zerops-import.yaml"
-services:
-  # Pick a free hostname for the new Local Storage service.
-  - hostname: volume2
-    type: local-storage:single@1
-    # Created before the migrator, which mounts it.
-    priority: 10
-
-  # Temporary service used only to copy the data.
-  - hostname: fsmigrator
-    type: ubuntu@26.04
-    zeropsYaml:
-      zerops:
-        - setup: fsmigrator
-          run:
-            volume:
-              # Hostname of the new Local Storage service.
-              hostname: volume2
-    mount:
-      # Hostname of the old Shared Storage service.
-      - volume
-    # Start the container without deploying any code.
-    startWithoutCode: true
-```
-
-Import it with the [zCLI](/references/cli) or [in the GUI](/references/import):
-
-```sh
-zcli project service-import zerops-import.yaml
-```
-
-Once the migrator is running, its container has the old data at `/mnt/volume` and the empty new volume at `/mnt/volume2`.
-
-## 3. Copy the data
-
-Open a shell in the `fsmigrator` container — the [web terminal](/references/networking/ssh#web-terminal-always-available) on the service detail page in the GUI, or [SSH](/references/networking/ssh) over the [Zerops VPN](/references/networking/vpn) — and copy everything from the old mount to the new one:
-
-```sh
-cp -a /mnt/volume/. /mnt/volume2/
-```
-
-`cp -a` preserves permissions, ownership, timestamps and symlinks, and the trailing `/.` copies the *contents* of the directory including hidden files.
-
-For large trees, `rsync` is more robust — it shows progress and can be re-run to resume an interrupted copy:
-
-```sh
-sudo apt-get update && sudo apt-get install -y rsync
-rsync -aH --info=progress2 /mnt/volume/ /mnt/volume2/
-```
-
-Then check that nothing is missing, for example by comparing the sizes and file counts of both trees:
-
-```sh
-du -sh /mnt/volume /mnt/volume2
-find /mnt/volume -type f | wc -l; find /mnt/volume2 -type f | wc -l
-```
-
-:::note
-`du` and `df` can report misleading numbers for the shared storage mount. If the totals differ, compare file counts or run `diff -r /mnt/volume /mnt/volume2` before you worry about it.
-:::
-
-## 4. Disconnect and stop the shared storage
-
-On the shared storage service detail page, open **Shared storage connections** and toggle **off** every connected runtime service, including `fsmigrator`. Then stop the shared storage service.
-
-Disconnecting is applied live and does not restart the runtime containers. Keep the service stopped rather than deleted for now — it is your rollback path until the new volume is verified.
-
-## 5. Mount the new volume in your runtime services
-
-In the `zerops.yaml` of every runtime service that used the shared storage, add the `volume` field and set `mountPath` to the path the shared storage was mounted at, i.e. `/mnt/<old-shared-storage-hostname>`:
-
-```yaml title="zerops.yaml"
-zerops:
-  - setup: app
-    run:
-      volume:
-        # Hostname of the new Local Storage service.
-        hostname: volume2
-        # Important: mount at the path of the old shared storage mount,
-        # i.e. /mnt/{old-shared-storage-hostname}, so the application
-        # keeps working without any changes.
-        mountPath: /mnt/volume
-```
-
-Deploy each service with the changed `zerops.yaml` (`zcli push`, or trigger your pipeline). The volume is mounted in the new containers at `/mnt/volume`, exactly where the shared storage used to be. See [Mount to a service](/local-storage/how-to/connect) for the full `volume` field reference.
-
-If you keep your infrastructure in a `zerops-import.yaml` or a template, update it as well: replace the `shared-storage` service with the `local-storage:single@1` service and remove the `mount` field from the runtime services.
-
-## 6. Verify
-
-Start the runtime services you stopped in step 1 (if they did not start with the deploy) and check that the application works — read an existing file, write a new one, and confirm the results in the [Local Storage container](/local-storage/how-to/manage#access-the-volume-directly), where the volume is mounted at `/data`.
-
-If something is wrong, you can roll back: remove the `volume` field from `zerops.yaml`, deploy, start the shared storage service and reconnect it to the runtime services.
-
-## 7. Clean up
-
-Once everything works, delete the `fsmigrator` service and the stopped shared storage service. The Local Storage service keeps the data, and its automated [backups](/local-storage/how-to/manage#backups) take over from the shared storage ones.
 
 
 ----------------------------------------
@@ -21987,7 +22028,7 @@ Remove entirely or disable `enableSubdomainAccess`. Use VPN + pgAdmin/DBeaver lo
 
 ## File Storage
 
-**Container filesystem survives restarts but is replaced on every deploy** — files stored on disk persist through reload/restart/stop+start but are lost on deploy or container replacement (scale-up/down).
+**Container filesystem survives restarts but is replaced on every deploy** — files stored on disk persist through reload/restart/stop+start but are lost on deploy or container replacement (scale-up/down). See [Storage on Zerops](/storage/overview).
 
 | Use case | Solution |
 |----------|----------|
@@ -22075,7 +22116,7 @@ Production services should pair a `deploy.readinessCheck` (gates traffic during 
 
 ## Gotchas
 1. **HA is immutable**: Must delete and recreate service to switch modes
-2. **Container filesystem survives restarts but is replaced on every deploy**: use external storage for persistent data
+2. **Container filesystem survives restarts but is replaced on every deploy**: use [external storage](/storage/overview) for persistent data
 3. **File sessions break with scaling**: Multiple containers don't share filesystem
 4. **Mailpit is not production SMTP**: Only for dev — no delivery guarantees
 5. **Debug mode leaks secrets**: Disable APP_DEBUG in production
@@ -23032,7 +23073,7 @@ Zerops keeps **10 most recent versions**. Older auto-deleted. Any archived versi
 
 When using SSHFS (`zerops_mount`) for dev workflows, deploy replaces the container. This has important consequences:
 
-1. **After deploy, run container only has `deployFiles` content.** All other files (including zerops.yml if not in deployFiles) are gone. Use `deployFiles: [.]` for dev services to ensure zerops.yml and source files survive the deploy cycle.
+1. **After deploy, run container only has `deployFiles` content.** All other files (including zerops.yml if not in deployFiles) are gone — persistent data belongs in a [storage service](/storage/overview). Use `deployFiles: [.]` for dev services to ensure zerops.yml and source files survive the deploy cycle.
 2. **SSHFS mount auto-reconnects only while the service is running.** Usually no remount is needed, but if the mount goes stale after a deploy (stat/ls returns empty, writes hang), recover it explicitly with `zerops_mount action="mount"`. A stopped service has no live mount until it starts again.
 3. **zerops.yml must be in deployFiles** for dev self-deploy lifecycle. Without it, subsequent deploys from the container fail because zerops.yml is missing.
 
@@ -23187,7 +23228,7 @@ Any CI system with shell access can deploy via `zcli push`:
 # Guides > Choose Storage
 
 
-**Use Object Storage** (S3) for uploads, media, and backups. **Use Local Storage** (`run.volume`) for anything that needs a real filesystem — SQLite and other embedded databases, single-node stateful apps, filesystem state shared between services. **Shared Storage is deprecated** — don't use it in new projects.
+**Use Object Storage** (S3) for uploads, media, and backups. **Use Local Storage** (`run.volume`) for anything that needs a real filesystem — SQLite and other embedded databases, single-node stateful apps, filesystem state shared between services. **Shared Storage is deprecated** — don't use it in new projects. Human-facing comparison: [Storage on Zerops](/storage/overview).
 
 ## Decision Matrix
 
