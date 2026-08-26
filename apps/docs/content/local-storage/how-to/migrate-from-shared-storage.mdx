@@ -1,0 +1,133 @@
+---
+title: Migrate from Shared Storage to Local Storage
+description: Step-by-step guide to moving data from a deprecated Shared Storage service to a Local Storage volume in Zerops, keeping the same mount path so your application does not change.
+---
+
+[Shared Storage](/shared-storage/overview) is deprecated. This guide moves the data of an existing Shared Storage service to a new Local Storage volume and switches your runtime services over to it. The new volume is mounted at the **same path** the shared storage used (`/mnt/<old-hostname>`), so your application code and configuration stay untouched.
+
+The migration in short:
+
+1. Stop everything that writes to the shared storage.
+2. Create the Local Storage service and a temporary migrator service that mounts both storages.
+3. Copy the data from the old mount to the new one.
+4. Disconnect the shared storage from all services and stop it.
+5. Mount the new volume in your runtime services at the old path and deploy.
+6. Verify, then delete the migrator and the shared storage.
+
+Throughout the guide, `volume` is the hostname of the **old Shared Storage** service and `volume2` the hostname of the **new Local Storage** service. Replace them with your own.
+
+## Before you start
+
+Local Storage is a different kind of storage than the network filesystem it replaces — read its [key trade-offs](/local-storage/overview#key-trade-offs) before you migrate. One consequence for the migration: a runtime service mounts at most one Local Storage volume, so if a service mounts several shared storages, copy them into subdirectories of a single volume and point your application at the new paths.
+
+Take a fresh [backup](/shared-storage/how-to/manage#backups) of the shared storage before you begin.
+
+## 1. Stop all writers
+
+Stop every service or process that writes to the shared storage — stop the runtime services in the Zerops GUI, or put your application into a maintenance mode that disables writes. Read-only access can stay up.
+
+:::caution
+Files that change while they are being copied end up inconsistent on the new volume. Do not skip this step.
+:::
+
+## 2. Create the Local Storage and a migrator service
+
+Import the new Local Storage service together with a temporary `fsmigrator` service that has **both** storages mounted: the old shared storage through the import-level `mount` field, and the new volume through the `volume` field in its inline `zeropsYaml`.
+
+```yaml title="zerops-import.yaml"
+services:
+  # Pick a free hostname for the new Local Storage service.
+  - hostname: volume2
+    type: local-storage:single@1
+    # Created before the migrator, which mounts it.
+    priority: 10
+
+  # Temporary service used only to copy the data.
+  - hostname: fsmigrator
+    type: ubuntu@26.04
+    zeropsYaml:
+      zerops:
+        - setup: fsmigrator
+          run:
+            volume:
+              # Hostname of the new Local Storage service.
+              hostname: volume2
+    mount:
+      # Hostname of the old Shared Storage service.
+      - volume
+    # Start the container without deploying any code.
+    startWithoutCode: true
+```
+
+Import it with the [zCLI](/references/cli) or [in the GUI](/references/import):
+
+```sh
+zcli project service-import zerops-import.yaml
+```
+
+Once the migrator is running, its container has the old data at `/mnt/volume` and the empty new volume at `/mnt/volume2`.
+
+## 3. Copy the data
+
+Open a shell in the `fsmigrator` container — the [web terminal](/references/networking/ssh#web-terminal-always-available) on the service detail page in the GUI, or [SSH](/references/networking/ssh) over the [Zerops VPN](/references/networking/vpn) — and copy everything from the old mount to the new one:
+
+```sh
+cp -a /mnt/volume/. /mnt/volume2/
+```
+
+`cp -a` preserves permissions, ownership, timestamps and symlinks, and the trailing `/.` copies the *contents* of the directory including hidden files.
+
+For large trees, `rsync` is more robust — it shows progress and can be re-run to resume an interrupted copy:
+
+```sh
+sudo apt-get update && sudo apt-get install -y rsync
+rsync -aH --info=progress2 /mnt/volume/ /mnt/volume2/
+```
+
+Then check that nothing is missing, for example by comparing the sizes and file counts of both trees:
+
+```sh
+du -sh /mnt/volume /mnt/volume2
+find /mnt/volume -type f | wc -l; find /mnt/volume2 -type f | wc -l
+```
+
+:::note
+`du` and `df` can report misleading numbers for the shared storage mount. If the totals differ, compare file counts or run `diff -r /mnt/volume /mnt/volume2` before you worry about it.
+:::
+
+## 4. Disconnect and stop the shared storage
+
+On the shared storage service detail page, open **Shared storage connections** and toggle **off** every connected runtime service, including `fsmigrator`. Then stop the shared storage service.
+
+Disconnecting is applied live and does not restart the runtime containers. Keep the service stopped rather than deleted for now — it is your rollback path until the new volume is verified.
+
+## 5. Mount the new volume in your runtime services
+
+In the `zerops.yaml` of every runtime service that used the shared storage, add the `volume` field and set `mountPath` to the path the shared storage was mounted at, i.e. `/mnt/<old-shared-storage-hostname>`:
+
+```yaml title="zerops.yaml"
+zerops:
+  - setup: app
+    run:
+      volume:
+        # Hostname of the new Local Storage service.
+        hostname: volume2
+        # Important: mount at the path of the old shared storage mount,
+        # i.e. /mnt/{old-shared-storage-hostname}, so the application
+        # keeps working without any changes.
+        mountPath: /mnt/volume
+```
+
+Deploy each service with the changed `zerops.yaml` (`zcli push`, or trigger your pipeline). The volume is mounted in the new containers at `/mnt/volume`, exactly where the shared storage used to be. See [Mount to a service](/local-storage/how-to/connect) for the full `volume` field reference.
+
+If you keep your infrastructure in a `zerops-import.yaml` or a template, update it as well: replace the `shared-storage` service with the `local-storage:single@1` service and remove the `mount` field from the runtime services.
+
+## 6. Verify
+
+Start the runtime services you stopped in step 1 (if they did not start with the deploy) and check that the application works — read an existing file, write a new one, and confirm the results in the [Local Storage container](/local-storage/how-to/manage#access-the-volume-directly), where the volume is mounted at `/data`.
+
+If something is wrong, you can roll back: remove the `volume` field from `zerops.yaml`, deploy, start the shared storage service and reconnect it to the runtime services.
+
+## 7. Clean up
+
+Once everything works, delete the `fsmigrator` service and the stopped shared storage service. The Local Storage service keeps the data, and its automated [backups](/local-storage/how-to/manage#backups) take over from the shared storage ones.

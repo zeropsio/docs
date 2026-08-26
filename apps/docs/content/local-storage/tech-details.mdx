@@ -34,8 +34,8 @@ All connected containers run on the same physical machine and share one kernel, 
 
 This is why filesystem-based databases (SQLite, Prometheus TSDB) are safe on Local Storage while they are explicitly unsafe on [Shared Storage](/shared-storage/overview#use-cases) or any other network filesystem.
 
-:::note
-Even though locking is fully correct, a single-writer setup remains the most robust pattern for SQLite and similar databases. Use the [`readOnly` mount option](/local-storage/how-to/connect#the-volume-field) to enforce it.
+:::note Single-writer restrictions still apply
+Correct locking makes concurrent access *safe*, not concurrent writes *possible*. SQLite still allows only one writer at a time — additional writers block or fail with `SQLITE_BUSY`, exactly as they would for two processes on one machine. A single-writer setup therefore remains the most robust pattern for SQLite and similar embedded databases: keep writes in one service (and ideally one container), and mount the volume with the [`readOnly` option](/local-storage/how-to/connect#the-volume-field) everywhere else to enforce it.
 :::
 
 ## Co-location and Scheduling
@@ -48,7 +48,7 @@ The volume is locally attached, so every container that mounts it must run on th
 
 ## Availability and Failure Behavior
 
-Local Storage is **not highly available** — the volume exists once, on one machine, with no replication.
+Local Storage is currently **not highly available** — the volume exists once, on one machine, with no replication. An HA mode may be added in the future.
 
 The volume lives on a single physical machine, together with every runtime service that mounts it. If that hardware fails, or when maintenance requires moving workloads elsewhere, Zerops moves the volume to a healthy server and every connected runtime service goes through a small outage — stop, move, start. Recovering the volume and its data is not guaranteed.
 

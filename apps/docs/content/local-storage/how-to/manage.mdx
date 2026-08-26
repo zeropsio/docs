@@ -20,7 +20,7 @@ Everything you change under `/data` is immediately visible to all runtime servic
 
 ## Backups
 
-Zerops provides automated data backup for Local Storage services with full encryption. Backups are enabled by default and strongly recommended: the volume is [not replicated](/local-storage/tech-details#availability-and-failure-behavior), so on a hardware failure they may be the only copy of your data.
+Zerops provides automated data backup for Local Storage services with full encryption. Backups are enabled by default and strongly recommended: the volume is [currently not replicated](/local-storage/tech-details#availability-and-failure-behavior), so on a hardware failure they may be the only copy of your data.
 
 For general backup information including configuration, scheduling, retention, tagging, quotas, and CLI tools, see the [Zerops Backups](/features/backup) documentation.
 
@@ -31,7 +31,31 @@ For general backup information including configuration, scheduling, retention, t
 - **Storage**: encrypted and stored in isolated object storage
 
 :::caution Backups are taken from the live filesystem
-The archive is created while the volume stays mounted and writable, so files that are being written at that moment can be captured mid-write. For databases like SQLite this can produce an archive that does not restore cleanly. For guaranteed-consistent backups of a database, pause writes during the backup or use the database's own backup mechanism (e.g. `sqlite3 .backup` / `VACUUM INTO`) to produce a snapshot file the archive can pick up.
+The archive is created while the volume stays mounted and writable, so files that are being written at that moment can be captured mid-write. For databases like SQLite this can produce an archive that does not restore cleanly. Do not rely on the `.tar.gz` archive alone for a database — produce a consistent copy on the volume first and let the archive pick that copy up.
+:::
+
+### Consistent database backups
+
+The reliable pattern is to let the database write its own consistent copy onto the volume on a schedule, so every platform backup contains a file that restores cleanly. Use a [cron job](/zerops-yaml/cron) in one of the runtime services that mounts the volume:
+
+```yaml title="zerops.yaml"
+run:
+  crontab:
+    - command: sqlite3 /mnt/vol/app.db ".backup /mnt/vol/backup/app.sqlite"
+      timing: "30 * * * *"
+      allContainers: false
+```
+
+- `sqlite3 .backup` (or `VACUUM INTO`) copies the database through SQLite itself, so the result is a consistent, restorable file even while the app keeps writing
+- `allContainers: false` runs the job in a single container, which keeps it a single-writer operation
+- The copy overwrites itself each run and lives on the volume, so it is included in every `.tar.gz` backup with the platform's own retention
+- The same approach applies to any other embedded database: use its native backup command rather than copying its live data files
+- The `sqlite3` CLI is not part of the base runtime images — install it in [`run.prepareCommands`](/zerops-yaml/specification#preparecommands--1) if your app doesn't already ship it
+
+The alternative is to pause writes for the duration of the platform backup, which is usually not worth it.
+
+:::note Snapshot backups are planned
+Zerops is moving Local Storage towards snapshot-based backups, which will produce fast, consistent, point-in-time backups of the whole volume without any application-level coordination. Until then, use the pattern above for databases.
 :::
 
 ### Restoring backups
