@@ -42,7 +42,7 @@ After the next deploy, the volume is mounted at `/mnt/vol` in all containers of 
 Local Storage is a good fit for:
 
 - **SQLite and other embedded databases**: full locking and mmap coherence make SQLite safe, including WAL mode with multiple connecting containers ([single-writer restrictions still apply](/local-storage/tech-details#filesystem-semantics))
-- **Single-node stateful apps**: Prometheus, Gitea, and similar applications that keep their state in a local data directory
+- **Single-node stateful apps**: Prometheus, Gitea, and similar applications that keep their state in a local data directory — see the [Gitea recipe ↗](https://github.com/zeropsio/recipe-gitea) for a complete example built on Local Storage
 - **Sharing filesystem state**: certificates, caches, and other files shared across containers and services within a project, with immediate visibility of writes
 - **Anything that needs a real local filesystem**: workloads that break on network filesystems because they rely on locking, mmap, inotify, or atomic renames
 
@@ -54,40 +54,7 @@ Automated [backups](/local-storage/how-to/manage#backups) are enabled by default
 
 ## Choosing a storage type
 
-The first word of each storage type names its access model:
-
-<table className="w-full my-1.5">
-  <thead>
-    <tr>
-      <th className="w-fit" style={{ minWidth: '130px' }}>Service</th>
-      <th className="w-fit">Access model</th>
-      <th className="w-fit">Semantics</th>
-      <th className="w-fit" style={{ minWidth: '60px' }}>HA</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td className="w-fit"><b><a href="/object-storage/overview">Object Storage</a></b></td>
-      <td className="w-fit">S3 API over the network</td>
-      <td className="w-fit">Object semantics; best price and durability for uploads, media, and backups</td>
-      <td className="w-fit">Yes</td>
-    </tr>
-    <tr>
-      <td className="w-fit"><b><a href="/shared-storage/overview">Shared Storage</a></b> (deprecated)</td>
-      <td className="w-fit">Network filesystem</td>
-      <td className="w-fit">POSIX-like with network filesystem caveats (per-mount locks, write amplification)</td>
-      <td className="w-fit">Yes</td>
-    </tr>
-    <tr>
-      <td className="w-fit"><b>Local Storage</b></td>
-      <td className="w-fit">Locally attached disk, single machine</td>
-      <td className="w-fit">Full single-kernel POSIX: locking, mmap, inotify across all connected containers</td>
-      <td className="w-fit">Not yet</td>
-    </tr>
-  </tbody>
-</table>
-
-Local Storage trades high availability for correctness and speed: it is the only storage type where lock-dependent workloads like databases are safe. An HA mode may be added in the future.
+Local Storage trades high availability for correctness and speed: it is the only storage type where lock-dependent workloads like databases are safe. An HA mode may be added in the future. See [Storage on Zerops](/storage/overview) for a comparison with Object Storage and Shared Storage and guidance on which one to use.
 
 Already on Shared Storage? Follow the [migration guide](/local-storage/how-to/migrate-from-shared-storage) to move your data to a Local Storage volume without changing your application.
 

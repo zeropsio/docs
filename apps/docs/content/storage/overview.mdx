@@ -1,0 +1,124 @@
+---
+title: Storage on Zerops
+description: Where persistent data lives on Zerops. Runtime containers are replaced on every deploy, so durable files belong in a managed database or in one of the three storage services — Object Storage, Local Storage, or the deprecated Shared Storage.
+---
+
+import DocCardList from '@theme/DocCardList';
+import Icons from '@theme/Icon';
+
+Runtime containers on Zerops are **volatile**. Anything your application needs to keep must live outside the container — in a [managed database](/postgresql/overview), or in one of the storage services described on this page.
+
+## Container filesystem is volatile
+
+The filesystem of a runtime container survives a restart, a reload, and a stop and start, but that is all:
+
+- **Every deploy replaces the containers.** The new containers contain only the [`deployFiles`](/zerops-yaml/specification#deployfiles-) of the new build; whatever the previous containers wrote to disk is gone.
+- **Containers are replaced when the service scales.** Scaling horizontally creates and removes containers, each with its own disk.
+- **Containers do not share a filesystem.** A file written in one container is not visible in the others of the same service.
+
+Use the container disk for temporary and scratch files only. Everything else — uploads, generated files, application state, anything shared between containers — belongs in a storage service or a database.
+
+## Storage services
+
+Zerops offers three storage services. The first word of each name tells you the access model:
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit" style={{ minWidth: '130px' }}>Service</th>
+      <th className="w-fit">Access model</th>
+      <th className="w-fit">Semantics</th>
+      <th className="w-fit" style={{ minWidth: '60px' }}>HA</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit"><b><a href="/object-storage/overview">Object Storage</a></b></td>
+      <td className="w-fit">S3 API over the network</td>
+      <td className="w-fit">Object semantics; best price and durability for uploads, media, and backups</td>
+      <td className="w-fit">Yes</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><b><a href="/local-storage/overview">Local Storage</a></b></td>
+      <td className="w-fit">Locally attached disk, single machine</td>
+      <td className="w-fit">Full single-kernel POSIX: locking, mmap, inotify across all connected containers</td>
+      <td className="w-fit">Not yet</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><b><a href="/shared-storage/overview">Shared Storage</a></b> (deprecated)</td>
+      <td className="w-fit">Network filesystem</td>
+      <td className="w-fit">POSIX-like with network filesystem caveats (per-mount locks, write amplification)</td>
+      <td className="w-fit">Yes</td>
+    </tr>
+  </tbody>
+</table>
+
+## Which one to use
+
+- **Uploads, media, backups, logs, exports** — [Object Storage](/object-storage/overview). Highly available, cheapest per GB, and independent of any runtime service; the default for most application data.
+- **Anything that needs a real filesystem** — [Local Storage](/local-storage/overview). SQLite and other embedded databases, single-node stateful apps such as Prometheus or Gitea, and filesystem state shared between services (certificates, caches). It is the only storage type where lock-dependent workloads are safe; see its [trade-offs](/local-storage/overview#key-trade-offs).
+- **Existing `mount:`-based setups** — [Shared Storage](/shared-storage/overview) keeps working but is deprecated. Move to Local Storage with the [migration guide](/local-storage/how-to/migrate-from-shared-storage), or to Object Storage if the data fits the S3 model.
+
+For structured data, use a [managed database](/postgresql/overview) rather than files on any storage.
+
+<DocCardList
+  colSize={4}
+  items={[
+    {
+      type: 'link',
+      href: '/object-storage/overview',
+      label: 'Object Storage',
+      customProps: {
+        icon: Icons['cube-solid'],
+        description: 'S3 compatible storage for uploads, media, and backups.',
+      },
+    },
+    {
+      type: 'link',
+      href: '/local-storage/overview',
+      label: 'Local Storage',
+      customProps: {
+        icon: Icons['circle-stack'],
+        description: 'Persistent local disk volume with full POSIX semantics.',
+      },
+    },
+    {
+      type: 'link',
+      href: '/shared-storage/overview',
+      label: 'Shared Storage',
+      customProps: {
+        icon: Icons['servers-connected'],
+        description: 'Deprecated network filesystem. See the migration guide.',
+      },
+    },
+  ]}
+/>
+
+## Need help?
+
+Stuck, or want to share what you built? Our core team and community are on Discord.
+
+<DocCardList
+  colSize={6}
+  items={[
+    {
+      type: 'link',
+      href: 'https://discord.com/invite/WDvCZ54',
+      label: 'Discord',
+      customProps: {
+        icon: Icons['discord'],
+        description:
+          'Join the Zerops community on Discord. Ask questions and share your tips.',
+      },
+    },
+    {
+      type: 'link',
+      href: '/references/cli',
+      label: 'zCLI',
+      customProps: {
+        icon: Icons['command-line'],
+        description: 'Get more out of Zerops with the command-line tool.',
+      },
+    },
+  ]}
+/>
