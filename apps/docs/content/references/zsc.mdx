@@ -471,15 +471,15 @@ Secret environment variables are encrypted at rest and securely distributed to y
 
 ### shared-storage
 
-Manages shared storage volumes for persistent data storage.
+Mounts a [SeaweedFS](/seaweedfs/overview) service at `/mnt/<storage-name>` with `weed mount`. The command dates from the deprecated Shared Storage and keeps its name, it is a shortcut for running `weed mount` yourself: it creates the directory, hands it to the `zerops` user, connects to the filer of the first storage container (`node-stable-1.db.<storage-name>.zerops:8888`) and passes a RAM-lean tuning (`-volumeServerAccess=direct -cacheCapacityMB=0 -concurrentWriters=1 -chunkSizeLimitMB=1`), see [Mounting from a runtime service](/seaweedfs/overview#mounting-from-a-runtime-service). `mount` runs in the foreground, so use it as a [start command](/zerops-yaml/specification#startcommands-). With `--background` it detaches the mount process and returns once the mount is ready, which is the form for [init commands](/seaweedfs/overview#mounting-in-init-commands). Both need `sudo`.
 
 ```sh
 zsc shared-storage [command]
 ```
 
 #### Available sub-commands
-- `mount`: Mounts the shared storage
-- `unmount`: Unmounts the shared storage
+- `mount`: Mounts the storage (foreground, `--background` detaches the mount and exits when it is ready)
+- `unmount`: Unmounts the storage and removes the mount directory
 - `wait`: Waits for readiness of the storage mount
 
 #### Available flags
@@ -490,11 +490,14 @@ zsc shared-storage [command]
 # View shared-storage help
 zsc shared-storage --help
 
-# Mount a shared storage volume
-zsc shared-storage mount <storage-name>
+# Mount a SeaweedFS service at /mnt/<storage-name> (foreground, as a start command)
+sudo zsc shared-storage mount <storage-name>
 
-# Unmount a shared storage volume
-zsc shared-storage unmount <storage-name>
+# Mount it in the background (in init commands), returns once the mount is ready
+sudo zsc shared-storage mount <storage-name> --background
+
+# Unmount it
+sudo zsc shared-storage unmount <storage-name>
 
 # Wait for a storage mount to be ready
 zsc shared-storage wait <storage-name>

@@ -89,9 +89,6 @@ services:
     minContainers: 2
     # Maximum number of containers
     maxContainers: 6
-    # List of shared storage services to connect to
-    mount:
-      - teststorage1
     # Full nginx config
     nginxConfig: |-
       server {
@@ -128,7 +125,7 @@ services:
     override: false
   # REQUIRED. Name of your other service
   - hostname: teststorage1
-    type: shared-storage:ha
+    type: seaweedfs:ha@3.85
     ...
 ```
 </DropdownItem>
@@ -221,7 +218,6 @@ The Service Configuration section is divided into multiple subsections for bette
 - [**Service Basic Configuration**](#service-basic-configuration) - Core parameters like hostname, type, mode, and environment variables
 - [**Service Vertical Autoscaling**](#service-vertical-autoscaling) - CPU, RAM, and disk scaling settings
 - [**Service Horizontal Autoscaling**](#service-horizontal-autoscaling) - Container count scaling settings
-- [**Service Mount Shared Storage**](#service-mount-shared-storage) - Connecting to shared storage services
 - [**Service Nginx Configuration**](#service-nginx-configuration) - Custom web server settings
 - [**Service zerops.yaml Configuration**](#service-zeropsyaml-configuration) - Build and run configurations
 
@@ -283,10 +279,6 @@ services:
     minContainers: 2                # Minimum number of containers (default: 1, max: 10)
     maxContainers: 6                # Maximum number of containers (max: 10)
 
-    # Shared storage (deprecated, see Local Storage)
-    mount:                          # List of shared storage services to mount
-      - teststorage1
-
     # Nginx configuration
     nginxConfig: |-                 # Custom nginx configuration
       server {
@@ -322,7 +314,7 @@ services:
 
   # A second, simpler service example
   - hostname: teststorage1
-    type: shared-storage:ha
+    type: seaweedfs:ha@3.85
 ```
 
 This example includes all possible configuration options for Zerops services. Not all options are required or applicable to every service type. The example shows two services in the same YAML file: a fully configured Node.js API service and a simpler static frontend service.
@@ -663,44 +655,11 @@ services:
 
 The `minContainers` and `maxContainers` parameters allow you to define the minimum and maximum number of containers for the service. The service will automatically scale between these values as needed.
 
-### Service Mount Shared Storage
+### Shared Storage Mount (removed)
 
-:::warning Deprecated
-[Shared Storage](/shared-storage/overview) is deprecated, and the `mount:` field with it. For a persistent filesystem shared between services, use a [Local Storage](/local-storage/overview) service, mounted through the [`volume` field in zerops.yaml](/zerops-yaml/specification#volume-) instead of an import-level field. Existing services can be moved with the [migration guide](/local-storage/how-to/migrate-from-shared-storage).
+:::warning Removed
+The `mount:` field of the deprecated [Shared Storage](/shared-storage/overview) is no longer accepted, an import containing it fails with `yamlMountDeprecated`. Mount a [SeaweedFS](/seaweedfs/overview) service from the runtime's [`startCommands`](/zerops-yaml/specification#startcommands-) in zerops.yaml, or mount a [Local Storage](/local-storage/overview) volume through the [`volume` field](/zerops-yaml/specification#volume-). Existing setups can be moved with the [SeaweedFS migration guide](/seaweedfs/how-to/migrate-from-shared-storage).
 :::
-
-The mount shared storage configuration defines which shared storage services should be mounted to the service.
-
-<table className="w-full my-1.5">
-  <thead>
-    <tr>
-      <th className="w-fit">Field</th>
-      <th className="w-fit">Type</th>
-      <th className="w-fit">Description</th>
-    </tr>
-  </thead>
-  <tbody>
-  <tr>
-    <td className="w-fit font-semibold">mount</td>
-    <td className="w-fit">list of strings</td>
-    <td className="w-fit">Mount shared storage to the service. `buildFromGit` must be filled.</td>
-    </tr>
-  </tbody>
-</table>
-
-```yaml
-services:
-  - hostname: app
-    type: nodejs@22
-    buildFromGit: https://github.com/myorg/myapp
-    enableSubdomainAccess: true
-    mount:
-      - teststorage1
-```
-
-The `mount:` parameter allows you to mount a shared storage (which should be created inside the project) to the service.
-
-The `buildFromGit` requirement exists because an import without it only creates an empty service shell with nothing deployed yet, so there is nothing to mount the storage into. With `buildFromGit`, the import also builds and deploys the repository, and the mount is applied to the deployed service. If you import a service without `buildFromGit`, deploy your application first and then connect the shared storage [in the GUI](/shared-storage/how-to/connect).
 
 ### Service Nginx Configuration
 

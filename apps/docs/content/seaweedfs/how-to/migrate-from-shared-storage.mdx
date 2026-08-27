@@ -1,0 +1,98 @@
+---
+title: Migrate from Shared Storage to SeaweedFS
+description: How to take over the mount of a deprecated Shared Storage service in your own zerops.yaml. No data is moved, the service is already a SeaweedFS service.
+---
+
+[Shared Storage](/shared-storage/overview) is deprecated. Every existing Shared Storage service has already been converted in place into a [SeaweedFS](/seaweedfs/overview) service: same containers, same data, same hostname. What changes is who mounts it. Zerops used to mount the storage into your runtime containers through the **Shared storage connections** page and the `mount:` import field. Now your service mounts it itself, from its `zerops.yaml`.
+
+Until you do that, the old mounts keep working: the connection lives on as the `zeropsSharedStorageMounts` environment variable of the runtime service, Zerops still mounts every hostname listed in it at `/mnt/<hostname>` on container start, and logs a deprecation warning into the runtime log each time. The managed mount is best-effort from now on and will be removed in a later release, so plan the switch.
+
+The migration in short:
+
+1. Add a `weed mount` start command to the `zerops.yaml` of every service that uses the storage.
+2. Delete the `zeropsSharedStorageMounts` variable of that service.
+3. Deploy.
+4. Update your import files.
+
+Throughout the guide, `storage` is the hostname of the storage service and `app` the runtime service that mounts it. Replace them with your own.
+
+## Before you start
+
+- The storage service now shows up as **SeaweedFS** in the GUI and has a `port` variable (`8888`, the filer). Nothing on it needs changing, and there is no **Shared storage connections** page anymore.
+- Take a fresh [backup](/seaweedfs/overview#backup-and-recovery) of the storage before you touch the mounts.
+- If you would rather move the data off SeaweedFS altogether, the [Local Storage migration guide](/local-storage/how-to/migrate-from-shared-storage) covers copying it to a Local Storage volume.
+
+## 1. Mount the storage from zerops.yaml
+
+Add a second entry to [`startCommands`](/zerops-yaml/specification#startcommands-) that runs `weed mount`. Keep the mount path the storage was at, `/mnt/<hostname>`, so the application does not change. If your `zerops.yaml` uses a single `start` command, convert it into the first `startCommands` entry:
+
+```yaml title="zerops.yaml"
+zerops:
+  - setup: app
+    run:
+      base: nodejs@22
+      # start: npm start
+      startCommands:
+        - name: app
+          command: npm start
+        - name: storage
+          initCommands:
+            - sudo mkdir -p /mnt/storage
+            - sudo chown zerops:zerops /mnt/storage
+          command: sudo /opt/zerops/bin/weed-3-85 mount -filer=node-stable-1.db.storage.zerops:8888 -dir=/mnt/storage
+```
+
+The `-filer` address is `node-stable-1.db.<hostname>.zerops:8888`, where `storage` is the **hostname of your SeaweedFS service** (the former Shared Storage service, its hostname did not change) and `8888` is the filer port. `node-stable-1.db.<hostname>.zerops` is the fixed name of the service's first container, which is where the managed mount always connected. In HA mode the second container is `node-stable-2.db.<hostname>.zerops`, and `<hostname>.zerops:8888` alone resolves to the filer HTTP API too. A service that mounted several storages gets one such entry per storage.
+
+:::note How the managed mount is tuned
+The managed mount (and `zsc shared-storage mount`) runs `weed mount` with `-volumeServerAccess=direct -cacheCapacityMB=0 -concurrentWriters=1 -chunkSizeLimitMB=1`: no local read cache and minimal write buffers, so the mount process stays around 100-150 MB of RAM at the cost of throughput. A bare `weed mount` favours speed and can grow well beyond that under load - tune the flags to your own workload, see [Mounting from a runtime service](/seaweedfs/overview#mounting-from-a-runtime-service).
+:::
+
+The equivalent one-liner is `zsc shared-storage mount storage`, which stays available as a [shortcut](/references/zsc#shared-storage). It runs exactly what the managed mount ran: the filer address above, the mount at `/mnt/<hostname>` owned by the `zerops` user, and the tuning flags from the note above:
+
+```yaml
+        - name: storage
+          command: sudo zsc shared-storage mount storage
+```
+
+### Alternative: mount in init commands
+
+If your `initCommands` already use the storage (they read a certificate from it, write a config into it, run a migration over shared files), a start command comes too late, it only runs after the init commands. Mount in the background from the init commands instead:
+
+```yaml title="zerops.yaml"
+zerops:
+  - setup: app
+    run:
+      base: nodejs@22
+      initCommands:
+        - sudo zsc shared-storage mount storage --background
+        - cp /mnt/storage/certs/app.pem /var/www/app.pem
+      start: npm start
+```
+
+The mount lands at the same `/mnt/storage`, with the same filer and tuning, and stays mounted after the init commands finish. Init commands run on every container start, so restarts mount again. The difference to the start command form: nothing restarts the mount process if it dies. See [Mounting in init commands](/seaweedfs/overview#mounting-in-init-commands) for the raw `weed fuse` equivalent and the options it accepts (sub-path, read-only, both HA filers).
+
+## 2. Delete the `zeropsSharedStorageMounts` variable
+
+Open the runtime service's **Environment variables** page and delete `zeropsSharedStorageMounts`. If the service mounts several storages and you are switching them one at a time, edit the variable and remove only the hostname you have taken over (the value is a `|`-separated list of hostnames).
+
+The change is applied live: the managed mount of that storage is unmounted from the running containers right away, and it is not recreated on the next container start. Your application loses the storage until step 3 completes, so do steps 2 and 3 back to back, or during a maintenance window.
+
+:::caution Do it before the deploy, not after
+The managed mount and your `weed mount` target the same directory. Deploying first would start your mount on top of the managed one in the new containers, delete the variable first so only your mount runs.
+:::
+
+## 3. Deploy
+
+Deploy the service with the changed `zerops.yaml` (`zcli push`, or trigger your pipeline). The new containers mount the storage from the start command, at the same path as before.
+
+Check the runtime log: the `storage` start command logs the mount, and the deprecation warning that used to appear on container start is gone.
+
+## 4. Update your import files
+
+- Replace the `mount:` field of runtime services in `zerops-import.yaml` files and templates by the `startCommands` entry above, `mount:` is rejected by the import now (`yamlMountDeprecated`).
+- The `shared-storage:ha` and `shared-storage:single` type names still work and create a SeaweedFS service, but prefer `seaweedfs:ha@3.85` and `seaweedfs:single@3.85`.
+
+## Rollback
+
+Put the hostname back into `zeropsSharedStorageMounts` (or recreate the variable with the hostname as its value), remove the `weed mount` start command and deploy. Zerops mounts the storage on the next container start as before.

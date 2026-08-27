@@ -32,7 +32,7 @@ All connected containers run on the same physical machine and share one kernel, 
 - **Atomic rename and `O_APPEND`** behave exactly as on a local disk
 - **inotify propagates across containers**: file watchers in one container see events triggered from another
 
-This is why filesystem-based databases (SQLite, Prometheus TSDB) are safe on Local Storage while they are explicitly unsafe on [Shared Storage](/shared-storage/overview#use-cases) or any other network filesystem.
+This is why filesystem-based databases (SQLite, Prometheus TSDB) are safe on Local Storage while they are explicitly unsafe on [SeaweedFS](/seaweedfs/overview#storage-engine-behavior) or any other network filesystem.
 
 :::note Single-writer restrictions still apply
 Correct locking makes concurrent access *safe*, not concurrent writes *possible*. SQLite still allows only one writer at a time — additional writers block or fail with `SQLITE_BUSY`, exactly as they would for two processes on one machine. A single-writer setup therefore remains the most robust pattern for SQLite and similar embedded databases: keep writes in one service (and ideally one container), and mount the volume with the [`readOnly` option](/local-storage/how-to/connect#the-volume-field) everywhere else to enforce it.

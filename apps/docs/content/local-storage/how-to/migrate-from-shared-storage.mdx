@@ -3,24 +3,24 @@ title: Migrate from Shared Storage to Local Storage
 description: Step-by-step guide to moving data from a deprecated Shared Storage service to a Local Storage volume in Zerops, keeping the same mount path so your application does not change.
 ---
 
-[Shared Storage](/shared-storage/overview) is deprecated. This guide moves the data of an existing Shared Storage service to a new Local Storage volume and switches your runtime services over to it. The new volume is mounted at the **same path** the shared storage used (`/mnt/<old-hostname>`), so your application code and configuration stay untouched.
+[Shared Storage](/shared-storage/overview) is deprecated, and existing Shared Storage services have been converted into [SeaweedFS](/seaweedfs/overview) services. If you only want to keep using them, follow the [SeaweedFS migration guide](/seaweedfs/how-to/migrate-from-shared-storage) instead. This guide moves the data off the network filesystem to a new Local Storage volume and switches your runtime services over to it. The new volume is mounted at the **same path** the shared storage used (`/mnt/<old-hostname>`), so your application code and configuration stay untouched.
 
 The migration in short:
 
 1. Stop everything that writes to the shared storage.
 2. Create the Local Storage service and a temporary migrator service that mounts both storages.
 3. Copy the data from the old mount to the new one.
-4. Disconnect the shared storage from all services and stop it.
+4. Remove the shared storage mounts from all services and stop it.
 5. Mount the new volume in your runtime services at the old path and deploy.
 6. Verify, then delete the migrator and the shared storage.
 
-Throughout the guide, `volume` is the hostname of the **old Shared Storage** service and `volume2` the hostname of the **new Local Storage** service. Replace them with your own.
+Throughout the guide, `volume` is the hostname of the **old Shared Storage** service (now a SeaweedFS service) and `volume2` the hostname of the **new Local Storage** service. Replace them with your own.
 
 ## Before you start
 
 Local Storage is a different kind of storage than the network filesystem it replaces — read its [key trade-offs](/local-storage/overview#key-trade-offs) before you migrate. One consequence for the migration: a runtime service mounts at most one Local Storage volume, so if a service mounts several shared storages, copy them into subdirectories of a single volume and point your application at the new paths.
 
-Take a fresh [backup](/shared-storage/how-to/manage#backups) of the shared storage before you begin.
+Take a fresh [backup](/seaweedfs/overview#backup-and-recovery) of the shared storage before you begin.
 
 ## 1. Stop all writers
 
@@ -32,7 +32,7 @@ Files that change while they are being copied end up inconsistent on the new vol
 
 ## 2. Create the Local Storage and a migrator service
 
-Import the new Local Storage service together with a temporary `fsmigrator` service that has **both** storages mounted: the old shared storage through the import-level `mount` field, and the new volume through the `volume` field in its inline `zeropsYaml`.
+Import the new Local Storage service together with a temporary `fsmigrator` service that has **both** storages mounted: the new volume through the `volume` field in its inline `zeropsYaml`, and the old shared storage through a [`weed mount` start command](/seaweedfs/overview#mounting-from-a-runtime-service).
 
 ```yaml title="zerops-import.yaml"
 services:
@@ -52,9 +52,10 @@ services:
             volume:
               # Hostname of the new Local Storage service.
               hostname: volume2
-    mount:
-      # Hostname of the old Shared Storage service.
-      - volume
+            startCommands:
+              # Mount the old Shared Storage service (hostname volume) at /mnt/volume.
+              - name: volume
+                command: sudo zsc shared-storage mount volume
     # Start the container without deploying any code.
     startWithoutCode: true
 ```
@@ -95,11 +96,11 @@ find /mnt/volume -type f | wc -l; find /mnt/volume2 -type f | wc -l
 `du` and `df` can report misleading numbers for the shared storage mount. If the totals differ, compare file counts or run `diff -r /mnt/volume /mnt/volume2` before you worry about it.
 :::
 
-## 4. Disconnect and stop the shared storage
+## 4. Remove the shared storage mounts and stop it
 
-On the shared storage service detail page, open **Shared storage connections** and toggle **off** every connected runtime service, including `fsmigrator`. Then stop the shared storage service.
+On every runtime service that still has the old managed mount, open **Environment variables** and delete the `zeropsSharedStorageMounts` variable (or remove `volume` from its `|`-separated list if the service mounts other storages too). This is applied live: the mount disappears from the running containers without a restart. Stop the `fsmigrator` service as well, then stop the shared storage service.
 
-Disconnecting is applied live and does not restart the runtime containers. Keep the service stopped rather than deleted for now — it is your rollback path until the new volume is verified.
+Keep the shared storage stopped rather than deleted for now — it is your rollback path until the new volume is verified.
 
 ## 5. Mount the new volume in your runtime services
 
@@ -120,13 +121,13 @@ zerops:
 
 Deploy each service with the changed `zerops.yaml` (`zcli push`, or trigger your pipeline). The volume is mounted in the new containers at `/mnt/volume`, exactly where the shared storage used to be. See [Mount to a service](/local-storage/how-to/connect) for the full `volume` field reference.
 
-If you keep your infrastructure in a `zerops-import.yaml` or a template, update it as well: replace the `shared-storage` service with the `local-storage:single@1` service and remove the `mount` field from the runtime services.
+If you keep your infrastructure in a `zerops-import.yaml` or a template, update it as well: replace the `shared-storage` / `seaweedfs` service with the `local-storage:single@1` service and remove the `mount` field (or any `weed mount` start command) from the runtime services.
 
 ## 6. Verify
 
 Start the runtime services you stopped in step 1 (if they did not start with the deploy) and check that the application works — read an existing file, write a new one, and confirm the results in the [Local Storage container](/local-storage/how-to/manage#access-the-volume-directly), where the volume is mounted at `/data`.
 
-If something is wrong, you can roll back: remove the `volume` field from `zerops.yaml`, deploy, start the shared storage service and reconnect it to the runtime services.
+If something is wrong, you can roll back: remove the `volume` field from `zerops.yaml`, deploy, start the shared storage service and put its hostname back into the `zeropsSharedStorageMounts` variable of the runtime services (or mount it with a `weed mount` start command).
 
 ## 7. Clean up
 

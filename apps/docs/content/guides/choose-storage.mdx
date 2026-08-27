@@ -1,9 +1,9 @@
 ---
 title: "Choosing Storage on Zerops"
-description: "**Use Object Storage** for uploads, media, and backups; **use Local Storage** for anything that needs a real filesystem (SQLite, Prometheus, Gitea, shared certs). Shared Storage is deprecated."
+description: "**Use Object Storage** for uploads, media, and backups; **use Local Storage** for anything that needs a real filesystem (SQLite, Prometheus, Gitea, shared certs); **use SeaweedFS** for an HA network filesystem shared between services that you mount yourself. Shared Storage is deprecated."
 ---
 
-**Use Object Storage** (S3) for uploads, media, and backups. **Use Local Storage** (`run.volume`) for anything that needs a real filesystem — SQLite and other embedded databases, single-node stateful apps, filesystem state shared between services. **Shared Storage is deprecated** — don't use it in new projects. Human-facing comparison: [Storage on Zerops](/storage/overview).
+**Use Object Storage** (S3) for uploads, media, and backups. **Use Local Storage** (`run.volume`) for anything that needs a real filesystem — SQLite and other embedded databases, single-node stateful apps, filesystem state shared between services. **Use SeaweedFS** when the shared filesystem must be highly available and the per-mount locking of a network filesystem is acceptable — the runtime mounts it from `run.startCommands`. **Shared Storage is deprecated** — existing services were converted to SeaweedFS. Human-facing comparison: [Storage on Zerops](/storage/overview).
 
 ## Decision Matrix
 
@@ -13,8 +13,9 @@ description: "**Use Object Storage** for uploads, media, and backups; **use Loca
 | SQLite / Prometheus / filesystem-based databases | **Local Storage** | Single-kernel POSIX: locking and mmap are correct — the only Zerops storage where these workloads are safe |
 | Single-node stateful app (Gitea, etc.) | **Local Storage** | Persistent volume survives deploys and container replacement |
 | Filesystem state shared between services (certs, caches) | **Local Storage** | One volume mountable by multiple runtime services, writes visible immediately |
+| HA filesystem shared between services, no lock-dependent workloads | **SeaweedFS** | Replicated managed cluster, mounted by the runtime itself via `weed mount` in `run.startCommands`, or used over the filer HTTP API |
 | Temp/scratch files | Container disk | Fine as-is; lost on deploy |
-| Existing `mount:`-based setups | Shared Storage (deprecated) | Keeps working; [migrate to Local Storage](/local-storage/how-to/migrate-from-shared-storage) or Object Storage |
+| Existing Shared Storage (`mount:`-based) setups | SeaweedFS (already converted) | Old mounts keep working via the `zeropsSharedStorageMounts` env; [take over the mount](/seaweedfs/how-to/migrate-from-shared-storage) or [migrate to Local Storage](/local-storage/how-to/migrate-from-shared-storage) |
 
 ## Local Storage
 
@@ -29,6 +30,10 @@ description: "**Use Object Storage** for uploads, media, and backups; **use Loca
 
 See the [object-storage integration guide](/guides/object-storage-integration): S3-compatible (MinIO), `objectStorageSize` quota, `AWS_USE_PATH_STYLE_ENDPOINT: true`, `${storage_*}` env var references. Not a filesystem — no locking, no partial writes, no mmap.
 
+## SeaweedFS
+
+See the [SeaweedFS integration guide](/guides/seaweedfs-integration): service type `seaweedfs:ha@3.85` / `seaweedfs:single@3.85`, exposes the filer at `<hostname>.zerops:8888` (HTTP API + FUSE via `weed mount`), no credentials. Zerops runs the cluster; mounting is the runtime's job (`run.startCommands` entry running `sudo /opt/zerops/bin/weed-3-85 mount ...` or `zsc shared-storage mount <hostname>`). Per-mount-only locks and an append-only store make databases unsafe on it — that workload belongs on Local Storage. Data capacity is capped at 60 GB.
+
 ## Shared Storage (deprecated)
 
-A managed SeaweedFS cluster mounted at `/mnt/<hostname>` via the import-level `mount:` field. Deprecated: it will be replaced by a standalone SeaweedFS managed service mounted with `zsc shared-storage mount` in `initCommands`. Its per-mount-only locks make databases unsafe on it — that workload belongs on Local Storage. Existing services keep working.
+Retired service type. Every existing Shared Storage service was converted in place into a SeaweedFS service (same containers, data and hostname). The GUI **Shared storage connections** page and the import-level `mount:` field are gone (`mount:` now fails with `yamlMountDeprecated`); the old runtime mounts survive as the `zeropsSharedStorageMounts` env (`|`-separated hostnames, mounted at `/mnt/<hostname>` on container start, best-effort, with a deprecation warning in the runtime log). Migration: add the `weed mount` start command, delete the env, deploy — see the [migration guide](/seaweedfs/how-to/migrate-from-shared-storage).

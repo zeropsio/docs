@@ -166,6 +166,7 @@ import IconBalancer from './Balancer';
 import IconDns from './Dns';
 import IconInternalAccess from './InternalAccess';
 import IconServersConnected from './ServersConnected';
+import IconSeaweedfs from './Seaweedfs';
 
 export default {
   'academic-cap-solid': AcademicCapSolid,
@@ -265,6 +266,7 @@ export default {
   'server-stack': ServerStack,
   'server-stack-solid': ServerStackSolid,
   'servers-connected': IconServersConnected,
+  seaweedfs: IconSeaweedfs,
   'shopping-cart': ShoppingCart,
   'shopping-cart-solid': ShoppingCartSolid,
   sidebar: SidebarLeft,

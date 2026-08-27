@@ -1,0 +1,83 @@
+---
+title: "SeaweedFS Integration on Zerops"
+description: "Managed SeaweedFS cluster (`seaweedfs:ha@3.85` / `seaweedfs:single@3.85`) exposing an unauthenticated filer at `<hostname>.zerops:8888`. Zerops does not mount it into runtimes — the runtime mounts it with `weed mount` in `run.startCommands` (or uses the filer HTTP API). Replaces the deprecated Shared Storage."
+---
+
+Managed SeaweedFS cluster (`seaweedfs:ha@3.85` / `seaweedfs:single@3.85`) exposing an unauthenticated filer at `<hostname>.zerops:8888`. Zerops does not mount it into runtimes — the runtime mounts it with `weed mount` in `run.startCommands` (or uses the filer HTTP API). Replaces the deprecated [Shared Storage](/shared-storage/overview). Human-facing docs: [SeaweedFS](/seaweedfs/overview).
+
+## Service
+
+```yaml
+services:
+  - hostname: storage
+    type: seaweedfs:ha@3.85     # 2 containers, replicated. seaweedfs:single@3.85 = 1 container
+```
+
+- Mode is part of the type and immutable. `shared-storage:ha` / `shared-storage:single` are accepted aliases.
+- Env vars generated on the service: `hostname` (`storage`), `port` (`8888`). Reference cross-service as `${storage_hostname}`, `${storage_port}`. No credentials — the filer is unauthenticated, reachable only on the project network and over VPN. Cannot be exposed via `enableSubdomainAccess` or public routing.
+- Endpoints: filer HTTP `http://storage.zerops:8888`, filer gRPC `storage.zerops:18888`, per-container filer `node-stable-<1|2>.db.storage.zerops:8888`. Master (`9333`) and volume (`8080`) servers are internal.
+- Vertical autoscaling only (defaults RAM 0.5 GB, disk 5 GB min); data capacity capped at **60 GB** regardless of disk. Backups: `.tar.gz` of the whole filesystem, restore by extracting through a mount.
+
+## Mounting from a runtime (zerops.yaml)
+
+Every runtime image ships `/opt/zerops/bin/weed-3-85`. Run `weed mount` as an extra `startCommands` entry; it stays in the foreground and Zerops restarts it if it exits:
+
+```yaml
+zerops:
+  - setup: app
+    run:
+      base: nodejs@22
+      startCommands:
+        - name: app
+          command: npm start
+        - name: storage
+          initCommands:
+            - sudo mkdir -p /mnt/storage
+            - sudo chown zerops:zerops /mnt/storage
+          command: sudo /opt/zerops/bin/weed-3-85 mount -filer=node-stable-1.db.storage.zerops:8888 -dir=/mnt/storage
+```
+
+- `sudo` is passwordless on Ubuntu and Alpine runtimes. A bare mount favours throughput and can grow to hundreds of MB RAM under load; cap it with `-cacheCapacityMB` / `-concurrentWriters` / `-chunkSizeLimitMB`. `-filer` targets one container's filer; in HA mode `node-stable-2` works too (same metadata).
+- Shortcut, mounts at `/mnt/<hostname>` against `node-stable-1` with a RAM-lean tuning baked in (`-volumeServerAccess=direct -cacheCapacityMB=0 -concurrentWriters=1 -chunkSizeLimitMB=1`, ~100-150 MB): `command: sudo zsc shared-storage mount storage`.
+- The mount exists only in running containers: not during build, not during `run.prepareCommands`. There is no `run.mount` field and no import-level `mount:` (rejected with `yamlMountDeprecated`).
+- Every container of the service mounts independently; all see the same files.
+
+### Mount in initCommands (when init commands need the files)
+
+`startCommands` run after `initCommands`, so mount in the background from the init commands when they need the storage:
+
+```yaml
+      initCommands:
+        - sudo zsc shared-storage mount storage --background   # mounts /mnt/storage, returns when ready
+        - cp /mnt/storage/certs/app.pem /var/www/app.pem
+```
+
+Raw form with options (`weed fuse` accepts every `weed mount` flag as `-o`): `sudo /opt/zerops/bin/weed-3-85 fuse /mnt/certs -o "filer=node-stable-1.db.storage.zerops:8888,filer.path=/certs,readOnly=true"` (create + chown the dir first). Both detach a `weed mount` child; it is re-created on every container start (init commands rerun) but **not restarted if it dies** - prefer the start command form unless init commands need the mount.
+
+Useful options: `filer=a:8888,b:8888` (list both HA containers), `filer.path=/sub` (mount a subtree per service), `readOnly=true`, `allowOthers=false`.
+
+## Filer HTTP API (no mount)
+
+```sh
+curl -F "file=@report.pdf" http://storage.zerops:8888/reports/2026/        # upload, creates dirs
+curl -o report.pdf http://storage.zerops:8888/reports/2026/report.pdf      # download
+curl -H "Accept: application/json" http://storage.zerops:8888/reports/2026/ # list
+curl -X DELETE http://storage.zerops:8888/reports/2026/report.pdf          # delete
+```
+
+HTTP uploads are limited to 64 MB per file; mounted writes are chunked and unlimited within capacity.
+
+## Constraints
+
+- **Not for databases.** Locks (`flock`, POSIX) are enforced per mount only; the store is append-only (write amplification on small rewrites). SQLite, Prometheus TSDB etc. belong on [Local Storage](/local-storage/overview).
+- Higher latency than local disk; avoid huge trees of tiny files; batch writes.
+- `df` inside the mount is misleading; use the GUI for usage.
+- HA failover: master container replacement makes the cluster unavailable ~30 s.
+
+## Migrating from Shared Storage
+
+Existing Shared Storage services are already SeaweedFS services (converted in place, same hostname and data). Their old runtime mounts persist as the `zeropsSharedStorageMounts` env on the runtime service (`|`-separated hostnames, mounted at `/mnt/<hostname>` on container start, best-effort, with a deprecation warning in runtime logs). Migration = add the `startCommands` mount above at the same `/mnt/<hostname>` path, delete the env (applied live, unmounts immediately), deploy. Delete the env **before** the deploy so the two mounts do not target the same directory. Details: [migration guide](/seaweedfs/how-to/migrate-from-shared-storage).
+
+## SeaweedFS vs Local Storage vs Object Storage
+
+See [Choosing Storage](/guides/choose-storage). Short form: Object Storage for uploads/media/backups; Local Storage for anything lock-dependent or single-node stateful; SeaweedFS for an HA network filesystem shared between services where per-mount locking is acceptable.

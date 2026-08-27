@@ -1,9 +1,9 @@
 ---
 title: "Scaling and Autoscaling"
-description: "Zerops autoscales vertically (CPU/RAM/disk) and horizontally (container count). Runtimes support both. Managed services (DB, cache, shared-storage) support vertical only with fixed container count (`:single`=1, `:ha`=3). Object-storage and Docker have no autoscaling. Extends grammar.md section 9 with mechanics, thresholds, YAML syntax, and common mistakes."
+description: "Zerops autoscales vertically (CPU/RAM/disk) and horizontally (container count). Runtimes support both. Managed services (DB, cache, SeaweedFS) support vertical only with fixed container count (`:single`=1, `:ha`=3, SeaweedFS `:ha`=2). Object-storage and Docker have no autoscaling. Extends grammar.md section 9 with mechanics, thresholds, YAML syntax, and common mistakes."
 ---
 
-Zerops autoscales vertically (CPU/RAM/disk) and horizontally (container count). Runtimes support both. Managed services (DB, cache, shared-storage) support vertical only with fixed container count (the `:single` type variant = 1 node, `:ha` = 3). Object-storage and Docker have no autoscaling. Extends grammar.md section 9 with mechanics, thresholds, YAML syntax, and common mistakes.
+Zerops autoscales vertically (CPU/RAM/disk) and horizontally (container count). Runtimes support both. Managed services (DB, cache, SeaweedFS) support vertical only with fixed container count (the `:single` type variant = 1 node, `:ha` = 3, SeaweedFS `:ha` = 2). Object-storage and Docker have no autoscaling. Extends grammar.md section 9 with mechanics, thresholds, YAML syntax, and common mistakes.
 
 ## When to Scale Which Way
 
@@ -22,7 +22,7 @@ Zerops autoscales vertically (CPU/RAM/disk) and horizontally (container count). 
 | **Linux containers** (Alpine, Ubuntu) | Yes | Yes (1-10 containers) | Same as runtimes |
 | **Managed DB** (PostgreSQL, MariaDB) | Yes | No (fixed: `:single`=1, `:ha`=3) | Variant immutable after creation |
 | **Managed cache** (Valkey) | Yes | No (fixed: `:single`=1, `:ha`=3) | Variant immutable after creation |
-| **Shared storage** | Yes (cpu/ram/disk configurable) | No (fixed: `:single`=1, `:ha`=3) | Accepts verticalAutoscaling in import.yml |
+| **SeaweedFS** | Yes (cpu/ram/disk configurable) | No (fixed: `:single`=1, `:ha`=2) | Accepts verticalAutoscaling in import.yml, data capacity capped at 60 GB regardless of disk |
 | **Object storage** | No | No | Fixed size at creation, no verticalAutoscaling |
 | **Docker** | No (manual, triggers VM restart) | Manual only (change VM count, triggers restart) | No automatic autoscaling |
 
@@ -109,14 +109,14 @@ Applies to **runtimes and Linux containers only**. New containers are added when
 
 **HA requirement**: applications must be stateless and handle distributed operation (no local file sessions, no local uploads).
 
-### Managed Services (DB, Cache, Shared Storage)
+### Managed Services (DB, Cache, SeaweedFS)
 
 Container count is **fixed by the deployment variant in the type** (`postgresql:single@18` / `postgresql:ha@18`), set at creation, **immutable**:
 
 | Variant | Containers | Use case |
 |---|---|---|
 | `:single` | 1 | Development, non-critical |
-| `:ha` | 3 (on separate physical machines) | Production, automatic failover |
+| `:ha` | 3 (on separate physical machines), 2 for SeaweedFS | Production, automatic failover |
 
 **Legacy form** you may still see in older YAML: a separate `mode:` field — `mode: NON_HA` ≡ `:single`, `mode: HA` ≡ `:ha`. Still accepted (remapped to the variant) but deprecated and ignored by validation.
 

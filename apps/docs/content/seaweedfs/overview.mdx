@@ -1,0 +1,240 @@
+---
+title: SeaweedFS
+desc: Managed SeaweedFS distributed filesystem on Zerops. A filer endpoint you mount or call from your runtime services, with optional high availability and automated backups.
+---
+
+import UnorderedList from '@site/src/components/UnorderedList';
+import UnorderedCodeList from '@site/src/components/UnorderedCodeList';
+import ResourceTable from '/src/components/ResourceTable';
+import data from '@site/static/data.json';
+
+[SeaweedFS ↗](https://github.com/seaweedfs/seaweedfs) is a distributed filesystem built for high volumes of files. Zerops runs the SeaweedFS cluster for you - master, volume servers and filer, in a single container or in a replicated highly available pair, with monitoring, autoscaling and backups.
+
+What Zerops does **not** do is decide how your application talks to it. The service exposes the SeaweedFS **filer** on the project network, and you pick the client: a FUSE mount started from your `zerops.yaml`, the filer HTTP API, or any other SeaweedFS client. This replaces the deprecated [Shared Storage](/shared-storage/overview), which mounted the same cluster into your containers with one fixed set of mount options. If you have a Shared Storage service, see the [migration guide](/seaweedfs/how-to/migrate-from-shared-storage).
+
+:::tip Is SeaweedFS the right storage?
+SeaweedFS is a network filesystem: files are visible from every container that mounts it, but locks are enforced per mount and the store is append-only. That makes it a good fit for **files shared between containers and services** and a bad fit for databases. For a real POSIX filesystem with correct locking use [Local Storage](/local-storage/overview), for uploads, media and backups use [Object Storage](/object-storage/overview). See [Storage on Zerops](/storage/overview) for the comparison.
+:::
+
+## Supported Versions
+
+Currently supported SeaweedFS versions:
+<UnorderedList data={data.seaweedfs.readable}/>
+
+Import configuration version:
+<UnorderedCodeList data={data.seaweedfs.import}/>
+
+The legacy `shared-storage:ha` and `shared-storage:single` type names are accepted as aliases and create a SeaweedFS service.
+
+## Service Configuration
+
+Zerops offers SeaweedFS in two deployment modes. The mode is part of the service type and is fixed for the life of the service.
+
+### Single Setup
+
+- One container running master, volume server and filer
+- No redundancy, all data is lost if the container fails
+- Suitable for development or non-critical data
+
+### HA (High Availability) Setup
+
+- Two containers, each running its own volume server and filer, the master runs on the first one
+- File data and filer metadata are replicated 1:1 across both containers (SeaweedFS replication `001`)
+- When a container fails, a new one replaces it and the data is replicated onto it automatically. While the master container is being replaced, the cluster is unavailable for roughly 30 seconds until the new master starts
+- Recommended for production
+
+### Creating the service
+
+Add the service in the Zerops GUI (**Add new service** → **SeaweedFS**), or import it:
+
+```yaml title="zerops-import.yaml"
+services:
+  - hostname: storage
+    type: seaweedfs:ha@3.85
+```
+
+Use `seaweedfs:single@3.85` for the single container mode. Import the file with the [zCLI](/references/cli):
+
+```sh
+zcli project service-import zerops-import.yaml
+```
+
+## Connecting
+
+The service exposes only the filer, the component every client talks to. Master and volume servers are internal to the cluster and clients reach them through the filer on their own.
+
+| Endpoint | Address | Notes |
+|---|---|---|
+| Filer HTTP API | `http://<hostname>.zerops:8888` | File upload, download and listing over HTTP, and the Filer UI |
+| Filer gRPC | `<hostname>.zerops:18888` | Used by `weed mount` and other native SeaweedFS clients (always HTTP port + 10000) |
+| Filer of one container | `node-stable-<n>.db.<hostname>.zerops:8888` | Pin a client to a specific container, `n` is `1` or `2` |
+
+The generated environment variables are `hostname` and `port` (`8888`). Reference them from another service in the same project as `${storage_hostname}` and `${storage_port}` for a service named `storage`.
+
+The filer is not authenticated. It is reachable only inside the project's private network and over the [Zerops VPN](/references/networking/vpn), and it cannot be exposed through public HTTP routing or subdomain access.
+
+### Mounting from a runtime service
+
+The SeaweedFS binary that ships in every Zerops runtime container (`/opt/zerops/bin/weed-3-85`) contains `weed mount`, a FUSE client that presents the filer as a directory. Run it as one of your [`startCommands`](/zerops-yaml/specification#startcommands-), next to your application:
+
+```yaml title="zerops.yaml"
+zerops:
+  - setup: app
+    run:
+      base: nodejs@22
+      startCommands:
+        - name: app
+          command: npm start
+        - name: storage
+          initCommands:
+            - sudo mkdir -p /mnt/storage
+            - sudo chown zerops:zerops /mnt/storage
+          command: sudo /opt/zerops/bin/weed-3-85 mount -filer=node-stable-1.db.storage.zerops:8888 -dir=/mnt/storage
+```
+
+- `weed mount` runs in the foreground and keeps the directory mounted for the lifetime of the container. Zerops restarts it like any other start command if it exits.
+- `-filer` points at the filer of one container. In HA mode both containers run a filer with the same metadata, so a second service can mount `node-stable-2` to spread the load.
+- The mount needs `sudo`, both Ubuntu and Alpine runtime images allow it without a password.
+- Every container of the service gets its own mount, and every mount sees the same files.
+- A bare `weed mount` favours throughput and caches reads locally, so the mount process can grow to hundreds of MB under load. Cap it with `-cacheCapacityMB`, `-concurrentWriters` and `-chunkSizeLimitMB` if RAM matters more, see the [`weed mount` options ↗](https://github.com/seaweedfs/seaweedfs/wiki/FUSE-Mount).
+- The mount is only available while the container runs, not during the build or the [runtime prepare](/features/pipeline#runtime-prepare-phase-optional) phase.
+
+:::note Shortcut: `zsc shared-storage mount`
+`zsc shared-storage mount <hostname>` does the same thing with a RAM-lean tuning baked in: it creates `/mnt/<hostname>`, gives it to the `zerops` user and mounts the filer of the first container (`node-stable-1.db.<hostname>.zerops:8888`) there, passing `-volumeServerAccess=direct -cacheCapacityMB=0 -concurrentWriters=1 -chunkSizeLimitMB=1` so the mount process stays around 100-150 MB at the cost of throughput. It exists for backwards compatibility with the deprecated Shared Storage and stays available, see the [zsc reference](/references/zsc#shared-storage).
+:::
+
+### Mounting in init commands
+
+A start command only runs after the [`initCommands`](/zerops-yaml/specification#initcommands-), so if an init command needs the storage (a certificate that lives there, a config it has to write, a migration over shared files), mount it there instead, in the background:
+
+```yaml title="zerops.yaml"
+zerops:
+  - setup: app
+    run:
+      base: nodejs@22
+      initCommands:
+        - sudo zsc shared-storage mount storage --background
+        - cp /mnt/storage/certs/app.pem /var/www/app.pem
+      start: npm start
+```
+
+`--background` mounts `/mnt/<hostname>` the same way as the foreground form (same filer, same tuning), leaves a detached `weed mount` process behind and returns once the mount is ready. Init commands run on every container start, and the command cleans up a stale mount before mounting, so a restart mounts again.
+
+The raw equivalent, for a custom path or options, is `weed fuse`: it takes every `weed mount` flag as an `-o` option and detaches the same way:
+
+```yaml
+      initCommands:
+        - sudo mkdir -p /mnt/certs && sudo chown zerops:zerops /mnt/certs
+        - sudo /opt/zerops/bin/weed-3-85 fuse /mnt/certs -o "filer=node-stable-1.db.storage.zerops:8888,filer.path=/certs,readOnly=true"
+```
+
+:::caution Nothing supervises a background mount
+A mount started from an init command is not restarted if its process dies, unlike a start command. Zerops replaces a container whose health check fails, but a lost mount alone does not fail the health check. If the storage is part of what your application serves, prefer the start command form, or add a [health check](/zerops-yaml/specification#healthcheck-) that touches a file on the mount.
+:::
+
+### Useful mount options
+
+These apply to `weed mount` as flags (`-filer.path=/certs`) and to `weed fuse` as `-o` options (`filer.path=/certs`):
+
+| Option | What it does |
+|---|---|
+| `filer=<a>:8888,<b>:8888` | Comma-separated list of filers. In HA mode you can list both containers (`node-stable-1.db.<hostname>.zerops:8888,node-stable-2.db.<hostname>.zerops:8888`) instead of pinning the mount to one of them. |
+| `filer.path=/some/dir` | Mounts only that directory of the storage, so different services can get different subtrees of one storage. The directory is created if missing. |
+| `readOnly=true` | Read-only mount, writes fail with `Read-only file system`. |
+| `cacheCapacityMB`, `concurrentWriters`, `chunkSizeLimitMB` | Memory vs. throughput trade-offs. The `zsc` shortcut sets them to `0`, `1` and `1` to keep the mount process RAM-lean. |
+| `allowOthers=false` | Restricts the mount to the user that mounted it (root when started with `sudo`), the default `true` lets the `zerops` user in. |
+
+See the [FUSE mount documentation ↗](https://github.com/seaweedfs/seaweedfs/wiki/FUSE-Mount) for the full list.
+
+### Filer HTTP API
+
+Any HTTP client can read and write files without a mount, which suits build steps, one-off jobs and languages with an HTTP client but no FUSE:
+
+```sh
+# upload (creates the directories on the way)
+curl -F "file=@report.pdf" http://storage.zerops:8888/reports/2026/
+
+# download
+curl -o report.pdf http://storage.zerops:8888/reports/2026/report.pdf
+
+# list a directory as JSON
+curl -H "Accept: application/json" http://storage.zerops:8888/reports/2026/
+
+# delete
+curl -X DELETE http://storage.zerops:8888/reports/2026/report.pdf
+```
+
+Uploads through the HTTP API are limited to **64 MB per file**. Files written through a mount are chunked and have no such limit. See the [filer server API ↗](https://github.com/seaweedfs/seaweedfs/wiki/Filer-Server-API) for the full interface.
+
+### Web interfaces
+
+Over the [Zerops VPN](/references/networking/vpn) you can open the SeaweedFS UIs in a browser:
+
+- **Filer UI** - `http://<hostname>.zerops:8888` - browse, upload and download files
+- **Master UI** - `http://node-stable-1.db.<hostname>.zerops:9333` - cluster topology, volume servers, health
+- **Volume UI** - `http://node-stable-<n>.db.<hostname>.zerops:8080/ui/index.html` - volume status and disk usage of one container
+
+## Storage engine behavior
+
+SeaweedFS stores file data in append-only volumes. Files are split into chunks, and when a file is modified new chunks are written while the old ones stay on disk until a vacuum reclaims them. Zerops triggers the automatic vacuum when deleted content exceeds 15% of a volume (the SeaweedFS default is 30%).
+
+The consequences for your workload:
+
+- **Frequent small modifications of existing files** cause heavy write amplification. Batch writes where possible and avoid huge trees of tiny files.
+- **File locks are per mount.** `flock` and POSIX locks are enforced only inside the container that holds the mount, a process in another container can write to the locked file freely.
+- **Latency is higher** than on a local disk, every operation crosses the network.
+
+:::caution Not suitable for databases
+Do not run SQLite, Prometheus TSDB or any other filesystem-based database on SeaweedFS. Per-mount locks lead to corruption as soon as two containers touch the database, and the append-only store amplifies every small write. Use a [managed database](/postgresql/overview), or [Local Storage](/local-storage/overview) for embedded databases.
+:::
+
+## Capacity
+
+A SeaweedFS service holds at most **60 GB of data** regardless of the disk resource in autoscaling. The disk gives the storage engine working space for the vacuum process and metadata, raising it in autoscaling does not raise the data capacity. If you need more, contact support.
+
+- Maximum file size: no fixed limit through a mount, up to the available capacity
+- Maximum upload size through the filer HTTP API and UI: 64 MB per file
+- `df` inside a mount reports the filer's view and can be misleading, use the service detail page in the GUI for accurate usage
+
+## Auto Scaling Configuration
+
+Zerops scales the containers vertically. The default configuration is:
+
+<ResourceTable resources={{
+  ram: {
+    min: '0.5 GB',
+  },
+  disk: {
+      min: '5 GB'
+      }
+}} />
+
+The number of containers is fixed by the deployment mode. If you need to limit the cost of the service, lower the maximum resources, Zerops never scales above them. If the storage feels slow, raise the minimum resources, Zerops never scales below them. The parameters can be changed at any time.
+
+## Health Monitoring
+
+Zerops checks the volume server (`/status`) and the filer of every container, plus the master (`/cluster/healthz`) on the container that runs it, and shows the result on the service detail page. The SeaweedFS logs of every component are in the service's **Runtime Logs**, the logs of a mount process are in the runtime logs of the service that runs it, under the name of the start command.
+
+## Backup and Recovery
+
+Zerops takes automated encrypted backups of the whole filesystem. For configuration, scheduling, retention, tagging, quotas and CLI tools see [Zerops Backups](/features/backup).
+
+- **Format**: `.tar.gz` archive of the filesystem contents
+- **Storage**: encrypted, in isolated object storage
+
+### Restoring backups
+
+1. Download the backup archive from the Zerops GUI.
+2. Transfer it into a runtime service that has the storage [mounted](#mounting-from-a-runtime-service), for example over the [Zerops VPN](/references/networking/vpn).
+3. Extract it into the mount directory:
+
+```sh
+tar -xzf backup.tar.gz -C /mnt/storage
+```
+
+Extract through a mount rather than uploading through the Filer UI, whose 64 MB per-file limit would reject larger files.
+
+## Support
+
+- Ask in the Zerops [Discord](https://discord.com/invite/WDvCZ54)
+- SeaweedFS [wiki ↗](https://github.com/seaweedfs/seaweedfs/wiki) for client options and the filer API

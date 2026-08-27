@@ -1,161 +1,53 @@
 ---
-title: Shared Storage on Zerops
-description: Managed shared disk storage on Zerops. A POSIX-compatible filesystem mounted into your runtime containers, with optional high availability and automated backups.
+title: Shared Storage (deprecated)
+description: Shared Storage is deprecated. Existing services were converted into managed SeaweedFS services, new projects should use SeaweedFS or Local Storage.
 ---
 
 import DocCardList from '@theme/DocCardList';
 import Icons from '@theme/Icon';
 
 :::warning Shared Storage is deprecated
-Shared Storage in its current form — a managed SeaweedFS cluster connected through the import-level `mount:` field — is deprecated. It will be replaced by a standalone SeaweedFS managed service that runtime services mount themselves with [`zsc shared-storage mount`](/references/zsc#shared-storage) in their `initCommands`. Existing Shared Storage services keep working for now, but don't build new projects on it — and move existing ones with the [migration guide](/local-storage/how-to/migrate-from-shared-storage).
-
-For new projects, choose by workload:
-
-- A **persistent filesystem shared between services** — use [Local Storage](/local-storage/overview). It is a real local filesystem with correct locking, so it also covers the workloads Shared Storage was never safe for (SQLite and other filesystem-based databases).
-- **Large or highly available data** — use [Object Storage](/object-storage/overview).
+Shared Storage, the SeaweedFS cluster that Zerops mounted into your runtime containers through the **Shared storage connections** page and the `mount:` import field, is no longer offered. The service type has been retired (the old `shared-storage:ha` / `shared-storage:single` type names still work in imports and create a SeaweedFS service), the `mount:` field is rejected on import, and the connections page is gone from the GUI.
 :::
 
-Zerops **Shared Storage** is a managed disk volume that mounts as a POSIX-compatible filesystem into your runtime services. Files written by one container are immediately visible to every other container that mounts the same storage, whether they belong to the same service or to different services in the project.
+**Every existing Shared Storage service has been converted in place into a [SeaweedFS](/seaweedfs/overview) service.** Same containers, same data, same hostname, no action was needed on your side. The mounts your runtime services had keep working for now through the `zeropsSharedStorageMounts` environment variable, on a best-effort basis and with a deprecation warning in the runtime log. Take over the mount in your own `zerops.yaml` with the [migration guide](/seaweedfs/how-to/migrate-from-shared-storage) before the managed mounts are removed.
 
-Under the hood it runs [SeaweedFS ↗](https://github.com/seaweedfs/seaweedfs), a distributed filesystem optimized for high-volume storage. See [Technical details](/shared-storage/tech-details) for the architecture.
+For new projects, pick by workload:
 
-## Quick start
+- **Files shared between containers and services** over the network - [SeaweedFS](/seaweedfs/overview). The same managed cluster as before, you mount it or use its filer API yourself.
+- **A real filesystem** with correct locking, for SQLite and other filesystem-based databases or single-node stateful apps - [Local Storage](/local-storage/overview).
+- **Uploads, media, backups** - [Object Storage](/object-storage/overview).
 
-Add a shared storage to your project and mount it into a runtime service with a `zerops-import.yaml`:
-
-```yaml title="zerops-import.yaml"
-services:
-  - hostname: teststorage
-    # type is shared-storage:{mode}
-    type: shared-storage:ha
-
-  - hostname: app
-    type: nodejs@22
-    buildFromGit: https://github.com/myorg/myapp
-    # mount the storage into /mnt/teststorage
-    mount:
-      - teststorage
-```
-
-The storage appears in the runtime containers at `/mnt/teststorage`. See [Create shared storage](/shared-storage/how-to/create) for the GUI flow and configuration details, and [Connect & mount](/shared-storage/how-to/connect) for how the mount behaves.
-
-## Use cases
-
-Shared Storage is a good fit for:
-
-- **Configuration sharing**: deploy configuration once and share it across services (e.g. Apache Airflow configuration and DAG files shared with all worker nodes)
-- **Application data**: user uploads, images, documents, and other assets shared between containers (avoid huge trees of tiny files, see [performance considerations](/shared-storage/tech-details#performance-considerations))
-- **Fallback to object storage**: applications that strictly require filesystem semantics and cannot work with [object storage](/object-storage/overview)
-
-:::caution Not suitable for databases
-Do **not** run databases on Shared Storage. This includes SQLite, Prometheus TSDB, and other filesystem-based databases.
-
-- File locks are enforced **per mount only**: a lock held in one container does not prevent another container from writing to the same file, which leads to data corruption.
-- The underlying storage engine is an append-only chunk store: every modification writes new chunks, so the frequent small writes typical for databases cause heavy write amplification.
-
-Use [managed databases](/postgresql/overview) instead. For SQLite and other filesystem-based databases, use [Local Storage](/local-storage/overview) — a local filesystem with correct locking where these workloads are safe. For storing database *backups*, prefer [object storage](/object-storage/overview): it is cheaper and better suited for write-once files.
-:::
-
-## Deployment modes
-
-Choose the reliability model when you create the service. It is set through the service `type` and is **fixed for the life of the service**.
-
-<table className="w-full my-1.5">
-  <thead>
-    <tr>
-      <th className="w-fit" style={{ minWidth: '75px' }}>Mode</th>
-      <th className="w-fit" style={{ minWidth: '200px' }}>type</th>
-      <th className="w-fit">What it is</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td className="w-fit"><b>Highly Available</b></td>
-      <td className="w-fit"><code>shared-storage:ha</code></td>
-      <td className="w-fit">Two containers with data and metadata replicated 1:1 across both, with automatic repair when a node fails. Recommended for production.</td>
-    </tr>
-    <tr>
-      <td className="w-fit"><b>Single container</b></td>
-      <td className="w-fit"><code>shared-storage:single</code></td>
-      <td className="w-fit">One container, so lower cost but no redundancy. All data is lost if the container fails. Good for development and non-critical data.</td>
-    </tr>
-  </tbody>
-</table>
-
-## Key limits
-
-- The storage holds at most **60GB of data**, regardless of the disk resource in autoscaling. See [storage capacity](/shared-storage/tech-details#storage-capacity).
-- File locks work **only within a single container's mount**, not across containers. See [filesystem capabilities](/shared-storage/tech-details#filesystem-capabilities).
-- The mount is available only in runtime containers, not during build and prepare phases.
-
-## Next steps
+See [Storage on Zerops](/storage/overview) for the full comparison.
 
 <DocCardList
-  colSize={6}
+  colSize={4}
   items={[
     {
       type: 'link',
-      href: '/shared-storage/how-to/create',
-      label: 'Create shared storage',
+      href: '/seaweedfs/how-to/migrate-from-shared-storage',
+      label: 'Migrate to SeaweedFS',
       customProps: {
-        icon: Icons['computer-desktop'],
-        description: 'Create a service in the GUI or with zerops-import.yaml.',
+        icon: Icons['seaweedfs'],
+        description: 'Take over the mount in your zerops.yaml, no data moves.',
       },
     },
     {
       type: 'link',
-      href: '/shared-storage/how-to/connect',
-      label: 'Connect & mount',
+      href: '/local-storage/how-to/migrate-from-shared-storage',
+      label: 'Migrate to Local Storage',
       customProps: {
-        icon: Icons['link'],
-        description: 'Connect runtime services and understand how the mount behaves.',
+        icon: Icons['circle-stack'],
+        description: 'Copy the data to a Local Storage volume.',
       },
     },
     {
       type: 'link',
-      href: '/shared-storage/how-to/manage',
-      label: 'Manage & backups',
+      href: '/storage/overview',
+      label: 'Storage on Zerops',
       customProps: {
-        icon: Icons['tools'],
-        description: 'Web interfaces, monitoring, backups, and restore.',
-      },
-    },
-    {
-      type: 'link',
-      href: '/shared-storage/tech-details',
-      label: 'Technical details',
-      customProps: {
-        icon: Icons['document-text'],
-        description: 'Architecture, storage engine behavior, limits, and autoscaling.',
-      },
-    },
-  ]}
-/>
-
-## Need help?
-
-Stuck, or want to share what you built? Our core team and community are on Discord.
-
-<DocCardList
-  colSize={6}
-  items={[
-    {
-      type: 'link',
-      href: 'https://discord.com/invite/WDvCZ54',
-      label: 'Discord',
-      customProps: {
-        icon: Icons['discord'],
-        description:
-          'Join the Zerops community on Discord. Ask questions and share your tips.',
-      },
-    },
-    {
-      type: 'link',
-      href: '/references/cli',
-      label: 'zCLI',
-      customProps: {
-        icon: Icons['command-line'],
-        description: 'Get more out of Zerops with the command-line tool.',
+        icon: Icons['archive-box'],
+        description: 'Compare the storage services and pick the right one.',
       },
     },
   ]}
