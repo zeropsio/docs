@@ -521,10 +521,10 @@ module.exports = {
         },
         {
           type: 'ref',
-          id: 'shared-storage/overview',
-          label: 'Shared Storage',
+          id: 'seaweedfs/overview',
+          label: 'SeaweedFS',
           customProps: {
-            sidebar_icon: 'servers-connected',
+            sidebar_icon: 'seaweedfs',
           },
           className: 'homepage-sidebar-item  service-sidebar-item',
         },
@@ -1165,11 +1165,6 @@ module.exports = {
           id: 'nodejs/how-to/filebrowser',
           label: 'Browse container files',
         },
-        {
-          type: 'doc',
-          id: 'nodejs/how-to/shared-storage',
-          label: 'Connect / disconnect shared storage',
-        },
       ],
     },
     {
@@ -1304,11 +1299,6 @@ module.exports = {
           id: 'php/how-to/filebrowser',
           label: 'Browse container files',
         },
-        {
-          type: 'doc',
-          id: 'php/how-to/shared-storage',
-          label: 'Connect / disconnect shared storage',
-        },
       ],
     },
   ],
@@ -1428,11 +1418,6 @@ module.exports = {
           type: 'doc',
           id: 'python/how-to/filebrowser',
           label: 'Browse container files',
-        },
-        {
-          type: 'doc',
-          id: 'python/how-to/shared-storage',
-          label: 'Connect / disconnect shared storage',
         },
       ],
     },
@@ -1554,11 +1539,6 @@ module.exports = {
           id: 'go/how-to/filebrowser',
           label: 'Browse container files',
         },
-        {
-          type: 'doc',
-          id: 'go/how-to/shared-storage',
-          label: 'Connect / disconnect shared storage',
-        },
       ],
     },
   ],
@@ -1678,11 +1658,6 @@ module.exports = {
           type: 'doc',
           id: 'rust/how-to/filebrowser',
           label: 'Browse container files',
-        },
-        {
-          type: 'doc',
-          id: 'rust/how-to/shared-storage',
-          label: 'Connect / disconnect shared storage',
         },
       ],
     },
@@ -1804,11 +1779,6 @@ module.exports = {
           id: 'dotnet/how-to/filebrowser',
           label: 'Browse container files',
         },
-        {
-          type: 'doc',
-          id: 'dotnet/how-to/shared-storage',
-          label: 'Connect / disconnect shared storage',
-        },
       ],
     },
   ],
@@ -1929,11 +1899,6 @@ module.exports = {
           id: 'java/how-to/filebrowser',
           label: 'Browse container files',
         },
-        {
-          type: 'doc',
-          id: 'java/how-to/shared-storage',
-          label: 'Connect / disconnect shared storage',
-        },
       ],
     },
   ],
@@ -2053,11 +2018,6 @@ module.exports = {
           type: 'doc',
           id: 'nginx/how-to/filebrowser',
           label: 'Browse container files',
-        },
-        {
-          type: 'doc',
-          id: 'nginx/how-to/shared-storage',
-          label: 'Connect / disconnect shared storage',
         },
       ],
     },
@@ -2208,11 +2168,6 @@ module.exports = {
           id: 'ubuntu/how-to/filebrowser',
           label: 'Browse container files',
         },
-        {
-          type: 'doc',
-          id: 'ubuntu/how-to/shared-storage',
-          label: 'Connect / disconnect shared storage',
-        },
       ],
     },
   ],
@@ -2332,11 +2287,6 @@ module.exports = {
           type: 'doc',
           id: 'alpine/how-to/filebrowser',
           label: 'Browse container files',
-        },
-        {
-          type: 'doc',
-          id: 'alpine/how-to/shared-storage',
-          label: 'Connect / disconnect shared storage',
         },
       ],
     },
@@ -2834,7 +2784,7 @@ module.exports = {
       },
     },
   ],
-  sharedstorage: [
+  seaweedfs: [
     {
       type: 'ref',
       id: 'homepage',
@@ -2846,11 +2796,11 @@ module.exports = {
     },
     {
       type: 'doc',
-      id: 'shared-storage/overview',
-      label: 'Shared storage overview',
+      id: 'seaweedfs/overview',
+      label: 'SeaweedFS overview',
       customProps: {
         sidebar_is_title: true,
-        sidebar_icon: 'servers-connected',
+        sidebar_icon: 'seaweedfs',
       },
     },
     {
@@ -2864,28 +2814,29 @@ module.exports = {
       items: [
         {
           type: 'doc',
-          id: 'shared-storage/how-to/create',
-          label: 'Create shared storage',
-        },
-        {
-          type: 'doc',
-          id: 'shared-storage/how-to/connect',
-          label: 'Connect & mount',
-        },
-        {
-          type: 'doc',
-          id: 'shared-storage/how-to/manage',
-          label: 'Manage & backups',
+          id: 'seaweedfs/how-to/migrate-from-shared-storage',
+          label: 'Migrate from Shared Storage',
         },
       ],
     },
+  ],
+  sharedstorage: [
+    {
+      type: 'ref',
+      id: 'homepage',
+      label: 'Back to home',
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: 'back-arrow',
+      },
+    },
     {
       type: 'doc',
-      id: 'shared-storage/tech-details',
-      label: 'Technical details',
+      id: 'shared-storage/overview',
+      label: 'Shared storage (deprecated)',
       customProps: {
         sidebar_is_title: true,
-        sidebar_icon: 'document-text',
+        sidebar_icon: 'servers-connected',
       },
     },
   ],
@@ -3062,11 +3013,6 @@ module.exports = {
           id: 'deno/how-to/filebrowser',
           label: 'Browse container files',
         },
-        {
-          type: 'doc',
-          id: 'deno/how-to/shared-storage',
-          label: 'Connect / disconnect shared storage',
-        },
       ],
     },
   ],
@@ -3186,11 +3132,6 @@ module.exports = {
           type: 'doc',
           id: 'bun/how-to/filebrowser',
           label: 'Browse container files',
-        },
-        {
-          type: 'doc',
-          id: 'bun/how-to/shared-storage',
-          label: 'Connect / disconnect shared storage',
         },
       ],
     },
@@ -3312,11 +3253,6 @@ module.exports = {
           id: 'gleam/how-to/filebrowser',
           label: 'Browse container files',
         },
-        {
-          type: 'doc',
-          id: 'gleam/how-to/shared-storage',
-          label: 'Connect / disconnect shared storage',
-        },
       ],
     },
   ],
@@ -3437,11 +3373,6 @@ module.exports = {
           id: 'ruby/how-to/filebrowser',
           label: 'Browse container files',
         },
-        {
-          type: 'doc',
-          id: 'ruby/how-to/shared-storage',
-          label: 'Connect / disconnect shared storage',
-        },
       ],
     },
   ],
@@ -3561,11 +3492,6 @@ module.exports = {
           type: 'doc',
           id: 'elixir/how-to/filebrowser',
           label: 'Browse container files',
-        },
-        {
-          type: 'doc',
-          id: 'elixir/how-to/shared-storage',
-          label: 'Connect / disconnect shared storage',
         },
       ],
     },

@@ -1,6 +1,6 @@
 ---
 title: Storage on Zerops
-description: Where persistent data lives on Zerops. Runtime containers are replaced on every deploy, so durable files belong in a managed database or in one of the three storage services — Object Storage, Local Storage, or the deprecated Shared Storage.
+description: Where persistent data lives on Zerops. Runtime containers are replaced on every deploy, so durable files belong in a managed database or in one of the three storage services — Object Storage, Local Storage, or SeaweedFS.
 ---
 
 import DocCardList from '@theme/DocCardList';
@@ -45,8 +45,8 @@ Zerops offers three storage services. The first word of each name tells you the 
       <td className="w-fit">Not yet</td>
     </tr>
     <tr>
-      <td className="w-fit"><b><a href="/shared-storage/overview">Shared Storage</a></b> (deprecated)</td>
-      <td className="w-fit">Network filesystem</td>
+      <td className="w-fit"><b><a href="/seaweedfs/overview">SeaweedFS</a></b></td>
+      <td className="w-fit">Network filesystem, mounted or accessed over HTTP by your services</td>
       <td className="w-fit">POSIX-like with network filesystem caveats (per-mount locks, write amplification)</td>
       <td className="w-fit">Yes</td>
     </tr>
@@ -57,7 +57,8 @@ Zerops offers three storage services. The first word of each name tells you the 
 
 - **Uploads, media, backups, logs, exports** — [Object Storage](/object-storage/overview). Highly available, cheapest per GB, and independent of any runtime service; the default for most application data.
 - **Anything that needs a real filesystem** — [Local Storage](/local-storage/overview). SQLite and other embedded databases, single-node stateful apps such as Prometheus or Gitea, and filesystem state shared between services (certificates, caches). It is the only storage type where lock-dependent workloads are safe; see its [trade-offs](/local-storage/overview#key-trade-offs).
-- **Existing `mount:`-based setups** — [Shared Storage](/shared-storage/overview) keeps working but is deprecated. Move to Local Storage with the [migration guide](/local-storage/how-to/migrate-from-shared-storage), or to Object Storage if the data fits the S3 model.
+- **Files shared between containers over the network, with high availability** — [SeaweedFS](/seaweedfs/overview). Zerops runs the managed cluster, your services mount it with `weed mount` from their start commands or talk to its filer HTTP API. Not for databases, see its [storage engine behavior](/seaweedfs/overview#storage-engine-behavior).
+- **Existing Shared Storage setups** — the service is already a SeaweedFS service. Take over the mount with the [SeaweedFS migration guide](/seaweedfs/how-to/migrate-from-shared-storage), or move the data to Local Storage with [its guide](/local-storage/how-to/migrate-from-shared-storage).
 
 For structured data, use a [managed database](/postgresql/overview) rather than files on any storage.
 
@@ -84,11 +85,11 @@ For structured data, use a [managed database](/postgresql/overview) rather than 
     },
     {
       type: 'link',
-      href: '/shared-storage/overview',
-      label: 'Shared Storage',
+      href: '/seaweedfs/overview',
+      label: 'SeaweedFS',
       customProps: {
-        icon: Icons['servers-connected'],
-        description: 'Deprecated network filesystem. See the migration guide.',
+        icon: Icons['seaweedfs'],
+        description: 'Managed distributed filesystem you mount from your services.',
       },
     },
   ]}

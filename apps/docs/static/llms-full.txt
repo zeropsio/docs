@@ -44,7 +44,7 @@ export const storages = [
     { name: "Storage overview", link: "/storage/overview", icon:  },
     { name: "Object storage", link: "/object-storage/overview", icon:  },
     { name: "Local storage", link: "/local-storage/overview", icon:  },
-    { name: "Shared storage", link: "/shared-storage/overview", icon:  },
+    { name: "SeaweedFS", link: "/seaweedfs/overview", icon:  },
 ]
 
 <div className="!max-w-xxl !mx-none">
@@ -67,7 +67,7 @@ These services are fully managed by Zerops and offered in highly available and s
 
 ### Storages
 
-Fully managed S3 compatible storage running on a separate infrastructure and persistent disk volumes that can be mounted to multiple services. Runtime containers are replaced on every deploy, so persistent data belongs in one of these — see [Storage on Zerops](/storage/overview).
+Fully managed S3 compatible storage running on a separate infrastructure, persistent disk volumes that can be mounted to multiple services, and a managed SeaweedFS distributed filesystem. Runtime containers are replaced on every deploy, so persistent data belongs in one of these — see [Storage on Zerops](/storage/overview).
 
 ## Quicklinks
 
@@ -3535,12 +3535,6 @@ Have you built something that others might find useful? Don't hesitate to share 
 
 ----------------------------------------
 
-# Ubuntu > How To > Shared Storage
-
-
-
-----------------------------------------
-
 # Ubuntu > How To > Scaling
 
 
@@ -3620,7 +3614,7 @@ Zerops caches custom runtime images to optimize deployment times. Learn about [c
 For information about managing builds and deployments, see [managing builds and deployments](/features/pipeline#manage-builds-and-deployments).
 
 :::warning
-Shared storage mounts and Local Storage volumes are not available during the runtime prepare phase.
+Local Storage volumes are not available during the runtime prepare phase, and start commands (such as a SeaweedFS mount) do not run there.
 :::
 
 ## Troubleshooting
@@ -3771,7 +3765,7 @@ S3_ACCESS_KEY_ID="P8cX1vVVb"
 S3_ACCESS_SECRET="ogFthuiLYki8XoL73opSCQ"
 ```
 
-The hostname of the PostgreSQL service will be set to "db". The [single container](/features/scaling#single-container-mode)(/features/scaling#deployment-modes-databases-and-shared-storage) mode will be chosen and the default auto [scaling configuration](/postgresql/how-to/scale#configure-scaling) will be set.
+The hostname of the PostgreSQL service will be set to "db". The [single container](/features/scaling#single-container-mode) mode will be chosen and the default auto [scaling configuration](/postgresql/how-to/scale#configure-scaling) will be set.
 
 #### Description of description.yaml parameters
 
@@ -5152,8 +5146,8 @@ Zerops offers three storage services. The first word of each name tells you the 
       <td className="w-fit">Not yet</td>
     </tr>
     <tr>
-      <td className="w-fit"><b>[Shared Storage](/shared-storage/overview)</b> (deprecated)</td>
-      <td className="w-fit">Network filesystem</td>
+      <td className="w-fit"><b>[SeaweedFS](/seaweedfs/overview)</b></td>
+      <td className="w-fit">Network filesystem, mounted or accessed over HTTP by your services</td>
       <td className="w-fit">POSIX-like with network filesystem caveats (per-mount locks, write amplification)</td>
       <td className="w-fit">Yes</td>
     </tr>
@@ -5164,13 +5158,14 @@ Zerops offers three storage services. The first word of each name tells you the 
 
 - **Uploads, media, backups, logs, exports** — [Object Storage](/object-storage/overview). Highly available, cheapest per GB, and independent of any runtime service; the default for most application data.
 - **Anything that needs a real filesystem** — [Local Storage](/local-storage/overview). SQLite and other embedded databases, single-node stateful apps such as Prometheus or Gitea, and filesystem state shared between services (certificates, caches). It is the only storage type where lock-dependent workloads are safe; see its [trade-offs](/local-storage/overview#key-trade-offs).
-- **Existing `mount:`-based setups** — [Shared Storage](/shared-storage/overview) keeps working but is deprecated. Move to Local Storage with the [migration guide](/local-storage/how-to/migrate-from-shared-storage), or to Object Storage if the data fits the S3 model.
+- **Files shared between containers over the network, with high availability** — [SeaweedFS](/seaweedfs/overview). Zerops runs the managed cluster, your services mount it with `weed mount` from their start commands or talk to its filer HTTP API. Not for databases, see its [storage engine behavior](/seaweedfs/overview#storage-engine-behavior).
+- **Existing Shared Storage setups** — the service is already a SeaweedFS service. Take over the mount with the [SeaweedFS migration guide](/seaweedfs/how-to/migrate-from-shared-storage), or move the data to Local Storage with [its guide](/local-storage/how-to/migrate-from-shared-storage).
 
 For structured data, use a [managed database](/postgresql/overview) rather than files on any storage.
 
 - [Object Storage](/object-storage/overview) — S3 compatible storage for uploads, media, and backups.
 - [Local Storage](/local-storage/overview) — Persistent local disk volume with full POSIX semantics.
-- [Shared Storage](/shared-storage/overview) — Deprecated network filesystem. See the migration guide.
+- [SeaweedFS](/seaweedfs/overview) — Managed distributed filesystem you mount from your services.
 
 ## Need help?
 
@@ -5628,445 +5623,356 @@ run:
 
 ----------------------------------------
 
-# Shared Storage > Tech Details
-
-
-:::warning Deprecated
-Shared Storage is [deprecated](/shared-storage/overview). For new projects, use [Local Storage](/local-storage/overview) or [Object Storage](/object-storage/overview) instead. To move an existing service, follow the [migration guide](/local-storage/how-to/migrate-from-shared-storage).
-:::
-
-Zerops Shared Storage is built on [SeaweedFS ↗](https://github.com/seaweedfs/seaweedfs), a distributed filesystem optimized for high-volume storage with efficient retrieval.
-
-## Architecture
-
-Shared Storage consists of three main components:
-
-- **Master Server**: manages metadata and coordinates volume servers
-- **Volume Servers**: store the actual file data
-- **Filer**: provides a POSIX-compatible interface for file operations
-
-### Storage Engine Behavior
-
-SeaweedFS stores file data in append-only volumes. Files are split into chunks, and when a file is modified, new chunks are written while the old ones remain on disk until they are reclaimed. Frequent small modifications of existing files therefore cause significant write amplification, which is one of the reasons Shared Storage is [not suitable for databases](/shared-storage/overview#use-cases).
-
-An **automatic vacuum process** reclaims the space occupied by deleted and superseded chunks. This process is triggered when the size of deleted content exceeds 15% (reduced from the SeaweedFS default of 30%).
-
-## Deployment Modes
-
-Zerops provides Shared Storage in two deployment modes:
-
-### Highly Available
-
-Recommended for production environments where data reliability is critical.
-
-- **Architecture**: Two containers, each running its own filer and volume server; the master server runs on the first container
-- **Data Durability**: Data and filer metadata are replicated 1:1 across both containers
-- **Fault Tolerance**:
-    - If a node fails, an automatic repair process begins
-    - A new container replaces the failed one
-    - Data is automatically replicated to the new container (duration depends on data size)
-    - During master node failure, mounted directories become temporarily unavailable until the new master initializes (~30s)
-
-### Single Container
-
-Suitable for development environments or non-critical data storage.
-
-- **Architecture**: Master, volume, and filer server all located on a single container
-- **Data Durability**: All data is lost if the container fails
-
-:::warning
-The deployment mode is fixed after the service is created and cannot be changed later.
-:::
-
-## Filesystem Capabilities
-
-Shared Storage supports standard POSIX filesystem operations:
-
-- Create, read, update, and delete files and directories
-- Set permissions (with some limitations)
-- File locking (per mount only, see the warning below)
-- Hard and symbolic links
-- Directory listing and traversal
-
-For a complete list of supported features, see the [SeaweedFS FUSE documentation ↗](https://github.com/seaweedfs/seaweedfs/wiki/FUSE-Mount#supported-features).
-
-:::caution File locks are per-mount only
-File locks (`flock`, POSIX locks) are enforced only within a single container's mount. A process in another container can freely write to a file you hold locked. Do not rely on file locking for coordination between containers, and do not run [lock-dependent workloads such as databases](/shared-storage/overview#use-cases) on Shared Storage.
-:::
-
-## Storage Capacity
-
-:::caution The 60GB data limit is independent of disk scaling
-A Shared Storage service holds at most **60GB of data**, no matter how much disk the service scales to. The disk resource (up to 250GB) provides headroom for the vacuum process and filesystem metadata; raising the disk limits in autoscaling does **not** increase the amount of data you can store.
-
-If you need more than 60GB, contact support.
-:::
-
-- Maximum storage space: 60GB (can be increased via support request)
-- Maximum file size: no fixed limit through the mount (files are stored in chunks), up to the available storage space
-- Maximum upload size via Filer UI: 64MB per file
-
-## Performance Considerations
-
-- **Latency**: higher latency compared to local storage due to the network-based distributed architecture
-- **Write performance**: for write-heavy workloads, batch operations where possible
-- **Small files**: minimize operations with many small files for better performance
-- **Mount process memory**: the mount process runs inside each connected runtime container and consumes its memory, roughly 60MB when idle and around 150MB under higher filesystem loads; it is optimized for low RAM usage, which may trade off some performance
-
-## Auto Scaling Configuration
-
-Zerops scales Shared Storage services automatically by raising or lowering the hardware resources of each container.
-
-Vertical auto scaling has the following default configuration:
-
-:::note
-Disk size only gives the storage engine working space; the usable data capacity stays capped at 60GB. See [Storage Capacity](#storage-capacity).
-:::
-
-For most cases, the default parameters will work without issues. If you need to limit the cost of the Shared Storage service, lower the maximal resources. Zerops will never scale above the selected maximums.
-
-When you are experiencing problems with insufficient Shared Storage performance, increase the minimal resources. Zerops will never scale below the selected minimums.
-
-You can change the auto scaling parameters at any time.
-
-
-----------------------------------------
-
 # Shared Storage > Overview
 
 
 :::warning Shared Storage is deprecated
-Shared Storage in its current form — a managed SeaweedFS cluster connected through the import-level `mount:` field — is deprecated. It will be replaced by a standalone SeaweedFS managed service that runtime services mount themselves with [`zsc shared-storage mount`](/references/zsc#shared-storage) in their `initCommands`. Existing Shared Storage services keep working for now, but don't build new projects on it — and move existing ones with the [migration guide](/local-storage/how-to/migrate-from-shared-storage).
-
-For new projects, choose by workload:
-
-- A **persistent filesystem shared between services** — use [Local Storage](/local-storage/overview). It is a real local filesystem with correct locking, so it also covers the workloads Shared Storage was never safe for (SQLite and other filesystem-based databases).
-- **Large or highly available data** — use [Object Storage](/object-storage/overview).
+Shared Storage, the SeaweedFS cluster that Zerops mounted into your runtime containers through the **Shared storage connections** page and the `mount:` import field, is no longer offered. The service type has been retired, the `mount:` field is rejected on import, and the connections page is gone from the GUI.
 :::
 
-Zerops **Shared Storage** is a managed disk volume that mounts as a POSIX-compatible filesystem into your runtime services. Files written by one container are immediately visible to every other container that mounts the same storage, whether they belong to the same service or to different services in the project.
+**Every existing Shared Storage service has been converted in place into a [SeaweedFS](/seaweedfs/overview) service.** Same containers, same data, same hostname, no action was needed on your side. The mounts your runtime services had keep working for now through the `zeropsSharedStorageMounts` environment variable, on a best-effort basis and with a deprecation warning in the runtime log. Take over the mount in your own `zerops.yaml` with the [migration guide](/seaweedfs/how-to/migrate-from-shared-storage) before the managed mounts are removed.
 
-Under the hood it runs [SeaweedFS ↗](https://github.com/seaweedfs/seaweedfs), a distributed filesystem optimized for high-volume storage. See [Technical details](/shared-storage/tech-details) for the architecture.
+For new projects, pick by workload:
 
-## Quick start
+- **Files shared between containers and services** over the network - [SeaweedFS](/seaweedfs/overview). The same managed cluster as before, you mount it or use its filer API yourself.
+- **A real filesystem** with correct locking, for SQLite and other filesystem-based databases or single-node stateful apps - [Local Storage](/local-storage/overview).
+- **Uploads, media, backups** - [Object Storage](/object-storage/overview).
 
-Add a shared storage to your project and mount it into a runtime service with a `zerops-import.yaml`:
+See [Storage on Zerops](/storage/overview) for the full comparison.
 
-```yaml title="zerops-import.yaml"
-services:
-  - hostname: teststorage
-    # type is shared-storage:{mode}
-    type: shared-storage:ha
-
-  - hostname: app
-    type: nodejs@22
-    buildFromGit: https://github.com/myorg/myapp
-    # mount the storage into /mnt/teststorage
-    mount:
-      - teststorage
-```
-
-The storage appears in the runtime containers at `/mnt/teststorage`. See [Create shared storage](/shared-storage/how-to/create) for the GUI flow and configuration details, and [Connect & mount](/shared-storage/how-to/connect) for how the mount behaves.
-
-## Use cases
-
-Shared Storage is a good fit for:
-
-- **Configuration sharing**: deploy configuration once and share it across services (e.g. Apache Airflow configuration and DAG files shared with all worker nodes)
-- **Application data**: user uploads, images, documents, and other assets shared between containers (avoid huge trees of tiny files, see [performance considerations](/shared-storage/tech-details#performance-considerations))
-- **Fallback to object storage**: applications that strictly require filesystem semantics and cannot work with [object storage](/object-storage/overview)
-
-:::caution Not suitable for databases
-Do **not** run databases on Shared Storage. This includes SQLite, Prometheus TSDB, and other filesystem-based databases.
-
-- File locks are enforced **per mount only**: a lock held in one container does not prevent another container from writing to the same file, which leads to data corruption.
-- The underlying storage engine is an append-only chunk store: every modification writes new chunks, so the frequent small writes typical for databases cause heavy write amplification.
-
-Use [managed databases](/postgresql/overview) instead. For SQLite and other filesystem-based databases, use [Local Storage](/local-storage/overview) — a local filesystem with correct locking where these workloads are safe. For storing database *backups*, prefer [object storage](/object-storage/overview): it is cheaper and better suited for write-once files.
-:::
-
-## Deployment modes
-
-Choose the reliability model when you create the service. It is set through the service `type` and is **fixed for the life of the service**.
-
-<table className="w-full my-1.5">
-  <thead>
-    <tr>
-      <th className="w-fit" style={{ minWidth: '75px' }}>Mode</th>
-      <th className="w-fit" style={{ minWidth: '200px' }}>type</th>
-      <th className="w-fit">What it is</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td className="w-fit"><b>Highly Available</b></td>
-      <td className="w-fit"><code>shared-storage:ha</code></td>
-      <td className="w-fit">Two containers with data and metadata replicated 1:1 across both, with automatic repair when a node fails. Recommended for production.</td>
-    </tr>
-    <tr>
-      <td className="w-fit"><b>Single container</b></td>
-      <td className="w-fit"><code>shared-storage:single</code></td>
-      <td className="w-fit">One container, so lower cost but no redundancy. All data is lost if the container fails. Good for development and non-critical data.</td>
-    </tr>
-  </tbody>
-</table>
-
-## Key limits
-
-- The storage holds at most **60GB of data**, regardless of the disk resource in autoscaling. See [storage capacity](/shared-storage/tech-details#storage-capacity).
-- File locks work **only within a single container's mount**, not across containers. See [filesystem capabilities](/shared-storage/tech-details#filesystem-capabilities).
-- The mount is available only in runtime containers, not during build and prepare phases.
-
-## Next steps
-
-- [Create shared storage](/shared-storage/how-to/create) — Create a service in the GUI or with zerops-import.yaml.
-- [Connect & mount](/shared-storage/how-to/connect) — Connect runtime services and understand how the mount behaves.
-- [Manage & backups](/shared-storage/how-to/manage) — Web interfaces, monitoring, backups, and restore.
-- [Technical details](/shared-storage/tech-details) — Architecture, storage engine behavior, limits, and autoscaling.
-
-## Need help?
-
-Stuck, or want to share what you built? Our core team and community are on Discord.
-
-- [Discord](https://discord.com/invite/WDvCZ54) — Join the Zerops community on Discord. Ask questions and share your tips.
-- [zCLI](/references/cli) — Get more out of Zerops with the command-line tool.
+- [Migrate to SeaweedFS](/seaweedfs/how-to/migrate-from-shared-storage) — Take over the mount in your zerops.yaml, no data moves.
+- [Migrate to Local Storage](/local-storage/how-to/migrate-from-shared-storage) — Copy the data to a Local Storage volume.
+- [Storage on Zerops](/storage/overview) — Compare the storage services and pick the right one.
 
 
 ----------------------------------------
 
-# Shared Storage > How To > Manage
+# Seaweedfs > Overview
 
 
-:::warning Deprecated
-Shared Storage is [deprecated](/shared-storage/overview). For new projects, use [Local Storage](/local-storage/overview) or [Object Storage](/object-storage/overview) instead. To move an existing service, follow the [migration guide](/local-storage/how-to/migrate-from-shared-storage).
+[SeaweedFS ↗](https://github.com/seaweedfs/seaweedfs) is a distributed filesystem built for high volumes of files. Zerops runs the SeaweedFS cluster for you - master, volume servers and filer, in a single container or in a replicated highly available pair, with monitoring, autoscaling and backups.
+
+What Zerops does **not** do is decide how your application talks to it. The service exposes the SeaweedFS **filer** on the project network, and you pick the client: a FUSE mount started from your `zerops.yaml`, the filer HTTP API, or any other SeaweedFS client. This replaces the deprecated [Shared Storage](/shared-storage/overview), which mounted the same cluster into your containers with one fixed set of mount options. If you have a Shared Storage service, see the [migration guide](/seaweedfs/how-to/migrate-from-shared-storage).
+
+:::tip Is SeaweedFS the right storage?
+SeaweedFS is a network filesystem: files are visible from every container that mounts it, but locks are enforced per mount and the store is append-only. That makes it a good fit for **files shared between containers and services** and a bad fit for databases. For a real POSIX filesystem with correct locking use [Local Storage](/local-storage/overview), for uploads, media and backups use [Object Storage](/object-storage/overview). See [Storage on Zerops](/storage/overview) for the comparison.
 :::
 
-Zerops Shared Storage provides several web interfaces to manage, monitor, and troubleshoot your storage, and automated encrypted backups of your data.
+## Supported Versions
 
-## Web interfaces
+Currently supported SeaweedFS versions:
 
-The web interfaces are accessible through the [Zerops VPN](/references/networking/vpn).
+Import configuration version:
 
-### Filer UI
+- `seaweedfs:single@3.85`, `seaweedfs:ha@3.85`
 
-* `http://<storage-service-hostname>.zerops:8888`
+The legacy `shared-storage:ha` and `shared-storage:single` type names are accepted as aliases and create a SeaweedFS service.
 
-A web-based interface for managing files and directories:
-- Browse the directory structure and create new directories
-- Upload new files (up to 64MB per file) and download existing files
-- Rename and delete files and directories
+## Service Configuration
 
-### Master UI
+Zerops offers SeaweedFS in two deployment modes. The mode is part of the service type and is fixed for the life of the service.
 
-* `http://node-stable-1.db.<storage-service-hostname>.zerops:9333`
+### Single Setup
 
-System status and monitoring information:
-- View cluster topology
-- Monitor volume servers
-- Check system status and health
-- View statistics and metrics
+- One container running master, volume server and filer
+- No redundancy, all data is lost if the container fails
+- Suitable for development or non-critical data
 
-### Volume UI
+### HA (High Availability) Setup
 
-* `http://node-stable-<node-number>.db.<storage-service-hostname>.zerops:8080/ui/index.html`
+- Two containers, each running its own volume server and filer, the master runs on the first one
+- File data and filer metadata are replicated 1:1 across both containers (SeaweedFS replication `001`)
+- When a container fails, a new one replaces it and the data is replicated onto it automatically. While the master container is being replaced, the cluster is unavailable for roughly 30 seconds until the new master starts
+- Recommended for production
 
-Monitoring of individual storage volumes:
-- View volume status
-- Check disk usage
-- Monitor I/O operations
-- View volume statistics
+### Creating the service
 
-## Monitoring
-
-Several options are available to help you monitor your Shared Storage:
-
-- **Runtime service logs**: navigate to your runtime service detail page, open the **Runtime Logs** section, and filter using the tag `zerops-mount-<service-hostname>` (standard output and error of the mount process)
-- **Shared Storage logs**: access from the Shared Storage service detail page, **Runtime Logs** tab
-- **System and volume status**: monitor replication status, disk usage, and performance metrics through the Master UI and Volume UI
-
-## Backups
-
-Zerops provides automated data backup for Shared Storage services with full encryption.
-
-For general backup information including configuration, scheduling, retention, tagging, quotas, and CLI tools, see the [Zerops Backups](/features/backup) documentation.
-
-### Backup format
-
-Shared Storage backups are created using tar archival:
-
-- **Format**: `.tar.gz` (archive of the directory contents)
-- **Content**: the entire shared volume (`/mnt/<storage-hostname>`)
-- **Storage**: encrypted and stored in isolated object storage
-
-### Restoring backups
-
-To restore a Shared Storage backup:
-
-1. Download the backup file (`.tar.gz`) from the Zerops UI.
-2. Transfer the archive into a runtime service that has the shared storage [connected](/shared-storage/how-to/connect), for example over the [Zerops VPN](/references/networking/vpn).
-3. Extract the archive into the mount directory from within the runtime container:
-
-```sh
-tar -xzf backup.tar.gz -C /mnt/<storage-hostname>
-```
-
-:::note
-Do not restore by uploading files through the Filer UI. Uploads there are limited to 64MB per file, so extracting the archive directly into the mounted directory is the reliable path.
-:::
-
-### Best practices
-
-- Regularly clean up unnecessary files from your Shared Storage to reduce backup size
-- Create manual backups with protected tags before major file operations or migrations
-- Test your restore process periodically to ensure data integrity
-
-
-----------------------------------------
-
-# Shared Storage > How To > Create
-
-
-:::warning Deprecated
-Shared Storage is [deprecated](/shared-storage/overview). For new projects, use [Local Storage](/local-storage/overview) or [Object Storage](/object-storage/overview) instead. To move an existing service, follow the [migration guide](/local-storage/how-to/migrate-from-shared-storage).
-:::
-
-## Create Using Zerops GUI
-
-Go to your project dashboard and choose **Add new service** in the left menu in the **Services** block. Then add a new Shared Storage service:
-
-[Video: /vids/services/shared-storage.webm](/vids/services/shared-storage.webm)
-
-### Set a Hostname
-
-Enter a unique service identifier like "storage", "files" etc.
-
-- Maximum 25 characters
-- Must contain only lowercase ASCII letters (a-z) or numbers (0-9)
-- Must be unique within the project
-
-:::note
-The hostname is fixed after the service is created. It can't be changed later.
-:::
-
-### Connect to Services
-
-Select one or more of the project's runtime services in the **Share with Services** block:
-
-Runtime services can be [connected and disconnected](/shared-storage/how-to/connect) at any time, even after the shared storage is created.
-
-### Choose Deployment Mode
-
-Choose between **Highly Available** (recommended for production) and **Single Container** (suitable for development). See the [mode comparison](/shared-storage/overview#deployment-modes) and [technical details](/shared-storage/tech-details#deployment-modes).
-
-:::warning
-The deployment mode is fixed after the service is created. It can't be changed later.
-:::
-
-### Set Auto Scaling Configuration
-
-Configure vertical auto scaling parameters to control resource allocation and costs:
-
-:::note
-Raising the disk limits does not raise the usable data capacity, which is capped at 60GB. See [Storage Capacity](/shared-storage/tech-details#storage-capacity) and [Auto Scaling Configuration](/shared-storage/tech-details#auto-scaling-configuration).
-:::
-
-## Create Using Import YAML
-
-The deployment mode is part of the service type:
+Add the service in the Zerops GUI (**Add new service** → **SeaweedFS**), or import it:
 
 ```yaml title="zerops-import.yaml"
 services:
-  - # Shared storage service in highly available mode
-    hostname: teststorage
-    type: shared-storage:ha
+  - hostname: storage
+    type: seaweedfs:ha@3.85
 ```
 
-Use `shared-storage:single` for the single container mode.
-
-:::note
-You can also pin the underlying engine version directly with `seaweedfs:ha@3` or `seaweedfs:single@3`.
-:::
-
-Import the file with the [zCLI](/references/cli):
+Use `seaweedfs:single@3.85` for the single container mode. Import the file with the [zCLI](/references/cli):
 
 ```sh
 zcli project service-import zerops-import.yaml
 ```
 
-To mount the storage into a runtime service in the same import, add the `mount:` parameter to the runtime service. See the [import reference](/references/import#service-mount-shared-storage) for details and requirements.
+## Connecting
 
-### Runtime-Specific Guides
+The service exposes only the filer, the component every client talks to. Master and volume servers are internal to the cluster and clients reach them through the filer on their own.
 
-export const languages = [
-    { name: "Node.js", link: "/nodejs/how-to/shared-storage#create-nodejs-service-with-a-shared-storage-using-zcli" },
-    { name: "PHP", link: "/php/how-to/shared-storage#create-php-service-with-a-shared-storage-using-zcli" },
-    { name: "Python", link: "/python/how-to/shared-storage#create-python-service-with-a-shared-storage-using-zcli" },
-    { name: "Go", link: "/go/how-to/shared-storage#create-go-service-with-a-shared-storage-using-zcli" },
-    { name: ".NET", link: "/dotnet/how-to/shared-storage#create-dotnet-service-with-a-shared-storage-using-zcli" },
-    { name: "Rust", link: "/rust/how-to/shared-storage#create-rust-service-with-a-shared-storage-using-zcli" }
-]
+| Endpoint | Address | Notes |
+|---|---|---|
+| Filer HTTP API | `http://<hostname>.zerops:8888` | File upload, download and listing over HTTP, and the Filer UI |
+| Filer gRPC | `<hostname>.zerops:18888` | Used by `weed mount` and other native SeaweedFS clients (always HTTP port + 10000) |
+| Filer of one container | `node-stable-<n>.db.<hostname>.zerops:8888` | Pin a client to a specific container, `n` is `1` or `2` |
+| Filer of one container | `node-stable-<n>.db.<hostname>.zerops:8888` | Pin a client to a specific container, `n` is `1` or `2` |
+
+The generated environment variables are `hostname` and `port` (`8888`). Reference them from another service in the same project as `${storage_hostname}` and `${storage_port}` for a service named `storage`.
+
+The filer is not authenticated. It is reachable only inside the project's private network and over the [Zerops VPN](/references/networking/vpn), and it cannot be exposed through public HTTP routing or subdomain access.
+
+### Mounting from a runtime service
+
+The SeaweedFS binary that ships in every Zerops runtime container (`/opt/zerops/bin/weed-3-85`) contains `weed mount`, a FUSE client that presents the filer as a directory. Run it as one of your [`startCommands`](/zerops-yaml/specification#startcommands-), next to your application:
+
+```yaml title="zerops.yaml"
+zerops:
+  - setup: app
+    run:
+      base: nodejs@22
+      startCommands:
+        - name: app
+          command: npm start
+        - name: storage
+          initCommands:
+            - sudo mkdir -p /mnt/storage
+            - sudo chown zerops:zerops /mnt/storage
+          command: sudo /opt/zerops/bin/weed-3-85 mount -filer=node-stable-1.db.storage.zerops:8888 -dir=/mnt/storage -cacheCapacityMB=0 -concurrentWriters=1 -chunkSizeLimitMB=1
+```
+
+- `weed mount` runs in the foreground and keeps the directory mounted for the lifetime of the container. Zerops restarts it like any other start command if it exits.
+- `-filer` points at the filer of one container. In HA mode both containers run a filer with the same metadata, so a second service can mount `node-stable-2` to spread the load.
+- The mount needs `sudo`, both Ubuntu and Alpine runtime images allow it without a password.
+- Every container of the service gets its own mount, and every mount sees the same files.
+- The three trailing flags keep the memory footprint of the mount process around 100-150 MB by disabling the local cache and limiting write buffers. Without them the process can grow well beyond the container's RAM. Tune or drop them if you have the memory to spare and want more throughput, see the [`weed mount` options ↗](https://github.com/seaweedfs/seaweedfs/wiki/FUSE-Mount).
+- The mount is only available while the container runs, not during the build or the [runtime prepare](/features/pipeline#runtime-prepare-phase-optional) phase.
+
+:::note Shortcut: `zsc shared-storage mount`
+`zsc shared-storage mount <hostname>` does the same thing with the flags above baked in: it creates `/mnt/<hostname>`, gives it to the `zerops` user and mounts the filer of the first container (`node-stable-1.db.<hostname>.zerops:8888`) there. It exists for backwards compatibility with the deprecated Shared Storage and stays available, see the [zsc reference](/references/zsc#shared-storage).
+:::
+
+### Mounting in init commands
+
+A start command only runs after the [`initCommands`](/zerops-yaml/specification#initcommands-), so if an init command needs the storage (a certificate that lives there, a config it has to write, a migration over shared files), mount it there instead, in the background:
+
+```yaml title="zerops.yaml"
+zerops:
+  - setup: app
+    run:
+      base: nodejs@22
+      initCommands:
+        - sudo zsc shared-storage mount storage --background
+        - cp /mnt/storage/certs/app.pem /var/www/app.pem
+      start: npm start
+```
+
+`--background` mounts `/mnt/<hostname>` the same way as the foreground form (same filer, same memory flags), leaves a detached `weed mount` process behind and returns once the mount is ready. Init commands run on every container start, and the command cleans up a stale mount before mounting, so a restart mounts again.
+
+The raw equivalent, for a custom path or options, is `weed fuse`: it takes every `weed mount` flag as an `-o` option and detaches the same way:
+
+```yaml
+      initCommands:
+        - sudo mkdir -p /mnt/certs && sudo chown zerops:zerops /mnt/certs
+        - sudo /opt/zerops/bin/weed-3-85 fuse /mnt/certs -o "filer=node-stable-1.db.storage.zerops:8888,filer.path=/certs,readOnly=true,cacheCapacityMB=0,concurrentWriters=1,chunkSizeLimitMB=1"
+```
+
+:::caution Nothing supervises a background mount
+A mount started from an init command is not restarted if its process dies, unlike a start command. Zerops replaces a container whose health check fails, but a lost mount alone does not fail the health check. If the storage is part of what your application serves, prefer the start command form, or add a [health check](/zerops-yaml/specification#healthcheck-) that touches a file on the mount.
+:::
+
+### Useful mount options
+
+These apply to `weed mount` as flags (`-filer.path=/certs`) and to `weed fuse` as `-o` options (`filer.path=/certs`):
+
+| Option | What it does |
+|---|---|
+| `filer=<a>:8888,<b>:8888` | Comma-separated list of filers. In HA mode you can list both containers (`node-stable-1.db.<hostname>.zerops:8888,node-stable-2.db.<hostname>.zerops:8888`) instead of pinning the mount to one of them. |
+| `filer.path=/some/dir` | Mounts only that directory of the storage, so different services can get different subtrees of one storage. The directory is created if missing. |
+| `readOnly=true` | Read-only mount, writes fail with `Read-only file system`. |
+| `cacheCapacityMB`, `concurrentWriters`, `chunkSizeLimitMB` | Memory trade-offs described above. |
+| `allowOthers=false` | Restricts the mount to the user that mounted it (root when started with `sudo`), the default `true` lets the `zerops` user in. |
+| `allowOthers=false` | Restricts the mount to the user that mounted it (root when started with `sudo`), the default `true` lets the `zerops` user in. |
+
+See the [FUSE mount documentation ↗](https://github.com/seaweedfs/seaweedfs/wiki/FUSE-Mount) for the full list.
+
+### Filer HTTP API
+
+Any HTTP client can read and write files without a mount, which suits build steps, one-off jobs and languages with an HTTP client but no FUSE:
+
+```sh
+# upload (creates the directories on the way)
+curl -F "file=@report.pdf" http://storage.zerops:8888/reports/2026/
+
+# download
+curl -o report.pdf http://storage.zerops:8888/reports/2026/report.pdf
+
+# list a directory as JSON
+curl -H "Accept: application/json" http://storage.zerops:8888/reports/2026/
+
+# delete
+curl -X DELETE http://storage.zerops:8888/reports/2026/report.pdf
+```
+
+Uploads through the HTTP API are limited to **64 MB per file**. Files written through a mount are chunked and have no such limit. See the [filer server API ↗](https://github.com/seaweedfs/seaweedfs/wiki/Filer-Server-API) for the full interface.
+
+### Web interfaces
+
+Over the [Zerops VPN](/references/networking/vpn) you can open the SeaweedFS UIs in a browser:
+
+- **Filer UI** - `http://<hostname>.zerops:8888` - browse, upload and download files
+- **Master UI** - `http://node-stable-1.db.<hostname>.zerops:9333` - cluster topology, volume servers, health
+- **Volume UI** - `http://node-stable-<n>.db.<hostname>.zerops:8080/ui/index.html` - volume status and disk usage of one container
+
+## Storage engine behavior
+
+SeaweedFS stores file data in append-only volumes. Files are split into chunks, and when a file is modified new chunks are written while the old ones stay on disk until a vacuum reclaims them. Zerops triggers the automatic vacuum when deleted content exceeds 15% of a volume (the SeaweedFS default is 30%).
+
+The consequences for your workload:
+
+- **Frequent small modifications of existing files** cause heavy write amplification. Batch writes where possible and avoid huge trees of tiny files.
+- **File locks are per mount.** `flock` and POSIX locks are enforced only inside the container that holds the mount, a process in another container can write to the locked file freely.
+- **Latency is higher** than on a local disk, every operation crosses the network.
+
+:::caution Not suitable for databases
+Do not run SQLite, Prometheus TSDB or any other filesystem-based database on SeaweedFS. Per-mount locks lead to corruption as soon as two containers touch the database, and the append-only store amplifies every small write. Use a [managed database](/postgresql/overview), or [Local Storage](/local-storage/overview) for embedded databases.
+:::
+
+## Capacity
+
+A SeaweedFS service holds at most **60 GB of data** regardless of the disk resource in autoscaling. The disk gives the storage engine working space for the vacuum process and metadata, raising it in autoscaling does not raise the data capacity. If you need more, contact support.
+
+- Maximum file size: no fixed limit through a mount, up to the available capacity
+- Maximum upload size through the filer HTTP API and UI: 64 MB per file
+- `df` inside a mount reports the filer's view and can be misleading, use the service detail page in the GUI for accurate usage
+
+## Auto Scaling Configuration
+
+Zerops scales the containers vertically. The default configuration is:
+
+The number of containers is fixed by the deployment mode. If you need to limit the cost of the service, lower the maximum resources, Zerops never scales above them. If the storage feels slow, raise the minimum resources, Zerops never scales below them. The parameters can be changed at any time.
+
+## Health Monitoring
+
+Zerops checks the master (`/cluster/healthz`), the volume server (`/status`) and the filer of every container and shows the result on the service detail page. The SeaweedFS logs of every component are in the service's **Runtime Logs**, the logs of a mount process are in the runtime logs of the service that runs it, under the name of the start command.
+
+## Backup and Recovery
+
+Zerops takes automated encrypted backups of the whole filesystem. For configuration, scheduling, retention, tagging, quotas and CLI tools see [Zerops Backups](/features/backup).
+
+- **Format**: `.tar.gz` archive of the filesystem contents
+- **Storage**: encrypted, in isolated object storage
+
+### Restoring backups
+
+1. Download the backup archive from the Zerops GUI.
+2. Transfer it into a runtime service that has the storage [mounted](#mounting-from-a-runtime-service), for example over the [Zerops VPN](/references/networking/vpn).
+3. Extract it into the mount directory:
+
+```sh
+tar -xzf backup.tar.gz -C /mnt/storage
+```
+
+Extract through a mount rather than uploading through the Filer UI, whose 64 MB per-file limit would reject larger files.
+
+## Support
+
+- Ask in the Zerops [Discord](https://discord.com/invite/WDvCZ54)
+- SeaweedFS [wiki ↗](https://github.com/seaweedfs/seaweedfs/wiki) for client options and the filer API
 
 
 ----------------------------------------
 
-# Shared Storage > How To > Connect
+# Seaweedfs > How To > Migrate From Shared Storage
 
 
-:::warning Deprecated
-Shared Storage is [deprecated](/shared-storage/overview). For new projects, use [Local Storage](/local-storage/overview) or [Object Storage](/object-storage/overview) instead. To move an existing service, follow the [migration guide](/local-storage/how-to/migrate-from-shared-storage).
-:::
+[Shared Storage](/shared-storage/overview) is deprecated. Every existing Shared Storage service has already been converted in place into a [SeaweedFS](/seaweedfs/overview) service: same containers, same data, same hostname. What changes is who mounts it. Zerops used to mount the storage into your runtime containers through the **Shared storage connections** page and the `mount:` import field. Now your service mounts it itself, from its `zerops.yaml`.
 
-This page covers how to connect an existing shared storage to runtime services, how to disconnect it, and how the mount behaves inside your containers.
+Until you do that, the old mounts keep working: the connection lives on as the `zeropsSharedStorageMounts` environment variable of the runtime service, Zerops still mounts every hostname listed in it at `/mnt/<hostname>` on container start, and logs a deprecation warning into the runtime log each time. The managed mount is best-effort from now on and will be removed in a later release, so plan the switch.
 
-## How the mount behaves
+The migration in short:
 
-Once a shared storage is connected to a runtime service, Zerops mounts it at `/mnt/<storage-hostname>` in the runtime containers. For example, `/mnt/teststorage` for a `teststorage` shared storage:
+1. Add a `weed mount` start command to the `zerops.yaml` of every service that uses the storage.
+2. Delete the `zeropsSharedStorageMounts` variable of that service.
+3. Deploy.
+4. Update your import files.
 
-- The content is shared among **all containers** of the connected runtime service; if you connect multiple runtime services, they all see the same content
-- Multiple storages can be mounted to a single service (e.g. `/mnt/files1`, `/mnt/files2`)
-- The mount point is owned by the `zerops` user and group (no sudo required)
-- Mounting removes any existing content of the mount directory
-- The mount is only available in runtime containers, not during build and prepare runtime phases
-- The mount process logs its standard output and error to the runtime service logs (tagged `zerops-mount-<service-hostname>`); individual file operations are not logged
+Throughout the guide, `storage` is the hostname of the storage service and `app` the runtime service that mounts it. Replace them with your own.
 
-:::note
-The `df` command may show incorrect or misleading information for shared storage mounts. Refer to the Zerops GUI for accurate storage metrics.
-:::
+## Before you start
 
-## Connect in Zerops GUI
+- The storage service now shows up as **SeaweedFS** in the GUI and has a `port` variable (`8888`, the filer). Nothing on it needs changing, and there is no **Shared storage connections** page anymore.
+- Take a fresh [backup](/seaweedfs/overview#backup-and-recovery) of the storage before you touch the mounts.
+- If you would rather move the data off SeaweedFS altogether, the [Local Storage migration guide](/local-storage/how-to/migrate-from-shared-storage) covers copying it to a Local Storage volume.
 
-When creating a new shared storage service, you can directly select which runtime services it should be connected to. See [Create shared storage](/shared-storage/how-to/create) for the creation process.
+## 1. Mount the storage from zerops.yaml
 
-For existing storage, go to the shared storage service detail page and select **Shared storage connections**. Toggle ON any runtime services you wish to connect to this storage.
+Add a second entry to [`startCommands`](/zerops-yaml/specification#startcommands-) that runs `weed mount`. Keep the mount path the storage was at, `/mnt/<hostname>`, so the application does not change. If your `zerops.yaml` uses a single `start` command, convert it into the first `startCommands` entry:
 
-To disconnect storage, toggle OFF the desired runtime service in the same place.
-
-:::note
-Connecting and disconnecting a shared storage is applied live; the runtime containers are not restarted.
-:::
-
-## Mount and unmount using zsc
-
-You can also mount and unmount a shared storage from within a runtime container using the `zsc` command:
-
-```sh
-# Mount a shared storage
-zsc shared-storage mount <storage-hostname>
-
-# Unmount a shared storage
-zsc shared-storage unmount <storage-hostname>
-
-# Wait until the storage mount is ready
-zsc shared-storage wait <storage-hostname>
+```yaml title="zerops.yaml"
+zerops:
+  - setup: app
+    run:
+      base: nodejs@22
+      # start: npm start
+      startCommands:
+        - name: app
+          command: npm start
+        - name: storage
+          initCommands:
+            - sudo mkdir -p /mnt/storage
+            - sudo chown zerops:zerops /mnt/storage
+          command: sudo /opt/zerops/bin/weed-3-85 mount -filer=node-stable-1.db.storage.zerops:8888 -dir=/mnt/storage
 ```
 
-Run these commands from your runtime container via web terminal or SSH, or as part of your `zerops.yaml` commands. For more details, see the [zsc reference](/references/zsc#shared-storage).
+The `-filer` address is `node-stable-1.db.<hostname>.zerops:8888`, where `storage` is the **hostname of your SeaweedFS service** (the former Shared Storage service, its hostname did not change) and `8888` is the filer port. `node-stable-1.db.<hostname>.zerops` is the fixed name of the service's first container, which is where the managed mount always connected. In HA mode the second container is `node-stable-2.db.<hostname>.zerops`, and `<hostname>.zerops:8888` alone resolves to the filer HTTP API too. A service that mounted several storages gets one such entry per storage.
 
-:::caution
-The shared storage must be mounted (through the GUI connection toggle or via `zsc shared-storage mount`) before your application can access the `/mnt/<storage-hostname>` directory.
-
-Before stopping or deleting a shared storage service, you must first disconnect (unmount) it from all runtime services.
+:::note Memory-saving flags of the managed mount
+The managed mount ran `weed mount` with `-volumeServerAccess=direct -cacheCapacityMB=0 -concurrentWriters=1 -chunkSizeLimitMB=1`, which disables the local read cache and shrinks the write buffers so the mount process stays around 100-150 MB of RAM. Without them the process can grow well beyond that under load. Append them to the command above if the container's RAM is tight, see [Mounting from a runtime service](/seaweedfs/overview#mounting-from-a-runtime-service) for what they do.
 :::
+
+The equivalent one-liner is `zsc shared-storage mount storage`, which stays available as a [shortcut](/references/zsc#shared-storage). It runs exactly what the managed mount ran: the filer address above, the mount at `/mnt/<hostname>` owned by the `zerops` user, and the memory-saving flags:
+
+```yaml
+        - name: storage
+          command: sudo zsc shared-storage mount storage
+```
+
+### Alternative: mount in init commands
+
+If your `initCommands` already use the storage (they read a certificate from it, write a config into it, run a migration over shared files), a start command comes too late, it only runs after the init commands. Mount in the background from the init commands instead:
+
+```yaml title="zerops.yaml"
+zerops:
+  - setup: app
+    run:
+      base: nodejs@22
+      initCommands:
+        - sudo zsc shared-storage mount storage --background
+        - cp /mnt/storage/certs/app.pem /var/www/app.pem
+      start: npm start
+```
+
+The mount lands at the same `/mnt/storage`, with the same filer and memory flags, and stays mounted after the init commands finish. Init commands run on every container start, so restarts mount again. The difference to the start command form: nothing restarts the mount process if it dies. See [Mounting in init commands](/seaweedfs/overview#mounting-in-init-commands) for the raw `weed fuse` equivalent and the options it accepts (sub-path, read-only, both HA filers).
+
+## 2. Delete the `zeropsSharedStorageMounts` variable
+
+Open the runtime service's **Environment variables** page and delete `zeropsSharedStorageMounts`. If the service mounts several storages and you are switching them one at a time, edit the variable and remove only the hostname you have taken over (the value is a `|`-separated list of hostnames).
+
+The change is applied live: the managed mount of that storage is unmounted from the running containers right away, and it is not recreated on the next container start. Your application loses the storage until step 3 completes, so do steps 2 and 3 back to back, or during a maintenance window.
+
+:::caution Do it before the deploy, not after
+The managed mount and your `weed mount` target the same directory. Deploying first would start your mount on top of the managed one in the new containers, delete the variable first so only your mount runs.
+:::
+
+## 3. Deploy
+
+Deploy the service with the changed `zerops.yaml` (`zcli push`, or trigger your pipeline). The new containers mount the storage from the start command, at the same path as before.
+
+Check the runtime log: the `storage` start command logs the mount, and the deprecation warning that used to appear on container start is gone.
+
+## 4. Update your import files
+
+- Replace the `mount:` field of runtime services in `zerops-import.yaml` files and templates by the `startCommands` entry above, `mount:` is rejected by the import now (`yamlMountDeprecated`).
+- The `shared-storage:ha` and `shared-storage:single` type names still work and create a SeaweedFS service, but prefer `seaweedfs:ha@3.85` and `seaweedfs:single@3.85`.
+
+## Rollback
+
+Put the hostname back into `zeropsSharedStorageMounts` (or recreate the variable with the hostname as its value), remove the `weed mount` start command and deploy. Zerops mounts the storage on the next container start as before.
 
 
 ----------------------------------------
@@ -6156,12 +6062,6 @@ Have you build something that others might find useful? Don't hesitate to share 
 ----------------------------------------
 
 # Rust > How To > Trigger Pipeline
-
-
-
-----------------------------------------
-
-# Rust > How To > Shared Storage
 
 
 
@@ -6345,7 +6245,7 @@ S3_ACCESS_KEY_ID="P8cX1vVVb"
 S3_ACCESS_SECRET="ogFthuiLYki8XoL73opSCQ"
 ```
 
-The hostname of the PostgreSQL service will be set to "db". The [single container](/features/scaling#single-container-mode)(/features/scaling#deployment-modes-databases-and-shared-storage) mode will be chosen and the default auto [scaling configuration](/postgresql/how-to/scale#configure-scaling) will be set.
+The hostname of the PostgreSQL service will be set to "db". The [single container](/features/scaling#single-container-mode) mode will be chosen and the default auto [scaling configuration](/postgresql/how-to/scale#configure-scaling) will be set.
 
 #### Description of description.yaml parameters
 
@@ -7646,12 +7546,6 @@ Have you build something that others might find useful? Don't hesitate to share 
 
 ----------------------------------------
 
-# Ruby > How To > Shared Storage
-
-
-
-----------------------------------------
-
 # Ruby > How To > Scaling
 
 
@@ -7831,7 +7725,7 @@ S3_ACCESS_KEY_ID="P8cX1vVVb"
 S3_ACCESS_SECRET="ogFthuiLYki8XoL73opSCQ"
 ```
 
-The hostname of the PostgreSQL service will be set to "db". The [single container](/features/scaling#single-container-mode)(/features/scaling#deployment-modes-databases-and-shared-storage) mode will be chosen and the default auto [scaling configuration](/postgresql/how-to/scale#configure-scaling) will be set.
+The hostname of the PostgreSQL service will be set to "db". The [single container](/features/scaling#single-container-mode) mode will be chosen and the default auto [scaling configuration](/postgresql/how-to/scale#configure-scaling) will be set.
 
 #### Description of description.yaml parameters
 
@@ -9461,15 +9355,15 @@ Secret environment variables are encrypted at rest and securely distributed to y
 
 ### shared-storage
 
-Manages shared storage volumes for persistent data storage.
+Mounts a [SeaweedFS](/seaweedfs/overview) service at `/mnt/<storage-name>` with `weed mount`. The command dates from the deprecated Shared Storage and keeps its name, it is a shortcut for running `weed mount` yourself: it creates the directory, hands it to the `zerops` user, connects to the filer of the first storage container (`node-stable-1.db.<storage-name>.zerops:8888`) and uses the memory-saving flags described in [Mounting from a runtime service](/seaweedfs/overview#mounting-from-a-runtime-service). `mount` runs in the foreground, so use it as a [start command](/zerops-yaml/specification#startcommands-). With `--background` it detaches the mount process and returns once the mount is ready, which is the form for [init commands](/seaweedfs/overview#mounting-in-init-commands). Both need `sudo`.
 
 ```sh
 zsc shared-storage [command]
 ```
 
 #### Available sub-commands
-- `mount`: Mounts the shared storage
-- `unmount`: Unmounts the shared storage
+- `mount`: Mounts the storage (foreground, `--background` detaches the mount and exits when it is ready)
+- `unmount`: Unmounts the storage and removes the mount directory
 - `wait`: Waits for readiness of the storage mount
 
 #### Available flags
@@ -9480,11 +9374,14 @@ zsc shared-storage [command]
 # View shared-storage help
 zsc shared-storage --help
 
-# Mount a shared storage volume
-zsc shared-storage mount <storage-name>
+# Mount a SeaweedFS service at /mnt/<storage-name> (foreground, as a start command)
+sudo zsc shared-storage mount <storage-name>
 
-# Unmount a shared storage volume
-zsc shared-storage unmount <storage-name>
+# Mount it in the background (in init commands), returns once the mount is ready
+sudo zsc shared-storage mount <storage-name> --background
+
+# Unmount it
+sudo zsc shared-storage unmount <storage-name>
 
 # Wait for a storage mount to be ready
 zsc shared-storage wait <storage-name>
@@ -10076,9 +9973,6 @@ services:
     minContainers: 2
     # Maximum number of containers
     maxContainers: 6
-    # List of shared storage services to connect to
-    mount:
-      - teststorage1
     # Full nginx config
     nginxConfig: |-
       server {
@@ -10115,7 +10009,7 @@ services:
     override: false
   # REQUIRED. Name of your other service
   - hostname: teststorage1
-    type: shared-storage:ha
+    type: seaweedfs:ha@3.85
     ...
 ```
 
@@ -10209,7 +10103,6 @@ The Service Configuration section is divided into multiple subsections for bette
 - [**Service Basic Configuration**](#service-basic-configuration) - Core parameters like hostname, type, mode, and environment variables
 - [**Service Vertical Autoscaling**](#service-vertical-autoscaling) - CPU, RAM, and disk scaling settings
 - [**Service Horizontal Autoscaling**](#service-horizontal-autoscaling) - Container count scaling settings
-- [**Service Mount Shared Storage**](#service-mount-shared-storage) - Connecting to shared storage services
 - [**Service Nginx Configuration**](#service-nginx-configuration) - Custom web server settings
 - [**Service zerops.yaml Configuration**](#service-zeropsyaml-configuration) - Build and run configurations
 
@@ -10270,10 +10163,6 @@ services:
     minContainers: 2                # Minimum number of containers (default: 1, max: 10)
     maxContainers: 6                # Maximum number of containers (max: 10)
 
-    # Shared storage (deprecated, see Local Storage)
-    mount:                          # List of shared storage services to mount
-      - teststorage1
-
     # Nginx configuration
     nginxConfig: |-                 # Custom nginx configuration
       server {
@@ -10309,7 +10198,7 @@ services:
 
   # A second, simpler service example
   - hostname: teststorage1
-    type: shared-storage:ha
+    type: seaweedfs:ha@3.85
 ```
 
 This example includes all possible configuration options for Zerops services. Not all options are required or applicable to every service type. The example shows two services in the same YAML file: a fully configured Node.js API service and a simpler static frontend service.
@@ -10652,42 +10541,9 @@ The `minContainers` and `maxContainers` parameters allow you to define the minim
 
 ### Service Mount Shared Storage
 
-:::warning Deprecated
-[Shared Storage](/shared-storage/overview) is deprecated, and the `mount:` field with it. For a persistent filesystem shared between services, use a [Local Storage](/local-storage/overview) service, mounted through the [`volume` field in zerops.yaml](/zerops-yaml/specification#volume-) instead of an import-level field. Existing services can be moved with the [migration guide](/local-storage/how-to/migrate-from-shared-storage).
+:::warning Removed
+The `mount:` field of the deprecated [Shared Storage](/shared-storage/overview) is no longer accepted, an import containing it fails with `yamlMountDeprecated`. Mount a [SeaweedFS](/seaweedfs/overview) service from the runtime's [`startCommands`](/zerops-yaml/specification#startcommands-) in zerops.yaml, or mount a [Local Storage](/local-storage/overview) volume through the [`volume` field](/zerops-yaml/specification#volume-). Existing setups can be moved with the [SeaweedFS migration guide](/seaweedfs/how-to/migrate-from-shared-storage).
 :::
-
-The mount shared storage configuration defines which shared storage services should be mounted to the service.
-
-<table className="w-full my-1.5">
-  <thead>
-    <tr>
-      <th className="w-fit">Field</th>
-      <th className="w-fit">Type</th>
-      <th className="w-fit">Description</th>
-    </tr>
-  </thead>
-  <tbody>
-  <tr>
-    <td className="w-fit font-semibold">mount</td>
-    <td className="w-fit">list of strings</td>
-    <td className="w-fit">Mount shared storage to the service. `buildFromGit` must be filled.</td>
-    </tr>
-  </tbody>
-</table>
-
-```yaml
-services:
-  - hostname: app
-    type: nodejs@22
-    buildFromGit: https://github.com/myorg/myapp
-    enableSubdomainAccess: true
-    mount:
-      - teststorage1
-```
-
-The `mount:` parameter allows you to mount a shared storage (which should be created inside the project) to the service.
-
-The `buildFromGit` requirement exists because an import without it only creates an empty service shell with nothing deployed yet, so there is nothing to mount the storage into. With `buildFromGit`, the import also builds and deploys the repository, and the mount is applied to the deployed service. If you import a service without `buildFromGit`, deploy your application first and then connect the shared storage [in the GUI](/shared-storage/how-to/connect).
 
 ### Service Nginx Configuration
 
@@ -14206,9 +14062,9 @@ Versions listed on the same line are aliases of the same underlying version.
 </td>
     </tr>
     <tr>
-      <td className="w-fit">Shared storage (deprecated)</td>
+      <td className="w-fit">SeaweedFS</td>
       <td className="w-fit">
-- `shared-storage:single`, `shared-storage:ha`
+- `seaweedfs:single@3.85`, `seaweedfs:ha@3.85`
 </td>
     </tr>
   </tbody>
@@ -16353,12 +16209,6 @@ Have you build something that others might find useful? Don't hesitate to share 
 
 ----------------------------------------
 
-# Python > How To > Shared Storage
-
-
-
-----------------------------------------
-
 # Python > How To > Scaling
 
 
@@ -16537,7 +16387,7 @@ S3_ACCESS_KEY_ID="P8cX1vVVb"
 S3_ACCESS_SECRET="ogFthuiLYki8XoL73opSCQ"
 ```
 
-The hostname of the PostgreSQL service will be set to "db". The [single container](/features/scaling#single-container-mode)(/features/scaling#deployment-modes-databases-and-shared-storage) mode will be chosen and the default auto [scaling configuration](/postgresql/how-to/scale#configure-scaling) will be set.
+The hostname of the PostgreSQL service will be set to "db". The [single container](/features/scaling#single-container-mode) mode will be chosen and the default auto [scaling configuration](/postgresql/how-to/scale#configure-scaling) will be set.
 
 #### Description of description.yaml parameters
 
@@ -18737,12 +18587,6 @@ Have you build something that others might find useful? Don't hesitate to share 
 
 ----------------------------------------
 
-# Php > How To > Shared Storage
-
-
-
-----------------------------------------
-
 # Php > How To > Scaling
 
 
@@ -19205,7 +19049,7 @@ S3_ACCESS_KEY_ID="P8cX1vVVb"
 S3_ACCESS_SECRET="ogFthuiLYki8XoL73opSCQ"
 ```
 
-The hostname of the PostgreSQL service will be set to "db". The [single container](/features/scaling#single-container-mode)(/features/scaling#deployment-modes-databases-and-shared-storage) mode will be chosen and the default auto [scaling configuration](/postgresql/how-to/scale#configure-scaling) will be set.
+The hostname of the PostgreSQL service will be set to "db". The [single container](/features/scaling#single-container-mode) mode will be chosen and the default auto [scaling configuration](/postgresql/how-to/scale#configure-scaling) will be set.
 
 #### Description of description.yaml parameters
 
@@ -21227,12 +21071,6 @@ If your build process seems to be hanging or timing out, check your logs for int
 
 ----------------------------------------
 
-# Nodejs > How To > Shared Storage
-
-
-
-----------------------------------------
-
 # Nodejs > How To > Scaling
 
 
@@ -21410,7 +21248,7 @@ S3_ACCESS_KEY_ID="P8cX1vVVb"
 S3_ACCESS_SECRET="ogFthuiLYki8XoL73opSCQ"
 ```
 
-The hostname of the PostgreSQL service will be set to "db". The [single container](/features/scaling#single-container-mode)(/features/scaling#deployment-modes-databases-and-shared-storage) mode will be chosen and the default auto [scaling configuration](/postgresql/how-to/scale#configure-scaling) will be set.
+The hostname of the PostgreSQL service will be set to "db". The [single container](/features/scaling#single-container-mode) mode will be chosen and the default auto [scaling configuration](/postgresql/how-to/scale#configure-scaling) will be set.
 
 #### Description of description.yaml parameters
 
@@ -22670,12 +22508,6 @@ Zerops provides built-in prerender.io support. Simply set the `PRERENDER_TOKEN` 
 
 ----------------------------------------
 
-# Nginx > How To > Shared Storage
-
-
-
-----------------------------------------
-
 # Nginx > How To > Scaling
 
 
@@ -22895,7 +22727,7 @@ Zerops caches custom runtime images to optimize deployment times. Learn about [c
 For information about managing builds and deployments, see [managing builds and deployments](/features/pipeline#manage-builds-and-deployments).
 
 :::warning
-Shared storage mounts and Local Storage volumes are not available during the runtime prepare phase.
+Local Storage volumes are not available during the runtime prepare phase, and start commands (such as a SeaweedFS mount) do not run there.
 :::
 
 ## Troubleshooting
@@ -25375,7 +25207,7 @@ All connected containers run on the same physical machine and share one kernel, 
 - **Atomic rename and `O_APPEND`** behave exactly as on a local disk
 - **inotify propagates across containers**: file watchers in one container see events triggered from another
 
-This is why filesystem-based databases (SQLite, Prometheus TSDB) are safe on Local Storage while they are explicitly unsafe on [Shared Storage](/shared-storage/overview#use-cases) or any other network filesystem.
+This is why filesystem-based databases (SQLite, Prometheus TSDB) are safe on Local Storage while they are explicitly unsafe on [SeaweedFS](/seaweedfs/overview#storage-engine-behavior) or any other network filesystem.
 
 :::note Single-writer restrictions still apply
 Correct locking makes concurrent access *safe*, not concurrent writes *possible*. SQLite still allows only one writer at a time — additional writers block or fail with `SQLITE_BUSY`, exactly as they would for two processes on one machine. A single-writer setup therefore remains the most robust pattern for SQLite and similar embedded databases: keep writes in one service (and ideally one container), and mount the volume with the [`readOnly` option](/local-storage/how-to/connect#the-volume-field) everywhere else to enforce it.
@@ -25451,9 +25283,9 @@ Automated [backups](/local-storage/how-to/manage#backups) are enabled by default
 
 ## Choosing a storage type
 
-Local Storage trades high availability for correctness and speed: it is the only storage type where lock-dependent workloads like databases are safe. An HA mode may be added in the future. See [Storage on Zerops](/storage/overview) for a comparison with Object Storage and Shared Storage and guidance on which one to use.
+Local Storage trades high availability for correctness and speed: it is the only storage type where lock-dependent workloads like databases are safe. An HA mode may be added in the future. See [Storage on Zerops](/storage/overview) for a comparison with Object Storage and SeaweedFS and guidance on which one to use.
 
-Already on Shared Storage? Follow the [migration guide](/local-storage/how-to/migrate-from-shared-storage) to move your data to a Local Storage volume without changing your application.
+Already on the deprecated Shared Storage? Follow the [migration guide](/local-storage/how-to/migrate-from-shared-storage) to move your data to a Local Storage volume without changing your application, or keep the data where it is and [mount it as SeaweedFS](/seaweedfs/how-to/migrate-from-shared-storage).
 
 ## Key trade-offs
 
@@ -25484,24 +25316,24 @@ Stuck, or want to share what you built? Our core team and community are on Disco
 # Local Storage > How To > Migrate From Shared Storage
 
 
-[Shared Storage](/shared-storage/overview) is deprecated. This guide moves the data of an existing Shared Storage service to a new Local Storage volume and switches your runtime services over to it. The new volume is mounted at the **same path** the shared storage used (`/mnt/<old-hostname>`), so your application code and configuration stay untouched.
+[Shared Storage](/shared-storage/overview) is deprecated, and existing Shared Storage services have been converted into [SeaweedFS](/seaweedfs/overview) services. If you only want to keep using them, follow the [SeaweedFS migration guide](/seaweedfs/how-to/migrate-from-shared-storage) instead. This guide moves the data off the network filesystem to a new Local Storage volume and switches your runtime services over to it. The new volume is mounted at the **same path** the shared storage used (`/mnt/<old-hostname>`), so your application code and configuration stay untouched.
 
 The migration in short:
 
 1. Stop everything that writes to the shared storage.
 2. Create the Local Storage service and a temporary migrator service that mounts both storages.
 3. Copy the data from the old mount to the new one.
-4. Disconnect the shared storage from all services and stop it.
+4. Remove the shared storage mounts from all services and stop it.
 5. Mount the new volume in your runtime services at the old path and deploy.
 6. Verify, then delete the migrator and the shared storage.
 
-Throughout the guide, `volume` is the hostname of the **old Shared Storage** service and `volume2` the hostname of the **new Local Storage** service. Replace them with your own.
+Throughout the guide, `volume` is the hostname of the **old Shared Storage** service (now a SeaweedFS service) and `volume2` the hostname of the **new Local Storage** service. Replace them with your own.
 
 ## Before you start
 
 Local Storage is a different kind of storage than the network filesystem it replaces — read its [key trade-offs](/local-storage/overview#key-trade-offs) before you migrate. One consequence for the migration: a runtime service mounts at most one Local Storage volume, so if a service mounts several shared storages, copy them into subdirectories of a single volume and point your application at the new paths.
 
-Take a fresh [backup](/shared-storage/how-to/manage#backups) of the shared storage before you begin.
+Take a fresh [backup](/seaweedfs/overview#backup-and-recovery) of the shared storage before you begin.
 
 ## 1. Stop all writers
 
@@ -25513,7 +25345,7 @@ Files that change while they are being copied end up inconsistent on the new vol
 
 ## 2. Create the Local Storage and a migrator service
 
-Import the new Local Storage service together with a temporary `fsmigrator` service that has **both** storages mounted: the old shared storage through the import-level `mount` field, and the new volume through the `volume` field in its inline `zeropsYaml`.
+Import the new Local Storage service together with a temporary `fsmigrator` service that has **both** storages mounted: the new volume through the `volume` field in its inline `zeropsYaml`, and the old shared storage through a [`weed mount` start command](/seaweedfs/overview#mounting-from-a-runtime-service).
 
 ```yaml title="zerops-import.yaml"
 services:
@@ -25533,9 +25365,10 @@ services:
             volume:
               # Hostname of the new Local Storage service.
               hostname: volume2
-    mount:
-      # Hostname of the old Shared Storage service.
-      - volume
+            startCommands:
+              # Mount the old Shared Storage service (hostname volume) at /mnt/volume.
+              - name: volume
+                command: sudo zsc shared-storage mount volume
     # Start the container without deploying any code.
     startWithoutCode: true
 ```
@@ -25576,11 +25409,11 @@ find /mnt/volume -type f | wc -l; find /mnt/volume2 -type f | wc -l
 `du` and `df` can report misleading numbers for the shared storage mount. If the totals differ, compare file counts or run `diff -r /mnt/volume /mnt/volume2` before you worry about it.
 :::
 
-## 4. Disconnect and stop the shared storage
+## 4. Remove the shared storage mounts and stop it
 
-On the shared storage service detail page, open **Shared storage connections** and toggle **off** every connected runtime service, including `fsmigrator`. Then stop the shared storage service.
+On every runtime service that still has the old managed mount, open **Environment variables** and delete the `zeropsSharedStorageMounts` variable (or remove `volume` from its `|`-separated list if the service mounts other storages too). This is applied live: the mount disappears from the running containers without a restart. Stop the `fsmigrator` service as well, then stop the shared storage service.
 
-Disconnecting is applied live and does not restart the runtime containers. Keep the service stopped rather than deleted for now — it is your rollback path until the new volume is verified.
+Keep the shared storage stopped rather than deleted for now — it is your rollback path until the new volume is verified.
 
 ## 5. Mount the new volume in your runtime services
 
@@ -25601,13 +25434,13 @@ zerops:
 
 Deploy each service with the changed `zerops.yaml` (`zcli push`, or trigger your pipeline). The volume is mounted in the new containers at `/mnt/volume`, exactly where the shared storage used to be. See [Mount to a service](/local-storage/how-to/connect) for the full `volume` field reference.
 
-If you keep your infrastructure in a `zerops-import.yaml` or a template, update it as well: replace the `shared-storage` service with the `local-storage:single@1` service and remove the `mount` field from the runtime services.
+If you keep your infrastructure in a `zerops-import.yaml` or a template, update it as well: replace the `shared-storage` / `seaweedfs` service with the `local-storage:single@1` service and remove the `mount` field (or any `weed mount` start command) from the runtime services.
 
 ## 6. Verify
 
 Start the runtime services you stopped in step 1 (if they did not start with the deploy) and check that the application works — read an existing file, write a new one, and confirm the results in the [Local Storage container](/local-storage/how-to/manage#access-the-volume-directly), where the volume is mounted at `/data`.
 
-If something is wrong, you can roll back: remove the `volume` field from `zerops.yaml`, deploy, start the shared storage service and reconnect it to the runtime services.
+If something is wrong, you can roll back: remove the `volume` field from `zerops.yaml`, deploy, start the shared storage service and put its hostname back into the `zeropsSharedStorageMounts` variable of the runtime services (or mount it with a `weed mount` start command).
 
 ## 7. Clean up
 
@@ -26607,12 +26440,6 @@ Have you build something that others might find useful? Don't hesitate to share 
 
 ----------------------------------------
 
-# Java > How To > Shared Storage
-
-
-
-----------------------------------------
-
 # Java > How To > Scaling
 
 
@@ -26791,7 +26618,7 @@ S3_ACCESS_KEY_ID="P8cX1vVVb"
 S3_ACCESS_SECRET="ogFthuiLYki8XoL73opSCQ"
 ```
 
-The hostname of the PostgreSQL service will be set to "db". The [single container](/features/scaling#single-container-mode)(/features/scaling#deployment-modes-databases-and-shared-storage) mode will be chosen and the default auto [scaling configuration](/postgresql/how-to/scale#configure-scaling) will be set.
+The hostname of the PostgreSQL service will be set to "db". The [single container](/features/scaling#single-container-mode) mode will be chosen and the default auto [scaling configuration](/postgresql/how-to/scale#configure-scaling) will be set.
 
 #### Description of description.yaml parameters
 
@@ -28298,54 +28125,87 @@ A change to `envSecrets` requires a **service restart** to take effect.
 
 ----------------------------------------
 
-# Guides > Shared Storage Integration
+# Guides > Seaweedfs Integration
 
 
-**DEPRECATED**: Shared Storage is deprecated and will be replaced by a standalone SeaweedFS managed service mounted with `zsc shared-storage mount` in `initCommands`. For new projects, prefer **[Local Storage](/local-storage/overview)** (`run.volume` in zerops.yaml) for a persistent shared filesystem, or **Object Storage** for large or highly available data. Existing Shared Storage services keep working; move them with the [migration guide](/local-storage/how-to/migrate-from-shared-storage).
+Managed SeaweedFS cluster (`seaweedfs:ha@3.85` / `seaweedfs:single@3.85`) exposing an unauthenticated filer at `<hostname>.zerops:8888`. Zerops does not mount it into runtimes — the runtime mounts it with `weed mount` in `run.startCommands` (or uses the filer HTTP API). Replaces the deprecated [Shared Storage](/shared-storage/overview). Human-facing docs: [SeaweedFS](/seaweedfs/overview).
 
-Shared storage is a managed SeaweedFS volume mounted as a POSIX filesystem at `/mnt/<storageHostname>` into one or more runtime services — for files that must be shared *between containers/services* (shared config, plugin directories, a common working set). It is mounted via the import.yaml `mount:` field; there is **no `zerops.yaml` mount** (do not confuse it with `run.volume`, which mounts a Local Storage volume). For high-write workloads or user uploads, prefer Object Storage (S3) instead — shared storage is POSIX/NFS-style and not built for high-throughput churn.
-
-## Mounting — import.yaml `mount:` is the only config-file mechanism
-
-Declare the storage service, then list it under the runtime's service-level `mount:`. This auto-connects the storage at provision — import alone is sufficient, no second step:
+## Service
 
 ```yaml
 services:
   - hostname: storage
-    type: shared-storage
-  - hostname: app
-    type: nodejs@22
-    buildFromGit: https://github.com/myorg/myapp   # mount: requires buildFromGit
-    mount:
-      - storage          # list one or more shared-storage hostnames
+    type: seaweedfs:ha@3.85     # 2 containers, replicated. seaweedfs:single@3.85 = 1 container
 ```
 
-After deploy, the runtime has `/mnt/storage` (SeaweedFS FUSE, writable). Multiple volumes can be mounted to one service (`/mnt/files1`, `/mnt/files2`, …).
+- Mode is part of the type and immutable. `shared-storage:ha` / `shared-storage:single` are accepted aliases.
+- Env vars generated on the service: `hostname` (`storage`), `port` (`8888`). Reference cross-service as `${storage_hostname}`, `${storage_port}`. No credentials — the filer is unauthenticated, reachable only on the project network and over VPN. Cannot be exposed via `enableSubdomainAccess` or public routing.
+- Endpoints: filer HTTP `http://storage.zerops:8888`, filer gRPC `storage.zerops:18888`, per-container filer `node-stable-<1|2>.db.storage.zerops:8888`. Master (`9333`) and volume (`8080`) servers are internal.
+- Vertical autoscaling only (defaults RAM 0.5 GB, disk 5 GB min); data capacity capped at **60 GB** regardless of disk. Backups: `.tar.gz` of the whole filesystem, restore by extracting through a mount.
 
-**There is NO `zerops.yaml` mount field.** A `mount:` under `run:` is silently stripped by the platform — it even passes yaml validation (validation-passing ≠ honored), but produces no mount and no connection. Mounting is import.yaml-only (or `connect-storage`, below).
+## Mounting from a runtime (zerops.yaml)
 
-## Connecting a storage to a runtime that missed the import mount
+Every runtime image ships `/opt/zerops/bin/weed-3-85`. Run `weed mount` as an extra `startCommands` entry; it stays in the foreground and Zerops restarts it if it exits:
 
-A runtime that was READY_TO_DEPLOY at import time (e.g. a stage service created but not yet deployed) does NOT pick up the import `mount:`. Once it's ACTIVE, connect explicitly:
-
+```yaml
+zerops:
+  - setup: app
+    run:
+      base: nodejs@22
+      startCommands:
+        - name: app
+          command: npm start
+        - name: storage
+          initCommands:
+            - sudo mkdir -p /mnt/storage
+            - sudo chown zerops:zerops /mnt/storage
+          command: sudo /opt/zerops/bin/weed-3-85 mount -filer=node-stable-1.db.storage.zerops:8888 -dir=/mnt/storage -cacheCapacityMB=0 -concurrentWriters=1 -chunkSizeLimitMB=1
 ```
-zerops_manage action="connect-storage" serviceHostname="app" storageHostname="storage"
+
+- `sudo` is passwordless on Ubuntu and Alpine runtimes. The three trailing flags cap the mount process at ~100-150 MB RAM; drop them for throughput if RAM allows. `-filer` targets one container's filer; in HA mode `node-stable-2` works too (same metadata).
+- Shortcut with identical flags, mounts at `/mnt/<hostname>` against `node-stable-1`: `command: sudo zsc shared-storage mount storage`.
+- The mount exists only in running containers: not during build, not during `run.prepareCommands`. There is no `run.mount` field and no import-level `mount:` (rejected with `yamlMountDeprecated`).
+- Every container of the service mounts independently; all see the same files.
+
+### Mount in initCommands (when init commands need the files)
+
+`startCommands` run after `initCommands`, so mount in the background from the init commands when they need the storage:
+
+```yaml
+      initCommands:
+        - sudo zsc shared-storage mount storage --background   # mounts /mnt/storage, returns when ready
+        - cp /mnt/storage/certs/app.pem /var/www/app.pem
 ```
 
-This registers the connection, but the FUSE mount materializes **only on the next fresh deploy (new container creation)** — a plain restart does NOT bring it up. Redeploy the service after connecting.
+Raw form with options (`weed fuse` accepts every `weed mount` flag as `-o`): `sudo /opt/zerops/bin/weed-3-85 fuse /mnt/certs -o "filer=node-stable-1.db.storage.zerops:8888,filer.path=/certs,readOnly=true,cacheCapacityMB=0,concurrentWriters=1,chunkSizeLimitMB=1"` (create + chown the dir first). Both detach a `weed mount` child; it is re-created on every container start (init commands rerun) but **not restarted if it dies** - prefer the start command form unless init commands need the mount.
 
-## Constraints & behavior
+Useful options: `filer=a:8888,b:8888` (list both HA containers), `filer.path=/sub` (mount a subtree per service), `readOnly=true`, `allowOthers=false`.
 
-- **Mount path**: always `/mnt/<storageHostname>`. Runtime containers only — NOT available during build or `run.prepareCommands` phases.
-- **Mounting overwrites** any existing content in the mount directory.
-- **Capacity**: max 60 GB total (raise via support request); file size is unbounded within the 60 GB. `verticalAutoscaling` floors: RAM 0.5 GB, disk 5 GB.
-- **HA**: 1:1 replication with auto-failover; during a master failover the mount is briefly unavailable (~30s).
-- **POSIX**: standard filesystem ops (with minor permission-setting limits). Filesystem operations are logged to runtime logs tagged `zerops-mount-<serviceHostname>`. `df` can report misleading numbers — use the Zerops GUI for accurate storage metrics.
-- **No env vars**: shared storage exposes no connection variables — it's a filesystem, not a networked service.
+## Filer HTTP API (no mount)
 
-## Shared storage vs local storage vs object storage
+```sh
+curl -F "file=@report.pdf" http://storage.zerops:8888/reports/2026/        # upload, creates dirs
+curl -o report.pdf http://storage.zerops:8888/reports/2026/report.pdf      # download
+curl -H "Accept: application/json" http://storage.zerops:8888/reports/2026/ # list
+curl -X DELETE http://storage.zerops:8888/reports/2026/report.pdf          # delete
+```
 
-Use **local storage** (`run.volume`) when you need a persistent POSIX filesystem — it is a real single-node local filesystem with correct locking and mmap semantics, so it also covers SQLite and other filesystem-based databases that are unsafe on shared storage. Use **shared storage** (deprecated) only for existing setups that need the filesystem replicated across nodes. Use **object storage** (S3/MinIO) for user uploads, media, and any high-throughput or write-heavy file operations — and for anything that must survive independent of any single service. Don't reach for shared storage as a generic uploads bucket.
+HTTP uploads are limited to 64 MB per file; mounted writes are chunked and unlimited within capacity.
+
+## Constraints
+
+- **Not for databases.** Locks (`flock`, POSIX) are enforced per mount only; the store is append-only (write amplification on small rewrites). SQLite, Prometheus TSDB etc. belong on [Local Storage](/local-storage/overview).
+- Higher latency than local disk; avoid huge trees of tiny files; batch writes.
+- `df` inside the mount is misleading; use the GUI for usage.
+- HA failover: master container replacement makes the cluster unavailable ~30 s.
+
+## Migrating from Shared Storage
+
+Existing Shared Storage services are already SeaweedFS services (converted in place, same hostname and data). Their old runtime mounts persist as the `zeropsSharedStorageMounts` env on the runtime service (`|`-separated hostnames, mounted at `/mnt/<hostname>` on container start, best-effort, with a deprecation warning in runtime logs). Migration = add the `startCommands` mount above at the same `/mnt/<hostname>` path, delete the env (applied live, unmounts immediately), deploy. Delete the env **before** the deploy so the two mounts do not target the same directory. Details: [migration guide](/seaweedfs/how-to/migrate-from-shared-storage).
+
+## SeaweedFS vs Local Storage vs Object Storage
+
+See [Choosing Storage](/guides/choose-storage). Short form: Object Storage for uploads/media/backups; Local Storage for anything lock-dependent or single-node stateful; SeaweedFS for an HA network filesystem shared between services where per-mount locking is acceptable.
 
 
 ----------------------------------------
@@ -28353,7 +28213,7 @@ Use **local storage** (`run.volume`) when you need a persistent POSIX filesystem
 # Guides > Scaling
 
 
-Zerops autoscales vertically (CPU/RAM/disk) and horizontally (container count). Runtimes support both. Managed services (DB, cache, shared-storage) support vertical only with fixed container count (the `:single` type variant = 1 node, `:ha` = 3). Object-storage and Docker have no autoscaling. Extends grammar.md section 9 with mechanics, thresholds, YAML syntax, and common mistakes.
+Zerops autoscales vertically (CPU/RAM/disk) and horizontally (container count). Runtimes support both. Managed services (DB, cache, SeaweedFS) support vertical only with fixed container count (the `:single` type variant = 1 node, `:ha` = 3, SeaweedFS `:ha` = 2). Object-storage and Docker have no autoscaling. Extends grammar.md section 9 with mechanics, thresholds, YAML syntax, and common mistakes.
 
 ## When to Scale Which Way
 
@@ -28373,7 +28233,7 @@ Zerops autoscales vertically (CPU/RAM/disk) and horizontally (container count). 
 | **Linux containers** (Alpine, Ubuntu) | Yes | Yes (1-10 containers) | Same as runtimes |
 | **Managed DB** (PostgreSQL, MariaDB) | Yes | No (fixed: `:single`=1, `:ha`=3) | Variant immutable after creation |
 | **Managed cache** (Valkey) | Yes | No (fixed: `:single`=1, `:ha`=3) | Variant immutable after creation |
-| **Shared storage** | Yes (cpu/ram/disk configurable) | No (fixed: `:single`=1, `:ha`=3) | Accepts verticalAutoscaling in import.yml |
+| **SeaweedFS** | Yes (cpu/ram/disk configurable) | No (fixed: `:single`=1, `:ha`=2) | Accepts verticalAutoscaling in import.yml, data capacity capped at 60 GB regardless of disk |
 | **Object storage** | No | No | Fixed size at creation, no verticalAutoscaling |
 | **Docker** | No (manual, triggers VM restart) | Manual only (change VM count, triggers restart) | No automatic autoscaling |
 | **Docker** | No (manual, triggers VM restart) | Manual only (change VM count, triggers restart) | No automatic autoscaling |
@@ -28465,15 +28325,15 @@ Applies to **runtimes and Linux containers only**. New containers are added when
 
 **HA requirement**: applications must be stateless and handle distributed operation (no local file sessions, no local uploads).
 
-### Managed Services (DB, Cache, Shared Storage)
+### Managed Services (DB, Cache, SeaweedFS)
 
 Container count is **fixed by the deployment variant in the type** (`postgresql:single@18` / `postgresql:ha@18`), set at creation, **immutable**:
 
 | Variant | Containers | Use case |
 |---|---|---|
 | `:single` | 1 | Development, non-critical |
-| `:ha` | 3 (on separate physical machines) | Production, automatic failover |
-| `:ha` | 3 (on separate physical machines) | Production, automatic failover |
+| `:ha` | 3 (on separate physical machines), 2 for SeaweedFS | Production, automatic failover |
+| `:ha` | 3 (on separate physical machines), 2 for SeaweedFS | Production, automatic failover |
 
 **Legacy form** you may still see in older YAML: a separate `mode:` field — `mode: NON_HA` ≡ `:single`, `mode: HA` ≡ `:ha`. Still accepted (remapped to the variant) but deprecated and ignored by validation.
 
@@ -29806,7 +29666,7 @@ When using SSHFS (`zerops_mount`) for dev workflows, deploy replaces the contain
 
 **Three kinds of "mount" (disambiguation):**
 - `zerops_mount` -- SSHFS tool, mounts service `/var/www` locally for development. This is a dev workflow tool.
-- Shared storage mount (deprecated) -- platform feature, attaches a shared-storage volume at `/mnt/{hostname}` via the service-level `mount:` parameter in import.yml. There is no `mount` field in zerops.yml (a `run.mount` is silently ignored). These are completely unrelated features.
+- SeaweedFS mount -- `weed mount` (or `zsc shared-storage mount <hostname>`) run as a `run.startCommands` entry in zerops.yml, mounts a [SeaweedFS](/seaweedfs/overview) service's filer at a directory of your choice. There is no `mount` field in zerops.yml (a `run.mount` is silently ignored) and the import-level `mount:` of the deprecated Shared Storage is rejected. These are completely unrelated features.
 - Local Storage volume -- platform feature, mounts a Local Storage service's persistent volume via the `run.volume` field in zerops.yml (`volume: {hostname, mountPath, readOnly}`). The volume survives deploys: new containers get the same volume attached at the configured `mountPath`.
 
 
@@ -29955,7 +29815,7 @@ Any CI system with shell access can deploy via `zcli push`:
 # Guides > Choose Storage
 
 
-**Use Object Storage** (S3) for uploads, media, and backups. **Use Local Storage** (`run.volume`) for anything that needs a real filesystem — SQLite and other embedded databases, single-node stateful apps, filesystem state shared between services. **Shared Storage is deprecated** — don't use it in new projects. Human-facing comparison: [Storage on Zerops](/storage/overview).
+**Use Object Storage** (S3) for uploads, media, and backups. **Use Local Storage** (`run.volume`) for anything that needs a real filesystem — SQLite and other embedded databases, single-node stateful apps, filesystem state shared between services. **Use SeaweedFS** when the shared filesystem must be highly available and the per-mount locking of a network filesystem is acceptable — the runtime mounts it from `run.startCommands`. **Shared Storage is deprecated** — existing services were converted to SeaweedFS. Human-facing comparison: [Storage on Zerops](/storage/overview).
 
 ## Decision Matrix
 
@@ -29965,9 +29825,10 @@ Any CI system with shell access can deploy via `zcli push`:
 | SQLite / Prometheus / filesystem-based databases | **Local Storage** | Single-kernel POSIX: locking and mmap are correct — the only Zerops storage where these workloads are safe |
 | Single-node stateful app (Gitea, etc.) | **Local Storage** | Persistent volume survives deploys and container replacement |
 | Filesystem state shared between services (certs, caches) | **Local Storage** | One volume mountable by multiple runtime services, writes visible immediately |
+| HA filesystem shared between services, no lock-dependent workloads | **SeaweedFS** | Replicated managed cluster, mounted by the runtime itself via `weed mount` in `run.startCommands`, or used over the filer HTTP API |
 | Temp/scratch files | Container disk | Fine as-is; lost on deploy |
-| Existing `mount:`-based setups | Shared Storage (deprecated) | Keeps working; [migrate to Local Storage](/local-storage/how-to/migrate-from-shared-storage) or Object Storage |
-| Existing `mount:`-based setups | Shared Storage (deprecated) | Keeps working; [migrate to Local Storage](/local-storage/how-to/migrate-from-shared-storage) or Object Storage |
+| Existing Shared Storage (`mount:`-based) setups | SeaweedFS (already converted) | Old mounts keep working via the `zeropsSharedStorageMounts` env; [take over the mount](/seaweedfs/how-to/migrate-from-shared-storage) or [migrate to Local Storage](/local-storage/how-to/migrate-from-shared-storage) |
+| Existing Shared Storage (`mount:`-based) setups | SeaweedFS (already converted) | Old mounts keep working via the `zeropsSharedStorageMounts` env; [take over the mount](/seaweedfs/how-to/migrate-from-shared-storage) or [migrate to Local Storage](/local-storage/how-to/migrate-from-shared-storage) |
 
 ## Local Storage
 
@@ -29982,9 +29843,13 @@ Any CI system with shell access can deploy via `zcli push`:
 
 See the [object-storage integration guide](/guides/object-storage-integration): S3-compatible (MinIO), `objectStorageSize` quota, `AWS_USE_PATH_STYLE_ENDPOINT: true`, `${storage_*}` env var references. Not a filesystem — no locking, no partial writes, no mmap.
 
+## SeaweedFS
+
+See the [SeaweedFS integration guide](/guides/seaweedfs-integration): service type `seaweedfs:ha@3.85` / `seaweedfs:single@3.85`, exposes the filer at `<hostname>.zerops:8888` (HTTP API + FUSE via `weed mount`), no credentials. Zerops runs the cluster; mounting is the runtime's job (`run.startCommands` entry running `sudo /opt/zerops/bin/weed-3-85 mount ...` or `zsc shared-storage mount <hostname>`). Per-mount-only locks and an append-only store make databases unsafe on it — that workload belongs on Local Storage. Data capacity is capped at 60 GB.
+
 ## Shared Storage (deprecated)
 
-A managed SeaweedFS cluster mounted at `/mnt/<hostname>` via the import-level `mount:` field. Deprecated: it will be replaced by a standalone SeaweedFS managed service mounted with `zsc shared-storage mount` in `initCommands`. Its per-mount-only locks make databases unsafe on it — that workload belongs on Local Storage. Existing services keep working.
+Retired service type. Every existing Shared Storage service was converted in place into a SeaweedFS service (same containers, data and hostname). The GUI **Shared storage connections** page and the import-level `mount:` field are gone (`mount:` now fails with `yamlMountDeprecated`); the old runtime mounts survive as the `zeropsSharedStorageMounts` env (`|`-separated hostnames, mounted at `/mnt/<hostname>` on container start, best-effort, with a deprecation warning in the runtime log). Migration: add the `weed mount` start command, delete the env, deploy — see the [migration guide](/seaweedfs/how-to/migrate-from-shared-storage).
 
 
 ----------------------------------------
@@ -30325,7 +30190,7 @@ Any change to these zerops.yml fields invalidates **both layers**:
 Zerops auto-backs up databases and storage daily (00:00-01:00 UTC) with X25519 encryption; backups are retained for 7 days minimum after service/project deletion.
 
 ## Supported Services
-MariaDB, PostgreSQL, Qdrant, Elasticsearch, NATS, Meilisearch, Local Storage, Shared Storage.
+MariaDB, PostgreSQL, Qdrant, Elasticsearch, NATS, Meilisearch, Local Storage, SeaweedFS.
 
 **ClickHouse**: not on the standard auto-backup path — back it up with the native `BACKUP ALL ...` SQL command (super user), stored as `.tar.gz`.
 
@@ -30371,8 +30236,8 @@ End-to-end with X25519 per-project keys. Decrypted only on download.
 | Qdrant | `.snapshot` |
 | NATS | `.tar.gz` |
 | Local Storage | tar → `.tar.gz` (archive of the live volume — pause database writes or use an application-level backup for guaranteed consistency) |
-| Shared Storage | tar → `.tar.gz` |
-| Shared Storage | tar → `.tar.gz` |
+| SeaweedFS | tar → `.tar.gz` (archive of the whole filesystem, restore by extracting through a mount) |
+| SeaweedFS | tar → `.tar.gz` (archive of the whole filesystem, restore by extracting through a mount) |
 
 ## Gotchas
 - Valkey/KeyDB are not backed up → rely on service persistence or application-level backup.
@@ -30465,12 +30330,6 @@ Have you build something that others might find useful? Don't hesitate to share 
 ----------------------------------------
 
 # Go > How To > Trigger Pipeline
-
-
-
-----------------------------------------
-
-# Go > How To > Shared Storage
 
 
 
@@ -30654,7 +30513,7 @@ S3_ACCESS_KEY_ID="P8cX1vVVb"
 S3_ACCESS_SECRET="ogFthuiLYki8XoL73opSCQ"
 ```
 
-The hostname of the PostgreSQL service will be set to "db". The [single container](/features/scaling#single-container-mode)(/features/scaling#deployment-modes-databases-and-shared-storage) mode will be chosen and the default auto [scaling configuration](/postgresql/how-to/scale#configure-scaling) will be set.
+The hostname of the PostgreSQL service will be set to "db". The [single container](/features/scaling#single-container-mode) mode will be chosen and the default auto [scaling configuration](/postgresql/how-to/scale#configure-scaling) will be set.
 
 #### Description of description.yaml parameters
 
@@ -31907,12 +31766,6 @@ Have you build something that others might find useful? Don't hesitate to share 
 
 ----------------------------------------
 
-# Gleam > How To > Shared Storage
-
-
-
-----------------------------------------
-
 # Gleam > How To > Scaling
 
 
@@ -32090,7 +31943,7 @@ S3_ACCESS_KEY_ID="P8cX1vVVb"
 S3_ACCESS_SECRET="ogFthuiLYki8XoL73opSCQ"
 ```
 
-The hostname of the PostgreSQL service will be set to "db". The [single container](/features/scaling#single-container-mode)(/features/scaling#deployment-modes-databases-and-shared-storage) mode will be chosen and the default auto [scaling configuration](/postgresql/how-to/scale#configure-scaling) will be set.
+The hostname of the PostgreSQL service will be set to "db". The [single container](/features/scaling#single-container-mode) mode will be chosen and the default auto [scaling configuration](/postgresql/how-to/scale#configure-scaling) will be set.
 
 #### Description of description.yaml parameters
 
@@ -33254,7 +33107,7 @@ Unlike traditional hosting where resources must be predicted and pre-provisioned
 Zerops uses two fundamentally different approaches for optimizing infrastructure:
 
 #### **Resource Management (Vertical Scaling)**
-- **Applies to:** Runtime services, databases, local and shared storage, and Linux containers (Alpine and Ubuntu)
+- **Applies to:** Runtime services, databases, Local Storage and SeaweedFS, and Linux containers (Alpine and Ubuntu)
 - **What it does:** Adjusts CPU, RAM, and disk resources within individual containers
 - **Management:** Automated by Zerops, but customizable by users
 
@@ -33269,7 +33122,7 @@ Docker services do not support automatic vertical scaling. Resource values can b
   - Container/VM creation limits can be controlled
   - Docker containers run in VMs rather than native containers
 
-- **For Databases & Shared Storage:** High Availability Mode (fixed container count)
+- **For Databases & SeaweedFS:** High Availability Mode (fixed container count)
   - Single Container OR Multi-Container HA configuration
   - Must be chosen at service creation (cannot be changed later)
   - Managed by Zerops (no application changes needed)
@@ -33283,7 +33136,7 @@ Docker services do not support automatic vertical scaling. Resource values can b
       <th className="">Feature</th>
       <th className="">Runtime Services & Linux Containers</th>
       <th className="">Databases</th>
-      <th className="">Shared Storage</th>
+      <th className="">SeaweedFS</th>
       <th className="">Docker</th>
     </tr>
   </thead>
@@ -33320,7 +33173,7 @@ You can configure scaling settings at three different stages:
 
 - **During import** - Use YAML configuration files to define comprehensive scaling settings including `verticalAutoscaling` parameters and horizontal scaling limits. See [Import & Export YAML Configuration](/references/import) for complete syntax.
 
-- **After service creation** - Modify most scaling settings anytime through your service's **Automatic scaling configuration** page. Note that some parameters like deployment mode for databases and shared storage cannot be changed after creation.
+- **After service creation** - Modify most scaling settings anytime through your service's **Automatic scaling configuration** page. Note that some parameters like deployment mode for databases and SeaweedFS cannot be changed after creation.
 
 This flexibility lets you plan scaling strategies upfront or adapt them as requirements evolve.
 
@@ -33328,7 +33181,7 @@ This flexibility lets you plan scaling strategies upfront or adapt them as requi
 
 Resource management in Zerops focuses on efficiently allocating and adjusting CPU, RAM, and disk resources within individual containers based on actual usage patterns.
 
-These resource management capabilities apply to **runtime** services, **databases**, **shared storage**, and **Linux containers** (Alpine and Ubuntu).
+These resource management capabilities apply to **runtime** services, **databases**, **SeaweedFS**, and **Linux containers** (Alpine and Ubuntu).
 
 :::note
 Docker services do not support automatic vertical scaling. Resources for Docker services are fixed at the values set manually and do not automatically adjust based on usage.
@@ -33499,7 +33352,7 @@ Below are the parameters that control this behavior across all services that sup
 Container architecture in Zerops defines how services are distributed across containers. Different service types use fundamentally different approaches:
 
 1. **Horizontal Scaling** (Runtime Services, Linux Containers, and Docker)
-2. **Deployment Modes** (Databases and Shared Storage)
+2. **Deployment Modes** (Databases and SeaweedFS)
 
 ### Horizontal Scaling (Runtime Services, Linux Containers, and Docker)
 
@@ -33522,9 +33375,9 @@ To configure horizontal scaling, users need to set the minimum and maximum numbe
 Setting identical minimum and maximum values creates a fixed number of containers (disables automatic horizontal scaling).
 :::
 
-### Deployment Modes (Databases and Shared Storage)
+### Deployment Modes (Databases and SeaweedFS)
 
-For databases and shared storage services, Zerops offers two deployment modes focused on reliability and data integrity.
+For databases and SeaweedFS services, Zerops offers two deployment modes focused on reliability and data integrity.
 
 :::warning
 Deployment mode cannot be changed after creation.
@@ -33556,7 +33409,7 @@ Highly Available (HA) Mode creates multiple containers with built-in redundancy.
 - Recommended for production use
 
 :::important
-Database and shared storage services in HA mode have a **fixed number of containers** that cannot be increased or decreased.
+Database and SeaweedFS services in HA mode have a **fixed number of containers** that cannot be increased or decreased.
 :::
 
 **Recovery process:**
@@ -34372,7 +34225,7 @@ Learn more about building custom runtime images:
 :::warning
 Do not include your application code in the custom runtime image, as your built application code is deployed automatically into fresh containers.
 
-Shared storage mounts and Local Storage volumes are also not available during the runtime prepare phase.
+Local Storage volumes are also not available during the runtime prepare phase, and start commands (such as a SeaweedFS mount) do not run there.
 :::
 
 ## Deploy phase
@@ -35555,7 +35408,7 @@ ZCP supports multiple coding agents including Claude Code (Anthropic), Codex (Op
 
 ### An ordinary Zerops project underneath
 
-The agent operates inside a normal Zerops project — same shape as production. Managed databases (PostgreSQL, MariaDB, ClickHouse), key-value stores (KeyDB, Valkey), search (Elasticsearch, Meilisearch, Typesense), vector store (Qdrant), message queues (NATS, Kafka), object, local and shared storage, managed Nginx — all on a private network, addressable by hostname. The same pipeline that deploys here can deploy to a separate HA production project with no `zcp` service attached. Not a sandbox the work outgrows.
+The agent operates inside a normal Zerops project — same shape as production. Managed databases (PostgreSQL, MariaDB, ClickHouse), key-value stores (KeyDB, Valkey), search (Elasticsearch, Meilisearch, Typesense), vector store (Qdrant), message queues (NATS, Kafka), object storage, Local Storage and SeaweedFS, managed Nginx — all on a private network, addressable by hostname. The same pipeline that deploys here can deploy to a separate HA production project with no `zcp` service attached. Not a sandbox the work outgrows.
 
 ### Human ↔ agent handover
 
@@ -36351,7 +36204,7 @@ Zerops provides an automated, secure backup system for supported services. This 
 
 ## Supported Services
 
-Zerops provides automated backup functionality for the following services. For specific backup format details and restore instructions, visit each service's documentation: [MariaDB](/mariadb/how-to/backup), [PostgreSQL](/postgresql/how-to/manage#backups), [Qdrant](/qdrant/overview), [Elasticsearch](/elasticsearch/overview), [NATS](/nats/overview), [Meilisearch](/meilisearch/overview), [Local Storage](/local-storage/how-to/manage#backups), and [Shared Storage](/shared-storage/how-to/manage#backups).
+Zerops provides automated backup functionality for the following services. For specific backup format details and restore instructions, visit each service's documentation: [MariaDB](/mariadb/how-to/backup), [PostgreSQL](/postgresql/how-to/manage#backups), [Qdrant](/qdrant/overview), [Elasticsearch](/elasticsearch/overview), [NATS](/nats/overview), [Meilisearch](/meilisearch/overview), [Local Storage](/local-storage/how-to/manage#backups), and [SeaweedFS](/seaweedfs/overview#backup-and-recovery).
 
 ## Managing Backups in the UI
 
@@ -36791,12 +36644,6 @@ Have you build something that others might find useful? Don't hesitate to share 
 
 ----------------------------------------
 
-# Elixir > How To > Shared Storage
-
-
-
-----------------------------------------
-
 # Elixir > How To > Scaling
 
 
@@ -36974,7 +36821,7 @@ S3_ACCESS_KEY_ID="P8cX1vVVb"
 S3_ACCESS_SECRET="ogFthuiLYki8XoL73opSCQ"
 ```
 
-The hostname of the PostgreSQL service will be set to "db". The [single container](/features/scaling#single-container-mode)(/features/scaling#deployment-modes-databases-and-shared-storage) mode will be chosen and the default auto [scaling configuration](/postgresql/how-to/scale#configure-scaling) will be set.
+The hostname of the PostgreSQL service will be set to "db". The [single container](/features/scaling#single-container-mode) mode will be chosen and the default auto [scaling configuration](/postgresql/how-to/scale#configure-scaling) will be set.
 
 #### Description of description.yaml parameters
 
@@ -38313,12 +38160,6 @@ Have you build something that others might find useful? Don't hesitate to share 
 
 ----------------------------------------
 
-# Dotnet > How To > Shared Storage
-
-
-
-----------------------------------------
-
 # Dotnet > How To > Scaling
 
 
@@ -38497,7 +38338,7 @@ S3_ACCESS_KEY_ID="P8cX1vVVb"
 S3_ACCESS_SECRET="ogFthuiLYki8XoL73opSCQ"
 ```
 
-The hostname of the PostgreSQL service will be set to "db". The [single container](/features/scaling#single-container-mode)(/features/scaling#deployment-modes-databases-and-shared-storage) mode will be chosen and the default auto [scaling configuration](/postgresql/how-to/scale#configure-scaling) will be set.
+The hostname of the PostgreSQL service will be set to "db". The [single container](/features/scaling#single-container-mode) mode will be chosen and the default auto [scaling configuration](/postgresql/how-to/scale#configure-scaling) will be set.
 
 #### Description of description.yaml parameters
 
@@ -40071,12 +39912,6 @@ Have you build something that others might find useful? Don't hesitate to share 
 
 ----------------------------------------
 
-# Deno > How To > Shared Storage
-
-
-
-----------------------------------------
-
 # Deno > How To > Scaling
 
 
@@ -40169,7 +40004,7 @@ Zerops caches custom runtime images to optimize deployment times. Learn about [c
 For information about managing builds and deployments, see [managing builds and deployments](/features/pipeline#manage-builds-and-deployments).
 
 :::warning
-Shared storage mounts and Local Storage volumes are not available during the runtime prepare phase.
+Local Storage volumes are not available during the runtime prepare phase, and start commands (such as a SeaweedFS mount) do not run there.
 :::
 
 ## Troubleshooting
@@ -40319,7 +40154,7 @@ S3_ACCESS_KEY_ID="P8cX1vVVb"
 S3_ACCESS_SECRET="ogFthuiLYki8XoL73opSCQ"
 ```
 
-The hostname of the PostgreSQL service will be set to "db". The [single container](/features/scaling#single-container-mode)(/features/scaling#deployment-modes-databases-and-shared-storage) mode will be chosen and the default auto [scaling configuration](/postgresql/how-to/scale#configure-scaling) will be set.
+The hostname of the PostgreSQL service will be set to "db". The [single container](/features/scaling#single-container-mode) mode will be chosen and the default auto [scaling configuration](/postgresql/how-to/scale#configure-scaling) will be set.
 
 #### Description of description.yaml parameters
 
@@ -42230,12 +42065,6 @@ Have you build something that others might find useful? Don't hesitate to share 
 
 ----------------------------------------
 
-# Bun > How To > Shared Storage
-
-
-
-----------------------------------------
-
 # Bun > How To > Scaling
 
 
@@ -42413,7 +42242,7 @@ S3_ACCESS_KEY_ID="P8cX1vVVb"
 S3_ACCESS_SECRET="ogFthuiLYki8XoL73opSCQ"
 ```
 
-The hostname of the PostgreSQL service will be set to "db". The [single container](/features/scaling#single-container-mode)(/features/scaling#deployment-modes-databases-and-shared-storage) mode will be chosen and the default auto [scaling configuration](/postgresql/how-to/scale#configure-scaling) will be set.
+The hostname of the PostgreSQL service will be set to "db". The [single container](/features/scaling#single-container-mode) mode will be chosen and the default auto [scaling configuration](/postgresql/how-to/scale#configure-scaling) will be set.
 
 #### Description of description.yaml parameters
 
@@ -43619,12 +43448,6 @@ Have you built something that others might find useful? Don't hesitate to share 
 
 ----------------------------------------
 
-# Alpine > How To > Shared Storage
-
-
-
-----------------------------------------
-
 # Alpine > How To > Scaling
 
 
@@ -43704,7 +43527,7 @@ Zerops caches custom runtime images to optimize deployment times. Learn about [c
 For information about managing builds and deployments, see [managing builds and deployments](/features/pipeline#manage-builds-and-deployments).
 
 :::warning
-Shared storage mounts and Local Storage volumes are not available during the runtime prepare phase.
+Local Storage volumes are not available during the runtime prepare phase, and start commands (such as a SeaweedFS mount) do not run there.
 :::
 
 ## Troubleshooting
@@ -43855,7 +43678,7 @@ S3_ACCESS_KEY_ID="P8cX1vVVb"
 S3_ACCESS_SECRET="ogFthuiLYki8XoL73opSCQ"
 ```
 
-The hostname of the PostgreSQL service will be set to "db". The [single container](/features/scaling#single-container-mode)(/features/scaling#deployment-modes-databases-and-shared-storage) mode will be chosen and the default auto [scaling configuration](/postgresql/how-to/scale#configure-scaling) will be set.
+The hostname of the PostgreSQL service will be set to "db". The [single container](/features/scaling#single-container-mode) mode will be chosen and the default auto [scaling configuration](/postgresql/how-to/scale#configure-scaling) will be set.
 
 #### Description of description.yaml parameters
 
