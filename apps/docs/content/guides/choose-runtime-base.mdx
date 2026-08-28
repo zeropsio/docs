@@ -3,7 +3,9 @@ title: "Choosing a Runtime Base on Zerops"
 description: "**Use Alpine** as the default base for all services. Use Ubuntu only when you need system packages not available in Alpine. Use Docker only for pre-built images."
 ---
 
-**Use Alpine** as the default base for all services. Switch to Ubuntu only for **glibc** needs (musl incompatibility): CGO-enabled Go, glibc-built Python/C-extension wheels, or the **Deno** runtime (no Alpine build). Needing a package is NOT itself a reason — both bases install packages (`sudo apk add` / `sudo apt-get install`). Use Docker only for pre-built images.
+The OS is part of the base identifier, never a separate field: `alpine/<tech>@<ver>` or `ubuntu/<tech>@<ver>` — the same value in the import `type` and in both `build.base` and `run.base` of zerops.yaml. Always write the prefix: a bare `<tech>@<ver>` is legacy and resolves differently per file (import → Ubuntu, zerops.yaml → Alpine), and `run.base` rewrites the service OS on every deploy.
+
+**Prefer Alpine** for standard apps. Switch to Ubuntu only for **glibc** needs (musl incompatibility): CGO-enabled Go, glibc-built Python/C-extension wheels, or the **Deno** runtime (Ubuntu image only). Needing a package is NOT itself a reason — both bases install packages (`sudo apk add` / `sudo apt-get install`). Use Docker only for pre-built images.
 
 ## Decision Matrix
 
