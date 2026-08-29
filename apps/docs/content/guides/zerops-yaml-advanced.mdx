@@ -132,9 +132,10 @@ Configuration is **merged at the section level** -- child values override parent
 
 Available runtimes and versions are listed in **Service Stacks (live)** -- injected by `zerops_knowledge` and workflow responses. Some key rules:
 
-- PHP: build `php@X`, run `php-nginx@X` or `php-apache@X` (different bases)
-- Deno: REQUIRES `os: ubuntu` (no Alpine build exists). Gleam runs on both Alpine and Ubuntu.
-- Static sites: build `nodejs@latest`, run `static`
+- The OS is part of the base value — `ubuntu/nodejs@22` or `alpine/nodejs@22` — with no separate `os:` field; use the same prefix in `build.base` and `run.base` (a bare `nodejs@22` resolves to Alpine, and `run.base` rewrites the service OS on deploy)
+- PHP: build `<os>/php@X`, run `<os>/php-nginx@X` or `<os>/php-apache@X` (different bases)
+- Deno: ships only as `ubuntu/deno@X` (no Alpine image). Gleam runs on both Alpine and Ubuntu.
+- Static sites: build `alpine/nodejs@latest`, run `static`
 - `@latest` = newest stable version
 
 ---
