@@ -130,13 +130,67 @@ zsc crontab [command]
 
 ---
 
-### execOnce
+### env-replace
+
+Renders template files with environment variables. Placeholders in the form `{{.VARIABLE_NAME}}` are replaced with the value of the environment variable of that name and the result is written to the target. Source files are never modified.
+
+```sh
+zsc env-replace <source> <target> [flags]
+```
+
+`envReplace` is accepted as an alias. This is a different mechanism than the [`envReplace`](/zerops-yaml/specification#envreplace-) key in `zerops.yaml`, which rewrites `%%VARIABLE%%`-style placeholders in the deployed files in place.
+
+#### Required parameters
+- `<source>`: Template file or directory to read
+- `<target>`: File or directory to write the rendered result to
+
+Both paths can be absolute (starting with `/`) or relative to the current working directory.
+
+- **Source directory**: traversed recursively, every file is rendered to the same relative path under the target directory. Missing target directories are created.
+- **Source file**: rendered to the target path. When the target is an existing directory, the file is written into it under its original name.
+
+The target must not be the source itself or a path inside the source directory.
+
+#### Available flags
+- `-s, --silent`: Disables output to StdOut
+- `-h, --help`: Help for the env-replace command
+
+#### Template syntax
+Templates use Go `text/template` syntax. Use `{{if .OPTIONAL}}...{{end}}` to guard a variable that may be unset. A file name ending with a permission suffix such as `script.sh.0755` is written without the suffix and with that file mode.
+
+#### Examples
+```sh
+# Render every template under /template/etc into /etc
+zsc env-replace /template/etc /etc
+
+# Render a single file to an explicit target path
+zsc env-replace /template/etc/example.conf /etc/example.conf
+
+# Relative paths are resolved from the current working directory
+zsc env-replace templates/nginx.conf /etc/nginx/nginx.conf
+```
+
+#### Example usage in `zerops.yaml`
+```yaml
+zerops:
+  - setup: app
+    run:
+      initCommands:
+        - zsc env-replace ./templates/app.conf /etc/app/app.conf
+      start: /usr/bin/app --config /etc/app/app.conf
+```
+
+---
+
+### exec-once
 
 Execute a command exactly once across all containers in a service, preventing duplicate execution in high-availability setups.
 
 ```sh
-zsc execOnce [flags] <key> -- <command> [args...]
+zsc exec-once [flags] <key> -- <command> [args...]
 ```
+
+`execOnce` is accepted as an alias.
 
 #### Required parameters
 * `<key>`: A unique identifier for the execution
@@ -146,7 +200,7 @@ zsc execOnce [flags] <key> -- <command> [args...]
 #### Available flags
 - `-r, --retryUntilSuccessful`: Retry command until it succeeds
 - `-v, --verbose`: Verbose output
-- `-h, --help`: Help for the execOnce command
+- `-h, --help`: Help for the exec-once command
 
 #### Behavior
 - **On success**: All containers proceed with their tasks
@@ -156,10 +210,10 @@ zsc execOnce [flags] <key> -- <command> [args...]
 #### Examples
 ```sh
 # Execute a command once for the entire service stack
-zsc execOnce someStaticKey -- /var/www/myBinary some initial command --flag="value" --flag2="value2"
+zsc exec-once someStaticKey -- /var/www/myBinary some initial command --flag="value" --flag2="value2"
 
 # Run migrations for each new app version deployed to Zerops
-zsc execOnce ${ZEROPS_appVersionId} -- php /var/bin/console migrations:continue
+zsc exec-once ${ZEROPS_appVersionId} -- php /var/bin/console migrations:continue
 ```
 
 :::info
@@ -436,36 +490,53 @@ The container will scale down automatically if resources are not utilized, or if
 
 ---
 
-### setSecretEnv
+### set-env
 
-Securely update environment variables containing sensitive information.
+Set or update an environment variable of the current service.
 
 ```sh
-zsc setSecretEnv <key> <content>
+zsc set-env <key> <content> [flags]
 ```
+
+`setEnv` is accepted as an alias.
 
 #### Arguments
 - `<key>`: The name of the environment variable to set
 - `<content>`: The new value for the variable, or `-` to read from stdin
 
 #### Available flags
-- `-h, --help`: Help for the setSecretEnv command
+- `--sensitive`: Store the variable as a secret. When omitted, an existing variable keeps its current secret setting and a new one is created as a plain variable
+- `-h, --help`: Help for the set-env command
 
 #### Examples
 ```sh
-# Set a secret environment variable directly
-zsc setSecretEnv SECRET_KEY "new_value"
+# Set an environment variable directly
+zsc set-env KEY "new_value"
 
-# Set a secret environment variable from stdin (useful for multi-line values or piping)
-echo "new_value" | zsc setSecretEnv SECRET_KEY -
+# Set an environment variable from stdin (useful for multi-line values or piping)
+echo "new_value" | zsc set-env KEY -
 
 # Set a secret API key from a file
-cat api_key.txt | zsc setSecretEnv API_KEY -
+cat api_key.txt | zsc set-env API_KEY - --sensitive
 ```
 
 :::info
-Secret environment variables are encrypted at rest and securely distributed to your containers. Use this command for storing sensitive configuration like API keys, tokens, and passwords.
+Secret environment variables are encrypted at rest and securely distributed to your containers. Use `--sensitive` for sensitive configuration like API keys, tokens, and passwords.
 :::
+
+---
+
+### set-secret-env
+
+:::caution
+Deprecated, use [`set-env --sensitive`](#set-env) instead. The command keeps working for existing scripts and recipes, `setSecretEnv` is accepted as an alias.
+:::
+
+```sh
+zsc set-secret-env <key> <content>
+```
+
+Behaves like `set-env` with `--sensitive` always on.
 
 ---
 
