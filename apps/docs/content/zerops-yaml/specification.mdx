@@ -438,6 +438,24 @@ run:
         - litestream restore -if-replica-exists -if-db-not-exists -config=litestream.yaml $DB_NAME
 ```
 
+Each entry supports:
+
+- `command` (required) - the command to run
+- `name` (optional) - distinguishes the process in logs
+- `workingDir` (optional, default `/var/www`) - the directory the command and its `initCommands` run in
+- `user` (optional, default `zerops`) - the system user the command and its `initCommands` run under. The user has to exist in the runtime container, create it in `prepareCommands`.
+- `initCommands` (optional) - commands run before this process starts, each time a container starts or restarts
+
+```yaml
+run:
+  prepareCommands:
+    - sudo adduser --system --group --home /home/git git
+  startCommands:
+    - command: gitea web
+      name: gitea
+      user: git
+```
+
 See [start-commands-example](https://github.com/zeropsio/start-commands-example)
 
 ### documentRoot <Badge type="optional" />
@@ -490,6 +508,10 @@ Files or directories to process for variable replacement.
 
 :::warning
 Directory targets only process files directly in the specified directory, not subdirectories for performance reasons. To process files in subdirectories, specify each subdirectory explicitly in the target array. For example, ./config/ processes only files in the config directory itself, not files in ./config/jwt/ or other subdirectories.
+:::
+
+:::info
+Not to be confused with the [`zsc env-replace`](/references/zsc#env-replace) command, which renders `{{.VARIABLE}}` Go templates from a source path into a separate target path and can be run from `initCommands` or manually.
 :::
 
 **How it works:**
