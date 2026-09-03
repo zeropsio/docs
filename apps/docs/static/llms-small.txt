@@ -5627,7 +5627,7 @@ run:
 
 
 :::warning Shared Storage is deprecated
-Shared Storage, the SeaweedFS cluster that Zerops mounted into your runtime containers through the **Shared storage connections** page and the `mount:` import field, is no longer offered. The service type has been retired, the `mount:` field is rejected on import, and the connections page is gone from the GUI.
+Shared Storage, the SeaweedFS cluster that Zerops mounted into your runtime containers through the **Shared storage connections** page and the `mount:` import field, is no longer offered. The service type has been retired (the old `shared-storage:ha` / `shared-storage:single` type names still work in imports and create a SeaweedFS service), the `mount:` field is rejected on import, and the connections page is gone from the GUI.
 :::
 
 **Every existing Shared Storage service has been converted in place into a [SeaweedFS](/seaweedfs/overview) service.** Same containers, same data, same hostname, no action was needed on your side. The mounts your runtime services had keep working for now through the `zeropsSharedStorageMounts` environment variable, on a best-effort basis and with a deprecation warning in the runtime log. Take over the mount in your own `zerops.yaml` with the [migration guide](/seaweedfs/how-to/migrate-from-shared-storage) before the managed mounts are removed.
@@ -5732,18 +5732,18 @@ zerops:
           initCommands:
             - sudo mkdir -p /mnt/storage
             - sudo chown zerops:zerops /mnt/storage
-          command: sudo /opt/zerops/bin/weed-3-85 mount -filer=node-stable-1.db.storage.zerops:8888 -dir=/mnt/storage -cacheCapacityMB=0 -concurrentWriters=1 -chunkSizeLimitMB=1
+          command: sudo /opt/zerops/bin/weed-3-85 mount -filer=node-stable-1.db.storage.zerops:8888 -dir=/mnt/storage
 ```
 
 - `weed mount` runs in the foreground and keeps the directory mounted for the lifetime of the container. Zerops restarts it like any other start command if it exits.
 - `-filer` points at the filer of one container. In HA mode both containers run a filer with the same metadata, so a second service can mount `node-stable-2` to spread the load.
 - The mount needs `sudo`, both Ubuntu and Alpine runtime images allow it without a password.
 - Every container of the service gets its own mount, and every mount sees the same files.
-- The three trailing flags keep the memory footprint of the mount process around 100-150 MB by disabling the local cache and limiting write buffers. Without them the process can grow well beyond the container's RAM. Tune or drop them if you have the memory to spare and want more throughput, see the [`weed mount` options ↗](https://github.com/seaweedfs/seaweedfs/wiki/FUSE-Mount).
+- A bare `weed mount` favours throughput and caches reads locally, so the mount process can grow to hundreds of MB under load. Cap it with `-cacheCapacityMB`, `-concurrentWriters` and `-chunkSizeLimitMB` if RAM matters more, see the [`weed mount` options ↗](https://github.com/seaweedfs/seaweedfs/wiki/FUSE-Mount).
 - The mount is only available while the container runs, not during the build or the [runtime prepare](/features/pipeline#runtime-prepare-phase-optional) phase.
 
 :::note Shortcut: `zsc shared-storage mount`
-`zsc shared-storage mount <hostname>` does the same thing with the flags above baked in: it creates `/mnt/<hostname>`, gives it to the `zerops` user and mounts the filer of the first container (`node-stable-1.db.<hostname>.zerops:8888`) there. It exists for backwards compatibility with the deprecated Shared Storage and stays available, see the [zsc reference](/references/zsc#shared-storage).
+`zsc shared-storage mount <hostname>` does the same thing with a RAM-lean tuning baked in: it creates `/mnt/<hostname>`, gives it to the `zerops` user and mounts the filer of the first container (`node-stable-1.db.<hostname>.zerops:8888`) there, passing `-volumeServerAccess=direct -cacheCapacityMB=0 -concurrentWriters=1 -chunkSizeLimitMB=1` so the mount process stays around 100-150 MB at the cost of throughput. It exists for backwards compatibility with the deprecated Shared Storage and stays available, see the [zsc reference](/references/zsc#shared-storage).
 :::
 
 ### Mounting in init commands
@@ -5761,14 +5761,14 @@ zerops:
       start: npm start
 ```
 
-`--background` mounts `/mnt/<hostname>` the same way as the foreground form (same filer, same memory flags), leaves a detached `weed mount` process behind and returns once the mount is ready. Init commands run on every container start, and the command cleans up a stale mount before mounting, so a restart mounts again.
+`--background` mounts `/mnt/<hostname>` the same way as the foreground form (same filer, same tuning), leaves a detached `weed mount` process behind and returns once the mount is ready. Init commands run on every container start, and the command cleans up a stale mount before mounting, so a restart mounts again.
 
 The raw equivalent, for a custom path or options, is `weed fuse`: it takes every `weed mount` flag as an `-o` option and detaches the same way:
 
 ```yaml
       initCommands:
         - sudo mkdir -p /mnt/certs && sudo chown zerops:zerops /mnt/certs
-        - sudo /opt/zerops/bin/weed-3-85 fuse /mnt/certs -o "filer=node-stable-1.db.storage.zerops:8888,filer.path=/certs,readOnly=true,cacheCapacityMB=0,concurrentWriters=1,chunkSizeLimitMB=1"
+        - sudo /opt/zerops/bin/weed-3-85 fuse /mnt/certs -o "filer=node-stable-1.db.storage.zerops:8888,filer.path=/certs,readOnly=true"
 ```
 
 :::caution Nothing supervises a background mount
@@ -5784,7 +5784,7 @@ These apply to `weed mount` as flags (`-filer.path=/certs`) and to `weed fuse` a
 | `filer=<a>:8888,<b>:8888` | Comma-separated list of filers. In HA mode you can list both containers (`node-stable-1.db.<hostname>.zerops:8888,node-stable-2.db.<hostname>.zerops:8888`) instead of pinning the mount to one of them. |
 | `filer.path=/some/dir` | Mounts only that directory of the storage, so different services can get different subtrees of one storage. The directory is created if missing. |
 | `readOnly=true` | Read-only mount, writes fail with `Read-only file system`. |
-| `cacheCapacityMB`, `concurrentWriters`, `chunkSizeLimitMB` | Memory trade-offs described above. |
+| `cacheCapacityMB`, `concurrentWriters`, `chunkSizeLimitMB` | Memory vs. throughput trade-offs. The `zsc` shortcut sets them to `0`, `1` and `1` to keep the mount process RAM-lean. |
 | `allowOthers=false` | Restricts the mount to the user that mounted it (root when started with `sudo`), the default `true` lets the `zerops` user in. |
 | `allowOthers=false` | Restricts the mount to the user that mounted it (root when started with `sudo`), the default `true` lets the `zerops` user in. |
 
@@ -5848,7 +5848,7 @@ The number of containers is fixed by the deployment mode. If you need to limit t
 
 ## Health Monitoring
 
-Zerops checks the master (`/cluster/healthz`), the volume server (`/status`) and the filer of every container and shows the result on the service detail page. The SeaweedFS logs of every component are in the service's **Runtime Logs**, the logs of a mount process are in the runtime logs of the service that runs it, under the name of the start command.
+Zerops checks the volume server (`/status`) and the filer of every container, plus the master (`/cluster/healthz`) on the container that runs it, and shows the result on the service detail page. The SeaweedFS logs of every component are in the service's **Runtime Logs**, the logs of a mount process are in the runtime logs of the service that runs it, under the name of the start command.
 
 ## Backup and Recovery
 
@@ -5921,11 +5921,11 @@ zerops:
 
 The `-filer` address is `node-stable-1.db.<hostname>.zerops:8888`, where `storage` is the **hostname of your SeaweedFS service** (the former Shared Storage service, its hostname did not change) and `8888` is the filer port. `node-stable-1.db.<hostname>.zerops` is the fixed name of the service's first container, which is where the managed mount always connected. In HA mode the second container is `node-stable-2.db.<hostname>.zerops`, and `<hostname>.zerops:8888` alone resolves to the filer HTTP API too. A service that mounted several storages gets one such entry per storage.
 
-:::note Memory-saving flags of the managed mount
-The managed mount ran `weed mount` with `-volumeServerAccess=direct -cacheCapacityMB=0 -concurrentWriters=1 -chunkSizeLimitMB=1`, which disables the local read cache and shrinks the write buffers so the mount process stays around 100-150 MB of RAM. Without them the process can grow well beyond that under load. Append them to the command above if the container's RAM is tight, see [Mounting from a runtime service](/seaweedfs/overview#mounting-from-a-runtime-service) for what they do.
+:::note How the managed mount is tuned
+The managed mount (and `zsc shared-storage mount`) runs `weed mount` with `-volumeServerAccess=direct -cacheCapacityMB=0 -concurrentWriters=1 -chunkSizeLimitMB=1`: no local read cache and minimal write buffers, so the mount process stays around 100-150 MB of RAM at the cost of throughput. A bare `weed mount` favours speed and can grow well beyond that under load - tune the flags to your own workload, see [Mounting from a runtime service](/seaweedfs/overview#mounting-from-a-runtime-service).
 :::
 
-The equivalent one-liner is `zsc shared-storage mount storage`, which stays available as a [shortcut](/references/zsc#shared-storage). It runs exactly what the managed mount ran: the filer address above, the mount at `/mnt/<hostname>` owned by the `zerops` user, and the memory-saving flags:
+The equivalent one-liner is `zsc shared-storage mount storage`, which stays available as a [shortcut](/references/zsc#shared-storage). It runs exactly what the managed mount ran: the filer address above, the mount at `/mnt/<hostname>` owned by the `zerops` user, and the tuning flags from the note above:
 
 ```yaml
         - name: storage
@@ -5947,7 +5947,7 @@ zerops:
       start: npm start
 ```
 
-The mount lands at the same `/mnt/storage`, with the same filer and memory flags, and stays mounted after the init commands finish. Init commands run on every container start, so restarts mount again. The difference to the start command form: nothing restarts the mount process if it dies. See [Mounting in init commands](/seaweedfs/overview#mounting-in-init-commands) for the raw `weed fuse` equivalent and the options it accepts (sub-path, read-only, both HA filers).
+The mount lands at the same `/mnt/storage`, with the same filer and tuning, and stays mounted after the init commands finish. Init commands run on every container start, so restarts mount again. The difference to the start command form: nothing restarts the mount process if it dies. See [Mounting in init commands](/seaweedfs/overview#mounting-in-init-commands) for the raw `weed fuse` equivalent and the options it accepts (sub-path, read-only, both HA filers).
 
 ## 2. Delete the `zeropsSharedStorageMounts` variable
 
@@ -21271,9 +21271,10 @@ Configuration is **merged at the section level** -- child values override parent
 
 Available runtimes and versions are listed in **Service Stacks (live)** -- injected by `zerops_knowledge` and workflow responses. Some key rules:
 
-- PHP: build `php@X`, run `php-nginx@X` or `php-apache@X` (different bases)
-- Deno: REQUIRES `os: ubuntu` (no Alpine build exists). Gleam runs on both Alpine and Ubuntu.
-- Static sites: build `nodejs@latest`, run `static`
+- The OS is part of the base value — `ubuntu/nodejs@22` or `alpine/nodejs@22` — with no separate `os:` field; use the same prefix in `build.base` and `run.base` (a bare `nodejs@22` resolves to Alpine, and `run.base` rewrites the service OS on deploy)
+- PHP: build `<os>/php@X`, run `<os>/php-nginx@X` or `<os>/php-apache@X` (different bases)
+- Deno: ships only as `ubuntu/deno@X` (no Alpine image). Gleam runs on both Alpine and Ubuntu.
+- Static sites: build `alpine/nodejs@latest`, run `static`
 - `@latest` = newest stable version
 
 ---
@@ -21470,11 +21471,11 @@ zerops:
           initCommands:
             - sudo mkdir -p /mnt/storage
             - sudo chown zerops:zerops /mnt/storage
-          command: sudo /opt/zerops/bin/weed-3-85 mount -filer=node-stable-1.db.storage.zerops:8888 -dir=/mnt/storage -cacheCapacityMB=0 -concurrentWriters=1 -chunkSizeLimitMB=1
+          command: sudo /opt/zerops/bin/weed-3-85 mount -filer=node-stable-1.db.storage.zerops:8888 -dir=/mnt/storage
 ```
 
-- `sudo` is passwordless on Ubuntu and Alpine runtimes. The three trailing flags cap the mount process at ~100-150 MB RAM; drop them for throughput if RAM allows. `-filer` targets one container's filer; in HA mode `node-stable-2` works too (same metadata).
-- Shortcut with identical flags, mounts at `/mnt/<hostname>` against `node-stable-1`: `command: sudo zsc shared-storage mount storage`.
+- `sudo` is passwordless on Ubuntu and Alpine runtimes. A bare mount favours throughput and can grow to hundreds of MB RAM under load; cap it with `-cacheCapacityMB` / `-concurrentWriters` / `-chunkSizeLimitMB`. `-filer` targets one container's filer; in HA mode `node-stable-2` works too (same metadata).
+- Shortcut, mounts at `/mnt/<hostname>` against `node-stable-1` with a RAM-lean tuning baked in (`-volumeServerAccess=direct -cacheCapacityMB=0 -concurrentWriters=1 -chunkSizeLimitMB=1`, ~100-150 MB): `command: sudo zsc shared-storage mount storage`.
 - The mount exists only in running containers: not during build, not during `run.prepareCommands`. There is no `run.mount` field and no import-level `mount:` (rejected with `yamlMountDeprecated`).
 - Every container of the service mounts independently; all see the same files.
 
@@ -21488,7 +21489,7 @@ zerops:
         - cp /mnt/storage/certs/app.pem /var/www/app.pem
 ```
 
-Raw form with options (`weed fuse` accepts every `weed mount` flag as `-o`): `sudo /opt/zerops/bin/weed-3-85 fuse /mnt/certs -o "filer=node-stable-1.db.storage.zerops:8888,filer.path=/certs,readOnly=true,cacheCapacityMB=0,concurrentWriters=1,chunkSizeLimitMB=1"` (create + chown the dir first). Both detach a `weed mount` child; it is re-created on every container start (init commands rerun) but **not restarted if it dies** - prefer the start command form unless init commands need the mount.
+Raw form with options (`weed fuse` accepts every `weed mount` flag as `-o`): `sudo /opt/zerops/bin/weed-3-85 fuse /mnt/certs -o "filer=node-stable-1.db.storage.zerops:8888,filer.path=/certs,readOnly=true"` (create + chown the dir first). Both detach a `weed mount` child; it is re-created on every container start (init commands rerun) but **not restarted if it dies** - prefer the start command form unless init commands need the mount.
 
 Useful options: `filer=a:8888,b:8888` (list both HA containers), `filer.path=/sub` (mount a subtree per service), `readOnly=true`, `allowOthers=false`.
 
@@ -22854,7 +22855,7 @@ The build container is **temporary** -- created on demand, destroyed after compl
 
 **Step-by-step execution order:**
 
-1. **Container creation** -- base environment from `build.base` + `build.os` (default Alpine)
+1. **Container creation** -- base environment from `build.base` (`<os>/<tech>@<ver>`; the prefix selects Alpine or Ubuntu, a bare value resolves to Alpine)
 2. **Source code download** -- from GitHub, GitLab, or zcli push to `/var/www`
 3. **Cache restoration** -- cached files moved to `/build/source` (no-clobber, source wins)
 4. **prepareCommands** -- install additional tools/packages (skipped if cache valid)
@@ -23205,7 +23206,9 @@ Four managed search engines, chosen by workload. **Meilisearch** for simple full
 # Guides > Choose Runtime Base
 
 
-**Use Alpine** as the default base for all services. Switch to Ubuntu only for **glibc** needs (musl incompatibility): CGO-enabled Go, glibc-built Python/C-extension wheels, or the **Deno** runtime (no Alpine build). Needing a package is NOT itself a reason — both bases install packages (`sudo apk add` / `sudo apt-get install`). Use Docker only for pre-built images.
+The OS is part of the base identifier, never a separate field: `alpine/<tech>@<ver>` or `ubuntu/<tech>@<ver>` — the same value in the import `type` and in both `build.base` and `run.base` of zerops.yaml. Always write the prefix: a bare `<tech>@<ver>` is legacy and resolves differently per file (import → Ubuntu, zerops.yaml → Alpine), and `run.base` rewrites the service OS on every deploy.
+
+**Prefer Alpine** for standard apps. Switch to Ubuntu only for **glibc** needs (musl incompatibility): CGO-enabled Go, glibc-built Python/C-extension wheels, or the **Deno** runtime (Ubuntu image only). Needing a package is NOT itself a reason — both bases install packages (`sudo apk add` / `sudo apt-get install`). Use Docker only for pre-built images.
 
 ## Decision Matrix
 
@@ -23501,11 +23504,11 @@ Any change to these zerops.yml fields invalidates **both layers**:
 Zerops auto-backs up databases and storage daily (00:00-01:00 UTC) with X25519 encryption; backups are retained for 7 days minimum after service/project deletion.
 
 ## Supported Services
-MariaDB, PostgreSQL, Qdrant, Elasticsearch, NATS, Meilisearch, Local Storage, SeaweedFS.
+MariaDB, PostgreSQL, Qdrant, NATS, Meilisearch, Local Storage, SeaweedFS.
 
 **ClickHouse**: not on the standard auto-backup path — back it up with the native `BACKUP ALL ...` SQL command (super user), stored as `.tar.gz`.
 
-**Not supported**: Runtimes, Object Storage (use S3 lifecycle policies), Valkey/KeyDB (in-memory).
+**Not supported**: Runtimes, Object Storage (use S3 lifecycle policies), Valkey/KeyDB (in-memory), Elasticsearch.
 
 ## Schedule Options
 - No backups
@@ -23542,7 +23545,6 @@ End-to-end with X25519 per-project keys. Decrypted only on download.
 |---------|---------------|
 | PostgreSQL | `pg_dump` → `.zip` (per-schema custom-format `-Fc` dumps) |
 | MariaDB | `mariabackup` → `.xb.gz` (xbstream + gzip) — **not** `mysqldump` (that is the manual-export tool, a different operation) |
-| Elasticsearch | elasticdump → `.gz` |
 | Meilisearch | `.dump` |
 | Qdrant | `.snapshot` |
 | NATS | `.tar.gz` |
@@ -29515,7 +29517,7 @@ Zerops provides an automated, secure backup system for supported services. This 
 
 ## Supported Services
 
-Zerops provides automated backup functionality for the following services. For specific backup format details and restore instructions, visit each service's documentation: [MariaDB](/mariadb/how-to/backup), [PostgreSQL](/postgresql/how-to/manage#backups), [Qdrant](/qdrant/overview), [Elasticsearch](/elasticsearch/overview), [NATS](/nats/overview), [Meilisearch](/meilisearch/overview), [Local Storage](/local-storage/how-to/manage#backups), and [SeaweedFS](/seaweedfs/overview#backup-and-recovery).
+Zerops provides automated backup functionality for the following services. For specific backup format details and restore instructions, visit each service's documentation: [MariaDB](/mariadb/how-to/backup), [PostgreSQL](/postgresql/how-to/manage#backups), [Qdrant](/qdrant/overview), [NATS](/nats/overview), [Meilisearch](/meilisearch/overview), [Local Storage](/local-storage/how-to/manage#backups), and [SeaweedFS](/seaweedfs/overview#backup-and-recovery).
 
 ## Managing Backups in the UI
 
@@ -31338,29 +31340,6 @@ envSecrets:
 :::note Requires Restart
 Changes to HEAP_PERCENT require a service restart to take effect.
 :::
-
-## Backup
-
-Elasticsearch backups are created using `elasticdump`:
-
-- **Format**: `.gz` (per index/component dump)
-- **Tooling**: `elasticdump`
-- **Compression**: Gzip compressed JSON data
-
-For backup configuration, scheduling, retention policies, and management options, see the [Zerops Backups](/features/backup) documentation.
-
-### Restoring Backups
-
-To restore an Elasticsearch backup:
-
-1. **Download** the backup file (`.gz`) from the Zerops UI
-2. **Extract** the compressed files to access the JSON data
-3. **Prepare** your target environment (clean existing indices or use a new instance)
-4. **Restore** using either:
-   - **elasticdump tool**: Use the same tool that created the backup for restoration via Zerops VPN or during deployment
-   - **Elasticsearch API**: Import the data through REST API [calls](https://www.elastic.co/docs/deploy-manage/tools/snapshot-and-restore/restore-snapshot)
-
-For assistance with the restoration process, contact Zerops support.
 
 ## Example Configuration
 

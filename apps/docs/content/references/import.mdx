@@ -89,22 +89,6 @@ services:
     minContainers: 2
     # Maximum number of containers
     maxContainers: 6
-    # Full nginx config
-    nginxConfig: |-
-      server {
-          listen 80 default_server;
-          listen [::]:80 default_server;
-
-          server_name _;
-          root /var/www;
-
-          location / {
-              try_files $uri $uri/ /index.html;
-          }
-
-          access_log syslog:server=unix:/dev/log,facility=local1 default_short;
-          error_log syslog:server=unix:/dev/log,facility=local1;
-      }
     # Zerops.yaml configuration
     zeropsSetup: backendapi
     zeropsYaml:
@@ -218,7 +202,6 @@ The Service Configuration section is divided into multiple subsections for bette
 - [**Service Basic Configuration**](#service-basic-configuration) - Core parameters like hostname, type, mode, and environment variables
 - [**Service Vertical Autoscaling**](#service-vertical-autoscaling) - CPU, RAM, and disk scaling settings
 - [**Service Horizontal Autoscaling**](#service-horizontal-autoscaling) - Container count scaling settings
-- [**Service Nginx Configuration**](#service-nginx-configuration) - Custom web server settings
 - [**Service zerops.yaml Configuration**](#service-zeropsyaml-configuration) - Build and run configurations
 
 <Dropdown>
@@ -278,22 +261,6 @@ services:
     # Horizontal autoscaling
     minContainers: 2                # Minimum number of containers (default: 1, max: 10)
     maxContainers: 6                # Maximum number of containers (max: 10)
-
-    # Nginx configuration
-    nginxConfig: |-                 # Custom nginx configuration
-      server {
-          listen 80 default_server;
-          listen [::]:80 default_server;
-          server_name _;
-          root /var/www/public;
-
-          location / {
-              try_files $uri $uri/ /index.html;
-          }
-
-          access_log syslog:server=unix:/dev/log,facility=local1 default_short;
-          error_log syslog:server=unix:/dev/log,facility=local1;
-      }
 
     # Zerops.yaml configuration
     zeropsSetup: backendapi          # Service setup name from zeropsYaml or repo
@@ -660,52 +627,6 @@ The `minContainers` and `maxContainers` parameters allow you to define the minim
 :::warning Removed
 The `mount:` field of the deprecated [Shared Storage](/shared-storage/overview) is no longer accepted, an import containing it fails with `yamlMountDeprecated`. Mount a [SeaweedFS](/seaweedfs/overview) service from the runtime's [`startCommands`](/zerops-yaml/specification#startcommands-) in zerops.yaml, or mount a [Local Storage](/local-storage/overview) volume through the [`volume` field](/zerops-yaml/specification#volume-). Existing setups can be moved with the [SeaweedFS migration guide](/seaweedfs/how-to/migrate-from-shared-storage).
 :::
-
-### Service Nginx Configuration
-
-The nginx configuration defines the nginx settings for the service.
-
-<table className="w-full my-1.5 whitespace-nowrap">
-  <thead>
-    <tr>
-      <th className="w-fit">Field</th>
-      <th className="w-fit">Type</th>
-      <th className="w-fit">Description</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td className="w-fit font-semibold">nginxConfig</td>
-      <td className="w-fit">string (multiline)</td>
-      <td className="w-full">Insert full nginx config.</td>
-    </tr>
-   </tbody>
-</table>
-
-```yaml
-#yamlPreprocessor=on
-services:
-  - hostname: app
-    type: php-nginx@8.4
-    enableSubdomainAccess: true
-    nginxConfig: |-
-      server {
-          listen 80 default_server;
-          listen [::]:80 default_server;
-
-          server_name _;
-          root /var/www;
-
-          location / {
-              try_files $uri $uri/ /index.html;
-          }
-
-          access_log syslog:server=unix:/dev/log,facility=local1 default_short;
-          error_log syslog:server=unix:/dev/log,facility=local1;
-      }
-```
-
-The `nginxConfig: |-` parameter allows you to specify a custom nginx configuration for the service.
 
 ### Service zerops.yaml Configuration
 
