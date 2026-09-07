@@ -6,7 +6,7 @@ desc: A comprehensive guide to Zerops' Static service, covering configuration, r
 import DeployButton from '@site/src/components/DeployButton';
 import CustomCard from '@site/src/components/CustomCard';
 
-The Static service provides a way to serve static content through a pre-configured Nginx setup. It balances simplicity with the flexibility needed for modern web applications.
+The Static service serves static files (HTML, CSS, JavaScript, images, the build output of any frontend framework) through a pre-configured Nginx. You describe redirects, headers and CORS declaratively in `zerops.yaml` and Zerops generates the Nginx configuration for you.
 
 <CustomCard title="Experience the simplicity of Zerops">
   Deploy an Analog app with static hosting in seconds. All you need is a Zerops account.
@@ -14,48 +14,124 @@ The Static service provides a way to serve static content through a pre-configur
   <DeployButton link="analog" badgeWidth="200" />
 </CustomCard>
 
+## Static or Nginx service?
+
+Zerops offers two services for static content. Both run Nginx, but they are configured differently and support different `zerops.yaml` attributes:
+
+| | Static service | [Nginx service](/nginx/overview) |
+|---|---|---|
+| `run.base` | `alpine/static` or `ubuntu/static` | `alpine/nginx@latest` or `ubuntu/nginx@latest` |
+| Nginx configuration | Generated from `run.routing` | Built-in default, or your own file via `run.siteConfigPath` |
+| Redirects, custom headers, CORS | Declarative `run.routing` | Written by you in the Nginx configuration |
+| Fallback for missing paths | `/index.html` (SPA friendly), plus extensionless `.html` pages | `/index.html` |
+| Prerender.io for crawlers | Built in, enabled by `PRERENDER_TOKEN` | Not built in |
+| Reverse proxy (`proxy_pass`), caching, rate limiting, other ports | Not available | Anything Nginx can do, in your own configuration |
+| Document root | `run.routing.root` | `run.documentRoot` |
+
+Choose **Static** when you deploy framework build output or plain files and need at most redirects, headers and CORS. Choose **Nginx** when you need Nginx directives that `routing` cannot express, typically proxying to another service, response caching, or listening on additional ports.
+
+:::caution Attributes are not interchangeable
+- `run.routing` is read only by the Static service. On any other service, including Nginx, it is silently ignored.
+- `run.documentRoot` is ignored by the Static service. Use `run.routing.root` instead.
+:::
+
+:::tip Sending paths to another service
+You do not need an Nginx service just to send `/api` to a backend. [Domain access routing](/references/networking/public-access#http-routing-setup) on the project's L7 balancer maps public paths to services and ports, so a Static frontend and an API can share one domain.
+:::
+
 ## Quick Start
 
-Add a Static service to your project by including this in your `zerops.yaml`:
+Build your frontend with any runtime and hand the output to the Static service:
 
 ```yaml title="zerops.yaml"
 zerops:
   - setup: app
+    build:
+      base: nodejs@latest
+      buildCommands:
+        - npm i
+        - npm run build
+      deployFiles:
+        - dist/~  # deploy the *contents* of dist to /var/www
     run:
-      os: alpine
-      base: static
+      base: alpine/static
 ```
 
-## Routing & Configuration
+The `~` in `dist/~` deploys the contents of `dist` directly into `/var/www`, so `index.html` ends up at the document root. If you deploy the folder as a whole (`deployFiles: - dist`), point the service at it with [`routing.root: dist`](#document-root).
 
-### Default Behavior
+If your files are already built, skip the `build` section and [deploy them with zCLI](/references/cli).
 
-Every Static service in Zerops comes with built-in defaults optimized for modern web applications, including Single Page Applications. By default, for any incoming request, the service will:
-1. Try to serve the exact path (`$uri`)
-2. Try with .html extension (`$uri.html`)
-3. Look for an index.html in the directory (`$uri/index.html`)
-4. Fall back to `/index.html` (suitable for SPAs)
-5. Return 404 if none of the above exist
+The base carries the operating system: `alpine/static` or `ubuntu/static`. The bare shorthand `static` is accepted and means `alpine/static`.
+
+## How requests are served
+
+The generated configuration serves files from the [document root](#document-root) and resolves every request in this order:
+
+1. The exact path (`$uri`)
+2. The path with `.html` appended (`$uri.html`), so `/about` serves `about.html`
+3. `index.html` inside the directory (`$uri/index.html`), so `/docs` serves `docs/index.html`
+4. `/index.html`, which makes client-side routing of Single Page Applications work
+5. HTTP 404 if `/index.html` does not exist either
+
+Other built-in behavior:
+
+- The service listens on port 80 only. HTTPS is terminated on the Zerops balancer and forwarded as plain HTTP.
+- Everything under `/.git` returns 404.
+- Gzip compression is enabled for text-based content types.
+- Prerender.io is wired in and becomes active once `PRERENDER_TOKEN` is set, see [SEO with Prerender](#seo-with-prerender).
 
 :::important SPAs
-Single Page Applications work out of the box without any additional configuration. The built-in fallback to `/index.html` ensures that client-side routing functions properly.
+Single Page Applications work out of the box. No redirects are needed for client-side routing. A consequence of the fallback is that a request for a nonexistent path returns `/index.html` with status 200, not 404.
 :::
 
-### Custom Routing Configuration
+## Document root
 
-The Static service allows you to configure additional URL routing and redirects through simple YAML configuration, abstracting away the complexity of Nginx configuration.
-
-Configure custom routing beyond the default behavior in the `run.routing` section of your `zerops.yaml`:
+By default files are served from `/var/www`, the folder your `deployFiles` land in. To serve a subfolder, set `run.routing.root`. The path is relative to `/var/www`:
 
 ```yaml title="zerops.yaml"
 run:
+  base: alpine/static
   routing:
+    root: dist  # serves /var/www/dist
+```
+
+:::caution
+`run.documentRoot` has no effect on the Static service. It is only used by the [Nginx](/nginx/how-to/build-pipeline#documentroot) and PHP services (and inside a [custom `.tmpl` configuration](#custom-nginx-configuration)).
+:::
+
+## Routing & Configuration
+
+Configure redirects, headers and CORS in the `run.routing` section of your `zerops.yaml`:
+
+```yaml title="zerops.yaml"
+run:
+  base: alpine/static
+  routing:
+    root: dist
+    cors: "*"
     redirects:
-      # Only needed for custom redirect scenarios
       - from: /special-path/*
         to: /specific-landing-page
         status: 302
+    headers:
+      - for: "/*"
+        values:
+          X-Frame-Options: "'DENY'"
 ```
+
+Zerops turns this into `location` blocks inside the generated Nginx configuration. Every deploy regenerates the configuration, so `routing` changes take effect on the next deploy.
+
+### Path matching
+
+The `from` field of a redirect and the `for` field of a header rule use the same matching rules:
+
+- **Without a wildcard** (`/about`) the rule matches that exact path only. `/about?x=1` matches (the query string is not part of the path), `/about/` and `/about/team` do not.
+- **With a trailing `*`** (`/blog/*`) the rule matches the path prefix. `/blog/`, `/blog/post` and `/blog/2024/post.html` all match. `/blog` without the trailing slash does not.
+- `*` is only supported at the end of a path. Patterns such as `/*.html` or `/*/edit` are not supported.
+- When several rules match, an exact rule wins over a prefix rule, and the longest matching prefix wins among prefix rules.
+- Path rules apply to paths only. Redirects between domains use [absolute redirects](#absolute-redirects), which are evaluated before any path rule.
+
+`/*` matches everything and is the rule to use when you want a header on all responses.
 
 ### Redirects
 
@@ -65,7 +141,7 @@ run:
 Remember that SPA routing is already built into the default behavior. You don't need to add any custom redirects for client-side routing to work.
 :::
 
-Use relative redirects to route paths within your application. When both `from` and `to` are relative paths, you can omit the `status` code to create a masked redirect that shows the content of the target page while preserving the original URL:
+When both `from` and `to` are paths, the redirect is relative. Omitting `status` creates a **masked redirect**: the content of the target is served while the URL in the browser stays the same. With a `status`, the browser receives an HTTP redirect to the target:
 
 ```yaml title="zerops.yaml"
 routing:
@@ -93,35 +169,56 @@ routing:
       status: 302
 ```
 
-:::caution Important
-When using `preservePath` with wildcards, ensure the `to` path ends with a `/` to maintain proper path concatenation. For example, `/blog/*` to `/new-blog/` will correctly redirect `/blog/hello.html` to `/new-blog/hello.html`, while `/new-blog` would result in `/new-bloghello.html`.
-:::
+- `status` can be any redirect code, typically `301`, `302`, `307` or `308`.
+- `preservePath` appends the part of the path after the wildcard to `to`. `/blog/*` to `/articles/` redirects `/blog/hello.html` to `/articles/hello.html`. End `to` with a `/`, otherwise the result is `/articleshello.html`.
+- `preserveQuery` appends the original query string. Without it the query string is dropped.
+- A masked redirect serves the target through the [default rules](#how-requests-are-served), so `to: /about-us` may resolve to `about-us.html` or `about-us/index.html`.
+- `preservePath` and `preserveQuery` are not allowed on masked redirects. Setting them fails the deploy with `Preserve path must not be set for masked redirects`. A masked redirect for a prefix (`from: /legacy/*`) simply serves the same `to` for every matching path.
 
 #### Absolute Redirects
 
-For redirecting between domains or to external URLs, use absolute redirects by including `http://` or `https://`. When using absolute URLs in either `from` or `to`, you must specify a `status` code:
+Use absolute URLs (`http://` or `https://`) to redirect between domains or to an external site. Absolute redirects require a `status`.
+
+A redirect with an **absolute `to`** and a path `from` works like a relative redirect, only the destination is external. Any status code is allowed:
 
 ```yaml title="zerops.yaml"
 routing:
   redirects:
-    # Redirect an old domain to a new one
-    - from: https://old-domain.com/*
-      to: https://new-domain.com
-      status: 301
-      preserveQuery: true  # Optional: maintain query parameters
-
-    # Redirect with path preservation
-    - from: https://old-site.com/*
-      to: https://new-site.com/
+    # /docs/getting-started -> https://docs.example.com/getting-started
+    - from: /docs/*
+      to: https://docs.example.com/
       status: 301
       preservePath: true
 ```
 
+A redirect with an **absolute `from`** matches on the domain of the request, which is why it only makes sense for domains that are [pointed at this service](/references/networking/public-access#custom-domain-access). It is evaluated before any path rule and supports `status` `301` or `302` only:
+
+```yaml title="zerops.yaml"
+routing:
+  redirects:
+    # Redirect an old domain to a new one, keeping the query string
+    - from: https://old-domain.com/*
+      to: https://new-domain.com
+      status: 301
+      preserveQuery: true
+
+    # Redirect with path preservation: https://old-site.com/blog/x -> https://new-site.com/blog/x
+    - from: https://old-site.com/*
+      to: https://new-site.com
+      status: 301
+      preservePath: true
+```
+
+- With an absolute `from`, `preservePath` appends the complete request path (it always starts with `/`), so do **not** end `to` with a `/`.
+- The domain match is a case-insensitive substring match on `host + path`. `https://old-domain.com/*` therefore also matches `www.old-domain.com` and every other subdomain of `old-domain.com`.
+- `https://*.old-domain.com/*` matches subdomains of `old-domain.com` only, not `old-domain.com` itself.
+- `https://old-domain.com/` without the trailing `*` matches the root path of that domain only.
+
 #### Wildcard Matching
 
-Use `*` as a wildcard in your paths:
-- **At the end of a path**: Matches any subsequent content
-- **At the start of a domain** (after `https://`): Enables regex matching for subdomains
+Use `*` as a wildcard:
+- **At the end of a path** it matches the path prefix, see [path matching](#path-matching).
+- **At the start of a domain** in an absolute `from` (`https://*.domain.com/*`) it matches all subdomains.
 
 Example of domain management:
 
@@ -129,12 +226,12 @@ Example of domain management:
 run:
   routing:
     redirects:
-      # Redirect a specific domain to an article
+      # Redirect a specific domain (and its subdomains) to an article
       - from: https://promo-domain.com/*
         to: https://main-site.com/special-offer
         status: 302
 
-      # Redirect all subdomains to main site
+      # Redirect only subdomains of old-domain.com to the main site
       - from: https://*.old-domain.com/*
         to: https://main-site.com
         status: 302
@@ -142,11 +239,12 @@ run:
 
 #### Matching Priority
 
-When multiple redirects are configured, they follow Nginx's matching priority system:
+Rules are matched in this order:
 
-1. Exact matches are checked first
-2. Simple path matches (without wildcards) are checked next
-3. Pattern matches (with wildcards) are checked last
+1. Absolute redirects (matched on the request domain)
+2. Exact path rules (`from` without a wildcard)
+3. Prefix rules (`from` ending with `*`), longest prefix first
+4. The [default behavior](#how-requests-are-served) for everything else
 
 For example:
 
@@ -158,11 +256,11 @@ routing:
       to: /home
       status: 302
 
-    # Simple path match - masked redirect
+    # Exact match - masked redirect
     - from: /about
       to: /about-us
 
-    # Pattern match with path preservation
+    # Prefix match with path preservation
     - from: /blog/*
       to: /articles/
       preservePath: true
@@ -170,10 +268,11 @@ routing:
 ```
 
 In this configuration:
-- `/` will redirect to `/home` with a 302 status
-- `/about` will show content from `/about-us` but keep the URL as `/about`
-- `/blog/post-123.html` will redirect to `/articles/post-123.html`
-- Any other path will use the [default behavior](#default-behavior)
+- `/` redirects to `/home` with a 302 status
+- `/about` shows content from `/about-us` but keeps the URL as `/about`
+- `/about/` and `/about/team` do not match the exact rule and use the default behavior
+- `/blog/post-123.html` redirects to `/articles/post-123.html`
+- Any other path uses the [default behavior](#how-requests-are-served)
 
 #### Common Redirect Patterns
 
@@ -184,8 +283,10 @@ routing:
     - from: https://old-domain.com/*
       to: https://new-domain.com
       status: 301
+      preservePath: true
+      preserveQuery: true
 ```
-Use permanent (301) redirects when permanently moving content to maintain SEO value.
+Use permanent (301) redirects when permanently moving content to maintain SEO value. Both `preservePath` and `preserveQuery` keep the visitor on the same page of the new domain.
 
 **Multiple Domain Management**
 ```yaml title="zerops.yaml"
@@ -202,10 +303,21 @@ run:
         to: https://main-site.com/campaign
         status: 302
 
-      # Legacy domains and subdomains
+      # Legacy subdomains
       - from: https://*.legacy-domain.com/*
         to: https://main-site.com
         status: 302
+```
+
+**Moving a section of the site**
+```yaml title="zerops.yaml"
+routing:
+  redirects:
+    - from: /blog/*
+      to: /articles/
+      status: 301
+      preservePath: true
+      preserveQuery: true
 ```
 
 ### CORS Configuration
@@ -222,11 +334,13 @@ run:
     cors: "'*' always"
 ```
 
-The `cors` directive sets the following headers:
+The `cors` directive sets the following headers on every response, including redirects:
 - `Access-Control-Allow-Origin`
 - `Access-Control-Allow-Methods`
 - `Access-Control-Allow-Headers`
 - `Access-Control-Expose-Headers`
+
+All four headers receive the same value. If you need different values per header, set them individually with the [`headers`](#custom-headers) directive instead.
 
 :::note
 The `cors` directive has a special case: if you specify just `"*"`, it's automatically converted to `'*'`. For any other values, you need to include the proper Nginx syntax including quotes.
@@ -234,13 +348,13 @@ The `cors` directive has a special case: if you specify just `"*"`, it's automat
 
 ### Custom Headers
 
-For more control over HTTP headers, use the `headers` directive:
+For more control over HTTP headers, use the `headers` directive. The `for` field uses the same [path matching](#path-matching) as redirects, so use `"/*"` to cover the whole site. `"/"` alone would match the homepage only:
 
 ```yaml title="zerops.yaml"
 run:
   routing:
     headers:
-      - for: "/"
+      - for: "/*"
         values:
           # All values need proper quoting since they're inserted directly into Nginx
           X-Frame-Options: "'DENY'"
@@ -262,7 +376,7 @@ Here are examples for different header scenarios:
 
 ```yaml title="zerops.yaml"
 headers:
-  - for: "/"
+  - for: "/*"
     values:
       # Simple header with proper quoting
       X-Frame-Options: "'DENY'"
@@ -290,9 +404,12 @@ add_header Content-Security-Policy "default-src 'self' https://cdn.example.com; 
 ```
 
 :::important Path Handling
-When you specify headers for a path that doesn't have an existing location block, the Static service automatically creates a location with the same [default behavior](#default-behavior) as the root path (trying files in order: `$uri`, `$uri.html`, `$uri/index.html`, `/index.html` or returning 404).
+Headers are attached to the matched location, and only the single best-matching rule applies to a request. Rules are not merged:
 
-If you add headers for a path that already has a location block, your headers will be merged with the existing configuration.
+- A request for `/docs/page` with rules for `/*` and `/docs/*` receives only the `/docs/*` headers. Repeat the site-wide headers in the more specific rule if you need both.
+- A redirect defined in `redirects` does not pick up headers from a broader rule such as `/*`, only the [`cors`](#cors-configuration) headers. To add headers to a redirect response, add a header rule with the same `for` path as the redirect's `from`. The two are merged.
+- A header rule for a path without a redirect serves files with the same [default behavior](#how-requests-are-served) as the rest of the site.
+- Without `always`, Nginx adds a header only to 2xx, 3xx and 304 responses, so use `always` for headers that must be present on error pages too.
 :::
 
 ### Combining CORS and Custom Headers
@@ -304,7 +421,7 @@ run:
   routing:
     cors: "'*' always"
     headers:
-      - for: "/"
+      - for: "/*"
         values:
           X-Frame-Options: "'DENY'"
 ```
@@ -319,12 +436,14 @@ If you specify Access-Control headers in the `headers` directive, they will over
 
 Single Page Applications render content with JavaScript, which most crawlers can't process—they see an empty page instead of your content. This affects traditional search engines, social media platforms, and AI tools like ChatGPT, Perplexity, and Claude.
 
-The Static service includes built-in support for Prerender.io, which automatically detects crawlers and serves them pre-rendered HTML while your users get the full interactive experience.
+The Static service includes built-in support for [Prerender.io](https://prerender.io), which automatically detects crawlers (search engines, social media link previews, SEO tools and AI bots) and serves them pre-rendered HTML while your users get the full interactive experience. Requests for assets such as scripts, styles and images are never prerendered.
 
 ### Setup
 
-1. Set the `PRERENDER_TOKEN` secret variable with your Prerender.io token
-2. The service automatically configures necessary rewrites based on user agents
+1. Set the `PRERENDER_TOKEN` [secret variable](/features/env-variables) with your Prerender.io token
+2. Restart the service (or trigger a new deploy). The Nginx configuration is generated when a container starts, so it picks the token up on the next start
+
+No changes to `zerops.yaml` are needed.
 
 ### Custom Prerender Host
 
@@ -333,7 +452,7 @@ If you're using a custom Prerender host, add it to environment variables in `zer
 ```yaml title="zerops.yaml"
 run:
   envVariables:
-  - PRERENDER_HOST=your.prerender.host
+    PRERENDER_HOST: your.prerender.host
 ```
 
 :::note Default
@@ -355,10 +474,10 @@ zerops:
       deployFiles:
         - dist/~  # Your framework's output directory
     run:
-      base: static
+      base: alpine/static
 ```
 
-The key is pointing `deployFiles` to wherever your framework outputs its built files (`dist/`, `build/`, `.output/public/`, etc.).
+The key is pointing `deployFiles` to wherever your framework outputs its built files (`dist/`, `build/`, `.output/public/`, etc.). The trailing `/~` deploys the folder's contents to the document root.
 
 This configuration:
 1. Uses Node.js for building the application
@@ -374,6 +493,20 @@ For framework-specific examples, check out our [recipe collection](https://githu
 
 ## Advanced Topics
 
+### Custom Nginx configuration
+
+The Static service also accepts your own Nginx configuration through `run.siteConfigPath`, the same attribute the [Nginx service](/nginx/how-to/customize-web-server) uses. The configuration is chosen with this precedence:
+
+1. `run.routing` is set: the configuration is generated from it and `siteConfigPath` is ignored
+2. Only `run.siteConfigPath` is set: your file is used as the complete `server` configuration
+3. Neither is set: the generated default configuration is used
+
+A `.tmpl` file is rendered as a Go template with `{{.DocumentRoot}}` (the value of `run.documentRoot`, `/var/www` when unset) and `{{.Environment.NAME}}` for environment variables. Any other extension is copied verbatim. See the [Nginx service guide](/nginx/how-to/customize-web-server#customize-nginx-configuration) for the requirements a custom configuration must meet.
+
+:::tip
+If you find yourself writing a custom configuration, consider switching to the [Nginx service](/nginx/overview). It is the same Nginx with `documentRoot` and `siteConfigPath` as first-class options, and it is what the rest of the documentation assumes for hand-written configurations.
+:::
+
 ### Switching to Full Nginx
 
 If you need more control over your Nginx configuration:
@@ -383,6 +516,10 @@ If you need more control over your Nginx configuration:
 3. Select **Need to switch to full Nginx service?**
 4. Copy the generated Nginx configuration
 5. Use this configuration as a starting point for a full Nginx service
+
+The same file is available inside any running container of the service at `/etc/nginx/sites-enabled/default.site`, for example over [SSH](/references/networking/ssh).
+
+To migrate, change `run.base` to `alpine/nginx@latest` (or `ubuntu/nginx@latest`), replace `run.routing` with `run.siteConfigPath` pointing at the copied configuration (with the `root` directive adjusted or replaced by `{{.DocumentRoot}}`), and remove `routing`, since the Nginx service ignores it. Prerender.io support is part of the generated configuration and will be carried over with it.
 
 :::tip
 This allows you to move to a more customizable setup while maintaining your existing routing logic.
@@ -406,7 +543,7 @@ run:
         to: https://main-site.com/campaign
         status: 302
 
-      # Legacy domains and subdomains
+      # Legacy subdomains
       - from: https://*.legacy-domain.com/*
         to: https://main-site.com
         status: 302
@@ -416,7 +553,7 @@ run:
 
 ### Development Setup
 
-Configuration for local development with CORS and API proxying:
+Configuration for a development environment with CORS and an API on another domain:
 
 ```yaml title="zerops.yaml"
 run:
@@ -424,11 +561,17 @@ run:
     # CORS with proper quoting
     cors: "'*' always"
     redirects:
-      # API requests
+      # Send browsers calling /api/... to the API domain
       - from: /api/*
-        to: https://api.your-domain.com
-        status: 302
+        to: https://api.your-domain.com/
+        status: 307
+        preservePath: true
+        preserveQuery: true
 ```
+
+:::note
+This is a browser redirect, not a reverse proxy. The Static service cannot proxy requests. To serve an API under the same domain as the frontend, use [domain access routing](/references/networking/public-access#http-routing-setup) or the [Nginx service](/nginx/overview) with a `proxy_pass` configuration.
+:::
 
 ### Production Setup with Security
 
@@ -438,7 +581,7 @@ Security-enhanced configuration for production environments:
 run:
   routing:
     headers:
-      # Custom headers for default location
+      # Custom headers for the whole site
       - for: "/*"
         values:
           X-Frame-Options: "'DENY' always"

@@ -11,6 +11,10 @@ import ResourceTable from '/src/components/ResourceTable';
 
 The Nginx static service contains the Nginx web server optimized for your static content. Nginx static service is highly scalable and customisable to suit both development and production.
 
+:::tip
+If you only need redirects, headers and CORS on top of your static files, the [Static service](/static/overview) configures them declaratively without any Nginx configuration. See [Static or Nginx?](/static/overview#static-or-nginx-service).
+:::
+
 ## Create Nginx static service using Zerops GUI
 
 First, set up a project in Zerops GUI. Then go to the project dashboard page and choose **Add new service** in the left menu in the **Services** block. Then add a new Nginx static service:
@@ -84,11 +88,11 @@ project:
 services:
   - # service name
     hostname: app
-    # service type and version number in nginx@{version} format
-    type: nginx@latest
+    # service type, OS and version number in {os}/nginx@{version} format
+    type: ubuntu/nginx@latest
     # defines the minimum number of containers for horizontal autoscaling
     minContainers: 1
-    # defines the maximum number of containers for horizontal autoscaling. Max value = 6.
+    # defines the maximum number of containers for horizontal autoscaling.
     maxContainers: 6
     # optional: create env variables
     envSecrets:
@@ -96,7 +100,7 @@ services:
       S3_ACCESS_SECRET: 'ogFthuiLYki8XoL73opSCQ'
 ```
 
-The yaml file describes your future project infrastructure. The project will contain one Nginx version 8.1 service with default [auto scaling](/nginx/how-to/scaling) configuration. Hostname will be set to "app", the internal port(s) the service listens on will be defined later in the [zerops.yaml](/nginx/how-to/build-pipeline#ports). Following secret env variables will be configured:
+The yaml file describes your future project infrastructure. The project will contain one Nginx version 1.22 service with default [auto scaling](/nginx/how-to/scaling) configuration. Hostname will be set to "app", the internal port(s) the service listens on will be defined later in the [zerops.yaml](/nginx/how-to/build-pipeline#ports). Following secret env variables will be configured:
 
 ```env
 S3_ACCESS_KEY_ID="P8cX1vVVb"
@@ -122,8 +126,8 @@ project:
 services:
   - # service name
     hostname: app
-    # service type and version number in nginx@{version} format
-    type: nginx@latest
+    # service type, OS and version number in {os}/nginx@{version} format
+    type: ubuntu/nginx@latest
     # optional: vertical auto scaling customization
     verticalAutoscaling:
       cpuMode: DEDICATED
@@ -136,9 +140,9 @@ services:
       startCpuCoreCount: 3
       minFreeRamGB: 0.5
       minFreeRamPercent: 20
-    # defines the minimum number of containers for horizontal autoscaling. Max value = 6.
+    # defines the minimum number of containers for horizontal autoscaling.
     minContainers: 2
-    # defines the maximum number of containers for horizontal autoscaling. Max value = 6.
+    # defines the maximum number of containers for horizontal autoscaling.
     maxContainers: 4
     # optional: create secret env variables
     envSecrets:
@@ -344,11 +348,11 @@ project:
 services:
   - # service name
     hostname: app
-    # service type and version number in nginx@{version} format
-    type: nginx@latest
+    # service type, OS and version number in {os}/nginx@{version} format
+    type: ubuntu/nginx@latest
     # defines the minimum number of containers for horizontal autoscaling
     minContainers: 1
-    # defines the maximum number of containers for horizontal autoscaling. Max value = 6.
+    # defines the maximum number of containers for horizontal autoscaling.
     maxContainers: 6
     # optional: create env variables
     envSecrets:

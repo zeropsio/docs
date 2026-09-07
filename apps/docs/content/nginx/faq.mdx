@@ -6,7 +6,13 @@ description: Get quick answers to your related questions about Nginx from freque
 import { FAQ, FAQItem } from '/src/components/Faq';
 
 <FAQ>
+  <FAQItem question="What is the difference between the Nginx service and the Static service?">
+    Both serve static files with Nginx. The [Static service](/static/overview) generates the Nginx configuration from a declarative `run.routing` section (redirects, headers, CORS) and has Prerender.io built in. The Nginx service gives you the default configuration or your own file via `run.siteConfigPath`, which is the way to go for `proxy_pass`, caching or extra ports. See the [comparison](/static/overview#static-or-nginx-service).
+  </FAQItem>
+  <FAQItem question="Why is my run.routing section ignored?">
+    `run.routing` is only read by the Static service. The Nginx service ignores it without an error. Either switch `run.base` to `alpine/static`, or express the redirects and headers in a custom configuration set via [`siteConfigPath`](/nginx/how-to/customize-web-server).
+  </FAQItem>
   <FAQItem question="How do I enable SEO optimization with prerender.io?">
-    Zerops provides built-in prerender.io support. Simply set the `PRERENDER_TOKEN` environment variable with your prerender.io service token. See our [prerender.io documentation](/nginx/how-to/env-variables#prerenderio-support) for details.
+    Prerender.io support is built into the [Static service](/static/overview#seo-with-prerender), not into the Nginx service. On the Nginx service you can add the prerender rules to your own configuration set via [`siteConfigPath`](/nginx/how-to/customize-web-server), or switch to the Static service.
   </FAQItem>
 </FAQ>
