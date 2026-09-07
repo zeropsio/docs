@@ -15,6 +15,11 @@ server {
     server_name _;
     root {{.DocumentRoot}};
 
+    location ^~ /.git {
+        deny all;
+        return 404;
+    }
+
     location / {
         try_files $uri $uri/ /index.html;
     }
@@ -24,15 +29,23 @@ server {
 }
 ```
 
-The configuration contains 2 variables:
+The configuration contains one variable:
 
 - **`{{.DocumentRoot}}`** is replaced by the <a href="/nginx/how-to/build-pipeline#documentroot">`run.documentRoot`</a> attribute from the `zerops.yaml`. If the attribute is not specified, the default value `/var/www` is used.
+
+With this configuration a request is served from the exact path, then from `index.html` inside a directory (a request for `/docs` is redirected to `/docs/` first), and falls back to `/index.html` for everything else, which makes client-side routing of Single Page Applications work. Extensionless URLs such as `/about` for `about.html` are **not** resolved, and anything under `/.git` returns 404. Requests for a nonexistent path return `/index.html` with status 200, not 404.
+
+The surrounding `nginx.conf` enables gzip for text-based content types, hides the Nginx version and allows request bodies up to 10 GB.
+
+:::note
+Redirects, custom headers and CORS have no declarative configuration on the Nginx service. Write them in your own configuration as described below. The `run.routing` section of `zerops.yaml` belongs to the [Static service](/static/overview#routing--configuration) and is ignored here.
+:::
 
 ## Customize Nginx configuration
 
 Follow these steps to customize the Nginx configuration in Nginx static service:
 
-1. Create a **.tmpl** file with the Nginx configuration in your repository.
+1. Create a **.tmpl** file with the Nginx configuration in your repository. The file replaces the whole default `server` block shown above, so start from a copy of it.
 
 2. Optionally use following variables:
 
@@ -46,8 +59,16 @@ root {{.DocumentRoot}};
 
 - **`{{.Environment.ENV_NAME}}`** is replaced by the [env variable](/nginx/how-to/env-variables) value. The env variable must be either defined in [run.envVariables](/nginx/how-to/build-pipeline#envvariables) in `zerops.yaml` or set as a [secret](/nginx/how-to/env-variables#set-secret-env-variables-in-zerops-gui) or [generated](/nginx/how-to/env-variables#generated-env-variables) env variable in Zerops GUI.
 
+Example:
+
+```
+location /api/ {
+    proxy_pass http://{{.Environment.API_HOSTNAME}}:3000/;
+}
+```
+
 :::caution
-Use the **.tmpl** file extension to make Zerops interpret the file as a template. Zerops will replace the supported variables listed above.
+Use the **.tmpl** file extension to make Zerops interpret the file as a template. Zerops will replace the supported variables listed above. A file with any other extension is copied to Nginx verbatim, without variable replacement.
 :::
 
 3. Check that your Nginx configuration is consistent with Zerops requirements:
@@ -55,6 +76,7 @@ Use the **.tmpl** file extension to make Zerops interpret the file as a template
 - Do not use IP addresses in the `listen` directive
 - If you use other ports than `:80` in the `listen` directive, add them to the <a href="/nginx/how-to/build-pipeline#ports">`run.ports`</a> in your `zerops.yaml` as well.
 - Do not use the port **:443**. All the incoming `https://` traffic is terminated on the Zerops internal balancer where the SSL certificate is installed and the request is forwarded to your Nginx static service as a **http://** on the port **:80**.
+- Keep the `access_log` and `error_log` directives from the default configuration so that the logs show up in Zerops.
 
 4. Add the <a href="/nginx/how-to/build-pipeline#siteconfigpath">`siteConfigPath`</a> to the run section of your `zerops.yaml`
 
@@ -67,37 +89,72 @@ zerops:
       # REQUIRED. Set the base technology for the build environment:
       base: nodejs@latest
 
+      buildCommands:
+        - npm i
+        - npm run build
+
       # REQUIRED. Select which files / folders to deploy after
       # the build has successfully finished
       deployFiles:
-        - vendor
-        - public
+        - dist
+        - site_config.tmpl
 
     # ==== how to run your application ====
     run:
-      documentRoot: public
+      base: alpine/nginx@latest
 
-      # OPTIONAL. Sets the custom Nginx or Apache configuration. The file must be deployed in the runtime container. Enter the path to the file relative to the /var/www folder
+      # OPTIONAL. Folder served by Nginx, relative to /var/www
+      documentRoot: dist
+
+      # OPTIONAL. Sets the custom Nginx configuration. The file must be deployed in the runtime container. Enter the path to the file relative to the /var/www folder
       siteConfigPath: site_config.tmpl
 ```
 
 5. Ensure that the <a href="/nginx/how-to/build-pipeline#deployfiles">`build.deployFiles`</a> contains the folder with the `siteConfigPath` or add the path to the Nginx config file to the `deployFiles` list. Zerops will deploy the file to the runtime container(s).
 
-6. [Trigger](/nginx/how-to/trigger-pipeline) the build & deploy pipeline.
+:::tip
+Everything under the document root is publicly served, including a configuration file deployed there. Keep the configuration outside the `documentRoot` folder (as in the example above, where `documentRoot` is `dist` and the template sits next to it in `/var/www`).
+:::
+
+6. [Trigger](/nginx/how-to/trigger-pipeline) the build & deploy pipeline. The configuration is applied every time a container starts, and the deploy fails if the file is missing.
+
+## Common customizations
+
+Serve extensionless `.html` pages and keep the SPA fallback:
+
+```
+location / {
+    try_files $uri $uri.html $uri/index.html /index.html =404;
+}
+```
+
+Redirect an old path permanently:
+
+```
+location = /old-page {
+    return 301 /new-page;
+}
+```
+
+Add headers to every response:
+
+```
+add_header X-Frame-Options 'DENY' always;
+add_header X-Content-Type-Options 'nosniff' always;
+```
+
+Proxy a path to another service of the project (the hostname is the other service's name):
+
+```
+location /api/ {
+    proxy_pass http://api:3000/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+}
+```
 
 ## SEO & Prerender Support
 
-Single Page Applications and JavaScript-heavy sites render content client-side, which most crawlers can't process—they see an empty page instead of your content. This affects traditional search engines, social media platforms, and AI tools like ChatGPT, Perplexity, and Claude.
+Prerender.io support is not part of the default Nginx service configuration. It is built into the [Static service](/static/overview#seo-with-prerender), which enables it as soon as `PRERENDER_TOKEN` is set.
 
-### Built-in Prerender.io Integration
-
-The default Nginx configuration includes automatic [Prerender.io](https://prerender.io) support. When enabled, it detects crawler requests (including AI crawlers) and serves them pre-rendered HTML while your users get the full interactive experience.
-
-### Setup
-
-To enable prerender support:
-
-1. Set the `PRERENDER_TOKEN` environment variable with your Prerender.io token (see [environment variables](/nginx/how-to/env-variables#prerenderio-support))
-2. Optionally set `PRERENDER_HOST` if using a custom prerender server
-
-The Nginx configuration will automatically handle the rest—no additional configuration needed.
+If you need prerendering together with a hand-written Nginx configuration, either start from the configuration generated by a Static service (open the Static service in the GUI and choose **Need to switch to full Nginx service?**, or copy `/etc/nginx/sites-enabled/default.site` from one of its containers) or add the [Prerender.io Nginx snippet](https://docs.prerender.io/docs/nginx-2) to your own template.

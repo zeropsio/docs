@@ -8,6 +8,10 @@ import UnorderedCodeList from 'docs/src/components/UnorderedCodeList';
 
 Zerops provides a customizable build and runtime environment for your static content.
 
+:::note Nginx service vs Static service
+This page covers the Nginx service (`run.base: alpine/nginx@latest` or `ubuntu/nginx@latest`). The [Static service](/static/overview) (`run.base: alpine/static`) uses the same build and deploy pipeline but is configured through `run.routing` instead of `documentRoot` and `siteConfigPath`. The `run.routing` section is ignored by the Nginx service. See [Static or Nginx?](/static/overview#static-or-nginx-service).
+:::
+
 :::tip Two Deployment Approaches
 You can use the Nginx service in two ways:
 - **Runtime only**: Deploy pre-built static files directly (no build phase needed)
@@ -35,9 +39,6 @@ zerops:
       # REQUIRED (if using build). Set the base technology for the build environment:
       base: nodejs@latest
 
-      # OPTIONAL. Set the operating system for the build environment.
-      # os: ubuntu
-
       # OPTIONAL. Customize the build environment by installing additional packages
       # or tools to the base build environment.
       # prepareCommands:
@@ -62,8 +63,8 @@ zerops:
 
     # ==== how to run your application ====
     run:
-      # OPTIONAL. Sets the base technology for the runtime environment:
-      base: nginx@latest
+      # OPTIONAL. Sets the base technology and OS for the runtime environment:
+      base: alpine/nginx@latest
 
       # OPTIONAL. Customize the runtime Nginx environment by installing additional
       # dependencies to the base Nginx runtime environment.
@@ -139,14 +140,14 @@ zerops:
 
     # ==== how to run your application ====
     run:
-      # OPTIONAL. Sets the base technology for the runtime environment:
-        base: nginx@latest
+      # OPTIONAL. Sets the base technology and OS for the runtime environment:
+      base: alpine/nginx@latest
       ...
 ```
 
 <p>
   The base runtime environment contains {data.alpine.default}, the
-  selected major version of Nginx, <a href="/references/cli">Zerops command line tool</a> and `composer`, `git` and `wget`.
+  selected major version of Nginx, <a href="/references/cli">Zerops command line tool</a>, `git`, `wget` and `curl`.
 </p>
 
 :::info
@@ -169,7 +170,7 @@ zerops:
     run:
       # OPTIONAL. Sets the base technology for the runtime environment:
       base:
-        - nginx@latest
+        - alpine/nginx@latest
       prepareCommands:
         - zsc add go@latest
       ...
@@ -181,14 +182,7 @@ To customize your build environment use the `prepareCommands` attribute.
 
 ### os
 
-_OPTIONAL._ Sets the operating system for the runtime environment.
-
-Following options are available:
-
-- `alpine`
-- `ubuntu`
-
-Default value is `alpine`.
+_DEPRECATED._ The operating system is part of the `base` value: `alpine/nginx@latest` or `ubuntu/nginx@latest`. Do not set `os` separately.
 
 We are currently using following os version:
 
@@ -250,7 +244,7 @@ _OPTIONAL._ Customizes the Nginx runtime environment by installing additional de
 
 <p>
   The base Nginx environment contains {data.alpine.default}, the selected
-  major version of Nginx, <a href="/references/cli">Zerops command line tool</a> and `composer`, `git` and `wget`. To install
+  major version of Nginx, <a href="/references/cli">Zerops command line tool</a>, `git`, `wget` and `curl`. To install
   additional packages or tools add one or more prepare commands:
 </p>
 
@@ -314,7 +308,7 @@ You can configure your prepare commands to be run in a single shell instance or 
 
 <p>
   The prepare runtime container contains {data.alpine.default}, the
-  selected major version of Nginx, <a href="/references/cli">Zerops command line tool</a> and `composer`, `git` and `wget`.
+  selected major version of Nginx, <a href="/references/cli">Zerops command line tool</a>, `git`, `wget` and `curl`.
 </p>
 
 The prepare runtime container does not contain your application code nor the built application. If you need to copy some folders or files from the build container to the runtime container (e.g. a configuration file) use the `addToRunPrepare` attribute in the build section of your chosen technology.
@@ -412,11 +406,29 @@ zerops:
 _OPTIONAL._ Sets the custom Nginx configuration.
 
 :::info
-If you don't set your custom configuratiin Zerops applies the [default](/nginx/how-to/customize-web-server#default-nginx-configuration) configuration.
+If you don't set your custom configuration Zerops applies the [default](/nginx/how-to/customize-web-server#default-nginx-configuration) configuration.
 :::
 
-The file must be deployed in the runtime container. Enter the path to the file relative to the `/var/www` folder.
+The file must be deployed in the runtime container. Enter the path to the file relative to the `/var/www` folder. A file with the `.tmpl` extension is rendered as a template (`{{.DocumentRoot}}`, `{{.Environment.NAME}}`), any other file is used verbatim.
 Read more about the [web server customization](/nginx/how-to/customize-web-server).
+
+```yaml
+zerops:
+  # hostname of your service
+  - setup: app
+    # ==== how to build your application ====
+    build:
+      ...
+      deployFiles:
+        - dist
+        - site_config.tmpl
+
+    # ==== how to run your application ====
+    run:
+      documentRoot: dist
+      # OPTIONAL. Path to your Nginx configuration, relative to /var/www.
+      siteConfigPath: site_config.tmpl
+```
 
 ### envVariables
 

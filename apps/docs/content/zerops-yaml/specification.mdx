@@ -140,10 +140,7 @@ build:
 
 ### os <Badge type="optional" />
 
-Sets the operating system for the build environment. Options:
-
-- `alpine` (default)
-- `ubuntu` (default for ubuntu service)
+Deprecated. The operating system is part of the `base` value, for example `ubuntu/nodejs@22` or `alpine/nodejs@22`. Use the OS-prefixed form in both `build.base` and `run.base` instead of setting `os`. A bare `nodejs@22` defaults to Alpine.
 
 Current versions:
 
@@ -152,7 +149,7 @@ Current versions:
 
 ```yaml
 build:
-  os: ubuntu
+  base: ubuntu/nodejs@22
 ```
 
 ### prepareCommands <Badge type="optional" />
@@ -355,7 +352,7 @@ run:
 
 ### os <Badge type="optional" />
 
-Sets the operating system for the runtime environment. Options and versions are the same as for the build environment.
+Deprecated, same as for the build environment: put the OS into `run.base` (`ubuntu/nodejs@22`) instead.
 
 ### ports <Badge type="optional" />
 
@@ -460,11 +457,23 @@ See [start-commands-example](https://github.com/zeropsio/start-commands-example)
 
 ### documentRoot <Badge type="optional" />
 
-Customizes the root folder for publicly accessible web server content (available only for webserver runtimes).
+Customizes the root folder for publicly accessible web server content. The path is relative to `/var/www`. Available for the [Nginx](/nginx/how-to/build-pipeline#documentroot) and [PHP](/php/how-to/build-pipeline#documentroot) services. The [Static service](/static/overview#document-root) ignores it, use `routing.root` there.
+
+```yaml
+run:
+  base: alpine/nginx@latest
+  documentRoot: dist
+```
 
 ### siteConfigPath <Badge type="optional" />
 
-Sets the custom webserver configuration (available only for webserver runtimes).
+Sets the custom webserver configuration for the [Nginx](/nginx/how-to/customize-web-server), [PHP](/php/how-to/customize-web-server) and [Static](/static/overview#custom-nginx-configuration) services. The path is relative to `/var/www` and the file must be part of the deployed files. A `.tmpl` file is rendered as a template with `{{.DocumentRoot}}` and `{{.Environment.NAME}}`, any other file is used verbatim. On the Static service `routing` takes precedence: when both are set, `siteConfigPath` is ignored.
+
+```yaml
+run:
+  base: alpine/nginx@latest
+  siteConfigPath: site_config.tmpl
+```
 
 ### envVariables <Badge text="Optional" color="#202e57" />
 
@@ -548,12 +557,13 @@ The placeholder gets replaced with the actual JWT public key during deployment.
 
 ### routing <Badge type="optional" />
 
-Configures URL routing, redirects, and HTTP headers (only for Static services).
+Configures the document root, redirects, CORS and HTTP headers of the [Static service](/static/overview#routing--configuration). Any other service, including the Nginx service, ignores this section without an error.
 
 ```yaml
 run:
+  base: alpine/static
   routing:
-    root: /custom/root
+    root: dist
     cors: "'*' always"
     redirects:
       - from: /old-path
@@ -568,31 +578,31 @@ run:
 Available parameters:
 
 #### root <Badge type="optional" />
-Sets a custom root directory for the service.
+Sets the folder served by the service, relative to `/var/www` (default `/var/www` itself). This is the Static service's equivalent of `documentRoot`.
 - Type: `string`
 
 #### cors <Badge type="optional" />
 Enables CORS headers for cross-origin requests.
 - Type: `string`
-- Sets `Access-Control-Allow-Origin`, `Access-Control-Allow-Methods`, `Access-Control-Allow-Headers`, and `Access-Control-Expose-Headers`
+- Sets `Access-Control-Allow-Origin`, `Access-Control-Allow-Methods`, `Access-Control-Allow-Headers`, and `Access-Control-Expose-Headers`, all to the same value
 - Special case: `"*"` is automatically converted to `'*'`
 
 #### redirects <Badge type="optional" />
 Defines URL redirects and rewrites.
 - Type: `array of objects`
 - Each redirect object supports:
-  - **from** <Badge type="required" /> - Source path to match ([supports wildcards](/static/overview#wildcard-matching) with `*`)
-  - **to** <Badge type="required" /> - Destination path
-  - **status** <Badge type="optional" /> - HTTP status code (required for absolute URLs)
-  - **preservePath** <Badge type="optional" /> - Preserve path after wildcard match
-  - **preserveQuery** <Badge type="optional" /> - Preserve query parameters
+  - **from** <Badge type="required" /> - Source path to match. Without `*` it matches the exact path, with a trailing `*` it matches the path prefix ([path matching](/static/overview#path-matching)). An absolute URL (`https://old-domain.com/*`) matches on the request domain.
+  - **to** <Badge type="required" /> - Destination path or absolute URL
+  - **status** <Badge type="optional" /> - HTTP status code. Omit it for a masked redirect that serves the target content under the original URL. Required for absolute URLs, and limited to `301` or `302` when `from` is absolute.
+  - **preservePath** <Badge type="optional" /> - Append the part of the path after the wildcard to `to`. Not allowed on masked redirects.
+  - **preserveQuery** <Badge type="optional" /> - Append the original query string. Not allowed on masked redirects.
 
 #### headers <Badge type="optional" />
 Sets custom HTTP headers for specific paths.
 - Type: `array of objects`
 - Each header object supports:
-  - **for** <Badge type="required" /> - Path pattern to match
-  - **values** <Badge type="required" /> - Object with header name/value pairs
+  - **for** <Badge type="required" /> - Path to match, same rules as `from` (`"/*"` for the whole site, `"/"` matches the homepage only)
+  - **values** <Badge type="required" /> - Object with header name/value pairs. Values are inserted into `add_header` verbatim, so include the quotes: `X-Frame-Options: "'DENY'"`
 
 **Example usage:**
 

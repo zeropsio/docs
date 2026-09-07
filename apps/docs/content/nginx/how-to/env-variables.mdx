@@ -11,44 +11,10 @@ import EnvVariablesTemplate from '/src/components/content/env-variables.mdx';
 
 <EnvVariablesTemplate />
 
-## Prerender.io Support
+## Environment variables in the Nginx configuration
 
-Zerops provides built-in prerender.io support for SEO optimization. Configure it using these environment variables:
+Nginx itself does not read environment variables. To use them in your configuration, deploy a `.tmpl` file via [`siteConfigPath`](/nginx/how-to/customize-web-server#customize-nginx-configuration) and reference variables as `{{.Environment.NAME}}`. Zerops renders the template every time a container starts.
 
-<table className="w-fit my-1.5">
-  <thead>
-    <tr className="text-center rounded-lg">
-      <th className="w-fit"><strong>Variable</strong></th>
-      <th className="w-fit"><strong>Required</strong></th>
-      <th className="w-fit"><strong>Description</strong></th>
-      <th className="w-fit"><strong>Default</strong></th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr className="text-center">
-      <td className="w-fit">PRERENDER_TOKEN</td>
-      <td className="w-fit">Yes</td>
-      <td className="w-fit">Your prerender.io service token</td>
-      <td className="w-fit">-</td>
-    </tr>
-    <tr className="text-center">
-      <td className="w-fit">PRERENDER_HOST</td>
-      <td className="w-fit">No</td>
-      <td className="w-fit">Prerender service host</td>
-      <td className="w-fit">service.prerender.io</td>
-    </tr>
-  </tbody>
-</table>
-
-:::tip
-Set `PRERENDER_TOKEN` as a secret environment variable in Zerops GUI for security.
+:::note
+Prerender.io support (`PRERENDER_TOKEN`, `PRERENDER_HOST`) is a feature of the [Static service](/static/overview#seo-with-prerender). The Nginx service does not act on these variables.
 :::
-
-Example in zerops.yaml:
-```yaml
-zerops:
-  - setup: app
-    run:
-      envVariables:
-        PRERENDER_HOST: "custom.prerender.host"
-```
