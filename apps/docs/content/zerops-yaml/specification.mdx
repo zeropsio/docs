@@ -109,9 +109,75 @@ zerops:
 
 When using `extends`:
 - The `extends` value must refer to another service's `setup` value in the same file
-- The child service inherits all configuration from the base service
-- Configuration is merged at the section level (`build`, `run`, `deploy`)
-- You can override specific sections by redefining them
+- The child service starts as a full copy of the base service, then its own keys are applied on top
+- Merging is recursive, key by key. Redefining `run` in the child does not replace the whole `run` section, only the keys you specify inside it. The same applies to nested objects such as `healthCheck` or `readinessCheck`
+- Maps such as `envVariables` are merged: the child's keys are added to the base's keys, and a key defined in both takes the child's value. Setting a key to `null` removes the inherited variable (an empty string `""` is a regular value), and `envVariables: null` drops the whole inherited map
+- Lists such as `buildCommands`, `initCommands`, `deployFiles`, `ports` or `startCommands` are replaced as a whole, never appended. If you need to change a list, define the full list in the child
+- A base service can itself extend another service. Chains are resolved regardless of the order of services in the file. A service cannot extend itself
+- `extends` also accepts a list, for example `extends: [base, logging]`. The child is then resolved exactly as if `logging` extended `base` and the child extended `logging`: later services in the list override earlier ones, and the child's own keys override all of them
+
+The following example shows how maps and lists behave differently:
+
+```yaml
+zerops:
+  - setup: base
+    build:
+      base: nodejs@22
+      buildCommands:
+        - npm ci
+        - npm run build
+      deployFiles: ./dist
+    run:
+      base: nodejs@22
+      start: npm start
+      envVariables:
+        LOG_LEVEL: info
+        NODE_ENV: development
+
+  - setup: prod
+    extends: base
+    build:
+      buildCommands:
+        - npm ci
+        - npm run build -- --mode=production
+    run:
+      envVariables:
+        NODE_ENV: production
+        LOG_LEVEL: null
+
+  - setup: dev
+    extends: base
+    run:
+      envVariables:
+        DEBUG: "1"
+```
+
+The resolved `prod` service is:
+
+```yaml
+setup: prod
+build:
+  base: nodejs@22                  # inherited
+  buildCommands:                   # list replaced as a whole
+    - npm ci
+    - npm run build -- --mode=production
+  deployFiles: ./dist              # inherited
+run:
+  base: nodejs@22                  # inherited
+  start: npm start                 # inherited
+  envVariables:                    # map merged key by key, LOG_LEVEL removed by null
+    NODE_ENV: production
+```
+
+And `dev` keeps everything from `base` and adds `DEBUG`:
+
+```yaml
+run:
+  envVariables:
+    LOG_LEVEL: info
+    NODE_ENV: development
+    DEBUG: "1"
+```
 
 :::tip
 Create a base service with common configuration and extend it for environment-specific services to keep your `zerops.yaml` file DRY (Don't Repeat Yourself).

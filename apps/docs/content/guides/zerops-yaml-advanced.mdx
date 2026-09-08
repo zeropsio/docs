@@ -113,20 +113,29 @@ zerops:
     run: { envVariables: { NODE_ENV: production } }
 ```
 
-Supports single parent (`extends: base`) or multiple parents (`extends: [base, logging]`) -- later parents override earlier ones:
+The child is a deep copy of the resolved parent with its own keys applied on top. The merge is **recursive, key by key**:
+
+- **Nested objects** (`build`, `run`, `deploy`, `healthCheck`, `readinessCheck`, `routing`, ...): only the keys the child specifies are overwritten, everything else is inherited. `run: { start: x }` in the child keeps the parent's `run.envVariables`, `run.ports`, etc.
+- **Maps** (`envVariables`): merged. Child keys are added, same-named keys take the child value, remaining parent keys stay. `KEY: null` removes an inherited variable (`KEY: ""` is a regular empty value); `envVariables: null` drops the whole inherited map.
+- **Lists** (`buildCommands`, `prepareCommands`, `initCommands`, `deployFiles`, `ports`, `startCommands`, `crontab`, `cache` as a list): **replaced as a whole**, never appended. Repeat the full list in the child. `[]` clears it.
+- **Chains** resolve transitively (`prod` extends `staging` extends `base`) in any file order, up to 25 levels deep. A setup cannot extend itself.
+- Must reference another `setup` name in the same file.
+- **Multiple parents** (`extends: [base, logging]`): resolved exactly as if `logging` extended `base` and the child extended `logging`. Later parents win over earlier ones (including their own ancestry), the child's own keys win over all parents. Same map-merge / list-replace rules apply at every step.
 
 ```yaml
 zerops:
   - setup: base
-    build: { buildCommands: [npm run build], deployFiles: ./dist }
-  - setup: logging
-    run: { envVariables: { LOG_LEVEL: info } }
+    build: { buildCommands: [npm ci, npm run build], deployFiles: ./dist }
+    run: { start: npm start, envVariables: { LOG_LEVEL: info, NODE_ENV: development } }
   - setup: prod
-    extends: [base, logging]
-    run: { envVariables: { NODE_ENV: production } }
+    extends: base
+    build: { buildCommands: [npm ci, npm run build -- --mode=production] }   # list replaced, deployFiles inherited
+    run: { envVariables: { NODE_ENV: production, LOG_LEVEL: null } }         # merged: NODE_ENV=production, LOG_LEVEL removed; start inherited
+  - setup: logging
+    run: { envVariables: { LOG_LEVEL: debug, LOG_FORMAT: json } }
+  - setup: prod-debug
+    extends: [prod, logging]   # everything from prod, then LOG_LEVEL=debug and LOG_FORMAT=json from logging; NODE_ENV=production inherited via prod
 ```
-
-Configuration is **merged at the section level** -- child values override parent values within each section (build, run, deploy), but unspecified sections inherit from parent. Must reference another `setup` name in the same file.
 
 ## Base Images
 
