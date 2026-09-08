@@ -3,7 +3,7 @@ title: "Environment Variables"
 description: "Zerops manages environment variables at two scopes (project and service) with strict build/runtime isolation. Variables are set via zerops.yml, import.yml, or GUI. Cross-service references use `${hostname_varname}` syntax. Project vars auto-inherit into all services. Secret vars are write-only after creation. Changes require service restart."
 ---
 
-Zerops manages environment variables at two scopes (project and service) with strict build/runtime isolation. Variables are set via zerops.yml, import.yml, or GUI. **Project vars auto-inherit into every service** — read them directly, no declaration. **Cross-service (sibling) vars do NOT auto-inject under the default `envIsolation=service`** — reference a sibling's value explicitly as `${hostname_varname}` in `run.envVariables` (only legacy `none` mode injects siblings as bare vars). Secret reads are privilege-gated (an admin token returns the value; a read-only token gets `REDACTED`). A running process keeps its boot-time env — restart it (not reload) to pick up a changed value.
+Zerops manages environment variables at two scopes (project and service) with strict build/runtime isolation. Variables are set via zerops.yml, import.yml, or GUI. **Project vars auto-inherit into every service** — read them directly, no declaration. **Cross-service (sibling) vars do NOT auto-inject under the default `envIsolation=service`** — reference a sibling's value explicitly as `${hostname_varname}` in `run.envVariables` (siblings are injected as bare `<host>_KEY` vars only when the owning service shares them via `none` or `service@<reader-hostname>`). Secret reads are privilege-gated (an admin token returns the value; a read-only token gets `REDACTED`). A running process keeps its boot-time env — restart it (not reload) to pick up a changed value.
 
 ---
 
@@ -63,7 +63,7 @@ run:
 - An **unresolved ref stays literal** (`${db_hostname}` reaches the process verbatim) — no error, no blank. A wrong hostname/var on the right-hand side becomes a literal string and the app fails at connect time.
 - **Hostname charset**: service hostnames are lowercase alphanumeric only (`[a-z0-9]`) — the platform rejects dashes, underscores, and uppercase with `serviceStackNameInvalid`. So a ref is simply `${hostname_varname}` with the literal hostname (service `cache` → `${cache_port}`); there is no dash-to-underscore rewrite to reason about, because a dashed hostname cannot exist.
 
-Only legacy `envIsolation=none` auto-injects every sibling's vars as bare `<host>_KEY` OS env vars without a ref — see Isolation Modes. New projects are `service`; rely on explicit refs.
+Sibling vars are auto-injected as bare `<host>_KEY` OS env vars only when the **owning** service shares them, via `none` or a `service@<reader-hostname>` grant — see Isolation Modes. New projects are `service`; rely on explicit refs.
 
 ### Cross-Service References in API vs Runtime
 
@@ -75,23 +75,31 @@ Cross-service references (`${hostname_varname}`) are **resolved at container sta
 
 ### Isolation Modes (envIsolation)
 
-`envIsolation` is a project-scope setting that controls whether sibling-service vars are auto-injected.
+`envIsolation` is a space-separated rule list set at project scope and optionally overridden per service (the service value replaces the project value, no merge). **It is owner-side and directional**: a service's own rules decide who sees ITS vars. The reader's rules never widen what the reader receives, so a compromised container cannot grant itself access to sibling secrets.
 
-| Mode | Behavior |
+| Rule | Behavior |
 |------|----------|
 | `service` (default) | **Siblings are isolated.** A service sees only its own vars + project vars + the explicit `${hostname_varname}` refs it declares in `run.envVariables`. Managed-service connection vars also require an explicit ref. |
-| `none` (legacy) | Every service's vars are auto-injected into every other container as bare `<host>_KEY` OS env vars (source-side, directional). Ambiguous and broad — avoid for new projects. |
+| `none` | Every service sees this service's vars as bare `<host>_KEY` OS env vars. Broad — prefer `service@name` for new projects. |
+| `service@name` | The service with hostname `name` additionally sees this service's vars as bare `<host>_KEY` vars. |
+| `-service@name` | The service with hostname `name` never sees this service's vars, even when `none` is present. |
+
+Evaluation for reader R against owner O's rules: `-service@R` → hidden, else `service@R` → visible, else `none` → visible, else hidden. A service always sees its own vars.
 
 Set in import.yml at project or service level:
 ```yaml
 project:
-  envIsolation: none       # legacy — avoid; default is service
+  envIsolation: service@zcp        # zcp sees every service that inherits this value
 services:
   - hostname: db
-    envIsolation: none     # per-service: expose THIS service's vars to siblings
+    envIsolation: none             # per-service: expose THIS service's vars to all siblings
+  - hostname: api
+    envIsolation: service          # per-service: opt out of the project grant, nobody sees api vars
+  - hostname: cache
+    envIsolation: none -service@api  # everyone except api sees cache vars
 ```
 
-**Default (`service`) is the right choice.** Wire cross-service explicitly with `${hostname_varname}` — it works in both modes, so code stays correct if isolation ever changes.
+**Default (`service`) is the right choice.** Wire cross-service explicitly with `${hostname_varname}` — it works in every mode, so code stays correct if isolation ever changes. When one tooling or admin service needs broad read access, grant it with `service@<hostname>` at project level instead of switching to `none`.
 
 ## Project Variables -- Auto-Inherited
 
