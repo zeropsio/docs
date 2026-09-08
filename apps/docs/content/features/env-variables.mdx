@@ -140,50 +140,73 @@ A security feature that controls the **visibility** of environment variables acr
 
 By default, Zerops isolates environment variables between services to enhance security and prevent unintended access to sensitive information. This isolation can be configured at both project and service levels.
 
-### Isolation Modes
+### Isolation Rules
 
-Zerops supports two isolation modes:
+The `envIsolation` value is a space-separated list of rules. **A service's own rules decide which other services can see its variables.** The rules of the service doing the reading are never consulted, so a service can widen or narrow what it exposes, but never what it receives.
 
 <table className="w-full my-1.5">
   <thead>
     <tr>
-      <th className="w-fit">Mode</th>
+      <th className="w-fit">Rule</th>
       <th className="w-fit">Description</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td className="w-fit whitespace-nowrap"><code>service</code></td>
-      <td className="w-full"><strong>Default mode.</strong> Variables are isolated to their respective services. Services can only access their own variables and must explicitly reference variables from other services.</td>
+      <td className="w-full"><strong>Default.</strong> Only the service itself sees its variables. Other services must reference them explicitly.</td>
     </tr>
     <tr>
       <td className="w-fit whitespace-nowrap"><code>none</code></td>
-      <td className="w-full"><i>Legacy mode.</i> All variables from all services are automatically shared and accessible via prefixing.</td>
+      <td className="w-full">Every service in the project sees the variables, prefixed with the service hostname.</td>
+    </tr>
+    <tr>
+      <td className="w-fit whitespace-nowrap"><code>service@name</code></td>
+      <td className="w-full">The service with hostname <code>name</code> additionally sees the variables.</td>
+    </tr>
+    <tr>
+      <td className="w-fit whitespace-nowrap"><code>-service@name</code></td>
+      <td className="w-full">The service with hostname <code>name</code> never sees the variables, even when <code>none</code> is present.</td>
     </tr>
   </tbody>
 </table>
+
+#### Rule Evaluation Order
+
+When service `reader` asks for the variables of service `owner`, the rules of `owner` are checked in this order:
+
+1. `-service@reader` is present → **hidden**
+2. `service@reader` is present → **visible**
+3. `none` is present → **visible**
+4. Otherwise → **hidden**
+
+Block rules always win over allow rules for the same service. A service always sees its own variables regardless of its rules, and explicit `${hostname_variable}` references keep working in every mode.
 
 ### Configuring Isolation
 
 #### Project-Level Isolation
 
-Zerops automatically creates the `envIsolation` project variable with the default value `service`. You only need to modify this if you want to disable isolation:
+Zerops automatically creates the `envIsolation` project variable with the default value `service`. Every service inherits the project value unless it sets its own:
 
 ```yaml title="import.yaml"
 project:
-  envIsolation: none  # Disables isolation, sharing all variables
+  envIsolation: service@zcp  # The zcp service sees the variables of every other service
 ```
 
 This can also be set through the Project Environment Variables section in the GUI.
 
 #### Service-Level Override
 
-Individual services can override the project-level isolation setting:
+Individual services can replace the project-level value with their own. The values are not merged, the service value applies on its own:
 
 ```yaml title="import.yaml"
+project:
+  envIsolation: service@zcp
 services:
   - hostname: db
-    envIsolation: none  # This service's variables will be visible to all services
+    envIsolation: none      # Everyone sees the db variables
+  - hostname: api
+    envIsolation: service   # Nobody sees the api variables, not even zcp
 ```
 
 :::tip
@@ -193,6 +216,31 @@ You might set a database service to `envIsolation: none` to expose its connectio
 :::note
 In import YAML, `envIsolation` can also be nested under `envVariables`/`envSecrets`. (If both are present, the nested version takes precedence).
 :::
+
+#### Common Combinations
+
+**Single privileged reader** *(tooling, migrations, admin service)*:
+```yaml
+envIsolation: service@zcp
+```
+- ✅ The `zcp` service sees the variables of every service that inherits this value
+- ❌ Every other service stays isolated
+
+**Open project with one exception**:
+```yaml
+envIsolation: none -service@untrusted
+```
+- ✅ All services see each other's variables
+- ❌ The `untrusted` service sees only its own variables and project variables
+
+**Selective exposure on one service**:
+```yaml
+services:
+  - hostname: db
+    envIsolation: service@api service@worker
+```
+- ✅ The `api` and `worker` services see the `db` variables
+- ❌ Every other service must reference `db` variables explicitly
 
 ### Accessing Variables Across Services
 
@@ -210,12 +258,12 @@ run:
 
 This approach gives you complete control over which variables are shared between services.
 
-#### With Isolation Disabled (`none` mode)
+#### When Variables Are Shared (`none` or `service@name`)
 
-When isolation is disabled, variables are automatically available across all services with the service name prefix:
+When the owning service shares its variables, they are automatically available with the service name prefix:
 
 ```yaml
-# In any service, you can directly access:
+# In any service the 'db' service shares variables with, you can directly access them:
 ${db_password}  # Accesses the 'password' variable from the 'db' service
 ```
 
@@ -224,7 +272,8 @@ ${db_password}  # Accesses the 'password' variable from the 'db' service
 1. **Use Default Isolation**: Keep the default `service` isolation for enhanced security.
 2. **Explicit References**: Create explicit references only for variables that need to be shared.
 3. **Naming Conventions**: Use clear naming patterns for reference variables (e.g. `DB_PASSWORD` for a reference to `db_password`).
-4. **Service-Level Exceptions**: Use service-level isolation overrides sparingly and only for services that need to expose their variables widely.
+4. **Grant, Don't Open**: Prefer `service@name` for the one service that needs broad access over `none`, which exposes variables to every service.
+5. **Service-Level Exceptions**: Use service-level isolation overrides sparingly and only for services that need to expose their variables widely.
 
 ## Referencing Variables
 
@@ -350,6 +399,6 @@ With this setup:
 - The `db` service cannot see any variables from `api` or `cache`
 - The `cache` service cannot see any variables from `api` or `db`
 
-If we changed the project's `envIsolation` to `none`, all services would be able to see all variables from all other services (prefixed with the service name).
+If we changed the project's `envIsolation` to `none`, all services would be able to see all variables from all other services (prefixed with the service name). With `service@api` instead, only the `api` service would see the `db` and `cache` variables, and `db` and `cache` would stay isolated from each other.
 
 *Need help? Join our [Discord community](https://discord.gg/zeropsio).*
