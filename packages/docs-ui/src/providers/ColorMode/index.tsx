@@ -35,7 +35,10 @@ export const ColorModeProvider = ({ children }: ColorModeProviderProps) => {
     if (theme && (theme === 'light' || theme === 'dark')) {
       setColorMode(theme);
     } else {
-      setColorMode("light") //if no value in localstorage present
+      const prefersDark = window.matchMedia(
+        '(prefers-color-scheme: dark)'
+      ).matches;
+      setColorMode(prefersDark ? 'dark' : 'light');
     }
     setLoaded(true);
   }, []);
