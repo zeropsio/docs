@@ -373,6 +373,15 @@ module.exports = {
           },
           className: 'homepage-sidebar-item  service-sidebar-item',
         },
+        {
+          type: 'ref',
+          id: 'swarm/overview',
+          label: 'Swarm',
+          customProps: {
+            sidebar_icon: 'servers-connected',
+          },
+          className: 'homepage-sidebar-item  service-sidebar-item',
+        },
       ],
     },
     {
@@ -2309,6 +2318,56 @@ module.exports = {
         sidebar_is_title: true,
         sidebar_icon: 'docker',
       },
+    },
+  ],
+  swarm: [
+    {
+      type: 'ref',
+      id: 'homepage',
+      label: 'Back to home',
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: 'back-arrow',
+      },
+    },
+    {
+      type: 'doc',
+      id: 'swarm/overview',
+      label: 'Swarm Service',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'servers-connected',
+      },
+    },
+    {
+      type: 'category',
+      label: 'How-to',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'swarm/how-to/create',
+          label: 'Create & import',
+        },
+        {
+          type: 'doc',
+          id: 'swarm/how-to/connect',
+          label: 'Connect & authenticate',
+        },
+        {
+          type: 'doc',
+          id: 'swarm/how-to/use',
+          label: 'Work with the pool',
+        },
+        {
+          type: 'doc',
+          id: 'swarm/how-to/deploy',
+          label: 'Custom image & rollout',
+        },
+      ],
     },
   ],
   mariadb: [

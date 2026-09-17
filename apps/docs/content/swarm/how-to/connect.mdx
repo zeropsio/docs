@@ -1,0 +1,145 @@
+---
+title: Connect & authenticate
+description: Reach the Swarm orchestrator from the Zerops VPN, from your other services and from the GUI, and understand the API token, the admin token and SSH access to pool containers.
+---
+
+The orchestrator serves everything on one address inside the project's private network:
+
+```
+http://orch.<hostname>.zerops
+```
+
+For a Swarm service with the hostname `sandbox` that is `http://orch.sandbox.zerops`. The control API, the web UI at `/` and the API reference at `/swagger` all live there. The orchestrator has no public address.
+
+## Ways to connect
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit" style={{ minWidth: '150px' }}>From</th>
+      <th className="w-fit">How</th>
+      <th className="w-fit" style={{ minWidth: '130px' }}>API token</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit"><b>Your workstation</b></td>
+      <td className="w-fit">Start the <a href="/references/networking/vpn">Zerops VPN</a> and call <code>{'http://orch.<hostname>.zerops'}</code>, or open it in a browser for the UI.</td>
+      <td className="w-fit">Not needed</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><b>A service in the project</b></td>
+      <td className="w-fit">Call the same address over the private network.</td>
+      <td className="w-fit">Required</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><b>The Zerops GUI</b></td>
+      <td className="w-fit">Open the orchestrator UI from the service detail. Zerops creates a link that is valid for one hour and signs you in.</td>
+      <td className="w-fit">Added for you</td>
+    </tr>
+  </tbody>
+</table>
+
+### From your workstation
+
+Connect with `zcli vpn up` and use the API directly. Requests that come from the VPN skip the API token check, so there is nothing to configure:
+
+```bash
+curl -s http://orch.sandbox.zerops/container
+```
+
+### From a service in the project
+
+This is the usual setup: a backend, a CI runner or an agent in the same project drives the pool. It has to send the API token as a bearer token:
+
+```bash
+curl -s http://orch.sandbox.zerops/container \
+  -H "Authorization: Bearer $SANDBOX_API_TOKEN"
+```
+
+Pass the token to your service by [referencing](/features/env-variables#referencing-variables) the Swarm service's variable in its `zerops.yaml`:
+
+```yaml title="zerops.yaml"
+zerops:
+  - setup: api
+    run:
+      envVariables:
+        SANDBOX_URL: http://orch.sandbox.zerops
+        SANDBOX_API_TOKEN: ${sandbox_API_TOKEN}
+```
+
+### From the GUI
+
+The link from the service detail goes through a Zerops proxy that adds the API token to every request, so the UI works without the VPN. The proxy never adds the admin token. To force an action in the UI you enter the admin token there yourself.
+
+The UI covers the whole API, including a shell to run commands, and is handy for watching what your code does with the pool.
+
+## Tokens
+
+Both tokens are generated when the service is created. You find them in the service detail under **Environment variables**.
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit" style={{ minWidth: '130px' }}>Variable</th>
+      <th className="w-fit" style={{ minWidth: '220px' }}>Sent as</th>
+      <th className="w-fit">What it allows</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit"><code>API_TOKEN</code></td>
+      <td className="w-fit"><code>{'Authorization: Bearer <token>'}</code></td>
+      <td className="w-fit">Every call of the API. Whoever has it can create and remove containers and run commands in any container nobody else holds. Not required from the VPN.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>ADMIN_TOKEN</code></td>
+      <td className="w-fit"><code>{'X-Swarm-Admin-Token: <token>'}</code></td>
+      <td className="w-fit">Taking a container away from the consumer that holds it, with <code>force=true</code>. Required from the VPN too.</td>
+    </tr>
+  </tbody>
+</table>
+
+A pool is usually shared: every consumer has the API token, and a [lease](/swarm/how-to/use#leases) keeps them out of each other's containers. Breaking a lease kills somebody's work, so it takes a second secret, which you give only to operators and to the code that cleans up after crashed consumers.
+
+You can check an admin token without doing anything with it:
+
+```bash
+curl -s http://orch.sandbox.zerops/admin/check \
+  -H "Authorization: Bearer $SANDBOX_API_TOKEN" \
+  -H "X-Swarm-Admin-Token: $SANDBOX_ADMIN_TOKEN"
+# {"enforced":true,"configured":true,"admin":true}
+```
+
+### What is open and what is not
+
+- The UI files (`/` and `/ui/*`) and the API reference (`/swagger`) are served without a token. They contain nothing about your pool.
+- If you empty `API_TOKEN`, the API is open to everything that can reach it on the private network, and `force` needs no admin token either.
+- If `API_TOKEN` is set and you empty `ADMIN_TOKEN`, every forced takeover is refused.
+- The pool containers never see either token, as the code running in them could otherwise control the whole pool.
+
+### Change a token
+
+Edit the variable in the GUI and then **reload** the Swarm service. The orchestrator reads its tokens when it starts, and a reload restarts it together with the start commands of the application you deployed to the pool, if any. It does not restart the pool containers, so it is the gentle option. A **restart** of the service works too, but restarts every container in the pool.
+
+Reservations survive both. The orchestrator keeps them on disk.
+
+## SSH access to pool containers
+
+The API is the intended way to run things in a pool container, and by default it is the only way available to your services. SSH access in Zerops is governed by [SSH isolation](/references/networking/ssh#ssh-access-control), and its default, `vpn`, means:
+
+- You can SSH from the VPN to any pool container, using the `hostname` the API returns for it. The [web terminal](/references/networking/ssh#web-terminal-always-available) in the GUI works too.
+- No service in the project can SSH to a pool container, and pool containers cannot SSH to each other or to your other services.
+
+If you want a service to SSH into the pool, allow it on the Swarm service:
+
+```yaml title="zerops-import.yaml"
+services:
+  - hostname: sandbox
+    type: swarm@1
+    sshIsolation: "vpn service@runner"
+```
+
+:::warning
+SSH does not know about leases. A service that is allowed to SSH into the pool can enter any container, including one another consumer has reserved, and the orchestrator cannot see or stop what it does there. Allow it only for services you would also trust with the admin token.
+:::

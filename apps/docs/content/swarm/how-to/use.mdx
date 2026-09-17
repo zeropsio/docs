@@ -1,0 +1,417 @@
+---
+title: Work with the pool
+description: Use the Swarm API to create and reserve containers, run commands in them, keep them clean with snapshots, fork them, and handle errors and takeovers.
+---
+
+This page walks through the control API the way you would use it: get a container, run something in it, give it back. For the exact schema of every request and response, open the API reference your own orchestrator serves at `http://orch.<hostname>.zerops/swagger`. It always matches the version you run.
+
+All examples use a Swarm service with the hostname `sandbox`, called from the [VPN](/swarm/how-to/connect#from-your-workstation). From a service, add the `Authorization: Bearer` header with the [API token](/swarm/how-to/connect#tokens).
+
+## The API at a glance
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit" style={{ minWidth: '290px' }}>Endpoint</th>
+      <th className="w-fit">What it does</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit"><code>GET /container</code>, <code>GET /container/&#123;id&#125;</code></td>
+      <td className="w-fit">List the pool, or get one container.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>POST /container</code></td>
+      <td className="w-fit">Create one or more containers.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>POST /container/acquire</code></td>
+      <td className="w-fit">Reserve a free container, creating one only if needed. Returns a lease.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>POST /container/&#123;id&#125;/release</code>, <code>/renew</code></td>
+      <td className="w-fit">Give a reserved container back, or extend the reservation.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>POST /container/&#123;id&#125;/exec</code></td>
+      <td className="w-fit">Run a command in a specific container and stream its output.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>POST /container/run</code></td>
+      <td className="w-fit">Run a command in whichever container is free and clean up afterwards.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>GET</code>, <code>POST /container/&#123;id&#125;/snapshot</code>, <code>DELETE .../snapshot/&#123;name&#125;</code></td>
+      <td className="w-fit">List, create and delete snapshots of a container.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>POST /container/&#123;id&#125;/restore</code></td>
+      <td className="w-fit">Restore a container to a snapshot.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>POST /container/&#123;id&#125;/fork</code></td>
+      <td className="w-fit">Copy a container, with everything on its disk, into a new one.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>POST /container/&#123;id&#125;/stop</code>, <code>/start</code></td>
+      <td className="w-fit">Stop or start a container.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>DELETE /container/&#123;id&#125;</code>, <code>DELETE /container</code></td>
+      <td className="w-fit">Remove one container, or several (or all) at once.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>POST /container/rollout</code></td>
+      <td className="w-fit">Replace containers that run an <a href="/swarm/how-to/deploy#roll-out-a-new-image">outdated image</a>.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>GET /pool</code>, <code>/health</code>, <code>/admin/check</code></td>
+      <td className="w-fit">Pool limits, orchestrator health, and a check of the admin token.</td>
+    </tr>
+  </tbody>
+</table>
+
+Create, start, stop, restore and fork answer when the work is done. For a VM pool that can take minutes, so give your HTTP client a timeout to match.
+
+## The container
+
+Every call that returns a container returns the same object. The fields you will use most:
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit" style={{ minWidth: '150px' }}>Field</th>
+      <th className="w-fit">Meaning</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit"><code>id</code>, <code>name</code>, <code>hostname</code></td>
+      <td className="w-fit">The id is what the API takes. The hostname is the container's address on the private network.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>status</code></td>
+      <td className="w-fit">What Zerops says about the container: usually <code>ACTIVE</code>, <code>STOPPED</code>, <code>FAILED</code> or <code>ACTION_FAILED</code>.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>lockState</code></td>
+      <td className="w-fit">What the orchestrator says about it. Empty means free, <code>reserved</code> means somebody holds it. <code>running</code>, <code>restoring</code>, <code>stopping</code>, <code>starting</code> and <code>deleting</code> mean work is in progress, and the container is not handed out until it ends.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>lease</code>, <code>leaseExpiresAt</code></td>
+      <td className="w-fit">The <a href="#leases">lease</a> is returned once, to the caller that reserved the container. Nobody else ever sees it.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>dirty</code></td>
+      <td className="w-fit">Whether a command has run in the container since it was created or last <a href="#clean-and-dirty-containers">reset</a>.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>current</code></td>
+      <td className="w-fit">Whether the container runs the image of the latest deploy. See <a href="/swarm/how-to/deploy">Custom image & rollout</a>.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>unreachableSince</code></td>
+      <td className="w-fit">Set when the container stopped answering on the private network. See <a href="#unreachable-containers">Unreachable containers</a>.</td>
+    </tr>
+  </tbody>
+</table>
+
+## Reserve a container
+
+You can create containers explicitly with `POST /container`, optionally with `{"count": 3}`. When several consumers share a pool, **acquire** is the better way in: it hands you a free container and creates one only when it has to.
+
+```bash
+curl -s -X POST http://orch.sandbox.zerops/container/acquire \
+  -H "Content-Type: application/json" \
+  -d '{"start": true, "clean": true, "leaseTtlSeconds": 600}'
+```
+
+Acquire looks for a container in this order:
+
+1. A free running container.
+2. A free stopped container. With `start` it is started and you get it once it is reachable, without `start` you get it stopped.
+3. A new container, if the pool has no usable one and is below its maximum.
+
+Among the free containers it picks the one that was used longest ago, so the work spreads over the pool.
+
+Two cases end with an error that is worth a retry. While free containers are still being created, acquire answers `containers-preparing` and does not create more. When every container is taken and another one cannot be created, usually because the pool is at its maximum, it answers `all-reserved`.
+
+### Leases
+
+The response carries a `lease`. It is the proof that the container is yours: **every later call on that container has to send it**, as the `lease` query parameter or the `X-Swarm-Lease` header. Calls without it are refused with `held-by-other`, which is what keeps consumers of a shared pool out of each other's work.
+
+With `leaseTtlSeconds` the reservation expires when you do not use it for that long. Every call that sends the lease extends it by the same amount, and a reservation never expires while a command is running under it. If you hold a container without calling it, extend the reservation with `POST /container/{id}/renew`. Without `leaseTtlSeconds` the reservation lasts until you release or remove the container.
+
+:::tip
+Set `leaseTtlSeconds` unless the consumer lives as long as the container. A consumer that crashes, or never receives the acquire response, would otherwise keep its container reserved until somebody takes it back with the admin token.
+:::
+
+### Release
+
+```bash
+curl -s -X POST "http://orch.sandbox.zerops/container/<id>/release?lease=<lease>&reset=true"
+```
+
+Release returns the container to the pool. With `reset=true` it is first restored to the state it was created in, so the next consumer gets it clean. A container with a command still running in it cannot be released.
+
+## Run commands
+
+### In a container you hold
+
+```bash
+curl -sN -X POST "http://orch.sandbox.zerops/container/<id>/exec?lease=<lease>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "command": ["bash", "-lc", "cd /var/www && npm test"],
+    "env": {"CI": "true"},
+    "timeoutSeconds": 900
+  }'
+```
+
+`command` is the executable and its arguments. No shell is involved, so wrap the command in `bash -lc` when you need pipes, variables or `&&`. The command runs as the `zerops` user. `env` adds variables on top of the container's own. With `timeoutSeconds` the command is killed, together with every process it started, when the time is up. Without it there is no timeout.
+
+A container runs one command at a time, and a second `exec` is refused with `command-running`. Closing the connection cancels the command.
+
+### In any free container
+
+```bash
+curl -sN -X POST http://orch.sandbox.zerops/container/run \
+  -H "Content-Type: application/json" \
+  -d '{"command": ["bash", "-lc", "make build"], "revert": true}'
+```
+
+`/container/run` is acquire, exec and cleanup in one call, for work that does not need to keep the container. A free running container is used as it is. A stopped one is started for the command and stopped again. If there is neither, a temporary container is created and removed after the run. With `revert`, a reused container is restored to its latest snapshot after the command, so a pool you prepared in advance stays the way you prepared it.
+
+For a reused container the connection stays open until the cleanup has finished, and when it closes the container is back in the pool. A temporary container is removed in the background after the stream ends, and counts against the pool maximum until it is gone.
+
+### The output stream
+
+Both calls answer with newline-delimited JSON, one object per line:
+
+```json
+{"type":"note","data":"cmV1c2luZyBhIHJ1bm5pbmcgY29udGFpbmVy..."}
+{"type":"stdout","data":"aGVsbG8K"}
+{"type":"exit","exitCode":0}
+```
+
+- `stdout` and `stderr` carry the output. `data` is base64-encoded, so binary output gets through.
+- `note` is a message from the orchestrator, for example which container a run picked.
+- `exit` is the last line of a command and carries its `exitCode`.
+- `error` means the connection to the container failed. It can arrive after some output, so the command may have run partly.
+
+When something other than the command itself ended it, the last line has a `reason`:
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit" style={{ minWidth: '190px' }}>reason</th>
+      <th className="w-fit">What happened</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit"><code>preempted</code></td>
+      <td className="w-fit">Somebody took the container with a forced stop, delete or restore, and the command was killed. Run it again in another container.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>command-timeout</code></td>
+      <td className="w-fit">The command ran longer than its <code>timeoutSeconds</code>.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>command-start-failed</code></td>
+      <td className="w-fit">The command could not be started, for example because the executable does not exist. Nothing has run. The error text is on <code>stderr</code>.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>command-killed</code></td>
+      <td className="w-fit">A signal killed the command. What it did until then stays done.</td>
+    </tr>
+  </tbody>
+</table>
+
+A command that ran and exited by itself has no `reason`, whatever its exit code.
+
+## Clean and dirty containers
+
+When a container is created via Orchestrator API, Zerops takes a snapshot of it named `zerops-primary`. It is the container as the pool made it: booted from the service's image, with your [deployed application](/swarm/how-to/deploy) and everything its `run.prepareCommands` installed, and nothing a consumer left behind. You cannot delete it.
+
+A container becomes **dirty** the moment a command runs in it. It becomes clean again only by a **reset**, a restore to the primary snapshot. There are three ways to get one:
+
+- `release?reset=true` cleans the container on its way back to the pool.
+- Acquire with `"clean": true` prefers a clean container, and resets a dirty one before it hands it out.
+- `POST /container/{id}/restore` with an empty body resets a container you hold.
+
+A reset stops the container, rewinds its disk and starts it again, so files and processes of the previous consumer are gone. Resetting on release keeps acquire fast. Resetting on acquire spares the cost for consumers that do not need a clean container.
+
+### Your own snapshots
+
+```bash
+curl -s -X POST "http://orch.sandbox.zerops/container/<id>/snapshot?lease=<lease>" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "deps-installed"}'
+
+curl -s -X POST "http://orch.sandbox.zerops/container/<id>/restore?lease=<lease>" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "deps-installed"}'
+```
+
+You can snapshot a running container at any point, as long as no command is running in it, and restore to it later. Snapshots are for state that belongs to one container and one piece of work, like a checked-out repository or a half-finished job you want to retry from.
+
+:::tip
+Do not use snapshots or forks to distribute tools and dependencies. Whatever every pool container needs belongs in the image: install it with `run.prepareCommands` and [roll it out](/swarm/how-to/deploy).
+:::
+
+- A container holds at most 5 snapshots, the primary one included. Names can contain letters, digits, `.`, `_` and `-`, and names starting with `zerops-` are reserved.
+- A restore brings a running container back running and leaves a stopped one stopped. A running container is restarted on the way, so processes in it end.
+- **A restore deletes every snapshot newer than the one you restore to.** A reset therefore deletes all your snapshots of that container.
+- A restore to one of your own snapshots does not make the container clean. Only the primary snapshot is known to contain nothing.
+
+With `"overwrite": "oldest"` or `"newest"`, creating a snapshot first deletes an existing one: the snapshot with the same name if there is one, otherwise the oldest or newest of your snapshots. It does that on every call, not only when the limit is reached. Calling it repeatedly with one name gives you a rolling checkpoint.
+
+## Fork a container
+
+```bash
+curl -s -X POST "http://orch.sandbox.zerops/container/<id>/fork?lease=<lease>"
+```
+
+A fork is a new pool container with a copy of the source's disk, reserved for you like an acquired one. Use it to try several continuations of the same work, or to look into a copy of a container without disturbing the original.
+
+The fork keeps the source's primary snapshot and gets a `fork` snapshot of the state it was copied at. Other snapshots of the source are not copied. By default the copy is taken while the source runs, which gives you a disk as consistent as after a power cut. That is fine for most sandboxes. With `{"consistent": true}` the source is stopped for the copy and started again. Copying takes a while, a VM in particular.
+
+## Take a container from somebody else
+
+Sooner or later a consumer hangs with a container reserved or a command running. `force=true` is the way out, and because it destroys somebody's work it needs the [admin token](/swarm/how-to/connect#tokens):
+
+```bash
+curl -s -X POST "http://orch.sandbox.zerops/container/<id>/stop?force=true" \
+  -H "X-Swarm-Admin-Token: $SANDBOX_ADMIN_TOKEN"
+```
+
+- A forced **stop** or **delete** kills the running command and clears the reservation. The killed command's stream ends with the reason `preempted`, so its owner knows what happened.
+- A forced **release** takes back a reservation, but never while a command is running. Stop or delete the container to end a command.
+- A forced **restore** kills the running command and returns the container to the pool.
+- On **rollout** and **batch delete**, `force` always needs the admin token.
+
+You do not need the admin token to force your own container, or one that nobody holds. A container picked by `/container/run` counts as held by somebody else for the duration of the run.
+
+## Remove containers
+
+`DELETE /container/{id}` answers `202` as soon as the removal has started, and the container disappears from the list shortly after. With `?wait=true` it answers `200` once the container is gone. Removing a container that is not in the pool any more is not an error.
+
+Zerops removes the containers of one service one after another. A second single delete while another removal is running is refused, and so is a removal that would take the pool below its minimum. A refused removal changes nothing, so a command that a forced delete was meant to end keeps running. To remove several containers, use the batch call, which handles both:
+
+```bash
+curl -s -X DELETE http://orch.sandbox.zerops/container \
+  -H "Content-Type: application/json" \
+  -d '{"all": true}'
+```
+
+It takes `{"ids": [...]}` or `{"all": true}` and answers with the `removed` ids and the `skipped` ones, each with a reason. Reserved and busy containers are skipped unless you force it, and with `all` enough containers are kept to stay at the pool minimum. The batch call does not take leases, so remove containers you hold one by one.
+
+## Handle errors
+
+A refused request answers with HTTP 400 and a body like this:
+
+```json
+{
+  "error": {
+    "code": "containerAction",
+    "message": "container is reserved by another consumer - pass its lease, or ?force=true to take it over",
+    "meta": [
+      {
+        "code": "containerAction",
+        "error": "container is reserved by another consumer - ...",
+        "metadata": {"reason": ["held-by-other"], "retryable": ["true"]}
+      }
+    ]
+  }
+}
+```
+
+The message is for people. In code, read `meta[].metadata.reason` and `retryable`. A retryable error can succeed later without you changing anything, so back off and try again. For the others something has to change first.
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit" style={{ minWidth: '210px' }}>reason</th>
+      <th className="w-fit" style={{ minWidth: '80px' }}>Retry</th>
+      <th className="w-fit">Meaning</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit"><code>held-by-other</code></td>
+      <td className="w-fit">yes</td>
+      <td className="w-fit">Another consumer holds the container. Send its lease, wait, or force.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>container-busy</code>, <code>command-running</code></td>
+      <td className="w-fit">yes</td>
+      <td className="w-fit">A command or another operation is in progress in the container.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>containers-preparing</code></td>
+      <td className="w-fit">yes</td>
+      <td className="w-fit">Free containers are being created. Wait for them.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>all-reserved</code></td>
+      <td className="w-fit">yes</td>
+      <td className="w-fit">Every container is taken and another one could not be created.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>container-unreachable</code>, <code>container-not-ready</code></td>
+      <td className="w-fit">yes</td>
+      <td className="w-fit">The container does not answer on the private network, or has no address yet.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>container-not-running</code></td>
+      <td className="w-fit">no</td>
+      <td className="w-fit">The container is stopped. Start it first.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>container-deleting</code></td>
+      <td className="w-fit">no</td>
+      <td className="w-fit">The container is being removed.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>container-not-found</code>, <code>snapshot-not-found</code></td>
+      <td className="w-fit">no</td>
+      <td className="w-fit">No such container in the pool, or no such snapshot of the container.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>unknown-lease</code></td>
+      <td className="w-fit">no</td>
+      <td className="w-fit">The lease does not hold this container, usually because the reservation expired.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>pool-capacity-exceeded</code>, <code>pool-at-minimum</code>, <code>pool-fixed-size</code></td>
+      <td className="w-fit">no</td>
+      <td className="w-fit">The request does not fit within the <a href="/swarm/how-to/create#size-the-pool">pool limits</a>.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>admin-token-required</code>, <code>admin-token-invalid</code></td>
+      <td className="w-fit">no</td>
+      <td className="w-fit">The request takes a container from its holder and the admin token is missing or wrong.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>invalid-request</code>, <code>empty-command</code>, <code>reserved-snapshot-name</code></td>
+      <td className="w-fit">no</td>
+      <td className="w-fit">The request itself is wrong. The message names the problem.</td>
+    </tr>
+  </tbody>
+</table>
+
+Two kinds of errors look different. A missing or wrong API token is a `401`. Refusals that come from Zerops itself, like the snapshot limit or a removal refused because another one is running, have the `containerAction` code but no `reason`.
+
+## Unreachable containers
+
+Before acquire or run hands out a running container, the orchestrator checks that it answers on the private network, and skips it if it does not. After three failed checks in a row the container is marked with `unreachableSince` and left out, and it is tried again with growing pauses (30 seconds, then 1, 5 and 10 minutes) when a later acquire, run or exec gets to it. The mark clears when the container answers again or is started again.
+
+An unreachable container still counts against the pool maximum. If every free container is unreachable, acquire and run fail with `container-unreachable` and do not create more containers around the dead ones. Restart or remove containers that do not recover.
+
+## Good to know
+
+- The orchestrator runs up to 10 container operations (create, remove, start, stop, snapshot, restore, fork) at the same time, and operations on a single existing container one at a time. Further requests wait in a queue.
+- Reservations are stored on the orchestrator's disk and survive its restart. A command that was running during the restart is lost, and the container goes back to its holder, or to the pool if nobody held it.
+- Batch delete and rollout continue when the client disconnects.

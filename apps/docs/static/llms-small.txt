@@ -16829,6 +16829,7 @@ export const containers = [
     { name: "Ubuntu", link: "/ubuntu/overview", icon:  },
     { name: "Alpine", link: "/alpine/overview", icon:  },
     { name: "Docker", link: "/docker/overview", icon:  },
+    { name: "Swarm", link: "/swarm/overview", icon:  },
 ]
 
 export const databases = [
@@ -26390,6 +26391,41 @@ A few things to know:
 - **TLS is required** on `6432` (see [above](#connection-ports-and-tls)), even for internal connections.
 - **HA mode.** pgBouncer pools connections to the primary (writes). Read routing across replicas on port `5433` is separate and is not pooled.
 
+## Connection limits
+
+`max_connections` follows the service's RAM and [workload type](/postgresql/how-to/scale#workload-types): 50 per GiB (between 20 and 500) for OLTP and WriteHeavy, 25 per GiB (between 10 and 200) for OLAP. RAM counts in [memory steps](/postgresql/how-to/scale#how-postgresql-scaling-works), so a service with 7 GB of RAM still gets the `4 GiB` limits. pgBouncer accepts `20 × (max_connections − 4)` clients, at least 100.
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit" rowSpan={2} style={{ minWidth: '105px' }}>Memory step</th>
+      <th className="w-fit" colSpan={2}><code>max_connections</code> (<code>5432</code>, <code>5433</code>)</th>
+      <th className="w-fit" colSpan={2}>pgBouncer clients (<code>6432</code>)</th>
+    </tr>
+    <tr>
+      <th className="w-fit">OLTP / WriteHeavy</th>
+      <th className="w-fit">OLAP</th>
+      <th className="w-fit">OLTP / WriteHeavy</th>
+      <th className="w-fit">OLAP</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td className="w-fit"><code>256 MiB</code></td><td className="w-fit">20</td><td className="w-fit">10</td><td className="w-fit">320</td><td className="w-fit">120</td></tr>
+    <tr><td className="w-fit"><code>512 MiB</code></td><td className="w-fit">25</td><td className="w-fit">12</td><td className="w-fit">420</td><td className="w-fit">160</td></tr>
+    <tr><td className="w-fit"><code>1 GiB</code></td><td className="w-fit">50</td><td className="w-fit">25</td><td className="w-fit">920</td><td className="w-fit">420</td></tr>
+    <tr><td className="w-fit"><code>2 GiB</code></td><td className="w-fit">100</td><td className="w-fit">50</td><td className="w-fit">1920</td><td className="w-fit">920</td></tr>
+    <tr><td className="w-fit"><code>4 GiB</code></td><td className="w-fit">200</td><td className="w-fit">100</td><td className="w-fit">3920</td><td className="w-fit">1920</td></tr>
+    <tr><td className="w-fit"><code>8 GiB</code></td><td className="w-fit">400</td><td className="w-fit">200</td><td className="w-fit">7920</td><td className="w-fit">3920</td></tr>
+    <tr><td className="w-fit"><code>16 GiB</code> and up</td><td className="w-fit">500</td><td className="w-fit">200</td><td className="w-fit">9920</td><td className="w-fit">3920</td></tr>
+  </tbody>
+</table>
+
+- **Not all of `max_connections` is yours.** 3 connections are reserved for superusers, and Zerops itself uses up to 4 (monitoring, health checks, backups).
+- **pgBouncer's server-side pool is much smaller than its client limit.** Each user/database pair gets up to `2 × vCPU + 1` server connections (the database's CPU cores), and each database at most a third of `max_connections`. Transactions beyond that wait in a queue instead of failing.
+- **The limits cannot be overridden.** If you need more connections, connect through `6432`, or raise the minimum RAM to the next memory step.
+- **HA mode.** The limits apply per node. Port `5433` balances across both replicas, so reads get twice the `max_connections`. Each of the two proxies runs its own pgBouncer with the full client limit, but both pool into the same primary: with several busy databases they can still exhaust its `max_connections`.
+- **Idle connections in HA mode.** The proxies close connections on `5432` and `5433` that stay idle for 60 minutes.
+
 ## Connect from services in the same project
 
 All services in a project share a private network, so other services reach PostgreSQL directly by its hostname. There are two ways to wire it up.
@@ -26885,7 +26921,7 @@ PostgreSQL services use **vertical scaling** to adjust CPU, RAM, and disk resour
 :::danger Scaling can briefly interrupt the service
 When scaling changes the service's resources, Zerops regenerates the PostgreSQL configuration and applies it with an automatic **reload**. If the new values require it, the service is **restarted** instead: rolling through the cluster in HA mode, a short outage in single mode.
 
-A restart is only needed when the granted RAM crosses a memory step: `256 MiB`, `512 MiB`, `1 GiB`, `2 GiB`, `4 GiB`, then multiples of `8 GiB`. Scaling within a step reloads only; to rule out restarts entirely, keep `minRam` and `maxRam` within one step.
+A restart is only needed when the granted RAM crosses a memory step: `256 MiB`, `512 MiB`, `1 GiB`, `2 GiB`, `4 GiB`, then multiples of `8 GiB`. Scaling within a step reloads only; to rule out restarts entirely, keep `minRam` and `maxRam` within one step. Crossing a step also changes the [connection limits](/postgresql/how-to/connect#connection-limits).
 :::
 
 ## Scaling profiles
@@ -26926,6 +26962,61 @@ A profile name combines a **workload type** with a **tier**, e.g. `oltp-producti
   </tbody>
 </table>
 
+The settings you are most likely to run into (RAM means the current [memory step](#how-postgresql-scaling-works)):
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Setting</th>
+      <th className="w-fit">OLTP</th>
+      <th className="w-fit">OLAP</th>
+      <th className="w-fit">WriteHeavy</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit"><code>max_connections</code></td>
+      <td className="w-fit" colSpan={3}>See [Connection limits](/postgresql/how-to/connect#connection-limits)</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>shared_buffers</code></td>
+      <td className="w-fit">25% of RAM, max <code>8 GiB</code></td>
+      <td className="w-fit">25% of RAM, max <code>16 GiB</code></td>
+      <td className="w-fit">25% of RAM, max <code>8 GiB</code></td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>effective_cache_size</code></td>
+      <td className="w-fit">75% of RAM</td>
+      <td className="w-fit">75% of RAM</td>
+      <td className="w-fit">50% of RAM</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>work_mem</code></td>
+      <td className="w-fit">RAM / (<code>max_connections</code> × 4): about <code>5 MiB</code> up to 8 GiB of RAM, <code>25 MiB</code> at 48 GiB</td>
+      <td className="w-fit">RAM / (<code>max_connections</code> × 2): about <code>20 MiB</code> up to 8 GiB of RAM, <code>123 MiB</code> at 48 GiB</td>
+      <td className="w-fit">RAM / (<code>max_connections</code> × 8), at least <code>4 MiB</code>: <code>4 MiB</code> up to 16 GiB of RAM, <code>12 MiB</code> at 48 GiB</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>temp_file_limit</code></td>
+      <td className="w-fit" colSpan={3}>2 × RAM, max <code>48 GiB</code>. A query that needs more temporary disk space fails.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>idle_in_transaction_session_timeout</code></td>
+      <td className="w-fit">5 minutes</td>
+      <td className="w-fit">10 minutes</td>
+      <td className="w-fit">5 minutes</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>jit</code></td>
+      <td className="w-fit">On from 4 GiB of RAM</td>
+      <td className="w-fit">On</td>
+      <td className="w-fit">Off</td>
+    </tr>
+  </tbody>
+</table>
+
+`work_mem` is sized so that every connection can run several sorts at once without exhausting RAM. If a few heavy queries need more, raise it just for them on any profile: `ALTER ROLE ... SET work_mem` for a dedicated role, or `SET LOCAL work_mem` inside a transaction.
+
 ### Available profiles
 
 The tier part of the name sets the size of the autoscaling envelope (and, in HA, the replication topology). Which profiles you can pick depends on the deployment mode:
@@ -26957,7 +27048,7 @@ The tier part of the name sets the size of the autoscaling envelope (and, in HA,
     <tr>
       <td className="w-fit"><code>oltp-enterprise</code></td>
       <td className="w-fit">HA only</td>
-      <td className="w-fit">High-throughput OLTP at scale. Highest connection limits and the most aggressive headroom.</td>
+      <td className="w-fit">High-throughput OLTP at scale. The largest resource envelope and the most aggressive headroom.</td>
     </tr>
     <tr>
       <td className="w-fit"><code>olap-production</code></td>
@@ -33162,6 +33253,917 @@ For structured data, use a [managed database](/postgresql/overview) rather than 
 - [Object Storage](/object-storage/overview) — S3 compatible storage for uploads, media, and backups.
 - [Local Storage](/local-storage/overview) — Persistent local disk volume with full POSIX semantics.
 - [SeaweedFS](/seaweedfs/overview) — Managed distributed filesystem you mount from your services.
+
+## Need help?
+
+Stuck, or want to share what you built? Our core team and community are on Discord.
+
+- [Discord](https://discord.com/invite/WDvCZ54) — Join the Zerops community on Discord. Ask questions and share your tips.
+- [zCLI](/references/cli) — Get more out of Zerops with the command-line tool.
+
+
+----------------------------------------
+
+# Swarm > How To > Connect
+
+
+The orchestrator serves everything on one address inside the project's private network:
+
+```
+http://orch.<hostname>.zerops
+```
+
+For a Swarm service with the hostname `sandbox` that is `http://orch.sandbox.zerops`. The control API, the web UI at `/` and the API reference at `/swagger` all live there. The orchestrator has no public address.
+
+## Ways to connect
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit" style={{ minWidth: '150px' }}>From</th>
+      <th className="w-fit">How</th>
+      <th className="w-fit" style={{ minWidth: '130px' }}>API token</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit"><b>Your workstation</b></td>
+      <td className="w-fit">Start the [Zerops VPN](/references/networking/vpn) and call <code>{'http://orch.<hostname>.zerops'}</code>, or open it in a browser for the UI.</td>
+      <td className="w-fit">Not needed</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><b>A service in the project</b></td>
+      <td className="w-fit">Call the same address over the private network.</td>
+      <td className="w-fit">Required</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><b>The Zerops GUI</b></td>
+      <td className="w-fit">Open the orchestrator UI from the service detail. Zerops creates a link that is valid for one hour and signs you in.</td>
+      <td className="w-fit">Added for you</td>
+    </tr>
+  </tbody>
+</table>
+
+### From your workstation
+
+Connect with `zcli vpn up` and use the API directly. Requests that come from the VPN skip the API token check, so there is nothing to configure:
+
+```bash
+curl -s http://orch.sandbox.zerops/container
+```
+
+### From a service in the project
+
+This is the usual setup: a backend, a CI runner or an agent in the same project drives the pool. It has to send the API token as a bearer token:
+
+```bash
+curl -s http://orch.sandbox.zerops/container \
+  -H "Authorization: Bearer $SANDBOX_API_TOKEN"
+```
+
+Pass the token to your service by [referencing](/features/env-variables#referencing-variables) the Swarm service's variable in its `zerops.yaml`:
+
+```yaml title="zerops.yaml"
+zerops:
+  - setup: api
+    run:
+      envVariables:
+        SANDBOX_URL: http://orch.sandbox.zerops
+        SANDBOX_API_TOKEN: ${sandbox_API_TOKEN}
+```
+
+### From the GUI
+
+The link from the service detail goes through a Zerops proxy that adds the API token to every request, so the UI works without the VPN. The proxy never adds the admin token. To force an action in the UI you enter the admin token there yourself.
+
+The UI covers the whole API, including a shell to run commands, and is handy for watching what your code does with the pool.
+
+## Tokens
+
+Both tokens are generated when the service is created. You find them in the service detail under **Environment variables**.
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit" style={{ minWidth: '130px' }}>Variable</th>
+      <th className="w-fit" style={{ minWidth: '220px' }}>Sent as</th>
+      <th className="w-fit">What it allows</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit"><code>API_TOKEN</code></td>
+      <td className="w-fit"><code>{'Authorization: Bearer <token>'}</code></td>
+      <td className="w-fit">Every call of the API. Whoever has it can create and remove containers and run commands in any container nobody else holds. Not required from the VPN.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>ADMIN_TOKEN</code></td>
+      <td className="w-fit"><code>{'X-Swarm-Admin-Token: <token>'}</code></td>
+      <td className="w-fit">Taking a container away from the consumer that holds it, with <code>force=true</code>. Required from the VPN too.</td>
+    </tr>
+  </tbody>
+</table>
+
+A pool is usually shared: every consumer has the API token, and a [lease](/swarm/how-to/use#leases) keeps them out of each other's containers. Breaking a lease kills somebody's work, so it takes a second secret, which you give only to operators and to the code that cleans up after crashed consumers.
+
+You can check an admin token without doing anything with it:
+
+```bash
+curl -s http://orch.sandbox.zerops/admin/check \
+  -H "Authorization: Bearer $SANDBOX_API_TOKEN" \
+  -H "X-Swarm-Admin-Token: $SANDBOX_ADMIN_TOKEN"
+# {"enforced":true,"configured":true,"admin":true}
+```
+
+### What is open and what is not
+
+- The UI files (`/` and `/ui/*`) and the API reference (`/swagger`) are served without a token. They contain nothing about your pool.
+- If you empty `API_TOKEN`, the API is open to everything that can reach it on the private network, and `force` needs no admin token either.
+- If `API_TOKEN` is set and you empty `ADMIN_TOKEN`, every forced takeover is refused.
+- The pool containers never see either token, as the code running in them could otherwise control the whole pool.
+
+### Change a token
+
+Edit the variable in the GUI and then **reload** the Swarm service. The orchestrator reads its tokens when it starts, and a reload restarts it together with the start commands of the application you deployed to the pool, if any. It does not restart the pool containers, so it is the gentle option. A **restart** of the service works too, but restarts every container in the pool.
+
+Reservations survive both. The orchestrator keeps them on disk.
+
+## SSH access to pool containers
+
+The API is the intended way to run things in a pool container, and by default it is the only way available to your services. SSH access in Zerops is governed by [SSH isolation](/references/networking/ssh#ssh-access-control), and its default, `vpn`, means:
+
+- You can SSH from the VPN to any pool container, using the `hostname` the API returns for it. The [web terminal](/references/networking/ssh#web-terminal-always-available) in the GUI works too.
+- No service in the project can SSH to a pool container, and pool containers cannot SSH to each other or to your other services.
+
+If you want a service to SSH into the pool, allow it on the Swarm service:
+
+```yaml title="zerops-import.yaml"
+services:
+  - hostname: sandbox
+    type: swarm@1
+    sshIsolation: "vpn service@runner"
+```
+
+:::warning
+SSH does not know about leases. A service that is allowed to SSH into the pool can enter any container, including one another consumer has reserved, and the orchestrator cannot see or stop what it does there. Allow it only for services you would also trust with the admin token.
+:::
+
+
+----------------------------------------
+
+# Swarm > How To > Create
+
+
+Create a Swarm service in the [GUI](#create-in-the-gui), or describe it in YAML and [import](#import-with-yaml) it through the GUI or zCLI.
+
+## Create in the GUI
+
+Go to your project dashboard, choose **Add new service** in the **Services** block and click **Swarm** (a pool of Linux containers) or **Swarm VM** (a pool of virtual machines). See [Containers or virtual machines](/swarm/overview#containers-or-virtual-machines) for the difference. The dialog asks for:
+
+- **Hostname**: a unique service identifier, like `sandbox`, `runners` or `pool`. Maximum 25 characters, lowercase ASCII letters (a-z) and numbers (0-9) only, unique within the project. The orchestrator is reachable at `orch.<hostname>.zerops`.
+- **Pool limits and resources**: the minimum and maximum number of containers, and the resources of each one. See [Size the pool](#size-the-pool).
+- **Start an empty Swarm service without requiring code first**: turn it on to use the pool right away. When it is off, the service waits for your first [deploy](/swarm/how-to/deploy) before the pool can be used.
+
+:::caution
+The **hostname** and the **type** (containers or VMs) are fixed once the service is created. Pool limits and resources can be changed at any time.
+:::
+
+## Import with YAML
+
+You can paste the YAML in the GUI (**Import services** in the left menu of your project) or import it with the [zCLI](/references/cli).
+
+```yaml title="zerops-import.yaml"
+services:
+  - hostname: sandbox
+    # swarm@1 for containers, swarm-vm@1 for virtual machines
+    type: swarm@1
+    # optional: use the pool right away, without a first deploy
+    startWithoutCode: true
+    # optional: the limits of the pool
+    minContainers: 0
+    maxContainers: 10
+    # optional: resources of each pool container
+    verticalAutoscaling:
+      minCpu: 1
+      maxCpu: 4
+      minRam: 0.5
+      maxRam: 8
+      minDisk: 1
+      maxDisk: 20
+```
+
+```sh
+zcli project service-import zerops-import.yaml
+```
+
+The VM type takes fixed resource values in place of ranges, the same way the [Docker service](/docker/overview#scaling-operations) does:
+
+```yaml title="zerops-import.yaml"
+services:
+  - hostname: sandboxvm
+    type: swarm-vm@1
+    startWithoutCode: true
+    maxContainers: 5
+    verticalAutoscaling:
+      cpu: 2
+      ram: 4
+      disk: 20
+```
+
+To create a whole project with a Swarm service in it, add the `project:` section and use `zcli project project-import`. The [import reference](/references/import) describes both commands and every general parameter.
+
+### Service parameters
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit" style={{ minWidth: '160px' }}>Parameter</th>
+      <th className="w-fit">Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit"><b>hostname</b></td>
+      <td className="w-fit">
+        The unique service identifier. Maximum 25 characters, lowercase ASCII letters (a-z) and numbers (0-9) only, unique within the project. <b>Fixed after creation.</b>
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit"><b>type</b></td>
+      <td className="w-fit">
+        <code>swarm@1</code> for a pool of containers, <code>swarm-vm@1</code> for a pool of virtual machines. <b>Fixed after creation.</b>
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit"><b>startWithoutCode</b></td>
+      <td className="w-fit">
+        <b>Optional.</b> Set to <code>true</code> to use the pool right away, with containers created from the plain base image. With the default, <code>false</code>, the service waits for your first [deploy](/swarm/how-to/deploy) before the pool can be used.
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit"><b>minContainers</b></td>
+      <td className="w-fit">
+        <b>Optional.</b> How many containers the pool always keeps. Defaults to <code>0</code>, an empty pool. Zerops creates this many containers by itself, and the API refuses removals that would go below it.
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit"><b>maxContainers</b></td>
+      <td className="w-fit">
+        <b>Optional.</b> How many containers the pool can have at most. The API refuses to create more.
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit"><b>verticalAutoscaling</b></td>
+      <td className="w-fit">
+        <b>Optional.</b> Resources of each pool container. For <code>swarm@1</code> the usual ranges (<code>cpuMode</code>, <code>minCpu</code>/<code>maxCpu</code>, <code>minRam</code>/<code>maxRam</code>, <code>minDisk</code>/<code>maxDisk</code> and the other attributes described in [Scaling](/features/scaling)). For <code>swarm-vm@1</code> the fixed values <code>cpu</code>, <code>ram</code> and <code>disk</code>, which default to 1 core, 1 GB and 5 GB.
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Size the pool
+
+`minContainers` and `maxContainers` mean something different here than in a runtime service. Zerops never adds or removes pool containers because of load. The two values are the limits your API calls work within:
+
+- **Minimum**: Zerops keeps at least this many containers in the pool and creates them for you. With `0`, the default, the pool starts empty.
+- **Maximum**: the most containers the pool can hold. Stopped containers count too. The limit is the same as for other runtime services, and we can raise it for your account on request.
+
+:::note
+The containers Zerops creates by itself to fill the minimum do not get the `zerops-primary` snapshot that containers created through the API have. A [reset](/swarm/how-to/use#clean-and-dirty-containers) of such a container, including acquire with `clean` and release with `reset`, fails because there is nothing to restore to. If you rely on resets, keep the minimum at `0` and create the warm containers with `POST /container`.
+:::
+
+A few things to consider when you choose them:
+
+- Creating a container takes seconds, a VM considerably longer. If your work cannot wait for that, keep a minimum of warm containers and [acquire](/swarm/how-to/use#reserve-a-container) them, so a container is only created when all of them are taken.
+- Pool containers can be stopped and started again through the API, and a stopped container keeps its disk. Acquire starts a stopped one on demand before it creates a new one.
+- A [rollout](/swarm/how-to/deploy#roll-out-a-new-image) needs room to work: it cannot replace anything in a pool whose minimum equals its maximum.
+
+Each pool container scales vertically on its own, the same way a container of any other runtime service does. VMs have fixed resources, and changing them restarts the VM.
+
+You can read the current limits from the API with `GET /pool`.
+
+
+----------------------------------------
+
+# Swarm > How To > Deploy
+
+
+A Swarm service [started without code](/swarm/how-to/create#service-parameters) creates its pool containers from a plain image: Ubuntu 26.04 for `swarm@1`, the [Docker](/docker/overview) VM for `swarm-vm@1`. Usually you want more in there, like a runtime, your tools or your code. You get it by deploying to the Swarm service, the same way you deploy to any runtime service. Anything every pool container needs belongs in this image, not in snapshots you take afterwards.
+
+## Deploy to a Swarm service
+
+Describe the image in a `zerops.yaml` and push it with `zcli push`, from the GUI, or through the [GitHub](/references/github-integration) or [GitLab](/references/gitlab-integration) integration:
+
+```yaml title="zerops.yaml"
+zerops:
+  - setup: sandbox
+    build:
+      base: python@3.12
+      os: ubuntu
+      deployFiles: ./
+    run:
+      base: python@3.12
+      os: ubuntu
+      # installed once and stored in the image
+      prepareCommands:
+        - sudo apt-get update
+        - sudo apt-get install -y ripgrep jq
+        - pip install --no-cache-dir pytest ruff
+```
+
+The [build & deploy pipeline](/features/pipeline) works as usual. The build runs, `run.prepareCommands` customize the runtime image, and the result becomes the image of the service. `run.base` can be any runtime Zerops supports. The service stays a Swarm service whatever you deploy to it.
+
+Inside a pool container everything behaves like in a normal runtime service: your deployed files are in `/var/www`, `run.envVariables` and the service's other variables are set, `run.initCommands` run when the container starts, and `run.ports` are opened. If you define `run.start`, it runs in every pool container. If you do not, nothing is started, which is what you want when the containers only wait for your `exec` calls.
+
+:::note
+For `swarm-vm@1` the base has to be a VM base, which today means `docker@26.1`. A container runtime cannot be deployed to a VM pool, and a VM base cannot be deployed to `swarm@1`. The deploy is refused with an error that names `run.base`.
+:::
+
+## What a deploy changes
+
+This is where Swarm differs from a runtime service. A normal deploy replaces the running containers with new ones. In a Swarm pool the containers hold somebody's work, so **a deploy never touches existing containers**:
+
+- Containers created after the deploy boot from the new image.
+- Containers that already exist keep the image they were created with, together with their reservations, running commands and snapshots.
+- A deploy does not create containers by itself. In a pool with a minimum of `0` the first deploy leaves the pool empty.
+
+The API tells you which containers are behind. Every container has an `appVersionId`, the deploy it was created for, and `current`, which is `false` when a newer deploy exists:
+
+```bash
+curl -s http://orch.sandbox.zerops/container | jq '.[] | {name, current}'
+```
+
+Acquire and run hand out outdated containers like any other. If your consumers must not land on an old image, roll the new one out right after the deploy. A [fork](/swarm/how-to/use#fork-a-container) runs the image of its source.
+
+## Roll out a new image
+
+```bash
+curl -s -X POST http://orch.sandbox.zerops/container/rollout
+```
+
+A rollout replaces every outdated container with a new one created from the current image. It works within the [pool limits](/swarm/how-to/create#size-the-pool), in rounds: it removes as many outdated containers as the pool can lose without going below its minimum, then creates as many replacements as fit under its maximum, and repeats until all are replaced. A pool that sits at its minimum starts with the creates.
+
+What happens to a container depends on its state:
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit" style={{ minWidth: '190px' }}>Outdated container</th>
+      <th className="w-fit">What the rollout does</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit"><b>Free</b></td>
+      <td className="w-fit">Removed and replaced during the call.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><b>Reserved</b></td>
+      <td className="w-fit">Left alone and reported as skipped with <code>held-by-other</code>. With <code>force=true</code> and the [admin token](/swarm/how-to/connect#tokens) it is replaced like a free one.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><b>Work in progress</b></td>
+      <td className="w-fit">Never interrupted. The container is marked, reported under <code>retiring</code>, and the orchestrator replaces it by itself once the command, restore, stop or start ends. No further call is needed.</td>
+    </tr>
+  </tbody>
+</table>
+
+The response lists what happened: `replaced` (ids of the removed containers), `created` (the new containers), `retiring`, `skipped` with a reason for each, and `createErrors` for replacements that could not be created. The call returns when its own removals and creates are done, which takes minutes for a VM pool, and it continues if your client disconnects.
+
+Two limits to know about:
+
+- A pool whose minimum equals its maximum cannot be rolled. There is no room to remove a container first or to create one first, so the call is refused with `pool-fixed-size`. Raise the maximum by one for the rollout.
+- A replacement is a new container with a new id and hostname. The old container's snapshots and everything on its disk are gone.
+
+
+----------------------------------------
+
+# Swarm > How To > Use
+
+
+This page walks through the control API the way you would use it: get a container, run something in it, give it back. For the exact schema of every request and response, open the API reference your own orchestrator serves at `http://orch.<hostname>.zerops/swagger`. It always matches the version you run.
+
+All examples use a Swarm service with the hostname `sandbox`, called from the [VPN](/swarm/how-to/connect#from-your-workstation). From a service, add the `Authorization: Bearer` header with the [API token](/swarm/how-to/connect#tokens).
+
+## The API at a glance
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit" style={{ minWidth: '290px' }}>Endpoint</th>
+      <th className="w-fit">What it does</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit"><code>GET /container</code>, <code>GET /container/&#123;id&#125;</code></td>
+      <td className="w-fit">List the pool, or get one container.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>POST /container</code></td>
+      <td className="w-fit">Create one or more containers.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>POST /container/acquire</code></td>
+      <td className="w-fit">Reserve a free container, creating one only if needed. Returns a lease.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>POST /container/&#123;id&#125;/release</code>, <code>/renew</code></td>
+      <td className="w-fit">Give a reserved container back, or extend the reservation.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>POST /container/&#123;id&#125;/exec</code></td>
+      <td className="w-fit">Run a command in a specific container and stream its output.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>POST /container/run</code></td>
+      <td className="w-fit">Run a command in whichever container is free and clean up afterwards.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>GET</code>, <code>POST /container/&#123;id&#125;/snapshot</code>, <code>DELETE .../snapshot/&#123;name&#125;</code></td>
+      <td className="w-fit">List, create and delete snapshots of a container.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>POST /container/&#123;id&#125;/restore</code></td>
+      <td className="w-fit">Restore a container to a snapshot.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>POST /container/&#123;id&#125;/fork</code></td>
+      <td className="w-fit">Copy a container, with everything on its disk, into a new one.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>POST /container/&#123;id&#125;/stop</code>, <code>/start</code></td>
+      <td className="w-fit">Stop or start a container.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>DELETE /container/&#123;id&#125;</code>, <code>DELETE /container</code></td>
+      <td className="w-fit">Remove one container, or several (or all) at once.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>POST /container/rollout</code></td>
+      <td className="w-fit">Replace containers that run an [outdated image](/swarm/how-to/deploy#roll-out-a-new-image).</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>GET /pool</code>, <code>/health</code>, <code>/admin/check</code></td>
+      <td className="w-fit">Pool limits, orchestrator health, and a check of the admin token.</td>
+    </tr>
+  </tbody>
+</table>
+
+Create, start, stop, restore and fork answer when the work is done. For a VM pool that can take minutes, so give your HTTP client a timeout to match.
+
+## The container
+
+Every call that returns a container returns the same object. The fields you will use most:
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit" style={{ minWidth: '150px' }}>Field</th>
+      <th className="w-fit">Meaning</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit"><code>id</code>, <code>name</code>, <code>hostname</code></td>
+      <td className="w-fit">The id is what the API takes. The hostname is the container's address on the private network.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>status</code></td>
+      <td className="w-fit">What Zerops says about the container: usually <code>ACTIVE</code>, <code>STOPPED</code>, <code>FAILED</code> or <code>ACTION_FAILED</code>.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>lockState</code></td>
+      <td className="w-fit">What the orchestrator says about it. Empty means free, <code>reserved</code> means somebody holds it. <code>running</code>, <code>restoring</code>, <code>stopping</code>, <code>starting</code> and <code>deleting</code> mean work is in progress, and the container is not handed out until it ends.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>lease</code>, <code>leaseExpiresAt</code></td>
+      <td className="w-fit">The [lease](#leases) is returned once, to the caller that reserved the container. Nobody else ever sees it.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>dirty</code></td>
+      <td className="w-fit">Whether a command has run in the container since it was created or last [reset](#clean-and-dirty-containers).</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>current</code></td>
+      <td className="w-fit">Whether the container runs the image of the latest deploy. See [Custom image & rollout](/swarm/how-to/deploy).</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>unreachableSince</code></td>
+      <td className="w-fit">Set when the container stopped answering on the private network. See [Unreachable containers](#unreachable-containers).</td>
+    </tr>
+  </tbody>
+</table>
+
+## Reserve a container
+
+You can create containers explicitly with `POST /container`, optionally with `{"count": 3}`. When several consumers share a pool, **acquire** is the better way in: it hands you a free container and creates one only when it has to.
+
+```bash
+curl -s -X POST http://orch.sandbox.zerops/container/acquire \
+  -H "Content-Type: application/json" \
+  -d '{"start": true, "clean": true, "leaseTtlSeconds": 600}'
+```
+
+Acquire looks for a container in this order:
+
+1. A free running container.
+2. A free stopped container. With `start` it is started and you get it once it is reachable, without `start` you get it stopped.
+3. A new container, if the pool has no usable one and is below its maximum.
+
+Among the free containers it picks the one that was used longest ago, so the work spreads over the pool.
+
+Two cases end with an error that is worth a retry. While free containers are still being created, acquire answers `containers-preparing` and does not create more. When every container is taken and another one cannot be created, usually because the pool is at its maximum, it answers `all-reserved`.
+
+### Leases
+
+The response carries a `lease`. It is the proof that the container is yours: **every later call on that container has to send it**, as the `lease` query parameter or the `X-Swarm-Lease` header. Calls without it are refused with `held-by-other`, which is what keeps consumers of a shared pool out of each other's work.
+
+With `leaseTtlSeconds` the reservation expires when you do not use it for that long. Every call that sends the lease extends it by the same amount, and a reservation never expires while a command is running under it. If you hold a container without calling it, extend the reservation with `POST /container/{id}/renew`. Without `leaseTtlSeconds` the reservation lasts until you release or remove the container.
+
+:::tip
+Set `leaseTtlSeconds` unless the consumer lives as long as the container. A consumer that crashes, or never receives the acquire response, would otherwise keep its container reserved until somebody takes it back with the admin token.
+:::
+
+### Release
+
+```bash
+curl -s -X POST "http://orch.sandbox.zerops/container/<id>/release?lease=<lease>&reset=true"
+```
+
+Release returns the container to the pool. With `reset=true` it is first restored to the state it was created in, so the next consumer gets it clean. A container with a command still running in it cannot be released.
+
+## Run commands
+
+### In a container you hold
+
+```bash
+curl -sN -X POST "http://orch.sandbox.zerops/container/<id>/exec?lease=<lease>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "command": ["bash", "-lc", "cd /var/www && npm test"],
+    "env": {"CI": "true"},
+    "timeoutSeconds": 900
+  }'
+```
+
+`command` is the executable and its arguments. No shell is involved, so wrap the command in `bash -lc` when you need pipes, variables or `&&`. The command runs as the `zerops` user. `env` adds variables on top of the container's own. With `timeoutSeconds` the command is killed, together with every process it started, when the time is up. Without it there is no timeout.
+
+A container runs one command at a time, and a second `exec` is refused with `command-running`. Closing the connection cancels the command.
+
+### In any free container
+
+```bash
+curl -sN -X POST http://orch.sandbox.zerops/container/run \
+  -H "Content-Type: application/json" \
+  -d '{"command": ["bash", "-lc", "make build"], "revert": true}'
+```
+
+`/container/run` is acquire, exec and cleanup in one call, for work that does not need to keep the container. A free running container is used as it is. A stopped one is started for the command and stopped again. If there is neither, a temporary container is created and removed after the run. With `revert`, a reused container is restored to its latest snapshot after the command, so a pool you prepared in advance stays the way you prepared it.
+
+For a reused container the connection stays open until the cleanup has finished, and when it closes the container is back in the pool. A temporary container is removed in the background after the stream ends, and counts against the pool maximum until it is gone.
+
+### The output stream
+
+Both calls answer with newline-delimited JSON, one object per line:
+
+```json
+{"type":"note","data":"cmV1c2luZyBhIHJ1bm5pbmcgY29udGFpbmVy..."}
+{"type":"stdout","data":"aGVsbG8K"}
+{"type":"exit","exitCode":0}
+```
+
+- `stdout` and `stderr` carry the output. `data` is base64-encoded, so binary output gets through.
+- `note` is a message from the orchestrator, for example which container a run picked.
+- `exit` is the last line of a command and carries its `exitCode`.
+- `error` means the connection to the container failed. It can arrive after some output, so the command may have run partly.
+
+When something other than the command itself ended it, the last line has a `reason`:
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit" style={{ minWidth: '190px' }}>reason</th>
+      <th className="w-fit">What happened</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit"><code>preempted</code></td>
+      <td className="w-fit">Somebody took the container with a forced stop, delete or restore, and the command was killed. Run it again in another container.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>command-timeout</code></td>
+      <td className="w-fit">The command ran longer than its <code>timeoutSeconds</code>.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>command-start-failed</code></td>
+      <td className="w-fit">The command could not be started, for example because the executable does not exist. Nothing has run. The error text is on <code>stderr</code>.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>command-killed</code></td>
+      <td className="w-fit">A signal killed the command. What it did until then stays done.</td>
+    </tr>
+  </tbody>
+</table>
+
+A command that ran and exited by itself has no `reason`, whatever its exit code.
+
+## Clean and dirty containers
+
+When a container is created via Orchestrator API, Zerops takes a snapshot of it named `zerops-primary`. It is the container as the pool made it: booted from the service's image, with your [deployed application](/swarm/how-to/deploy) and everything its `run.prepareCommands` installed, and nothing a consumer left behind. You cannot delete it.
+
+A container becomes **dirty** the moment a command runs in it. It becomes clean again only by a **reset**, a restore to the primary snapshot. There are three ways to get one:
+
+- `release?reset=true` cleans the container on its way back to the pool.
+- Acquire with `"clean": true` prefers a clean container, and resets a dirty one before it hands it out.
+- `POST /container/{id}/restore` with an empty body resets a container you hold.
+
+A reset stops the container, rewinds its disk and starts it again, so files and processes of the previous consumer are gone. Resetting on release keeps acquire fast. Resetting on acquire spares the cost for consumers that do not need a clean container.
+
+### Your own snapshots
+
+```bash
+curl -s -X POST "http://orch.sandbox.zerops/container/<id>/snapshot?lease=<lease>" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "deps-installed"}'
+
+curl -s -X POST "http://orch.sandbox.zerops/container/<id>/restore?lease=<lease>" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "deps-installed"}'
+```
+
+You can snapshot a running container at any point, as long as no command is running in it, and restore to it later. Snapshots are for state that belongs to one container and one piece of work, like a checked-out repository or a half-finished job you want to retry from.
+
+:::tip
+Do not use snapshots or forks to distribute tools and dependencies. Whatever every pool container needs belongs in the image: install it with `run.prepareCommands` and [roll it out](/swarm/how-to/deploy).
+:::
+
+- A container holds at most 5 snapshots, the primary one included. Names can contain letters, digits, `.`, `_` and `-`, and names starting with `zerops-` are reserved.
+- A restore brings a running container back running and leaves a stopped one stopped. A running container is restarted on the way, so processes in it end.
+- **A restore deletes every snapshot newer than the one you restore to.** A reset therefore deletes all your snapshots of that container.
+- A restore to one of your own snapshots does not make the container clean. Only the primary snapshot is known to contain nothing.
+
+With `"overwrite": "oldest"` or `"newest"`, creating a snapshot first deletes an existing one: the snapshot with the same name if there is one, otherwise the oldest or newest of your snapshots. It does that on every call, not only when the limit is reached. Calling it repeatedly with one name gives you a rolling checkpoint.
+
+## Fork a container
+
+```bash
+curl -s -X POST "http://orch.sandbox.zerops/container/<id>/fork?lease=<lease>"
+```
+
+A fork is a new pool container with a copy of the source's disk, reserved for you like an acquired one. Use it to try several continuations of the same work, or to look into a copy of a container without disturbing the original.
+
+The fork keeps the source's primary snapshot and gets a `fork` snapshot of the state it was copied at. Other snapshots of the source are not copied. By default the copy is taken while the source runs, which gives you a disk as consistent as after a power cut. That is fine for most sandboxes. With `{"consistent": true}` the source is stopped for the copy and started again. Copying takes a while, a VM in particular.
+
+## Take a container from somebody else
+
+Sooner or later a consumer hangs with a container reserved or a command running. `force=true` is the way out, and because it destroys somebody's work it needs the [admin token](/swarm/how-to/connect#tokens):
+
+```bash
+curl -s -X POST "http://orch.sandbox.zerops/container/<id>/stop?force=true" \
+  -H "X-Swarm-Admin-Token: $SANDBOX_ADMIN_TOKEN"
+```
+
+- A forced **stop** or **delete** kills the running command and clears the reservation. The killed command's stream ends with the reason `preempted`, so its owner knows what happened.
+- A forced **release** takes back a reservation, but never while a command is running. Stop or delete the container to end a command.
+- A forced **restore** kills the running command and returns the container to the pool.
+- On **rollout** and **batch delete**, `force` always needs the admin token.
+
+You do not need the admin token to force your own container, or one that nobody holds. A container picked by `/container/run` counts as held by somebody else for the duration of the run.
+
+## Remove containers
+
+`DELETE /container/{id}` answers `202` as soon as the removal has started, and the container disappears from the list shortly after. With `?wait=true` it answers `200` once the container is gone. Removing a container that is not in the pool any more is not an error.
+
+Zerops removes the containers of one service one after another. A second single delete while another removal is running is refused, and so is a removal that would take the pool below its minimum. A refused removal changes nothing, so a command that a forced delete was meant to end keeps running. To remove several containers, use the batch call, which handles both:
+
+```bash
+curl -s -X DELETE http://orch.sandbox.zerops/container \
+  -H "Content-Type: application/json" \
+  -d '{"all": true}'
+```
+
+It takes `{"ids": [...]}` or `{"all": true}` and answers with the `removed` ids and the `skipped` ones, each with a reason. Reserved and busy containers are skipped unless you force it, and with `all` enough containers are kept to stay at the pool minimum. The batch call does not take leases, so remove containers you hold one by one.
+
+## Handle errors
+
+A refused request answers with HTTP 400 and a body like this:
+
+```json
+{
+  "error": {
+    "code": "containerAction",
+    "message": "container is reserved by another consumer - pass its lease, or ?force=true to take it over",
+    "meta": [
+      {
+        "code": "containerAction",
+        "error": "container is reserved by another consumer - ...",
+        "metadata": {"reason": ["held-by-other"], "retryable": ["true"]}
+      }
+    ]
+  }
+}
+```
+
+The message is for people. In code, read `meta[].metadata.reason` and `retryable`. A retryable error can succeed later without you changing anything, so back off and try again. For the others something has to change first.
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit" style={{ minWidth: '210px' }}>reason</th>
+      <th className="w-fit" style={{ minWidth: '80px' }}>Retry</th>
+      <th className="w-fit">Meaning</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit"><code>held-by-other</code></td>
+      <td className="w-fit">yes</td>
+      <td className="w-fit">Another consumer holds the container. Send its lease, wait, or force.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>container-busy</code>, <code>command-running</code></td>
+      <td className="w-fit">yes</td>
+      <td className="w-fit">A command or another operation is in progress in the container.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>containers-preparing</code></td>
+      <td className="w-fit">yes</td>
+      <td className="w-fit">Free containers are being created. Wait for them.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>all-reserved</code></td>
+      <td className="w-fit">yes</td>
+      <td className="w-fit">Every container is taken and another one could not be created.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>container-unreachable</code>, <code>container-not-ready</code></td>
+      <td className="w-fit">yes</td>
+      <td className="w-fit">The container does not answer on the private network, or has no address yet.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>container-not-running</code></td>
+      <td className="w-fit">no</td>
+      <td className="w-fit">The container is stopped. Start it first.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>container-deleting</code></td>
+      <td className="w-fit">no</td>
+      <td className="w-fit">The container is being removed.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>container-not-found</code>, <code>snapshot-not-found</code></td>
+      <td className="w-fit">no</td>
+      <td className="w-fit">No such container in the pool, or no such snapshot of the container.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>unknown-lease</code></td>
+      <td className="w-fit">no</td>
+      <td className="w-fit">The lease does not hold this container, usually because the reservation expired.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>pool-capacity-exceeded</code>, <code>pool-at-minimum</code>, <code>pool-fixed-size</code></td>
+      <td className="w-fit">no</td>
+      <td className="w-fit">The request does not fit within the [pool limits](/swarm/how-to/create#size-the-pool).</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>admin-token-required</code>, <code>admin-token-invalid</code></td>
+      <td className="w-fit">no</td>
+      <td className="w-fit">The request takes a container from its holder and the admin token is missing or wrong.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>invalid-request</code>, <code>empty-command</code>, <code>reserved-snapshot-name</code></td>
+      <td className="w-fit">no</td>
+      <td className="w-fit">The request itself is wrong. The message names the problem.</td>
+    </tr>
+  </tbody>
+</table>
+
+Two kinds of errors look different. A missing or wrong API token is a `401`. Refusals that come from Zerops itself, like the snapshot limit or a removal refused because another one is running, have the `containerAction` code but no `reason`.
+
+## Unreachable containers
+
+Before acquire or run hands out a running container, the orchestrator checks that it answers on the private network, and skips it if it does not. After three failed checks in a row the container is marked with `unreachableSince` and left out, and it is tried again with growing pauses (30 seconds, then 1, 5 and 10 minutes) when a later acquire, run or exec gets to it. The mark clears when the container answers again or is started again.
+
+An unreachable container still counts against the pool maximum. If every free container is unreachable, acquire and run fail with `container-unreachable` and do not create more containers around the dead ones. Restart or remove containers that do not recover.
+
+## Good to know
+
+- The orchestrator runs up to 10 container operations (create, remove, start, stop, snapshot, restore, fork) at the same time, and operations on a single existing container one at a time. Further requests wait in a queue.
+- Reservations are stored on the orchestrator's disk and survive its restart. A command that was running during the restart is lost, and the container goes back to its holder, or to the pool if nobody held it.
+- Batch delete and rollout continue when the client disconnects.
+
+
+----------------------------------------
+
+# Swarm > Overview
+
+
+Swarm is a service that gives you a **pool of containers (or virtual machines) and an HTTP API to control them**. You create a container, reserve it, run commands in it, snapshot it, fork it and remove it with plain HTTP calls that answer in seconds. It is built for workloads where containers come and go all the time: CI jobs, per-user or per-task workspaces, sandboxes for AI agents, and one-off commands that need a clean environment.
+
+:::note
+Zerops Swarm has nothing to do with Docker Swarm.
+:::
+
+## Why not a regular runtime service
+
+A regular runtime service is managed through the Zerops API. Every change is queued, runs as a process you can follow in the GUI, and horizontal autoscaling decides how many containers exist. That is the right model for an application. It is too slow and too indirect when your code needs a fresh container now, a command executed in it, and the container gone a minute later.
+
+In a Swarm service, **horizontal autoscaling is off and you decide which containers exist**. The pool can be empty. Requests go to an orchestrator that runs inside your project and talks to the platform directly, so creating, starting and stopping a container are synchronous calls: when the response arrives, the work is done.
+
+## How it works
+
+A Swarm service has two parts:
+
+- **The orchestrator**, a small always-on container that serves the [control API](/swarm/how-to/use), a web UI and the API reference. It is created with the service and reachable on the project's private network at `orch.<hostname>.zerops`.
+- **The pool**, the containers your work runs in. They are ordinary Zerops containers: they sit on the project's private network, get the service's environment variables, and show up in the GUI with their logs and metrics.
+
+Everything else behaves like a [runtime service](/features/infrastructure#services). You can [deploy](/swarm/how-to/deploy) a `zerops.yaml` to it to prepare a custom image, and vertical autoscaling works the same way. The difference is who controls the containers.
+
+## Quick start
+
+Add a Swarm service to your project with a `zerops-import.yaml`:
+
+```yaml title="zerops-import.yaml"
+services:
+  - hostname: sandbox
+    type: swarm@1
+    # usable right away, without a first deploy
+    startWithoutCode: true
+```
+
+Import it with the zCLI:
+
+```bash
+zcli project service-import zerops-import.yaml
+```
+
+Connect to the project with the [Zerops VPN](/references/networking/vpn) and reserve a container. Requests coming from the VPN need no token:
+
+```bash
+curl -s -X POST http://orch.sandbox.zerops/container/acquire
+```
+
+The response contains the container and a `lease`, which proves the container is yours. Run a command in it and release it when you are done:
+
+```bash
+curl -s -X POST "http://orch.sandbox.zerops/container/<id>/exec?lease=<lease>" \
+  -H "Content-Type: application/json" \
+  -d '{"command": ["bash", "-lc", "uname -a"]}'
+
+curl -s -X POST "http://orch.sandbox.zerops/container/<id>/release?lease=<lease>&reset=true"
+```
+
+If all you need is to run one command somewhere, a single call picks a free container (or creates a temporary one), runs the command and cleans up:
+
+```bash
+curl -s -X POST http://orch.sandbox.zerops/container/run \
+  -H "Content-Type: application/json" \
+  -d '{"command": ["bash", "-lc", "echo hello"]}'
+```
+
+See [Work with the pool](/swarm/how-to/use) for the whole API and [Connect & authenticate](/swarm/how-to/connect) for calling it from your services.
+
+## Containers or virtual machines
+
+Swarm comes in two types. They have the same API and the same orchestrator, and differ in what the pool is made of. The type is **fixed for the life of the service**.
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit" style={{ minWidth: '110px' }}>Type</th>
+      <th className="w-fit" style={{ minWidth: '140px' }}>Pool</th>
+      <th className="w-fit">When to choose it</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit"><code>swarm@1</code></td>
+      <td className="w-fit">Linux containers (Ubuntu 26.04)</td>
+      <td className="w-fit">The default. Containers are created and started in seconds, scale vertically without a restart and use the least resources. You can deploy any container-based runtime to the pool.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>swarm-vm@1</code></td>
+      <td className="w-fit">Virtual machines (the [Docker](/docker/overview) VM)</td>
+      <td className="w-fit">When the work needs its own kernel: running Docker, or code you want separated from its neighbours by more than a container boundary. VMs boot slower, their resources are fixed values and only VM bases can be deployed to the pool.</td>
+    </tr>
+  </tbody>
+</table>
+
+Containers share the kernel of the machine they run on. That is the same isolation every Zerops runtime service has, and it is fine for your own code and your CI jobs. If you plan to run code you do not trust, consider the VM type. The general trade-offs are described in [Containers vs VMs](/features/container-vs-vm).
+
+### Supported versions
+
+- `swarm@1`
+- `swarm-vm@1`
+
+## Next steps
+
+- [Create & import](/swarm/how-to/create) — Create a Swarm service in the GUI or with zerops-import.yaml, and size the pool.
+- [Connect & authenticate](/swarm/how-to/connect) — Reach the API from the VPN, from your services and from the GUI. API and admin tokens, SSH.
+- [Work with the pool](/swarm/how-to/use) — Reserve containers, run commands, snapshot, reset and fork them.
+- [Custom image & rollout](/swarm/how-to/deploy) — Deploy a zerops.yaml to prepare the pool image and replace outdated containers.
 
 ## Need help?
 
