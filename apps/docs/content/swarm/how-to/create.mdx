@@ -1,0 +1,132 @@
+---
+title: Create & import
+description: Create a Swarm service in the Zerops GUI or import it with a YAML definition, choose between containers and VMs, and set the limits of the pool.
+---
+
+Create a Swarm service in the [GUI](#create-in-the-gui), or describe it in YAML and [import](#import-with-yaml) it through the GUI or zCLI.
+
+## Create in the GUI
+
+Go to your project dashboard, choose **Add new service** in the **Services** block and click **Swarm** (a pool of Linux containers) or **Swarm VM** (a pool of virtual machines). See [Containers or virtual machines](/swarm/overview#containers-or-virtual-machines) for the difference. The dialog asks for:
+
+- **Hostname**: a unique service identifier, like `sandbox`, `runners` or `pool`. Maximum 25 characters, lowercase ASCII letters (a-z) and numbers (0-9) only, unique within the project. The orchestrator is reachable at `orch.<hostname>.zerops`.
+- **Pool limits and resources**: the minimum and maximum number of containers, and the resources of each one. See [Size the pool](#size-the-pool).
+- **Start an empty Swarm service without requiring code first**: turn it on to use the pool right away. When it is off, the service waits for your first [deploy](/swarm/how-to/deploy) before the pool can be used.
+
+:::caution
+The **hostname** and the **type** (containers or VMs) are fixed once the service is created. Pool limits and resources can be changed at any time.
+:::
+
+## Import with YAML
+
+You can paste the YAML in the GUI (**Import services** in the left menu of your project) or import it with the [zCLI](/references/cli).
+
+```yaml title="zerops-import.yaml"
+services:
+  - hostname: sandbox
+    # swarm@1 for containers, swarm-vm@1 for virtual machines
+    type: swarm@1
+    # optional: use the pool right away, without a first deploy
+    startWithoutCode: true
+    # optional: the limits of the pool
+    minContainers: 0
+    maxContainers: 10
+    # optional: resources of each pool container
+    verticalAutoscaling:
+      minCpu: 1
+      maxCpu: 4
+      minRam: 0.5
+      maxRam: 8
+      minDisk: 1
+      maxDisk: 20
+```
+
+```sh
+zcli project service-import zerops-import.yaml
+```
+
+The VM type takes fixed resource values in place of ranges, the same way the [Docker service](/docker/overview#scaling-operations) does:
+
+```yaml title="zerops-import.yaml"
+services:
+  - hostname: sandboxvm
+    type: swarm-vm@1
+    startWithoutCode: true
+    maxContainers: 5
+    verticalAutoscaling:
+      cpu: 2
+      ram: 4
+      disk: 20
+```
+
+To create a whole project with a Swarm service in it, add the `project:` section and use `zcli project project-import`. The [import reference](/references/import) describes both commands and every general parameter.
+
+### Service parameters
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit" style={{ minWidth: '160px' }}>Parameter</th>
+      <th className="w-fit">Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit"><b>hostname</b></td>
+      <td className="w-fit">
+        The unique service identifier. Maximum 25 characters, lowercase ASCII letters (a-z) and numbers (0-9) only, unique within the project. <b>Fixed after creation.</b>
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit"><b>type</b></td>
+      <td className="w-fit">
+        <code>swarm@1</code> for a pool of containers, <code>swarm-vm@1</code> for a pool of virtual machines. <b>Fixed after creation.</b>
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit"><b>startWithoutCode</b></td>
+      <td className="w-fit">
+        <b>Optional.</b> Set to <code>true</code> to use the pool right away, with containers created from the plain base image. With the default, <code>false</code>, the service waits for your first <a href="/swarm/how-to/deploy">deploy</a> before the pool can be used.
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit"><b>minContainers</b></td>
+      <td className="w-fit">
+        <b>Optional.</b> How many containers the pool always keeps. Defaults to <code>0</code>, an empty pool. Zerops creates this many containers by itself, and the API refuses removals that would go below it.
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit"><b>maxContainers</b></td>
+      <td className="w-fit">
+        <b>Optional.</b> How many containers the pool can have at most. The API refuses to create more.
+      </td>
+    </tr>
+    <tr>
+      <td className="w-fit"><b>verticalAutoscaling</b></td>
+      <td className="w-fit">
+        <b>Optional.</b> Resources of each pool container. For <code>swarm@1</code> the usual ranges (<code>cpuMode</code>, <code>minCpu</code>/<code>maxCpu</code>, <code>minRam</code>/<code>maxRam</code>, <code>minDisk</code>/<code>maxDisk</code> and the other attributes described in <a href="/features/scaling">Scaling</a>). For <code>swarm-vm@1</code> the fixed values <code>cpu</code>, <code>ram</code> and <code>disk</code>, which default to 1 core, 1 GB and 5 GB.
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Size the pool
+
+`minContainers` and `maxContainers` mean something different here than in a runtime service. Zerops never adds or removes pool containers because of load. The two values are the limits your API calls work within:
+
+- **Minimum**: Zerops keeps at least this many containers in the pool and creates them for you. With `0`, the default, the pool starts empty.
+- **Maximum**: the most containers the pool can hold. Stopped containers count too. The limit is the same as for other runtime services, and we can raise it for your account on request.
+
+:::note
+The containers Zerops creates by itself to fill the minimum do not get the `zerops-primary` snapshot that containers created through the API have. A [reset](/swarm/how-to/use#clean-and-dirty-containers) of such a container, including acquire with `clean` and release with `reset`, fails because there is nothing to restore to. If you rely on resets, keep the minimum at `0` and create the warm containers with `POST /container`.
+:::
+
+A few things to consider when you choose them:
+
+- Creating a container takes seconds, a VM considerably longer. If your work cannot wait for that, keep a minimum of warm containers and [acquire](/swarm/how-to/use#reserve-a-container) them, so a container is only created when all of them are taken.
+- Pool containers can be stopped and started again through the API, and a stopped container keeps its disk. Acquire starts a stopped one on demand before it creates a new one.
+- A [rollout](/swarm/how-to/deploy#roll-out-a-new-image) needs room to work: it cannot replace anything in a pool whose minimum equals its maximum.
+
+Each pool container scales vertically on its own, the same way a container of any other runtime service does. VMs have fixed resources, and changing them restarts the VM.
+
+You can read the current limits from the API with `GET /pool`.
