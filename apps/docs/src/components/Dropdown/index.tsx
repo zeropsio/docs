@@ -22,7 +22,7 @@ export function DropdownItem({ title, children, wrap = true }: DropdownItemProps
 
     return (
         <div className="py-0.5">
-            <div className="card bg-[#F2F5F7] dark:bg-medusa-bg-base shadow-card-rest dark:shadow-card-rest-dark w-full p-[5px] rounded-md">
+            <div className="card !overflow-visible bg-[#F2F5F7] dark:bg-medusa-bg-base shadow-card-rest dark:shadow-card-rest-dark w-full p-[5px] rounded-md">
                 <button
                     className="flex w-full p-[9px] justify-between items-center text-left bg-transparent border-none cursor-pointer"
                     onClick={() => setIsOpen(!isOpen)}
@@ -37,7 +37,8 @@ export function DropdownItem({ title, children, wrap = true }: DropdownItemProps
                 </button>
                 <div
                     ref={answerRef}
-                    className={`overflow-hidden transition-all duration-500 ease-in-out`}
+                    // Clipping only the vertical axis hides the collapsed content but lets an expanded code block extend sideways out of the card.
+                    className="overflow-x-visible overflow-y-clip transition-all duration-500 ease-in-out"
                     style={{ height: height }}
                     role="region"
                 >
