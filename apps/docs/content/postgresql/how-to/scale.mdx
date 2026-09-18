@@ -20,7 +20,7 @@ PostgreSQL services use **vertical scaling** to adjust CPU, RAM, and disk resour
 :::danger Scaling can briefly interrupt the service
 When scaling changes the service's resources, Zerops regenerates the PostgreSQL configuration and applies it with an automatic **reload**. If the new values require it, the service is **restarted** instead: rolling through the cluster in HA mode, a short outage in single mode.
 
-A restart is only needed when the granted RAM crosses a memory step: `256 MiB`, `512 MiB`, `1 GiB`, `2 GiB`, `4 GiB`, then multiples of `8 GiB`. Scaling within a step reloads only; to rule out restarts entirely, keep `minRam` and `maxRam` within one step.
+A restart is only needed when the granted RAM crosses a memory step: `256 MiB`, `512 MiB`, `1 GiB`, `2 GiB`, `4 GiB`, then multiples of `8 GiB`. Scaling within a step reloads only; to rule out restarts entirely, keep `minRam` and `maxRam` within one step. Crossing a step also changes the [connection limits](/postgresql/how-to/connect#connection-limits).
 :::
 
 ## Scaling profiles
@@ -61,6 +61,63 @@ A profile name combines a **workload type** with a **tier**, e.g. `oltp-producti
   </tbody>
 </table>
 
+The settings you are most likely to run into (RAM means the current [memory step](#how-postgresql-scaling-works)):
+
+<ExpandableTable>
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit">Setting</th>
+      <th className="w-fit">OLTP</th>
+      <th className="w-fit">OLAP</th>
+      <th className="w-fit">WriteHeavy</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit"><code>max_connections</code></td>
+      <td className="w-fit" colSpan={3}>See <a href="/postgresql/how-to/connect#connection-limits">Connection limits</a></td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>shared_buffers</code></td>
+      <td className="w-fit">25% of RAM, max <code>8 GiB</code></td>
+      <td className="w-fit">25% of RAM, max <code>16 GiB</code></td>
+      <td className="w-fit">25% of RAM, max <code>8 GiB</code></td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>effective_cache_size</code></td>
+      <td className="w-fit">75% of RAM</td>
+      <td className="w-fit">75% of RAM</td>
+      <td className="w-fit">50% of RAM</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>work_mem</code></td>
+      <td className="w-fit">RAM / (<code>max_connections</code> × 4): about <code>5 MiB</code> up to 8 GiB of RAM, <code>25 MiB</code> at 48 GiB</td>
+      <td className="w-fit">RAM / (<code>max_connections</code> × 2): about <code>20 MiB</code> up to 8 GiB of RAM, <code>123 MiB</code> at 48 GiB</td>
+      <td className="w-fit">RAM / (<code>max_connections</code> × 8), at least <code>4 MiB</code>: <code>4 MiB</code> up to 16 GiB of RAM, <code>12 MiB</code> at 48 GiB</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>temp_file_limit</code></td>
+      <td className="w-fit" colSpan={3}>2 × RAM, max <code>48 GiB</code>. A query that needs more temporary disk space fails.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>idle_in_transaction_session_timeout</code></td>
+      <td className="w-fit">5 minutes</td>
+      <td className="w-fit">10 minutes</td>
+      <td className="w-fit">5 minutes</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>jit</code></td>
+      <td className="w-fit">On from 4 GiB of RAM</td>
+      <td className="w-fit">On</td>
+      <td className="w-fit">Off</td>
+    </tr>
+  </tbody>
+</table>
+</ExpandableTable>
+
+`work_mem` is sized so that every connection can run several sorts at once without exhausting RAM. If a few heavy queries need more, raise it just for them on any profile: `ALTER ROLE ... SET work_mem` for a dedicated role, or `SET LOCAL work_mem` inside a transaction.
+
 ### Available profiles
 
 The tier part of the name sets the size of the autoscaling envelope (and, in HA, the replication topology). Which profiles you can pick depends on the deployment mode:
@@ -92,7 +149,7 @@ The tier part of the name sets the size of the autoscaling envelope (and, in HA,
     <tr>
       <td className="w-fit"><code>oltp-enterprise</code></td>
       <td className="w-fit">HA only</td>
-      <td className="w-fit">High-throughput OLTP at scale. Highest connection limits and the most aggressive headroom.</td>
+      <td className="w-fit">High-throughput OLTP at scale. The largest resource envelope and the most aggressive headroom.</td>
     </tr>
     <tr>
       <td className="w-fit"><code>olap-production</code></td>

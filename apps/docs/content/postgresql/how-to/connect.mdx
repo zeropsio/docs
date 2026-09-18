@@ -127,6 +127,41 @@ A few things to know:
 - **TLS is required** on `6432` (see [above](#connection-ports-and-tls)), even for internal connections.
 - **HA mode.** pgBouncer pools connections to the primary (writes). Read routing across replicas on port `5433` is separate and is not pooled.
 
+## Connection limits
+
+`max_connections` follows the service's RAM and [workload type](/postgresql/how-to/scale#workload-types): 50 per GiB (between 20 and 500) for OLTP and WriteHeavy, 25 per GiB (between 10 and 200) for OLAP. RAM counts in [memory steps](/postgresql/how-to/scale#how-postgresql-scaling-works), so a service with 7 GB of RAM still gets the `4 GiB` limits. pgBouncer accepts `20 × (max_connections − 4)` clients, at least 100.
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit" rowSpan={2} style={{ minWidth: '105px' }}>Memory step</th>
+      <th className="w-fit" colSpan={2}><code>max_connections</code> (<code>5432</code>, <code>5433</code>)</th>
+      <th className="w-fit" colSpan={2}>pgBouncer clients (<code>6432</code>)</th>
+    </tr>
+    <tr>
+      <th className="w-fit">OLTP / WriteHeavy</th>
+      <th className="w-fit">OLAP</th>
+      <th className="w-fit">OLTP / WriteHeavy</th>
+      <th className="w-fit">OLAP</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td className="w-fit"><code>256 MiB</code></td><td className="w-fit">20</td><td className="w-fit">10</td><td className="w-fit">320</td><td className="w-fit">120</td></tr>
+    <tr><td className="w-fit"><code>512 MiB</code></td><td className="w-fit">25</td><td className="w-fit">12</td><td className="w-fit">420</td><td className="w-fit">160</td></tr>
+    <tr><td className="w-fit"><code>1 GiB</code></td><td className="w-fit">50</td><td className="w-fit">25</td><td className="w-fit">920</td><td className="w-fit">420</td></tr>
+    <tr><td className="w-fit"><code>2 GiB</code></td><td className="w-fit">100</td><td className="w-fit">50</td><td className="w-fit">1920</td><td className="w-fit">920</td></tr>
+    <tr><td className="w-fit"><code>4 GiB</code></td><td className="w-fit">200</td><td className="w-fit">100</td><td className="w-fit">3920</td><td className="w-fit">1920</td></tr>
+    <tr><td className="w-fit"><code>8 GiB</code></td><td className="w-fit">400</td><td className="w-fit">200</td><td className="w-fit">7920</td><td className="w-fit">3920</td></tr>
+    <tr><td className="w-fit"><code>16 GiB</code> and up</td><td className="w-fit">500</td><td className="w-fit">200</td><td className="w-fit">9920</td><td className="w-fit">3920</td></tr>
+  </tbody>
+</table>
+
+- **Not all of `max_connections` is yours.** 3 connections are reserved for superusers, and Zerops itself uses up to 4 (monitoring, health checks, backups).
+- **pgBouncer's server-side pool is much smaller than its client limit.** Each user/database pair gets up to `2 × vCPU + 1` server connections (the database's CPU cores), and each database at most a third of `max_connections`. Transactions beyond that wait in a queue instead of failing.
+- **The limits cannot be overridden.** If you need more connections, connect through `6432`, or raise the minimum RAM to the next memory step.
+- **HA mode.** The limits apply per node. Port `5433` balances across both replicas, so reads get twice the `max_connections`. Each of the two proxies runs its own pgBouncer with the full client limit, but both pool into the same primary: with several busy databases they can still exhaust its `max_connections`.
+- **Idle connections in HA mode.** The proxies close connections on `5432` and `5433` that stay idle for 60 minutes.
+
 ## Connect from services in the same project
 
 All services in a project share a private network, so other services reach PostgreSQL directly by its hostname. There are two ways to wire it up.
