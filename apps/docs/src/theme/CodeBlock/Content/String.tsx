@@ -65,6 +65,7 @@ export default function CodeBlockString({
       as="div"
       className={clsx(
         blockClassName,
+        wordWrap.isCodeScrollable && 'code-block-scrollable',
         language &&
           !blockClassName.includes(`language-${language}`) &&
           `language-${language}`

@@ -62,14 +62,19 @@ details + p {
   @apply relative mb-4 bg-medusa-bg-subtle dark:bg-medusa-bg-base hover:bg-medusa-bg-subtle-hover dark:hover:bg-medusa-bg-base-hover;
 }
 
-.col.toc-wrapper {
-  --ifm-col-width: 220px;
+:root {
+  --doc-toc-width: 220px;
+  --code-block-actions-width: 68px;
 }
 
 @media (min-width: 1400px) {
-  .col.toc-wrapper {
-    --ifm-col-width: 300px;
+  :root {
+    --doc-toc-width: 300px;
   }
+}
+
+.col.toc-wrapper {
+  --ifm-col-width: var(--doc-toc-width);
 }
 
 .markdown-doc-wrapper--fluid {
@@ -92,19 +97,69 @@ details + p {
   @apply text-medusa-code-text-subtle !pl-0;
 }
 
+/* The action buttons get a fixed-width gutter as a margin (not a percentage max-width), so it stays the same size when the block expands
+   and it counts towards the max-content width the expanded block sizes itself to. */
 .prism-code {
-  @apply xs:max-w-[90%] text-code-body [&_*]:text-code-body xs:after:content-[''] xs:after:rounded xs:after:absolute;
-  @apply xs:after:right-0 xs:after:top-0 xs:after:w-[calc(10%+24px)] xs:after:h-full xs:after:bg-code-fade;
+  @apply text-code-body [&_*]:text-code-body xs:after:content-[''] xs:after:rounded xs:after:absolute;
+  @apply xs:after:right-0 xs:after:top-0 xs:after:h-full xs:after:bg-code-fade;
+  @apply xs:after:w-[calc(var(--code-block-actions-width)+24px)] xs:after:pointer-events-none;
 }
 
-.prism-code:not(:hover)::-webkit-scrollbar-thumb,
-.prism-code:not(:hover)::-webkit-scrollbar-track {
-  @apply xs:invisible;
+/* The extra class in the selector is there to outrank the m-0 utility on the pre, which comes later in the stylesheet. */
+@media (min-width: 576px) {
+  .theme-code-block .prism-code {
+    margin-right: var(--code-block-actions-width);
+  }
 }
 
-.prism-code:hover::-webkit-scrollbar-thumb,
-.prism-code:hover::-webkit-scrollbar-track {
-  @apply xs:opacity-100;
+/* Touch devices never hover, so hiding the thumb there would leave their scroll indicator permanently invisible. */
+@media (hover: hover) and (pointer: fine) {
+  .prism-code {
+    scrollbar-color: transparent transparent;
+  }
+
+  .theme-code-block:hover .prism-code,
+  .prism-code:focus-visible {
+    scrollbar-color: var(--ifm-scrollbar-thumb-background-color) transparent;
+  }
+}
+
+/* A permanent scrollbar keeps the block height the same whether the code overflows (collapsed) or fits (expanded).
+   With the track transparent it only shows as a thumb, which is absent when there is nothing to scroll. */
+.code-block-scrollable .prism-code {
+  overflow-x: scroll;
+}
+
+/* Overflowing code blocks expand over the TOC column on hover. Needs a pointer that can hover and a TOC column to expand into. */
+@media (hover: hover) and (pointer: fine) and (min-width: 997px) {
+  .row:has(> .toc-wrapper) .theme-code-block.code-block-scrollable:not(.reference-table *) {
+    position: relative;
+    width: max-content;
+    min-width: 100%;
+    max-width: 100%;
+    /* z-index is held until the collapse animation ends, otherwise the sticky TOC paints over the shrinking block.
+       The resting value has to be a number for that, because a change from auto cannot be delayed by a transition. */
+    z-index: 0;
+    transition: max-width 120ms ease-out, box-shadow 120ms ease-out, z-index 0s 120ms;
+  }
+
+  /* :active keeps the block open while a text selection drag leaves it. :focus-visible (not :focus-within) so a mouse click does not pin it. */
+  .row:has(> .toc-wrapper) .theme-code-block.code-block-scrollable:not(.reference-table *):is(:hover, :active, :has(:focus-visible)) {
+    /* Reaches the right edge of the TOC content: article and column paddings (32px) plus the column's auto margin (13.5px on the fixed-width
+       layout from 1419px up) plus the TOC column minus its own right padding (16px). Narrower viewports have a smaller margin, where the
+       rounded-up 30px ends inside the TOC column's right padding. */
+    max-width: calc(100% + var(--doc-toc-width) + 30px);
+    z-index: 99;
+    /* The delay stops blocks from popping open as they pass under the cursor while the page scrolls. */
+    transition: max-width 120ms ease-out 180ms, box-shadow 120ms ease-out 180ms, z-index 0s;
+    @apply shadow-flyout dark:shadow-flyout-dark;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-code-block.code-block-scrollable {
+    transition-duration: 0s !important;
+  }
 }
 
 .prism-code {
