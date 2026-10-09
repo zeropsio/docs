@@ -1,6 +1,12 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useLayoutEffect, useState } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useState,
+} from 'react';
 
 export type ColorMode = 'light' | 'dark';
 
@@ -16,47 +22,62 @@ export type ColorModeProviderProps = {
   children: React.ReactNode;
 };
 
+const isColorMode = (value: unknown): value is ColorMode =>
+  value === 'light' || value === 'dark';
+
+const readStoredTheme = (): ColorMode | null => {
+  try {
+    const stored = localStorage.getItem('theme');
+    return isColorMode(stored) ? stored : null;
+  } catch {
+    return null;
+  }
+};
+
 export const ColorModeProvider = ({ children }: ColorModeProviderProps) => {
-  const [colorMode, setColorMode] = useState<ColorMode>('light');
-  const [loaded, setLoaded] = useState(false);
+  const [colorMode, setColorModeState] = useState<ColorMode>('light');
+
+  // Only an explicit user choice is persisted. Persisting the resolved value
+  // would freeze the system default into localStorage and later override it.
+  const setColorMode = (value: ColorMode) => {
+    setColorModeState(value);
+    try {
+      localStorage.setItem('theme', value);
+    } catch {
+      // storage unavailable (e.g. private mode); choice applies to this session
+    }
+  };
 
   const toggleColorMode = () =>
     setColorMode(colorMode === 'light' ? 'dark' : 'light');
 
   useLayoutEffect(() => {
-    if (loaded) {
-      return;
-    }
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    const systemTheme = (): ColorMode => {
+      return media.matches ? 'dark' : 'light';
+    };
 
     const urlTheme = new URLSearchParams(window.location.search).get(
       'docusaurus-theme'
     );
-    const theme = urlTheme ?? localStorage.getItem('theme');
-    if (theme && (theme === 'light' || theme === 'dark')) {
-      setColorMode(theme);
-    } else {
-      const prefersDark = window.matchMedia(
-        '(prefers-color-scheme: dark)'
-      ).matches;
-      setColorMode(prefersDark ? 'dark' : 'light');
-    }
-    setLoaded(true);
+    // URL param wins for this view only (not persisted)
+    setColorModeState(
+      isColorMode(urlTheme) ? urlTheme : (readStoredTheme() ?? systemTheme())
+    );
+
+    // Follow live system changes unless the user chose explicitly
+    const onChange = () => {
+      if (!readStoredTheme()) {
+        setColorModeState(systemTheme());
+      }
+    };
+    media.addEventListener('change', onChange);
+    return () => media.removeEventListener('change', onChange);
   }, []);
 
   useEffect(() => {
     document.querySelector('html')?.setAttribute('data-theme', colorMode);
   }, [colorMode]);
-
-  useEffect(() => {
-    if (!loaded) {
-      return;
-    }
-
-    const theme = localStorage.getItem('theme');
-    if (theme !== colorMode) {
-      localStorage.setItem('theme', colorMode);
-    }
-  }, [loaded, colorMode]);
 
   return (
     <ColorModeContext.Provider
