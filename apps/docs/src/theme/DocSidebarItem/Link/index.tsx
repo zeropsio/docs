@@ -71,7 +71,7 @@ export default function DocSidebarItemLink({
         {customProps?.sidebar_badge && (
           <Badge
             {...customProps.sidebar_badge}
-            className={`sidebar-soon-badge`}
+            className={`sidebar-soon-badge ml-0.5 !px-[6px]`}
           />
         )}
       </Link>

@@ -251,6 +251,10 @@ const config = {
             require('./src/plugins/remark-mdx-table-component'),
           ],
           rehypePlugins: [require('./src/plugins/rehype-wrap-tables')],
+          admonitions: {
+            keywords: ['beta'],
+            extendDefaults: true,
+          },
           showLastUpdateTime: false,
           showLastUpdateAuthor: false,
           // breadcrumbs: false,

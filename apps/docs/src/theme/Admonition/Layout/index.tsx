@@ -18,6 +18,8 @@ function AdmonitionContainer({
             : 'bg-medusa-tag-neutral-bg border-medusa-tag-neutral-border'),
         (type === 'danger' || type === 'warning' || type === 'caution') &&
           'bg-medusa-tag-red-bg border-medusa-tag-red-border',
+        type === 'beta' &&
+          'bg-medusa-tag-orange-bg border-medusa-tag-orange-border',
         '[&_a]:no-underline [&_a]:text-medusa-fg-interactive hover:[&_a]:text-medusa-fg-interactive-hover ',
         'mb-2 alert',
         className
@@ -46,6 +48,7 @@ function AdmonitionContent({
             : 'text-medusa-tag-neutral-text'),
         (type === 'danger' || type === 'warning' || type === 'caution') &&
           'text-medusa-tag-red-text',
+        type === 'beta' && 'text-medusa-tag-orange-text',
         'text-medium flex-1 [&>*:last-child]:mb-0',
         '[&>p>code]:px-0.5 [&>p>code]:text-code-label'
       )}
