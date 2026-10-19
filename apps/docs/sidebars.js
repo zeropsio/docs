@@ -14,6 +14,11 @@
  * - To add a coming soon link (with a badge), add in customProps sidebar_is_soon: true
  */
 
+const betaBadge = {
+  variant: 'orange',
+  children: 'BETA',
+};
+
 /** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */
 module.exports = {
   homepage: [
@@ -379,6 +384,16 @@ module.exports = {
           label: 'Swarm',
           customProps: {
             sidebar_icon: 'servers-connected',
+          },
+          className: 'homepage-sidebar-item  service-sidebar-item',
+        },
+        {
+          type: 'ref',
+          id: 'zbox/overview',
+          label: 'Box Workspace',
+          customProps: {
+            sidebar_icon: 'zerops-box',
+            sidebar_badge: betaBadge,
           },
           className: 'homepage-sidebar-item  service-sidebar-item',
         },
@@ -2368,6 +2383,27 @@ module.exports = {
           label: 'Custom image & rollout',
         },
       ],
+    },
+  ],
+  zbox: [
+    {
+      type: 'ref',
+      id: 'homepage',
+      label: 'Back to home',
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: 'back-arrow',
+      },
+    },
+    {
+      type: 'doc',
+      id: 'zbox/overview',
+      label: 'Zerops Box',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'zerops-box',
+        sidebar_badge: betaBadge,
+      },
     },
   ],
   mariadb: [

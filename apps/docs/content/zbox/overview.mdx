@@ -1,0 +1,118 @@
+---
+title: Zerops Box
+description: Zerops Box is a managed service that gives you a persistent workspace VM for running AI agent sandboxes as Firecracker microVMs, managed with the zbox CLI.
+---
+
+import data from '@site/static/data.json';
+import UnorderedCodeList from '@site/src/components/UnorderedCodeList';
+
+:::beta
+Zerops Box is in beta, and we're still shaping it. Its behavior, API and CLI may change as we go, and it doesn't come with an SLA yet. We'd love to hear your feedback, and more documentation is on the way.
+:::
+
+Zerops Box runs **sandboxes for AI agents** on Zerops. One Zerops Box service is one **workspace**: a persistent Ubuntu virtual machine. Inside the workspace, each sandbox is a Firecracker microVM that you create, park, wake, fork and snapshot with the [`zbox` CLI](#install-the-zbox-cli). Each workspace also serves a web console.
+
+The service type is called **Box Workspace**, after its unit: one service is one workspace. It is a managed service, like a database. There is nothing to deploy: it has no `zerops.yaml`, no build and no deploy pipeline.
+
+## Install the zbox CLI
+
+Workspaces and sandboxes are managed with the `zbox` CLI ([zbox-cli repository](https://github.com/zeropsio/zbox-cli)). It runs on Linux, macOS and Windows, on amd64 and arm64.
+
+On Linux and macOS:
+
+```bash
+curl -fsSL https://box.zerops.io/install.sh | sh
+```
+
+The script downloads the latest release, verifies its SHA-256 checksum and installs `zbox` to `/usr/local/bin` if it's writable, otherwise to `~/.local/bin`. If that directory isn't on your `PATH`, the script tells you how to add it.
+
+On Windows, in PowerShell:
+
+```powershell
+irm https://box.zerops.io/install.ps1 | iex
+```
+
+The binary is installed to `%LOCALAPPDATA%\Programs\zbox` and added to your user `PATH`. Open a new terminal for the change to apply.
+
+Both scripts accept two environment variables: `ZBOX_VERSION` installs a specific release (for example `v0.24`) instead of the latest one, and `ZBOX_INSTALL_DIR` sets the install directory. Pre-releases (tags with a hyphen, like `v0.24-rc1`) are only installed when `ZBOX_VERSION` names them. Run `zbox --version` to check the installed version.
+
+You can also download a binary from the [releases page](https://github.com/zeropsio/zbox-cli/releases) by hand, or install from source with Go 1.25 or newer:
+
+```bash
+go install github.com/zeropsio/zbox-cli/cmd/zbox@latest
+```
+
+Log in to your Zerops account. `zbox login` opens a consent page in the Zerops GUI where you confirm the code the CLI printed. If you don't have an account yet, `zbox register` opens the same page to create one first.
+
+```bash
+zbox login
+# or log in with a personal access token created in the Zerops GUI
+zbox login --token <personal-access-token>
+```
+
+## Create a workspace
+
+The quickest way is `zbox setup`. It creates a Box Workspace service, by default named `zbox` in a new project named `zbox-<timestamp>`, and waits until the default sandbox image is pulled as the first base.
+
+```bash
+zbox setup
+# use an existing project and a custom service name
+zbox setup --project-id <project-id> --name mybox
+# set the VM size; the defaults are 2 CPU cores, 4 GiB RAM and 10 GiB disk
+zbox setup --cpu 4 --ram 8 --disk 20
+```
+
+Check the login, the workspace, its capacity and what is in use with:
+
+```bash
+zbox workspace status
+```
+
+You can also create a workspace in the GUI: choose **Add new service** in your project and pick **Box Workspace** from the service catalog. Or describe it in a `zerops-import.yaml`:
+
+```yaml title="zerops-import.yaml"
+services:
+  - hostname: box
+    type: zbox@1
+```
+
+Import it with the [zCLI](/references/cli), or paste the YAML in the GUI (**Import services** in the left menu of your project):
+
+```bash
+zcli project service-import zerops-import.yaml
+```
+
+Supported versions:
+
+<UnorderedCodeList data={data.zbox.import} />
+
+## Work with sandboxes
+
+Create a sandbox, run commands in it and open its ports:
+
+```bash
+# new sandbox "app" with port 3000
+zbox new app -p 3000
+zbox exec app -- echo hello
+zbox shell app
+# open the port URL in the browser with a one-time ticket valid for 60 seconds
+zbox open app 3000
+# keep disk and memory state but free the RAM; zbox wake app resumes it
+zbox park app
+zbox remove app
+```
+
+Without `--base`, the only ready base is used. Ports are written as `port[/protocol][/access]`. By default, opening a port needs a one-time ticket.
+
+To start sandboxes without a cold boot, create a warm template. Sandboxes created from it resume from memory:
+
+```bash
+zbox template create --name dev --base <base-name-or-digest> --cpus 2 --memory 4g --warm
+zbox new app --template dev -p 3000/public
+```
+
+Commands have short aliases, like `ls` for `list`, `rm` for `remove`, `ws` for `workspace` and `create` for `new`. Every command accepts `--json` for scripting and `-q` to print only IDs.
+
+## Scaling
+
+A workspace is a single VM, so it scales **vertically only**: CPU cores, RAM and disk. There is no horizontal scaling and no minimum or maximum container count. Disk space can be increased but never decreased. See [Resource management](/features/scaling#part-1-resource-management) for how vertical scaling works on Zerops.

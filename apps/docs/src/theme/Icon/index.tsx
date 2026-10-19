@@ -118,6 +118,7 @@ import IconPuzzleSolid from './PuzzleSolid';
 import IconNextjs from './Nextjs';
 import IconFlagMini from './FlagMini';
 import IconBeaker from './Beaker';
+import IconZeropsBox from './ZeropsBox';
 import IconGitHub from './GitHub';
 import IconNestjs from './Nestjs';
 import IconLaravel from './Laravel';
@@ -180,6 +181,7 @@ export default {
   'back-arrow': ArrowUturnLeft,
   'bars-three': BarsThree,
   beaker: IconBeaker,
+  'zerops-box': IconZeropsBox,
   bell: BellAlert,
   'bell-alert-solid': BellAlertSolid,
   bolt: Bolt,
