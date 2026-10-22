@@ -1,0 +1,56 @@
+---
+title: Isolation and security
+description: The layers that separate Zerops Box sandboxes from each other, from the workspace and from the rest of your Zerops project, and the one key that controls them all.
+---
+
+Zerops Box is built to run code you don't fully trust, typically what an AI agent writes. This page gives an overview of the layers involved and of what each one protects, with links to the pages that describe them in detail.
+
+| Layer | Separates | Details |
+|---|---|---|
+| Zerops project | Your workspace from other projects and users | [Workspace as a Zerops service](/zbox/workspace-service) |
+| Workspace VM | Your sandboxes from other services in the project | [Workspace as a Zerops service](/zbox/workspace-service) |
+| Sandbox microVM | Each sandbox from the others and from the workspace | [below](#sandboxes) |
+| Network | What a sandbox can reach, and who can reach its ports | [Networking and access](/zbox/networking) |
+| Credentials | Which secrets a sandbox can read or use | [Secrets and the credentials proxy](/zbox/secrets) |
+
+## The workspace
+
+A workspace is a service in your Zerops project, with the same [project isolation](/features/infrastructure#projects) as any other service: its private network is shared only with the services of the same project. It is a dedicated VM, not a container, and runs nothing but the Zerops Box software and your sandboxes.
+
+Bases, templates, sandbox disks, memory images of parked sandboxes and snapshots are stored on a separate data disk of the workspace, encrypted with LUKS2. Its key is the service variable `ZBOX_WORKSPACE_VOLUME_KEY`, which Zerops generates when it creates the service and which can't be edited ([environment variables](/zbox/workspace-service#environment-variables)). Secrets inside a parked sandbox's memory are therefore stored encrypted too.
+
+## The API key controls everything
+
+The [workspace API key](/zbox/access#api-key) is the single authority over a workspace: there are no scopes and no per-user keys. Whoever holds it can create, read, change and terminate every sandbox, run commands in any of them and read their files.
+
+- In Zerops, the key is a service variable, so everyone who can see the workspace's variables, or open its web console from the GUI, has full control. Grant [project access](/features/rbac) accordingly.
+- Don't give the key to a sandbox unless that sandbox should manage the workspace. It is never delivered as a [secret](/zbox/secrets#where-secrets-come-from): every variable whose name starts with `ZBOX_` is excluded.
+- The key never opens a sandbox port. Browser access to ports goes through one-time tickets ([access modes](/zbox/networking#access-modes)).
+
+## Sandboxes
+
+Every sandbox is its own Firecracker microVM with its own Linux kernel, memory and disk. Code in a sandbox runs as root inside the guest, but that root has no access to the workspace or to other sandboxes: the only way out of the guest is its virtual network interface, and the channel the workspace uses to run commands in it.
+
+On the workspace, each microVM runs as a separate unprivileged process with its own memory and process limits, so one sandbox can't take the memory reserved for others ([capacity](/zbox/workspace-settings#capacity)).
+
+A sandbox's disk is its own writable layer on top of a shared, read-only base. A fork or a restore gets its own disk: it starts with the same content, and what one sandbox writes never reaches the other ([fork a sandbox](/zbox/lifecycle#fork-a-sandbox)). On the workspace disk, the copy takes space only for what changes afterwards ([what uses the disk](/zbox/workspace-settings#what-uses-the-disk)).
+
+## Network
+
+- **Between sandboxes**: a sandbox can't reach other sandboxes or its own workspace over the network directly, in any network mode. It can reach another sandbox only through a port's public URL, under that port's [access mode](/zbox/networking#access-modes).
+- **Egress**: the [network mode](/zbox/networking#egress) decides whether a sandbox reaches the internet, your project's private network, both or nothing, and [egress rules](/zbox/networking#egress-rules) narrow it further.
+- **Your project**: the default mode includes the project network, so a sandbox can reach the other services of your project, including their databases and the APIs of other workspaces. Use the `internet` or `airgapped` mode, or egress rules, for sandboxes that shouldn't, and limit the allowed modes in the [workspace policy](/zbox/workspace-settings#workspace-policy).
+- **Ingress**: a sandbox exposes no port until you declare one, and a declared port by default admits only those who can use the workspace API, with the API key or a Zerops login, through one-time tickets ([access modes](/zbox/networking#access-modes)).
+
+## Credentials
+
+You choose per sandbox how a credential reaches it ([secrets and the credentials proxy](/zbox/secrets)):
+
+- An **integration** keeps the credential outside the sandbox. The [credentials proxy](/zbox/secrets#credentials-proxy) adds it to requests on their way out, so code in the sandbox can use the API but never read the credential. [Connectors](/zbox/connectors) work the same way for Claude Code, GitHub and Codex.
+- A **secret** is delivered into the sandbox's environment, so the code inside can read it. A sandbox that received secrets can't be forked or snapshotted with memory, so its secrets don't spread to other sandboxes ([secret-bearing sandboxes](/zbox/secrets#secret-bearing-sandboxes)).
+
+Prefer integrations for API tokens, and give each sandbox only the secrets it needs.
+
+## Base builds
+
+A base built from a Dockerfile with `zbox base build` is built on the workspace VM itself, not inside a sandbox. Its `RUN` steps have the workspace VM's network, including your project's private network ([build a base](/zbox/images#build-a-base-from-a-dockerfile)). Build only Dockerfiles you trust, as you would on your own machine.

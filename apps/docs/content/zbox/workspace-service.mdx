@@ -1,0 +1,129 @@
+---
+title: Workspace as a Zerops service
+description: How a Box Workspace runs as a managed Zerops service, what you can change on it in Zerops, and what each change does to your sandboxes.
+---
+
+A workspace is one Zerops service of the type **Box Workspace** (`zbox@1`): a single Ubuntu VM in your project. It is a managed service, like a database. Zerops runs the VM and the orchestrator inside it, and you manage the sandboxes through the workspace's API. This page covers the Zerops side: the service lifecycle, resizing, environment variables and networking.
+
+## What Zerops manages
+
+Zerops provides and runs:
+
+- **The VM and its operating system.** You don't deploy anything to it. A Box Workspace has no `zerops.yaml`, build, deploy or pipelines. The Zerops GUI offers no web terminal, file browser or backups for it.
+- **The orchestrator**, which runs your sandboxes as microVMs and serves the API and the web console. It starts on its own whenever the VM boots. New orchestrator versions come with the platform. The orchestrator restarts itself to pick up a new version, and running sandboxes keep running while it does.
+- **The data disk.** Bases, templates, sandboxes and snapshots live on a separate, encrypted disk of the VM ([isolation](/zbox/isolation)). The disk persists across restarts, stops and resizes, and it is deleted only with the service.
+
+To see which orchestrator version and VM image a workspace runs, use `zbox workspace`. The console's Workspace page shows the same:
+
+```bash
+# Version is the orchestrator, Image the VM image
+zbox workspace
+```
+
+Everything inside the workspace is yours to manage through the [API, the CLI or the console](/zbox/access). That includes sandboxes, bases, templates, the workspace policy, domains, integrations and webhooks. In Zerops you manage only the service itself:
+
+| In Zerops (GUI, zCLI, import YAML) | In the workspace (API, `zbox`, console) |
+|---|---|
+| Restart, stop, start, reload, delete | Sandboxes, bases, templates, snapshots |
+| Size: CPU cores, RAM, disk | The [workspace policy and capacity](/zbox/workspace-settings) |
+| Service environment variables | Domains, integrations, connectors, webhooks |
+| Subdomain access, logs | Events and sandbox metrics |
+
+## Service lifecycle
+
+Every lifecycle action of the service also affects the sandboxes inside it:
+
+| Action | The VM | Running sandboxes | Parked sandboxes |
+|---|---|---|---|
+| **Reload** | Keeps running. Zerops restarts the orchestrator with the current service variables. | Keep running, with their processes | Stay parked with their memory |
+| **Restart** | Reboots | Stop, and come back `PARKED` without memory | Stay parked with their memory |
+| **Stop**, then **Start** | Shuts down, then boots | Stop, and come back `PARKED` without memory | Stay parked with their memory |
+| **Resize** ([below](#resizing)) | Shuts down and boots with the new size | Stop, and come back `PARKED` without memory | Stay parked with their memory |
+| **Delete** | Deleted, with its data disk | Gone | Gone |
+
+You find these actions on the service in the Zerops GUI. A reload is the one that leaves the sandboxes alone. zCLI can stop and start the service:
+
+```bash
+zcli service stop --serviceId <workspace-service-id>
+zcli service start --serviceId <workspace-service-id>
+```
+
+While the workspace is stopped, the API, the console and every sandbox URL are unreachable, and `zbox` exits with code 7 (unavailable). Operations still in flight when the VM goes down fail. Sandboxes that were still being created end up `FAILED`.
+
+:::warning Running sandboxes lose their memory
+A restart, stop or resize does not park the running sandboxes first. Their microVMs are killed, and when the workspace is back they are `PARKED` without a memory image. Processes inside them are gone, and writes that a guest had not yet flushed to its disk are lost: a file written seconds before can come back empty or be missing. The next wake is a cold boot. Data that was synced to the sandbox's disk is kept.
+
+To keep a sandbox's processes and memory, [park it](/zbox/lifecycle) before you restart, stop or resize the workspace, and wake it afterwards. It resumes from memory as usual:
+
+```bash
+zbox list
+zbox park app
+```
+:::
+
+:::note Coming soon
+The workspace will park its running sandboxes with their memory before it stops, restarts or resizes, so they resume where they left off.
+:::
+
+:::caution Deleting the service deletes everything
+Zerops does not back up a workspace. Deleting the service deletes its data disk and every base, template, sandbox and snapshot on it.
+:::
+
+## Resizing
+
+A workspace is a single VM with fixed resources. It scales **vertically only**, and only when you change its size: CPU cores, RAM and disk. It never autoscales and never adds a second VM. You change the size in the service's scaling settings in the Zerops GUI. `zbox setup` sets the size at create time ([getting started](/zbox/getting-started)).
+
+| Resource | Minimum | Default | Technical maximum |
+|---|---|---|---|
+| CPU cores | 2 | 2, shared | 24 |
+| RAM | 2 GB | 4 GB | 48 GB |
+| Disk | 10 GB | 10 GB | 1024 GB |
+
+Your Zerops account can have lower maximums than the technical ones. The scaling settings in the Zerops GUI show the limits that apply to you, and a larger value is lowered to them.
+
+- **Every change stops and starts the VM.** This applies to CPU and RAM as well as to disk, and running sandboxes are affected as by a restart (see the [warning above](/zbox/workspace-service#service-lifecycle)). Plan resizes like restarts.
+- **Disk can only grow.** The data disk is enlarged and keeps its contents. Zerops refuses a smaller disk size. To get a smaller disk, you need a new workspace.
+- **The size sets the capacity.** The CPU, RAM and disk of the VM are what sandboxes are admitted against ([capacity](/zbox/workspace-settings#capacity)).
+
+CPU can be shared or dedicated, like in any Zerops service. See [resource management](/features/scaling#part-1-resource-management) for CPU modes, and [fixed resource allocation](/features/scaling#fixed-resource-allocation-docker-services) for how VM-based services differ from containers.
+
+## Environment variables
+
+The service creates two environment variables of its own:
+
+| Variable | What it is |
+|---|---|
+| `ZBOX_WORKSPACE_API_KEY` | The [workspace API key](/zbox/access#api-key). It is generated when the service is created, and it is sensitive and editable. |
+| `ZBOX_WORKSPACE_VOLUME_KEY` | The key that unlocks the encrypted data disk. It is generated when the service is created, and it is sensitive and not editable ([isolation](/zbox/isolation)). |
+
+The orchestrator reads `ZBOX_WORKSPACE_API_KEY` only when it starts, so an edited key takes effect on the next **reload**, **restart**, or **stop and start** of the service, never on its own. See [rotate the API key](/zbox/access#rotate-the-api-key) for the steps.
+
+Your own service variables, and the project variables the service sees, are where sandbox secrets and integration credentials come from ([secrets](/zbox/secrets)). Edits to them apply right away, without a reload or restart: new sandboxes and integrations use the new value, and sandboxes that were given the old one become [stale](/zbox/secrets#stale-secrets). Connector credentials you store through the API are saved as service variables too ([connectors](/zbox/connectors)). For how Zerops variables work in general, see [environment variables](/features/env-variables).
+
+## Subdomain access
+
+A workspace publishes two HTTP ports. With Zerops subdomain access enabled, each gets its own Zerops subdomain:
+
+| Port | Serves | Example |
+|---|---|---|
+| 8080 | The API and the web console | `https://zbox-6da-8080.prg1.zerops.app` |
+| 8081 | Sandbox ingress: the ports your sandboxes expose | `https://<port>-<sandbox-id>-zbox-6da-8081.prg1.zerops.app` |
+
+`zbox setup` turns subdomain access on and adds the 8081 subdomain as the workspace's first domain ([domains](/zbox/workspace-settings#domains)).
+
+Turning subdomain access off doesn't touch the sandboxes. Both subdomains stop answering (`502`): the API URL, the console at it, and every sandbox port URL on the Zerops subdomain. The workspace still lists the subdomain among its domains and in the sandboxes' URLs. The API stays reachable through Zerops with your Zerops login, the way the GUI and a logged-in CLI reach it. To give sandbox ports public URLs without it, route [your own wildcard domain](/zbox/workspace-settings#your-own-domain) to port 8081. Turning subdomain access on again brings back the same URLs. For Zerops subdomains in general, see [public access](/features/access#zerops-subdomain).
+
+## Project network
+
+A workspace is a service in your project's private network, like any other Zerops service.
+
+- **Sandboxes reach other services** of the project by hostname when their network mode includes the project network, which the default mode does. See [project services](/zbox/networking#project-services) for the details.
+- **Other services reach the workspace API** at `http://<hostname>:8080` with the API key as a bearer token, for example a runtime service that creates sandboxes for its users. Over the [Zerops VPN](/references/networking/vpn), your own machine can reach it the same way.
+
+## Logs
+
+The orchestrator logs to the service's runtime log in Zerops. See [logs](/zbox/monitoring#logs).
+
+## Node moves
+
+Zerops may move a workspace to another server, for example for maintenance. The data disk moves with the VM. The VM is stopped for the move and started again afterwards, so sandboxes are affected as by a stop and start.

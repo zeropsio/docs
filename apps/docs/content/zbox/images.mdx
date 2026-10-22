@@ -1,0 +1,188 @@
+---
+title: "Images: bases and templates"
+description: Bases are the images sandboxes boot from, pulled from a registry or built from a Dockerfile on the workspace; templates add a size, a policy and optionally a warm memory snapshot.
+---
+
+Every sandbox starts from a **base**: a container image turned into a read-only root disk for the sandbox's microVM. A **template** is a base plus a size and a policy, and a **warm template** also keeps a booted, warmed-up memory snapshot, so sandboxes made from it resume instead of booting. This page covers how to get your own images in, when to reach for a template, and the guest kernel every sandbox runs.
+
+The same actions are on the **Images** page of the web console.
+
+## Base or template
+
+| | Base | Template |
+|---|---|---|
+| What it is | an image: files, a command, environment variables, a working directory | a base plus CPUs, memory and a policy, optionally warm |
+| Sandbox size | whatever you pass to `zbox new`, otherwise 1 vCPU and 512 MiB | the template's size, unless you override it |
+| Start | cold boot | cold boot, or resume from memory if warm |
+| Use it for | one-off sandboxes, trying an image | many sandboxes of one kind, with fixed sizes, default ports and limits, or things loaded in advance |
+
+```bash
+# boot straight from a base
+zbox new scratch --base alpine
+# or from a template
+zbox new agent1 --template dev
+```
+
+Both `--base` and `--template` take a name, a digest or a digest prefix. `--base` also takes the image reference the base was added from.
+
+## The default base
+
+A new workspace gets the default sandbox image as its first base (see [create a workspace](/zbox/getting-started#create-a-workspace)). It's Ubuntu 26.04 with Node.js 24, Python 3, build tools (gcc, make), git, curl, the GitHub CLI, Claude Code and Codex. Its working directory is `/workspace` and its command is `sleep infinity`, so the sandbox just waits for your commands.
+
+The default image is published as a tarball. To add it again, for example after you removed it or to pick up a [new agent](#keep-bases-current):
+
+```bash
+zbox base add https://storage.cdn.zerops.app/4ga3k-boxstorage/zbox/zbox-base.tar.gz --name default
+```
+
+## Add a base from a registry or a URL
+
+`zbox base add` pulls an image and turns it into a base:
+
+```bash
+# Docker Hub short names work like in docker
+zbox base add python:3.12-slim --name python
+# any OCI registry, pinned to a digest if you like
+zbox base add ghcr.io/acme/agent@sha256:<digest> --name agent
+# a `docker save` archive (.tar or .tar.gz) served over http(s)
+zbox base add https://example.com/images/agent.tar.gz --name agent
+```
+
+The workspace downloads the `linux/amd64` image, applies its layers into one filesystem and stores it as a compressed read-only disk image. The pull runs as an [operation](/zbox/access#operations); the CLI waits for it unless you pass `--no-wait`. A pull may take up to 15 minutes.
+
+**Private registries.** Put the registry login as `username:password` (or `username:access-token`) into an [environment variable of the workspace service](/zbox/workspace-service#environment-variables), then name the variable, not the value:
+
+```bash
+zbox base add ghcr.io/acme/private-agent:1.4 --name agent --registry-credential-env GHCR_LOGIN
+```
+
+The workspace reads the variable when it pulls, so a new or changed variable needs no restart.
+
+**Names and digests.** A base is identified by its image digest, and the name is an optional, unique label on top. Adding an image that is already a base doesn't create a second one: the existing base takes the new reference, and the new `--name` if you pass one. `--name` takes the name over from any base that holds it, which leaves that base unnamed but otherwise untouched. Rename a base with `zbox base rename <base> <name>`; unlike `--name` on add, a rename is refused while another base has the name.
+
+:::caution
+Adding an image that's already registered under a different name renames that base. For example, `zbox base add alpine:3.20 --name test` on a workspace that has `alpine:3.20` as `alpine` leaves you with one base named `test`.
+:::
+
+## Build a base from a Dockerfile
+
+`zbox base build` uploads a build context and builds it on the workspace, with no Docker needed on your machine:
+
+```bash
+# pack the current directory and build its Dockerfile
+zbox base build --name app
+# a directory, or a ready .tar, .tar.gz or .zip
+zbox base build ./image --name app
+# show what would be uploaded without building
+zbox base build ./image --dry-run
+```
+
+The `Dockerfile` must be at the root of the context. The CLI leaves out what `docker build` would: the patterns of a root `.dockerignore`, otherwise the `.gitignore` files, and `.git` always.
+
+- **Limits**: the context can be up to 512 MiB and a build up to 30 minutes. When the CLI talks to the workspace's API URL directly with the workspace API key (instead of through your Zerops login), uploads over 50 MiB are refused.
+- **Network**: `RUN` steps have internet access, so package installs and downloads work. They run on the workspace VM, not in a sandbox, so they also reach your project's private network ([base builds](/zbox/isolation#base-builds)).
+- **Failures**: a failed build creates no base, and the error shows the end of the build output.
+- **Rebuilds**: build again with the same `--name` and the name moves to the new base. The previous build stays as an unnamed base, still used by any template or sandbox made from it, until you [remove it](#delete-bases-and-templates).
+- **Cache**: layers are cached on the workspace disk with no size limit, so rebuilds are fast. `zbox base prune` removes the whole cache, and the next build of every Dockerfile starts from scratch.
+
+## Image requirements
+
+Most Linux images work as they are, both glibc-based (Debian, Ubuntu) and musl-based (Alpine).
+
+- The image must be `linux/amd64`.
+- No init system is needed. The Zerops Box agent becomes the sandbox's init process (it replaces any `/init` in the image), runs your command, and serves commands, files and [SSH](/zbox/networking#ssh). You don't need an SSH server in the image.
+- The root of the image must contain the directories `/dev`, `/run` and `/etc`. Distribution images have them, but an image built `FROM scratch` with a single binary won't boot without them.
+- Warm-up commands and other commands that run through a shell need `/bin/sh`.
+- The sandbox manages `/etc/resolv.conf` (DNS).
+
+From the image configuration, the sandbox uses the command (`ENTRYPOINT` and `CMD`), the environment variables (`ENV`), the working directory (`WORKDIR`) and the exposed ports (`EXPOSE`). Everything else is ignored, `USER` included: everything in a sandbox runs as root.
+
+When a sandbox boots, the image's command starts as its main process, with its output in `/var/log/zbox-workload.log`. If the command exits, the sandbox keeps running and you can still run commands in it. You can replace the command, the environment and the working directory per sandbox:
+
+```bash
+zbox new web --base app -e PORT=3000 -w /srv -- node server.js
+```
+
+The base is the sandbox's read-only lower layer. Whatever the sandbox writes lands in its own writable layer (see [what uses the disk](/zbox/workspace-settings#what-uses-the-disk)).
+
+The `EXPOSES` column of `zbox base list` shows the image's `EXPOSE` ports. A sandbox created straight from the base opens no ports. A template made from the base opens them by default with `members` access (see [ports](/zbox/networking#ports)).
+
+## Templates
+
+A template fixes a base, a size and a policy for the sandboxes created from it:
+
+```bash
+zbox template create --base app --name dev --cpus 2 --memory 2g
+zbox new agent1 --template dev
+```
+
+The size is the default for every sandbox made from the template. Without `--cpus` and `--memory`, a template gets 1 vCPU and 512 MiB, the same as a [new sandbox](/zbox/lifecycle#create-a-sandbox). The **template policy**, passed as a JSON file with `-f`, sets defaults and limits for those sandboxes, within the [workspace policy](/zbox/workspace-settings#workspace-policy):
+
+| Field | Effect |
+|---|---|
+| `defaultPorts` | ports a sandbox opens when its create request names none; the base's `EXPOSE` ports with `members` access when empty |
+| `defaultEgress` | egress rules a sandbox gets when its create request names none (see [egress](/zbox/networking#egress)) |
+| `allowedNetworkModes` | network modes a sandbox may use |
+| `maxCpus`, `maxMemoryBytes`, `maxPorts` | upper limits for a sandbox's size and its number of ports |
+| `maxIdleTtlSeconds`, `maxAbsoluteTtlSeconds` | upper limits for a sandbox's [TTLs](/zbox/lifecycle#idle-and-absolute-ttl) |
+
+```json title="policy.json"
+{ "maxCpus": 2, "allowedNetworkModes": ["PROJECT_INTERNET"], "defaultPorts": [{ "port": 3000, "protocol": "HTTP", "access": "MEMBERS" }] }
+```
+
+A create request that goes over a limit fails with `422 policyViolation`, like one over the [workspace policy](/zbox/workspace-settings#workspace-policy).
+
+### Warm templates
+
+A **warm template** is built by booting its base once at the template's size, running an optional **warm-up command**, and saving the sandbox's memory and disk. A sandbox created from it resumes from that snapshot instead of booting:
+
+```bash
+zbox template create --base default --name dev --warm --cpus 2 --memory 2g --warmup 'claude --version'
+```
+
+A sandbox made from a warm template inherits everything from the moment of the snapshot: files the warm-up wrote, memory contents (including `/dev/shm` and other in-memory filesystems), and processes the warm-up left running in the background. Use the warm-up to load what every sandbox needs anyway, such as a language runtime, a tool's first start or caches. After resuming, the sandbox gets its own identity: hostname, network, environment variables, secrets and SSH host key, and then the image's command starts.
+
+The warm-up runs with `/bin/sh -c` and the image's environment variables. It has no network, so anything it needs must already be in the image. It may run up to 10 minutes. If it exits non-zero, the template ends up `FAILED` with the end of the warm-up output as the reason; remove the template and create it again.
+
+A sandbox resumes from the snapshot only when it has exactly the template's CPUs and memory. With any other size it cold boots from the base, without anything the warm-up did. A sandbox with the `airgapped` network mode can't resume a snapshot either: it cold boots from the template's saved disk. In that case, only the warm-up's files that were flushed to disk are there, so end the warm-up with `sync` if such sandboxes need them.
+
+A warm template's snapshot takes space on the workspace disk. A template without `--warm` stores only its settings and takes none.
+
+### Change or replace a template
+
+You can rename a template or replace its policy. Sandboxes created earlier keep the policy they were created with.
+
+```bash
+zbox template rename dev dev-old
+zbox template set dev --name dev -f policy.json
+```
+
+The base, the size and the warm-up can't change. To change them, create a new template. Template names are unique and, unlike base names, aren't taken over, so rename the old template first, create the new one under the name, then remove the old one.
+
+## Keep bases current
+
+Every base contains the Zerops Box agent from the time the base was added. When Zerops updates the agent with the workspace software, existing bases keep their old copy. Nothing re-adds them automatically, not even a restart of the workspace. To move a base to the current agent, add it again, or rebuild a built base:
+
+```bash
+zbox base add python:3.12-slim --name python
+zbox base build ./image --name app
+```
+
+Sandboxes created afterwards from the base, or from a template without `--warm`, get the new agent. Sandboxes that already exist stay on the image they started with. A warm template keeps the agent in its memory snapshot, so replace it with a new template (see [above](#change-or-replace-a-template)).
+
+## The guest kernel
+
+Every sandbox runs the same Linux kernel, 6.18.53, which Zerops ships with the workspace software. You can't pick or replace it per base or sandbox. `uname -r` in a sandbox shows it.
+
+The kernel has everything built in and can't load kernel modules. It provides cgroup v2, namespaces including user namespaces, overlayfs, FUSE and TUN. It doesn't provide KVM, so you can't run virtual machines inside a sandbox, and there's no swap. For running Docker, see [Docker in sandboxes](/zbox/docker).
+
+## Delete bases and templates
+
+```bash
+zbox template remove dev-old
+zbox base remove app
+```
+
+A template can't be removed while a sandbox that isn't terminated uses it, or while it's still building. A base can't be removed while a template or a sandbox that isn't terminated uses it. Both cases fail with `inUse`, and the error says what holds it. Parked sandboxes count, so terminate them or remove the templates first.
+
+Bases, warm template snapshots and the build cache all live on the workspace disk. `zbox workspace` shows the disk in use; see [capacity](/zbox/workspace-settings#capacity) for how much is available.

@@ -1,0 +1,158 @@
+---
+title: Workspace settings and capacity
+description: How a Zerops Box workspace admits sandboxes against its CPU, RAM and disk, how the workspace policy sets ceilings for every sandbox, and how domains give sandbox ports their public URLs.
+---
+
+A workspace runs every sandbox inside one VM, so the VM's size sets how many sandboxes can run at once. This page explains how the workspace counts its capacity, the **workspace policy** that caps what a sandbox may ask for, and the **domains** sandbox ports are published under.
+
+```bash
+# capacity, usage, domains and the policy of the current workspace
+zbox workspace
+```
+
+The console shows the same on its Workspace page, where you can also edit the policy and the domains.
+
+## Capacity
+
+`zbox workspace` prints the capacity and what is in use, for example on a workspace with 2 CPU cores and 4 GB of RAM:
+
+```text
+Capacity	16 vcpu (2 cores x 8), 3.3 GiB memory (3.8 GiB less 512.0 MiB reserve), 9.9 GiB disk (1.0 GiB headroom)
+In use	3 vcpu, 3.0 GiB memory reserved by 3 running sandboxes (0 parked), 274.0 MiB resident, 1.0 GiB disk
+```
+
+| Resource | Capacity |
+|---|---|
+| vCPUs | The workspace's CPU cores × `cpuOvercommit` (8 unless the [policy](#workspace-policy) sets another value). |
+| Memory | The VM's memory less a reserve for the workspace's own system (`coreReserveBytes`, 512 MiB unless the policy sets another value). Memory is never overcommitted. |
+| Disk | The workspace disk. 1 GiB must stay free (the **headroom**) for anything new to start. |
+
+### What a sandbox reserves
+
+- **A running sandbox** reserves its full memory size plus 8 MiB, and its vCPUs. The reservation is the size you gave the sandbox, not what it uses: the `resident` figure shows how much memory the sandboxes actually touch.
+- **A parked sandbox** reserves no CPU and no memory. It keeps its disk and, when parked with memory, a memory image on the workspace disk ([park and wake](/zbox/lifecycle#park-and-wake)).
+- **A base pull or a base build** reserves 512 MiB of memory while it runs, and a warm template build reserves the template's size while it builds ([images](/zbox/images)).
+
+A sandbox can't have more vCPUs than the workspace has cores. vCPUs beyond the cores are shared: the running sandboxes get CPU time in proportion to their vCPUs.
+
+### What uses the disk
+
+Everything a workspace stores sits on its disk: bases, templates (with their memory images when warm), what each sandbox writes to its disk, the memory images of sandboxes parked with memory, snapshots, and the cache of base builds. A sandbox's disk takes space only for what the sandbox writes. A fork shares its parent's disk and adds only what changes afterwards ([fork a sandbox](/zbox/lifecycle#fork-a-sandbox)). Removing a sandbox frees its disk and memory image.
+
+:::caution
+Sandboxes don't reserve disk. Every sandbox sees a 10 GiB disk of its own even when the workspace has less free space, and the headroom only stops new sandboxes, wakes, forks, snapshots and builds from starting. Keep an eye on the disk line of `zbox workspace` when sandboxes write a lot.
+:::
+
+### When the workspace is full
+
+Creating, forking, restoring or waking a sandbox, taking a snapshot, building a warm template, and pulling or building a base each check the free capacity first. If something doesn't fit, the request fails with `409 workspaceFull` and the CLI exits with code 7:
+
+```text
+error: workspace full: memory 520.0 MiB needed, 235.1 MiB free of 3.3 GiB; park a sandbox or scale the workspace
+```
+
+The error's metadata names the `resource` (`memory`, `cpu` or `disk`) with `requested`, `free` and `usable` (bytes, or vCPUs for `cpu`). The workspace never parks or removes sandboxes to make room. To free capacity:
+
+- **memory or CPU**: park sandboxes you don't need right now, or remove them ([park and wake](/zbox/lifecycle#park-and-wake)), or give new sandboxes smaller sizes.
+- **disk**: remove sandboxes, snapshots, templates and bases you no longer need, or park sandboxes with `--no-memory` to drop their memory images ([delete bases and templates](/zbox/images#delete-bases-and-templates)).
+- **any**: [resize the workspace](/zbox/workspace-service#resizing). Disk can only grow.
+
+## Workspace policy
+
+The **workspace policy** sets ceilings for every sandbox and template in the workspace, and the two numbers the capacity is computed from. A new workspace has an empty policy (`{}`): no ceilings, and the default capacity settings.
+
+| Field | What it does | When not set |
+|---|---|---|
+| `allowedNetworkModes` | The [network modes](/zbox/networking#egress) a sandbox may use, for example `["INTERNET", "AIRGAPPED"]`. | All modes |
+| `maxCpus` | Most vCPUs per sandbox. | Up to the workspace's cores |
+| `maxMemoryBytes` | Most memory per sandbox, in bytes. | Up to the free capacity |
+| `maxIdleTtlSeconds` | Longest idle TTL a sandbox may set. | No cap |
+| `maxAbsoluteTtlSeconds` | Longest absolute TTL a sandbox may set. | No cap |
+| `coreReserveBytes` | Memory kept for the workspace's own system, taken off the usable memory. `0` is allowed. | 512 MiB |
+| `cpuOvercommit` | vCPUs the running sandboxes may reserve per core, from 1 to 64. | 8 |
+
+A sandbox or template over a ceiling is refused with `422 policyViolation`, for example `memoryBytes 1610612736 exceeds the template or Workspace ceiling`. The TTL caps apply only to TTLs you set: a sandbox without TTLs is always allowed ([idle and absolute TTL](/zbox/lifecycle#idle-and-absolute-ttl)). A template can set lower ceilings of its own, but none above the workspace's ([templates](/zbox/images#templates)).
+
+Print the policy, edit it and write it back. `-f` replaces the whole policy, so start from the printed one; `-` reads it from stdin:
+
+```bash
+# print the policy as JSON
+zbox workspace policy > policy.json
+# cap sandboxes at 2 vCPUs and 4 GiB, no project network access
+cat > policy.json <<'EOF'
+{
+  "maxCpus": 2,
+  "maxMemoryBytes": 4294967296,
+  "allowedNetworkModes": ["INTERNET", "AIRGAPPED"]
+}
+EOF
+zbox workspace policy -f policy.json
+# back to the defaults
+echo '{}' | zbox workspace policy -f -
+```
+
+The console's Workspace page has the same form. The API is `PUT /workspace/policy` ([HTTP API](/zbox/access#http-api)).
+
+Changes apply at once to new requests. `coreReserveBytes` and `cpuOvercommit` change the capacity immediately. Existing sandboxes keep their size and network mode when you tighten the policy, even if they are now over a ceiling or the running ones reserve more than the new capacity; nothing new is admitted until they fit.
+
+## Defaults for new sandboxes
+
+A sandbox created without these options gets:
+
+| Setting | Default |
+|---|---|
+| vCPUs | 1 |
+| Memory | 512 MiB |
+| Network mode | `PROJECT_INTERNET` in the CLI and the console (the API requires a mode) |
+| Idle and absolute TTL | None |
+| Ports | None |
+
+A sandbox created from a template takes the template's size, ports and egress rules instead ([templates](/zbox/images#templates)). The policy has no fields for these defaults: set them per sandbox ([create a sandbox](/zbox/lifecycle#create-a-sandbox)) or through a template.
+
+## Domains
+
+Sandbox ports get their public URLs from the workspace's **domains**. Each HTTP port of a sandbox gets one URL per domain, in the order the domains are listed, so `hosts` of a sandbox lists every port once per domain. `zbox open` and the console open the URL on the first domain. With no domain, sandbox ports have no public URL. Who may open a URL is up to the port's [access mode](/zbox/networking#access-modes).
+
+A domain has one of two forms:
+
+| Form | URL of port 3000 of sandbox `l8mvceq5` | Use for |
+|---|---|---|
+| dash | `https://3000-l8mvceq5-zbox-6da-8081.prg1.zerops.app/` | The Zerops subdomain of the workspace's port 8081 |
+| dot | `https://3000-l8mvceq5.box.example.com/` | Your own wildcard domain `*.box.example.com` |
+
+The domains are set only through the CLI, the console or the API (`PUT /workspace/domains`). Zerops never adds one on its own.
+
+```bash
+# list the domains
+zbox workspace domain list
+# add your own wildcard domain (dot form is the default)
+zbox workspace domain add box.example.com
+# add the Zerops subdomain of port 8081
+zbox workspace domain add zbox-6da-8081.prg1.zerops.app --form dash
+# remove a domain
+zbox workspace domain remove box.example.com
+```
+
+A domain is a bare lowercase hostname, without `*.`, a scheme or a path. A new domain goes to the end of the list. Removing a domain takes effect at once: every URL on it stops working, including links you have already shared.
+
+### Zerops subdomain
+
+`zbox setup` turns on [subdomain access](/zbox/workspace-service#subdomain-access) and adds the subdomain of port 8081 as the first domain, in the dash form. A workspace created in the Zerops GUI or with import YAML starts without a domain. Turn on subdomain access for the service, then add the second URL Zerops shows for it (the one with `8081`) without `https://`:
+
+```bash
+zbox workspace domain add zbox-6da-8081.prg1.zerops.app --form dash
+```
+
+### Your own domain
+
+To publish sandbox ports under your own domain, for example `box.example.com`:
+
+1. In the Zerops GUI, add the domain access for the workspace service with the wildcard domain `*.box.example.com` and route it to port **8081** of the workspace ([public access through your domain](/references/networking/public-access#custom-domain-access)).
+2. Point `*.box.example.com` to the project's IP addresses and add the `_acme-challenge` CNAME record, so Zerops can issue the wildcard certificate ([wildcard domains](/references/networking/dns#wildcard-domain-configuration)).
+3. Add the domain to the workspace: `zbox workspace domain add box.example.com`.
+
+Each sandbox port is then reachable at `https://<port>-<sandbox-id>.box.example.com/`.
+
+:::caution
+Without a [dedicated IPv4 address](/references/networking/public-access#ipv4-configuration), the project's own domains go through the shared IPv4, which closes every connection after about two minutes. WebSockets and long downloads to sandbox ports break for IPv4 clients. Add a dedicated IPv4 to the project if you need them.
+:::
