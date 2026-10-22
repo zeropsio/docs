@@ -1,0 +1,151 @@
+---
+title: Events, webhooks, metrics and logs
+description: Follow what happens to your sandboxes through the workspace event log, signed webhooks, hourly sandbox metrics and the workspace log in Zerops.
+---
+
+Every workspace keeps an event log of what happened to its sandboxes, can deliver those events to your own URLs as signed webhooks, and records hourly resource usage per sandbox. The workspace itself is a Zerops service, so its log and its resource graphs are in Zerops like any other service's.
+
+## Events
+
+The workspace records an **event** for every sandbox state change and every session opened or closed inside a sandbox. Events stay readable after the sandbox is terminated (ask by sandbox id, not by name).
+
+```bash
+# the newest events of the whole workspace, the latest at the bottom
+zbox events
+# only one sandbox
+zbox events --sandbox app
+# page back from an id
+zbox events --before 18200
+# print new events as they happen, until interrupted
+zbox events --follow
+```
+
+The console shows the same log on the **Activity** page (with the operations) and on the **Events** tab of each sandbox.
+
+Each event carries:
+
+- `id`: the workspace-wide cursor. It grows with every event, but it is not consecutive.
+- `sandboxId` and `seq`: the sandbox and the per-sandbox cursor, which also grows but is not consecutive.
+- `type`, and `fromStatus` and `toStatus` when the event is a [status change](/zbox/lifecycle).
+- `operationId`: the operation that caused it, if any.
+- `payload`: a small JSON object that depends on the type, and `created`.
+
+| Type | When | Payload |
+|---|---|---|
+| `CREATED` | A sandbox is created, including fork children and restores. Status `CREATING`. | `parentId` for forks and restores |
+| `READY` | A newly created sandbox runs. | `address`, `resumedMemory`, `secretsDelivered` |
+| `PARKED` | A sandbox is parked. | `memoryKept` |
+| `WOKE` | A sandbox is woken. | same as `READY` |
+| `FORKED` | On the parent when a fork finished, and on each child when it runs. | parent: `children` (child id to status); child: same as `READY` |
+| `RESTORED` | A sandbox restored from a snapshot runs. | same as `READY` |
+| `SNAPSHOT_TAKEN` | A snapshot is taken. | `snapshotId`, `hasMemory` |
+| `POLICY_CHANGED` | The sandbox policy changed, for example a port was opened. | `policyGeneration` |
+| `FAILED` | The sandbox became `FAILED`. | `reason` |
+| `DELETED` | The sandbox is terminated. | none |
+| `SESSION_OPENED` | A command, shell or SSH session starts in the sandbox. | `sessionId`, `kind` (`EXEC`, `PTY`, `SSH`) |
+| `SESSION_CLOSED` | That session ends. | `sessionId`, `kind`, `status`, `exitCode` |
+
+The event type enum in the [OpenAPI document](/zbox/access#openapi-document) has a few more values for features that are not released yet. The workspace does not emit them.
+
+### Following events live
+
+`zbox events --follow` reads the event stream, a WebSocket at `GET /api/rest/event-stream`. It sends one event as JSON per text message. Without a cursor, the stream starts at the newest event and sends only what happens after you connect. With `afterId`, it first replays the events after that id, so a client that reconnects with the last id it saw misses nothing (`zbox events --follow --after <id>`). Add `sandboxId` to follow one sandbox.
+
+If you'd rather poll, both lists long-poll. `GET /api/rest/event-list?afterId=<id>&waitSeconds=<n>` answers the events after the id, oldest first, and holds the request up to `n` seconds (at most 60) while there is nothing newer. `GET /api/rest/sandbox/{id}/event-list?afterSeq=<seq>&waitSeconds=<n>` does the same for one sandbox with its own cursor. `zbox events --after <id>` is one such long poll of 30 seconds.
+
+## Webhooks
+
+A **webhook** delivers events to a URL of yours as HTTP `POST` requests, signed with a secret only you and the workspace know.
+
+```bash
+# deliver READY and FAILED events; the signing secret is printed once
+zbox webhook create --url https://example.com/hook --event ready --event failed
+# with no --event, every event type is delivered
+zbox webhook create --url https://example.com/all-events
+zbox webhook list
+# change the URL or the event types, or pause deliveries
+zbox webhook set <id> --event parked --event woke
+zbox webhook set <id> --disabled
+zbox webhook remove <id>
+```
+
+The console manages webhooks on the **Integrations** page.
+
+Copy the signing secret when you create the webhook: it can't be read again. The URL must be an absolute `http` or `https` URL that the workspace can reach. Addresses on the workspace itself (loopback, link-local and the workspace's internal networks) are refused.
+
+A webhook gets the events that happen after it is created, never older ones. While a webhook is disabled, events are not queued for it: enabling it again does not deliver what happened in between. Removing a webhook also removes its delivery log.
+
+### Delivery format
+
+Each delivery is a `POST` with a JSON body: the event exactly as the [event log](#events) returns it. The request carries these headers:
+
+| Header | Value |
+|---|---|
+| `Content-Type` | `application/json` |
+| `User-Agent` | `zbox-webhook` |
+| `X-Zbox-Event` | the event type, for example `READY` |
+| `X-Zbox-Delivery` | the delivery id, the same on every retry of this delivery |
+| `X-Zbox-Signature` | `t=<unix seconds>,v1=<hex HMAC-SHA256>` |
+
+### Verifying a delivery
+
+The signature is the hex HMAC-SHA256, keyed with the signing secret, of the timestamp `t`, a dot and the raw request body. The timestamp is set again on every attempt, so a receiver can reject old ones to block replays. Verify against the raw body bytes, before parsing the JSON:
+
+```python
+import hashlib, hmac, time
+
+def verify(secret: str, signature: str, raw_body: bytes, tolerance: int = 300) -> bool:
+    parts = dict(item.split("=", 1) for item in signature.split(","))
+    timestamp = parts["t"]
+    if abs(time.time() - int(timestamp)) > tolerance:
+        return False
+    expected = hmac.new(secret.encode(), timestamp.encode() + b"." + raw_body, hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected, parts["v1"])
+
+# verify(SIGNING_SECRET, request.headers["X-Zbox-Signature"], request_body_bytes)
+```
+
+### Retries and ordering
+
+A delivery succeeds when your endpoint answers with a `2xx` status. Any other status, a connection error or no answer within 10 seconds counts as a failure. The workspace then retries it after 30 seconds, doubling the wait up to one hour between attempts. If it still fails 24 hours after the event, the delivery is **abandoned** and is not retried again.
+
+Delivery is at least once: a receiver can see the same delivery more than once, so use `X-Zbox-Delivery` to ignore duplicates. Events of one sandbox reach one webhook in the order they happened. While a delivery is failing, the later events of the same sandbox wait behind it, and events of other sandboxes still go out.
+
+### Delivery log
+
+```bash
+# the newest deliveries first; filter with --status pending, delivered or abandoned
+zbox webhook deliveries <webhook-id>
+```
+
+Each entry shows the event id and sandbox, the status (`PENDING`, `DELIVERED` or `ABANDONED`), the number of attempts, the last response code and error, when it was delivered and when the next attempt is due.
+
+## Metrics
+
+The workspace samples every running sandbox once a minute and adds the readings up into one row per sandbox per hour (UTC). It measures the sandbox from the workspace, not from inside the guest. Hours in which a sandbox was parked for the whole hour have no row.
+
+```bash
+zbox metrics app
+# a time range, RFC 3339
+zbox metrics app --from 2026-10-01T00:00:00Z --to 2026-10-02T00:00:00Z
+```
+
+The console shows the last hours on the sandbox's **Metrics** tab. The API is `GET /api/rest/sandbox/{id}/metric-list` with optional `from` and `to`.
+
+| Field | Meaning in the hour |
+|---|---|
+| `cpuSeconds` | CPU time the sandbox used, in seconds |
+| `memoryPssAvg`, `memoryPssMax` | average and peak memory the sandbox held on the workspace, in bytes, without reclaimable file cache |
+| `diskBytes` | space the sandbox's disk took on the workspace disk at the last sample, in bytes |
+| `netRxBytes`, `netTxBytes` | bytes the sandbox received and sent on its network interface |
+| `routerRequests`, `routerBytes` | HTTP requests that reached the sandbox's [ports](/zbox/networking#ports) through the workspace, and their request and response bytes |
+
+For the workspace VM as a whole, Zerops shows CPU, RAM and disk graphs in the service detail like for any other service, see [resource history graphs](/features/scaling#resource-history-graphs). `zbox workspace status` shows how much of the workspace's capacity the sandboxes reserve, see [capacity](/zbox/workspace-settings#capacity).
+
+## Logs
+
+The workspace orchestrator, the program that serves the API and runs the sandboxes, writes its log to the service's runtime log in Zerops under the tag `zerops-zbox-orchestrator`. Read it in the Zerops GUI in the service detail or in the project's log overview, or forward it like any other service log (see [logging](/references/logging)).
+
+It records the workspace's start-up steps and what the orchestrator did and failed to do, such as base builds and failed requests to a sandbox port. It does not contain anything your sandboxes print.
+
+The workspace does not collect logs from inside sandboxes. The main process a sandbox starts with (the image's command, or the one given after `--` in `zbox new`) writes its output to `/var/log/zbox-workload.log` inside the sandbox, which you read like any other file, for example `zbox exec app -- tail -n 50 /var/log/zbox-workload.log`. The output of commands you run through the API is kept with their [sessions](/zbox/commands).

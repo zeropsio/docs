@@ -1,0 +1,49 @@
+---
+title: Lineages, import and export
+description: A lineage groups a Zerops Box sandbox with every sandbox forked or restored from it, and is the unit that export and import will move between workspaces.
+---
+
+A **lineage** is a sandbox together with everything that descends from it: its [forks](/zbox/lifecycle#fork-a-sandbox), the forks of those forks, and the sandboxes [restored from its snapshots](/zbox/lifecycle#snapshots-and-restore). It lets you find every sandbox that shares a common starting point, and it is the unit that export and import will work with.
+
+## How lineages are formed
+
+Every `zbox new` starts a new lineage. A sandbox created from a [base or a template](/zbox/images) has no parent, so two sandboxes from the same template belong to two different lineages.
+
+A fork child and a restored sandbox join the lineage of the sandbox they came from, and record that sandbox as their **parent**. Each sandbox carries both:
+
+| Field | Meaning |
+|---|---|
+| `lineageId` | The lineage the sandbox belongs to. Set at create and never changes. |
+| `parentId` | The sandbox it was forked or restored from. Empty for a sandbox created with `zbox new`. |
+
+`zbox get` shows them as **Lineage** and **Parent**.
+
+A lineage has no name and no status of its own, only an ID and the time it was created. It stays in the workspace after all of its sandboxes are removed.
+
+## List and inspect lineages
+
+```bash
+# all lineages in the workspace, newest first
+zbox lineage list
+# one lineage by its ID
+zbox lineage get <lineage-id>
+```
+
+To see the sandboxes of a lineage, filter the sandbox list. Like any `zbox list`, it shows only live sandboxes unless you ask for other [statuses](/zbox/lifecycle#sandbox-statuses):
+
+```bash
+# sandboxes of one lineage
+zbox list --lineage <lineage-id>
+# include the removed ones
+zbox list --lineage <lineage-id> --status terminated
+# direct children of one sandbox (forks and restores), by ID or name
+zbox list --parent app
+```
+
+`--parent` lists only direct children. To find everything descended from a sandbox, list its lineage.
+
+## Export and import
+
+:::note Coming soon
+Export a whole lineage out of the workspace and import it into another one: a backup that survives the loss of the workspace, and a way to move sandboxes between workspaces.
+:::

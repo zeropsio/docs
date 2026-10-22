@@ -1,0 +1,105 @@
+---
+title: Connectors
+description: Connectors log a provider such as Claude Code, GitHub or OpenAI Codex in once per workspace, so sandboxes use the account through the credentials proxy without ever holding the credential.
+---
+
+A **connector** is a ready-made provider login for the whole workspace. You log in to the provider once (or paste a token), the workspace keeps the credential, and every sandbox you create with the connector attached talks to the provider through the [credentials proxy](/zbox/secrets#credentials-proxy). The agent inside the sandbox gets a working client and a placeholder token, never the real credential.
+
+## Connectors and integrations
+
+An **integration** is the general mechanism: a target URL, a workspace env that holds the credential, and how the proxy injects it. You define integrations yourself, see [integrations and the credentials proxy](/zbox/secrets#credentials-proxy).
+
+A connector sits on top of integrations. It knows the provider, stores your credential in the right workspace env, creates and manages its integrations for you, and also configures the provider's tools inside the sandbox (base URLs, placeholder tokens, config files). With a plain integration, pointing the client at the proxy is up to you.
+
+## Available connectors
+
+| Connector | Provider | Credential (workspace variable) | Integrations |
+|---|---|---|---|
+| `claude` | Claude Code | OAuth token from a Claude subscription (`CLAUDE_CODE_OAUTH_TOKEN`), or an Anthropic API key (`ANTHROPIC_API_KEY`) | `claude` |
+| `github` | GitHub | OAuth token or personal access token (`GH_TOKEN`) | `github`, `github-api` |
+| `codex` | OpenAI Codex | ChatGPT login (`CODEX_AUTH_JSON`), or an OpenAI API key (`OPENAI_API_KEY`) | `chatgpt` (ChatGPT login) or `openai` (API key) |
+
+```bash
+# connectors, whether they are connected, and their integrations
+zbox connector list
+zbox connector get claude
+```
+
+The credential is stored as a sensitive environment variable of the workspace service, so you also see it among the service's [environment variables](/features/env-variables) in the Zerops GUI. `zbox connector list` shows the kind of the stored credential, its variable and the integrations it uses.
+
+:::note Coming soon
+Connectors are being reworked into a generic mechanism, with many more providers to connect.
+:::
+
+## Connect a provider
+
+The easiest way is the provider's own browser login. `zbox connector login` starts a helper sandbox, runs the provider's login command in it (`claude setup-token`, `gh auth login --web`, or `codex login --device-auth`) and attaches your terminal. Open the link it prints and finish the login in your browser; Claude Code then asks you to paste the code the browser shows, Codex gives you a one-time code to enter in the browser. The workspace picks up the credential, stores it and terminates the helper sandbox, which closes your terminal.
+
+```bash
+zbox connector login claude
+zbox connector login github   # asks GitHub for the repo, read:org and workflow scopes
+zbox connector login codex    # a ChatGPT login
+```
+
+The login needs an interactive terminal. If you close the terminal, the helper sandbox is terminated shortly after; a login you leave open without finishing is abandoned after 15 minutes. In the console, the same flow is the **Connect in browser** button in the Connectors section of the Integrations page.
+
+:::caution
+The helper sandbox boots from the most recently added ready base, not from the [default base](/zbox/images#the-default-base), and that base must contain the provider's CLI. The default base has `claude`, `gh` and `codex`. If you added another base after it, the terminal shows `command not found` (or the login fails right away when the base can't run a shell); exit the shell and store a token instead.
+:::
+
+If you already have a token or an API key, store it directly. The value is read without echo from the terminal, or from stdin when piped, never from the command line. The kind (OAuth token or API key) is detected from the value; `--kind` overrides it.
+
+```bash
+# paste the token when asked
+zbox connector set claude
+# reuse the GitHub login of your own machine
+gh auth token | zbox connector set github
+# an OpenAI API key instead of a ChatGPT login
+zbox connector set codex
+```
+
+In the console, use **Paste a token**. Storing a credential replaces the previous one, including one of the other kind.
+
+## Use a connector in a sandbox
+
+A connector does not apply to sandboxes automatically. Attach its integrations when you create the sandbox:
+
+```bash
+zbox new agent --integration claude
+# GitHub has two integrations: git and the REST API
+zbox new agent --integration claude --integration github --integration github-api
+```
+
+In the console's new sandbox form, tick the connector under **Log in as**; that attaches all of its integrations.
+
+Attach them at create. The tools are configured when the sandbox boots, so an integration attached later with `zbox attach` is routed through the proxy right away, but the tools inside the sandbox are pointed at it only after the next cold boot ([park with `--no-memory`](/zbox/lifecycle#park-and-wake) and wake).
+
+What the tools in the sandbox get:
+
+| Connector | Tools | Set up in the sandbox |
+|---|---|---|
+| `claude` | `claude` | `ANTHROPIC_BASE_URL` points at the proxy, a placeholder token, onboarding marked as done, sessions start in auto permission mode |
+| `github` | `git`, GitHub REST API clients | `https://github.com/`, `git@github.com:` and `ssh://git@github.com/` remotes are rewritten to the proxy, so clone and push work without a key; `GITHUB_API_URL` points at the proxy; `/etc/gitconfig` gets the name and email of the token's GitHub account |
+| `codex` | `codex`, OpenAI SDKs (API key) | `/etc/codex/config.toml` points Codex at the proxy, `~/.codex/config.toml` defaults to no approvals and full access; with an API key also `OPENAI_BASE_URL` and a placeholder `OPENAI_API_KEY` |
+
+Settings you put in the image or the sandbox win: the Claude Code files only get the top-level keys they lack, the Codex user config and the git identity are only written when missing, and a git setting at the global or repository level overrides the system one.
+
+:::note
+`gh` is not authenticated through the GitHub connector, because it cannot talk to the proxy. Use `git` and the REST API, or deliver the token to the sandbox as a [secret](/zbox/secrets) (`--secret GH_TOKEN`), which puts the real credential inside the sandbox.
+:::
+
+The proxy reads the credential on every request, so storing a new one of the same kind applies to running sandboxes right away. Switching the kind (for example from a Claude subscription token to an API key) changes the placeholder and the tool configuration too, which running sandboxes get only at their next cold boot.
+
+## Drop a credential
+
+```bash
+zbox connector unset github
+```
+
+This removes the credential from the workspace. The connector's integrations stay, and sandboxes that use them get the proxy's `502` [`credentialMissing` error](/zbox/secrets#attach-an-integration) until you store a credential again. In the console, use **Disconnect**.
+
+Storing the first credential creates the connector's integrations. To get rid of them too, drop the credential and remove them once no sandbox has them attached:
+
+```bash
+zbox integration remove github github-api
+```

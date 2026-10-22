@@ -2405,6 +2405,126 @@ module.exports = {
         sidebar_badge: betaBadge,
       },
     },
+    {
+      type: 'category',
+      label: 'Get started',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'zbox/getting-started',
+          label: 'Getting started',
+        },
+        {
+          type: 'doc',
+          id: 'zbox/access',
+          label: 'Console, API, CLI & MCP',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Workspace',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'zbox/workspace-service',
+          label: 'Workspace as a Zerops service',
+        },
+        {
+          type: 'doc',
+          id: 'zbox/workspace-settings',
+          label: 'Settings & capacity',
+        },
+        {
+          type: 'doc',
+          id: 'zbox/pricing',
+          label: 'Pricing',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Sandboxes',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'zbox/images',
+          label: 'Images: bases & templates',
+        },
+        {
+          type: 'doc',
+          id: 'zbox/lifecycle',
+          label: 'Lifecycle',
+        },
+        {
+          type: 'doc',
+          id: 'zbox/commands',
+          label: 'Running commands',
+        },
+        {
+          type: 'doc',
+          id: 'zbox/networking',
+          label: 'Networking & access',
+        },
+        {
+          type: 'doc',
+          id: 'zbox/secrets',
+          label: 'Secrets & credentials proxy',
+        },
+        {
+          type: 'doc',
+          id: 'zbox/connectors',
+          label: 'Connectors',
+        },
+        {
+          type: 'doc',
+          id: 'zbox/docker',
+          label: 'Docker in sandboxes',
+        },
+        {
+          type: 'doc',
+          id: 'zbox/lineages',
+          label: 'Lineages, import & export',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Operate',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'zbox/monitoring',
+          label: 'Events, webhooks, metrics & logs',
+        },
+        {
+          type: 'doc',
+          id: 'zbox/isolation',
+          label: 'Isolation & security',
+        },
+        {
+          type: 'doc',
+          id: 'zbox/faq',
+          label: 'FAQ & limitations',
+        },
+      ],
+    },
   ],
   mariadb: [
     {

@@ -1,0 +1,163 @@
+---
+title: Getting started
+description: Install the zbox CLI, create a Zerops Box workspace and run your first sandbox with an open port.
+---
+
+import data from '@site/static/data.json';
+import UnorderedCodeList from '@site/src/components/UnorderedCodeList';
+
+This page takes you from zero to a running sandbox with a port you can open in the browser. You install the `zbox` CLI, log in to Zerops, create a workspace and start a sandbox in it.
+
+You need a Zerops account. If you don't have one yet, `zbox register` creates it (see [Log in](#log-in)).
+
+## Install the zbox CLI
+
+The `zbox` CLI ([zbox-cli repository](https://github.com/zeropsio/zbox-cli)) runs on Linux, macOS and Windows, on amd64 and arm64.
+
+On Linux and macOS:
+
+```bash
+curl -fsSL https://box.zerops.io/install.sh | sh
+```
+
+The script downloads the latest release, verifies its SHA-256 checksum and installs `zbox` to `/usr/local/bin` if it's writable, otherwise to `~/.local/bin`. If that directory isn't on your `PATH`, the script tells you how to add it.
+
+On Windows, in PowerShell:
+
+```powershell
+irm https://box.zerops.io/install.ps1 | iex
+```
+
+The binary is installed to `%LOCALAPPDATA%\Programs\zbox` and added to your user `PATH`. Open a new terminal for the change to apply.
+
+Both scripts accept two environment variables: `ZBOX_VERSION` installs a specific release (for example `v0.3.0`) instead of the latest one, and `ZBOX_INSTALL_DIR` sets the install directory. Pre-releases (tags with a hyphen, like `v0.1.0-rc1`) are only installed when `ZBOX_VERSION` names them.
+
+You can also download a binary and `checksums.txt` from the [releases page](https://github.com/zeropsio/zbox-cli/releases) by hand, or install from source with Go 1.25 or newer:
+
+```bash
+go install github.com/zeropsio/zbox-cli/cmd/zbox@latest
+```
+
+Run `zbox --version` to check the installed version.
+
+## Log in
+
+`zbox login` opens a consent page in the Zerops GUI, where you sign in and confirm the code the CLI printed. `zbox register` opens the same page and lets you create an account first.
+
+```bash
+zbox login
+# or store a personal access token created in the Zerops GUI
+zbox login --token <personal-access-token>
+```
+
+See [Personal access tokens](/references/cli#personal-access-tokens) for how to create a token. The token suits machines without a browser.
+
+## Create a workspace
+
+A **workspace** is one Zerops service of type **Box Workspace**. The quickest way to create one is `zbox setup`:
+
+```bash
+zbox setup
+```
+
+It creates a new project named `zbox-<timestamp>` with a Box Workspace service named `zbox`, turns on subdomain access, waits for the workspace to answer and pulls the default sandbox image as its first base. The new workspace becomes the current one for the CLI. Subdomain access gives sandbox ports their public URLs; with `--no-subdomain` it stays off and `zbox open` has no URL to open.
+
+```bash
+# add the workspace to an existing project, with your own service name
+zbox setup --project-id <project-id> --name mybox
+# set the VM size; the defaults are 2 CPU cores, 4 GB RAM and 10 GB disk
+zbox setup --cpu 4 --ram 8 --disk 20
+```
+
+For the minimum and maximum sizes, and what a later resize does, see [resizing](/zbox/workspace-service#resizing). `--base`, `--build` and `--template` start the workspace with your own bases and warm templates instead of the default image, see [Images](/zbox/images).
+
+Check the login, the workspace, its capacity and what is in use:
+
+```bash
+zbox workspace status
+```
+
+### In the Zerops GUI or with import YAML
+
+You can also create a workspace in the GUI: choose **Add new service** in your project and pick **Box Workspace** from the service catalog. Or describe it in a `zerops-import.yaml`:
+
+```yaml title="zerops-import.yaml"
+services:
+  - hostname: box
+    type: zbox@1
+    enableSubdomainAccess: true
+```
+
+Import it with the [zCLI](/references/cli), or paste the YAML in the GUI (**Import services** in the left menu of your project):
+
+```bash
+zcli project service-import zerops-import.yaml
+```
+
+Supported versions:
+
+<UnorderedCodeList data={data.zbox.import} />
+
+A workspace created this way starts empty: it has no base and no [domain](/zbox/workspace-settings#domains) for sandbox ports. Store it in the CLI and add both:
+
+```bash
+# find the service ID of the workspace
+zbox workspace list
+# store it in the CLI; it becomes the current one if you have no other
+zbox workspace authorize <service-id>
+# pull a base, here the default sandbox image
+zbox base add https://storage.cdn.zerops.app/4ga3k-boxstorage/zbox/zbox-base.tar.gz --name default
+# publish sandbox ports under the Zerops subdomain of port 8081
+zbox workspace domain add <port-8081-subdomain> --form dash
+```
+
+The domain needs [subdomain access](/zbox/workspace-service#subdomain-access) turned on for the service. The GUI's service form leaves it off by default. To find the subdomain of port 8081, see [Zerops subdomain](/zbox/workspace-settings#zerops-subdomain). If you have several workspaces, see [Several workspaces](/zbox/access#several-workspaces).
+
+## Run your first sandbox
+
+A **sandbox** boots from a base. On a new workspace the only base is used; when there are several, pick one with `--base`. If you run `zbox new` before you have a workspace, the CLI offers to run the setup.
+
+```bash
+# create sandbox "app" with HTTP port 8000
+zbox new app -p 8000
+# run a command and get its output and exit code
+zbox exec app -- echo hello
+# open an interactive shell as root; exit with "exit"
+zbox shell app
+```
+
+Start a small web server as a detached process and open its port in the browser:
+
+```bash
+zbox process app -- python3 -m http.server 8000
+# print the port URL and open it in the browser
+zbox open app 8000
+```
+
+By default a port is reachable only by you: `zbox open` signs the browser in with a one-time ticket. To make a port public or reachable in other ways, see [Access modes](/zbox/networking#access-modes) and [Ports](/zbox/networking#ports). More on exec, shells and detached processes in [Running commands](/zbox/commands).
+
+When you don't need the sandbox for a while, park it. Parking keeps its disk and memory and frees the RAM it took, so the server keeps running after the wake:
+
+```bash
+zbox park app
+zbox wake app
+# terminate the sandbox
+zbox remove app
+```
+
+See [Sandbox lifecycle](/zbox/lifecycle) for parking, forks, snapshots and TTLs.
+
+## Where to go next
+
+- [Managing and accessing the workspace](/zbox/access): the web console, the HTTP API and `zbox mcp` for AI agents.
+- [Images: bases and templates](/zbox/images): your own images and warm templates.
+- [Sandbox lifecycle](/zbox/lifecycle): park, wake, fork and snapshot.
+- [Networking and access](/zbox/networking): ports, SSH and egress.
+
+## Remove the workspace
+
+`zbox workspace teardown` deletes the current workspace's service with everything in it: sandboxes, bases and snapshots. The project stays, together with any other services in it; delete an empty project in the Zerops GUI. You can also delete the service in the Zerops GUI like any other service.
+
+```bash
+zbox workspace teardown
+```
