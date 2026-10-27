@@ -999,6 +999,32 @@ module.exports = {
     },
     {
       type: 'html',
+      value: 'Pricing & Billing',
+      customProps: {
+        sidebar_is_group_divider: true,
+      },
+      className: 'homepage-sidebar-item',
+    },
+    {
+      type: 'doc',
+      id: 'billing/pricing',
+      label: 'Pricing',
+      customProps: {
+        sidebar_icon: 'currency-dollar',
+      },
+      className: 'homepage-sidebar-item',
+    },
+    {
+      type: 'doc',
+      id: 'billing/overview',
+      label: 'Billing',
+      customProps: {
+        sidebar_icon: 'receipt-percent',
+      },
+      className: 'homepage-sidebar-item',
+    },
+    {
+      type: 'html',
       value: 'Help',
       customProps: {
         sidebar_is_group_divider: true,
@@ -1039,28 +1065,6 @@ module.exports = {
         sidebar_icon: 'information-circle',
       },
       className: 'homepage-sidebar-item',
-    },
-    {
-      type: 'category',
-      link: {
-        type: 'doc',
-        id: 'company/pricing',
-      },
-      label: 'Pricing',
-      customProps: {
-        sidebar_icon: 'currency-dollar',
-      },
-      className: 'homepage-sidebar-item',
-      items: [
-        {
-          type: 'doc',
-          id: 'company/payment',
-          label: 'Top-up & Billing',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-      ],
     },
     {
       type: 'doc',

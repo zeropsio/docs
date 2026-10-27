@@ -198,7 +198,7 @@ async function generateLLMDocs() {
       '## Docs',
       '',
       `- [Full Docs](https://docs.zerops.io/llms-full.txt): The complete documentation as a single file (${optionalFiles.length} pages, no images).`,
-      '- [Core Docs](https://docs.zerops.io/llms-small.txt): The same, trimmed to the core platform — excludes API/CLI references, company and help pages.',
+      '- [Core Docs](https://docs.zerops.io/llms-small.txt): The same, trimmed to the core platform — excludes API/CLI references, company, pricing and billing, and help pages.',
       '',
       'Every page below is also reachable in its rendered form by dropping the `.md`',
       'suffix, and any docs.zerops.io URL can be turned into clean markdown by adding it.',
@@ -226,7 +226,7 @@ async function generateLLMDocs() {
 
   const outputTinyFile = path.resolve(publicDir, 'llms-small.txt')
 
-  const tinyExclude = ['references', 'company', 'help']
+  const tinyExclude = ['references', 'company', 'billing/', 'help']
   const tinyFiles = files.filter((filename: string) => !tinyExclude.some(exclude => filename.includes(exclude)))
 
   const tinyContent = await generateContent(

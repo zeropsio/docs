@@ -1,0 +1,185 @@
+---
+title: Billing
+description: How Zerops charges your credit, how project core and dedicated IPv4 subscriptions renew, how to start a stopped project, and how to top up.
+---
+
+import { Dropdown, DropdownItem } from '/src/components/Dropdown';
+
+Zerops is prepaid. You top up credit, and Zerops charges your projects, services and add-ons from it. You can add funds manually or automatically, track all your transactions, and download invoices for your records.
+
+This page explains how charges and subscriptions work, what happens when your credit runs out, and how to manage top-ups and invoices. For the prices themselves, see [Pricing](/billing/pricing).
+
+## Credit
+
+Your organization has two balances, both shown in **Credit & Spend Overview** in the Organization section of the main menu:
+
+- **Credit** - the money you top up, manually or [automatically](#automatic-top-ups).
+- **Promo credit** - credit granted by Zerops, for example on sign-up. Every [refund](#subscriptions) is paid out as promo credit too.
+
+Every charge takes promo credit first, then credit.
+
+Resource usage (CPU, RAM, disk and overages) is billed by the minute and deducted from your credit hourly. [Subscriptions](#subscriptions) are charged a month in advance.
+
+Your credit can drop below zero, because a subscription renewal always goes through. Your next top-up pays off the negative balance.
+
+## Subscriptions
+
+The [project core](#project-core) and a [dedicated IPv4 address](#dedicated-ipv4-address) are monthly subscriptions:
+
+- A period starts the moment the subscription is created and lasts one month. Periods don't follow calendar months: a subscription created on 14 March at 10:00 renews on 14 April at 10:00.
+- At each renewal, Zerops charges the next month in advance. The renewal goes through even if it takes your credit below zero.
+- You get a notification about every renewal.
+- Every refund is paid out as promo credit, whether the period was paid with credit or promo credit.
+
+### Project Core
+
+Every project has a core subscription, either Lightweight or Serious. See [project core options](/features/infrastructure#project-core-options) for what each includes and [Pricing](/billing/pricing#project-core-plans) for the prices.
+
+- Creating a project charges the first month of its core. Zerops refuses to create the project if your balance (credit + promo credit) would not stay above zero after that charge.
+- The core is charged for as long as the project exists, a stopped project included.
+- [Upgrading the core](/features/infrastructure#project-core-upgrade) ends the current core subscription and refunds its unused rest pro rata as promo credit. The new core subscription starts at that moment, and its first month is charged.
+- Deleting a project ends its core subscription and refunds the unused rest pro rata as promo credit.
+
+### Dedicated IPv4 Address
+
+A dedicated IPv4 address is a project add-on, called **unique IPv4 address** in the GUI. See [Public Access Configuration](/references/networking/public-access#ipv4-configuration) for what it is for and [Pricing](/billing/pricing#additional-services) for the price. A project can have one dedicated IPv4 address.
+
+#### Activate
+
+You can activate a dedicated IPv4 address when:
+
+- the project is active or is being created,
+- your organization has made at least one top-up, and
+- your balance covers the first month, unless you [reuse a paid period](#reuse-a-paid-period).
+
+Activate it in the project's IP access settings or in the **Add-ons** section of the project. The GUI shows the price per month and the dates of the first period. The first month is charged right away, and the subscription then renews every month. The fee is never refunded.
+
+#### Release
+
+A dedicated IPv4 address is released when:
+
+- you click **Release IPv4 address** in the **Add-ons** section of the project,
+- you delete the project, or
+- Zerops [stops the project](#when-credit-runs-out).
+
+The address is removed from the project right away, and the project falls back to the shared IPv4. The paid period stays with your organization until it ends.
+
+#### Reuse a Paid Period
+
+If you activate a dedicated IPv4 address on any project of your organization before a released period ends, Zerops reuses that period at no extra charge. The GUI shows this as **Reuse paid IPv4 address**. The period keeps its end date, and the next renewal is charged as usual.
+
+The project gets an address that may differ from the released one, so check the DNS A records of your domains. A period that you don't reuse expires at its end, and nothing more is charged for it.
+
+## When Credit Runs Out
+
+Zerops may stop the projects of an organization that has run out of credit. When Zerops stops a project:
+
+- its services stop,
+- its dedicated IPv4 address is [released](#release), and
+- its core is still charged, because the project still exists.
+
+A stopped project stays stopped after a top-up. Start it with **Start project** on the project in the GUI, or with `PUT /project/{id}/start` in the [public API](/references/api). Zerops starts the project only if your balance (credit + promo credit) is above zero. If it isn't, the GUI asks you to top up credit first.
+
+Starting the project doesn't bring back its dedicated IPv4 address. Activate it again: while the released period lasts, it is [reused at no extra charge](#reuse-a-paid-period).
+
+Enable [automatic top-ups](#automatic-top-ups) to keep your credit above zero.
+
+## Manual Top-up
+
+Manual top-ups give you direct control over your account funding. To add credits to your account immediately:
+
+1. Navigate to **Credit & Spend Overview** in the Organization section of the main menu
+2. Click on **Top up credit** and fill in the [billing information](#billing-information)
+3. Enter your desired top-up amount (minimum $10 VAT excl.)
+3. Complete payment using your saved or new payment method
+
+## Automatic Top-ups
+
+Automatic top-up ensures your projects continue running without interruption by replenishing your credits when they run low.
+
+:::note Prerequisites
+Automatic top-ups are available once you have made at least one manual top-up, saved a payment method, and provided your [billing information](#billing-information). The saved card is charged off-session, so a valid payment method must stay on file.
+:::
+
+To turn them on, navigate to **Credit & Spend Overview** in the Organization section of the main menu, open the automatic top-up settings, and configure the three values described below.
+
+### How Automatic Top-ups Work
+
+When enabled, Zerops periodically checks your balance and tops it up by a fixed amount whenever your credit drops below a threshold you choose, up to a limit you set for each calendar month.
+Zerops initiates an automatic payment when:
+
+- Your combined balance (credit + promo credit) drops **below your threshold**
+- You have automatic top-ups enabled
+- The top-up wouldn't exceed your **calendar-month limit**
+
+:::note Important notes
+- Each top-up charges the **fixed amount** you configured, regardless of how fast you're spending
+- Your balance is checked periodically (every few minutes), so a top-up can take a few minutes to appear after you drop below the threshold
+- The final automatic top-up of the month is reduced so the month's total lands exactly on your calendar-month limit; after the limit is reached, automatic top-ups pause until the next calendar month
+- To avoid repeatedly hitting your payment method (which can get a card flagged or blocked by the payment processor), top-ups are spaced out: after a **successful** top-up Zerops waits **1 hour** before the next one, and after a **failed** top-up it waits **1 day** before trying again
+- If a charge fails, Zerops notifies you so you can check the validity and available funds of your saved card. After **3 failed attempts in a row**, automatic top-up is turned off and you're notified by email; re-enable it once your payment method is working again
+- Auto top-up limits don't affect manual payments — add any amount manually regardless of automatic settings
+:::
+
+### Configuration Options
+
+#### Threshold
+When your combined balance (credit + promo credit) drops below this value, an automatic top-up is triggered.
+
+#### Top-up Amount
+The fixed amount charged to your saved card on each automatic top-up.
+
+- Minimum: $10 (matches the minimum manual payment)
+- Maximum: $10,000 per top-up
+
+#### Calendar-Month Limit
+The maximum total that can be automatically charged within a single calendar month (UTC). This safeguards against unexpected costs: once the limit is reached, automatic top-ups pause until the next calendar month.
+
+- Must be at least the top-up amount (so at least one top-up can go through each month)
+
+<Dropdown>
+<DropdownItem title="Real-World Example">
+**Scenario:** Application with ~$50 weekly operating costs and an initial manual top-up of $100
+
+**Your Settings:**
+- Threshold = $50
+- Top-up amount = $200
+- Calendar-month limit = $500
+
+**Expected behavior:**
+- When your balance falls below $50, Zerops charges $200 to bring it back up
+- Each top-up is exactly $200, no matter how fast you're spending, until you approach the calendar-month limit
+- After two top-ups ($400), a full $200 would exceed the $500 limit, so the next top-up is reduced to $100, bringing the month's total to exactly $500
+- Automatic top-ups then pause until the limit resets at the start of the next calendar month (UTC)
+<br/>
+</DropdownItem>
+</Dropdown>
+
+## Billing Information
+
+You are required to enter billing details for all transactions (manual and automatic top-ups), with one exception:
+
+- EU-based users who are not VAT payers with transactions under $350
+
+You can save your billing details by navigating to **Invoices & Billing Settings** in the Organization section of the main menu.
+
+## Invoices
+
+Zerops provides easy access to all invoices generated for manual and automatic top-ups within your organization.
+
+To view and manage your invoices navigate to **Invoices & Billing Settings** in the Organization section of the main menu.
+
+## Export Credit Consumption Records
+
+Zerops allows you to download monthly reports of your credit consumption history for analysis and record-keeping.
+
+1. Navigate to **Credit & Spend Overview** in the Organization section
+2. Find the **Export Credit Consumption Records** section
+3. Click on any month button to download that period's report
+
+Reports are available for the past 12 months in TXT format and include:
+- Client information and reporting period
+- Starting and ending balances
+- Itemized resource charges by project and service
+- Credit transactions (top-ups, refunds, promotional credits)
+- Clear distinction between common (paid) and promotional credits
