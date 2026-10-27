@@ -96,7 +96,7 @@ function PricingCalculatorContent() {
     cpu: resources.cpuType === 'shared' ? 0.6 : 6,
     ram: 3,
     disk: 0.1,
-    storage: 0.01,
+    storage: 0.02,
     ipv4_addr: 3,
     backup: 0.1,
     buildTime: 0.033,
@@ -382,7 +382,7 @@ const exportToPDF = () => {
 
     // Disk
     addText('Disk', margin + 5, y, { color: secondaryTextColor, size: 9 });
-    addText(`(${service.disk}GB × ${service.nodes} nodes) @ $0.05/GB = $${formatNumber(resourceCosts.disk)}`,
+    addText(`(${service.disk}GB × ${service.nodes} nodes) @ $${price.disk.toFixed(2)}/GB = $${formatNumber(resourceCosts.disk)}`,
       pageWidth - margin - 5, y, {
         align: 'right',
         color: secondaryTextColor,
@@ -510,7 +510,7 @@ const exportToPDF = () => {
           >
             <div className="package-option-name">Lightweight</div>
             <div className="package-price">
-              $0<span>/30 days</span>
+              $0<span>/month</span>
             </div>
             <div className="package-description">
               Single-container core services with modest build hours, backup storage, and egress bandwidth included. <span className="package-highlight">Ideal for development and smaller production projects.</span>
@@ -523,7 +523,7 @@ const exportToPDF = () => {
           >
             <div className="package-option-name">Serious</div>
             <div className="package-price">
-              $10<span>/30 days</span>
+              $10<span>/month</span>
             </div>
             <div className="package-description">
               Highly available core services with generous build hours, backup storage, and egress bandwidth included. <span className="package-highlight">Perfect for production workloads that mean business.</span>
