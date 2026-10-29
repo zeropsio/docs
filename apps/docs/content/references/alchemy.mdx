@@ -1,0 +1,130 @@
+---
+title: Alchemy
+description: Manage Zerops resources and deployments with Alchemy.
+---
+
+## Install
+
+```sh
+npm i @zerops/alchemy alchemy@2.0.0-beta.84 effect
+```
+
+```sh
+bun add @zerops/alchemy alchemy@2.0.0-beta.84 effect
+```
+
+## Auth
+
+```sh
+export ZEROPS_TOKEN="YOUR_TOKEN"
+```
+
+- Create a token in [token management](https://app.zerops.io/settings/token-management).
+
+| Variable | Setting |
+| --- | --- |
+| `ZEROPS_TOKEN` | Bearer token. |
+| `ZEROPS_ENDPOINT` | Optional API origin; default `https://api.app-prg1.zerops.io`. |
+| `ZEROPS_ORGANIZATION_ID` | Optional organization API `clientId`; required with multiple memberships. |
+
+### Alchemy profile alternative
+
+```sh
+bunx alchemy profile create zerops
+bunx alchemy profile edit --profile zerops --add Zerops
+bunx alchemy deploy --profile zerops
+```
+
+- Profile fields: `token`, optional `endpoint`, optional `organizationId`.
+
+## Minimal stack
+
+```ts title="alchemy.run.ts"
+import * as Alchemy from "alchemy";
+import * as Effect from "effect/Effect";
+import * as Zerops from "@zerops/alchemy";
+
+export default Alchemy.Stack("ZeropsApp", {
+  providers: Zerops.providers(),
+  state: Alchemy.localState(),
+}, Effect.gen(function* () {
+  const project = yield* Zerops.Project("Project", { mode: "LIGHT" });
+  const db = yield* Zerops.ManagedService("Database", {
+    project, hostname: "db", type: "postgresql:single@16",
+  });
+  const api = yield* Zerops.Service("Api", {
+    project, hostname: "api", type: "nodejs@22",
+    source: { dir: "./api" },
+    env: { DATABASE_URL: Zerops.ref(db, "connectionString") },
+    subdomain: true,
+  });
+  const route = yield* Zerops.HttpRoute("ApiRoute", {
+    project, domains: ["api.example.com"], ssl: false,
+    locations: [{ path: "/", service: api, port: 3000 }],
+  });
+  return { subdomainUrls: api.subdomainUrls, routeId: route.routeId };
+}));
+```
+
+- `api/`: Node.js app with `package.json`, lockfile, and `npm start` listening on port 3000.
+- `api/zerops.yml`: setup `api`, Node.js 22 build/run, HTTP port 3000;
+  see [zerops.yml specification](/zerops-yaml/specification).
+- `Zerops.ref(db, "connectionString")` renders a server-side environment reference;
+  no database credentials fetched.
+- Configure custom-domain DNS separately; certificate issuance is not awaited.
+
+```sh
+bunx alchemy plan
+bunx alchemy deploy
+```
+
+## Resource map
+
+| Alchemy resource | Zerops object |
+| --- | --- |
+| `Zerops.Project` | Project |
+| `Zerops.Service` | Runtime service and source deployment; optional generated subdomain |
+| `Zerops.ManagedService` | Managed service without application code |
+| `Zerops.Postgres`, `Zerops.MariaDB`, `Zerops.Valkey` | Typed managed-service factories |
+| `Zerops.ProjectVariable` | Project environment variable |
+| `Zerops.ServiceVariable` | Service environment variable |
+| `Zerops.ObjectStorage` | Object-storage service, quota, access policy |
+| `Zerops.HttpRoute` | Custom-domain HTTP routing |
+| `Zerops.PortRoute` | Public IPv6 TCP/UDP routing |
+
+## Deploy sources
+
+| Source | `Zerops.Service` props |
+| --- | --- |
+| Directory | `source: { dir: "./api" }` |
+| Archive | `source: { archive: "./api.tar.gz" }`; `build: false` for prebuilt code |
+| Git ref | `source: { git: { url: "https://github.com/owner/repo.git", ref: "v1.0.0" } }` |
+
+- Exactly one source mode per deployment.
+- Root `zerops.yml` / `zerops.yaml`, or explicit `zeropsYaml`; `setup` defaults to the service hostname.
+- Git branches and tags resolve to commits; tags and full 40-character SHAs are fetched provider-side, not branch-HEAD builds on Zerops.
+- Private HTTP(S) Git: `git.auth` accepts an Effect `Redacted` token; no credentials in URLs.
+- Directory/Git sources exclude `.git` and `.alchemy`; use `.deployignore` or directory `ignore` for other sensitive files.
+
+## Adoption and ownership
+
+- Existing unowned resources: `bunx alchemy deploy --adopt`; subsequent updates and deletion belong to the stack.
+- Project tag `alchemy:<48 hex>` hashes stack/stage/resource FQN; matching tags recover ownership after state loss without `--adopt`.
+- Keep logical IDs, stack, and stage stable; do not remove or forge ownership tags.
+- Existing explicit service/storage hostnames and variables/routes require adoption; incompatible service types are refused.
+- Resource `.ref(...)` reads Alchemy state; not remote lookup or adoption.
+
+## Behaviour notes
+
+- Drift: `bunx alchemy drift --no-input`; intentional repair: `bunx alchemy drift --repair --no-input`.
+- Generated secrets stay out of resource attributes; environment attributes store digests. Masked secret-content drift cannot be detected.
+- Resolved props, including user-supplied secrets, persist as plaintext in Alchemy state; `Redacted` does not encrypt state.
+- Routing sync commits all staged edits for the project/routing kind. Foreign staged edits block sync unless `forceSync: true` or `ZEROPS_ROUTING_FORCE_SYNC=true`; use one routing writer per project/kind.
+- PostgreSQL disk floor: 2 GB; `ZEROPS_POSTGRESQL_MIN_DISK_GB` can raise it, never lower it. Explicit lower bounds are rejected.
+- Alchemy v2 is beta; provider pinned to `alchemy@2.0.0-beta.84`.
+- Destroy deletes managed resources, including database and object-storage data.
+
+## Links
+
+- [GitHub repository](https://github.com/zeropsio/alchemy)
+- [Alchemy documentation](https://alchemy.run)
