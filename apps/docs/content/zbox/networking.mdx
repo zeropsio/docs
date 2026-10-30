@@ -37,7 +37,7 @@ An SSH connection ends when the sandbox is parked and when a snapshot with memor
 
 ## Ports
 
-A sandbox exposes nothing until you declare a port. A port is written as `port[/access]`, for example `3000`, `3000/public` or `5432/project`, where access is one of the [access modes](#access-modes). Add `/wake` or `/no-wake` to override [wake on request](#wake-on-request). Ports are HTTP: the workspace proxies HTTP requests to them.
+A sandbox exposes nothing until you declare a port. A port is written as `port[/access]`, for example `3000`, `3000/public` or `5432/project`, where access is one of the [access modes](#access-modes). Add `/wake` or `/no-wake` to override [wake on request](#wake-on-request). Ports are HTTP: the workspace proxies HTTP requests to them, WebSocket upgrades included.
 
 ```bash
 # declare ports at create
@@ -52,7 +52,7 @@ Port changes apply to a running or parked sandbox on the next request. In the co
 
 The application has to listen on all interfaces (`0.0.0.0`), not only on `localhost`: requests arrive on the sandbox's network interface. If nothing answers on the port, the request fails with `UNREACHABLE`.
 
-The workspace forwards the request with the original `Host` header and `X-Forwarded-*` headers. It removes the `Authorization` header, its own session cookie and the `ticket` and `token` query parameters before the request reaches the sandbox, on every access mode.
+The workspace forwards the request with the original `Host` header. It keeps the `X-Forwarded-For`, `X-Forwarded-Proto`, `X-Forwarded-Host` and `X-Forwarded-Port` headers the request arrives with, which the Zerops edge sets, and fills in the missing ones from the request itself. The `Authorization` header and your application's own cookies reach the sandbox unchanged, so the application can run its own login. On every access mode, the workspace removes only its own credentials: the `X-Zerops-Box-Authorization` header, its `zbox_session` cookie, and the `ticket` and `token` query parameters.
 
 :::note Coming soon
 Raw TCP ports, and per-port ingress limits: maximum connections, held requests, request rate and body size.
@@ -62,7 +62,9 @@ Raw TCP ports, and per-port ingress limits: maximum connections, held requests, 
 
 Each port gets one URL per workspace domain, built from the port number and the sandbox ID, for example `https://3000-l8mvceq5-zbox-6da-8081.prg1.zerops.app` on the Zerops subdomain or `https://3000-l8mvceq5.box.example.com` on your own domain. See [domains](/zbox/workspace-settings#domains) for the two forms and how to add a domain.
 
-The URLs are listed by `zbox port list` and in the sandbox's `hosts` in the API, in the order of the workspace domains. A workspace without a domain gives ports no public URL. All of them are served by the workspace's port 8081 ([subdomain access](/zbox/workspace-service#subdomain-access)).
+The URLs are listed by `zbox port list` and in the sandbox's `hosts` in the API, in the order of the workspace domains. A workspace without a domain gives ports no public URL, but the project network still reaches them ([reach a sandbox from the project](#reach-a-sandbox-from-the-project)). All of them are served by the workspace's port 8081 ([subdomain access](/zbox/workspace-service#subdomain-access)). The same port also answers the bare host `3000-l8mvceq5`, with no domain, which only the project network can send.
+
+On the Zerops subdomain, requests to a port pass the Zerops edge and its [request limits](/zbox/access#request-limits), which delay server-sent events and long polls. Requests [from the project](#reach-a-sandbox-from-the-project) have none of these limits.
 
 ## Access modes
 
@@ -70,9 +72,9 @@ The access mode of a port decides who gets through:
 
 | Mode | Who can reach the port | How |
 |---|---|---|
-| `members` (default) | Whoever can use the workspace API, with the API key or a Zerops login | A one-time ticket from `zbox open` or the console's port links, exchanged for a session cookie |
+| `members` (default) | Whoever can use the workspace API, with the API key, a Zerops login or a [token](/zbox/access#scoped-tokens) with the `sandbox` scope | A one-time ticket from `zbox open` or the console's port links, exchanged for a session cookie |
 | `ticket` | Anyone you give a ticket | A ticket from `zbox credential issue`, exchanged for a session cookie |
-| `token` | Clients holding a token | `Authorization: Bearer <token>`, or `?token=<token>` in a link |
+| `token` | Clients holding a token | `X-Zerops-Box-Authorization: Bearer <token>`, or `?token=<token>` in a link |
 | `public` | Anyone | No credential |
 | `project` | Services in your Zerops project | Requests from the project network only ([how](#reach-a-sandbox-from-the-project)) |
 
@@ -86,11 +88,11 @@ zbox open app 3000
 zbox open app 3000 --domain box.example.com
 ```
 
-`zbox open` issues a credential valid for 60 seconds for this one opening and opens the port URL with it: a ticket for a `members` or `ticket` port, a token for a `token` port. A `public` port opens bare. The workspace exchanges the credential for a session cookie and redirects to the clean URL, so the credential never stays in the address bar or reaches your application. The port links at the top of a sandbox's page in the console work the same way.
+`zbox open` issues a credential valid for 60 seconds for this one opening and opens the port URL with it: a ticket for a `members` or `ticket` port, a token for a `token` port. A `public` port opens bare, and a `project` port can't be opened from outside the project. The workspace exchanges the credential for a session cookie and redirects to the clean URL, so the credential never stays in the address bar or reaches your application. The port links at the top of a sandbox's page in the console work the same way.
 
 ### Ingress credentials
 
-**Ingress credentials** are tickets and tokens for one port of one sandbox. A **ticket** is used once and works for `members` and `ticket` ports. A **token** can be used repeatedly and works for `token` ports. The secret is shown only when the credential is issued.
+**Ingress credentials** are tickets and tokens for one port of one sandbox. A **ticket** is used once and works for `members` and `ticket` ports. A **token** can be used repeatedly and works for `token` ports. The port must be declared with a mode that takes the credential's kind. The secret is shown only when the credential is issued.
 
 ```bash
 # a ticket for port 3000, valid 15 minutes unless --ttl says otherwise
@@ -101,7 +103,13 @@ zbox credential list app
 zbox credential revoke <credential-id>
 ```
 
-`issue` also prints an Open URL with the secret as a query parameter. Opening it signs the browser in with a session cookie. A client can send a token as a bearer header instead, on every request. Revoking a credential ends its sessions on their next request. Removing a sandbox revokes all of its credentials. The console lists and issues them in the sandbox's Access tab.
+`issue` also prints an Open URL with the secret as a `?ticket=` or `?token=` query parameter. Opening it exchanges the secret for a session cookie and redirects to the URL without it. A client can send a token in the `X-Zerops-Box-Authorization: Bearer <token>` header instead, on every request, with no cookie. The plain `Authorization` header is passed on to your application and doesn't open a `token` port:
+
+```bash
+curl -H "X-Zerops-Box-Authorization: Bearer <token>" https://9000-l8mvceq5-zbox-6da-8081.prg1.zerops.app/
+```
+
+The session cookie is `zbox_session`. It opens only the one port of the one sandbox it was issued for, and it is `HttpOnly` and `SameSite=Lax`, and `Secure` when the request came over HTTPS. Revoking a credential ends its sessions on their next request. Removing a sandbox revokes all of its credentials, and rotating the workspace API key ends every session. The console lists and issues credentials in the sandbox's Access tab.
 
 :::caution
 A session lasts only as long as the credential it was opened with, and 12 hours at most. A session started by `zbox open` or a console port link ends after about a minute, when its 60-second credential expires, and the next request gets `UNAUTHORIZED`. Open the port again, or open it with a longer-lived ticket from `zbox credential issue --ttl`.
@@ -109,7 +117,12 @@ A session lasts only as long as the credential it was opened with, and 12 hours 
 
 ## Wake on request
 
-A request to a port of a parked sandbox can wake it. The request is held while the sandbox wakes and is then passed on. Wake on request is on by default for every access mode except `public`, and `/wake` or `/no-wake` on the port spec overrides it. A request that fails the access check never wakes anything. A `public` port without wake on request answers `PARKED`.
+A request to a port of a parked sandbox can wake it. The request is held while the sandbox wakes and is then passed on. Wake on request is on by default for every access mode except `public`, and `/wake` or `/no-wake` on the port spec overrides it. In the policy JSON, it is `ingress.ports[].wakeOnRequest`. A request that fails the access check never wakes anything. A port without wake on request, so a `public` port unless you add `/wake`, answers `503 PARKED` while the sandbox is parked:
+
+```bash
+# a public port that wakes the sandbox
+zbox port open app 8000/public/wake
+```
 
 A request is held for 30 seconds at most, also while the sandbox is being created or is in another transition. Set `ingress.holdTimeoutSeconds` in the sandbox's policy to change it, the same way as the [egress rules](#egress-rules). A sandbox with [stale secrets](/zbox/secrets#stale-secrets) isn't woken by a request, it answers `SECRETS_STALE` until you wake it explicitly.
 
@@ -121,13 +134,14 @@ When the workspace can't pass a request on, it answers with a JSON body like the
 |---|---|---|
 | 404 | `NO_ROUTE` | No sandbox with this ID, or the port isn't declared |
 | 401 | `UNAUTHORIZED` | The port needs a valid ticket, token or session |
-| 403 | `PROJECT_ONLY` | A `project` port was reached from outside the project network |
-| 410 | `GONE` | The sandbox was removed |
+| 403 | `PROJECT_ONLY` | A `project` port got a request through the public URL, or one with an `X-Forwarded-For` header |
+| 410 | `GONE` | The sandbox is being removed or was removed |
 | 503 | `PARKED` | The sandbox is parked and the port doesn't wake it |
 | 503 | `SECRETS_STALE` | The sandbox has stale secrets and needs an explicit wake |
 | 504 | `HOLD_TIMEOUT` | The sandbox didn't come up within the hold timeout, `Retry-After` is set |
 | 502 | `FAILED` | The sandbox is in the failed status |
 | 502 | `UNREACHABLE`, `UPSTREAM` | Nothing listens on the port, or the application closed the connection |
+| 500 | `INTERNAL` | The workspace couldn't handle the request, for example a wake it couldn't start |
 
 On the Zerops subdomain, 502 answers show the Zerops error page instead of the JSON body.
 
@@ -167,10 +181,16 @@ Inside its mode, a sandbox can be restricted further by the `egress` part of its
 }
 ```
 
+- An `egress` block needs all three of `allow`, `deny` and `dns`.
 - `deny` rules are checked first and drop matching traffic.
 - `allow` rules let matching traffic through, still within the network mode. With an `egress` block present, everything not allowed is dropped, so an empty `allow` list leaves only DNS and the credentials proxy.
-- A rule's `cidr` is an IPv4 address or prefix, or `project` for the project's private network. `ports` lists destination ports (TCP and UDP), an empty list means every port. Domain names and IPv6 prefixes are refused.
+- A rule's `cidr` is an IPv4 address or prefix, or `project` for the project's private network. Domain names and IPv6 prefixes are refused. To allow a service you know by name, such as an object storage, allow its current IPv4 address.
+- A rule's `ports` is required and lists destination ports, `[]` means every port. A rule has no protocol: a port matches TCP and UDP alike, so allowing `443` opens both.
 - `dns` is `PROJECT` (the sandbox uses the project's DNS resolver) or `NONE` (no DNS at all).
+
+:::caution No IPv6
+Sandboxes have IPv4 only, with no IPv6 address and no IPv6 route. The resolver still answers AAAA records, so a client that tries IPv6 first fails or waits for a timeout. Make clients prefer IPv4, for example `curl -4` or `NODE_OPTIONS=--dns-result-order=ipv4first` for Node.js.
+:::
 
 Without an `egress` block, the network mode alone applies. A sandbox created from a template gets the template's default egress unless its own policy sets one. Set the rules at create with `zbox new -f policy.json`, or change them on a running or parked sandbox, which applies at once:
 
@@ -178,6 +198,8 @@ Without an `egress` block, the network mode alone applies. A sandbox created fro
 zbox policy app > policy.json   # edit the "egress" block, then:
 zbox policy app -f policy.json
 ```
+
+`zbox policy app` prints the policy together with its `policyGeneration`, and the file you write back must keep it. The API is `PUT /api/rest/sandbox/{id}/policy` with the same body: `policy` and `policyGeneration`, the generation you read with the policy. If the policy changed in the meantime, the write is refused with `409 policyGenerationConflict` and the other change stays, so read the policy again and reapply your edit. A body without `policyGeneration` answers `invalidUserInput` with `field is required`.
 
 :::note Coming soon
 Egress filtering by domain name, and bandwidth limits.
@@ -189,11 +211,13 @@ A sandbox whose network mode includes the project reaches the other services of 
 
 ### Reach a sandbox from the project
 
-Services in the project reach a sandbox's `project` port through the workspace's port 8081 on the project network, with the port's host in the `Host` header:
+Services in the project reach a sandbox's ports through the workspace's port 8081 on the project network, with the port and the sandbox ID as the `Host` header:
 
 ```bash
 # from a service in the same project, workspace hostname "zbox"
-curl -H "Host: 3000-l8mvceq5-zbox-6da-8081.prg1.zerops.app" http://zbox.zerops:8081/
+curl -H "Host: 3000-l8mvceq5" http://zbox.zerops:8081/
 ```
+
+This `Host` works without any workspace domain, and for every access mode: a port that isn't `project` still asks for its ticket, token or session. A proxy of your own in the project can forward requests to sandbox ports this way. A client on the project network can set its own `X-Forwarded-*` headers, which the workspace keeps and the application sees, and the workspace fills in the ones it leaves out. A `project` port refuses a request that carries an `X-Forwarded-For` header with `PROJECT_ONLY`, because it treats it as coming through the public edge, so don't let your proxy add one for `project` ports.
 
 Requests that come through the public URL are refused with `PROJECT_ONLY`.

@@ -11,7 +11,7 @@ The same actions are on the **Images** page of the web console.
 
 | | Base | Template |
 |---|---|---|
-| What it is | an image: files, a command, environment variables, a working directory | a base plus CPUs, memory and a policy, optionally warm |
+| What it is | an image: files, a command, environment variables, a working directory | a base plus CPUs, memory, disk and a policy, optionally warm |
 | Sandbox size | whatever you pass to `zbox new`, otherwise 1 vCPU and 512 MiB | the template's size, unless you override it |
 | Start | cold boot | cold boot, or resume from memory if warm |
 | Use it for | one-off sandboxes, trying an image | many sandboxes of one kind, with fixed sizes, default ports and limits, or things loaded in advance |
@@ -44,7 +44,7 @@ zbox base add https://storage.cdn.zerops.app/4ga3k-boxstorage/zbox/zbox-base.tar
 zbox base add python:3.12-slim --name python
 # any OCI registry, pinned to a digest if you like
 zbox base add ghcr.io/acme/agent@sha256:<digest> --name agent
-# a `docker save` archive (.tar or .tar.gz) served over http(s)
+# a `docker save` archive (.tar, .tar.gz or .tar.zst) served over http(s)
 zbox base add https://example.com/images/agent.tar.gz --name agent
 ```
 
@@ -58,7 +58,7 @@ zbox base add ghcr.io/acme/private-agent:1.4 --name agent --registry-credential-
 
 The workspace reads the variable when it pulls, so a new or changed variable needs no restart.
 
-**Names and digests.** A base is identified by its image digest, and the name is an optional, unique label on top. Adding an image that is already a base doesn't create a second one: the existing base takes the new reference, and the new `--name` if you pass one. `--name` takes the name over from any base that holds it, which leaves that base unnamed but otherwise untouched. Rename a base with `zbox base rename <base> <name>`; unlike `--name` on add, a rename is refused while another base has the name.
+**Names and digests.** A base is identified by its image digest, and the name is an optional, unique label on top. Adding an image that is already a base doesn't create a second one: the existing base takes the new reference, and the new `--name` if you pass one. `--name` takes the name over from any base that holds it, which leaves that base unnamed but otherwise untouched. Rename a base with `zbox base rename <base> <name>`. Unlike `--name` on add, a rename is refused with `nameConflict` while another base has the name. `zbox base set <base> --name ''` drops the name.
 
 :::caution
 Adding an image that's already registered under a different name renames that base. For example, `zbox base add alpine:3.20 --name test` on a workspace that has `alpine:3.20` as `alpine` leaves you with one base named `test`.
@@ -71,15 +71,16 @@ Adding an image that's already registered under a different name renames that ba
 ```bash
 # pack the current directory and build its Dockerfile
 zbox base build --name app
-# a directory, or a ready .tar, .tar.gz or .zip
+# a directory, or a ready .tar, .tar.gz, .tar.zst or .zip
 zbox base build ./image --name app
 # show what would be uploaded without building
 zbox base build ./image --dry-run
 ```
 
-The `Dockerfile` must be at the root of the context. The CLI leaves out what `docker build` would: the patterns of a root `.dockerignore`, otherwise the `.gitignore` files, and `.git` always.
+The `Dockerfile` must be at the root of the context, or in its only top directory when an archive holds one whole folder. The CLI leaves out what `docker build` would: the patterns of a root `.dockerignore`, otherwise the `.gitignore` files, and `.git` always.
 
-- **Limits**: the context can be up to 512 MiB and a build up to 30 minutes. When the CLI talks to the workspace's API URL directly with the workspace API key (instead of through your Zerops login), uploads over 50 MiB are refused.
+- **Limits**: the context can be up to 512 MiB and a build up to 30 minutes. A workspace runs one build at a time, and a second build waits for the first. When the CLI talks to the workspace's public API URL directly with the workspace API key (instead of through your Zerops login or inside the project), uploads over 50 MiB are refused ([request limits](/zbox/access#request-limits)).
+- **Memory**: a build has at most 512 MiB of memory, BuildKit and all `RUN` steps together, and it reserves that much of the workspace's capacity while it runs ([what a sandbox reserves](/zbox/workspace-settings#what-a-sandbox-reserves)). A build that needs more fails with `the build ran out of memory, 512 MiB` and the end of the build output. Sandboxes keep running.
 - **Network**: `RUN` steps have internet access, so package installs and downloads work. They run on the workspace VM, not in a sandbox, so they also reach your project's private network ([base builds](/zbox/isolation#base-builds)).
 - **Failures**: a failed build creates no base, and the error shows the end of the build output.
 - **Rebuilds**: build again with the same `--name` and the name moves to the new base. The previous build stays as an unnamed base, still used by any template or sandbox made from it, until you [remove it](#delete-bases-and-templates).
@@ -116,7 +117,7 @@ zbox template create --base app --name dev --cpus 2 --memory 2g
 zbox new agent1 --template dev
 ```
 
-The size is the default for every sandbox made from the template. Without `--cpus` and `--memory`, a template gets 1 vCPU and 512 MiB, the same as a [new sandbox](/zbox/lifecycle#create-a-sandbox). The **template policy**, passed as a JSON file with `-f`, sets defaults and limits for those sandboxes, within the [workspace policy](/zbox/workspace-settings#workspace-policy):
+The size, including the disk set with `--disk`, is the default for every sandbox made from the template. Without `--cpus`, `--memory` and `--disk`, a template gets the same defaults as a [new sandbox](/zbox/lifecycle#create-a-sandbox), and its size must fit the workspace policy ceilings like a sandbox's. The **template policy**, passed as a JSON file with `-f`, sets defaults and limits for those sandboxes, within the [workspace policy](/zbox/workspace-settings#workspace-policy):
 
 | Field | Effect |
 |---|---|
@@ -137,14 +138,14 @@ A create request that goes over a limit fails with `422 policyViolation`, like o
 A **warm template** is built by booting its base once at the template's size, running an optional **warm-up command**, and saving the sandbox's memory and disk. A sandbox created from it resumes from that snapshot instead of booting:
 
 ```bash
-zbox template create --base default --name dev --warm --cpus 2 --memory 2g --warmup 'claude --version'
+zbox template create --base default --name dev --warm --cpus 2 --memory 2g --disk 20g --warmup 'claude --version && sync'
 ```
 
 A sandbox made from a warm template inherits everything from the moment of the snapshot: files the warm-up wrote, memory contents (including `/dev/shm` and other in-memory filesystems), and processes the warm-up left running in the background. Use the warm-up to load what every sandbox needs anyway, such as a language runtime, a tool's first start or caches. After resuming, the sandbox gets its own identity: hostname, network, environment variables, secrets and SSH host key, and then the image's command starts.
 
-The warm-up runs with `/bin/sh -c` and the image's environment variables. It has no network, so anything it needs must already be in the image. It may run up to 10 minutes. If it exits non-zero, the template ends up `FAILED` with the end of the warm-up output as the reason; remove the template and create it again.
+The warm-up runs with `/bin/sh -c`, the image's environment variables and its working directory. It has no network, so anything it needs must already be in the image. It may run up to 10 minutes. If it exits non-zero, the template ends up `FAILED` with the end of the warm-up output as the reason. A workspace restart during the build fails the template too. Remove a failed template and create it again.
 
-A sandbox resumes from the snapshot only when it has exactly the template's CPUs and memory. With any other size it cold boots from the base, without anything the warm-up did. A sandbox with the `airgapped` network mode can't resume a snapshot either: it cold boots from the template's saved disk. In that case, only the warm-up's files that were flushed to disk are there, so end the warm-up with `sync` if such sandboxes need them.
+A sandbox resumes from the snapshot only when it has exactly the template's size: CPUs, memory and disk. With any other size it cold boots from the template's saved disk, resized: the warm-up's files are there, its memory and processes aren't ([resize a sandbox](/zbox/lifecycle#resize-a-sandbox)). A sandbox with the `airgapped` network mode can't resume a snapshot either and cold boots the same way. A cold boot finds only the warm-up's files that were flushed to disk, so end the warm-up with `sync`.
 
 A warm template's snapshot takes space on the workspace disk. A template without `--warm` stores only its settings and takes none.
 
@@ -154,10 +155,13 @@ You can rename a template or replace its policy. Sandboxes created earlier keep 
 
 ```bash
 zbox template rename dev dev-old
-zbox template set dev --name dev -f policy.json
+# replace the policy, the name stays
+zbox template set dev -f policy.json
 ```
 
-The base, the size and the warm-up can't change. To change them, create a new template. Template names are unique and, unlike base names, aren't taken over, so rename the old template first, create the new one under the name, then remove the old one.
+`zbox template set` changes only what you pass. In the API, `PUT /api/rest/template/{digest}` sets the name on every call, so send the current name to keep it.
+
+The base, the size and the warm-up can't change. To change them, create a new template. Template names are unique and, unlike base names, aren't taken over: a name another template holds is refused with `nameConflict`. Rename the old template first, create the new one under the name, then remove the old one.
 
 ## Keep bases current
 
@@ -183,6 +187,8 @@ zbox template remove dev-old
 zbox base remove app
 ```
 
-A template can't be removed while a sandbox that isn't terminated uses it, or while it's still building. A base can't be removed while a template or a sandbox that isn't terminated uses it. Both cases fail with `inUse`, and the error says what holds it. Parked sandboxes count, so terminate them or remove the templates first.
+A template can't be removed while a sandbox that isn't `TERMINATED` or `ARCHIVED` uses it, or while it's still building. A base can't be removed while a template or such a sandbox uses it. Both cases fail with `inUse`, and the error says what holds it. Parked sandboxes count, so remove them or the templates first ([sandbox statuses](/zbox/lifecycle#sandbox-statuses)).
+
+A removed base or template disappears from every list, gives its name up, and its files leave the workspace disk. Adding the same image again brings the base back.
 
 Bases, warm template snapshots and the build cache all live on the workspace disk. `zbox workspace` shows the disk in use; see [capacity](/zbox/workspace-settings#capacity) for how much is available.

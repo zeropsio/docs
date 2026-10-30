@@ -3,13 +3,13 @@ title: Managing and accessing the workspace
 description: Manage a Zerops Box workspace through its web console, its HTTP API, the zbox CLI or the zbox MCP server, and keep its API key safe.
 ---
 
-Every workspace serves one HTTP API. The web console, the `zbox` CLI and `zbox mcp` are all clients of that API. You authorize them in one of two ways: through your Zerops login, or with the workspace API key.
+Every workspace serves one HTTP API. The web console, the `zbox` CLI and `zbox mcp` are all clients of that API. You authorize them through your Zerops login, with the workspace API key, or with a scoped token that may call only a part of the API.
 
 | Interface | Use it for | Signed in with |
 |---|---|---|
 | [Web console](#web-console) | Working with sandboxes in the browser | Your Zerops login (from the Zerops GUI or the CLI), or the API key |
-| [HTTP API](#http-api) | Your own code, services and CI | The API key |
-| [zbox CLI](#zbox-cli) | Your terminal, scripts and agents | Your Zerops login, or the API key |
+| [HTTP API](#http-api) | Your own code, services and CI | The API key, or a [scoped token](#scoped-tokens) |
+| [zbox CLI](#zbox-cli) | Your terminal, scripts and agents | Your Zerops login, the API key, or a scoped token |
 | [MCP server](#mcp-server) | AI agents that run code in throwaway sandboxes | Same as the CLI |
 
 ## API key
@@ -17,7 +17,7 @@ Every workspace serves one HTTP API. The web console, the `zbox` CLI and `zbox m
 The **workspace API key** is the service environment variable `ZBOX_WORKSPACE_API_KEY`, which Zerops generates when it creates the workspace ([environment variables](/zbox/workspace-service#environment-variables)).
 
 :::warning One key manages everything
-The API key is the whole authority over the workspace. There are no scopes and no per-user keys. Anyone who holds it, and any sandbox you give it to, can create, read, change and terminate every sandbox, base, template, integration and webhook of the workspace. Keep it out of sandboxes unless you want them to manage the workspace. See [isolation and security](/zbox/isolation).
+The API key is the whole authority over the workspace. Anyone who holds it, and any sandbox you give it to, can create, read, change and terminate every sandbox, base, template, integration and webhook of the workspace, and create tokens. Keep it out of sandboxes and backends, and give them a [scoped token](#scoped-tokens) instead. See [isolation and security](/zbox/isolation).
 :::
 
 You don't need the key when you are logged in to Zerops. The Zerops GUI and the CLI reach the workspace through Zerops, which adds the key on the way. When you need it, for a script, CI or another machine, print it:
@@ -39,11 +39,52 @@ The API key never opens a sandbox port. Port links use one-time tickets instead 
 After the reload, the old key is refused and browsers signed in to the console with it are signed out.
 
 :::caution Logged-in access keeps the old key
-The Zerops GUI and a logged-in CLI reach the workspace with an access that Zerops creates with the key of that moment. An access created before the reload keeps sending the old key until it expires, an hour after its last use, and the CLI fails with `Missing or invalid Workspace API key` (exit code 6). Reopen the console from the Zerops GUI, and fetch a new access for the CLI:
+The Zerops GUI and a logged-in CLI reach the workspace with an access that Zerops creates with the key of that moment. An access created before the reload keeps sending the old key until it expires, an hour after its last use, and the CLI fails with `Missing or invalid Workspace API key or token` (exit code 6). Reopen the console from the Zerops GUI, and fetch a new access for the CLI:
 
 ```bash
 zbox workspace authorize <workspace-service-id>
 ```
+:::
+
+### Scoped tokens
+
+A **token** may call only a part of the API, so a backend, a CI job or an agent gets what it needs and nothing more. It is sent like the API key, as `Authorization: Bearer zbt_...`.
+
+```bash
+# a token that runs sandboxes
+zbox token create --name backend --scope sandbox
+# two scopes, expiring in 30 days
+zbox token create --name ci --scope sandbox:read --scope webhook --expires 720h
+zbox token list
+zbox token revoke <token-id>
+```
+
+| Scope | What it may call |
+|---|---|
+| `admin` | Every route a token may call, which is every route except the tokens themselves |
+| `sandbox` | Everything of `sandbox:read`, plus: create, change, park, wake, fork and terminate sandboxes, change their policy and ports, run commands and background processes, list processes and sessions and read their output, files, the shell and the SSH connection, take, remove and restore snapshots, issue and revoke ingress credentials, attach and detach integrations, export and import, download and remove exports |
+| `sandbox:read` | Read sandboxes with their events, metrics, SSH host key, snapshots, ingress credentials and integration attachments, operations, the workspace event log and stream, lineages, exports, and the bases and templates sandboxes are made from |
+| `base` | Bases and templates: read, pull, build, change and remove them, and the base build cache |
+| `integration` | Integrations and connectors, including connector credentials and logins |
+| `webhook` | Webhooks and their delivery log |
+| `workspace` | The workspace policy, the domains and the quarantine |
+
+Every token can read the workspace itself (`GET /api/rest/workspace`). Files, sessions and the process list take `sandbox`, not `sandbox:read`, because they reach inside the sandbox.
+
+- `POST /api/rest/token` creates a token with a `name`, its `scopes` and an optional `ttlSeconds`, and answers its secret once. It can't be read again. `GET /api/rest/token-list` lists the tokens that are not revoked, `includeRevoked=true` adds the revoked ones. `DELETE /api/rest/token/{id}` revokes one.
+- Only the API key manages tokens: as a bearer, in a console signed in with it, or through your Zerops login in the Zerops GUI and the CLI, which reach the API with the key. A token never does, not even an `admin` one.
+- A route outside the token's scopes answers `403 forbidden`, and the error's `scope` metadata lists the scopes that grant the route. A route no token may call, such as the token routes, answers `forbidden` with `scope` metadata that says the route takes the Workspace API key.
+- An unknown, revoked or expired token answers `401 unauthorized`. Expiry and revocation apply from the token's next request. A shell or an event stream opened before stays open.
+- A token works on the workspace's API URL and [inside the project](#request-limits). It can't sign in to the web console. The Zerops path takes your Zerops login, never a token, and always acts with the API key, so the Zerops GUI and a logged-in CLI have the whole authority of the key.
+
+To use a token with the CLI, store it like a key: `zbox workspace use <API URL> --api-key <token>`, or set it as `ZBOX_API_KEY` ([scripts, CI and sandboxes](#scripts-ci-and-sandboxes)). `zbox token create -q` prints only the secret.
+
+:::caution A `sandbox` token can read the workspace's secrets
+A token with the `sandbox` scope can create a sandbox that selects workspace variables as [secrets](/zbox/secrets#secrets), or change the selection of an existing one, and then read them inside the sandbox. Without a limit, that is every variable of the workspace service. Limit the modes and the variables any sandbox may select with the `secrets` ceiling of the [workspace policy](/zbox/workspace-settings#workspace-policy). Only the key and a `workspace` or `admin` token change that ceiling.
+:::
+
+:::caution A `base` token has the authority of the key
+A base build runs on the workspace VM itself ([base builds](/zbox/isolation#base-builds)), and a base pull can send any workspace variable to a registry as its credential. A token with the `base` scope, and so an `admin` token, can therefore reach every variable of the workspace, the API key included. Give the `base` scope only where you would give the API key.
 :::
 
 ## Web console
@@ -66,7 +107,7 @@ The session cookie works only over HTTPS. Over the [Zerops VPN](/references/netw
 
 The API URL is the Zerops subdomain of the workspace's port 8080, for example `https://zbox-6da-8080.prg1.zerops.app` ([subdomain access](/zbox/workspace-service#subdomain-access)). `zbox workspace` prints it on the `API` line. Other services in the project reach the API at `http://<hostname>:8080` ([project network](/zbox/workspace-service#project-network)). Every route is under `/api/rest/`.
 
-Send the API key as a bearer token in the `Authorization` header, on every request including WebSocket upgrades. A key in the query string is refused. Only `GET /api/rest/ping` answers without the key.
+Send the API key or a [scoped token](#scoped-tokens) as a bearer token in the `Authorization` header, on every request including WebSocket upgrades. A key in the query string is refused. Only `GET /api/rest/ping` answers without the key.
 
 ```bash
 export ZBOX_WORKSPACE_URL=https://zbox-6da-8080.prg1.zerops.app
@@ -80,6 +121,20 @@ curl -H "Authorization: Bearer $ZBOX_API_KEY" "$ZBOX_WORKSPACE_URL/api/rest/sand
 
 The CLI, when logged in to Zerops, uses a different path: it calls the API through Zerops with a short-lived access token minted from your login, so no key is stored on your machine.
 
+### Request limits
+
+On the Zerops subdomains, the API URL on port 8080 and the [sandbox port URLs](/zbox/networking#port-hostnames) on port 8081, every request passes the Zerops edge, which limits it:
+
+| Limit | What happens |
+|---|---|
+| Request body at most 50 MiB (52428800 bytes) | A larger body answers `413`, a chunked body is cut off with `413` when it passes the limit. |
+| A response must send something within 60 seconds | Otherwise the request answers `504 Gateway Time-out`. |
+| Small writes of a response are buffered | A response that sends a little now and then reaches the client only at its end. Large responses stream. |
+
+Inside the project, none of these apply. Services of the project, and your machine over the [Zerops VPN](/references/networking/vpn), reach the API at `http://<hostname>.zerops:8080` and the sandbox ports at `http://<hostname>.zerops:8081` ([reach a sandbox from the project](/zbox/networking#reach-a-sandbox-from-the-project)), with any body size and without the 60 second limit. The CLI logged in to Zerops and the Zerops GUI reach the API another way, with no limit on the body size. A request there still has a time limit, so a very large upload over a slow connection can fail.
+
+For what this means for commands and uploads, see [long commands](/zbox/commands#timeouts-and-output-limits) and [transfer files](/zbox/commands#transfer-files).
+
 ### OpenAPI document
 
 Each workspace serves its API reference without the key:
@@ -91,7 +146,7 @@ The document describes the whole contract, including a few routes and fields tha
 
 ### Operations
 
-Requests that create, park, wake, fork, snapshot, restore or terminate sandboxes, pull or build bases, or build templates answer right away with an **operation** and do the work in the background ([which verbs are operations](/zbox/lifecycle#operations)). An operation has an `id`, a `kind`, a `status` (`PENDING`, `RUNNING`, `FINISHED` or `FAILED`), a `result` when it finished and an `error` when it failed.
+Requests that create, park, wake, fork, snapshot, restore, export, import or terminate sandboxes, and pull or build bases, answer right away with an **operation** and do the work in the background ([which verbs are operations](/zbox/lifecycle#operations)). An operation has an `id`, a `kind`, a `status` (`PENDING`, `RUNNING`, `FINISHED` or `FAILED`), a `result` when it finished and an `error` when it failed. Creating a template answers the template itself, whose `status` is `BUILDING` until it is `READY` or `FAILED`.
 
 To wait for one, long-poll it. `waitSeconds` holds the answer until the operation finishes or fails, for at most 30 seconds. If it is still running when the time is up, you get it as it is, so ask again:
 
@@ -99,16 +154,32 @@ To wait for one, long-poll it. `waitSeconds` holds the answer until the operatio
 curl -H "Authorization: Bearer $ZBOX_API_KEY" "$ZBOX_WORKSPACE_URL/api/rest/operation/<operation-id>?waitSeconds=30"
 ```
 
-Creating a sandbox (`POST /api/rest/sandbox`) also takes `waitSeconds` in its body. The answer then carries the finished operation and the sandbox in its final state. `GET /api/rest/operation-list` lists recent operations, newest first.
+Creating a sandbox (`POST /api/rest/sandbox`) also takes `waitSeconds` in its body. The answer then carries the finished operation and the sandbox in its final state.
 
 The CLI waits for every operation by default. `--no-wait` prints the operation instead, `--timeout` stops waiting while the work goes on, and `zbox operation wait <id>` picks the wait up again.
 
+### Paging lists
+
+`GET /api/rest/operation-list` lists operations newest first, 100 of them unless `limit` asks for another number (at most 1000). Filter it with `sandboxId`, `status` and `kind`. To read older ones, pass the `id` of the last operation of a page as `beforeId`, and the answer continues from there. The CLI does the same:
+
+```bash
+# the newest 100 operations
+zbox operation list
+# filtered, and older than a given operation
+zbox operation list --sandbox app --status failed --kind wake --before <operation-id>
+# every operation, paged back from the newest
+zbox operation list --all
+```
+
+`GET /api/rest/sandbox-list` pages the same way with `beforeId` and `limit` (at most 1000), but answers every matching sandbox when you pass no `limit`. Filter it with `status` (repeatable), `lineageId` and `parentId`. `zbox list` takes `--status`, `--lineage`, `--parent`, `--limit` and `--before`.
+
 ### Idempotency keys
 
-The requests that consume capacity require an `Idempotency-Key` header: create, fork, park, wake, snapshot, restore and terminate a sandbox, pull a base and create a template. Use a new unique value for each logical request, and reuse it only when you retry that same request.
+The requests that consume capacity require an `Idempotency-Key` header: create, fork, park, wake, snapshot, restore and terminate a sandbox, export, import from an export or a bucket, pull a base and create a template. Use a new unique value for each logical request, and reuse it only when you retry that same request.
 
 - The same key with the same request within 24 hours replays the first answer. Nothing runs twice.
-- The same key with a different request, or while the first request is still in progress, is refused with `409 idempotencyKeyConflict`.
+- The same key with a different body or route is refused with `409 idempotencyKeyConflict`, also after the sandbox the first request created was terminated. The error's `route` metadata names the operation the key was first used with, as its OpenAPI `operationId`, for example `PostSandbox`.
+- The same key while the first request is still in progress is refused the same way, with `state: inFlight` in the error.
 - A request that failed releases its key, so you can retry with it.
 - Keys are shared by the whole workspace, not per client.
 
@@ -130,7 +201,34 @@ Errors use the HTTP status code and one JSON shape. `code` is stable for your co
 {"error": {"code": "invalidUserInput", "message": "Invalid user input", "meta": [{"code": "invalidUserInput", "error": "Invalid user input", "metadata": {"networkMode": ["field is required"]}}]}}
 ```
 
-For example, a wrong or missing key answers `401 unauthorized`, an unknown sandbox `404 sandboxNotFound`, and a full workspace `409 workspaceFull` ([capacity](/zbox/workspace-settings#capacity)).
+| Status | Code | Meaning |
+|---|---|---|
+| 400 | `invalidUserInput` | A field is missing or wrong, `meta` names it |
+| 401 | `unauthorized` | No bearer, a wrong key, or an unknown, revoked or expired token |
+| 403 | `forbidden` | The token's scopes don't cover the route, the `scope` metadata says what does ([scoped tokens](#scoped-tokens)) |
+| 404 | `sandboxNotFound`, `baseNotFound`, `templateNotFound`, `snapshotNotFound`, `operationNotFound`, `lineageNotFound`, `exportNotFound`, `integrationNotFound`, `integrationAttachmentNotFound`, `webhookNotFound`, `ingressCredentialNotFound`, `sessionNotFound`, `quarantineNotFound`, `connectorNotFound`, `tokenNotFound` | The object doesn't exist |
+| 404 | `pathNotFound` | The path doesn't exist inside the sandbox |
+| 404 | `pageNotFound` | No such route |
+| 409 | `sandboxNotRunning` | The request needs a running sandbox |
+| 409 | `invalidSandboxStatus` | The sandbox's status doesn't allow the request ([sandbox statuses](/zbox/lifecycle#sandbox-statuses)) |
+| 409 | `operationInFlight` | Another operation runs on the sandbox ([operations](/zbox/lifecycle#operations)) |
+| 409 | `secretsStale` | The sandbox's [secrets are stale](/zbox/secrets#stale-secrets), wake it with `redeliverSecrets` |
+| 409 | `secretBearing` | The sandbox received secrets, so it can't be forked, snapshotted with memory or exported ([secret-bearing sandboxes](/zbox/secrets#secret-bearing-sandboxes)) |
+| 409 | `policyGenerationConflict` | The policy changed since you read it, read it again |
+| 409 | `nameConflict` | The name is taken |
+| 409 | `baseNotReady`, `templateNotReady` | The base or template isn't `READY` yet, or its pull or build failed |
+| 409 | `idempotencyKeyConflict` | The [idempotency key](#idempotency-keys) was used with another request, or that request still runs |
+| 409 | `inUse` | Something still uses the object, the error says what |
+| 409 | `resizeNeedsColdBoot` | A memory image keeps its size ([resize a sandbox](/zbox/lifecycle#resize-a-sandbox)) |
+| 409 | `workspaceFull` | No room for the request, `meta` has `resource`, `requested`, `free` and `usable` ([when the workspace is full](/zbox/workspace-settings#when-the-workspace-is-full)) |
+| 409 | `exportRunning`, `exportHasNoFile` | The export still runs, or has no file on the workspace ([export](/zbox/export)) |
+| 422 | `policyViolation` | The request goes over a ceiling of the template or the [workspace policy](/zbox/workspace-settings#workspace-policy) |
+| 501 | `notSupportedBySubstrate` | The workspace doesn't support the request |
+| 502 | `substrateFailed`, `guestFailed` | The workspace or the sandbox's agent failed |
+| 503 | `internalServerError`, `serviceUnavailable` | An internal error, retry later |
+| 504 | `guestTimeout` | The sandbox's agent didn't answer in time |
+
+An operation that fails after it was accepted has no error code of its own: the failed operation carries the reason in its `error`, for example a disk that can't shrink to the size you asked for ([resize a sandbox](/zbox/lifecycle#resize-a-sandbox)). Requests to sandbox ports answer the router's own errors ([error responses](/zbox/networking#error-responses)). On the Zerops subdomain, the edge can replace the body of a `502` or `504` answer with its own page.
 
 ## zbox CLI
 
@@ -138,7 +236,7 @@ Install and log in as described in [getting started](/zbox/getting-started). Eve
 
 ### Output and exit codes
 
-On a terminal the CLI prints tables. When stdout is a pipe or a file, it prints tab-separated values with one header line. `--json` prints the API objects as they are, and `-q` (`--quiet`) prints only ids, one per line. Progress and hints go to stderr. Under `--json`, an error is one JSON object on stderr.
+On a terminal the CLI prints tables. When stdout is a pipe or a file, it prints tab-separated values with one header line. `--json` prints the API objects as they are, and `-q` (`--quiet`) prints only ids, one per line. Progress and hints go to stderr. Under `--json`, an error is one JSON object on stderr, `{"error": {"code", "message", "status", "meta", "exitCode"}}`, with the API's [error code](#errors) and HTTP status when the API answered.
 
 ```bash
 id=$(zbox new -q --template dev)
@@ -153,11 +251,12 @@ zbox get "$id" --json
 | 3 | Not found |
 | 4 | Conflict: the sandbox's state does not allow it, a name is taken, an operation is in progress |
 | 5 | Timed out waiting, the work may go on |
-| 6 | Not authorized: no login, no workspace, a rejected key |
+| 6 | Not authorized: no login, no workspace, a rejected key or token, a token whose scopes don't cover the command |
 | 7 | Unavailable: the workspace is not reachable or is full, retry later |
+| 125 | `zbox exec` itself failed |
 | 130 | Interrupted |
 
-`zbox exec` has exit codes of its own, see [run a command](/zbox/commands#run-a-command).
+`zbox exec` exits with the command's own exit code, see [run a command](/zbox/commands#run-a-command).
 
 Commands that delete something (`remove`, `base remove`, `workspace teardown`, and so on) ask for confirmation on a terminal. Without a terminal they refuse with exit code 2 unless you pass `--yes` (`-y`).
 
@@ -170,8 +269,8 @@ The CLI remembers the workspaces you have used and keeps one as current. Command
 zbox workspace list
 # store a workspace of your account; it is reached through Zerops, no key is stored
 zbox workspace authorize <service-id>
-# store a workspace outside your account by its API URL and key
-zbox workspace use https://box-1a2-8080.prg1.zerops.app --api-key <key>
+# store a workspace outside your account by its API URL and its key or a token
+zbox workspace use https://box-1a2-8080.prg1.zerops.app --api-key <key-or-token>
 # make another stored workspace the current one
 zbox workspace switch <name>
 # work on another stored workspace for one command only
@@ -180,7 +279,7 @@ zbox list --workspace <name>
 zbox workspace forget
 ```
 
-`zbox workspace use` stores the key in the CLI's configuration file. `ZBOX_WORKSPACE=<name>` in the environment does the same as `--workspace`.
+`zbox workspace use` stores the key or token in the CLI's configuration file. `ZBOX_WORKSPACE=<name>` in the environment does the same as `--workspace`.
 
 ### Scripts, CI and sandboxes
 
@@ -188,11 +287,11 @@ These environment variables override what the CLI has stored, for scripts and CI
 
 | Variable | What it does |
 |---|---|
-| `ZBOX_WORKSPACE_URL` and `ZBOX_API_KEY` | Work on the workspace at this API URL with this key, ignoring the stored ones. Set both or neither. |
+| `ZBOX_WORKSPACE_URL` and `ZBOX_API_KEY` | Work on the workspace at this API URL with this key or [token](#scoped-tokens), ignoring the stored ones. Set both or neither. |
 | `ZBOX_TOKEN` | A Zerops [personal access token](/references/cli#personal-access-tokens) used instead of the stored login, for commands such as `zbox setup` and `zbox workspace teardown` |
 | `ZBOX_CONFIG` | Path of the configuration file, `~/.config/zbox/config.json` by default |
 
-The URL and key pair is the simplest way for CI, and for a sandbox that should manage its own workspace. A sandbox reaches its workspace's API only through the public API URL, so it needs a [network mode](/zbox/networking#egress) with internet access.
+The URL and key pair is the simplest way for CI, and for a sandbox that should manage its own workspace. Give them a [scoped token](#scoped-tokens) rather than the API key. A sandbox reaches its workspace's API only through the public API URL, so it needs a [network mode](/zbox/networking#egress) with internet access.
 
 ```bash
 ZBOX_WORKSPACE_URL=https://zbox-6da-8080.prg1.zerops.app ZBOX_API_KEY=<key> zbox list

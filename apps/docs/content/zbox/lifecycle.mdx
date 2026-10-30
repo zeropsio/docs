@@ -9,29 +9,32 @@ A sandbox is created from a base or a template, runs, can be parked to free its 
 
 | Status | Meaning |
 |---|---|
-| `CREATING` | The sandbox is being created, forked or restored. |
+| `CREATING` | The sandbox is being created or forked. |
+| `RESTORING` | The sandbox is being restored from a snapshot or [imported](/zbox/export#import-a-sandbox). |
 | `RUNNING` | The VM is up. It reserves its CPU and memory on the workspace. |
 | `PARKING` | The sandbox is being parked. |
 | `PARKED` | The VM is stopped. The disk, and the memory image if one was kept, stay on the workspace disk. No CPU or memory is reserved. |
 | `WAKING` | The sandbox is being woken. |
 | `FORKING` | The sandbox is being forked. It returns to `RUNNING` or `PARKED` when the children are up. |
 | `FAILED` | Something went wrong, see [Failed sandboxes](#failed-sandboxes). |
+| `TERMINATING` | The sandbox is being removed. It keeps its memory reservation until the removal is done. |
 | `TERMINATED` | The sandbox was removed. Only its record remains. |
+| `ARCHIVED` | The sandbox was removed because its [absolute TTL](#idle-and-absolute-ttl) ran out. Only its record remains. |
 
-The API also lists `RESTORING` and `ARCHIVED`, but no sandbox enters them today. A restored sandbox shows `CREATING`.
+While an [operation](#operations) runs on a sandbox, the sandbox carries it as `operation` with its `id`, `kind` and `since`, in `GET /api/rest/sandbox/{id}` and in the list. Without one, `operation` is `null`.
 
-`zbox list` shows live sandboxes only. Removed ones are listed on request:
+`zbox list` shows live sandboxes only. Removed ones are listed on request, for 7 days after their removal ([retention](#retention)):
 
 ```bash
 zbox list
 zbox list --status running,parked
 # removed sandboxes
-zbox list --status terminated
+zbox list --status terminated,archived
 ```
 
 ### Failed sandboxes
 
-A sandbox ends up `FAILED` when it could not boot (on create, fork, restore or a wake from disk), when its removal could not clean up, or when the workspace restarted while the sandbox was being created or no longer found its VM. `zbox get <sandbox>` shows the **Reason**.
+A sandbox ends up `FAILED` when it could not boot (on create, fork, restore or a wake from disk), when its removal could not clean up or was interrupted by a workspace restart, or when a workspace restart finds the sandbox still being created or its VM gone. `zbox get <sandbox>` shows the **Reason**. A sandbox whose removal failed or was interrupted needs one more `zbox remove`.
 
 Try `zbox wake <sandbox>` first: it boots the sandbox again from its disk if the disk is still there. Otherwise remove it. To remove all failed sandboxes at once:
 
@@ -47,18 +50,24 @@ A sandbox whose VM stops on its own, for example because the workspace ran out o
 # from the only ready base, with 1 vCPU and 512 MiB
 zbox new app
 # from a named base, with an explicit size
-zbox new app --base python --cpus 2 --memory 2g
+zbox new app --base python --cpus 2 --memory 2g --disk 20g
 # from a template, with the template's size; a warm template resumes from memory
 zbox new app --template dev
 ```
 
-Without `--cpus` and `--memory`, a sandbox gets 1 vCPU and 512 MiB, or the template's size when created from a [template](/zbox/images#templates). Memory is a multiple of 16 MiB, at least 64 MiB, and CPUs range from 1 to the number of the workspace's cores. The [workspace policy](/zbox/workspace-settings#workspace-policy) and the template can set lower ceilings, and the workspace must have free capacity for the sandbox, otherwise the create fails with [`workspaceFull`](/zbox/workspace-settings#when-the-workspace-is-full).
+A sandbox's size is its vCPUs, its memory and its disk (`cpus`, `memoryBytes` and `diskBytes` in the API):
 
-The size is fixed for the sandbox's life. Forks and restored sandboxes get the same size. To run with a different size, create a new sandbox.
+| | Default | Range |
+|---|---|---|
+| vCPUs | 1 | 1 to the number of the workspace's cores |
+| Memory | 512 MiB | A multiple of 16 MiB, at least 64 MiB |
+| Disk | `defaultDiskBytes` of the [workspace policy](/zbox/workspace-settings#workspace-policy), else 10 GiB | Whole MiB, from 1 GiB to the size of the workspace disk |
 
-Every sandbox has a 10 GiB writable disk on top of its read-only base image. The writable disk takes space on the [workspace disk](/zbox/workspace-settings#what-uses-the-disk) only for what the sandbox writes, and it cannot be resized.
+A sandbox created from a [template](/zbox/images#templates) takes the template's size unless you give another one, and at another size it boots cold ([warm templates](/zbox/images#warm-templates)). A size outside these ranges is refused with `400 invalidUserInput`. The [workspace policy](/zbox/workspace-settings#workspace-policy) can set lower ceilings with `maxCpus`, `maxMemoryBytes` and `maxDiskBytes`, and a template can set `maxCpus` and `maxMemoryBytes`. A size over a ceiling is refused with `422 policyViolation`. The workspace must also have free capacity for the sandbox, otherwise the create fails with [`workspaceFull`](/zbox/workspace-settings#when-the-workspace-is-full).
 
-The [network mode](/zbox/networking#egress) is also fixed at create. [Ports](/zbox/networking#ports) and the [secrets](/zbox/secrets#secrets) a sandbox receives are set at create too and can be changed later. Arguments after `--` replace the image's command.
+The disk is a writable layer on top of the read-only base image. It takes space on the [workspace disk](/zbox/workspace-settings#what-uses-the-disk) only for what the sandbox writes, and deleting files doesn't give that space back. A size can be changed later with a cold boot ([resize a sandbox](#resize-a-sandbox)).
+
+The [network mode](/zbox/networking#egress) is fixed at create. [Ports](/zbox/networking#ports) and the [secrets](/zbox/secrets#secrets) a sandbox receives are set at create too and can be changed later. Arguments after `--` replace the image's command, and `-e` replaces the image's environment. The API shows that launch environment in the sandbox's `launchContract` as `envNames`, the sorted names only, never the values.
 
 `zbox new` waits until the sandbox is `RUNNING`. With `--no-wait` it returns right away with the [operation](#operations).
 
@@ -74,41 +83,86 @@ zbox park app --no-memory
 zbox wake app
 ```
 
-By default, parking keeps a **memory image** next to the disk. The wake resumes the sandbox from it: processes keep running from where they were, with their files, `/tmp` and memory intact. The guest's clock is set to the current time on the wake, and the system uptime doesn't include the time spent parked.
+By default, parking keeps a **memory image** next to the disk, for every sandbox, a [secret-bearing](/zbox/secrets#secret-bearing-sandboxes) one too. The wake resumes the sandbox from it: processes keep running from where they were, with their files, `/tmp` and memory intact. The guest's clock is set to the current time on the wake, and the system uptime doesn't include the time spent parked.
 
-With `--no-memory`, the sandbox's disk is synced and the guest shut down: every process ends and nothing is kept in memory. Files on the disk stay. The next wake is a cold boot that runs the image's command again and delivers the current secrets and policy.
+With `--no-memory`, the sandbox's disk is synced and the guest shut down: every process ends and nothing is kept in memory. Files on the disk stay. The next wake is a cold boot that runs the image's command again and delivers the current secrets and policy. If the sync reports a write error or takes longer than 15 seconds, the park is refused: nothing is stopped, the sandbox keeps running, and the operation fails with the reason, recorded as an `OPERATION_FAILED` [event](/zbox/monitoring#events).
 
 `zbox wake` reports whether the sandbox resumed from memory or booted cold. A wake needs free capacity like a create and fails with `workspaceFull` without it. A sandbox whose [secrets are stale](/zbox/secrets#stale-secrets) only wakes with `zbox wake --redeliver-secrets`.
 
-A [workspace restart, stop or resize](/zbox/workspace-service#service-lifecycle) leaves running sandboxes parked without a memory image: their processes end and writes not yet on the disk are lost.
+A [workspace restart, stop or resize](/zbox/workspace-service#service-lifecycle) parks the running sandboxes with their memory first.
+
+## Resize a sandbox
+
+A sandbox's size changes only with a cold boot, because a memory image can't resume at another size:
+
+```bash
+# a running sandbox: parked without memory and booted again at the new size, in one operation
+zbox resize app --cpus 2 --memory 2g
+zbox resize app --disk 20g
+# a sandbox parked without memory: wake it at the new size
+zbox wake app --cpus 4 --disk 30g
+```
+
+- On a running sandbox, `zbox resize` recreates the sandbox in place in one `WAKE` operation: it parks it without memory, with the same disk sync as `zbox park --no-memory`, and boots it at the new size. Everything running inside ends and starts again with the image's command, files stay. If the sync fails, the operation fails and the sandbox keeps running at its old size.
+- On a sandbox parked without memory, `zbox resize` and `zbox wake` with a size do the same: the sandbox boots cold at the new size.
+- A sandbox parked with memory refuses another size with `409 resizeNeedsColdBoot`. Wake it first and resize it while it runs.
+- A disk can grow, and shrink down to what its files take. A smaller size fails the operation with `diskTooSmall` and names the minimum. The sandbox then stays parked without memory at its old size.
+- The new size must stay within the ranges and the [ceilings](#create-a-sandbox) of a create. A running sandbox already holds its old size, so only the growth has to fit the free capacity.
+
+In the API, a resize is a wake with `cpus`, `memoryBytes` or `diskBytes` in its body (`POST /api/rest/sandbox/{id}/wake`).
 
 ### Implicit wake
 
 You rarely need `zbox wake`. Any call that works inside a parked sandbox wakes it first: `zbox exec`, `zbox process`, `zbox shell`, `zbox ssh` and file operations. A request to one of its ports wakes it as well, depending on the port's [wake on request](/zbox/networking#wake-on-request) setting. Reading the sandbox, its events, metrics or process list doesn't wake it.
 
-A park cuts off the [sessions](/zbox/commands#sessions) of background processes started before it.
+A park ends the [sessions](/zbox/commands#sessions) of the commands, shells and background processes started before it.
 
 ## Idle and absolute TTL
 
 A sandbox can have two time limits, both unset by default:
 
-- **Idle TTL**: how long the sandbox may go without activity. Activity is what would also wake it: `zbox exec`, `zbox process`, file operations, shell and SSH connections, and requests to its ports. Each activity moves the idle deadline. A parked sandbox has no idle deadline.
-- **Absolute TTL**: how long the sandbox may exist, counted from its creation.
+- **Idle TTL**: how long a running sandbox may go without activity. When it runs out, the sandbox is parked with its memory, so the next call or request wakes it where it left off. A parked sandbox has no idle deadline.
+- **Absolute TTL**: how long the sandbox may exist, counted from its own creation, whatever its status. When it runs out, the sandbox is removed like with `zbox remove` and becomes `ARCHIVED`: its operation is a terminate, and its [events](/zbox/monitoring#events) are `DELETED` and then `ARCHIVED` with the reason `absoluteTtl`.
+
+The workspace checks the deadlines every 15 seconds. A sandbox with an operation in progress is checked again on the next round. If an idle park fails, it is tried again one idle TTL later.
 
 ```bash
 zbox new app --idle-ttl 30m --absolute-ttl 24h
-zbox set app --name app --idle-ttl 1h --absolute-ttl 48h
+# change one TTL, the name and the other TTL stay
+zbox set app --idle-ttl 1h
+# clear the idle TTL
+zbox set app --idle-ttl 0
 ```
+
+Each activity moves the idle deadline:
+
+| Counts as activity | Doesn't count |
+|---|---|
+| A boot or a wake | Reading the sandbox, lists, `zbox set` and policy changes |
+| A `zbox exec`, when it ends | A background process running on its own |
+| Starting a `zbox process` | Reading a session's output, `zbox ps` |
+| File operations | Traffic on a WebSocket after it opened |
+| A shell or SSH connection, for as long as it stays open | |
+| Requests to the sandbox's ports, recorded at most every 10 seconds | |
+
+:::caution Long jobs and the idle TTL
+A `zbox exec` counts only when it ends, and a background process doesn't count at all. A sandbox with an idle TTL shorter than such a job can be parked while the job runs. Choose an idle TTL longer than your longest job, or keep a shell open.
+:::
 
 `zbox get` shows each TTL with its deadline. The [workspace policy](/zbox/workspace-settings#workspace-policy) and a template can cap both TTLs; a value over the cap is refused with `policyViolation`. A cap applies only to TTLs you set, so a sandbox without TTLs is always allowed. Forks and restored sandboxes inherit both TTLs, and their absolute TTL counts from their own creation.
 
-:::caution
-Expiry isn't enforced yet: when a deadline passes, the sandbox keeps running. Once it is, a sandbox past its idle TTL will be parked and one past its absolute TTL removed. Until then, park or remove sandboxes yourself.
-:::
+`zbox set` changes only the flags you pass, `--name ""` or a TTL of `0` clears one, and `zbox rename` keeps both TTLs. The API's `PUT /api/rest/sandbox/{id}` replaces the name and both TTLs together, so send all three, and leave out or null only what you want cleared.
 
-:::warning
-`zbox set` replaces the name and both TTLs at once, and clears whatever you leave out. Always pass all three values you want to keep, like in the example above. `zbox rename` clears both TTLs. The console's edit form on the sandbox page keeps all three.
-:::
+## Retention
+
+The workspace deletes old records on its own, every hour:
+
+| What | Kept for |
+|---|---|
+| A removed or archived sandbox, with its events, operations, sessions, snapshot records, metrics and webhook deliveries | 7 days after its removal |
+| A closed [session](/zbox/commands#sessions) with its output | 7 days after it closed. Removing the sandbox deletes the output at once. |
+
+A removed sandbox is kept as long as the workspace keeps the record of any of its children. [Metrics](/zbox/monitoring#metrics), [webhook deliveries](/zbox/monitoring#delivery-log) and [idempotency keys](/zbox/access#idempotency-keys) have retention periods of their own.
 
 ## Fork a sandbox
 
@@ -118,11 +172,17 @@ A fork creates one or more children that continue from the sandbox's current sta
 zbox fork app --name try-a --name try-b
 # three unnamed children
 zbox fork app --count 3
+# children of another size, they boot cold
+zbox fork app --name big --cpus 4 --memory 4g --disk 30g
 ```
 
 A running sandbox is paused briefly while its state is captured and then continues. A parked sandbox stays parked; its children resume from its memory image, or boot cold from its disk if it was parked without memory.
 
-Each child is a new sandbox with its own ID, hostname, network address and SSH host key. It inherits the parent's size, network mode, policy, ports, TTLs and integration attachments, and joins the parent's [lineage](/zbox/lineages). Children without `--name` have no name. After the fork, the parent and the children are independent: removing one doesn't affect the others.
+A child has the parent's size unless you give it another one. A child of another size can't resume the memory image, so it boots cold from the parent's disk, synced first when the parent runs: files are there, running processes aren't. A parent parked with memory refuses other sizes with `resizeNeedsColdBoot`, because its disk isn't synced. Each child's size is checked against the [ceilings](#create-a-sandbox) like a create.
+
+The CLI's `--cpus`, `--memory` and `--disk` give every child of the fork the same size. In the API, the fork body can list the children as `children`, each with an optional `name`, `cpus`, `memoryBytes` and `diskBytes`, so every child can have its own size. `children` replaces `count` and `names`, a body with both is refused.
+
+Each child is a new sandbox with its own ID, hostname, network address and SSH host key. It inherits the parent's network mode, policy, ports, TTLs and integration attachments, and joins the parent's [lineage](/zbox/lineages). Children without `--name` have no name. After the fork, the parent and the children are independent: removing one doesn't affect the others.
 
 Each child needs free capacity like a new sandbox. One child failing doesn't stop its siblings; the fork's operation lists the outcome per child. A sandbox that received [secrets](/zbox/secrets#secret-bearing-sandboxes) can't be forked, because its memory holds them.
 
@@ -147,9 +207,19 @@ You can snapshot a running or a parked sandbox. Snapshot names are lowercase let
 A disk-only snapshot of a running sandbox contains only what the guest has already written to its disk. Recent writes still in the guest's memory are missing from it. Run `zbox exec app -- sync` right before the snapshot, or take it with `--with-memory`.
 :::
 
-A restore never changes the original sandbox. It creates a new sandbox with the original's current size and policy, a fresh identity like a fork child, the original as its parent and the same [lineage](/zbox/lineages). With `--with-memory` and a snapshot that has memory, the new sandbox resumes the captured processes; otherwise it boots cold from the snapshot's disk.
+A restore never changes the original sandbox. It creates a new sandbox with the original's current policy, a fresh identity like a fork child, the original as its parent and the same [lineage](/zbox/lineages). The new sandbox is `RESTORING` until it runs. With `--with-memory` and a snapshot that has memory, the new sandbox resumes the captured processes; otherwise it boots cold from the snapshot's disk.
+
+A snapshot records the sandbox's size at the time it was taken (`cpus`, `memoryBytes` and `diskBytes`, `null` on older snapshots), and a restore gets that size by default. An older snapshot without a recorded size restores at the original's current size. A disk restore takes any other size within the [ranges and ceilings](#create-a-sandbox), and its disk shrinks only down to what its files take. A memory restore keeps the snapshot's size and refuses another one with `409 resizeNeedsColdBoot`:
+
+```bash
+zbox snapshot restore <snapshot-id> --name app-big --cpus 4 --memory 8g --disk 40g
+```
+
+A snapshot taken while the sandbox was [secret-bearing](/zbox/secrets#secret-bearing-sandboxes) gives a restored sandbox that is secret-bearing from its start.
 
 Snapshots are stored on the [workspace disk](/zbox/workspace-settings#what-uses-the-disk) next to the sandbox's own disk.
+
+`zbox snapshot list` and `GET /api/rest/sandbox/{id}/snapshot-list` list the named snapshots only. The memory image that a [park](#park-and-wake) keeps is not a snapshot: it isn't listed, and its size isn't shown.
 
 :::caution
 Removing a sandbox deletes its snapshots. They still appear in `zbox snapshot list` afterwards, but can't be restored. To keep a state beyond the sandbox, restore the snapshot into a new sandbox before you remove the original.
@@ -167,19 +237,30 @@ zbox remove app
 zbox remove -y app worker
 ```
 
-Removing stops the sandbox and deletes its disk, memory image and snapshots. Its ports stop answering, its ingress tickets and tokens are revoked and its integration attachments are deleted. This can't be undone. Forks and sandboxes restored from it are separate sandboxes and keep running.
+Removing stops the sandbox and deletes its disk, memory image, snapshots and the output of its sessions. Its ports stop answering, its ingress tickets and tokens are revoked and its integration attachments are deleted. This can't be undone. Forks and sandboxes restored from it are separate sandboxes and keep running.
 
-The sandbox's record stays with the status `TERMINATED`, so it remains in `zbox list --status terminated` and in the [event log](/zbox/monitoring#events).
+The sandbox is `TERMINATING` while it is being removed. Removing it again meanwhile answers the removal already running. Afterwards, its record stays with the status `TERMINATED` for 7 days ([retention](#retention)), in `zbox list --status terminated` and in the [event log](/zbox/monitoring#events).
 
 ## Operations
 
-Create, park, wake, fork, snapshot, restore and remove are **operations**: the API accepts the request, answers with an operation and does the work in the background. A fork has one operation for the fork itself and one per child. Renaming, changing TTLs, listing and removing snapshots answer right away.
+Create, park, wake, fork, snapshot, restore, remove, [export and import](/zbox/export) are **operations**: the API accepts the request, answers with an operation and does the work in the background. A fork has one operation for the fork itself and one per child. Renaming, changing TTLs, listing and removing snapshots answer right away.
 
 The CLI waits for them; see [operations](/zbox/access#operations) for `--no-wait` and for waiting through the API.
 
-A sandbox runs one operation at a time: another lifecycle request while one is in progress is refused with `operationInFlight`. Parking a parked sandbox or waking a running one does nothing and answers the last operation of that kind.
+```bash
+# the operations of one sandbox, newest first
+zbox operation list --sandbox app
+# one operation with its result or its error
+zbox operation get <operation-id>
+# wait for an operation started with --no-wait
+zbox operation wait <operation-id>
+```
 
-Each status change is also recorded as an [event](/zbox/monitoring#events):
+A sandbox runs one operation at a time: another lifecycle request while one is in progress is refused with `operationInFlight`, except a second removal, which answers the running one. Parking a parked sandbox does nothing and answers the last park. Waking a running sandbox does the same, unless the wake asks for [another size](#resize-a-sandbox) or for `--redeliver-secrets`: then the sandbox is shut down and booted again.
+
+A failed operation of a sandbox is recorded as an [event](/zbox/monitoring#events), except a failed export. When the sandbox ends up `FAILED`, the event is `FAILED`. When it keeps its status, for example a refused park that leaves it running or a failed wake that leaves it parked, the event is `OPERATION_FAILED` with the `reason`. An operation never stays `RUNNING` after its work ended. A workspace restart fails the operations still in flight.
+
+The sandbox's [events](/zbox/monitoring#events) record its lifecycle:
 
 ```bash
 zbox events --sandbox app

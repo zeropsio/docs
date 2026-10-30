@@ -7,7 +7,7 @@ Every workspace keeps an event log of what happened to its sandboxes, can delive
 
 ## Events
 
-The workspace records an **event** for every sandbox state change and every session opened or closed inside a sandbox. Events stay readable after the sandbox is terminated (ask by sandbox id, not by name).
+The workspace records an **event** whenever a step in a sandbox's life ends (it is created, runs, parks, fails or is removed), whenever an operation on it fails, and for every session opened or closed inside it. The transitional statuses such as `PARKING` or `TERMINATING` have no event of their own. Events stay readable after the sandbox is removed until its [retention](/zbox/lifecycle#retention) ends: ask by sandbox id, not by name.
 
 ```bash
 # the newest events of the whole workspace, the latest at the bottom
@@ -32,18 +32,23 @@ Each event carries:
 
 | Type | When | Payload |
 |---|---|---|
-| `CREATED` | A sandbox is created, including fork children and restores. Status `CREATING`. | `parentId` for forks and restores |
-| `READY` | A newly created sandbox runs. | `address`, `resumedMemory`, `secretsDelivered` |
-| `PARKED` | A sandbox is parked. | `memoryKept` |
-| `WOKE` | A sandbox is woken. | same as `READY` |
-| `FORKED` | On the parent when a fork finished, and on each child when it runs. | parent: `children` (child id to status); child: same as `READY` |
-| `RESTORED` | A sandbox restored from a snapshot runs. | same as `READY` |
+| `CREATED` | A sandbox is created, including fork children, restores and imports. Status `CREATING`, or `RESTORING` for restores and imports. | forks and restores: `parentId` and `size` (`cpus`, `memoryBytes`, `diskBytes`); imports: `source` |
+| `READY` | A newly created sandbox runs. | `address`, `resumedMemory`, `secretsDelivered`, and the size: `cpus`, `memoryBytes`, `diskBytes` |
+| `PARKED` | A sandbox is parked. | `memoryKept`, and `reason` when the workspace parked it while starting |
+| `WOKE` | A sandbox is woken, or a running sandbox is [resized](/zbox/lifecycle#resize-a-sandbox) or booted again by `zbox wake --redeliver-secrets`. | same as `READY` |
+| `FORKED` | On the parent when a fork finished, and on each child when it runs. | parent: `children` (child id to `READY` or the error); child: same as `READY` |
+| `RESTORED` | A sandbox restored from a snapshot or [imported](/zbox/export#import-a-sandbox) runs. | same as `READY` |
 | `SNAPSHOT_TAKEN` | A snapshot is taken. | `snapshotId`, `hasMemory` |
+| `EXPORTED` | An [export](/zbox/export) of the sandbox or its snapshot finished. | `exportId`, `sandboxId`, `storage` (`FILE` or `S3`), `destination`, `hasMemory`, `sizeBytes` |
 | `POLICY_CHANGED` | The sandbox policy changed, for example a port was opened. | `policyGeneration` |
-| `FAILED` | The sandbox became `FAILED`. | `reason` |
-| `DELETED` | The sandbox is terminated. | none |
+| `FAILED` | The sandbox became `FAILED`, for example after a failed boot or removal. | `reason` |
+| `OPERATION_FAILED` | An operation on the sandbox failed and the sandbox kept a usable status, for example a refused park, a wake that failed and left it parked, a refused resize or a failed snapshot ([operations](/zbox/lifecycle#operations)). | `reason` |
+| `DELETED` | The sandbox is removed. | none |
+| `ARCHIVED` | After `DELETED`, when the sandbox was removed because its [absolute TTL](/zbox/lifecycle#idle-and-absolute-ttl) ran out. | `reason`: `absoluteTtl` |
 | `SESSION_OPENED` | A command, shell or SSH session starts in the sandbox. | `sessionId`, `kind` (`EXEC`, `PTY`, `SSH`) |
-| `SESSION_CLOSED` | That session ends. | `sessionId`, `kind`, `status`, `exitCode` |
+| `SESSION_CLOSED` | That session ends. | `sessionId`, `kind`, `status` (`CLOSED` or `FAILED`), `exitCode` when there is one |
+
+A failed export emits no event: the export and its operation carry the error ([export](/zbox/export)). Base and template operations belong to no sandbox and emit no events either, follow them through their [operation](/zbox/access#operations).
 
 The event type enum in the [OpenAPI document](/zbox/access#openapi-document) has a few more values for features that are not released yet. The workspace does not emit them.
 
@@ -63,15 +68,17 @@ zbox webhook create --url https://example.com/hook --event ready --event failed
 # with no --event, every event type is delivered
 zbox webhook create --url https://example.com/all-events
 zbox webhook list
-# change the URL or the event types, or pause deliveries
+# change the URL or the event types; --event all is every type again
 zbox webhook set <id> --event parked --event woke
+# pause deliveries and resume them
 zbox webhook set <id> --disabled
+zbox webhook set <id> --enabled
 zbox webhook remove <id>
 ```
 
 The console manages webhooks on the **Integrations** page.
 
-Copy the signing secret when you create the webhook: it can't be read again. The URL must be an absolute `http` or `https` URL that the workspace can reach. Addresses on the workspace itself (loopback, link-local and the workspace's internal networks) are refused.
+Copy the signing secret when you create the webhook: it can't be read again. The URL must be an absolute `http` or `https` URL that the workspace can reach. Addresses on the workspace itself (loopback, link-local and the workspace's internal networks) are refused: a literal address when the webhook is saved, a host name that resolves to one at each delivery attempt.
 
 A webhook gets the events that happen after it is created, never older ones. While a webhook is disabled, events are not queued for it: enabling it again does not deliver what happened in between. Removing a webhook also removes its delivery log.
 
@@ -118,11 +125,11 @@ Delivery is at least once: a receiver can see the same delivery more than once, 
 zbox webhook deliveries <webhook-id>
 ```
 
-Each entry shows the event id and sandbox, the status (`PENDING`, `DELIVERED` or `ABANDONED`), the number of attempts, the last response code and error, when it was delivered and when the next attempt is due.
+Each entry shows the event id and sandbox, the status (`PENDING`, `DELIVERED` or `ABANDONED`), the number of attempts, the last response code and error, when it was delivered and when the next attempt is due. Delivered and abandoned entries are kept for 7 days ([retention](/zbox/lifecycle#retention)).
 
 ## Metrics
 
-The workspace samples every running sandbox once a minute and adds the readings up into one row per sandbox per hour (UTC). It measures the sandbox from the workspace, not from inside the guest. Hours in which a sandbox was parked for the whole hour have no row.
+The workspace samples every running sandbox once a minute and adds the readings up into one row per sandbox per hour (UTC). It measures the sandbox from the workspace, not from inside the guest. Only running sandboxes are sampled: hours in which a sandbox was parked for the whole hour have no row, and a sandbox that ran for less than a minute may have none at all. The rows are kept for 30 days ([retention](/zbox/lifecycle#retention)).
 
 ```bash
 zbox metrics app
@@ -135,10 +142,12 @@ The console shows the last hours on the sandbox's **Metrics** tab. The API is `G
 | Field | Meaning in the hour |
 |---|---|
 | `cpuSeconds` | CPU time the sandbox used, in seconds |
-| `memoryPssAvg`, `memoryPssMax` | average and peak memory the sandbox held on the workspace, in bytes, without reclaimable file cache |
-| `diskBytes` | space the sandbox's disk took on the workspace disk at the last sample, in bytes |
+| `memoryPssAvg`, `memoryPssMax` | average and peak memory the sandbox held on the workspace, in bytes, including the guest's file cache (see below) |
+| `diskBytes` | space the sandbox's disk took on the workspace disk at the last sample, in bytes. It doesn't shrink when files are deleted inside the sandbox ([what uses the disk](/zbox/workspace-settings#what-uses-the-disk)). |
 | `netRxBytes`, `netTxBytes` | bytes the sandbox received and sent on its network interface |
 | `routerRequests`, `routerBytes` | HTTP requests that reached the sandbox's [ports](/zbox/networking#ports) through the workspace, and their request and response bytes |
+
+From the workspace, every page of memory the guest has touched counts as held, its file cache included. After any large file read or write, `memoryPssMax` reaches the sandbox's memory size and reads as full, even when the processes inside use little. To see what the processes use, look inside the guest, for example with `zbox exec app -- free -m` or `zbox ps`.
 
 For the workspace VM as a whole, Zerops shows CPU, RAM and disk graphs in the service detail like for any other service, see [resource history graphs](/features/scaling#resource-history-graphs). `zbox workspace status` shows how much of the workspace's capacity the sandboxes reserve, see [capacity](/zbox/workspace-settings#capacity).
 

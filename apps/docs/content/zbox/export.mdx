@@ -1,0 +1,104 @@
+---
+title: Export and import
+description: Export a parked Zerops Box sandbox or a snapshot as one archive, download it or upload it to your own S3 bucket, and import it into the same or another workspace.
+---
+
+An **export** writes a parked sandbox or a snapshot as one archive: its disk, and its memory image when it has one. The archive is a file on the workspace that you download, or an object the workspace uploads to an S3 bucket of yours. An **import** creates a new sandbox from such an archive, in the same workspace or in another one. Use it as a backup that survives the loss of the workspace, and to move sandboxes between workspaces.
+
+The console's **Lineages** page exports, downloads and imports the same way.
+
+:::caution Archives aren't encrypted
+An archive holds the sandbox's disk and memory as they are, including whatever the sandbox wrote, like source code, tokens in files, and the memory of its processes. Anyone who can read the file or the bucket can read them. Keep downloaded archives and the bucket private.
+:::
+
+## Export a sandbox or a snapshot
+
+```bash
+# a parked sandbox, with its memory image if it has one, downloaded when it finished
+zbox export create app -o app.tar.zst
+# a snapshot, without the memory image
+zbox export create --snapshot <snapshot-id> --no-memory
+# download a file export later
+zbox export download <export-id> -o app.tar.zst
+```
+
+- The sandbox must be `PARKED`. To export a running sandbox, [take a snapshot](/zbox/lifecycle#snapshots-and-restore) and export the snapshot, or [park](/zbox/lifecycle#park-and-wake) it first. A running sandbox, and a snapshot of a removed sandbox, answer `invalidSandboxStatus`. While another operation runs on the sandbox, the export answers `operationInFlight`.
+- With a memory image, the export carries it unless you pass `--no-memory`. A sandbox parked without memory, and a disk-only snapshot, export their disk only.
+- A sandbox that ever received [secrets](/zbox/secrets#secret-bearing-sandboxes) can't be exported, neither its disk nor its snapshots, and neither can a snapshot taken while a sandbox held secrets, because a delivered secret can sit in the disk or the memory. The request fails with `secretBearing`. A snapshot shows it in its own `secretBearing` field.
+- An export is an [operation](/zbox/access#operations) and may take up to an hour. The archive holds the sandbox as it was when you asked, so you can wake the sandbox while its export runs.
+
+Without the bucket flags, the archive is a **file export**: a file on the [workspace disk](/zbox/workspace-settings#what-uses-the-disk), kept for 24 hours after the export finished and then deleted with its export. It goes earlier when the [retention](/zbox/lifecycle#retention) deletes the sandbox it came from. A file export is refused with `workspaceFull` when it would leave less than 1 GiB free on the workspace disk ([when the workspace is full](/zbox/workspace-settings#when-the-workspace-is-full)). `zbox export download` writes the archive to `<sandbox-id>-<export-id>.tar.zst` in the current directory unless `-o` names another file, and `-o -` writes it to stdout. A download of a bucket export, or of an export that hasn't finished, fails with `exportHasNoFile`.
+
+```bash
+zbox export list
+# only the exports of one lineage
+zbox export list --lineage <lineage-id>
+zbox export get <export-id>
+# delete an export, and its file
+zbox export remove <export-id>
+```
+
+An export's status is `RUNNING`, `FINISHED` or `FAILED`, with the error when it failed. A restart of the workspace fails the exports that are running. A finished export also records an `EXPORTED` [event](/zbox/monitoring#events) on the sandbox. The export's operation doesn't name the sandbox, so `zbox operation list --sandbox` doesn't show it; use `zbox export list` instead. `zbox export remove` deletes the export and its file, and refuses a running export with `exportRunning`. An object in a bucket is never deleted by the workspace. An export ID the workspace doesn't know answers `exportNotFound`.
+
+### Export to a bucket
+
+With the bucket flags, the workspace uploads the archive to any S3-compatible storage, for example a Zerops [object storage](/object-storage/overview), instead of keeping a file. The upload streams straight to the bucket and takes no extra space on the workspace disk. The archive's object key is `<prefix><lineage-id>/<sandbox-id>/<export-id>.tar.zst`.
+
+The workspace reads the bucket's keys from two [environment variables](/zbox/workspace-service#environment-variables) of the workspace service, by name: you pass the names of the variables, never the values, and the workspace stores neither. The names must end with `_accessKeyId` and `_secretAccessKey`. For a Zerops object storage `storage` in the same project, add two service variables to the workspace that reference its keys:
+
+```yaml
+BACKUP_accessKeyId: ${storage_accessKeyId}
+BACKUP_secretAccessKey: ${storage_secretAccessKey}
+```
+
+The endpoint is the storage's `apiUrl`, for example `https://storage-prg1.zerops.io`, and the bucket its `bucketName` ([object storage access](/object-storage/how-to/access)). The URL is the address of the S3 API alone. A URL with a path, a variable with another name, or one that doesn't exist fails the request with `invalidUserInput`.
+
+```bash
+zbox export create app --prefix backups/ \
+  --url https://storage-prg1.zerops.io --bucket abc12-backups \
+  --access-key-env BACKUP_accessKeyId --secret-key-env BACKUP_secretAccessKey
+```
+
+### Export through the API
+
+`POST /api/rest/export` takes `sandboxId` or `snapshotId`, and optionally `withMemory`. For a bucket export, add a `target` of `url`, `bucket`, `accessKeyIdEnv` and `secretAccessKeyEnv`, and optionally `prefix`. It needs an [`Idempotency-Key`](/zbox/access#idempotency-keys). `GET /api/rest/export-list`, optionally filtered by `lineageId`, and `GET /api/rest/export/{id}` read the exports, `GET /api/rest/export/{id}/archive` downloads the file of a file export, and `DELETE /api/rest/export/{id}` removes an export.
+
+### What the archive contains
+
+The archive is a zstd-compressed tar of:
+
+| File | Content |
+|---|---|
+| `manifest.json` | The format version, the sandbox's record, the digest of its base, the disk layout, and what a memory resume needs: the Firecracker release and the CPU model |
+| `rw.img` | The sandbox's writable disk. Unwritten parts stay out of the archive. |
+| `mem.img`, `vmstate` | The memory image, when the export carries one |
+| `sha256.json` | The checksums of the files, checked on import |
+| `signature.hmac` | The exporting workspace's signature, which only that workspace can check |
+
+The base image isn't in the archive. Only its digest is.
+
+## Import a sandbox
+
+An import reads the archive from one of three places:
+
+```bash
+# a file export of this workspace
+zbox import --export <export-id> --name app-copy
+# an archive on your machine, exported by any workspace
+zbox import --file app.tar.zst --name app-copy
+# an object in a bucket: the part of the destination after the bucket
+zbox import backups/<lineage-id>/<sandbox-id>/<export-id>.tar.zst --name app-copy \
+  --url https://storage-prg1.zerops.io --bucket abc12-backups \
+  --access-key-env BACKUP_accessKeyId --secret-key-env BACKUP_secretAccessKey
+```
+
+`--file` uploads the archive and keeps it on the workspace as a file export of kind `UPLOADED` for 24 hours, so an import that was refused can be retried with `--export` without uploading again. `zbox export list` shows its ID. On the workspace's API URL on the Zerops subdomain, an upload is capped at 50 MiB, which most archives exceed. The CLI logged in to Zerops and the console have no size cap, but a large archive over a slow connection can still hit the time limit ([request limits](/zbox/access#request-limits)). For those, export to a bucket and import from there.
+
+- **The base must be on the workspace.** The archive names its base by digest. If the workspace doesn't have it, the import fails with `baseNotFound`, and the error names the image. [Add the same image as a base](/zbox/images#add-a-base-from-a-registry-or-a-url) first. A base that isn't `READY` answers `baseNotReady`.
+- **Memory resumes only where it was exported.** With a memory image, the sandbox resumes where it was parked only from an archive this workspace exported itself (the workspace signs its archives), and only on the same Firecracker release, CPU model and build of the base. Otherwise, or with `--no-memory`, it boots cold from the archive's disk: its files are there, its processes aren't. A sandbox moved to another workspace always boots cold.
+- **The sandbox starts fresh around its disk.** It gets its own ID and its own [lineage](/zbox/lineages), with no parent. Every import of one uploaded archive joins the same lineage, the upload's. It has no integration attachments and no secret selection, even when the exported sandbox had them. Its size, network mode and the rest of its policy come from the archive.
+- **It's checked like a create.** The name, the [workspace policy](/zbox/workspace-settings#workspace-policy) ceilings and the free capacity are checked from the archive's manifest, before the sandbox exists and before the rest of the archive is read. Unpacking the archive needs its unpacked size plus 1 GiB free on the workspace disk, and an upload also needs room for the uploaded file.
+
+The new sandbox is `RESTORING` until it runs, and its `RESTORED` event says whether it resumed from memory. An import must finish within 10 minutes, the download from a bucket included. Otherwise the sandbox is [`FAILED`](/zbox/lifecycle#failed-sandboxes).
+
+The API is `POST /api/rest/import` with `exportId`, or with a `source` of the same shape as an export's `target` and the `key`, and optionally `name` and `withMemory`. It answers the new sandbox and its operation, like a create, and needs an [`Idempotency-Key`](/zbox/access#idempotency-keys). `POST /api/rest/import/upload` takes the archive as the request body, with `name` and `withMemory` as query parameters, and answers like `POST /api/rest/import`.

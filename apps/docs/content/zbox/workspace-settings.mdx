@@ -14,7 +14,7 @@ The console shows the same on its Workspace page, where you can also edit the po
 
 ## Capacity
 
-`zbox workspace` prints the capacity and what is in use, for example on a workspace with 2 CPU cores and 4 GB of RAM:
+`zbox workspace` prints the capacity and what is in use, for example on a workspace with 2 CPU cores and 4 GiB of RAM:
 
 ```text
 Capacity	16 vcpu (2 cores x 8), 3.3 GiB memory (3.8 GiB less 512.0 MiB reserve), 9.9 GiB disk (1.0 GiB headroom)
@@ -27,34 +27,41 @@ In use	3 vcpu, 3.0 GiB memory reserved by 3 running sandboxes (0 parked), 274.0 
 | Memory | The VM's memory less a reserve for the workspace's own system (`coreReserveBytes`, 512 MiB unless the policy sets another value). Memory is never overcommitted. |
 | Disk | The workspace disk. 1 GiB must stay free (the **headroom**) for anything new to start. |
 
+`zbox workspace --json` and `GET /api/rest/workspace` answer the same numbers in bytes: `capacity` holds the usable and the total memory, the reserve, the cores, `cpuOvercommit`, the disk and the headroom. `usage` holds what is reserved (`cpus`, `memoryBytes`), what the sandboxes hold (`memoryResidentBytes`), the used disk, the running and parked sandboxes, and the `builds` in progress.
+
 ### What a sandbox reserves
 
-- **A running sandbox** reserves its full memory size plus 8 MiB, and its vCPUs. The reservation is the size you gave the sandbox, not what it uses: the `resident` figure shows how much memory the sandboxes actually touch.
-- **A parked sandbox** reserves no CPU and no memory. It keeps its disk and, when parked with memory, a memory image on the workspace disk ([park and wake](/zbox/lifecycle#park-and-wake)).
-- **A base pull or a base build** reserves 512 MiB of memory while it runs, and a warm template build reserves the template's size while it builds ([images](/zbox/images)).
+- **A running sandbox** reserves its memory size and its vCPUs. The reservation is the size you gave the sandbox, not what it uses: the `resident` figure shows how much memory the sandboxes actually touch. A sandbox reserves the same while it is being created, woken, restored or parked (`CREATING`, `WAKING`, `RESTORING`, `PARKING`).
+- **A sandbox you remove** keeps its reservation while it is `TERMINATING`, also when it was parked, and frees it when it is `TERMINATED`.
+- **A parked sandbox** reserves no CPU and no memory, and neither does a `FAILED` one. A parked sandbox keeps its disk and, when parked with memory, a memory image on the workspace disk ([park and wake](/zbox/lifecycle#park-and-wake)).
+- **A base pull or a base build** reserves 512 MiB of memory while it runs, the memory a build may use ([build a base](/zbox/images#build-a-base-from-a-dockerfile)). A warm template build reserves the template's size while it builds ([warm templates](/zbox/images#warm-templates)).
+- **A resize of a running sandbox** needs only the growth to fit, because the sandbox already holds its old size ([resize a sandbox](/zbox/lifecycle#resize-a-sandbox)).
+- **A disk** is a cap, not a reservation. Nothing reserves disk space, every capacity check only wants the headroom free ([what uses the disk](#what-uses-the-disk)).
 
 A sandbox can't have more vCPUs than the workspace has cores. vCPUs beyond the cores are shared: the running sandboxes get CPU time in proportion to their vCPUs.
 
 ### What uses the disk
 
-Everything a workspace stores sits on its disk: bases, templates (with their memory images when warm), what each sandbox writes to its disk, the memory images of sandboxes parked with memory, snapshots, and the cache of base builds. A sandbox's disk takes space only for what the sandbox writes. A fork shares its parent's disk and adds only what changes afterwards ([fork a sandbox](/zbox/lifecycle#fork-a-sandbox)). Removing a sandbox frees its disk and memory image.
+Everything a workspace stores sits on its disk: bases, templates (with their memory images when warm), what each sandbox writes to its disk, the memory images of sandboxes parked with memory, snapshots, [file exports and uploaded archives](/zbox/export) for 24 hours, and the cache of base builds. A sandbox's disk takes space only for what the sandbox writes. A fork shares its parent's disk and adds only what changes afterwards ([fork a sandbox](/zbox/lifecycle#fork-a-sandbox)).
 
-:::caution
-Sandboxes don't reserve disk. Every sandbox sees a 10 GiB disk of its own even when the workspace has less free space, and the headroom only stops new sandboxes, wakes, forks, snapshots and builds from starting. Keep an eye on the disk line of `zbox workspace` when sandboxes write a lot.
+The space a sandbox's disk takes only grows. Deleting files inside the sandbox doesn't give it back to the workspace disk: the sandbox's disk doesn't support discard, so `fstrim` fails. A parked sandbox keeps its whole disk. Only removing the sandbox frees its disk and memory image.
+
+:::caution A full workspace disk breaks every running sandbox
+Sandboxes don't reserve disk. Every sandbox sees its disk at its full size even when the workspace has less free space, and the headroom only stops new sandboxes, wakes, forks, restores, snapshots, builds, exports and imports from starting. When the workspace disk does fill up, writes fail with I/O errors in every running sandbox, not just a `No space left on device` in the one that wrote the most. Keep an eye on the disk line of `zbox workspace` when sandboxes write a lot.
 :::
 
 ### When the workspace is full
 
-Creating, forking, restoring or waking a sandbox, taking a snapshot, building a warm template, and pulling or building a base each check the free capacity first. If something doesn't fit, the request fails with `409 workspaceFull` and the CLI exits with code 7:
+Creating, forking, restoring, waking or resizing a sandbox, taking a snapshot, building a warm template, pulling or building a base, and exporting or importing a sandbox each check the free capacity first. An [export or an import](/zbox/export) also needs room for the archive it writes, on top of the headroom. If something doesn't fit, the request fails with `409 workspaceFull` and the CLI exits with code 7:
 
 ```text
-error: workspace full: memory 520.0 MiB needed, 235.1 MiB free of 3.3 GiB; park a sandbox or scale the workspace
+error: workspace full: memory 512.0 MiB needed, 235.1 MiB free of 3.3 GiB; park a sandbox or scale the workspace
 ```
 
 The error's metadata names the `resource` (`memory`, `cpu` or `disk`) with `requested`, `free` and `usable` (bytes, or vCPUs for `cpu`). The workspace never parks or removes sandboxes to make room. To free capacity:
 
 - **memory or CPU**: park sandboxes you don't need right now, or remove them ([park and wake](/zbox/lifecycle#park-and-wake)), or give new sandboxes smaller sizes.
-- **disk**: remove sandboxes, snapshots, templates and bases you no longer need, or park sandboxes with `--no-memory` to drop their memory images ([delete bases and templates](/zbox/images#delete-bases-and-templates)).
+- **disk**: remove sandboxes, snapshots, templates, bases and file exports you no longer need, or park sandboxes with `--no-memory` to drop their memory images ([delete bases and templates](/zbox/images#delete-bases-and-templates)). Deleting files inside a sandbox doesn't help ([what uses the disk](#what-uses-the-disk)).
 - **any**: [resize the workspace](/zbox/workspace-service#resizing). Disk can only grow.
 
 ## Workspace policy
@@ -66,24 +73,29 @@ The **workspace policy** sets ceilings for every sandbox and template in the wor
 | `allowedNetworkModes` | The [network modes](/zbox/networking#egress) a sandbox may use, for example `["INTERNET", "AIRGAPPED"]`. | All modes |
 | `maxCpus` | Most vCPUs per sandbox. | Up to the workspace's cores |
 | `maxMemoryBytes` | Most memory per sandbox, in bytes. | Up to the free capacity |
+| `maxDiskBytes` | Largest disk per sandbox, in bytes. | Up to the workspace disk |
+| `defaultDiskBytes` | Disk of a sandbox or template created from a base without a disk size, in bytes. A sandbox from a template takes the template's disk. | 10 GiB |
 | `maxIdleTtlSeconds` | Longest idle TTL a sandbox may set. | No cap |
 | `maxAbsoluteTtlSeconds` | Longest absolute TTL a sandbox may set. | No cap |
 | `coreReserveBytes` | Memory kept for the workspace's own system, taken off the usable memory. `0` is allowed. | 512 MiB |
 | `cpuOvercommit` | vCPUs the running sandboxes may reserve per core, from 1 to 64. | 8 |
+| `secrets.allowedModes` | The [secret](/zbox/secrets#secrets) modes a sandbox may use, of `NONE`, `ALLOWLIST` (a list of names) and `ALL_ENVS` (`--secrets all`). | All modes |
+| `secrets.allowedNames` | The workspace variables a sandbox may select or alias as secrets. With a list, `ALL_ENVS` is refused. | No limit, also when empty |
 
-A sandbox or template over a ceiling is refused with `422 policyViolation`, for example `memoryBytes 1610612736 exceeds the template or Workspace ceiling`. The TTL caps apply only to TTLs you set: a sandbox without TTLs is always allowed ([idle and absolute TTL](/zbox/lifecycle#idle-and-absolute-ttl)). A template can set lower ceilings of its own, but none above the workspace's ([templates](/zbox/images#templates)).
+A sandbox or template over a ceiling is refused with `422 policyViolation`, for example `memoryBytes 1610612736 exceeds the template or Workspace ceiling`. The size ceilings are checked on create, on every fork child and restore, on a wake that changes the size, and on [import](/zbox/export). A change of the name or the TTLs checks the network mode, the TTLs and the secrets again, but not the size, so it passes under a lowered size ceiling. The `secrets` ceiling is checked on create, on a change of the sandbox policy (`PUT /api/rest/sandbox/{id}/policy`) and on import ([secrets](/zbox/secrets#secrets)). The TTL caps apply only to TTLs you set: a sandbox without TTLs is always allowed ([idle and absolute TTL](/zbox/lifecycle#idle-and-absolute-ttl)). A template can set lower ceilings of its own, but none above the workspace's ([templates](/zbox/images#templates)).
 
 Print the policy, edit it and write it back. `-f` replaces the whole policy, so start from the printed one; `-` reads it from stdin:
 
 ```bash
 # print the policy as JSON
 zbox workspace policy > policy.json
-# cap sandboxes at 2 vCPUs and 4 GiB, no project network access
+# cap sandboxes at 2 vCPUs and 4 GiB, no project network access, only GH_TOKEN as a secret
 cat > policy.json <<'EOF'
 {
   "maxCpus": 2,
   "maxMemoryBytes": 4294967296,
-  "allowedNetworkModes": ["INTERNET", "AIRGAPPED"]
+  "allowedNetworkModes": ["INTERNET", "AIRGAPPED"],
+  "secrets": { "allowedNames": ["GH_TOKEN"] }
 }
 EOF
 zbox workspace policy -f policy.json
@@ -91,7 +103,7 @@ zbox workspace policy -f policy.json
 echo '{}' | zbox workspace policy -f -
 ```
 
-The console's Workspace page has the same form. The API is `PUT /workspace/policy` ([HTTP API](/zbox/access#http-api)).
+The console's Workspace page has the same form. The API is `PUT /api/rest/workspace/policy` ([HTTP API](/zbox/access#http-api)).
 
 Changes apply at once to new requests. `coreReserveBytes` and `cpuOvercommit` change the capacity immediately. Existing sandboxes keep their size and network mode when you tighten the policy, even if they are now over a ceiling or the running ones reserve more than the new capacity; nothing new is admitted until they fit.
 
@@ -101,13 +113,13 @@ A sandbox created without these options gets:
 
 | Setting | Default |
 |---|---|
-| vCPUs | 1 |
-| Memory | 512 MiB |
+| Size | 1 vCPU, 512 MiB of memory, a disk of the policy's `defaultDiskBytes` or 10 GiB ([sizes](/zbox/lifecycle#create-a-sandbox)) |
 | Network mode | `PROJECT_INTERNET` in the CLI and the console (the API requires a mode) |
+| Egress rules | None, the network mode alone decides ([egress rules](/zbox/networking#egress-rules)) |
 | Idle and absolute TTL | None |
 | Ports | None |
 
-A sandbox created from a template takes the template's size, ports and egress rules instead ([templates](/zbox/images#templates)). The policy has no fields for these defaults: set them per sandbox ([create a sandbox](/zbox/lifecycle#create-a-sandbox)) or through a template.
+A sandbox created from a template takes the template's size, ports and egress rules instead ([templates](/zbox/images#templates)). Apart from `defaultDiskBytes`, the policy has no fields for these defaults: set them per sandbox ([create a sandbox](/zbox/lifecycle#create-a-sandbox)) or through a template.
 
 ## Domains
 
@@ -120,7 +132,7 @@ A domain has one of two forms:
 | dash | `https://3000-l8mvceq5-zbox-6da-8081.prg1.zerops.app/` | The Zerops subdomain of the workspace's port 8081 |
 | dot | `https://3000-l8mvceq5.box.example.com/` | Your own wildcard domain `*.box.example.com` |
 
-The domains are set only through the CLI, the console or the API (`PUT /workspace/domains`). Zerops never adds one on its own.
+The domains are set only through the CLI, the console or the API (`PUT /api/rest/workspace/domains`). Zerops never adds one on its own.
 
 ```bash
 # list the domains

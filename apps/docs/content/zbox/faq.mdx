@@ -13,9 +13,9 @@ No. You pay only for the workspace service's CPU, RAM and disk, see [pricing](/z
 
 As many as fit into the workspace: running sandboxes reserve their CPU and memory, parked ones only take disk. See [capacity](/zbox/workspace-settings#capacity).
 
-### Can I change a sandbox's CPU or memory?
+### Can I change a sandbox's CPU, memory or disk?
 
-No, the size is fixed when the sandbox is created, and forks and restores keep it ([create a sandbox](/zbox/lifecycle#create-a-sandbox)). Create a new sandbox with the size you need.
+Yes, with a cold boot. `zbox resize` boots a running sandbox again at the new size, and `zbox wake --cpus --memory --disk` wakes a sandbox parked without memory at it. Its files stay, its running processes end ([resize a sandbox](/zbox/lifecycle#resize-a-sandbox)). Forks and restores can get another size too.
 
 ### Can I use my own image?
 
@@ -31,7 +31,15 @@ Use a [connector](/zbox/connectors). For other APIs, use an [integration](/zbox/
 
 ### How do I show a web app running in a sandbox to someone else?
 
-Issue them a [ticket or a token](/zbox/networking#ingress-credentials) for the port, or make the port `public` ([access modes](/zbox/networking#access-modes)).
+Pick the port's [access mode](/zbox/networking#access-modes): `public` for anyone, `ticket` to give them a ticket, or `token` for a client that sends a token as `X-Zerops-Box-Authorization: Bearer <token>` or opens a link with `?token=`. `zbox credential issue` issues tickets and tokens ([ingress credentials](/zbox/networking#ingress-credentials)).
+
+### How do I give a backend or an agent less than the API key?
+
+Create a scoped token with only the scopes it needs, for example `zbox token create --name backend --scope sandbox`, and send it like the key ([scoped tokens](/zbox/access#scoped-tokens)). Limit the variables a `sandbox` token can reach through secrets with the `secrets` ceiling of the [workspace policy](/zbox/workspace-settings#workspace-policy).
+
+### How do I move a sandbox to another workspace or keep a backup?
+
+Export it: a parked sandbox or a snapshot becomes one archive, a file you download or an object in your own S3 bucket. `zbox import` creates a new sandbox from it, in any workspace that has the same base. In another workspace, the sandbox boots cold from its disk ([export and import](/zbox/export)).
 
 ### Can I use VS Code or JetBrains with a sandbox?
 
@@ -43,7 +51,22 @@ Not yet, a fully working Docker integration is [coming soon](/zbox/docker).
 
 ### What happens to my sandboxes when the workspace restarts?
 
-Running sandboxes lose their memory, see the warning in [service lifecycle](/zbox/workspace-service#service-lifecycle). Park them before you restart, stop or resize the workspace.
+A restart, a stop and a resize park the running sandboxes with their memory first, within 30 seconds, so they resume where they left off. Sandboxes the 30 seconds don't reach come back parked without memory: their processes end, their files stay. A reload keeps them running ([service lifecycle](/zbox/workspace-service#service-lifecycle)).
+
+### Why was my sandbox parked or archived?
+
+A sandbox is parked when:
+
+- Its idle TTL ran out, and it is parked with its memory. When its absolute TTL runs out, it is removed and `ARCHIVED` ([idle and absolute TTL](/zbox/lifecycle#idle-and-absolute-ttl)).
+- The workspace was restarted, stopped, resized or moved to another server ([service lifecycle](/zbox/workspace-service#service-lifecycle)).
+- Someone parked it with `zbox park`, the console or the API.
+
+The workspace never parks a sandbox to make room ([when the workspace is full](/zbox/workspace-settings#when-the-workspace-is-full)). The sandbox's events and operations show when it was parked, `zbox get` shows its TTL deadlines, and an `ARCHIVED` event carries the reason `absoluteTtl`:
+
+```bash
+zbox events --sandbox <sandbox-id>
+zbox operation list --sandbox <sandbox-id>
+```
 
 ## Limitations
 
@@ -51,23 +74,24 @@ Zerops Box is in beta. These are the known limitations, each described where it 
 
 **Workspace**
 
-- A restart, stop or resize of the workspace doesn't park running sandboxes first: they lose their memory, and writes not yet on their disk ([service lifecycle](/zbox/workspace-service#service-lifecycle)).
+- A restart, stop or resize of the workspace parks running sandboxes with their memory only within 30 seconds. The rest come back parked without memory, so their processes end ([service lifecycle](/zbox/workspace-service#service-lifecycle)).
 - Every resize restarts the workspace VM, and its disk can only grow ([resizing](/zbox/workspace-service#resizing)).
-- Zerops doesn't back up a workspace. Deleting the service deletes everything in it ([service lifecycle](/zbox/workspace-service#service-lifecycle)), and lineage export is [not available yet](/zbox/lineages#export-and-import).
-- One API key with full authority, no scopes or per-user keys ([API key](/zbox/access#api-key)).
+- Zerops doesn't back up a workspace. Deleting the service deletes everything in it ([service lifecycle](/zbox/workspace-service#service-lifecycle)). Export the sandboxes you need to keep into your own bucket ([export and import](/zbox/export)).
+- One API key with full authority. Scoped tokens limit what a client may call, but there are no per-user keys, and a `sandbox` token can read the workspace's variables through a sandbox's secrets unless the workspace policy limits them ([scoped tokens](/zbox/access#scoped-tokens)).
 - After an API key rotation, the Zerops GUI and a logged-in CLI keep sending the old key until their access expires, an hour after its last use ([rotate the API key](/zbox/access#rotate-the-api-key)).
 - The web console can't be signed in to over plain HTTP, for example over the Zerops VPN ([web console](/zbox/access#web-console)).
 
 **Sandboxes**
 
-- The size of a sandbox is fixed, and its disk is 10 GiB ([create a sandbox](/zbox/lifecycle#create-a-sandbox)). Sandboxes don't reserve disk on the workspace ([what uses the disk](/zbox/workspace-settings#what-uses-the-disk)).
-- Idle and absolute TTLs are recorded but not enforced yet ([idle and absolute TTL](/zbox/lifecycle#idle-and-absolute-ttl)).
+- A sandbox's size changes only with a cold boot, so a resize ends its processes ([resize a sandbox](/zbox/lifecycle#resize-a-sandbox)). Sandboxes don't reserve disk on the workspace, and deleting files doesn't free it ([what uses the disk](/zbox/workspace-settings#what-uses-the-disk)).
+- A long `zbox exec` or a background process doesn't keep a sandbox with an idle TTL from being parked ([idle and absolute TTL](/zbox/lifecycle#idle-and-absolute-ttl)).
 - A sandbox whose VM stops on its own keeps showing `RUNNING` and keeps its reservation ([failed sandboxes](/zbox/lifecycle#failed-sandboxes)).
 - Removing a sandbox deletes its snapshots ([snapshots and restore](/zbox/lifecycle#snapshots-and-restore)).
-- A sandbox that received secrets can't be forked or snapshotted with memory ([secret-bearing sandboxes](/zbox/secrets#secret-bearing-sandboxes)).
-- Images must be `linux/amd64`. The guest kernel can't load modules and has no KVM ([the guest kernel](/zbox/images#the-guest-kernel)).
+- A sandbox that received secrets can't be forked, snapshotted with memory or exported ([secret-bearing sandboxes](/zbox/secrets#secret-bearing-sandboxes)).
+- Only a parked sandbox or a snapshot can be exported, and the archive isn't encrypted. An imported sandbox resumes its memory only in the workspace that exported it ([export and import](/zbox/export)).
+- Images must be `linux/amd64` ([image requirements](/zbox/images#image-requirements)). The guest kernel can't load modules and has no KVM ([the guest kernel](/zbox/images#the-guest-kernel)).
 - Docker inside a sandbox is [not supported yet](/zbox/docker).
-- On the workspace's API URL, a request ends after 60 seconds, so a longer `zbox exec` with the API key fails while its command goes on; use a background process or the CLI logged in to Zerops ([long commands](/zbox/commands#timeouts-and-output-limits)).
+- On the workspace's public API URL, a request that sends nothing for 60 seconds ends, so a longer `zbox exec` with the API key fails while its command goes on; use a background process, a shell or the API inside the project ([long commands](/zbox/commands#timeouts-and-output-limits)).
 - A parked sandbox's background processes can't be read or interrupted through their sessions after the wake ([sessions](/zbox/commands#sessions)).
 
 **Networking**
@@ -78,4 +102,5 @@ Zerops Box is in beta. These are the known limitations, each described where it 
 - Bare project hostnames don't resolve inside a sandbox, use `<hostname>.zerops` ([project services](/zbox/networking#project-services)).
 - Egress rules take IPv4 addresses only, not domain names ([egress rules](/zbox/networking#egress-rules)).
 - Without a dedicated IPv4, connections to sandbox ports on your own domain are closed after about two minutes for IPv4 clients ([your own domain](/zbox/workspace-settings#your-own-domain)).
-- Uploads through the workspace's API URL are limited to 50 MiB, which matters for files and build contexts ([transfer files](/zbox/commands#transfer-files), [build a base](/zbox/images#build-a-base-from-a-dockerfile)).
+- On the Zerops subdomains, request bodies are limited to 50 MiB and small response writes are buffered until the response ends, for the API and for sandbox ports alike; inside the project there are no such limits ([request limits](/zbox/access#request-limits)).
+- Sandboxes have no IPv6, clients that try IPv6 first fail or wait ([egress rules](/zbox/networking#egress-rules)).

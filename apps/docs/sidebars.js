@@ -2500,7 +2500,12 @@ module.exports = {
         {
           type: 'doc',
           id: 'zbox/lineages',
-          label: 'Lineages, import & export',
+          label: 'Lineages',
+        },
+        {
+          type: 'doc',
+          id: 'zbox/export',
+          label: 'Export & import',
         },
       ],
     },
