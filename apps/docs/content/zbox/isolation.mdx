@@ -21,10 +21,13 @@ Bases, templates, sandbox disks, memory images of parked sandboxes and snapshots
 
 ## The API key controls everything
 
-The [workspace API key](/zbox/access#api-key) is the single authority over a workspace: there are no scopes and no per-user keys. Whoever holds it can create, read, change and terminate every sandbox, run commands in any of them and read their files.
+The [workspace API key](/zbox/access#api-key) is the single full authority over a workspace. Whoever holds it can create, read, change and terminate every sandbox, run commands in any of them and read their files.
 
+- For a backend, a script or an agent that needs less, create a [scoped token](/zbox/access#scoped-tokens) (`zbt_...`), which may call only the routes of its scopes. Only the API key creates and revokes tokens.
+- A token with the `sandbox` scope can choose which workspace variables a sandbox gets as secrets, and read them inside it. Limit that choice with the `secrets` ceiling of the [workspace policy](/zbox/workspace-settings#workspace-policy).
+- A token with the `base` scope runs builds on the workspace VM itself ([base builds](#base-builds)), so give it only where you would give the API key.
 - In Zerops, the key is a service variable, so everyone who can see the workspace's variables, or open its web console from the GUI, has full control. Grant [project access](/features/rbac) accordingly.
-- Don't give the key to a sandbox unless that sandbox should manage the workspace. It is never delivered as a [secret](/zbox/secrets#where-secrets-come-from): every variable whose name starts with `ZBOX_` is excluded.
+- Don't give the key to a sandbox. A sandbox that should manage the workspace gets a scoped token. The key is never delivered as a [secret](/zbox/secrets#where-secrets-come-from): every variable whose name starts with `ZBOX_` is excluded.
 - The key never opens a sandbox port. Browser access to ports goes through one-time tickets ([access modes](/zbox/networking#access-modes)).
 
 ## Sandboxes
@@ -37,20 +40,29 @@ A sandbox's disk is its own writable layer on top of a shared, read-only base. A
 
 ## Network
 
-- **Between sandboxes**: a sandbox can't reach other sandboxes or its own workspace over the network directly, in any network mode. It can reach another sandbox only through a port's public URL, under that port's [access mode](/zbox/networking#access-modes).
+- **Always denied**: in every network mode, a sandbox can't reach other sandboxes, its own workspace apart from the [credentials proxy](/zbox/secrets#credentials-proxy), link-local addresses or the internal addresses of the Zerops node. It reaches another sandbox only through a port's public URL, under that port's [access mode](/zbox/networking#access-modes).
 - **Egress**: the [network mode](/zbox/networking#egress) decides whether a sandbox reaches the internet, your project's private network, both or nothing, and [egress rules](/zbox/networking#egress-rules) narrow it further.
 - **Your project**: the default mode includes the project network, so a sandbox can reach the other services of your project, including their databases and the APIs of other workspaces. Use the `internet` or `airgapped` mode, or egress rules, for sandboxes that shouldn't, and limit the allowed modes in the [workspace policy](/zbox/workspace-settings#workspace-policy).
-- **Ingress**: a sandbox exposes no port until you declare one, and a declared port by default admits only those who can use the workspace API, with the API key or a Zerops login, through one-time tickets ([access modes](/zbox/networking#access-modes)).
+- **Ingress**: a sandbox exposes no port until you declare one. A declared port by default admits only holders of the API key, a Zerops login or a `sandbox` token, through one-time tickets, and its [access mode](/zbox/networking#access-modes) can open it wider.
+- **Credentials on ports**: the workspace removes only its own credentials from a request, such as the `X-Zerops-Box-Authorization` header of a `token` port. Your application's own `Authorization` header and cookies pass through unchanged, so the application can run its own login. A `project` port refuses a request with an `X-Forwarded-For` header, because the public edge adds one.
 
 ## Credentials
 
 You choose per sandbox how a credential reaches it ([secrets and the credentials proxy](/zbox/secrets)):
 
 - An **integration** keeps the credential outside the sandbox. The [credentials proxy](/zbox/secrets#credentials-proxy) adds it to requests on their way out, so code in the sandbox can use the API but never read the credential. [Connectors](/zbox/connectors) work the same way for Claude Code, GitHub and Codex.
-- A **secret** is delivered into the sandbox's environment, so the code inside can read it. A sandbox that received secrets can't be forked or snapshotted with memory, so its secrets don't spread to other sandboxes ([secret-bearing sandboxes](/zbox/secrets#secret-bearing-sandboxes)).
+- A **secret** is delivered into the sandbox's environment as its value, so the code inside can read it. A sandbox that received secrets can't be forked, snapshotted with memory or exported, so its secrets don't spread to other sandboxes ([secret-bearing sandboxes](/zbox/secrets#secret-bearing-sandboxes)).
+
+The API never answers a variable's value. The environments it shows, of a sandbox's launch and of a session's command, list names only as `envNames` ([how secrets reach the sandbox](/zbox/secrets#how-secrets-reach-the-sandbox)).
 
 Prefer integrations for API tokens, and give each sandbox only the secrets it needs.
 
+## Export archives
+
+An [export](/zbox/export) archive isn't encrypted, so anyone who can read the file or the bucket can read the sandbox's disk and memory. The exporting workspace signs its archives, and a sandbox resumes its memory only from an archive its workspace exported itself.
+
 ## Base builds
 
-A base built from a Dockerfile with `zbox base build` is built on the workspace VM itself, not inside a sandbox. Its `RUN` steps have the workspace VM's network, including your project's private network ([build a base](/zbox/images#build-a-base-from-a-dockerfile)). Build only Dockerfiles you trust, as you would on your own machine.
+A base built from a Dockerfile with `zbox base build` is built on the workspace VM itself, not inside a sandbox. Its `RUN` steps share the workspace VM's network, so they reach the workspace's own local services and your project's private network. A build can therefore do anything the workspace itself can. Build only Dockerfiles you trust, and give the `base` scope only where you would give the API key.
+
+A build has at most 512 MiB of memory, so it can't take the memory of running sandboxes ([build a base](/zbox/images#build-a-base-from-a-dockerfile)).

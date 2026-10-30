@@ -25,7 +25,7 @@ zbox connector list
 zbox connector get claude
 ```
 
-The credential is stored as a sensitive environment variable of the workspace service, so you also see it among the service's [environment variables](/features/env-variables) in the Zerops GUI. `zbox connector list` shows the kind of the stored credential, its variable and the integrations it uses.
+The credential is stored as a sensitive environment variable of the workspace service, so you also see it among the service's [environment variables](/features/env-variables) in the Zerops GUI. A value you set or edit there applies without a restart of the service, and it creates the connector's integrations like `zbox connector set` does. `zbox connector list` shows the kind of the stored credential, its variable and the integrations it uses.
 
 :::note Coming soon
 Connectors are being reworked into a generic mechanism, with many more providers to connect.
@@ -80,15 +80,15 @@ What the tools in the sandbox get:
 |---|---|---|
 | `claude` | `claude` | `ANTHROPIC_BASE_URL` points at the proxy, a placeholder token, onboarding marked as done, sessions start in auto permission mode |
 | `github` | `git`, GitHub REST API clients | `https://github.com/`, `git@github.com:` and `ssh://git@github.com/` remotes are rewritten to the proxy, so clone and push work without a key; `GITHUB_API_URL` points at the proxy; `/etc/gitconfig` gets the name and email of the token's GitHub account |
-| `codex` | `codex`, OpenAI SDKs (API key) | `/etc/codex/config.toml` points Codex at the proxy, `~/.codex/config.toml` defaults to no approvals and full access; with an API key also `OPENAI_BASE_URL` and a placeholder `OPENAI_API_KEY` |
+| `codex` | `codex`, OpenAI SDKs (API key) | `/etc/codex/config.toml` points Codex at the proxy, `~/.codex/config.toml` defaults to no approvals and full access; with a ChatGPT login a `~/.codex/auth.json` with placeholder tokens, which Codex refreshes through the proxy; with an API key also `OPENAI_BASE_URL` and a placeholder `OPENAI_API_KEY` |
 
 Settings you put in the image or the sandbox win: the Claude Code files only get the top-level keys they lack, the Codex user config and the git identity are only written when missing, and a git setting at the global or repository level overrides the system one.
 
 :::note
-`gh` is not authenticated through the GitHub connector, because it cannot talk to the proxy. Use `git` and the REST API, or deliver the token to the sandbox as a [secret](/zbox/secrets) (`--secret GH_TOKEN`), which puts the real credential inside the sandbox.
+`gh` is not authenticated through the GitHub connector, because it can't be pointed at the proxy's plain HTTP address. Use `git` and the REST API, or deliver the token to the sandbox as a [secret](/zbox/secrets) (`--secret GH_TOKEN`), which puts the real credential inside the sandbox.
 :::
 
-The proxy reads the credential on every request, so storing a new one of the same kind applies to running sandboxes right away. Switching the kind (for example from a Claude subscription token to an API key) changes the placeholder and the tool configuration too, which running sandboxes get only at their next cold boot.
+The proxy reads the credential on every request, so storing a new one of the same kind applies to running sandboxes right away. Switching the kind (for example from a Claude subscription token to an API key) changes the placeholder and the tool configuration too, which running sandboxes get only at their next cold boot. For `codex` the kind also picks the integration, so a sandbox needs `chatgpt` for a ChatGPT login and `openai` for an API key.
 
 ## Drop a credential
 

@@ -30,7 +30,7 @@ irm https://box.zerops.io/install.ps1 | iex
 
 The binary is installed to `%LOCALAPPDATA%\Programs\zbox` and added to your user `PATH`. Open a new terminal for the change to apply.
 
-Both scripts accept two environment variables: `ZBOX_VERSION` installs a specific release (for example `v0.3.0`) instead of the latest one, and `ZBOX_INSTALL_DIR` sets the install directory. Pre-releases (tags with a hyphen, like `v0.1.0-rc1`) are only installed when `ZBOX_VERSION` names them.
+Both scripts accept two environment variables: `ZBOX_VERSION` installs a specific release (for example `v0.24`) instead of the latest one, and `ZBOX_INSTALL_DIR` sets the install directory. Pre-releases (tags with a hyphen, like `v0.24-rc1`) are only installed when `ZBOX_VERSION` names them.
 
 You can also download a binary and `checksums.txt` from the [releases page](https://github.com/zeropsio/zbox-cli/releases) by hand, or install from source with Go 1.25 or newer:
 
@@ -48,9 +48,11 @@ Run `zbox --version` to check the installed version.
 zbox login
 # or store a personal access token created in the Zerops GUI
 zbox login --token <personal-access-token>
+# or log in from the terminal with your email, the password is asked for
+zbox login --email you@example.com
 ```
 
-See [Personal access tokens](/references/cli#personal-access-tokens) for how to create a token. The token suits machines without a browser.
+See [Personal access tokens](/references/cli#personal-access-tokens) for how to create a token. The token and the email login suit machines without a browser. The email login can't answer two-factor authentication, so with 2FA on use the browser or a token. `zbox register --email` creates the account from the terminal in the same way.
 
 ## Create a workspace
 
@@ -60,16 +62,17 @@ A **workspace** is one Zerops service of type **Box Workspace**. The quickest wa
 zbox setup
 ```
 
-It creates a new project named `zbox-<timestamp>` with a Box Workspace service named `zbox`, turns on subdomain access, waits for the workspace to answer and pulls the default sandbox image as its first base. The new workspace becomes the current one for the CLI. Subdomain access gives sandbox ports their public URLs; with `--no-subdomain` it stays off and `zbox open` has no URL to open.
+It creates a new project named `zbox-<timestamp>` (`--project` names it) with a Box Workspace service named `zbox`, turns on subdomain access and waits for the workspace to answer. Then it adds the subdomain of port 8081 as the workspace's first [domain](/zbox/workspace-settings#domains) and pulls the [default sandbox image](/zbox/images#the-default-base) as its first base. The new workspace becomes the current one for the CLI. Subdomain access gives sandbox ports their public URLs. With `--no-subdomain` it stays off, sandbox ports get no URL and `zbox open` has nothing to open.
 
 ```bash
 # add the workspace to an existing project, with your own service name
 zbox setup --project-id <project-id> --name mybox
-# set the VM size; the defaults are 2 CPU cores, 4 GB RAM and 10 GB disk
+# set the VM size: dedicated CPU cores, RAM in GiB, disk in GiB
+# without these flags the VM gets 2 cores, 4 GiB RAM and 10 GiB disk
 zbox setup --cpu 4 --ram 8 --disk 20
 ```
 
-For the minimum and maximum sizes, and what a later resize does, see [resizing](/zbox/workspace-service#resizing). `--base`, `--build` and `--template` start the workspace with your own bases and warm templates instead of the default image, see [Images](/zbox/images).
+For the minimum and maximum sizes, and what a later resize does, see [resizing](/zbox/workspace-service#resizing). `--base` and `--build` give the workspace your own bases in place of the default image, and `--template` warms templates on them, see [Images](/zbox/images).
 
 Check the login, the workspace, its capacity and what is in use:
 
@@ -126,6 +129,8 @@ zbox exec app -- echo hello
 zbox shell app
 ```
 
+The sandbox gets the default size. `--cpus`, `--memory` and `--disk` set another one, see [Create a sandbox](/zbox/lifecycle#create-a-sandbox).
+
 Start a small web server as a detached process and open its port in the browser:
 
 ```bash
@@ -134,7 +139,7 @@ zbox process app -- python3 -m http.server 8000
 zbox open app 8000
 ```
 
-By default a port is reachable only by you: `zbox open` signs the browser in with a one-time ticket. To make a port public or reachable in other ways, see [Access modes](/zbox/networking#access-modes) and [Ports](/zbox/networking#ports). More on exec, shells and detached processes in [Running commands](/zbox/commands).
+By default a port is a `members` port, which only those who can use the workspace reach: `zbox open` signs the browser in with a one-time ticket. To make a port public or reachable in other ways, see [Access modes](/zbox/networking#access-modes) and [Ports](/zbox/networking#ports). More on exec, shells and detached processes in [Running commands](/zbox/commands).
 
 When you don't need the sandbox for a while, park it. Parking keeps its disk and memory and frees the RAM it took, so the server keeps running after the wake:
 
@@ -156,7 +161,7 @@ See [Sandbox lifecycle](/zbox/lifecycle) for parking, forks, snapshots and TTLs.
 
 ## Remove the workspace
 
-`zbox workspace teardown` deletes the current workspace's service with everything in it: sandboxes, bases and snapshots. The project stays, together with any other services in it; delete an empty project in the Zerops GUI. You can also delete the service in the Zerops GUI like any other service.
+`zbox workspace teardown` deletes the current workspace's service with everything in it: sandboxes, bases and snapshots. The CLI forgets the workspace. The project stays, together with any other services in it; delete an empty project in the Zerops GUI. You can also delete the service in the Zerops GUI like any other service.
 
 ```bash
 zbox workspace teardown

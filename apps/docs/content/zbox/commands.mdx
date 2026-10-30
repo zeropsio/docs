@@ -7,11 +7,11 @@ Everything you do inside a sandbox goes through the workspace API: one-off comma
 
 ## What a command sees
 
-Every command, shell and process in a sandbox runs as **root**. It inherits the sandbox's environment: the image's environment variables, or the launch environment you replaced them with when you created the sandbox, plus any [secrets delivered to the sandbox](/zbox/secrets#how-secrets-reach-the-sandbox). `HOME` is `/root` and `TERM` is `xterm-256color`. If the image doesn't set a `PATH`, commands get `/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin`.
+Every command, shell and process in a sandbox runs as **root**. It inherits the sandbox's environment: the image's environment variables, or the launch environment you replaced them with when you created the sandbox, plus any [secrets delivered to the sandbox](/zbox/secrets#how-secrets-reach-the-sandbox). Unless the environment sets them, `HOME` is `/root`, `TERM` is `xterm-256color` and `PATH` is `/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin`.
 
-Commands and shells start in the image's working directory (`WORKDIR`, `/workspace` in the default base), or in `/` when the image doesn't set one. Pass `-w` to `zbox exec` and `zbox process` to run somewhere else.
+Commands, background processes and shells start in `/`, whatever the image's `WORKDIR` is. Pass `-w` to `zbox exec` and `zbox process` to run somewhere else, for example `-w /workspace`, the working directory of the default base. An [SSH](/zbox/networking#ssh) session starts in the image's working directory, or in the one you set with `zbox new -w`.
 
-Every call on this page except the process list wakes a parked sandbox first and then runs, so you don't need a separate `zbox wake`. A sandbox with [stale secrets](/zbox/secrets#stale-secrets) is not woken this way, and the call fails with `secretsStale`. For more on parking and waking, see [implicit wake](/zbox/lifecycle#implicit-wake).
+Commands, shells, background processes and file operations wake a parked sandbox first and then run, so you don't need a separate `zbox wake`. They also count as [activity](/zbox/lifecycle#idle-and-absolute-ttl) for the idle TTL. Reading sessions and the process list doesn't wake a sandbox. A sandbox with [stale secrets](/zbox/secrets#stale-secrets) is not woken this way, and the call fails with `secretsStale`. For more on parking and waking, see [implicit wake](/zbox/lifecycle#implicit-wake).
 
 ## Run a command
 
@@ -43,7 +43,7 @@ A command has no stdin: piping into `zbox exec` passes nothing, and a command th
 When the timeout runs out, the command and everything it started are killed.
 
 :::caution Long commands
-Through the workspace's API URL (with the API key), the Zerops edge ends any request after 60 seconds, so an `exec` that runs longer fails with `504 Gateway Time-out`, even with a longer `--timeout`. The CLI logged in to Zerops and the Zerops GUI go another way and aren't limited like this. The command keeps running until its own timeout, and its output is recorded in its [session](#sessions). For anything that can take a minute or more, start a [background process](#run-a-background-process) instead.
+`zbox exec` answers only when the command ends. Through the workspace's public API URL, the Zerops edge ends a request that sends nothing for 60 seconds ([request limits](/zbox/access#request-limits)), so an `exec` that runs longer fails with `504 Gateway Time-out`, even with a longer `--timeout`. The command keeps running until its own timeout, and its output is recorded in its [session](#sessions). The limit belongs to the edge only: through the API inside the project, `http://<hostname>.zerops:8080`, an `exec` runs up to its `--timeout`. Elsewhere, start anything that can take a minute or more as a [background process](#run-a-background-process), or run it in a [shell](#open-a-shell).
 :::
 
 Every `exec` is recorded as a session, so you can read the complete output again later, up to 64 MiB, with stdout and stderr interleaved:
@@ -84,22 +84,22 @@ zbox session interrupt $id   # send it SIGINT
 
 `zbox session output` prints what the process has written so far, up to 64 MiB, with stdout and stderr interleaved. It doesn't follow the output, so run it again to see more. `zbox session interrupt` sends `SIGINT` to the process and everything it started. A process that exits on `SIGINT` closes with exit code 130. To stop a process that ignores `SIGINT`, use `zbox exec app -- kill …`.
 
-Only calls to the API count as sandbox activity. A process running on its own doesn't, and neither does reading its output. Once idle TTLs are enforced, a sandbox with an [idle TTL](/zbox/lifecycle#idle-and-absolute-ttl) can be parked while a long job is still running.
+Starting a process counts as sandbox activity, but a process running on its own doesn't, and neither does reading its output. A sandbox with an [idle TTL](/zbox/lifecycle#idle-and-absolute-ttl) shorter than a job can be parked while the job is still running.
 
 ### Sessions
 
-A **session** is the record of one exec, background process or shell. `zbox session list <sandbox>` lists the sandbox's sessions, newest first. Filter them with `--kind pty|exec|ssh` and `--status open|closed|failed`. The console's **Sessions** tab shows the same list and lets you download output and interrupt sessions.
+A **session** is the record of one exec, background process or shell. Its `command` in the API lists the environment variables you passed with `-e` by name only (`envNames`), never their values. `zbox session list <sandbox>` lists the sandbox's sessions, newest first. Filter them with `--kind pty|exec|ssh` and `--status open|closed|failed`. The console's **Sessions** tab shows the same list and lets you download output and interrupt sessions. How long the workspace keeps closed sessions and their output is listed under [retention](/zbox/lifecycle#retention).
 
 | Status | Meaning |
 |---|---|
 | `OPEN` | The command, process or shell is still running. |
-| `CLOSED` | It ended. A command or process has its exit code. |
-| `FAILED` | It was cut off: a timeout, a park, a workspace restart, or the sandbox failed. It has no exit code. |
+| `CLOSED` | It ended. A command or process has its exit code, a shell or SSH session has none. |
+| `FAILED` | A command or process was cut off: a timeout, a park, a workspace restart, or the sandbox failed. It has no exit code. |
 
-A snapshot of a running sandbox doesn't interrupt its background processes or shells. A park does:
+A snapshot or a fork of a running sandbox doesn't interrupt its background processes or shells. A park does:
 
-:::caution Parking cuts background processes off
-When a sandbox is parked, its open sessions end as `FAILED`. A park without memory ends the processes. After a park with memory, a process keeps running once the sandbox wakes, but you can no longer read its output or interrupt it through the session. Use `zbox ps` and `zbox exec … kill` instead.
+:::caution Parking ends sessions
+When a sandbox is parked, its running commands and background processes end as `FAILED`, and its shells and SSH sessions are closed. Commands and shells don't survive a park. After a park with memory, a background process keeps running once the sandbox wakes, but you can no longer read its output or interrupt it through the session. Use `zbox ps` and `zbox exec … kill` instead. A park without memory ends background processes too.
 :::
 
 ## Transfer files
@@ -120,7 +120,7 @@ zbox file remove app /workspace/tmp --yes
 ```
 
 - An upload replaces the target file in one step and gets mode `0644` unless you pass `--mode`. The parent directory must exist, otherwise the upload fails with `pathNotFound`. Create the directory with `zbox exec app -- mkdir -p …` first.
-- Through the workspace's API URL (with the API key), an upload can be at most 50 MiB, a limit of the Zerops edge. The CLI logged in to Zerops has no such cap, and downloads aren't capped either way. To move bigger files in, fetch them from inside the sandbox (`curl`, `git`) or use `scp` or `rsync` over [SSH](/zbox/networking#ssh).
+- Through the workspace's public API URL, an upload can be at most 50 MiB, a [limit of the Zerops edge](/zbox/access#request-limits). Through the API inside the project and with the CLI logged in to Zerops there is no such cap, and downloads aren't capped either way. To move bigger files in from elsewhere, fetch them from inside the sandbox (`curl`, `git`) or use `scp` or `rsync` over [SSH](/zbox/networking#ssh).
 - `file get` downloads regular files only. Use `file archive` for directories. The archive is an uncompressed tar with the directory itself as its top-level entry, and symlinks are stored as links, not followed.
 - `file remove` deletes directories recursively. Without a terminal to confirm on, it requires `--yes`.
 
@@ -135,11 +135,11 @@ zbox ps app
 zbox ps app --json
 ```
 
-Unlike every other call on this page, `zbox ps` never wakes a sandbox and doesn't count as activity: a sandbox that isn't running lists no processes. The console shows the same list on the **Metrics** tab when you select **Refresh**.
+`zbox ps` never wakes a sandbox and doesn't count as activity: a sandbox that isn't running lists no processes. The console shows the same list on the **Metrics** tab when you select **Refresh**.
 
 ## For AI agents
 
 - Use `zbox exec --json` and decide on `exitCode`, `timedOut` and the two truncation flags instead of parsing text.
-- With the API key on the workspace's API URL, keep each `exec` well under 60 seconds. For builds, test suites and servers, start a background process with `zbox process -q` and check it with `zbox session get` and `zbox session output`.
+- With the API key on the workspace's public API URL, keep each `exec` well under 60 seconds. For builds, test suites and servers, start a background process with `zbox process -q` and check it with `zbox session get` and `zbox session output`.
 - Wrap pipelines and redirects in `sh -c '…'`, and pass input as a file with `zbox file put`, because commands have no stdin.
-- To give an MCP client a sandbox to run code in, use [`zbox mcp`](/zbox/access#mcp-server).
+- To give an MCP client a sandbox to run code in, use [`zbox mcp`](/zbox/access#mcp-server): its `run_code` tool runs code in a sandbox, and `kill_sandbox` removes a sandbox that `run_code` kept.
