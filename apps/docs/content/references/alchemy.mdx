@@ -3,6 +3,8 @@ title: Alchemy
 description: Manage Zerops resources and deployments with Alchemy.
 ---
 
+Provider version: **0.2.0**; requires `alchemy@2.0.0-beta.84`.
+
 ## Install
 
 ```sh
@@ -49,8 +51,8 @@ export default Alchemy.Stack("ZeropsApp", {
   state: Alchemy.localState(),
 }, Effect.gen(function* () {
   const project = yield* Zerops.Project("Project", { mode: "LIGHT" });
-  const db = yield* Zerops.ManagedService("Database", {
-    project, hostname: "db", type: "postgresql:single@16",
+  const db = yield* Zerops.Postgres("Database", {
+    project, hostname: "db", version: "16",
   });
   const api = yield* Zerops.Service("Api", {
     project, hostname: "api", type: "nodejs@22",
@@ -85,12 +87,36 @@ bunx alchemy deploy
 | `Zerops.Project` | Project |
 | `Zerops.Service` | Runtime service and source deployment; optional generated subdomain |
 | `Zerops.ManagedService` | Managed service without application code |
-| `Zerops.Postgres`, `Zerops.MariaDB`, `Zerops.Valkey` | Typed managed-service factories |
+| Managed family helpers | Typed managed services; see below |
 | `Zerops.ProjectVariable` | Project environment variable |
 | `Zerops.ServiceVariable` | Service environment variable |
 | `Zerops.ObjectStorage` | Object-storage service, quota, access policy |
 | `Zerops.HttpRoute` | Custom-domain HTTP routing |
 | `Zerops.PortRoute` | Public IPv6 TCP/UDP routing |
+
+
+## Managed families
+
+| Helper | Versions | Modes | Floor | Typical ref keys |
+| --- | --- | --- | --- | --- |
+| `Postgres` | 14, 16, 17, 18 | Single / HA | Disk 2 GB | `connectionString`, `hostname`, `user`, `password` |
+| `MariaDB` | 10.6 | Single / HA | Catalogue minimum | `connectionString`, `dbName`, `user`, `password` |
+| `Valkey` | 7.2 | Single / HA | Catalogue minimum | `connectionString`, `connectionTlsString`, `hostname`, `password` |
+| `ClickHouse` | 25.3 | Single / HA | RAM 0.375 GB | `connectionString`, `portHttp`, `user`, `password` |
+| `Elasticsearch` | 8.16, 9.2 | Single / HA | RAM 2 GB | `connectionString`, `hostname`, `user`, `password` |
+| `Kafka` | 3.9 | Single / HA | Catalogue minimum | `hostname`, `port`, `user`, `password` |
+| `Nats` | 2.10, 2.12 | Single / HA | Catalogue minimum | `connectionString`, `portManagement`, `user`, `password` |
+| `Qdrant` | 1.10, 1.12 | Single / HA | Catalogue minimum | `connectionString`, `grpcConnectionString`, `apiKey`, `readOnlyApiKey` |
+| `Typesense` | 27.1, 30.2 | Single / HA | Catalogue minimum | `connectionString`, `apiKey`, `hostname`, `port` |
+| `SeaweedFS` | 3.85 | Single / HA | Catalogue minimum | `hostname`, `port`, `projectId`, `serviceId` |
+| `Meilisearch` | 1.10, 1.20, 1.44 | Single only | Catalogue minimum | `connectionString`, `masterKey`, `defaultSearchKey`, `hostname` |
+| `LocalStorage` | 1 | Single only | Catalogue minimum | `hostname`, `projectId`, `serviceId`, `BACKUP_PERIOD` |
+
+- Helpers take `project`, `version`, optional `hostname` and managed-service props; default mode is `"NON_HA"` (single).
+- `mode: "HA"` unlocks PostgreSQL `connectionStringReplicas` / `portReplicas` and Valkey `connectionStringReplicas` / `connectionTlsStringReplicas` / `portReplicas` / `portTlsReplicas`.
+- `SeaweedFS` is shared storage; deprecated `shared-storage` import aliases map to it.
+- `ManagedService({ type })` is the untyped escape hatch; family floors and mode restrictions still apply.
+- Full ref keys and floor environment overrides: [provider README](https://github.com/zeropsio/alchemy#managed-families).
 
 ## Deploy sources
 
@@ -120,7 +146,7 @@ bunx alchemy deploy
 - Generated secrets stay out of resource attributes; environment attributes store digests. Masked secret-content drift cannot be detected.
 - Resolved props, including user-supplied secrets, persist as plaintext in Alchemy state; `Redacted` does not encrypt state.
 - Routing sync commits all staged edits for the project/routing kind. Foreign staged edits block sync unless `forceSync: true` or `ZEROPS_ROUTING_FORCE_SYNC=true`; use one routing writer per project/kind.
-- PostgreSQL disk floor: 2 GB; `ZEROPS_POSTGRESQL_MIN_DISK_GB` can raise it, never lower it. Explicit lower bounds are rejected.
+- Unset scaling minima default to family floors; explicit min/max below the floor are rejected. `ZEROPS_POSTGRESQL_MIN_DISK_GB`, `ZEROPS_CLICKHOUSE_MIN_RAM_GB` and `ZEROPS_ELASTICSEARCH_MIN_RAM_GB` replace their floors, bounded below by catalogue minima (1 GB disk, 0.25 GB RAM and 0.75 GB RAM respectively).
 - Alchemy v2 is beta; provider pinned to `alchemy@2.0.0-beta.84`.
 - Destroy deletes managed resources, including database and object-storage data.
 
