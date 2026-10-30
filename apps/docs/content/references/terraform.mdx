@@ -20,8 +20,8 @@ provider "zerops" {}
 
 - Token: create in [token management](https://app.zerops.io/settings/token-management)
   ([guide](/references/cli#personal-access-tokens)); export as `ZEROPS_TOKEN`.
-- OpenTofu: OpenTofu Registry listing is pending; use
-  `source = "registry.terraform.io/zeropsio/zerops"`.
+- OpenTofu: use `source = "zeropsio/zerops"`; the provider is listed on the
+  OpenTofu Registry, and `tofu init` installs it signed.
 - Explicit provider attributes override environment variables.
 
 | Setting | Environment variable | Default / behavior |
@@ -85,7 +85,7 @@ resource "zerops_service" "app" {
 resource "zerops_service" "db" {
   project_id = zerops_project.example.id
   hostname   = "db"
-  type       = "postgresql@16"
+  type       = "postgresql:single@16"
 }
 
 resource "zerops_service_env" "database_url" {
@@ -176,6 +176,10 @@ resource "zerops_service_subdomain_access" "app" {
 - Non-sudo tokens cannot detect secret-content drift when refresh returns masked
   values. Importing masked secrets requires sudo credentials. Secret contents
   remain in state; protect state and backend access.
+- Managed services that offer both single-node and highly available modes need an
+  explicit mode in `type`, for example `postgresql:single@16` or
+  `postgresql:ha@16`. The shorthand `postgresql@16` creates an HA service, and
+  provider v0.1.2 and later reject it at plan time.
 - PostgreSQL disk floor: `postgresql_min_disk_gb`; adjust when the catalog
   changes.
 - Project `max_credit_limit` is write-only: it cannot be read back or cleared.
