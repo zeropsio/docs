@@ -3,6 +3,8 @@ title: Terraform / OpenTofu
 description: Configure Zerops resources, deployments, and imports with Terraform or OpenTofu.
 ---
 
+Use the Zerops provider to manage projects, services, deployments and routing as code. It works with both Terraform and OpenTofu.
+
 ## Install
 
 ```hcl
@@ -18,47 +20,53 @@ terraform {
 provider "zerops" {}
 ```
 
-- Token: create in [token management](https://app.zerops.io/settings/token-management)
-  ([guide](/references/cli#personal-access-tokens)); export as `ZEROPS_TOKEN`.
-- OpenTofu: use `source = "zeropsio/zerops"`; the provider is listed on the
-  OpenTofu Registry, and `tofu init` installs it signed.
+- Create a token in [token management](https://app.zerops.io/settings/token-management)
+  (see the [guide](/references/cli#personal-access-tokens)) and export it as `ZEROPS_TOKEN`.
+- If you use OpenTofu, set `source = "zeropsio/zerops"`. The provider is listed on the
+  OpenTofu Registry, and `tofu init` installs the signed provider.
 - Explicit provider attributes override environment variables.
+
+You can configure the provider with the following settings:
 
 | Setting | Environment variable | Default / behavior |
 | --- | --- | --- |
 | `token` | `ZEROPS_TOKEN` | Required. |
 | `organization_id` | `ZEROPS_ORGANIZATION_ID` | Auto-selected when the token has one organization. |
 | `endpoint` | `ZEROPS_ENDPOINT` | `https://api.app-prg1.zerops.io` |
-| `postgresql_min_disk_gb` | `ZEROPS_POSTGRESQL_MIN_DISK_GB` | `2` GB; PostgreSQL disk default and floor. |
-| `routing_force_sync` | `ZEROPS_ROUTING_FORCE_SYNC` | `false`; synchronize foreign staged routing changes only when enabled. |
+| `postgresql_min_disk_gb` | `ZEROPS_POSTGRESQL_MIN_DISK_GB` | `2` GB. PostgreSQL disk default and floor. |
+| None, environment only | `ZEROPS_CLICKHOUSE_MIN_RAM_GB` | 0.375 GB. ClickHouse RAM floor. |
+| None, environment only | `ZEROPS_ELASTICSEARCH_MIN_RAM_GB` | 2 GB. Elasticsearch RAM floor. |
+| `routing_force_sync` | `ZEROPS_ROUTING_FORCE_SYNC` | `false`. Synchronizes foreign staged routing changes only when enabled. |
 
-## Resource map
+## Resource Map
+
+The following table maps Zerops concepts to provider resources and data sources.
 
 | Zerops concept | Resources | Data sources |
 | --- | --- | --- |
 | Project | [zerops_project](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/resources/project) | [zerops_project](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/data-sources/project), [zerops_projects](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/data-sources/projects) |
 | Runtime / managed database | [zerops_service](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/resources/service) | [zerops_service](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/data-sources/service) |
-| Project environment variables | [zerops_project_env](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/resources/project_env) | — |
+| Project environment variables | [zerops_project_env](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/resources/project_env) | None |
 | Service environment variables | [zerops_service_env](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/resources/service_env) | [zerops_service_env_vars](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/data-sources/service_env_vars) |
-| Object storage | [zerops_object_storage](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/resources/object_storage) | — |
-| Generated subdomain | [zerops_service_subdomain_access](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/resources/service_subdomain_access) | — |
-| Custom domains / HTTP routing | [zerops_public_http_routing](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/resources/public_http_routing) | — |
-| Port routing | [zerops_public_port_routing](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/resources/public_port_routing) | — |
-| Dedicated IPv4 | [zerops_project_dedicated_ipv4](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/resources/project_dedicated_ipv4) | — |
-| Deploy | [zerops_service_deploy](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/resources/service_deploy) | — |
-| Restart | [zerops_service_restart](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/resources/service_restart) | — |
-| Git integration | [zerops_service_git_integration](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/resources/service_git_integration) | — |
-| Backups | [zerops_service_backup_config](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/resources/service_backup_config) | — |
-| VPN peer | [zerops_project_vpn_peer](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/resources/project_vpn_peer) | — |
-| L7 balancer | [zerops_project_l7_balancer_config](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/resources/project_l7_balancer_config) | — |
-| Remote logging | [zerops_project_remote_logging](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/resources/project_remote_logging) | — |
-| Prometheus configuration | [zerops_project_prometheus_config](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/resources/project_prometheus_config) | — |
+| Object storage | [zerops_object_storage](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/resources/object_storage) | None |
+| Generated subdomain | [zerops_service_subdomain_access](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/resources/service_subdomain_access) | None |
+| Custom domains / HTTP routing | [zerops_public_http_routing](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/resources/public_http_routing) | None |
+| Port routing | [zerops_public_port_routing](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/resources/public_port_routing) | None |
+| Dedicated IPv4 | [zerops_project_dedicated_ipv4](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/resources/project_dedicated_ipv4) | None |
+| Deploy | [zerops_service_deploy](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/resources/service_deploy) | None |
+| Restart | [zerops_service_restart](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/resources/service_restart) | None |
+| Git integration | [zerops_service_git_integration](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/resources/service_git_integration) | None |
+| Backups | [zerops_service_backup_config](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/resources/service_backup_config) | None |
+| VPN peer | [zerops_project_vpn_peer](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/resources/project_vpn_peer) | None |
+| L7 balancer | [zerops_project_l7_balancer_config](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/resources/project_l7_balancer_config) | None |
+| Remote logging | [zerops_project_remote_logging](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/resources/project_remote_logging) | None |
+| Prometheus configuration | [zerops_project_prometheus_config](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/resources/project_prometheus_config) | None |
 | YAML project import / export | [zerops_project_import](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/resources/project_import) | [zerops_project_export](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/data-sources/project_export) |
-| Integration tokens | [zerops_integration_token](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/resources/integration_token) | — |
-| Catalogs | — | [zerops_regions](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/data-sources/regions), [zerops_locations](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/data-sources/locations), [zerops_service_types](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/data-sources/service_types) |
-| Organization lookup | — | [zerops_organization](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/data-sources/organization) |
+| Integration tokens | [zerops_integration_token](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/resources/integration_token) | None |
+| Catalogs | None | [zerops_regions](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/data-sources/regions), [zerops_locations](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/data-sources/locations), [zerops_service_types](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/data-sources/service_types) |
+| Organization lookup | None | [zerops_organization](https://registry.terraform.io/providers/zeropsio/zerops/latest/docs/data-sources/organization) |
 
-## Minimal example
+## Minimal Example
 
 ```hcl title="main.tf"
 terraform {
@@ -123,9 +131,9 @@ resource "zerops_service_subdomain_access" "app" {
 }
 ```
 
-- `app/` holds the Node.js app (`package.json`, `package-lock.json`, `npm start`
+- `app/` holds the Node.js app (`package.json`, `package-lock.json`, and `npm start`
   listening on port 3000). Keep Terraform files and state outside `app/`.
-- `$$` escapes Terraform interpolation; Zerops resolves `${db_connectionString}`.
+- `$$` escapes Terraform interpolation. Zerops resolves `${db_connectionString}`.
   See [referencing variables](/features/env-variables#referencing-variables).
 - Subdomain access requires a deployed service with HTTP ports.
 
@@ -133,18 +141,18 @@ resource "zerops_service_subdomain_access" "app" {
 
 | Source | Configuration | Use when |
 | --- | --- | --- |
-| Local directory | `source_dir` | Upload local source; `.git` directories are excluded. |
+| Local directory | `source_dir` | Upload local source. `.git` directories are excluded. |
 | Archive | `archive_path`; `build = false` for prebuilt archives | Upload a local `.tar.gz` source or ready-to-run archive. |
-| Provider Git | `git = { mode = "provider", url = "...", ref = "..." }` | Pin a branch, tag, or full commit SHA; use `ZEROPS_GIT_TOKEN` for private HTTPS repositories. |
+| Provider Git | `git = { mode = "provider", url = "...", ref = "..." }` | Pin a branch, tag, or full commit SHA. Use `ZEROPS_GIT_TOKEN` for private HTTPS repositories. |
 | Server Git | `git = { mode = "server", url = "...", ref = "..." }` | Build a public repository's branch HEAD on Zerops. |
 
 - Set exactly one source: `source_dir`, `archive_path`, or `git`.
 - Set `zerops_yaml` in every mode. See the
-  [zerops.yml specification](/zerops-yaml/specification).
-- Server Git also requires matching `zerops.yml` in the repository.
-- Server Git builds branch HEAD at build time, not the planned commit.
+  [zerops.yaml specification](/zerops-yaml/specification).
+- Server Git also requires a matching `zerops.yaml` in the repository.
+- Server Git builds the branch HEAD at build time, not the planned commit.
 - Deployments are immutable: input changes create a new application version.
-  Destroy only forgets the invocation; import is unsupported.
+  Destroying a deployment only forgets the invocation. Import is unsupported.
 
 ## Import
 
@@ -167,29 +175,29 @@ resource "zerops_service_subdomain_access" "app" {
   `zerops_project_import` cannot be imported.
 - Routing imports do not synchronize staged changes.
 
-## Behavior and limitations
+## Behavior and Limitations
 
-- Resources wait for asynchronous Zerops processes. Set per-resource `timeouts`;
-  operations and defaults are in each resource schema.
-- Routing mutations synchronize staged routes. Per-route `force_sync` overrides
-  provider `routing_force_sync`; forcing permits foreign staged changes.
-- Non-sudo tokens cannot detect secret-content drift when refresh returns masked
+- Resources wait for asynchronous Zerops processes. Set per-resource `timeouts`.
+  Operations and defaults are listed in each resource schema.
+- Routing mutations synchronize staged routes. A per-route `force_sync` overrides the
+  provider's `routing_force_sync`, and forcing permits foreign staged changes.
+- Non-sudo tokens cannot detect secret-content drift when a refresh returns masked
   values. Importing masked secrets requires sudo credentials. Secret contents
-  remain in state; protect state and backend access.
+  remain in state, so protect state and backend access.
 - Managed services that offer both single-node and highly available modes need an
   explicit mode in `type`, for example `postgresql:single@16` or
   `postgresql:ha@16`. The shorthand `postgresql@16` creates an HA service, and
   provider v0.1.2 and later reject it at plan time.
-- PostgreSQL disk floor: `postgresql_min_disk_gb`; adjust when the catalog
-  changes.
+- The PostgreSQL disk floor is set by `postgresql_min_disk_gb`. Adjust it when the
+  catalog changes.
 - Project `max_credit_limit` is write-only: it cannot be read back or cleared.
-- Server-side Git is branch-only and public-only.
-- Dedicated IPv4 cannot be released: destroy only drops Terraform ownership.
-  Billing continues until project deletion.
-- The Zerops public API is beta; the provider is pre-1.0. Breaking changes are
+- Server-side Git supports only public repositories and branches.
+- A dedicated IPv4 address cannot be released. Destroying it only drops Terraform
+  ownership, and billing continues until project deletion.
+- The Zerops public API is in beta, and the provider is pre-1.0. Breaking changes are
   possible in 0.x releases.
-- Avoid reserved service hostnames `core` and `l7httpbalancer`.
-- Failed API calls may leave partial resources requiring dashboard cleanup.
+- Avoid the reserved service hostnames `core` and `l7httpbalancer`.
+- Failed API calls may leave partial resources that require dashboard cleanup.
 
 ## Links
 
