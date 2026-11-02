@@ -159,6 +159,8 @@ import IconGitlab from './Gitlab';
 import IconTypesense from './Typesense';
 import IconDocker from './Docker';
 import IconCurlyBraces from './CurlyBraces';
+import IconTerraform from './Terraform';
+import IconAlchemy from './Alchemy';
 import IconCdn from './Cdn';
 import IconClickhouse from './Clickhouse';
 import IconCloudflare from './Cloudflare';
@@ -334,6 +336,8 @@ export default {
   cloudok: IconCloudOk,
   typesense: IconTypesense,
   'curly-braces': IconCurlyBraces,
+  terraform: IconTerraform,
+  alchemy: IconAlchemy,
   cdn: IconCdn,
   clickhouse: IconClickhouse,
   cloudflare: IconCloudflare,

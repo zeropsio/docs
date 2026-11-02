@@ -945,7 +945,7 @@ module.exports = {
           id: 'references/terraform',
           label: 'Terraform / OpenTofu',
           customProps: {
-            sidebar_icon: 'curly-braces',
+            sidebar_icon: 'terraform',
           },
           className: 'homepage-sidebar-item',
         },
@@ -954,7 +954,7 @@ module.exports = {
           id: 'references/alchemy',
           label: 'Alchemy',
           customProps: {
-            sidebar_icon: 'curly-braces',
+            sidebar_icon: 'alchemy',
           },
           className: 'homepage-sidebar-item',
         },
