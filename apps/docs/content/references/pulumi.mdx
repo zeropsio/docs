@@ -1,0 +1,228 @@
+---
+title: Pulumi
+description: Deploy Zerops applications with Pulumi WebApp or primitive resources.
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## Install
+
+- Version: `0.1.1`; [Pulumi CLI](https://www.pulumi.com/docs/install/) 3.x.
+- Start with `zerops-app` / `WebApp`; its SDK includes `zerops` primitives.
+
+| Language | WebApp package / install | Primitives-only package / install |
+| --- | --- | --- |
+| Python ≥ 3.10 | `python -m pip install pulumi-zerops-app==0.1.1` | `python -m pip install pulumi-zerops==0.1.1` |
+| Go ≥ 1.26.6 | `go get github.com/zeropsio/pulumi-zerops/sdk-app/go/zeropsapp@v0.1.1` | `go get github.com/zeropsio/pulumi-zerops/sdk/go/zerops@v0.1.1` |
+| TypeScript / Node.js | `npm install @zerops/pulumi-app@0.1.1` | `npm install @zerops/pulumi@0.1.1` |
+| YAML | `zerops-app` plugin; no SDK | `zerops` plugin; no SDK |
+| C# | Coming soon: NuGet `Zerops.Pulumi.App` / `Zerops.Pulumi` | — |
+| Java | Coming soon: Maven `io.zerops:pulumi-app` / `io.zerops:pulumi` | — |
+
+- Plugins download automatically from the provider's GitHub release.
+- Pulumi Registry listing pending; use the [GitHub repository](https://github.com/zeropsio/pulumi-zerops).
+
+### Auth
+
+- Create a token in [token management](https://app.zerops.io/settings/token-management)
+  ([guide](/references/cli#personal-access-tokens)).
+- Supply `ZEROPS_TOKEN` securely, or set a secret in an initialized stack:
+
+```sh
+pulumi config set --secret zerops:token
+```
+
+- Multiple organizations: set `zerops:organizationId` to the organization's
+  membership `clientId`.
+
+## Quickstart
+
+<Tabs groupId="pulumi-language">
+<TabItem value="python" label="Python" default>
+
+```sh
+pulumi new https://github.com/zeropsio/pulumi-zerops/tree/v0.1.1/templates/zerops-python
+pulumi up
+```
+
+</TabItem>
+<TabItem value="go" label="Go">
+
+```sh
+pulumi new https://github.com/zeropsio/pulumi-zerops/tree/v0.1.1/templates/zerops-go
+pulumi up
+```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```sh
+pulumi new https://github.com/zeropsio/pulumi-zerops/tree/v0.1.1/templates/zerops-typescript
+pulumi up
+```
+
+</TabItem>
+<TabItem value="yaml" label="YAML">
+
+```sh
+pulumi new https://github.com/zeropsio/pulumi-zerops/tree/v0.1.1/templates/zerops-yaml
+pulumi up
+```
+
+</TabItem>
+</Tabs>
+
+- Templates include `app/` and prompt for `appName` and a secret Zerops token.
+- PostgreSQL starts disabled; enable with `pulumi config set database true`.
+- Open the `url` stack output after deployment.
+
+## WebApp
+
+- Replace the template's infrastructure program with the matching example.
+- Creates a `LIGHT` project, runtime, PostgreSQL, deployment and public subdomain.
+- `app/`: template application and `zerops.yml` with setup `app`; see the
+  [zerops.yml specification](/zerops-yaml/specification).
+
+<Tabs groupId="pulumi-language">
+<TabItem value="python" label="Python" default>
+
+```python title="__main__.py"
+import pulumi
+from pulumi_zerops_app import WebApp
+
+web = WebApp(
+    "web",
+    app_name="hello",
+    runtime="python@3.12",
+    source="./app",
+    database=True,
+)
+pulumi.export("url", web.url)
+```
+
+</TabItem>
+<TabItem value="go" label="Go">
+
+```go title="main.go"
+package main
+
+import (
+    "github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+    "github.com/zeropsio/pulumi-zerops/sdk-app/go/zeropsapp"
+)
+
+func main() {
+    pulumi.Run(func(ctx *pulumi.Context) error {
+        source, database := "./app", true
+        web, err := zeropsapp.NewWebApp(ctx, "web", &zeropsapp.WebAppArgs{
+            AppName: "hello", Runtime: "python@3.12",
+            Source: &source, Database: &database,
+        })
+        if err != nil {
+            return err
+        }
+        ctx.Export("url", web.Url)
+        return nil
+    })
+}
+```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```ts title="index.ts"
+import { WebApp } from "@zerops/pulumi-app";
+
+const web = new WebApp("web", {
+    appName: "hello",
+    runtime: "python@3.12",
+    source: "./app",
+    database: true,
+});
+export const url = web.url;
+```
+
+</TabItem>
+<TabItem value="yaml" label="YAML">
+
+```yaml title="Pulumi.yaml"
+name: hello
+runtime: yaml
+resources:
+  web:
+    type: zerops-app:index:WebApp
+    options:
+      version: 0.1.1
+      pluginDownloadURL: github://api.github.com/zeropsio/pulumi-zerops
+    properties:
+      appName: hello
+      runtime: python@3.12
+      source: ./app
+      database: true
+outputs:
+  url: ${web.url}
+```
+
+</TabItem>
+</Tabs>
+
+| Input (schema / YAML name) | Behavior |
+| --- | --- |
+| `appName` | Required project name. |
+| `runtime` | Required service type; independent of the Pulumi language. |
+| `database` / `databaseType` | Default `false`; when enabled, `postgresql:single@16`; HA requires `postgresql:ha@16`. |
+| `env` | Additional variables; database mode injects server-side refs including `${db_connectionString}` and `${db_password}`. |
+| `publicAccess` | Default `true`; subdomain requires a source deployment with HTTP ports. |
+| `source` / `zeropsYaml` | Application directory; reads its `zerops.yml` / `zerops.yaml` unless supplied explicitly. |
+| `hostname` | Default `app`; must match the deployment setup; `db` reserved with database enabled. |
+
+## Primitives
+
+- [Resource semantics, deployment modes and import IDs](/references/terraform).
+- Tokens below use Pulumi's short YAML form.
+
+| Resource | Token |
+| --- | --- |
+| Project | `zerops:index:Project` |
+| Service | `zerops:index:Service` |
+| Project / service variables | `zerops:index:ProjectEnv` / `zerops:index:ServiceEnv` |
+| Deployment | `zerops:index:ServiceDeploy` |
+| Object storage | `zerops:index:ObjectStorage` |
+| Subdomain | `zerops:index:ServiceSubdomainAccess` |
+| HTTP / port routing | `zerops:index:PublicHttpRouting` / `zerops:index:PublicPortRouting` |
+| Dedicated IPv4 | `zerops:index:ProjectDedicatedIpv4` |
+| Git integration / backups | `zerops:index:ServiceGitIntegration` / `zerops:index:ServiceBackupConfig` |
+| Restart / YAML import | `zerops:index:ServiceRestart` / `zerops:index:ProjectImport` |
+| VPN / L7 balancer | `zerops:index:ProjectVpnPeer` / `zerops:index:ProjectL7BalancerConfig` |
+| Logging / Prometheus | `zerops:index:ProjectRemoteLogging` / `zerops:index:ProjectPrometheusConfig` |
+| Integration token | `zerops:index:IntegrationToken` |
+
+## Behavior notes
+
+- Dual-mode managed types require explicit `:single@` / `:ha@`, for example
+  `postgresql:single@16`; runtime types such as `python@3.12` are unchanged.
+- Floors: PostgreSQL disk `2` GB, ClickHouse RAM `0.375` GB, Elasticsearch RAM
+  `2` GB; smaller configured values fail preview. Overrides:
+  `zerops:postgresqlMinDiskGb`, `ZEROPS_CLICKHOUSE_MIN_RAM_GB`,
+  `ZEROPS_ELASTICSEARCH_MIN_RAM_GB`.
+- `WebApp.source`: directory only. `ServiceDeploy`: exactly one of `sourceDir`,
+  `archivePath`, `git`; supply `zeropsYaml`. Provider Git pins the planned commit;
+  server Git builds public branch HEAD at build time.
+- Source/input changes replace `ServiceDeploy` and trigger a new deployment;
+  destroying that resource does not stop or roll back the application.
+- Directory uploads exclude `.git` only; `.gitignore` is not an upload filter.
+  Keep secrets, `.env`, dependencies and caches outside `app/`.
+- Pulumi secrets are encrypted in state, not omitted. WebApp database environment
+  references resolve on Zerops; generated passwords are not read into state.
+- Routing `forceSync` overrides `zerops:routingForceSync` (default `false`);
+  forcing synchronization permits foreign staged routing changes.
+- Resources incur [charges](https://zerops.io/pricing); destroying the project
+  deletes application and database data.
+- Zerops public API is beta; provider `0.x` releases may break compatibility.
+
+## Links
+
+- [GitHub repository and full reference](https://github.com/zeropsio/pulumi-zerops/tree/v0.1.1)
+- [Issues](https://github.com/zeropsio/pulumi-zerops/issues)
+- [Terraform / OpenTofu reference](/references/terraform)
