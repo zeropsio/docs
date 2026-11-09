@@ -147,6 +147,39 @@ The core upgrade is a **partially destructive process** that will temporarily di
 If you encounter issues, **contact support immediately** and try running the process again.
 :::
 
+### Project Transfer {#project-transfer}
+
+A project can be moved to another organization. **The transfer is not self-service: request it from Zerops support, and a Zerops operator performs it for you.**
+
+**What moves:**
+- The whole project, with no downtime: all services and containers, deployed versions, environment variables and secrets, domains and routing, the public IPv6 and any dedicated IPv4, the Zerops subdomain, backups and retention settings, and logs
+- Nothing restarts, no hostname or address changes, and the project stays in its location
+
+**Access:**
+- As soon as the transfer finishes, the project shows up in the target organization and disappears from the previous one
+- Owners and Admins of the target organization have access right away. Developers and Guests need a [project role override](/features/rbac#project-role-overrides) granted by an Admin, as for any project
+- Members of the previous organization lose access, and their project role overrides are removed. A member with a project role override who is still logged in may keep access until they log in again
+
+**Billing:**
+- From the moment of transfer, usage is billed to the target organization. The hour of the transfer is split at the transfer time, and earlier usage stays on the previous organization
+- The project [subscriptions](/billing/overview#subscriptions) (the project core and a dedicated IPv4 address) move with the project, the current paid period included. The previous organization is not refunded for it. Future renewals and any refunds go to the target organization
+- The remaining free monthly allowances for egress and build time move with the project and do not reset. The previous organization's usage in the hour of the transfer is billed without the free allowances (egress, build time, backup space)
+- The project's daily spending limit is cleared and has to be set again
+- The target organization's billing view shows the project within a few minutes
+
+**Credentials that stop working:**
+- [Integration tokens](/features/rbac#integration-tokens) limited to this project only, including ZCP keys, are deleted. Create new ones in the target organization. Tokens with custom access to several projects keep working, without this project
+- [GitHub](/references/github-integration) and [GitLab](/references/gitlab-integration) integrations are disconnected. Reconnect them to restore automatic deploys
+- All VPN keys of the project are released. Reconnect with `zcli vpn up`
+
+**What stays behind:**
+- Action history and notifications stay with the previous organization. The target organization sees only new ones
+
+:::note Known Limitations
+- A project that forwards logs to another project's ELK, or metrics to a Prometheus of the previous organization, keeps that configuration, but it may stop working and needs reconfiguring.
+- The `ZEROPS_ClientId` system variable inside running containers updates on the next restart.
+:::
+
 ## Services
 
 Services encapsulate your containers and provide specific functionality within a project. A project can contain unlimited services, each with its own purpose.
