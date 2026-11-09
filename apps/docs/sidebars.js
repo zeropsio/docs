@@ -960,6 +960,15 @@ module.exports = {
         },
         {
           type: 'doc',
+          id: 'references/pulumi',
+          label: 'Pulumi',
+          customProps: {
+            sidebar_icon: 'curly-braces',
+          },
+          className: 'homepage-sidebar-item',
+        },
+        {
+          type: 'doc',
           id: 'references/api',
           label: 'API',
           customProps: {
