@@ -44,18 +44,32 @@ See how to [reference variables](#referencing-variables) between services and be
 Your application must be redeployed when updating environmental variables in `zerops.yaml`.
 :::
 
-#### 2. Secret Variables
+#### 2. Custom and Secret Variables {#2-secret-variables}
 
-For storing sensitive data you don't want in your source repository. They can be updated without redeployment (though services need to be reloaded).
+Variables stored in Zerops, not in your source repository. They can be updated without redeployment, but the service has to be restarted to pick up the new values.
 
-Secret variables can be managed through:
+Each of these variables is either plain or sensitive:
+
+- **Custom variables** are plain.
+- **Secret variables** are sensitive. Their values are encrypted at rest with a per-project key and masked in the GUI and API responses. Inside the containers they are plain text, so your application reads them like any other variable.
+
+You can create both kinds in the GUI, in import.yaml or through the API. In API requests, the `sensitive` flag decides which kind a variable is and defaults to `false`. See [Reading sensitive values](#reading-sensitive-values) for who can see a secret value.
 
 ##### GUI Interface
 
-Navigate to service details and find **Environment variables** in the menu. You can:
-- Add individual variables using the "Add secret variable" button
+Navigate to service details and find **Environment variables** in the menu. The page has four sections:
+
+- **Custom variables**: plain variables you set in the GUI
+- **Secret variables**: sensitive variables, stored encrypted
+- **Variables from zerops.yml**: the [build and runtime variables](#1-build--runtime-variables) deployed with your application
+- **Generated variables**: [variables set by the system](#system-generated-variables)
+
+In the **Custom variables** and **Secret variables** sections you can:
+- Add individual variables
 - Edit individual variables through the menu that appears on hover
-- Use the bulk editor for managing multiple variables in .env format
+- Use the section's bulk editor to change multiple variables at once in .env format (see [Editing several variables at once](#editing-several-variables-at-once))
+
+Secret values are masked. Revealing a value asks you to re-authorize, and so does loading secret variables into the bulk editor.
 
 <figure style={{ textAlign: 'center', margin: '1rem 0' }}>
     <Image
@@ -67,32 +81,46 @@ Navigate to service details and find **Environment variables** in the menu. You 
 
 ##### Import Configuration
 
-Create secret variables for a service with `envSecrets` attribute. See the complete [import.yaml structure](/references/import).
+Create custom and secret variables for a service with the `vault` attribute. Each entry is either a plain `KEY: value` pair, or an object with `value` and `sensitive: true` for a secret variable. See the complete [import.yaml structure](/references/import).
 
 ```yaml title="import.yaml"
 services:
-  ...
-  envSecrets:
-    S3_ACCESS_KEY_ID: 'your-secret-s3-key'
-    S3_ACCESS_SECRET: 'your-s3-access-secret'
+  - hostname: app
+    ...
+    vault:
+      S3_ACCESS_KEY_ID:
+        value: your-secret-s3-key
+        sensitive: true
+      S3_ACCESS_SECRET:
+        value: your-s3-access-secret
+        sensitive: true
+      LOG_LEVEL: info
 ```
+
+To paste variables in `.env` format, use `dotEnvVariables` for plain variables and `dotEnvSecrets` for secret variables. The `envVariables` and `envSecrets` attributes are deprecated but still accepted.
+
+##### API
+
+The endpoints that create or update a single variable accept a `sensitive` flag, which defaults to `false`, and their responses include `sensitive`, `editable` and `internal`. When you create a service or trigger its pipeline, pass plain variables in `envVarsFile` and secret variables in `envSecretsFile`, both as `.env` text. The `userDataEnvFile` field is deprecated. To change several variables at once, see [Editing several variables at once](#editing-several-variables-at-once).
 
 ### System-Generated Variables
 
 Zerops automatically generates variables based on service type.
 
-These variables cannot be deleted and are always listed at the bottom of the environment variables page. Some are read-only (like `hostname`), while others can be edited (like `PATH`).
+These variables cannot be deleted and are listed in the **Generated variables** section of the environment variables page. Some are read-only (like `hostname`), while others can be edited (like `PATH`). Some are sensitive, such as a generated database password, and a sensitive system variable can't be changed to plain.
 
 These variables can also be [referenced](#referencing-variables).
 
 ## Project Variables
 
-Variables that apply across all services within a [project](/features/infrastructure#projects). These provide a way to share common configuration across services.
+Variables that apply across the runtime services within a [project](/features/infrastructure#projects). These provide a way to share common configuration across services.
 
-They work similarly to service secret variables but at project scope - they're managed through the GUI and can be updated without redeployment (though services need to be reloaded).
+Like custom and secret service variables, each project variable is either plain or sensitive, and sensitive values are encrypted and masked the same way. Project variables can be updated without redeployment, but services have to be restarted to pick up the new values.
 
 :::important
-Project variables are **automatically inherited** by all services in the project — both in build and runtime environments. You do not need to [reference](#referencing-variables) them in your `zerops.yaml`.
+Project variables are **automatically inherited** by all runtime services in the project — both in build and runtime environments. You do not need to [reference](#referencing-variables) them in your `zerops.yaml`.
+
+Managed services don't receive project variables. A managed service's own variables, [references](#referencing-variables) to other services' variables and [isolation](#environment-variable-isolation) work as usual.
 :::
 
 ### User-Defined Variables
@@ -104,25 +132,30 @@ You can set project-wide variables through:
 Access **Project environment variables** in your project detail to:
 - Add individual variables one by one
 - Edit individual variables
-- Use the bulk editor with .env format
+- Use the bulk editor to change multiple variables at once in .env format (see [Editing several variables at once](#editing-several-variables-at-once))
 
 #### Import Configuration
 
-Create project variables with `envVariables` attribute. See the complete [import.yaml structure](/references/import).
+Create project variables with the `vault` attribute. Each entry is either a plain `KEY: value` pair, or an object with `value` and `sensitive: true` for a sensitive variable. See the complete [import.yaml structure](/references/import).
 
 ```yaml title="import.yaml"
 project:
   ...
-  envVariables:
+  vault:
     LOG_LEVEL: info
     API_VERSION: v1
+    SHARED_API_KEY:
+      value: your-api-key
+      sensitive: true
 ```
 
-These variables will be automatically available in all services without any additional configuration.
+These variables are automatically available in all runtime services without any additional configuration. The `envVariables` and `envSecrets` attributes are deprecated but still accepted.
+
+Through the API, project creation accepts `envVariables` (plain) and `envSecrets` (sensitive), each an array of `{key, content}` objects. Single project variables are created and updated with a `sensitive` flag that defaults to `false`.
 
 ### System-Generated Variables
 
-Zerops automatically generates project-level variables that are also automatically available in all services.
+Zerops automatically generates project-level variables that are also automatically available in all runtime services.
 
 ### Overriding Project Variables
 
@@ -277,7 +310,7 @@ ${db_password}  # Accesses the 'password' variable from the 'db' service
 
 ## Referencing Variables
 
-You can reference other variables using the `${variable_name}` syntax. This is used to reference **service-level variables**, not project variables (which are already automatically inherited).
+You can reference other variables using the `${variable_name}` syntax. This is used to reference **service-level variables**, not project variables (which runtime services already inherit automatically).
 
 ### Within Same Service
 
@@ -331,7 +364,7 @@ run:
 
 ### Project Variables — No Reference Needed
 
-[Project variables](#project-variables) are **automatically available** in all services. Do not use the `${...}` syntax to reference them:
+[Project variables](#project-variables) are **automatically available** in all runtime services. Do not use the `${...}` syntax to reference them:
 
 ```yaml
 # ❌ Wrong - this shadows the project variable
@@ -359,13 +392,46 @@ All environment variables must follow these restrictions:
 
 ## Variable Management
 
+### Editing Several Variables at Once
+
+Custom and secret service variables and project variables can all be edited as a single `.env` file, with one `KEY=value` pair per line:
+
+```env
+APP_KEY=abc123
+DB_PASSWORD=secure123
+MAIL_HOST=smtp.example.com
+```
+
+**In the GUI**, open the bulk editor of the **Custom variables** or **Secret variables** section on the service's **Environment variables** page, or in **Project environment variables**. Paste or edit the whole list and save it once, rather than adding or editing each variable separately.
+
+**Through the API**, use the env file endpoints for [service variables ↗](https://api.app-prg1.zerops.io/api/rest/public/swagger/#/PublicUserData) and [project variables ↗](https://api.app-prg1.zerops.io/api/rest/public/swagger/#/PublicProjectEnv). Each has one endpoint to read the variables as a file and one to write the edited file back. One request changes the whole set, while calling the single-variable endpoints once per variable starts a separate process for every variable. See the [REST API reference](/references/api) for authentication and the full list of endpoints.
+
+Variables are split into two groups, sensitive and non-sensitive, and the `sensitive` flag picks which group a request works with. A `PUT` sets that group to exactly what the file contains:
+
+- Keys in the file are created, or updated if they already exist in the group.
+- Keys in the group that are missing from the file are **deleted**.
+- If a key in the file already exists in the other group, the request fails.
+
+Because missing keys are deleted, read the current file first, edit it, and send the whole file back. Reading sensitive values requires [sudo mode](#reading-sensitive-values). As with any change to these variables, restart the affected services to pick up the new values.
+
+### Reading Sensitive Values
+
+The value of a sensitive variable is only returned to a request in **sudo mode**:
+
+- **In the GUI**, you enter sudo mode by re-authorizing. The GUI asks you to when you reveal a secret value or load secret variables into the bulk editor.
+- **An API token** is in sudo mode if it was created with `sudo: true`. Creating such a token requires sudo mode. A token without sudo always gets `REDACTED` in place of sensitive values.
+
+List and detail endpoints return `REDACTED` for a sensitive value unless the request is in sudo mode and the user's role isn't read-only. The read-only role never gets sensitive values. To reveal a single value, use the reveal endpoint for a [service variable ↗](https://api.app-prg1.zerops.io/api/rest/public/swagger/#/PublicUserData) or a [project variable ↗](https://api.app-prg1.zerops.io/api/rest/public/swagger/#/PublicProjectEnv). Both require sudo mode.
+
+Project and service [exports](/references/import#sensitive-values-in-exports) write sensitive variables as `value: REDACTED` unless you request the values with `reveal=true`, which also requires sudo mode.
+
 ### Variable Precedence
 
 When the same environment variable key exists in multiple places, Zerops follows these precedence rules:
 
 1. Service-level variables take precedence over project variables
 2. Within service-level:
-   - Build/runtime variables override secret variables
+   - Build/runtime variables override custom and secret variables
    - Build and runtime containers are separate environments
 
 ## Environment Variable Examples
@@ -379,18 +445,24 @@ project:
   name: my-project
 services:
   - hostname: api
-    envSecrets:
+    vault:
       # Creating explicit references to needed variables
-      DB_CONNECTION: ${db_user}:${db_password}@${db_hostname}:${db_port}
+      DB_CONNECTION:
+        value: ${db_user}:${db_password}@${db_hostname}:${db_port}
+        sensitive: true
       CACHE_URL: ${cache_hostname}:${cache_port}
   - hostname: db
-    envSecrets:
-      password: secureDbPassword
+    vault:
+      password:
+        value: secureDbPassword
+        sensitive: true
       user: dbuser
       port: 5432
   - hostname: cache
-    envSecrets:
-      password: cacheServerPass
+    vault:
+      password:
+        value: cacheServerPass
+        sensitive: true
       port: 6379
 ```
 

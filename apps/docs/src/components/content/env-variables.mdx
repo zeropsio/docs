@@ -6,7 +6,7 @@ In Zerops you do not have to create a `.env` file manually. Zerops handles the e
 
 ## Service env variables
 
-Zerops supports service-level environment variables that are specific to your <Var name="serviceDisplay" /> service. There are 3 different sets of service env variables in Zerops:
+Zerops supports service-level environment variables that are specific to your <Var name="serviceDisplay" /> service. There are 4 different sets of service env variables in Zerops:
 
 <table className="w-fit my-1.5">
   <thead>
@@ -28,26 +28,31 @@ Zerops supports service-level environment variables that are specific to your <V
       <td className="w-fit"><VarLink name="servicePath" path="/{{VAR}}/how-to/build-pipeline#envvariables-1">zerops.yaml</VarLink></td>
     </tr>
     <tr className="text-center">
-      <td className="w-fit">secret</td>
+      <td className="w-fit">custom (plain)</td>
       <td className="w-fit">runtime</td>
-      <td className="w-fit"><VarLink name="servicePath" path="/{{VAR}}/how-to/env-variables#set-secret-env-variables-in-zerops-gui">Zerops GUI</VarLink></td>
+      <td className="w-fit"><VarLink name="servicePath" path="/{{VAR}}/how-to/env-variables#set-secret-env-variables-in-zerops-gui">Zerops GUI</VarLink>, import.yaml or API</td>
+    </tr>
+    <tr className="text-center">
+      <td className="w-fit">secret (sensitive)</td>
+      <td className="w-fit">runtime</td>
+      <td className="w-fit"><VarLink name="servicePath" path="/{{VAR}}/how-to/env-variables#set-secret-env-variables-in-zerops-gui">Zerops GUI</VarLink>, import.yaml or API</td>
     </tr>
   </tbody>
 </table>
 
 :::tip
-Zerops also supports [project-level environment variables](/features/env-variables#project-variables) that apply across all services within a project.
+Zerops also supports [project-level environment variables](/features/env-variables#project-variables) that apply across all runtime services within a project.
 :::
 
-Use the <VarLink name="servicePath" path="/{{VAR}}/how-to/create#set-secret-environment-variables">secret env variables</VarLink> for all sensitive data you don't want to store in your application code. Secret env variables are also useful if you need for testing where you need to change the value of some env variables frequently. Secret variables are managed in Zerops GUI and you don't have to redeploy your application.
+Custom and secret env variables are stored in Zerops, not in your repository, so you can change them without redeploying your application. Use <VarLink name="servicePath" path="/{{VAR}}/how-to/create#set-secret-environment-variables">secret env variables</VarLink> for passwords, tokens and other sensitive data: their values are encrypted at rest and masked in the GUI. Inside the containers, your application reads them as plain text like any other variable. Use custom env variables for values that aren't sensitive but that you want to change without a redeploy.
 
 The basic build and runtime env variables are listed in your [zerops.yaml](/zerops-yaml/specification) and deployed together with your application code. When you need to update a value of an existing env variable or change the set of build or runtime env variables, update your zerops.yaml and redeploy your application to Zerops.
 
 You can <VarLink name="servicePath" path="/{{VAR}}/how-to/env-variables#reference-a-local-variable-in-another-variable-value">reference</VarLink> another variable of the same service or even a variable of <VarLink name="servicePath" path="/{{VAR}}/how-to/env-variables#reference-a-variable-of-another-project-service">another service</VarLink> within the same project.
 
-## Set secret env variables in Zerops GUI
+## Set env variables in Zerops GUI {#set-secret-env-variables-in-zerops-gui}
 
-Use secret variables to store passwords, tokens and other sensitive information that shouldn't be part of your repository and listed in zerops.yaml.
+Use secret variables to store passwords, tokens and other sensitive information that shouldn't be part of your repository and listed in zerops.yaml. Use custom variables for other values you want to manage outside zerops.yaml.
 
 <figure style={{ textAlign: 'center', margin: '1rem 0' }}>
   <img
@@ -60,9 +65,16 @@ Use secret variables to store passwords, tokens and other sensitive information 
 
 You can set env variables when you <VarLink name="servicePath" path="/{{VAR}}/how-to/create">create</VarLink> a new <Var name="serviceDisplay" /> service or you can set them later.
 
-To configure env variables for an existing service, go to the service detail and choose **Environment variables** in the left menu. Scroll to the **Secret variables** section and click on the **Add secret variable** button and set variable key and value.
+To configure env variables for an existing service, go to the service detail and choose **Environment variables** in the left menu. The page has four sections:
 
-You can edit or delete env variables that you've created by clicking on the menu on the right side of each row.
+- **Custom variables**: plain variables you set in the GUI
+- **Secret variables**: sensitive variables, stored encrypted
+- **Variables from zerops.yml**: the build and runtime variables deployed with your application
+- **Generated variables**: variables set by the system
+
+Add a variable in the **Custom variables** or **Secret variables** section and set its key and value. You can edit or delete env variables that you've created by clicking on the menu on the right side of each row. Custom and secret variables each have their own bulk editor for editing several variables at once in `.env` format.
+
+Secret values are masked. Revealing a value asks you to re-authorize, and so does loading secret variables into the bulk editor.
 
 The changes you've made to environment variables will be automatically applied to all containers of your project's services.
 
@@ -207,10 +219,10 @@ To access the `password` env variable of the `mariadb2` service, use `mariadb2_p
 
 ## How to read runtime env variables in the build environment
 
-You can use runtime env variables in the build environment using the `RUNTIME_` prefix. For example if you have a runtime variable with the `connectionString` key, use the `RUNTIME_connectionString` to read the variable in the build environment. This rule applies both for basic and secret runtime variables.
+You can use runtime env variables in the build environment using the `RUNTIME_` prefix. For example if you have a runtime variable with the `connectionString` key, use the `RUNTIME_connectionString` to read the variable in the build environment. This rule applies to basic, custom and secret runtime variables.
 
 ## Basic and secret env variable with the same key
 
-If you create a secret env variable and a basic runtime env variable with the same key, Zerops saves the basic runtime env variable from your zerops.yaml and ignores the secret env variable.
+If you create a custom or secret env variable and a basic runtime env variable with the same key, Zerops saves the basic runtime env variable from your zerops.yaml and ignores the custom or secret env variable.
 
 If you create a basic build env variable and a runtime env variable with the same key, Zerops saves both because the build and runtime environments have separate sets of env variables.

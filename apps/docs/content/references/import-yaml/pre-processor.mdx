@@ -22,9 +22,11 @@ services:
     type: nodejs@latest
     buildFromGit: https://github.com/example/app
     enableSubdomainAccess: true
-    envSecrets:
+    vault:
       # yamlPreprocessor feat: generates a random 64 char and stores it
-      SECRET_KEY: <@generateRandomString(<64>)>
+      SECRET_KEY:
+        value: <@generateRandomString(<64>)>
+        sensitive: true
     
   - hostname: db
     type: postgresql@16
@@ -155,10 +157,16 @@ The preprocessor supports nested function and string expressions, allowing you t
 services:
 - hostname: app
   type: nodejs@20
-  envSecrets:
-    NESTED_STRINGS: <Base and <Nested> content>
-    NESTED_FUNCTIONS: <@generateRandomString(<@generateRandomInt(<20>, <50>)>)>
-    EVEN_MORE_NESTING: <@setVar(<refVarName>, <@generateRandomString(<@generateRandomInt(<20>, <30>)>)>)>
+  vault:
+    NESTED_STRINGS:
+      value: <Base and <Nested> content>
+      sensitive: true
+    NESTED_FUNCTIONS:
+      value: <@generateRandomString(<@generateRandomInt(<20>, <50>)>)>
+      sensitive: true
+    EVEN_MORE_NESTING:
+      value: <@setVar(<refVarName>, <@generateRandomString(<@generateRandomInt(<20>, <30>)>)>)>
+      sensitive: true
 ```
 
 ### Outputs of Nesting with Environment Variables
@@ -168,10 +176,16 @@ services:
 services:
 - hostname: app
   type: nodejs@20
-  envSecrets:
-    NESTED_STRINGS: "Base and Nested content"
-    NESTED_FUNCTIONS: "58580f0ad377a8e4c0dccc1622e2d3812b90"
-    EVEN_MORE_NESTING: "73bcd2b647293dd04674cdecc"
+  vault:
+    NESTED_STRINGS:
+      value: "Base and Nested content"
+      sensitive: true
+    NESTED_FUNCTIONS:
+      value: "58580f0ad377a8e4c0dccc1622e2d3812b90"
+      sensitive: true
+    EVEN_MORE_NESTING:
+      value: "73bcd2b647293dd04674cdecc"
+      sensitive: true
 ```
 
 ### Escaping to Print Reserved Characters
@@ -282,8 +296,10 @@ This function generates a random string of specified length using alphanumeric c
 services:
 - hostname: app
   type: nodejs@20
-  envSecrets:
-    RANDOM_STRING: <@generateRandomString(<10>)>
+  vault:
+    RANDOM_STRING:
+      value: <@generateRandomString(<10>)>
+      sensitive: true
 ```
 
 #### Output of import YAML
@@ -328,8 +344,10 @@ This function generates requested amount of cryptographically random bytes. It i
 services:
 - hostname: app
   type: nodejs@20
-  envSecrets:
-    RANDOM_STRING: <@generateRandomString(<10>)>
+  vault:
+    RANDOM_STRING:
+      value: <@generateRandomString(<10>)>
+      sensitive: true
 ```
 
 #### Output of import YAML
@@ -378,8 +396,10 @@ This function generates a random integer within a specified range (inclusive). I
 services:
 - hostname: app
   type: nodejs@20
-  envSecrets:
-    RANDOM_INT: <@generateRandomInt(<200>, <1000>)>
+  vault:
+    RANDOM_INT:
+      value: <@generateRandomInt(<200>, <1000>)>
+      sensitive: true
 ```
 
 #### Output of import YAML
@@ -424,8 +444,10 @@ This function randomly selects one value from a list of provided options. It's h
 services:
 - hostname: app
   type: nodejs@20
-  envSecrets:
-    PICK_RANDOM: <@pickRandom(<640>, <800>, <1024>, <1280>, <1440>, <1920>)>
+  vault:
+    PICK_RANDOM:
+      value: <@pickRandom(<640>, <800>, <1024>, <1280>, <1440>, <1920>)>
+      sensitive: true
 ```
 
 #### Output of import YAML
@@ -475,8 +497,10 @@ This function stores a value in memory for later use and returns the stored valu
 services:
 - hostname: app
   type: nodejs@20
-  envSecrets:
-    SET_VAR: <@setVar(<plainPassword>, <@generateRandomString(<16>)>)>
+  vault:
+    SET_VAR:
+      value: <@setVar(<plainPassword>, <@generateRandomString(<16>)>)>
+      sensitive: true
 ```
 
 #### Output of import YAML
@@ -521,8 +545,10 @@ This function retrieves a previously stored value from memory. It works in conju
 services:
 - hostname: app
   type: nodejs@20
-  envSecrets:
-    GET_VAR: <@getVar(plainPassword)>
+  vault:
+    GET_VAR:
+      value: <@getVar(plainPassword)>
+      sensitive: true
 ```
 
 #### Output of import YAML
@@ -574,8 +600,10 @@ The output contains only a random combination of alphanumeric characters (`a-zA-
 services:
 - hostname: app
   type: nodejs@20
-  envSecrets:
-    GENERATE_RANDOM_STRING_VAR: <@generateRandomStringVar(<plainPassword>, <10>)>
+  vault:
+    GENERATE_RANDOM_STRING_VAR:
+      value: <@generateRandomStringVar(<plainPassword>, <10>)>
+      sensitive: true
 ```
 
 #### Output of import YAML
@@ -627,18 +655,26 @@ This function generates a JWT (JSON Web Token) signed by HS256 algorithm using p
 services:
 - hostname: app
   type: nodejs@20
-  envSecrets:
+  vault:
     # Using a fixed secret string
-    JWT_FIXED: <@generateJWT(<fixedSecretString>, <{"role":"admin","exp":1798761600}>)>
-    
+    JWT_FIXED:
+      value: <@generateJWT(<fixedSecretString>, <{"role":"admin","exp":1798761600}>)>
+      sensitive: true
+
     # Using an empty payload
-    JWT_EMPTY: <@generateJWT(<fixedSecretString>, <{}>)>
-    
+    JWT_EMPTY:
+      value: <@generateJWT(<fixedSecretString>, <{}>)>
+      sensitive: true
+
     # Generate and store a random secret, then use it
-    JWT_RANDOM: <@generateJWT(<@generateRandomStringVar(<jwtSecretKey>, <32>)>, <{"role":"admin","exp":1798761600}>)>
-    
+    JWT_RANDOM:
+      value: <@generateJWT(<@generateRandomStringVar(<jwtSecretKey>, <32>)>, <{"role":"admin","exp":1798761600}>)>
+      sensitive: true
+
     # Use a previously stored secret
-    JWT_STORED: <@generateJWT(<@getVar(jwtSecretKeyVar)>, <{"role":"admin","exp":1798761600}>)>
+    JWT_STORED:
+      value: <@generateJWT(<@getVar(jwtSecretKeyVar)>, <{"role":"admin","exp":1798761600}>)>
+      sensitive: true
 ```
 
 #### Output of import YAML
@@ -708,8 +744,10 @@ Returns the current date and time in a <a href="#masking">specified mask pattern
 services:
 - hostname: app
   type: nodejs@20
-  envSecrets:
-    GET_DATETIME: <@getDatetime(<DD.MM.YYYY HH:mm:ss>, <CET>)>
+  vault:
+    GET_DATETIME:
+      value: <@getDatetime(<DD.MM.YYYY HH:mm:ss>, <CET>)>
+      sensitive: true
 ```
 
 #### Output of import YAML
@@ -768,9 +806,13 @@ GET_DATETIME: 11.12.2022 18:06:13
     services:
       - hostname: app
         type: nodejs@20
-        envSecrets:
-          TIMESTAMP: <@getDateTime(<YYYY-MM-DD HH:mm:ss>, <UTC>)>
-          FRIENDLY_DATE: <@getDateTime(<dddd, MMM D, YYYY 'at' h:mma>, <UTC>)>
+        vault:
+          TIMESTAMP:
+            value: <@getDateTime(<YYYY-MM-DD HH:mm:ss>, <UTC>)>
+            sensitive: true
+          FRIENDLY_DATE:
+            value: <@getDateTime(<dddd, MMM D, YYYY 'at' h:mma>, <UTC>)>
+            sensitive: true
     ```
   </DropdownItem>
 </Dropdown>
@@ -860,16 +902,26 @@ Generates public and private <a href="https://en.wikipedia.org/wiki/EdDSA">ED255
 services:
 - hostname: app
   type: nodejs@20
-  envSecrets:
-    GENERATED_PUBLIC_KEY: |
-      <@generateED25519Key(<Key>)>
-    APP_PUBLIC_KEY: |
-      <@getVar(KeyPublic)>
-    APP_PUBLIC_KEY_SSH: <@getVar(KeyPublicSsh)>
-    APP_PRIVATE_KEY: |
-      <@getVar(KeyPrivate)>
-    APP_PRIVATE_KEY_SSH: |
-      <@getVar(KeyPrivateSsh)>
+  vault:
+    GENERATED_PUBLIC_KEY:
+      value: |
+        <@generateED25519Key(<Key>)>
+      sensitive: true
+    APP_PUBLIC_KEY:
+      value: |
+        <@getVar(KeyPublic)>
+      sensitive: true
+    APP_PUBLIC_KEY_SSH:
+      value: <@getVar(KeyPublicSsh)>
+      sensitive: true
+    APP_PRIVATE_KEY:
+      value: |
+        <@getVar(KeyPrivate)>
+      sensitive: true
+    APP_PRIVATE_KEY_SSH:
+      value: |
+        <@getVar(KeyPrivateSsh)>
+      sensitive: true
 ```
 
 #### Output of import YAML
@@ -1001,14 +1053,22 @@ services:
 - hostname: app
   type: nodejs@16
   minContainers: 1
-  envSecrets:
-    GENERATED_PUBLIC_KEY: |
-      <@generateRSA2048Key(<Key>)>
-    APP_PUBLIC_KEY: |
-      <@getVar(KeyPublic)>
-    APP_PUBLIC_KEY_SSH: <@getVar(KeyPublicSsh)>
-    APP_PRIVATE_KEY: |
-      <@getVar(KeyPrivate)>
+  vault:
+    GENERATED_PUBLIC_KEY:
+      value: |
+        <@generateRSA2048Key(<Key>)>
+      sensitive: true
+    APP_PUBLIC_KEY:
+      value: |
+        <@getVar(KeyPublic)>
+      sensitive: true
+    APP_PUBLIC_KEY_SSH:
+      value: <@getVar(KeyPublicSsh)>
+      sensitive: true
+    APP_PRIVATE_KEY:
+      value: |
+        <@getVar(KeyPrivate)>
+      sensitive: true
 ```
 
 #### Output of import YAML
@@ -1185,14 +1245,22 @@ This Function Generates public and private <a href="https://en.wikipedia.org/wik
 services:
 - hostname: app
   type: nodejs@16
-  envSecrets:
-    GENERATED_PUBLIC_KEY: |
-      <@generateRSA4096Key(<Key>)>
-    APP_PUBLIC_KEY: |
-      <@getVar(KeyPublic)>
-    APP_PUBLIC_KEY_SSH: <@getVar(KeyPublicSsh)>
-    APP_PRIVATE_KEY: |
-      <@getVar(KeyPrivate)>
+  vault:
+    GENERATED_PUBLIC_KEY:
+      value: |
+        <@generateRSA4096Key(<Key>)>
+      sensitive: true
+    APP_PUBLIC_KEY:
+      value: |
+        <@getVar(KeyPublic)>
+      sensitive: true
+    APP_PUBLIC_KEY_SSH:
+      value: <@getVar(KeyPublicSsh)>
+      sensitive: true
+    APP_PRIVATE_KEY:
+      value: |
+        <@getVar(KeyPrivate)>
+      sensitive: true
 ```
 
 #### Output of import YAML

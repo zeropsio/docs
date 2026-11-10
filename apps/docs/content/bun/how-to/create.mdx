@@ -50,7 +50,7 @@ The hostname is fixed after the service is created and cannot be changed later.
 
 ### Set secret environment variables
 
-Add environment variables with sensitive data, such as passwords, tokens, salts, certificates, etc. These will be securely saved inside Zerops and added to your runtime service upon start.
+Add environment variables with sensitive data, such as passwords, tokens, salts, certificates, etc. They are encrypted, stored securely inside Zerops and added to your runtime service upon start.
 
 Setting secret environment variables is optional. You can always set them later in the Zerops GUI.
 
@@ -95,9 +95,13 @@ services:
     # defines the maximum number of containers for horizontal autoscaling. Max value = 6.
     maxContainers: 6
     # optional: create env variables
-    envSecrets:
-      S3_ACCESS_KEY_ID: 'P8cX1vVVb'
-      S3_ACCESS_SECRET: 'ogFthuiLYki8XoL73opSCQ'
+    vault:
+      S3_ACCESS_KEY_ID:
+        value: P8cX1vVVb
+        sensitive: true
+      S3_ACCESS_SECRET:
+        value: ogFthuiLYki8XoL73opSCQ
+        sensitive: true
 ```
 
 The yaml file describes your future project infrastructure. The project will contain one Bun service with default [auto scaling](scaling) configuration. Hostname will be set to "app", the internal port(s) the service listens on will be defined later in the [zerops.yaml](build-pipeline#ports). Following secret env variables will be configured:
@@ -145,9 +149,13 @@ services:
     # defines the maximum number of containers for horizontal autoscaling. Max value = 6.
     maxContainers: 4
     # optional: create env variables
-    envSecrets:
-      S3_ACCESS_KEY_ID: 'P8cX1vVVb'
-      S3_ACCESS_SECRET: 'ogFthuiLYki8XoL73opSCQ'
+    vault:
+      S3_ACCESS_KEY_ID:
+        value: P8cX1vVVb
+        sensitive: true
+      S3_ACCESS_SECRET:
+        value: ogFthuiLYki8XoL73opSCQ
+        sensitive: true
   - # second service hostname
     hostname: db
     # service type and version number in postgresql@{version} format
@@ -278,11 +286,10 @@ At least one service in `services:` section is required. You can create a projec
     </tr>
     <tr>
       <td className="w-fit">
-        <b>envSecrets</b>
+        <b>vault</b>
       </td>
       <td className="w-fit">
-        <b>Optional.</b> Defines one or more secret env variables as a key value
-        map. See env variable <a href="env-variables#env-variable-restrictions">restrictions</a>.
+        <b>Optional.</b> Defines the service's environment variables as a map. Each entry is either a plain <code>KEY: value</code> pair or an object with <code>value</code> and <code>sensitive: true</code>, which stores the variable encrypted as a secret variable. <code>envSecrets</code> is deprecated but still accepted. See env variable <a href="env-variables#env-variable-restrictions">restrictions</a>.
       </td>
     </tr>
   </tbody>
@@ -342,9 +349,13 @@ services:
     # defines the maximum number of containers for horizontal autoscaling. Max value = 6.
     maxContainers: 6
     # optional: create env variables
-    envSecrets:
-      S3_ACCESS_KEY_ID: 'P8cX1vVVb'
-      S3_ACCESS_SECRET: 'ogFthuiLYki8XoL73opSCQ'
+    vault:
+      S3_ACCESS_KEY_ID:
+        value: P8cX1vVVb
+        sensitive: true
+      S3_ACCESS_SECRET:
+        value: ogFthuiLYki8XoL73opSCQ
+        sensitive: true
 ```
 
 The yaml file describes the list of one or more services that you want to add to your existing project. In the example above, one Bun service with default [auto scaling](scaling) configuration will be added to your project. Hostname of the new service will be set to `app`. Following secret env variables will be configured:

@@ -40,7 +40,7 @@ project:
     - test
     - dev
   # Project-level environment variables
-  envVariables:
+  vault:
     LOG_LEVEL: info
     API_VERSION: v1
 # ==== Define a list of services to import into the project ====
@@ -51,9 +51,12 @@ services:
     type: nodejs@22
     # HA or NON_HA mode
     mode: HA
-    # Map of secret environment variables
-    envSecrets:
-      SECRET_KEY: <@generateRandomString(<32>)>
+    # Environment variables: plain KEY: value, or value + sensitive: true for secrets
+    vault:
+      SECRET_KEY:
+        value: <@generateRandomString(<32>)>
+        sensitive: true
+      LOG_FORMAT: json
     # Environment variables defined in .env format (automatically creates secret envs)
     dotEnvSecrets: |
       APP_KEY=<@generateRandomString(<32>)>
@@ -162,9 +165,19 @@ The project configuration is used to define the project you want to import.
       <td className="w-fit">One or more string tags.<br/>Tags provide better orientation in projects.</td>
     </tr>
     <tr>
+      <td className="w-fit font-semibold">vault</td>
+      <td className="w-fit">map</td>
+      <td className="w-fit">[Project-level environment variables](/features/env-variables#project-variables) that are available to all runtime services in the project. Each entry is either a plain `KEY: value` pair or an object with `value` and `sensitive: true`, which stores the variable encrypted. See [vault entries](#vault-entries).</td>
+    </tr>
+    <tr>
       <td className="w-fit font-semibold">envVariables</td>
       <td className="w-fit">map[string]string</td>
-      <td className="w-fit">[Project-level environment variables](/features/env-variables#project-variables) that are available to all services in the project.</td>
+      <td className="w-fit">_Deprecated, use `vault`._ Plain project-level environment variables.</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">envSecrets</td>
+      <td className="w-fit">map[string]string</td>
+      <td className="w-fit">_Deprecated, use `vault`._ Sensitive project-level environment variables.</td>
     </tr>
   </tbody>
 </table>
@@ -189,10 +202,30 @@ project:
     - test
     - dev
   # Project-level environment variables
-  envVariables:
+  vault:
     LOG_LEVEL: info
     API_VERSION: v1
 ```
+
+### Vault Entries
+
+The `vault` key holds environment variables at project level and at service level. Each entry is one of:
+
+- **Plain**: `KEY: value`. Unquoted numbers and booleans are accepted as values.
+- **Object**: `value`, plus `sensitive: true` for a sensitive variable. Sensitive values are encrypted at rest.
+
+```yaml
+vault:
+  LOG_LEVEL: info
+  PORT_OFFSET: 10
+  APP_KEY:
+    value: <@generateRandomString(<32>)>
+    sensitive: true
+```
+
+The object accepts only the `value` and `sensitive` keys. Any other key is rejected, so a typo such as `sensitve` can't store a secret as a plain variable.
+
+Write sensitive entries in block form, as above, not inline as `{ value: ..., sensitive: true }`. [Preprocessor functions](/references/import-yaml/pre-processor) can contain commas and brackets, which break inline YAML.
 
 ## Service Configuration
 
@@ -215,10 +248,15 @@ services:
     mode: HA                        # HA or NON_HA mode (default: NON_HA)
 
     # Environment variables
-    envSecrets:                     # Secret environment variables (blurred in GUI)
-      SECRET_KEY: <@generateRandomString(<32>)>  # Generated random string
-    dotEnvSecrets: |                # Environment vars in .env format
+    vault:
+      SECRET_KEY:                   # Sensitive variable, stored encrypted
+        value: <@generateRandomString(<32>)>  # Generated random string
+        sensitive: true
+      LOG_LEVEL: info               # Plain variable
+    dotEnvSecrets: |                # Sensitive environment vars in .env format
       APP_KEY=<@generateRandomString(<32>)>
+    dotEnvVariables: |              # Plain environment vars in .env format
+      MAIL_HOST=smtp.example.com
 
     # Storage configuration
     objectStorageSize: 2            # Object storage size in GB
@@ -325,14 +363,29 @@ This example includes all possible configuration options for Zerops services. No
       <td className="w-fit">Values: <b>HA</b> / <b>NON_HA</b> (default NON_HA)<br/>Defines the operation mode of the service.</td>
     </tr>
     <tr>
-      <td className="w-fit font-semibold">envSecrets</td>
-      <td className="w-fit">map[string]string</td>
-      <td className="w-fit">Environment variables that are blurred by default in Zerops GUI. Can be edited or deleted in Zerops GUI.</td>
+      <td className="w-fit font-semibold">vault</td>
+      <td className="w-fit">map</td>
+      <td className="w-fit">[Service environment variables](/features/env-variables#2-secret-variables). Each entry is either a plain `KEY: value` pair or an object with `value` and `sensitive: true`, which creates an encrypted secret variable. See [vault entries](#vault-entries).</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">dotEnvVariables</td>
+      <td className="w-fit">string (multiline)</td>
+      <td className="w-fit">Plain environment variables in .env file format.</td>
     </tr>
     <tr>
       <td className="w-fit font-semibold">dotEnvSecrets</td>
       <td className="w-fit">string (multiline)</td>
-      <td className="w-fit">Environment variables in .env file format that are automatically created as secret envs.</td>
+      <td className="w-fit">Environment variables in .env file format that are created as sensitive (secret) variables.</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">envVariables</td>
+      <td className="w-fit">map[string]string</td>
+      <td className="w-fit">_Deprecated, use `vault`._ Plain environment variables.</td>
+    </tr>
+    <tr>
+      <td className="w-fit font-semibold">envSecrets</td>
+      <td className="w-fit">map[string]string</td>
+      <td className="w-fit">_Deprecated, use `vault`._ Sensitive environment variables, stored encrypted.</td>
     </tr>
     <tr>
       <td className="w-fit font-semibold">objectStorageSize</td>
@@ -416,10 +469,12 @@ services:
   type: nodejs@22
   # High-Availability or Non-High-Availability mode
   mode: HA
-  # Map of secret environment variables
-  envSecrets:
-    SECRET_KEY: <@generateRandomString(<32>)>
-  # Environment variables in .env format
+  # Environment variables: plain KEY: value, or value + sensitive: true for secrets
+  vault:
+    SECRET_KEY:
+      value: <@generateRandomString(<32>)>
+      sensitive: true
+  # Sensitive environment variables in .env format
   dotEnvSecrets: |
     APP_KEY=<@generateRandomString(<32>)>
   # Object storage size in GB
@@ -440,8 +495,8 @@ services:
 
 This yaml will create a `nodejs@latest` service named `app` in `HA` (High-Availability) mode with the following configurations:
 - Environment variables:
-  - From `envSecrets`: `SECRET_KEY` (requires yamlPreprocessor)
-  - From `dotEnvSecrets`: `APP_KEY` in .env format (requires yamlPreprocessor)
+  - From `vault`: `SECRET_KEY` as a sensitive variable (requires yamlPreprocessor)
+  - From `dotEnvSecrets`: `APP_KEY` in .env format as a sensitive variable (requires yamlPreprocessor)
 - Object storage: 2GB with `public-read-write` policy
 - Git repository: `https://github.com/zeropsio/recipe-nodejs`
 - Public access enabled via Zerops subdomain
@@ -454,6 +509,8 @@ The `services` object allows you to define one or more services in the same yaml
 
 :::caution
 The `yamlPreprocessor` option in your project & service import YAML is required to generate random secret values, passwords, and public/private key pairs. For more information, see the [yamlPreprocessor](/references/import-yaml/pre-processor) page.
+
+Store generated values as sensitive `vault` entries in block form (`value:` and `sensitive: true` on separate lines). Preprocessor functions can contain commas and brackets, which break inline YAML.
 :::
 
 ### Service Vertical Autoscaling
@@ -702,7 +759,24 @@ Zerops provides the ability to export your existing projects and services as YAM
 - Sharing project templates with team members
 - Creating version-controlled infrastructure configurations
 
-The exported YAML follows the same structure as the import YAML configuration detailed above. It will contain all the configuration parameters you've set for your project and services.
+The exported YAML follows the same structure as the import YAML configuration detailed above. It will contain all the configuration parameters you've set for your project and services. Environment variables are always exported under `vault`.
+
+### Sensitive Values in Exports
+
+By default, sensitive variables are exported with their value replaced:
+
+```yaml
+vault:
+  APP_KEY:
+    value: REDACTED
+    sensitive: true
+```
+
+To export the real values through the API, call the [project export ↗](https://api.app-prg1.zerops.io/api/rest/public/swagger/#/PublicProject) or [service export ↗](https://api.app-prg1.zerops.io/api/rest/public/swagger/#/PublicServiceStack) endpoint with `reveal=true`. This requires [sudo mode](/features/env-variables#reading-sensitive-values). The project env file endpoint accepts the same `reveal` parameter.
+
+:::warning
+Importing a file with `value: REDACTED` stores the literal string `REDACTED` as the variable's value. Replace these values before you import an exported file.
+:::
 
 ### How to Export
 
