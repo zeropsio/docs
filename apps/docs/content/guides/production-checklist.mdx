@@ -45,7 +45,7 @@ services:
     type: alpine@3.20
     buildFromGit: https://github.com/zeropsio/recipe-mailpit
 ```
-For production, point your app at a real provider — non-secret settings in the app's `run.envVariables` (zerops.yaml), the key in `envSecrets` (import.yaml). They are different files; a bare top-level `envVariables:` block is schema-invalid.
+For production, point your app at a real provider — non-secret settings in the app's `run.envVariables` (zerops.yaml), the key as a sensitive `vault` entry (import.yaml). They are different files; a bare top-level `envVariables:` block is schema-invalid.
 ```yaml
 run:
   envVariables:
@@ -55,8 +55,10 @@ run:
 ```yaml
 services:
   - hostname: app
-    envSecrets:
-      SMTP_PASSWORD: your-production-key
+    vault:
+      SMTP_PASSWORD:
+        value: your-production-key
+        sensitive: true
 ```
 
 ### Adminer → Remove or Restrict
