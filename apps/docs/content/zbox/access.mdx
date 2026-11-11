@@ -1,13 +1,13 @@
 ---
 title: Managing and accessing the workspace
-description: Manage a Zerops Box workspace through its web console, its HTTP API, the zbox CLI or the zbox MCP server, and keep its API key safe.
+description: Manage a Zerops Box workspace through the web console in the Zerops Box app, its HTTP API, the zbox CLI or the zbox MCP server, and keep its API key safe.
 ---
 
-Every workspace serves one HTTP API. The web console, the `zbox` CLI and `zbox mcp` are all clients of that API. You authorize them through your Zerops login, with the workspace API key, or with a scoped token that may call only a part of the API.
+Every workspace serves one HTTP API. The web console in the Zerops Box app, the `zbox` CLI and `zbox mcp` are all clients of that API. You authorize them through your Zerops login, with the workspace API key, or with a scoped token that may call only a part of the API.
 
 | Interface | Use it for | Signed in with |
 |---|---|---|
-| [Web console](#web-console) | Working with sandboxes in the browser | Your Zerops login (from the Zerops GUI or the CLI), or the API key |
+| [Web console](#web-console) | Working with workspaces and sandboxes in the browser | Your Zerops login |
 | [HTTP API](#http-api) | Your own code, services and CI | The API key, or a [scoped token](#scoped-tokens) |
 | [zbox CLI](#zbox-cli) | Your terminal, scripts and agents | Your Zerops login, the API key, or a scoped token |
 | [MCP server](#mcp-server) | AI agents that run code in throwaway sandboxes | Same as the CLI |
@@ -20,26 +20,26 @@ The **workspace API key** is the service environment variable `ZBOX_WORKSPACE_AP
 The API key is the whole authority over the workspace. Anyone who holds it, and any sandbox you give it to, can create, read, change and terminate every sandbox, base, template, integration and webhook of the workspace, and create tokens. Keep it out of sandboxes and backends, and give them a [scoped token](#scoped-tokens) instead. See [isolation and security](/zbox/isolation).
 :::
 
-You don't need the key when you are logged in to Zerops. The Zerops GUI and the CLI reach the workspace through Zerops, which adds the key on the way. When you need it, for a script, CI or another machine, print it:
+You don't need the key when you are logged in to Zerops. The web console and the CLI reach the workspace through Zerops, which adds the key on the way. When you need it, for a script, CI or another machine, print it:
 
 ```bash
 zbox workspace key
 ```
 
-The CLI reads the key from the service with your Zerops login. Because the key is a sensitive variable, the CLI may ask you to confirm the access in the browser first.
+The CLI reads the key from the service with your Zerops login. Because the key is a sensitive variable, the CLI may ask you to confirm the access in the browser first. In the Zerops Box app, **Show API key** in a workspace's menu shows the same key.
 
 The API key never opens a sandbox port. Port links use one-time tickets instead ([access modes](/zbox/networking#access-modes)).
 
 ### Rotate the API key
 
 1. Edit `ZBOX_WORKSPACE_API_KEY` of the workspace service in the Zerops GUI.
-2. Reload the service. The reload applies the new key and keeps sandboxes running. Until then, only the old key works ([environment variables](/zbox/workspace-service#environment-variables)).
+2. Reload the service, for example with `zbox workspace reload`. The reload applies the new key and keeps sandboxes running. Until then, only the old key works ([environment variables](/zbox/workspace-service#environment-variables)).
 3. Update every script, CI secret and `zbox workspace use` that holds the old key.
 
-After the reload, the old key is refused and browsers signed in to the console with it are signed out.
+After the reload, the old key is refused.
 
 :::caution Logged-in access keeps the old key
-The Zerops GUI and a logged-in CLI reach the workspace with an access that Zerops creates with the key of that moment. An access created before the reload keeps sending the old key until it expires, an hour after its last use, and the CLI fails with `Missing or invalid Workspace API key or token` (exit code 6). Reopen the console from the Zerops GUI, and fetch a new access for the CLI:
+The web console and a logged-in CLI reach the workspace with an access that Zerops creates with the key of that moment. An access created before the reload keeps sending the old key until it expires, an hour after its last use, and the CLI fails with `Missing or invalid Workspace API key or token` (exit code 6). Load the console again in the browser, and fetch a new access for the CLI:
 
 ```bash
 zbox workspace authorize <workspace-service-id>
@@ -72,10 +72,10 @@ zbox token revoke <token-id>
 Every token can read the workspace itself (`GET /api/rest/workspace`). Files, sessions and the process list take `sandbox`, not `sandbox:read`, because they reach inside the sandbox.
 
 - `POST /api/rest/token` creates a token with a `name`, its `scopes` and an optional `ttlSeconds`, and answers its secret once. It can't be read again. `GET /api/rest/token-list` lists the tokens that are not revoked, `includeRevoked=true` adds the revoked ones. `DELETE /api/rest/token/{id}` revokes one.
-- Only the API key manages tokens: as a bearer, in a console signed in with it, or through your Zerops login in the Zerops GUI and the CLI, which reach the API with the key. A token never does, not even an `admin` one.
+- Only the API key manages tokens: as a bearer, or through your Zerops login in the web console and the CLI, which reach the API with the key. A token never does, not even an `admin` one. The console lists, creates and revokes tokens on the workspace's **Settings** page.
 - A route outside the token's scopes answers `403 forbidden`, and the error's `scope` metadata lists the scopes that grant the route. A route no token may call, such as the token routes, answers `forbidden` with `scope` metadata that says the route takes the Workspace API key.
 - An unknown, revoked or expired token answers `401 unauthorized`. Expiry and revocation apply from the token's next request. A shell or an event stream opened before stays open.
-- A token works on the workspace's API URL and [inside the project](#request-limits). It can't sign in to the web console. The Zerops path takes your Zerops login, never a token, and always acts with the API key, so the Zerops GUI and a logged-in CLI have the whole authority of the key.
+- A token works on the workspace's API URL and [inside the project](#request-limits). It doesn't open the web console. The Zerops path takes your Zerops login, never a token, and always acts with the API key, so the web console and a logged-in CLI have the whole authority of the key.
 
 To use a token with the CLI, store it like a key: `zbox workspace use <API URL> --api-key <token>`, or set it as `ZBOX_API_KEY` ([scripts, CI and sandboxes](#scripts-ci-and-sandboxes)). `zbox token create -q` prints only the secret.
 
@@ -89,18 +89,23 @@ A base build runs on the workspace VM itself ([base builds](/zbox/isolation#base
 
 ## Web console
 
-Each workspace serves a web console at the root of its API URL. It covers sandboxes (terminal, files, policy, snapshots, ports, sessions, events, metrics), images, integrations, activity, and the workspace itself.
+The web console is part of the **Zerops Box app** at [box.zerops.io](https://box.zerops.io). You log in with your Zerops account, the same login as in the Zerops GUI, and the app reaches each workspace through Zerops. No API key is involved, and the workspace itself serves only the API.
 
-Open it in one of these ways:
+The app works in one organization at a time. With several organizations, pick the current one in the top bar.
 
-- **From the Zerops GUI**: in the workspace service's left menu, open **Web UI** to see the console embedded in Zerops, or **Open web UI in new tab**. You are signed in through Zerops, with no key. Your [role in the project](/features/rbac) decides whether you can open it.
-- **From the CLI**: `zbox workspace console` opens the console of the current workspace, signed in. For a workspace of your account it goes through Zerops. For one you added with `zbox workspace use`, it opens a one-time sign-in link that is valid for 60 seconds.
-- **Directly**: open the API URL, for example `https://zbox-6da-8080.prg1.zerops.app`, and paste the API key into the sign-in form.
+- **Workspaces** lists the Box Workspace services of the organization. **New workspace** creates one ([create a workspace](/zbox/getting-started#create-a-workspace)). A workspace's menu starts, stops, restarts, reloads, resizes and deletes it ([service lifecycle](/zbox/workspace-service#service-lifecycle)), shows its API key and opens the service in the Zerops GUI.
+- **Open** on a workspace leads to its console at `https://box.zerops.io/workspace/<service-id>`. It covers the sandboxes (terminal, commands, files, policy, snapshots, ports and their access, integrations, sessions, events, SSH, metrics), images, lineages, integrations, activity, and the workspace's settings: capacity, policy, domains and tokens.
+- **Team** manages the people of the organization: their roles and their access to its projects ([roles and access](/features/rbac#user-roles)).
 
-Signing in with the key exchanges it once for a session cookie, so the key is never stored in the browser. The session lasts 7 days. **Sign out** ends it in that browser.
+You can also open a workspace's console in these ways:
 
-:::caution The console needs HTTPS
-The session cookie works only over HTTPS. Over the [Zerops VPN](/references/networking/vpn), the console at `http://<hostname>.zerops:8080` loads, but signing in fails without an error. Use the Zerops GUI or the public API URL for the console. The API itself works over the VPN with a bearer token.
+- **From the Zerops GUI**: in the workspace service's left menu, open **Web UI** to see the console embedded in Zerops, or **Open web UI in new tab**.
+- **From the CLI**: `zbox workspace console` opens the console of the current workspace in the browser and prints its URL.
+
+Opening a console takes **Full access** to the workspace's project. With **Read only** access you see the workspace in the list, but you can't open its console or start, stop or resize it ([project access levels](/features/rbac#project-access-levels)).
+
+:::note A workspace added by its URL and key has no console
+The console opens only workspaces of your Zerops account, through your Zerops login. It has no sign-in with the API key or a token. A workspace you store in the CLI with `zbox workspace use <API URL> --api-key` stays CLI and API only.
 :::
 
 ## HTTP API
@@ -131,7 +136,7 @@ On the Zerops subdomains, the API URL on port 8080 and the [sandbox port URLs](/
 | A response must send something within 60 seconds | Otherwise the request answers `504 Gateway Time-out`. |
 | Small writes of a response are buffered | A response that sends a little now and then reaches the client only at its end. Large responses stream. |
 
-Inside the project, none of these apply. Services of the project, and your machine over the [Zerops VPN](/references/networking/vpn), reach the API at `http://<hostname>.zerops:8080` and the sandbox ports at `http://<hostname>.zerops:8081` ([reach a sandbox from the project](/zbox/networking#reach-a-sandbox-from-the-project)), with any body size and without the 60 second limit. The CLI logged in to Zerops and the Zerops GUI reach the API another way, with no limit on the body size. A request there still has a time limit, so a very large upload over a slow connection can fail.
+Inside the project, none of these apply. Services of the project, and your machine over the [Zerops VPN](/references/networking/vpn), reach the API at `http://<hostname>.zerops:8080` and the sandbox ports at `http://<hostname>.zerops:8081` ([reach a sandbox from the project](/zbox/networking#reach-a-sandbox-from-the-project)), with any body size and without the 60 second limit. The CLI logged in to Zerops and the web console reach the API another way, with no limit on the body size. A request there still has a time limit, so a very large upload over a slow connection can fail.
 
 For what this means for commands and uploads, see [long commands](/zbox/commands#timeouts-and-output-limits) and [transfer files](/zbox/commands#transfer-files).
 
@@ -265,7 +270,7 @@ Commands that delete something (`remove`, `base remove`, `workspace teardown`, a
 The CLI remembers the workspaces you have used and keeps one as current. Commands work on the current one.
 
 ```bash
-# the Box Workspace services of your Zerops account, and the ones stored here
+# the Box Workspace services in every organization of your Zerops account, and the ones stored here
 zbox workspace list
 # store a workspace of your account; it is reached through Zerops, no key is stored
 zbox workspace authorize <service-id>
