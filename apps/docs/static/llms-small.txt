@@ -5931,7 +5931,9 @@ Currently supported Valkey versions:
 
 Import configuration version:
 
-- `valkey@7.2`
+- `valkey:single@9.0`, `valkey:ha@9.0`
+- `valkey:single@8.1`, `valkey:ha@8.1`
+- `valkey:single@7.2`, `valkey:ha@7.2`
 
 ## Service Configuration
 
@@ -5962,6 +5964,8 @@ Replica reads (ports `7000`/`7001`) can lag slightly behind the primary due to a
 :::
 
 **Failover client impact:** expect roughly 10–15 seconds of write unavailability while a new primary is elected and HAProxy reconverges. Read traffic on surviving replicas is unaffected.
+
+**Failover and recent writes:** replication from the primary to the replicas is asynchronous. A failover can therefore lose the most recent writes, including writes that the old primary already confirmed to the client.
 
 :::tip Trusting the TLS certificate
 The certificates served on the TLS ports (`6380` and `7001`) are signed by the Zerops Certificate Authority. To verify them from outside Zerops, download and trust the [Zerops CA](/references/networking/zerops-ca) &mdash; e.g. `redis-cli --tls --cacert ./zerops-ca.pem -h <ip> -p 6380 -a <password>`.
@@ -6001,9 +6005,18 @@ Services created **without** a `password` variable (older deployments) keep work
 
 ### Idle connection timeout
 
-Valkey closes connections that stay **idle for 5 minutes** (`timeout 300`). This is intentional on the managed instances &mdash; we avoid keeping infinite idle connections open. Older Valkey services ran with no timeout (`timeout 0`); if you connected before this change, your connections used to stay open indefinitely.
+Connections that stay **idle for 5 minutes** are closed. This is intentional on the managed instances &mdash; we avoid keeping infinite idle connections open. Older Valkey services ran with no timeout (`timeout 0`); if you connected before this change, your connections used to stay open indefinitely.
 
-"Idle" means **no commands sent on the connection** &mdash; the server resets the timer on every command, so a busy connection is never closed. The connections most likely to be affected are long-lived ones that sit waiting rather than sending commands, typically **pub/sub subscribers** and **blocking reads** (`BLPOP`, `XREAD`, …). Most clients reconnect automatically, so you may only see log lines such as `Redis subscriber socket closed; reconnecting if possible.` &mdash; but the reconnect churn can drop pub/sub messages published in the gap.
+What counts as idle depends on the deployment mode:
+
+- **Single:** Valkey closes a connection that sent **no command** for 5 minutes (`timeout 300`). This timeout does not apply to **pub/sub subscribers** and to clients waiting in a **blocking read** (`BLPOP`, `XREAD BLOCK`, …), so these connections stay open.
+- **HA:** clients connect through HAProxy, which closes every connection that carried **no data in either direction** for 5 minutes. This includes pub/sub subscribers and blocking reads that receive nothing for that long.
+
+A busy connection is never closed. Most clients reconnect automatically, so you may only see log lines such as `Redis subscriber socket closed; reconnecting if possible.` &mdash; but the reconnect churn can drop pub/sub messages published in the gap.
+
+:::note
+HA services created before the 5-minute HAProxy limit was introduced close idle connections after 60 seconds. They switch to the 5-minute limit on their next restart.
+:::
 
 To keep idle connections open, send an application-level **`PING` on an interval shorter than 300s**. A TCP keep-alive alone is **not** enough &mdash; keepalive packets live below the application layer and don't count as Valkey commands, so they don't reset the idle timer.
 
@@ -6022,7 +6035,7 @@ If your client has no equivalent option, run your own heartbeat on every long-li
 const heartbeat = setInterval(() => {
   publisher.ping().catch(() => {});
   subscriber.ping().catch(() => {});
-}, 60000); // any interval under 300s
+}, 30000); // any interval well under the idle limit
 ```
 
 For ordinary request/response traffic, a [connection pool](https://valkey.io/topics/clients/) that recycles connections handles this transparently.
@@ -6044,7 +6057,7 @@ Platform-managed encrypted backups are available for both Single and HA setups. 
 
 ## Memory and Autoscaling
 
-You don't set `maxmemory` directly. Zerops sizes it at **80% of the container's available RAM** &mdash; precisely 80% of the *smaller* of your configured maximum RAM and the cgroup-allocated RAM. It is re-evaluated and adjusted automatically about every 30 seconds, so `maxmemory` tracks the container as it scales vertically. The remaining 20% covers Valkey's internal overhead (fork on AOF rewrite / replica sync, fragmentation) and the OS.
+You don't set `maxmemory` directly. Zerops sizes it at **80% of the container's available RAM** &mdash; precisely 80% of the *smaller* of your configured maximum RAM and the cgroup-allocated RAM. It is re-evaluated and adjusted automatically about every 10 seconds, so `maxmemory` tracks the container as it scales vertically. The remaining 20% covers Valkey's internal overhead (fork on AOF rewrite / replica sync, fragmentation) and the OS.
 
 :::warning Keep minimum free RAM above 20% when customizing autoscaling
 If you edit the autoscaling configuration, keep the **minimum free RAM above 20%**. Zerops caps `maxmemory` at 80% of available RAM, so the dataset alone can never push free RAM below 20%. If your minimum free RAM threshold is at or below 20%, the scale-up trigger may **never fire at all** &mdash; free RAM never crosses it, so the service stays stuck at its current size and starts evicting keys (or rejecting writes under `noeviction`) instead of scaling up. Setting the threshold above 20% lets the dataset's growth toward the 80% cap cross the trigger, so the service scales up in time and keeps headroom for the fork during an AOF rewrite or replica sync. The built-in profiles all keep this threshold above 20%.
@@ -6070,7 +6083,7 @@ services:
 ```
 
 :::note Migrating from environment variables
-Services created before profile overrides existed configure this setting via the `VALKEY_MAXMEMORY_POLICY` environment variable. It keeps working, but once a profile override is set it takes precedence over the environment variable.
+Services created before profile overrides existed configure this setting via the `MAXMEMORY_POLICY` environment variable. It keeps working, but once a profile override is set it takes precedence over the environment variable.
 :::
 
 ### `maxmemory-policy`
@@ -26773,7 +26786,7 @@ services:
 ## Valkey (Default Choice)
 
 - Redis-compatible drop-in replacement
-- **HA vs single → the `type` variant:** `valkey:single@7.2` (default) / `valkey:ha@7.2`. Only `7.2` exists — the platform rejects `valkey@8` (`serviceStackTypeNotFound`).
+- **HA vs single → the `type` variant:** `valkey:single@7.2` / `valkey:ha@7.2`. Always write the variant — there is no default, and a bare `valkey@7.2` without `mode` creates the HA variant (3 containers). Available versions are `7.2`, `8.1` and `9.0`, in both variants. Write the version exactly as listed — the platform rejects `valkey@8` (`serviceStackTypeNotFound`).
 - **Scaling tier → the `profile` field:** `hobby` / `staging` *(default)* / `production`. Recommend `hobby` for dev (cheapest), `staging` for production; escalate to `production` only on a clear load signal. Omitting `profile` applies `staging`.
 - **Legacy form** (older YAML / existing services): `type: valkey@7.2` + `mode:` — `mode: NON_HA` ≡ `:single`, `mode: HA` ≡ `:ha`. Still accepted (remaps to the variant) but `mode` is deprecated; author new YAML as the variant + profile.
 - Connection: Valkey **requires auth** on Zerops — use `${cache_connectionString}` (full auth'd URL) or supply `${cache_password}` (e.g. `REDIS_PASSWORD: ${cache_password}`). There is no separate `${cache_user}` (default user + password); an unauthenticated `redis://${hostname}:6379` fails with `NOAUTH Authentication required`.
@@ -26943,6 +26956,8 @@ MariaDB, PostgreSQL, Qdrant, NATS, Meilisearch, Local Storage, SeaweedFS.
 
 **ClickHouse**: not on the standard auto-backup path — back it up with the native `BACKUP ALL ...` SQL command (super user), stored as `.tar.gz`.
 
+**Valkey**: supported, but with no schedule by default — set a schedule on the service or run a backup manually.
+
 **Not supported**: Runtimes, Object Storage (use S3 lifecycle policies), Elasticsearch.
 
 ## Schedule Options
@@ -26979,12 +26994,13 @@ End-to-end with X25519 per-project keys. Decrypted only on download.
 | Meilisearch | `.dump` |
 | Qdrant | `.snapshot` |
 | NATS | `.tar.gz` |
+| Valkey | `valkey-cli --rdb` → `.rdb.gz` (RDB snapshot + gzip) |
 | Local Storage | tar → `.tar.gz` (archive of the live volume — pause database writes or use an application-level backup for guaranteed consistency) |
 | SeaweedFS | tar → `.tar.gz` (archive of the whole filesystem, restore by extracting through a mount) |
 | SeaweedFS | tar → `.tar.gz` (archive of the whole filesystem, restore by extracting through a mount) |
 
 ## Gotchas
-- Valkey backups are disabled by default → enable them on the service, see [Valkey persistence](/valkey/overview#persistence).
+- Valkey has no backup schedule by default → set one if the data must survive more than AOF persistence and replication cover, see [Valkey persistence](/valkey/overview#persistence).
 
 
 ----------------------------------------
