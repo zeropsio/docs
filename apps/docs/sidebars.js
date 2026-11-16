@@ -497,15 +497,6 @@ module.exports = {
           },
           className: 'homepage-sidebar-item  service-sidebar-item',
         },
-        {
-          type: 'ref',
-          id: 'keydb/overview',
-          label: 'KeyDB',
-          customProps: {
-            sidebar_icon: 'keydb',
-          },
-          className: 'homepage-sidebar-item  service-sidebar-item',
-        },
       ],
     },
     {
@@ -2741,70 +2732,6 @@ module.exports = {
         sidebar_icon: 'elasticsearch',
       },
     },
-  ],
-  keydb: [
-    {
-      type: 'ref',
-      id: 'homepage',
-      label: 'Back to home',
-      customProps: {
-        sidebar_is_back_link: true,
-        sidebar_icon: 'back-arrow',
-      },
-    },
-    {
-      type: 'doc',
-      id: 'keydb/overview',
-      label: 'Zerops KeyDB Service',
-      customProps: {
-        sidebar_is_title: true,
-        sidebar_icon: 'keydb',
-      },
-    },
-    {
-      type: 'category',
-      label: 'How-to',
-      collapsible: false,
-      customProps: {
-        sidebar_is_group_headline: true,
-      },
-      items: [
-        {
-          type: 'doc',
-          id: 'keydb/how-to/create',
-          label: 'Create KeyDB service',
-        },
-        {
-          type: 'doc',
-          id: 'keydb/how-to/connect',
-          label: 'Connect to KeyDB',
-        },
-        {
-          type: 'doc',
-          id: 'keydb/how-to/manage',
-          label: 'Manage users and databases',
-        },
-        {
-          type: 'doc',
-          id: 'keydb/how-to/scale',
-          label: 'Scale KeyDB service',
-        },
-        {
-          type: 'doc',
-          id: 'keydb/how-to/control',
-          label: 'Stop, start and delete KeyDB service',
-        },
-      ],
-    },
-    // {
-    //   type: 'doc',
-    //   id: 'keydb/faq',
-    //   label: 'FAQ',
-    //   customProps: {
-    //     sidebar_is_title: true,
-    //     sidebar_icon: 'chat-bubble-left-right',
-    //   },
-    // },
   ],
   typesense: [
     {
