@@ -10,6 +10,8 @@ MariaDB, PostgreSQL, Qdrant, NATS, Meilisearch, Local Storage, SeaweedFS.
 
 **ClickHouse**: not on the standard auto-backup path — back it up with the native `BACKUP ALL ...` SQL command (super user), stored as `.tar.gz`.
 
+**Valkey**: supported, but with no schedule by default — set a schedule on the service or run a backup manually.
+
 **Not supported**: Runtimes, Object Storage (use S3 lifecycle policies), Elasticsearch.
 
 ## Schedule Options
@@ -46,8 +48,9 @@ End-to-end with X25519 per-project keys. Decrypted only on download.
 | Meilisearch | `.dump` |
 | Qdrant | `.snapshot` |
 | NATS | `.tar.gz` |
+| Valkey | `valkey-cli --rdb` → `.rdb.gz` (RDB snapshot + gzip) |
 | Local Storage | tar → `.tar.gz` (archive of the live volume — pause database writes or use an application-level backup for guaranteed consistency) |
 | SeaweedFS | tar → `.tar.gz` (archive of the whole filesystem, restore by extracting through a mount) |
 
 ## Gotchas
-- Valkey backups are disabled by default → enable them on the service, see [Valkey persistence](/valkey/overview#persistence).
+- Valkey has no backup schedule by default → set one if the data must survive more than AOF persistence and replication cover, see [Valkey persistence](/valkey/overview#persistence).

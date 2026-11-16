@@ -14,7 +14,7 @@ description: "**Use Valkey.** It is the Redis-compatible in-memory data store on
 ## Valkey (Default Choice)
 
 - Redis-compatible drop-in replacement
-- **HA vs single → the `type` variant:** `valkey:single@7.2` (default) / `valkey:ha@7.2`. Only `7.2` exists — the platform rejects `valkey@8` (`serviceStackTypeNotFound`).
+- **HA vs single → the `type` variant:** `valkey:single@7.2` / `valkey:ha@7.2`. Always write the variant — there is no default, and a bare `valkey@7.2` without `mode` creates the HA variant (3 containers). Available versions are `7.2`, `8.1` and `9.0`, in both variants. Write the version exactly as listed — the platform rejects `valkey@8` (`serviceStackTypeNotFound`).
 - **Scaling tier → the `profile` field:** `hobby` / `staging` *(default)* / `production`. Recommend `hobby` for dev (cheapest), `staging` for production; escalate to `production` only on a clear load signal. Omitting `profile` applies `staging`.
 - **Legacy form** (older YAML / existing services): `type: valkey@7.2` + `mode:` — `mode: NON_HA` ≡ `:single`, `mode: HA` ≡ `:ha`. Still accepted (remaps to the variant) but `mode` is deprecated; author new YAML as the variant + profile.
 - Connection: Valkey **requires auth** on Zerops — use `${cache_connectionString}` (full auth'd URL) or supply `${cache_password}` (e.g. `REDIS_PASSWORD: ${cache_password}`). There is no separate `${cache_user}` (default user + password); an unauthenticated `redis://${hostname}:6379` fails with `NOAUTH Authentication required`.
