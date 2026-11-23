@@ -954,7 +954,7 @@ module.exports = {
           id: 'references/pulumi',
           label: 'Pulumi',
           customProps: {
-            sidebar_icon: 'curly-braces',
+            sidebar_icon: 'pulumi',
           },
           className: 'homepage-sidebar-item',
         },
