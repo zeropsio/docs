@@ -160,6 +160,7 @@ import IconDocker from './Docker';
 import IconCurlyBraces from './CurlyBraces';
 import IconTerraform from './Terraform';
 import IconAlchemy from './Alchemy';
+import IconPulumi from './Pulumi';
 import IconCdn from './Cdn';
 import IconClickhouse from './Clickhouse';
 import IconCloudflare from './Cloudflare';
@@ -336,6 +337,7 @@ export default {
   'curly-braces': IconCurlyBraces,
   terraform: IconTerraform,
   alchemy: IconAlchemy,
+  pulumi: IconPulumi,
   cdn: IconCdn,
   clickhouse: IconClickhouse,
   cloudflare: IconCloudflare,
