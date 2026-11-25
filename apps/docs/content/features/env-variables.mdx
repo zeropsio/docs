@@ -111,6 +111,37 @@ These variables cannot be deleted and are listed in the **Generated variables** 
 
 These variables can also be [referenced](#referencing-variables).
 
+#### Rotating secrets {#rotating-secrets}
+
+For [PostgreSQL](/postgresql/how-to/connect#rotating-secrets), [MariaDB](/mariadb/how-to/connect#rotating-secrets) and [Valkey](/valkey/overview#rotating-secrets) services, Zerops can generate new values for the secrets of the service, such as its passwords, and apply them. It is meant for emergencies, for example when a password has leaked.
+
+The rotation covers only the secrets that Zerops generated for the service, always all of them together. Users, roles and passwords that you created yourself are not part of it.
+
+**Before you rotate**, make sure that:
+
+- the service is running and healthy,
+- no other operation is running on the service, such as a backup, a restore, scaling or maintenance,
+- a short outage is acceptable. New logins fail until the environment variables hold the new values, and depending on the service its open connections are closed.
+
+**To rotate:**
+
+1. Open the service detail and go to **Access details**.
+2. Click **Rotate secrets** and confirm.
+
+Zerops generates the new values, applies them in the service and then updates its environment variables. Variables that reference a rotated secret, such as `connectionString`, follow.
+
+**After the rotation:**
+
+- The old values no longer work.
+- Services that use the secrets keep the old values in their running processes. Reload or restart them, Zerops does not do it for you.
+
+**If the rotation fails**, the message tells you which of two things happened:
+
+- **The environment variables were not changed.** Run the rotation again. If it keeps failing, restart the service and run the rotation again.
+- **The secrets were rotated, but the rotation did not finish in every container.** The environment variables hold the new values, and a part of the service may not use them yet. Run the rotation again. If it keeps failing, restart the service and run the rotation again.
+
+If the problem persists, contact support.
+
 ## Project Variables
 
 Variables that apply across the runtime services within a [project](/features/infrastructure#projects). These provide a way to share common configuration across services.
