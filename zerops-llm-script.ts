@@ -179,6 +179,7 @@ async function generateLLMDocs() {
   const optionalFiles = globModule
     .sync('**/*.mdx', { cwd: contentDir })
     .filter(shouldIncludeInLLMDocs)
+    .sort()
 
   const optionals: string[] = []
 
@@ -215,6 +216,7 @@ async function generateLLMDocs() {
   const files = globModule
     .sync('**/*.mdx', { cwd: contentDir })
     .filter(shouldIncludeInLLMDocs)
+    .sort()
 
   const fullContent = await generateContent(
     files,
