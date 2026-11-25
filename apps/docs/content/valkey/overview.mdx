@@ -120,6 +120,30 @@ const heartbeat = setInterval(() => {
 
 For ordinary request/response traffic, a [connection pool](https://valkey.io/topics/clients/) that recycles connections handles this transparently.
 
+## Rotating secrets
+
+[Rotating secrets](/features/env-variables#rotating-secrets) describes when and how to rotate, and what to do when it goes wrong. This section covers what is specific to Valkey.
+
+### What is rotated
+
+- The password of the `default` user: the `password` variable. The connection string variables follow.
+
+Nothing else in the service is changed.
+
+### During the rotation
+
+| | Single-node | HA |
+|---|---|---|
+| Valkey | keeps running | keeps running |
+| Open connections | stay open | stay open |
+| New connections | fail until the variables hold the new values | fail until the variables hold the new values |
+
+### Good to know
+
+- **The rotation needs some extra memory for a moment.** A service that runs close to its memory limit can freeze for a few seconds during the rotation or run out of memory, and in HA mode such a freeze can cause a failover. This makes a failed rotation more likely.
+- **Raise the minimum RAM before you rotate.** We recommend that you set the [minimum RAM](/features/scaling#minimum-and-maximum-ram) of the service above its current usage, at least temporarily. You can lower it again after the rotation.
+- **A service without a `password` variable has nothing to rotate.** This applies to older services that were created without a password.
+
 ## Persistence
 
 Valkey persists data to disk with **AOF (append-only file)**, so the dataset survives restarts and is rebuilt automatically on startup.
