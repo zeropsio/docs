@@ -5200,45 +5200,29 @@ Have you build something that others might find useful? Don't hesitate to share 
 # Docker > Overview
 
 
-Zerops provides Docker support through dedicated Virtual Machine (VM) environments, ensuring maximum compatibility and isolation while maintaining integration with the broader Zerops ecosystem. This guide explains how to effectively use Docker services in Zerops, including best practices and important considerations.
+The Docker service runs Docker Engine in a dedicated virtual machine (VM). Use it for software that ships as a Docker image or a Docker Compose stack.
+A VM boots slower than a container and its resources don't scale automatically, so your own code is usually better served by a native runtime service.
+See [Containers vs VMs](/features/container-vs-vm) for the difference.
 
-## Why VMs
+## Quick Start
 
-While Zerops primarily uses native Linux containers for optimal performance, this VM-based approach allows you to run virtually any Docker container while maintaining Zerops' robust infrastructure management.
+Create the service with a `zerops-import.yaml`:
 
-You can learn more about [differences](/features/container-vs-vm) between Containers and Virtual Machines in Zerops.
+```yaml title="zerops-import.yaml"
+services:
+  - hostname: app
+    type: docker@26.1
+    verticalAutoscaling:
+      cpu: 1
+      ram: 1
+      disk: 5
+```
 
-Before using Docker services, consider these important aspects:
+```sh
+zcli project service-import zerops-import.yaml
+```
 
-### Virtual Machine Environment
-
-Docker services in Zerops operate in a full VM environment, which has several implications:
-
-- **Slower Boot Times**: VMs require more time to initialize due to full kernel boot
-- **Higher Resource Usage**: VMs include additional system overhead compared to native containers
-- **Scaling Limitations**:
-    - Vertical scaling requires VM restart
-    - Resources must be set as fixed values (no min-max ranges)
-    - Zerops automatically restarts the VM when resource values are changed in UI
-- **Storage Management**: Disk space can only be increased, not decreased without recreation
-- **Build Phase Limitations**: Build phase runs in containers, not in the VM environment
-
-### Advantages
-
-Despite these limitations, Docker services offer some benefits:
-
-- **Broad Compatibility**: Run almost any Docker container with minimal modification
-- **Familiar Environment**: Standard Docker runtime environment
-
-## Configuration Guide
-
-### Supported Version
-
-Currently supported Docker versions:
-
-### Basic Structure
-
-Docker services in Zerops are configured through the `zerops.yaml` file. Here's a typical configuration pattern:
+Then deploy a `zerops.yaml` that pulls the image and runs it:
 
 ```yaml title="zerops.yaml"
 zerops:
@@ -5246,162 +5230,151 @@ zerops:
     run:
       base: docker@latest
       prepareCommands:
-        - docker image pull <your-image>:<version>  # Always use specific version tags
-      start: docker run --network=host <your-image>:<version>
+        - docker image pull crccheck/hello-world:v1.0.0
+      start: docker run --rm --network=host crccheck/hello-world:v1.0.0
       ports:
-        - port: <port-number>
+        - port: 8000
           httpSupport: true
 ```
 
-:::important
-Always use specific version tags (like `1.0.0`) instead of `:latest`. Zerops caches the `prepareCommands` output, which means a new `:latest` image won't be automatically pulled on subsequent deployments unless the cache is manually cleared or the commands change.
+The [Docker recipe repository](https://github.com/zeropsio/recipe-docker) has a complete example.
+
+## Resources and Scaling
+
+A Docker service doesn't scale automatically, neither its resources nor its number of VMs.
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit" style={{ minWidth: '120px' }}>Topic</th>
+      <th className="w-fit">Behavior</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit"><b>Resources</b></td>
+      <td className="w-fit">Fixed values for <code>cpu</code>, <code>ram</code> and <code>disk</code> in <code>verticalAutoscaling</code>, no min-max ranges. Without them a new service gets 1 vCPU, 1 GB RAM and 5 GB disk.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><b>Changing resources</b></td>
+      <td className="w-fit">Every change restarts the VM.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><b>Disk</b></td>
+      <td className="w-fit">Can be increased, never decreased.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><b>Number of VMs</b></td>
+      <td className="w-fit">The service runs <code>minContainers</code> VMs.</td>
+    </tr>
+  </tbody>
+</table>
+
+## Building and Preparing Images
+
+The build phase runs in a regular container without Docker, so images can't be built or pulled there.
+It can still prepare files for the VM, such as a `docker-compose.yaml`.
+
+Pull or build images in `run.prepareCommands`.
+Zerops [caches the result](/features/pipeline#custom-runtime-image-caching) and reuses it on later deploys until the commands or the `addToRunPrepare` files change.
+
+:::important Use specific image tags
+Always use specific version tags (like `1.0.0`) instead of `:latest`.
+Because of the cache, a new `:latest` image isn't pulled on later deploys.
 :::
 
-Refer to the [Docker recipe repository](https://github.com/zeropsio/recipe-docker) for an example configuration.
+### Building from a Dockerfile
 
-:::note
-We are actively working on improving the speed of image caching after `run.prepareCommands` and reducing the startup time of runtime VMs. These improvements will be released in future updates.
-:::
-
-### Network Configuration
-
-Docker services require the `--network=host` flag for proper integration with Zerops:
-
-- **Direct Port Management**: Ports are managed through `zerops.yaml`
-- **Simplified Configuration**: Avoids double port exposure in Docker and Zerops
-- **Native Performance**: Direct access to host networking
-
-### Docker Compose Support
-
-For projects using Docker Compose, additional configuration is required:
-
-1. **File Deployment**:
-   ```yaml title="zerops.yaml"
-   build:
-     # base cannot be docker — build phase runs in containers, not VMs
-     deployFiles: ./docker-compose.yaml
-     addToRunPrepare: ./docker-compose.yaml
-   ```
-
-2. **Network Mode**:
-   ```yaml title="docker-compose.yaml"
-   services:
-     your-service:
-       image: your-image:1.0.0
-       network_mode: host
-   ```
-
-3. **Start Command**:
-   ```yaml title="zerops.yaml"
-   run:
-     start: docker compose up --force-recreate
-   ```
-
-### Environment Variables
-
-When using Docker services, there's an additional layer to consider since environment variables defined in Zerops must be explicitly passed to your Docker containers.
-
-#### 1. Defining Variables in Zerops
-
-Define your environment variables in the `run.envVariables` section of your `zerops.yaml` (example uses [referenced](/features/env-variables#referencing-variables) variables):
+To build your own image without a registry, copy the Dockerfile and its build context to the prepare phase with `addToRunPrepare` and run `docker build` there:
 
 ```yaml title="zerops.yaml"
 zerops:
   - setup: app
+    build:
+      deployFiles: ./
+      addToRunPrepare: ./
     run:
       base: docker@latest
-      envVariables:
-        DB_HOST: ${db_hostname}
-        DB_PORT: ${db_port}
+      prepareCommands:
+        - docker build --tag my-app:local .
+      start: docker run --rm --network=host my-app:local
+      ports:
+        - port: 8000
+          httpSupport: true
 ```
 
-#### 2. Passing Variables to Docker Containers
+A change to any file in `addToRunPrepare` invalidates the cache, so every deploy with new code builds the image again.
 
-For single containers, pass variables using the `-e` flag:
+### Private Registries
+
+Store the registry credentials as [secret variables](/features/env-variables#2-secret-variables) and log in before pulling:
 
 ```yaml title="zerops.yaml"
 run:
   base: docker@latest
   prepareCommands:
-    - docker image pull my-application:1.0.0  # Use specific version tags, not :latest
-  start: docker run -e DB_HOST -e DB_PORT --network=host my-application:1.0.0
+    - echo "$REGISTRY_PASSWORD" | docker login ghcr.io --username "$REGISTRY_USER" --password-stdin
+    - docker image pull ghcr.io/my-org/my-app:1.0.0
+  start: docker run --rm --network=host ghcr.io/my-org/my-app:1.0.0
 ```
 
-:::important
-Always use specific version tags (like `1.0.0`) instead of `:latest`. Zerops caches the `prepareCommands` output, which means a new `:latest` image won't be automatically pulled on subsequent deployments unless the cache is manually cleared or the commands change.
+## Running Containers
+
+### Network
+
+Run containers with `--network=host` (`network_mode: host` in Docker Compose).
+The container then listens directly on the VM's ports, and you expose them with `ports` in `zerops.yaml`.
+Docker's own port publishing (`-p`) is not needed.
+
+### Container Lifecycle
+
+Zerops runs the `start` command in the foreground and restarts it whenever it exits.
+Its output goes to the [runtime log](/references/logging).
+Don't detach with `-d`: the command exits right away, Zerops starts it again, and every restart creates another container.
+
+Each `docker run` creates a new container, and Docker keeps exited containers on the VM disk, also across VM restarts.
+Always pass `--rm` so Docker removes the container when it exits.
+
+Without `--rm`, an app that crashes in a loop leaves thousands of stopped containers behind.
+The Docker daemon can then run out of memory while loading them on startup, and the VM fails its readiness check.
+To recover, stop the service, raise the RAM and start the service again. Then run `docker container prune -f` and lower the RAM.
+
+:::warning
+Don't use `--name` without `--rm`. The next restart fails because the name is already in use, and the app doesn't come back.
 :::
 
-For Docker Compose setups, pass environment variables in your `docker-compose.yaml`:
+Don't add `--restart`, Docker rejects it together with `--rm`.
 
-```yaml title="docker-compose.yaml"
-services:
-  api:
-    image: my-application:1.0.0
-    network_mode: host
-    environment:
-      - DB_HOST
-      - DB_PORT
+### Environment Variables
+
+Variables from `run.envVariables` and the service's [environment variables](/features/env-variables) are set for the `start` command, not inside your containers.
+Pass each one with `-e` (or list them under `environment` in Docker Compose):
+
+```yaml title="zerops.yaml"
+run:
+  base: docker@latest
+  envVariables:
+    DB_HOST: ${db_hostname}
+    DB_PORT: ${db_port}
+  prepareCommands:
+    - docker image pull my-application:1.0.0
+  start: docker run --rm -e DB_HOST -e DB_PORT --network=host my-application:1.0.0
 ```
 
-## Implementation Examples
+## Docker Compose
 
-### Single Container
+Deploy the `docker-compose.yaml` and make it available to `prepareCommands` with `addToRunPrepare`:
 
 ```yaml title="zerops.yaml"
 zerops:
   - setup: app
-    run:
-      base: docker@latest
-      prepareCommands:
-        - docker image pull crccheck/hello-world:1.0.0  # Always use specific version tags
-      start: docker run --network=host crccheck/hello-world:1.0.0
-      ports:
-        - port: 8000
-          httpSupport: true
-```
-
-:::important
-Always use specific version tags (like `1.0.0`) instead of `:latest`. Zerops caches the `prepareCommands` output, which means a new `:latest` image won't be automatically pulled on subsequent deployments unless the cache is manually cleared or the commands change.
-:::
-
-### Single Service with Docker Compose
-
-```yaml title="zerops.yaml"
-zerops:
-  - setup: api
     build:
-      # base cannot be docker — build phase runs in containers, not VMs
       deployFiles: ./docker-compose.yaml
       addToRunPrepare: ./docker-compose.yaml
     run:
       base: docker@latest
-      prepareCommands:
-        - docker compose pull api
-      start: docker compose up api --force-recreate
-      ports:
-        - port: 8000
-          httpSupport: true
-```
-
-```yaml title="docker-compose.yaml (excerpt)"
-services:
-  api:
-    image: your-image:1.0.0
-    network_mode: host
-    # other configuration...
-```
-
-### Multiple Services with Docker Compose
-
-```yaml title="zerops.yaml"
-zerops:
-  - setup: apps
-    build:
-      # base cannot be docker — build phase runs in containers, not VMs
-      deployFiles: ./docker-compose.yaml
-      addToRunPrepare: ./docker-compose.yaml
-    run:
-      base: docker@latest
+      envVariables:
+        DB_HOST: ${db_hostname}
       prepareCommands:
         - docker compose pull
       start: docker compose up --force-recreate
@@ -5410,65 +5383,47 @@ zerops:
           httpSupport: true
 ```
 
-```yaml title="docker-compose.yaml (excerpt)"
+```yaml title="docker-compose.yaml"
 services:
   web:
     image: web-image:1.0.0
     network_mode: host
-    # other configuration...
-
   api:
     image: api-image:1.0.0
     network_mode: host
-    # other configuration...
+    environment:
+      - DB_HOST
 ```
 
-## Best Practices
+To run only some services of the file, name them: `docker compose pull api` and `docker compose up api --force-recreate`.
 
-#### Image Management
-- **Always use specific version tags** instead of `:latest` - This prevents caching issues as Zerops caches `prepareCommands` output
+Docker Compose keeps one container per service across `up` runs, so stopped containers don't accumulate.
+`docker compose up` exits only when all its containers stop, so a single crashed service stays down.
+Set `restart: unless-stopped` on the services that Docker should restart.
 
-#### Resource Planning
-- Account for VM overhead in resource allocation
-- Plan for longer initialization times
-- Consider the impact on scaling operations
+## Deploys and Data
 
-#### Migration Consideration
-- Evaluate if your workload could run on native containers
-- Consider gradual migration for complex applications
-- Balance development effort against operational benefits
+A deploy creates new VMs, and the old ones keep serving traffic until the new ones are ready, see [Subsequent deploys](/features/pipeline#subsequent-deploys).
+Add a [readiness check](/zerops-yaml/specification#readinesscheck-) so that Zerops switches traffic only when your container accepts requests.
 
-## Limitations and Workarounds
+VMs are ephemeral like containers.
+Data on the VM disk, including Docker volumes, is lost when a deploy replaces the VM.
+Keep persistent data in a database or storage service.
 
-### Build Phase
+## Debugging
 
-Since the build phase runs in containers rather than VMs:
+Connect to a VM over [SSH](/references/networking/ssh) and inspect it with the Docker CLI:
 
-- Use `run.prepareCommands` for Docker-specific build steps
-- Consider external CI/CD for complex Docker builds
-- Leverage pre-built images when possible
+```sh
+docker ps --all          # running and stopped containers
+docker logs <container>  # output of a container that still exists
+docker images            # images pulled or built in prepareCommands
+```
 
-### Scaling Operations
+The [runtime log](/references/logging) also keeps the output of containers that `--rm` already removed.
 
-Docker services in Zerops have specific scaling characteristics that differ from native containers:
+## Supported Versions
 
-#### Vertical Scaling
-- Resources must be defined with **fixed** values instead of min-max ranges
-- CPU, RAM, and disk are specified as single values:
-  ```yaml
-  verticalAutoscaling:
-    cpu: 3
-    ram: 2
-    disk: 20
-  ```
-- Any change to these values through the UI triggers an automatic VM restart
-- Plan your resource allocation carefully to minimize scaling operations
-
-#### Horizontal Scaling
-- Still supports multiple containers through `minContainers` and `maxContainers`
-- Consider breaking large services into smaller components
-- Implement proper health checks for reliable scaling
-- Use horizontal scaling when possible to avoid VM restarts
 
 ----------------------------------------
 
@@ -11073,7 +11028,7 @@ For [manual deployments](#manual-deploy-using-zerops-cli) using Zerops CLI, the 
 Zerops uses the stored artifact to deploy identical versions of your application whenever a new container starts:
 
 - During new application version deployments
-- When applications [scale horizontally](/features/scaling#horizontal-scaling-runtime-services-linux-containers-and-docker)
+- When applications [scale horizontally](/features/scaling#horizontal-scaling-runtime-services-and-linux-containers)
 - When runtime containers fail and new containers start automatically
 
 ### First deploy
@@ -11680,11 +11635,12 @@ Docker services do not support automatic vertical scaling. Resource values can b
 :::
 
 #### **Container Architecture**
-- **For Runtime Services, Linux Containers, and Docker:** Horizontal Scaling (dynamic container count)
-  - Adds or removes containers/VMs based on load
+- **For Runtime Services and Linux Containers:** Horizontal Scaling (dynamic container count)
+  - Adds or removes containers based on load
   - Requires applications to be designed for HA operation
-  - Container/VM creation limits can be controlled
-  - Docker containers run in VMs rather than native containers
+  - Container creation limits can be controlled
+
+- **For Docker:** a fixed number of VMs, see [Fixed Resource Allocation](#fixed-resource-allocation-docker-services)
 
 - **For Databases & SeaweedFS:** High Availability Mode (fixed container count)
   - Single Container OR Multi-Container HA configuration
@@ -11717,7 +11673,7 @@ Docker services do not support automatic vertical scaling. Resource values can b
       <td className="w-fit text-center">✓</td>
       <td className="w-fit text-center">Fixed # of containers</td>
       <td className="w-fit text-center">Fixed # of containers</td>
-      <td className="w-fit text-center">✓</td>
+      <td className="w-fit text-center">Fixed # of VMs</td>
     </tr>
     <tr>
       <td className="w-fit font-semibold whitespace-nowrap">High Availability</td>
@@ -11915,14 +11871,14 @@ Below are the parameters that control this behavior across all services that sup
 
 Container architecture in Zerops defines how services are distributed across containers. Different service types use fundamentally different approaches:
 
-1. **Horizontal Scaling** (Runtime Services, Linux Containers, and Docker)
+1. **Horizontal Scaling** (Runtime Services and Linux Containers)
 2. **Deployment Modes** (Databases and SeaweedFS)
 
-### Horizontal Scaling (Runtime Services, Linux Containers, and Docker)
+### Horizontal Scaling (Runtime Services and Linux Containers)
 
-Horizontal scaling adds or removes entire containers (or VMs for Docker) as demand fluctuates.
-* When vertical scaling reaches its defined maximum, new containers/VMs are automatically added to handle additional load.
-* As demand decreases, containers/VMs are gradually removed to optimize resource usage.
+Horizontal scaling adds or removes entire containers as demand fluctuates.
+* When vertical scaling reaches its defined maximum, new containers are automatically added to handle additional load.
+* As demand decreases, containers are gradually removed to optimize resource usage.
 
 :::important HA-ready Applications
 For applications to work properly across multiple containers, they must be designed to be HA-ready.
@@ -11990,25 +11946,7 @@ In HA mode, when a container or physical machine fails, recovery is handled auto
 
 ### Fixed Resource Allocation (Docker Services)
 
-Docker services in Zerops operate differently from other service types:
-
-#### Docker Service Characteristics
-
-- **VM-Based Deployment**: Docker services run in virtual machines rather than containers
-- **Fixed Resources**: Unlike other services, Docker services do not support automatic vertical scaling
-- **User-Defined Resources**: Resources are set at creation and remain fixed until manually changed
-- **VM Count Changes**: The number of VMs can be changed, but this requires a VM restart
-- **No Automatic Scaling**: Resource levels do not automatically adjust based on usage
-
-**Important Considerations for Docker Services:**
-- Initial resource values should be chosen carefully, as they cannot automatically scale
-- Planning for expected peak loads is important when setting resource values
-- Runtime services or Linux containers should be considered instead if dynamic scaling is essential
-- VM restarts cause temporary service disruption when changing VM count or resources
-
-:::warning
-Docker services use fixed resources that do not automatically scale. Sufficient resources should be allocated at creation to handle expected workload. Additionally, disk space for Docker services can only be increased, not decreased without recreation of the service.
-:::
+Docker services run in VMs with fixed resources and a fixed number of VMs, see [Docker resources and scaling](/docker/overview#resources-and-scaling).
 
 ## Monitoring Your Infrastructure
 
@@ -12062,7 +12000,7 @@ These graphs help understand application resource needs, identify usage patterns
 * **Issue:** Docker service experiencing performance issues or crashes.
 * **Possible Cause:** Fixed resources inadequate for actual workload.
 * **Solution:**
-    - Since Docker services don't support automatic vertical scaling, a new service with higher resource allocations may be needed
+    - Raise the fixed resources manually, which restarts the VM
     - Consider migrating to a runtime service or Linux container if dynamic resource scaling is needed
 
 *Need help implementing scaling in your project? Join our [Discord community](https://discord.gg/zerops) where our team and other Zerops users can assist you!*
@@ -34569,7 +34507,7 @@ Database services, message brokers, and object storage are **not accessible** vi
 :::warning Non-Persistent Changes
 SSH connections should not be used for making persistent changes to your service:
 
-- In [HA mode](/features/scaling#horizontal-scaling-runtime-services-linux-containers-and-docker), changes via SSH affect only the current container
+- In [HA mode](/features/scaling#horizontal-scaling-runtime-services-and-linux-containers), changes via SSH affect only the current container
 - Container replacements or scaling events will deploy the original application version
 - For persistent changes across all containers, use:
   - [`run.prepareCommands`](/zerops-yaml/specification#preparecommands--1)
@@ -34637,7 +34575,7 @@ ssh node-id-1.runtime.app.zerops
 ```
 
 :::note
-When using [HA mode](/features/scaling#horizontal-scaling-runtime-services-linux-containers-and-docker), connecting to the service hostname will route you to a random container within that service.
+When using [HA mode](/features/scaling#horizontal-scaling-runtime-services-and-linux-containers), connecting to the service hostname will route you to a random container within that service.
 :::
 
 #### Container Naming Conventions
@@ -34647,7 +34585,7 @@ Each container in your project has a unique hostname following these patterns:
 - Format 1: `node-id-<number>.runtime.app.zerops`
 - Format 2: `node<number>.runtime.app.zerops`
 
-When your application [scales horizontally](/features/scaling#horizontal-scaling-runtime-services-linux-containers-and-docker):
+When your application [scales horizontally](/features/scaling#horizontal-scaling-runtime-services-and-linux-containers):
 - New containers receive incremental hostnames
 - Decommissioned container hostnames are not recycled
 - You might see non-sequential container numbers (e.g., `node-id-5` and `node-id-12`)
@@ -40808,7 +40746,7 @@ services:
 zcli project service-import zerops-import.yaml
 ```
 
-The VM type takes fixed resource values in place of ranges, the same way the [Docker service](/docker/overview#scaling-operations) does:
+The VM type takes fixed resource values in place of ranges, the same way the [Docker service](/docker/overview#resources-and-scaling) does:
 
 ```yaml title="zerops-import.yaml"
 services:
