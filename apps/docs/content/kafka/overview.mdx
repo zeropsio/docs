@@ -94,6 +94,33 @@ To access a single specific broker or a list of all/some brokers:
 node-stable-1.db.<hostname>.zerops:9092,node-stable-2.db.<hostname>.zerops:9092,...
 ```
 
+## Rotating secrets
+
+[Rotating secrets](/features/env-variables#rotating-secrets) describes when and how to rotate, and what to do when it goes wrong. This section covers what is specific to Kafka.
+
+### What is rotated
+
+- The password of the `zerops` user: the `password` variable.
+
+The `user`, `port` and other variables don't change.
+
+### During the rotation
+
+| | Single-node | HA |
+|---|---|---|
+| Kafka | the broker restarts | all three brokers restart at the same time |
+| Service | is unavailable during the restart | the whole cluster is unavailable during the restart |
+| Open connections | are closed | are closed |
+| After the restart | only the new password is accepted | only the new password is accepted |
+
+### Good to know
+
+- **Kafka cannot change this password without a restart.** One password serves the clients and the traffic between the brokers.
+- **In HA mode it is not a rolling restart.** All brokers are down together. Stored messages, topics and consumer offsets are kept.
+- **Producers and consumers have to reconnect with the new password.** A client that keeps the old one gets an authentication error.
+- **Messages produced during the restart fail.** The client has to send them again.
+- **A broker that doesn't stop in time is stopped by force.** It recovers its logs when it starts.
+
 ## Best Practices
 
 ### Production Workloads
