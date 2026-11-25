@@ -31,11 +31,12 @@ Docker services do not support automatic vertical scaling. Resource values can b
 :::
 
 #### **Container Architecture**
-- **For Runtime Services, Linux Containers, and Docker:** Horizontal Scaling (dynamic container count)
-  - Adds or removes containers/VMs based on load
+- **For Runtime Services and Linux Containers:** Horizontal Scaling (dynamic container count)
+  - Adds or removes containers based on load
   - Requires applications to be designed for HA operation
-  - Container/VM creation limits can be controlled
-  - Docker containers run in VMs rather than native containers
+  - Container creation limits can be controlled
+
+- **For Docker:** a fixed number of VMs, see [Fixed Resource Allocation](#fixed-resource-allocation-docker-services)
 
 - **For Databases & SeaweedFS:** High Availability Mode (fixed container count)
   - Single Container OR Multi-Container HA configuration
@@ -68,7 +69,7 @@ Docker services do not support automatic vertical scaling. Resource values can b
       <td className="w-fit text-center">✓</td>
       <td className="w-fit text-center">Fixed # of containers</td>
       <td className="w-fit text-center">Fixed # of containers</td>
-      <td className="w-fit text-center">✓</td>
+      <td className="w-fit text-center">Fixed # of VMs</td>
     </tr>
     <tr>
       <td className="w-fit font-semibold whitespace-nowrap">High Availability</td>
@@ -274,14 +275,14 @@ Below are the parameters that control this behavior across all services that sup
 
 Container architecture in Zerops defines how services are distributed across containers. Different service types use fundamentally different approaches:
 
-1. **Horizontal Scaling** (Runtime Services, Linux Containers, and Docker)
+1. **Horizontal Scaling** (Runtime Services and Linux Containers)
 2. **Deployment Modes** (Databases and SeaweedFS)
 
-### Horizontal Scaling (Runtime Services, Linux Containers, and Docker)
+### Horizontal Scaling (Runtime Services and Linux Containers)
 
-Horizontal scaling adds or removes entire containers (or VMs for Docker) as demand fluctuates.
-* When vertical scaling reaches its defined maximum, new containers/VMs are automatically added to handle additional load.
-* As demand decreases, containers/VMs are gradually removed to optimize resource usage.
+Horizontal scaling adds or removes entire containers as demand fluctuates.
+* When vertical scaling reaches its defined maximum, new containers are automatically added to handle additional load.
+* As demand decreases, containers are gradually removed to optimize resource usage.
 
 :::important HA-ready Applications
 For applications to work properly across multiple containers, they must be designed to be HA-ready.
@@ -357,25 +358,7 @@ In HA mode, when a container or physical machine fails, recovery is handled auto
 
 ### Fixed Resource Allocation (Docker Services)
 
-Docker services in Zerops operate differently from other service types:
-
-#### Docker Service Characteristics
-
-- **VM-Based Deployment**: Docker services run in virtual machines rather than containers
-- **Fixed Resources**: Unlike other services, Docker services do not support automatic vertical scaling
-- **User-Defined Resources**: Resources are set at creation and remain fixed until manually changed
-- **VM Count Changes**: The number of VMs can be changed, but this requires a VM restart
-- **No Automatic Scaling**: Resource levels do not automatically adjust based on usage
-
-**Important Considerations for Docker Services:**
-- Initial resource values should be chosen carefully, as they cannot automatically scale
-- Planning for expected peak loads is important when setting resource values
-- Runtime services or Linux containers should be considered instead if dynamic scaling is essential
-- VM restarts cause temporary service disruption when changing VM count or resources
-
-:::warning
-Docker services use fixed resources that do not automatically scale. Sufficient resources should be allocated at creation to handle expected workload. Additionally, disk space for Docker services can only be increased, not decreased without recreation of the service.
-:::
+Docker services run in VMs with fixed resources and a fixed number of VMs, see [Docker resources and scaling](/docker/overview#resources-and-scaling).
 
 ## Monitoring Your Infrastructure
 
@@ -437,7 +420,7 @@ These graphs help understand application resource needs, identify usage patterns
 * **Issue:** Docker service experiencing performance issues or crashes.
 * **Possible Cause:** Fixed resources inadequate for actual workload.
 * **Solution:**
-    - Since Docker services don't support automatic vertical scaling, a new service with higher resource allocations may be needed
+    - Raise the fixed resources manually, which restarts the VM
     - Consider migrating to a runtime service or Linux container if dynamic resource scaling is needed
 
 *Need help implementing scaling in your project? Join our [Discord community](https://discord.gg/zerops) where our team and other Zerops users can assist you!*
