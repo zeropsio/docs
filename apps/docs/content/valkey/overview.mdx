@@ -140,8 +140,8 @@ Nothing else in the service is changed.
 
 ### Good to know
 
-- **The rotation needs some extra memory for a moment.** A service that runs close to its memory limit can freeze for a few seconds during the rotation or run out of memory, and in HA mode such a freeze can cause a failover. This makes a failed rotation more likely.
-- **Raise the minimum RAM before you rotate.** We recommend that you set the [minimum RAM](/features/scaling#minimum-and-maximum-ram) of the service above its current usage, at least temporarily. You can lower it again after the rotation.
+- **The rotation needs some extra memory for a moment.** Zerops tries to add RAM to the service before the rotation, and the extra RAM is released again afterwards. This only works if the [maximum RAM](/features/scaling#minimum-and-maximum-ram) of the service leaves room for it.
+- **Check the maximum RAM before you rotate.** Make sure it is above the current usage of the service, and raise it if it is not. A service that has no memory left can freeze for a few seconds during the rotation, and in HA mode such a freeze can cause a failover.
 - **An older service without a password cannot be rotated.** Valkey services created before June 2026 have no `password` variable and run without a password, so there is nothing to rotate. Zerops refuses the rotation with the message that secrets rotation is not supported, and changes nothing.
 
 ## Persistence
