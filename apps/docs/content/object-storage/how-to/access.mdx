@@ -69,6 +69,37 @@ The same information is available in the service detail page under the **Access 
   </tbody>
 </table>
 
+## Rotating secrets
+
+Zerops can generate a new secret key for the Object storage service and apply it. It is meant for emergencies, for example when the key has leaked.
+
+### What is rotated
+
+- The S3 Secret Key: the `secretAccessKey` variable.
+- Depending on the storage, also the S3 Access Key ID: the `accessKeyId` variable. Check the access details after the rotation.
+
+The bucket, its name, its content and its access policy stay the same.
+
+**Before you rotate**, make sure that:
+
+- the project is active, the rotation is refused in a stopped project,
+- a short outage is acceptable. Requests signed with the old key are refused until your applications use the new one.
+
+**To rotate:**
+
+1. Open the Object storage service detail and find **Access details**.
+2. Click **Rotate secret key** and confirm.
+
+Zerops generates the new key, applies it in the storage and then updates the environment variables of the service.
+
+**After the rotation:**
+
+- The old key no longer works.
+- Services that use the variables keep the old key in their running processes. Restart them, Zerops does not do it for you.
+- Applications outside Zerops need the new key set by hand.
+
+**If the rotation fails**, the access details show the key that works. Run the rotation again. If the problem persists, contact support.
+
 ## Use Object storage environment variables
 
 Zerops creates default environment variables for each Object storage service to help you with connection from any runtime services in the same project. To avoid the need to copy Object storage access parameters manually, use environment variables in your runtime service.
