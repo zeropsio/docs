@@ -69,6 +69,34 @@ API key authentication is required for both HTTP and gRPC API calls. Include the
 - **Port:** `6334`
 - **gRPC Connection String:** Available as `grpcConnectionString` environment variable or construct using `tcp://${hostname}:${grpcPort}`
 
+## Rotating secrets
+
+[Rotating secrets](/features/env-variables#rotating-secrets) describes when and how to rotate, and what to do when it goes wrong. This section covers what is specific to Qdrant.
+
+### What is rotated
+
+- The full access API key: the `apiKey` variable.
+- The read-only API key: the `readOnlyApiKey` variable.
+
+Nothing else in the Qdrant configuration is changed.
+
+### During the rotation
+
+| | Single-node | HA |
+|---|---|---|
+| Qdrant | restarts once | restarts node by node, each node after the previous one is ready again |
+| Open connections | are closed | to a node are closed when that node restarts |
+| Requests | fail until Qdrant has loaded its collections | are routed to the running nodes |
+| Keys | only the new keys are accepted after the restart | a restarted node accepts only the new keys, the other nodes only the old ones |
+
+### Good to know
+
+- **In HA mode a request can be refused with either key.** Until the rotation ends, it depends on which node answers.
+- **The health status of the containers can show as failing for a short time.** It recovers when the containers receive the new variables.
+- **A value that you set by hand in `apiKey` or `readOnlyApiKey` is replaced.** Qdrant doesn't use a value set by hand, and the rotation overwrites it with a generated one.
+- **If a node doesn't become ready in time, the rotation goes on with the next node.** It then fails with the message that the secrets were rotated, but part of the service was left in an inconsistent state. The new keys are stored and valid. Wait until the service is healthy. If a node still accepts the old keys then, run the rotation again.
+- **A backup that starts during the rotation can fail.** Run it again.
+
 ## Support
 
 For advanced configurations or custom requirements:
