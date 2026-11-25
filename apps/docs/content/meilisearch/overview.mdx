@@ -46,7 +46,7 @@ To switch between modes:
 
 ### API Key Management
 
-The service provides three pre-configured API keys, each with specific access levels:
+The service provides these pre-configured API keys, each with specific access levels:
 
 #### `masterKey`
 - Root access to your Meilisearch instance
@@ -62,6 +62,8 @@ The service provides three pre-configured API keys, each with specific access le
 - Full administrative access to all indices
 - For backend operations and index management
 - **Keep secure in backend services only**
+
+Services created with Meilisearch version 1.20 or newer have two more keys: `defaultReadOnlyKey` holds the Default Read-Only Admin API Key of Meilisearch, and `defaultChatKey` its Default Chat API Key.
 
 [Custom API keys](https://www.meilisearch.com/docs/reference/api/keys) provide fine-grained access control for specific use cases. For example, you might create:
 - Search-only keys for specific indices
@@ -80,6 +82,33 @@ Services within the same project can reach Meilisearch directly:
 ```
 http://{hostname}:7700
 ```
+
+## Rotating secrets
+
+[Rotating secrets](/features/env-variables#rotating-secrets) describes when and how to rotate, and what to do when it goes wrong. This section covers what is specific to Meilisearch.
+
+### What is rotated
+
+- The master key: the `masterKey` variable.
+- The default keys: the `defaultSearchKey` and `defaultAdminKey` variables, and on services that have them `defaultReadOnlyKey` and `defaultChatKey`.
+
+API keys that you created yourself get new values too, because Meilisearch derives every key from the master key.
+
+### During the rotation
+
+| | Single-node |
+|---|---|
+| Meilisearch | restarts once, the service is unavailable during the restart |
+| Open connections | are closed |
+| Requests after the restart | are accepted with the new keys only |
+
+### Good to know
+
+- **Read the new values of your own API keys after the rotation.** Use `GET /keys` with the new master key. All keys, the default ones included, keep their uid, name, permissions and expiry.
+- **All tenant tokens become invalid.** Issue them again.
+- **A task that is being processed continues after the restart.** Indexes, documents, settings and tasks are not changed.
+- **The rotation doesn't bring back a default key that you deleted.** Its variable holds a value that doesn't work.
+- **A backup that starts during the rotation can fail.** Run it again.
 
 ## Backup
 
