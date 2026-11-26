@@ -38,14 +38,43 @@ Import configuration version:
 curl -u elastic:generatedpassword http://elasticsearch:9200
 ```
 
+## Rotating secrets
+
+[Rotating secrets](/features/env-variables#rotating-secrets) describes when and how to rotate, and what to do when it goes wrong. This section covers what is specific to Elasticsearch.
+
+### What is rotated
+
+- The password of the `elastic` user: the `password` variable.
+- The passwords of the built-in users `kibana_system`, `logstash_system`, `beats_system` and `apm_system`. They get the same new value.
+
+`connectionString` holds no password and doesn't change.
+
+Users that you created yourself keep their passwords. API keys and tokens are not part of the rotation.
+
+### During the rotation
+
+| | Single-node | HA |
+|---|---|---|
+| Elasticsearch | keeps running | keeps running, the cluster stays formed |
+| Requests with the old password | are refused with `401` | are refused with `401`, on all nodes at once |
+
+### Good to know
+
+- **The rotation needs some extra memory for a moment.** Zerops tries to add RAM to the service before the rotation, and the extra RAM is released again afterwards. This only works if the [maximum RAM](/features/scaling#minimum-and-maximum-ram) of the service leaves room for it. Several rotations in a row add up.
+- **Raise the maximum RAM before you rotate.** Ideally set it well above the current usage of the service for the rotation, so that Elasticsearch does not run out of memory. You can lower it again afterwards.
+- **API keys and tokens created earlier stay valid.** Revoke them yourself if they may have leaked.
+- **A password that you set yourself for a built-in user is replaced.** After the rotation `kibana_system`, `logstash_system`, `beats_system` and `apm_system` all use the value of the `password` variable.
+- **The rotation also works after you changed the `elastic` password by hand.** The password doesn't have to match the `password` variable.
+- **The health status of the service can show as failing for a short time.** It recovers when the containers receive the new variable.
+
 ## Configuration Options
 
 ### Plugin Management
 
-You can configure Elasticsearch plugins using a comma-separated list in your environment secrets:
+You can configure Elasticsearch plugins using a comma-separated list in the service's environment variables:
 
 ```yaml
-envSecrets:
+vault:
   PLUGINS: "analysis-icu,ingest-attachment"
 ```
 
@@ -60,7 +89,7 @@ envSecrets:
 Control the JVM heap size as a percentage of container memory:
 
 ```yaml
-envSecrets:
+vault:
   HEAP_PERCENT: "75"
 ```
 
@@ -81,7 +110,7 @@ services:
   - hostname: elasticsearch
     type: elasticsearch@8.16
     mode: HA
-    envSecrets:
+    vault:
       PLUGINS: "analysis-icu,ingest-attachment"
       HEAP_PERCENT: "75"
 ```

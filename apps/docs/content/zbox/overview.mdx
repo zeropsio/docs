@@ -1,0 +1,57 @@
+---
+title: Zerops Box
+description: Zerops Box runs sandboxes for AI agents on Zerops. A Box Workspace service is a persistent VM in your project that runs each sandbox as a Firecracker microVM.
+---
+
+:::beta
+Zerops Box is in beta, and we're still shaping it. Its behavior, API and CLI may change as we go, and it doesn't come with an SLA yet. We'd love to hear your feedback.
+:::
+
+Zerops Box runs **sandboxes for AI agents** on Zerops. A sandbox is a small, isolated Linux machine that can be parked and woken with its memory intact, forked into copies and snapshotted. Give each agent, task or user their own sandbox, and let them run whatever code they need without touching anything else.
+
+Sandboxes live in a **workspace**: one Zerops service of the type **Box Workspace** (`zbox@1`) in your project. It is a managed service, like a database: there is nothing to deploy, no `zerops.yaml` and no pipeline. You pay for the workspace's resources like for any other Zerops service, and the sandboxes inside it cost nothing extra ([pricing](/zbox/pricing)).
+
+New here? Start with [Getting started](/zbox/getting-started).
+
+## How it fits together
+
+```text
+Zerops project
+├── your services (runtimes, databases, ...)
+└── Box Workspace service = one workspace (a VM)
+    ├── port 8080: HTTP API
+    ├── port 8081: sandbox ingress, the ports your sandboxes expose
+    ├── bases, templates and snapshots
+    └── sandboxes, each a Firecracker microVM
+```
+
+- The **workspace** is a single VM with the CPU, RAM and disk you give it. It runs the Zerops Box orchestrator, which runs the sandboxes, serves the API on port 8080, and serves the sandbox ports on port 8081 ([workspace as a Zerops service](/zbox/workspace-service), [subdomain access](/zbox/workspace-service#subdomain-access)).
+- You manage the workspace through its **HTTP API**, the **`zbox` CLI**, the **web console** in the Zerops Box app at [box.zerops.io](https://box.zerops.io), or `zbox mcp` for AI agents ([managing and accessing the workspace](/zbox/access)).
+- Because the workspace sits in your project's private network, sandboxes can reach your other services, such as a database, if you let them ([networking](/zbox/networking)).
+
+## Concepts
+
+| Concept | What it is |
+|---|---|
+| **Workspace** | One Box Workspace service: the VM that hosts your sandboxes, with one API and one API key. |
+| **Scoped token** | A bearer token that may call only a part of the API, for a backend, a CI job or an agent. Only the API key creates and revokes tokens ([scoped tokens](/zbox/access#scoped-tokens)). |
+| **Sandbox** | A Firecracker microVM with its own kernel, memory, disk and network. You run commands in it, open its ports and SSH into it. |
+| **Base** | The image a sandbox boots from, pulled from a container registry or a URL, or built from a Dockerfile on the workspace ([images](/zbox/images)). |
+| **Template** | A base with a size and a policy. A **warm** template keeps a booted memory snapshot, so sandboxes made from it resume instead of booting ([templates](/zbox/images#templates)). |
+| **Park and wake** | Parking stops a sandbox and frees its CPU and memory. Waking resumes it, by default from its memory image ([lifecycle](/zbox/lifecycle#park-and-wake)). |
+| **Fork** | Copies of a sandbox that continue from its current state, running processes included unless a copy gets another size ([fork](/zbox/lifecycle#fork-a-sandbox)). |
+| **Snapshot** | A saved disk, optionally with memory, that you restore into a new sandbox ([snapshots](/zbox/lifecycle#snapshots-and-restore)). |
+| **Lineage** | A sandbox together with everything forked or restored from it ([lineages](/zbox/lineages)). |
+| **Export and import** | An export writes a parked sandbox or a snapshot as one archive, downloaded or uploaded to your bucket. An import creates a new sandbox from it, in the same or another workspace ([export and import](/zbox/export)). |
+| **Policy** | The rules of a sandbox: its ports and who may open them, its egress, its secrets. The workspace and template policies set the limits ([workspace policy](/zbox/workspace-settings#workspace-policy)). |
+| **Port and access mode** | A sandbox's HTTP port, served on a URL of the workspace. Its access mode decides who gets through: members, ticket or token holders, anyone, or only the project ([access modes](/zbox/networking#access-modes)). |
+| **Integration** | An API the credentials proxy calls on a sandbox's behalf, adding a credential the sandbox never sees. **Connectors** are ready-made integrations for Claude Code, GitHub and Codex ([secrets](/zbox/secrets), [connectors](/zbox/connectors)). |
+| **Operation** | A long-running request, such as a create or a park, that you can wait for ([operations](/zbox/access#operations)). |
+| **Event** | A record of something that happened to a sandbox, readable live or delivered by webhooks ([events and webhooks](/zbox/monitoring)). |
+
+## What's in the docs
+
+- **Get started**: [Getting started](/zbox/getting-started), [Managing and accessing the workspace](/zbox/access) through the console, the API, the CLI and MCP.
+- **Workspace**: [Workspace as a Zerops service](/zbox/workspace-service), [Workspace settings and capacity](/zbox/workspace-settings), [Pricing](/zbox/pricing).
+- **Sandboxes**: [Images: bases and templates](/zbox/images), [Sandbox lifecycle](/zbox/lifecycle), [Running commands in a sandbox](/zbox/commands), [Networking and access](/zbox/networking), [Secrets and the credentials proxy](/zbox/secrets), [Connectors](/zbox/connectors), [Docker in sandboxes](/zbox/docker), [Lineages](/zbox/lineages), [Export and import](/zbox/export).
+- **Operate**: [Events, webhooks, metrics and logs](/zbox/monitoring), [Isolation and security](/zbox/isolation), [FAQ and limitations](/zbox/faq).

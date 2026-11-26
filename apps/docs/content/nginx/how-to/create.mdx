@@ -49,7 +49,7 @@ The hostname is fixed after the service is created. It can't be changed later.
 
 ### Set secret environment variables
 
-Add environment variables with sensitive data, such as password, tokens, salts, certificates etc. These will be securely saved inside Zerops and added to your runtime service upon start.
+Add environment variables with sensitive data, such as password, tokens, salts, certificates etc. They are encrypted, stored securely inside Zerops and added to your runtime service upon start.
 
 Setting the secret environment variables is optional. You can set them later in Zerops GUI.
 
@@ -95,9 +95,13 @@ services:
     # defines the maximum number of containers for horizontal autoscaling.
     maxContainers: 6
     # optional: create env variables
-    envSecrets:
-      S3_ACCESS_KEY_ID: 'P8cX1vVVb'
-      S3_ACCESS_SECRET: 'ogFthuiLYki8XoL73opSCQ'
+    vault:
+      S3_ACCESS_KEY_ID:
+        value: P8cX1vVVb
+        sensitive: true
+      S3_ACCESS_SECRET:
+        value: ogFthuiLYki8XoL73opSCQ
+        sensitive: true
 ```
 
 The yaml file describes your future project infrastructure. The project will contain one Nginx version 1.22 service with default [auto scaling](/nginx/how-to/scaling) configuration. Hostname will be set to "app", the internal port(s) the service listens on will be defined later in the [zerops.yaml](/nginx/how-to/build-pipeline#ports). Following secret env variables will be configured:
@@ -144,10 +148,14 @@ services:
     minContainers: 2
     # defines the maximum number of containers for horizontal autoscaling.
     maxContainers: 4
-    # optional: create secret env variables
-    envSecrets:
-      S3_ACCESS_KEY_ID: 'P8cX1vVVb'
-      S3_ACCESS_SECRET: 'ogFthuiLYki8XoL73opSCQ'
+    # optional: create env variables
+    vault:
+      S3_ACCESS_KEY_ID:
+        value: P8cX1vVVb
+        sensitive: true
+      S3_ACCESS_SECRET:
+        value: ogFthuiLYki8XoL73opSCQ
+        sensitive: true
 ```
 
 The yaml file describes your future project infrastructure. The project will contain an Nginx static service with `app` hostname. The internal port(s) the service listens on will be defined later in the [zerops.yaml](/nginx/how-to/build-pipeline#ports). Nginx static service will run on version 1.22 with a custom vertical and horizontal scaling. Following secret env variables will be configured:
@@ -291,11 +299,10 @@ At least one service in `services:` section is required. You can create a projec
     </tr>
     <tr>
       <td className="w-fit">
-        <b>envSecrets</b>
+        <b>vault</b>
       </td>
       <td className="w-fit">
-        <b>Optional.</b> Defines one or more secret env variables as a key value
-        map. See env variable <a href="/nginx/how-to/env-variables#env-variable-restrictions">restrictions</a>.
+        <b>Optional.</b> Defines the service's environment variables as a map. Each entry is either a plain <code>KEY: value</code> pair or an object with <code>value</code> and <code>sensitive: true</code>, which stores the variable encrypted as a secret variable. <code>envSecrets</code> is deprecated but still accepted. See env variable <a href="/nginx/how-to/env-variables#env-variable-restrictions">restrictions</a>.
       </td>
     </tr>
   </tbody>
@@ -355,9 +362,13 @@ services:
     # defines the maximum number of containers for horizontal autoscaling.
     maxContainers: 6
     # optional: create env variables
-    envSecrets:
-      S3_ACCESS_KEY_ID: 'P8cX1vVVb'
-      S3_ACCESS_SECRET: 'ogFthuiLYki8XoL73opSCQ'
+    vault:
+      S3_ACCESS_KEY_ID:
+        value: P8cX1vVVb
+        sensitive: true
+      S3_ACCESS_SECRET:
+        value: ogFthuiLYki8XoL73opSCQ
+        sensitive: true
 ```
 
 The yaml file describes the list of one or more services that you want to add to your existing project. In the example above, one Nginx static service version 1.22 with default [auto scaling](/nginx/how-to/scaling) configuration will be added to your project. Hostname of the new service will be set to `app`. Following secret env variables will be configured:

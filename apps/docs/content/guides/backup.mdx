@@ -10,7 +10,9 @@ MariaDB, PostgreSQL, Qdrant, NATS, Meilisearch, Local Storage, SeaweedFS.
 
 **ClickHouse**: not on the standard auto-backup path — back it up with the native `BACKUP ALL ...` SQL command (super user), stored as `.tar.gz`.
 
-**Not supported**: Runtimes, Object Storage (use S3 lifecycle policies), Valkey/KeyDB (in-memory), Elasticsearch.
+**Valkey**: supported, but with no schedule by default — set a schedule on the service or run a backup manually.
+
+**Not supported**: Runtimes, Object Storage (use S3 lifecycle policies), Elasticsearch.
 
 ## Schedule Options
 - No backups
@@ -25,11 +27,8 @@ MariaDB, PostgreSQL, Qdrant, NATS, Meilisearch, Local Storage, SeaweedFS.
 - **Protected tags**: Exempt from automatic deletion — use for critical snapshots
 
 ## Storage Limits
-| Plan | Backup Storage | Egress |
-|------|---------------|--------|
-| Lightweight | 5 GB | 100 GB |
-| Serious | 25 GB | 3 TB |
-| Technical max | 1 TiB per project (shared across all services) |
+- Included backup storage and egress depend on the project core: [pricing](/billing/pricing#project-core-plans)
+- Technical max: 1 TiB per project (shared across all services)
 
 ## Retention Defaults
 - Minimum kept: 7 daily + 4 weekly + 3 monthly
@@ -49,8 +48,9 @@ End-to-end with X25519 per-project keys. Decrypted only on download.
 | Meilisearch | `.dump` |
 | Qdrant | `.snapshot` |
 | NATS | `.tar.gz` |
+| Valkey | `valkey-cli --rdb` → `.rdb.gz` (RDB snapshot + gzip) |
 | Local Storage | tar → `.tar.gz` (archive of the live volume — pause database writes or use an application-level backup for guaranteed consistency) |
 | SeaweedFS | tar → `.tar.gz` (archive of the whole filesystem, restore by extracting through a mount) |
 
 ## Gotchas
-- Valkey/KeyDB are not backed up → rely on service persistence or application-level backup.
+- Valkey has no backup schedule by default → set one if the data must survive more than AOF persistence and replication cover, see [Valkey persistence](/valkey/overview#persistence).

@@ -172,6 +172,33 @@ Allows integration with PostgreSQL-compatible clients and ORMs.
 
 More about it in [official ClickHouse docs](https://clickhouse.com/docs/interfaces/postgresql).
 
+## Rotating secrets
+
+[Rotating secrets](/features/env-variables#rotating-secrets) describes when and how to rotate, and what to do when it goes wrong. This section covers what is specific to ClickHouse.
+
+### What is rotated
+
+- The password of the `zerops` user: the `password` variable. `connectionString` follows.
+- The password of the `super` user: the `superUserPassword` variable.
+
+Users that you created yourself keep their passwords.
+
+### During the rotation
+
+| | Single-node | HA |
+|---|---|---|
+| ClickHouse | keeps running and serving queries | keeps running and serving queries, replication keeps running |
+| Open native (TCP) connections | stay open | stay open |
+| New connections and HTTP requests | are refused with the old password | are refused with the old password |
+
+### Good to know
+
+- **In HA mode the `super` password changes node by node.** For a short time a login as `super` is accepted or refused depending on which node answers. The `zerops` password changes on all nodes at once.
+- **The `zerops` user keeps only the new password.** Other authentication methods that you added to this user are removed.
+- **The `zerops` user must exist under this name.** If you renamed or dropped it, the rotation fails with the message that the secrets were rotated, but part of the service was left in an inconsistent state. The `super` password is new, and `password` matches no user. Rename the user back, or create it again with that name, and run the rotation again.
+- **Passwords stored inside ClickHouse objects are not updated.** This applies to Distributed tables with explicit credentials, dictionaries, named collections and `remote()` calls. Change the password there yourself.
+- **A backup that starts during the rotation can fail.** Run it again.
+
 ## Backup and Recovery
 
 Zerops provides comprehensive backup functionality using ClickHouse's native backup capabilities.

@@ -64,7 +64,7 @@ The master API key is automatically generated and managed by the platform. You c
 - The `apiKey` environment variable in your service configuration
 
 :::warning
-Currently, as a security-focused design decision, the master API key cannot be modified after generation.
+The master API key cannot be set to a value of your choice. Zerops can generate a new one, see [Rotating secrets](#rotating-secrets).
 :::
 
 ### CORS Configuration
@@ -97,6 +97,32 @@ Node addressing patterns:
 **Format:**```node-stable-{n}.db.{hostname}.zerops```
 - **maintain consistent IP mapping** until node retirement (scaling down or failure events)
 - e.g. `node-stable-1.db.typesenseha.zerops`, `node-stable-2.db.typesenseha.zerops`
+
+## Rotating secrets
+
+[Rotating secrets](/features/env-variables#rotating-secrets) describes when and how to rotate, and what to do when it goes wrong. This section covers what is specific to Typesense.
+
+### What is rotated
+
+- The master API key: the `apiKey` variable.
+
+API keys that you created through the Typesense keys API are not changed. They work again as soon as the service is back.
+
+### During the rotation
+
+| | Single-node | HA |
+|---|---|---|
+| Typesense | restarts | all nodes restart at the same time |
+| Open connections | are closed | are closed, because all nodes restart |
+| Searches and writes | are unavailable until Typesense has loaded its collections | are unavailable until the nodes have loaded their collections and elected a leader |
+| Keys | only the new key is accepted from the restart on | only the new key is accepted from the restart on, on all nodes alike |
+
+### Good to know
+
+- **The more data, the longer the service is unavailable.** After the restart Typesense loads its collections before it answers again.
+- **With a large dataset the nodes can need longer to load than the rotation waits.** The rotation then fails with the message that the secrets were rotated, but part of the service was left in an inconsistent state. The new key is stored and active. Wait until the service is healthy before you run the rotation again.
+- **Searches can return only part of the results right after the service answers again.** For a short time Typesense replays recent writes.
+- **If writes keep failing after a failed rotation, run the rotation again.** This happens when a node did not change during the rotation.
 
 ## Quick Start Example
 
@@ -142,7 +168,8 @@ const searchResults = await client.collections('companies')
 #### API Key Security
 - Never expose the master API key in client-side code
 - Generate scoped search-only API keys for frontend applications
-- Rotate API keys periodically through your service configuration
+- Rotate the API keys that you created periodically through the Typesense keys API
+- Replace the master API key through [Rotating secrets](#rotating-secrets)
 
 #### High Availability
 - Implement retry logic in clients for handling temporary unavailability

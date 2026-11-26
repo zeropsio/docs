@@ -1,0 +1,179 @@
+---
+title: Swarm on Zerops
+description: Swarm is a pool of containers or virtual machines you create, reserve, run commands in, snapshot and remove through a fast HTTP API, without going through the Zerops API.
+---
+
+import DocCardList from '@theme/DocCardList';
+import Icons from '@theme/Icon';
+import data from '@site/static/data.json';
+import UnorderedCodeList from '@site/src/components/UnorderedCodeList';
+
+Swarm is a service that gives you a **pool of containers (or virtual machines) and an HTTP API to control them**. You create a container, reserve it, run commands in it, snapshot it, fork it and remove it with plain HTTP calls that answer in seconds. It is built for workloads where containers come and go all the time: CI jobs, per-user or per-task workspaces, sandboxes for AI agents, and one-off commands that need a clean environment.
+
+:::note
+Zerops Swarm has nothing to do with Docker Swarm.
+:::
+
+## Why not a regular runtime service
+
+A regular runtime service is managed through the Zerops API. Every change is queued, runs as a process you can follow in the GUI, and horizontal autoscaling decides how many containers exist. That is the right model for an application. It is too slow and too indirect when your code needs a fresh container now, a command executed in it, and the container gone a minute later.
+
+In a Swarm service, **horizontal autoscaling is off and you decide which containers exist**. The pool can be empty. Requests go to an orchestrator that runs inside your project and talks to the platform directly, so creating, starting and stopping a container are synchronous calls: when the response arrives, the work is done.
+
+## How it works
+
+A Swarm service has two parts:
+
+- **The orchestrator**, a small always-on container that serves the [control API](/swarm/how-to/use), a web UI and the API reference. It is created with the service and reachable on the project's private network at `orch.<hostname>.zerops`.
+- **The pool**, the containers your work runs in. They are ordinary Zerops containers: they sit on the project's private network, get the service's environment variables, and show up in the GUI with their logs and metrics.
+
+Everything else behaves like a [runtime service](/features/infrastructure#services). You can [deploy](/swarm/how-to/deploy) a `zerops.yaml` to it to prepare a custom image, and vertical autoscaling works the same way. The difference is who controls the containers.
+
+## Quick start
+
+Add a Swarm service to your project with a `zerops-import.yaml`:
+
+```yaml title="zerops-import.yaml"
+services:
+  - hostname: sandbox
+    type: swarm@1
+    # usable right away, without a first deploy
+    startWithoutCode: true
+```
+
+Import it with the zCLI:
+
+```bash
+zcli project service-import zerops-import.yaml
+```
+
+Connect to the project with the [Zerops VPN](/references/networking/vpn) and reserve a container. Requests coming from the VPN need no token:
+
+```bash
+curl -s -X POST http://orch.sandbox.zerops/container/acquire
+```
+
+The response contains the container and a `lease`, which proves the container is yours. Run a command in it and release it when you are done:
+
+```bash
+curl -s -X POST "http://orch.sandbox.zerops/container/<id>/exec?lease=<lease>" \
+  -H "Content-Type: application/json" \
+  -d '{"command": ["bash", "-lc", "uname -a"]}'
+
+curl -s -X POST "http://orch.sandbox.zerops/container/<id>/release?lease=<lease>&reset=true"
+```
+
+If all you need is to run one command somewhere, a single call picks a free container (or creates a temporary one), runs the command and cleans up:
+
+```bash
+curl -s -X POST http://orch.sandbox.zerops/container/run \
+  -H "Content-Type: application/json" \
+  -d '{"command": ["bash", "-lc", "echo hello"]}'
+```
+
+See [Work with the pool](/swarm/how-to/use) for the whole API and [Connect & authenticate](/swarm/how-to/connect) for calling it from your services.
+
+## Containers or virtual machines
+
+Swarm comes in two types. They have the same API and the same orchestrator, and differ in what the pool is made of. The type is **fixed for the life of the service**.
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit" style={{ minWidth: '110px' }}>Type</th>
+      <th className="w-fit" style={{ minWidth: '140px' }}>Pool</th>
+      <th className="w-fit">When to choose it</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit"><code>swarm@1</code></td>
+      <td className="w-fit">Linux containers (Ubuntu 26.04)</td>
+      <td className="w-fit">The default. Containers are created and started in seconds, scale vertically without a restart and use the least resources. You can deploy any container-based runtime to the pool.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><code>swarm-vm@1</code></td>
+      <td className="w-fit">Virtual machines (the <a href="/docker/overview">Docker</a> VM)</td>
+      <td className="w-fit">When the work needs its own kernel: running Docker, or code you want separated from its neighbours by more than a container boundary. VMs boot slower, their resources are fixed values and only VM bases can be deployed to the pool.</td>
+    </tr>
+  </tbody>
+</table>
+
+Containers share the kernel of the machine they run on. That is the same isolation every Zerops runtime service has, and it is fine for your own code and your CI jobs. If you plan to run code you do not trust, consider the VM type. The general trade-offs are described in [Containers vs VMs](/features/container-vs-vm).
+
+### Supported versions
+
+<UnorderedCodeList data={data.swarm.import} />
+
+## Next steps
+
+<DocCardList
+  colSize={6}
+  items={[
+    {
+      type: 'link',
+      href: '/swarm/how-to/create',
+      label: 'Create & import',
+      customProps: {
+        icon: Icons['computer-desktop'],
+        description: 'Create a Swarm service in the GUI or with zerops-import.yaml, and size the pool.',
+      },
+    },
+    {
+      type: 'link',
+      href: '/swarm/how-to/connect',
+      label: 'Connect & authenticate',
+      customProps: {
+        icon: Icons['key'],
+        description: 'Reach the API from the VPN, from your services and from the GUI. API and admin tokens, SSH.',
+      },
+    },
+    {
+      type: 'link',
+      href: '/swarm/how-to/use',
+      label: 'Work with the pool',
+      customProps: {
+        icon: Icons['command-line'],
+        description: 'Reserve containers, run commands, snapshot, reset and fork them.',
+      },
+    },
+    {
+      type: 'link',
+      href: '/swarm/how-to/deploy',
+      label: 'Custom image & rollout',
+      customProps: {
+        icon: Icons['rocket-launch'],
+        description: 'Deploy a zerops.yaml to prepare the pool image and replace outdated containers.',
+      },
+    },
+  ]}
+/>
+
+## Need help?
+
+Stuck, or want to share what you built? Our core team and community are on Discord.
+
+<DocCardList
+  colSize={6}
+  items={[
+    {
+      type: 'link',
+      href: 'https://discord.com/invite/WDvCZ54',
+      label: 'Discord',
+      customProps: {
+        icon: Icons['discord'],
+        description:
+          'Join the Zerops community on Discord. Ask questions and share your tips.',
+      },
+    },
+    {
+      type: 'link',
+      href: '/references/cli',
+      label: 'zCLI',
+      customProps: {
+        icon: Icons['command-line'],
+        description: 'Get more out of Zerops with the command-line tool.',
+      },
+    },
+  ]}
+/>

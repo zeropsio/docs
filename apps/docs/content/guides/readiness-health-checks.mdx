@@ -26,11 +26,12 @@ Checks the **new** container at `localhost`. Until it passes, traffic stays on t
 deploy:
   readinessCheck:
     httpGet: { port: 3000, path: /health }
-    failureTimeout: 60   # seconds until the container is marked failed
-    retryPeriod: 10      # seconds between attempts
+    failureTimeout: "60s"   # time until the container is marked failed
+    retryPeriod: "10s"      # time between attempts
 ```
 
 Mechanics: `start` runs → readiness check runs → on fail, wait `retryPeriod` and retry → on success, the container is marked active and receives traffic → if still failing after `failureTimeout`, the container is deleted and the deploy fails (the previous appVersion stays active). Set `failureTimeout`/`retryPeriod` explicitly — there is no fixed schema default to rely on.
+Timeouts and periods are duration strings with a unit, like `"60s"`. A bare number such as `60` fails validation.
 
 ## Health check (`run.healthCheck`)
 
@@ -40,10 +41,10 @@ Runs on every container continuously after startup.
 run:
   healthCheck:
     httpGet: { port: 3000, path: /health }
-    failureTimeout: 30     # consecutive-failure seconds before restart (reset by a success)
-    disconnectTimeout: 30  # seconds before a failing container is pulled from the LB
-    recoveryTimeout: 30    # seconds of success before a restarted container takes traffic again
-    execPeriod: 10         # seconds between attempts
+    failureTimeout: "30s"     # consecutive-failure time before restart (reset by a success)
+    disconnectTimeout: "30s"  # time before a failing container is pulled from the LB
+    recoveryTimeout: "30s"    # time of success before a restarted container takes traffic again
+    execPeriod: "10s"         # time between attempts
 ```
 
 **Failure sequence**: repeated failures → `disconnectTimeout` removes the container from the load balancer → `failureTimeout` triggers a restart → `recoveryTimeout` gates traffic reconnection once it's healthy again.

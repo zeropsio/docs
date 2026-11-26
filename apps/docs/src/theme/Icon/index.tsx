@@ -118,6 +118,7 @@ import IconPuzzleSolid from './PuzzleSolid';
 import IconNextjs from './Nextjs';
 import IconFlagMini from './FlagMini';
 import IconBeaker from './Beaker';
+import IconZeropsBox from './ZeropsBox';
 import IconGitHub from './GitHub';
 import IconNestjs from './Nestjs';
 import IconLaravel from './Laravel';
@@ -136,7 +137,6 @@ import IconMariadb from './Mariadb';
 import IconMeilisearch from './Meilisearch';
 import IconMongodb from './Mongodb';
 import IconElasticsearch from './Elasticsearch';
-import IconKeydb from './Keydb';
 import IconRabbitmq from './Rabbitmq';
 import IconNginx from './Nginx';
 import IconUbuntu from './Ubuntu';
@@ -158,6 +158,9 @@ import IconGitlab from './Gitlab';
 import IconTypesense from './Typesense';
 import IconDocker from './Docker';
 import IconCurlyBraces from './CurlyBraces';
+import IconTerraform from './Terraform';
+import IconAlchemy from './Alchemy';
+import IconPulumi from './Pulumi';
 import IconCdn from './Cdn';
 import IconClickhouse from './Clickhouse';
 import IconCloudflare from './Cloudflare';
@@ -180,6 +183,7 @@ export default {
   'back-arrow': ArrowUturnLeft,
   'bars-three': BarsThree,
   beaker: IconBeaker,
+  'zerops-box': IconZeropsBox,
   bell: BellAlert,
   'bell-alert-solid': BellAlertSolid,
   bolt: Bolt,
@@ -313,7 +317,6 @@ export default {
   meilisearch: IconMeilisearch,
   mongodb: IconMongodb,
   elasticsearch: IconElasticsearch,
-  keydb: IconKeydb,
   rabbitmq: IconRabbitmq,
   nginx: IconNginx,
   ubuntu: IconUbuntu,
@@ -332,6 +335,9 @@ export default {
   cloudok: IconCloudOk,
   typesense: IconTypesense,
   'curly-braces': IconCurlyBraces,
+  terraform: IconTerraform,
+  alchemy: IconAlchemy,
+  pulumi: IconPulumi,
   cdn: IconCdn,
   clickhouse: IconClickhouse,
   cloudflare: IconCloudflare,

@@ -14,6 +14,11 @@
  * - To add a coming soon link (with a badge), add in customProps sidebar_is_soon: true
  */
 
+const betaBadge = {
+  variant: 'orange',
+  children: 'BETA',
+};
+
 /** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */
 module.exports = {
   homepage: [
@@ -373,6 +378,25 @@ module.exports = {
           },
           className: 'homepage-sidebar-item  service-sidebar-item',
         },
+        {
+          type: 'ref',
+          id: 'swarm/overview',
+          label: 'Swarm',
+          customProps: {
+            sidebar_icon: 'servers-connected',
+          },
+          className: 'homepage-sidebar-item  service-sidebar-item',
+        },
+        {
+          type: 'ref',
+          id: 'zbox/overview',
+          label: 'Box Workspace',
+          customProps: {
+            sidebar_icon: 'zerops-box',
+            sidebar_badge: betaBadge,
+          },
+          className: 'homepage-sidebar-item  service-sidebar-item',
+        },
       ],
     },
     {
@@ -470,15 +494,6 @@ module.exports = {
           label: 'Clickhouse',
           customProps: {
             sidebar_icon: 'clickhouse',
-          },
-          className: 'homepage-sidebar-item  service-sidebar-item',
-        },
-        {
-          type: 'ref',
-          id: 'keydb/overview',
-          label: 'KeyDB',
-          customProps: {
-            sidebar_icon: 'keydb',
           },
           className: 'homepage-sidebar-item  service-sidebar-item',
         },
@@ -918,6 +933,33 @@ module.exports = {
         },
         {
           type: 'doc',
+          id: 'references/terraform',
+          label: 'Terraform / OpenTofu',
+          customProps: {
+            sidebar_icon: 'terraform',
+          },
+          className: 'homepage-sidebar-item',
+        },
+        {
+          type: 'doc',
+          id: 'references/alchemy',
+          label: 'Alchemy',
+          customProps: {
+            sidebar_icon: 'alchemy',
+          },
+          className: 'homepage-sidebar-item',
+        },
+        {
+          type: 'doc',
+          id: 'references/pulumi',
+          label: 'Pulumi',
+          customProps: {
+            sidebar_icon: 'pulumi',
+          },
+          className: 'homepage-sidebar-item',
+        },
+        {
+          type: 'doc',
           id: 'references/api',
           label: 'API',
           customProps: {
@@ -975,6 +1017,32 @@ module.exports = {
     },
     {
       type: 'html',
+      value: 'Pricing & Billing',
+      customProps: {
+        sidebar_is_group_divider: true,
+      },
+      className: 'homepage-sidebar-item',
+    },
+    {
+      type: 'doc',
+      id: 'billing/pricing',
+      label: 'Pricing',
+      customProps: {
+        sidebar_icon: 'currency-dollar',
+      },
+      className: 'homepage-sidebar-item',
+    },
+    {
+      type: 'doc',
+      id: 'billing/overview',
+      label: 'Billing',
+      customProps: {
+        sidebar_icon: 'receipt-percent',
+      },
+      className: 'homepage-sidebar-item',
+    },
+    {
+      type: 'html',
       value: 'Help',
       customProps: {
         sidebar_is_group_divider: true,
@@ -1015,28 +1083,6 @@ module.exports = {
         sidebar_icon: 'information-circle',
       },
       className: 'homepage-sidebar-item',
-    },
-    {
-      type: 'category',
-      link: {
-        type: 'doc',
-        id: 'company/pricing',
-      },
-      label: 'Pricing',
-      customProps: {
-        sidebar_icon: 'currency-dollar',
-      },
-      className: 'homepage-sidebar-item',
-      items: [
-        {
-          type: 'doc',
-          id: 'company/payment',
-          label: 'Top-up & Billing',
-          customProps: {
-            exclude_from_doc_list: false,
-          },
-        },
-      ],
     },
     {
       type: 'doc',
@@ -2311,6 +2357,202 @@ module.exports = {
       },
     },
   ],
+  swarm: [
+    {
+      type: 'ref',
+      id: 'homepage',
+      label: 'Back to home',
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: 'back-arrow',
+      },
+    },
+    {
+      type: 'doc',
+      id: 'swarm/overview',
+      label: 'Swarm Service',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'servers-connected',
+      },
+    },
+    {
+      type: 'category',
+      label: 'How-to',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'swarm/how-to/create',
+          label: 'Create & import',
+        },
+        {
+          type: 'doc',
+          id: 'swarm/how-to/connect',
+          label: 'Connect & authenticate',
+        },
+        {
+          type: 'doc',
+          id: 'swarm/how-to/use',
+          label: 'Work with the pool',
+        },
+        {
+          type: 'doc',
+          id: 'swarm/how-to/deploy',
+          label: 'Custom image & rollout',
+        },
+      ],
+    },
+  ],
+  zbox: [
+    {
+      type: 'ref',
+      id: 'homepage',
+      label: 'Back to home',
+      customProps: {
+        sidebar_is_back_link: true,
+        sidebar_icon: 'back-arrow',
+      },
+    },
+    {
+      type: 'doc',
+      id: 'zbox/overview',
+      label: 'Zerops Box',
+      customProps: {
+        sidebar_is_title: true,
+        sidebar_icon: 'zerops-box',
+        sidebar_badge: betaBadge,
+      },
+    },
+    {
+      type: 'category',
+      label: 'Get started',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'zbox/getting-started',
+          label: 'Getting started',
+        },
+        {
+          type: 'doc',
+          id: 'zbox/access',
+          label: 'Console, API, CLI & MCP',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Workspace',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'zbox/workspace-service',
+          label: 'Workspace as a Zerops service',
+        },
+        {
+          type: 'doc',
+          id: 'zbox/workspace-settings',
+          label: 'Settings & capacity',
+        },
+        {
+          type: 'doc',
+          id: 'zbox/pricing',
+          label: 'Pricing',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Sandboxes',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'zbox/images',
+          label: 'Images: bases & templates',
+        },
+        {
+          type: 'doc',
+          id: 'zbox/lifecycle',
+          label: 'Lifecycle',
+        },
+        {
+          type: 'doc',
+          id: 'zbox/commands',
+          label: 'Running commands',
+        },
+        {
+          type: 'doc',
+          id: 'zbox/networking',
+          label: 'Networking & access',
+        },
+        {
+          type: 'doc',
+          id: 'zbox/secrets',
+          label: 'Secrets & credentials proxy',
+        },
+        {
+          type: 'doc',
+          id: 'zbox/connectors',
+          label: 'Connectors',
+        },
+        {
+          type: 'doc',
+          id: 'zbox/docker',
+          label: 'Docker in sandboxes',
+        },
+        {
+          type: 'doc',
+          id: 'zbox/lineages',
+          label: 'Lineages',
+        },
+        {
+          type: 'doc',
+          id: 'zbox/export',
+          label: 'Export & import',
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Operate',
+      collapsible: false,
+      customProps: {
+        sidebar_is_group_headline: true,
+      },
+      items: [
+        {
+          type: 'doc',
+          id: 'zbox/monitoring',
+          label: 'Events, webhooks, metrics & logs',
+        },
+        {
+          type: 'doc',
+          id: 'zbox/isolation',
+          label: 'Isolation & security',
+        },
+        {
+          type: 'doc',
+          id: 'zbox/faq',
+          label: 'FAQ & limitations',
+        },
+      ],
+    },
+  ],
   mariadb: [
     {
       type: 'ref',
@@ -2499,70 +2741,6 @@ module.exports = {
         sidebar_icon: 'elasticsearch',
       },
     },
-  ],
-  keydb: [
-    {
-      type: 'ref',
-      id: 'homepage',
-      label: 'Back to home',
-      customProps: {
-        sidebar_is_back_link: true,
-        sidebar_icon: 'back-arrow',
-      },
-    },
-    {
-      type: 'doc',
-      id: 'keydb/overview',
-      label: 'Zerops KeyDB Service',
-      customProps: {
-        sidebar_is_title: true,
-        sidebar_icon: 'keydb',
-      },
-    },
-    {
-      type: 'category',
-      label: 'How-to',
-      collapsible: false,
-      customProps: {
-        sidebar_is_group_headline: true,
-      },
-      items: [
-        {
-          type: 'doc',
-          id: 'keydb/how-to/create',
-          label: 'Create KeyDB service',
-        },
-        {
-          type: 'doc',
-          id: 'keydb/how-to/connect',
-          label: 'Connect to KeyDB',
-        },
-        {
-          type: 'doc',
-          id: 'keydb/how-to/manage',
-          label: 'Manage users and databases',
-        },
-        {
-          type: 'doc',
-          id: 'keydb/how-to/scale',
-          label: 'Scale KeyDB service',
-        },
-        {
-          type: 'doc',
-          id: 'keydb/how-to/control',
-          label: 'Stop, start and delete KeyDB service',
-        },
-      ],
-    },
-    // {
-    //   type: 'doc',
-    //   id: 'keydb/faq',
-    //   label: 'FAQ',
-    //   customProps: {
-    //     sidebar_is_title: true,
-    //     sidebar_icon: 'chat-bubble-left-right',
-    //   },
-    // },
   ],
   typesense: [
     {

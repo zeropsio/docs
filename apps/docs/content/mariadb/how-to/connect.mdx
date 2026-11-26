@@ -99,6 +99,31 @@ When you change the password of the default MariaDB user in the database, the ne
 
 You can create own custom [environment variables](/features/env-variables) for the MariaDB service in Zerops GUI and use them in the same way as the default variables.
 
+## Rotating secrets
+
+[Rotating secrets](/features/env-variables#rotating-secrets) describes when and how to rotate, and what to do when it goes wrong. This section covers what is specific to MariaDB.
+
+### What is rotated
+
+- The password of the user named in the `user` variable: the `password` variable. The connection string follows.
+- The password of the internal `zps` maintenance user.
+
+Users that you created yourself keep their passwords.
+
+### During the rotation
+
+| | Single-node | HA |
+|---|---|---|
+| MariaDB | keeps running | keeps running |
+| Open connections | stay open | are closed, because the proxies restart |
+| New connections | fail until the variables hold the new values | fail until the variables hold the new values |
+
+### Good to know
+
+- **The `user` variable must name an existing user.** If it names a user that doesn't exist in the database, the rotation fails and nothing is changed. Set `user` back and rotate again.
+- **In HA mode an open transaction through the proxy is rolled back.** The proxies restart, which closes their connections.
+- **In HA mode a proxy blocks a client after 10 failed logins.** The block lasts about a minute and also refuses the correct password. A client that retries in a tight loop during the rotation can run into it.
+
 ## Connect to MariaDB in Zerops remotely
 
 :::caution

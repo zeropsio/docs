@@ -1,0 +1,91 @@
+---
+title: Custom image & rollout
+description: Deploy a zerops.yaml to a Swarm service to prepare the image new pool containers boot from, and replace outdated containers with a rollout.
+---
+
+A Swarm service [started without code](/swarm/how-to/create#service-parameters) creates its pool containers from a plain image: Ubuntu 26.04 for `swarm@1`, the [Docker](/docker/overview) VM for `swarm-vm@1`. Usually you want more in there, like a runtime, your tools or your code. You get it by deploying to the Swarm service, the same way you deploy to any runtime service. Anything every pool container needs belongs in this image, not in snapshots you take afterwards.
+
+## Deploy to a Swarm service
+
+Describe the image in a `zerops.yaml` and push it with `zcli push`, from the GUI, or through the [GitHub](/references/github-integration) or [GitLab](/references/gitlab-integration) integration:
+
+```yaml title="zerops.yaml"
+zerops:
+  - setup: sandbox
+    build:
+      base: python@3.12
+      os: ubuntu
+      deployFiles: ./
+    run:
+      base: python@3.12
+      os: ubuntu
+      # installed once and stored in the image
+      prepareCommands:
+        - sudo apt-get update
+        - sudo apt-get install -y ripgrep jq
+        - pip install --no-cache-dir pytest ruff
+```
+
+The [build & deploy pipeline](/features/pipeline) works as usual. The build runs, `run.prepareCommands` customize the runtime image, and the result becomes the image of the service. `run.base` can be any runtime Zerops supports. The service stays a Swarm service whatever you deploy to it.
+
+Inside a pool container everything behaves like in a normal runtime service: your deployed files are in `/var/www`, `run.envVariables` and the service's other variables are set, `run.initCommands` run when the container starts, and `run.ports` are opened. If you define `run.start`, it runs in every pool container. If you do not, nothing is started, which is what you want when the containers only wait for your `exec` calls.
+
+:::note
+For `swarm-vm@1` the base has to be a VM base, which today means `docker@26.1`. A container runtime cannot be deployed to a VM pool, and a VM base cannot be deployed to `swarm@1`. The deploy is refused with an error that names `run.base`.
+:::
+
+## What a deploy changes
+
+This is where Swarm differs from a runtime service. A normal deploy replaces the running containers with new ones. In a Swarm pool the containers hold somebody's work, so **a deploy never touches existing containers**:
+
+- Containers created after the deploy boot from the new image.
+- Containers that already exist keep the image they were created with, together with their reservations, running commands and snapshots.
+- A deploy does not create containers by itself. In a pool with a minimum of `0` the first deploy leaves the pool empty.
+
+The API tells you which containers are behind. Every container has an `appVersionId`, the deploy it was created for, and `current`, which is `false` when a newer deploy exists:
+
+```bash
+curl -s http://orch.sandbox.zerops/container | jq '.[] | {name, current}'
+```
+
+Acquire and run hand out outdated containers like any other. If your consumers must not land on an old image, roll the new one out right after the deploy. A [fork](/swarm/how-to/use#fork-a-container) runs the image of its source.
+
+## Roll out a new image
+
+```bash
+curl -s -X POST http://orch.sandbox.zerops/container/rollout
+```
+
+A rollout replaces every outdated container with a new one created from the current image. It works within the [pool limits](/swarm/how-to/create#size-the-pool), in rounds: it removes as many outdated containers as the pool can lose without going below its minimum, then creates as many replacements as fit under its maximum, and repeats until all are replaced. A pool that sits at its minimum starts with the creates.
+
+What happens to a container depends on its state:
+
+<table className="w-full my-1.5">
+  <thead>
+    <tr>
+      <th className="w-fit" style={{ minWidth: '190px' }}>Outdated container</th>
+      <th className="w-fit">What the rollout does</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="w-fit"><b>Free</b></td>
+      <td className="w-fit">Removed and replaced during the call.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><b>Reserved</b></td>
+      <td className="w-fit">Left alone and reported as skipped with <code>held-by-other</code>. With <code>force=true</code> and the <a href="/swarm/how-to/connect#tokens">admin token</a> it is replaced like a free one.</td>
+    </tr>
+    <tr>
+      <td className="w-fit"><b>Work in progress</b></td>
+      <td className="w-fit">Never interrupted. The container is marked, reported under <code>retiring</code>, and the orchestrator replaces it by itself once the command, restore, stop or start ends. No further call is needed.</td>
+    </tr>
+  </tbody>
+</table>
+
+The response lists what happened: `replaced` (ids of the removed containers), `created` (the new containers), `retiring`, `skipped` with a reason for each, and `createErrors` for replacements that could not be created. The call returns when its own removals and creates are done, which takes minutes for a VM pool, and it continues if your client disconnects.
+
+Two limits to know about:
+
+- A pool whose minimum equals its maximum cannot be rolled. There is no room to remove a container first or to create one first, so the call is refused with `pool-fixed-size`. Raise the maximum by one for the rollout.
+- A replacement is a new container with a new id and hostname. The old container's snapshots and everything on its disk are gone.

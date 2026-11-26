@@ -32,7 +32,7 @@ You can fine-tune your NATS service by adjusting **environment variables**:
 ### Available Configuration Options
 
 :::note
-If certain variables are not visible in your configuration, they may have been introduced after your service was created. Simply add them as [secret variables](/features/env-variables#2-secret-variables) to access the functionality.
+If certain variables are not visible in your configuration, they may have been introduced after your service was created. Simply add them as [service variables](/features/env-variables#2-secret-variables) to access the functionality.
 :::
 
 <table className="w-full my-1.5">
@@ -102,6 +102,31 @@ Authentication credentials are automatically generated and managed by the platfo
   - `user` - Username for authentication (default: "zerops")
   - `password` - Generated secure password
   - `connectionString` - Complete connection string in the format `nats://${dbUser}:${dbPassword}@${hostname}:${port}`
+
+## Rotating secrets
+
+[Rotating secrets](/features/env-variables#rotating-secrets) describes when and how to rotate, and what to do when it goes wrong. This section covers what is specific to NATS.
+
+### What is rotated
+
+- The password of the `zerops` user: the `password` variable. `connectionString` follows.
+
+### During the rotation
+
+| | Single-node | HA |
+|---|---|---|
+| NATS | normally reloads its configuration and is not restarted (see below), streams and messages in JetStream are kept | the nodes change one after another, the cluster and JetStream replication keep running |
+| Open client connections | are all closed at the moment of the change | are closed on each node when it changes |
+| New connections | work at once, with the new password only | until the last node is done, the old password still works on the nodes that have not changed yet, and the new one only on the changed nodes |
+
+### Good to know
+
+- **If a saved change of the service's variables is not applied yet, the rotation restarts NATS.** NATS cannot reload then, for example after a change of `JET_STREAM_ENABLED`. The restart applies that change, and in HA mode it goes one node at a time. A single-node service is unavailable for a moment, and in HA mode JetStream publishing pauses briefly when a node restarts.
+- **Check your saved variables before you rotate.** With a value that NATS cannot start with, for example a `MAX_PAYLOAD` above the maximum, the restart leaves NATS down until you correct the value.
+- **In HA mode the rotation can fail after a saved change of `JET_STREAM_ENABLED` from `0` to `1`.** The message says that the secrets were rotated, but part of the service was left in an inconsistent state, although every node works with the new password. Run the rotation again.
+- **Core NATS messages published while a subscriber is disconnected are not delivered to it.** JetStream consumers continue after they reconnect.
+- **Some client libraries stop reconnecting after repeated authorization errors.** Restart the application if it doesn't come back.
+- **A backup that starts during the rotation can fail.** Run it again.
 
 ## Health Monitoring
 

@@ -1,9 +1,9 @@
 ---
 title: "Environment Variables"
-description: "Zerops manages environment variables at two scopes (project and service) with strict build/runtime isolation. Variables are set via zerops.yml, import.yml, or GUI. Cross-service references use `${hostname_varname}` syntax. Project vars auto-inherit into all services. Secret vars are write-only after creation. Changes require service restart."
+description: "Zerops manages environment variables at two scopes (project and service) with strict build/runtime isolation. Variables are set via zerops.yml, import.yml `vault`, GUI, or API. Cross-service references use `${hostname_varname}` syntax. Project vars auto-inherit into all runtime services, not managed services. Every user-defined var is plain or sensitive; sensitive values are encrypted at rest and returned as REDACTED unless the request is in sudo mode. To add or edit several variables, send one .env file through the env-file API endpoint, not one request per variable. Changes require service restart."
 ---
 
-Zerops manages environment variables at two scopes (project and service) with strict build/runtime isolation. Variables are set via zerops.yml, import.yml, or GUI. **Project vars auto-inherit into every service** — read them directly, no declaration. **Cross-service (sibling) vars do NOT auto-inject under the default `envIsolation=service`** — reference a sibling's value explicitly as `${hostname_varname}` in `run.envVariables` (siblings are injected as bare `<host>_KEY` vars only when the owning service shares them via `none` or `service@<reader-hostname>`). Secret reads are privilege-gated (an admin token returns the value; a read-only token gets `REDACTED`). A running process keeps its boot-time env — restart it (not reload) to pick up a changed value.
+Zerops manages environment variables at two scopes (project and service) with strict build/runtime isolation. Variables are set via zerops.yml, import.yml `vault`, GUI, or API. **Project vars auto-inherit into every runtime service** — read them directly, no declaration. Managed services (databases, caches, search, queues, storage) do not receive project vars. **Cross-service (sibling) vars do NOT auto-inject under the default `envIsolation=service`** — reference a sibling's value explicitly as `${hostname_varname}` in `run.envVariables` (siblings are injected as bare `<host>_KEY` vars only when the owning service shares them via `none` or `service@<reader-hostname>`). **Every user-defined var, project or service, is plain or sensitive.** Sensitive values are encrypted at rest and plain text inside containers; the API returns `REDACTED` for them unless the request is in [sudo mode](#reading-sensitive-values) and the role isn't read-only. A running process keeps its boot-time env — restart it (not reload) to pick up a changed value. **Adding or editing more than one variable? Use the [.env file endpoint](#bulk-changes--use-the-env-file-endpoint)** — one request and one process for the whole set, never one request per variable.
 
 ---
 
@@ -11,20 +11,54 @@ Zerops manages environment variables at two scopes (project and service) with st
 
 | Scope | Defined In | Visibility | Editable Without Redeploy |
 |-------|-----------|------------|--------------------------|
-| **Project** | import.yml `project.envVariables`, GUI | All services (auto-inherited) | Yes (restart to apply) |
-| **Service secret** | import.yml `envSecrets`, GUI | Single service | Yes (restart to apply) |
+| **Project** (plain or sensitive) | import.yml `project.vault`, GUI, API | All runtime services (auto-inherited), not managed services | Yes (restart to apply) |
+| **Service custom / secret** (plain / sensitive) | import.yml `vault`, `dotEnvVariables`, `dotEnvSecrets`, GUI, API | Single service | Yes (restart to apply) |
 | **Service basic (build)** | zerops.yml `build.envVariables` | Build container only | No (redeploy required) |
 | **Service basic (runtime)** | zerops.yml `run.envVariables` | Runtime container only | No (redeploy required) |
 
+## Bulk Changes — Use the .env File Endpoint
+
+**When you add, edit or delete more than one variable, send them all at once as a `.env` file.** Each single-variable API call starts its own process, so setting 30 variables one by one starts 30 processes. The env file endpoint applies the whole set in **one request and one process**. In the GUI, the equivalent is the bulk editor on the **Environment variables** page.
+
+Look up the env file endpoints by operation ID in the [OpenAPI spec](https://api.app-prg1.zerops.io/api/rest/public/swagger/openapi.yml) (plain-text YAML; search it for the ID to get the current path and request body):
+
+| Scope | Read the file | Write the file |
+|-------|---------------|----------------|
+| **Service** | `GetUserDataEnvFileForEdit` | `UpdateUserDataEnvFile` |
+| **Project** | `GetProjectEnvFileForEdit` | `UpdateProjectEnvFile` |
+
+**The `sensitive` flag picks the group.** Variables are either sensitive or non-sensitive, and each request works on one group only. A `PUT` makes that group match the file exactly:
+
+- Keys in the file are **upserted** (created or updated).
+- Keys in the group that are **not in the file are deleted**.
+- A key that already exists in the **other** group makes the request **fail**.
+
+Workflow:
+
+1. `GET` the current file for the group (`sensitive=true` or `false`). It comes back in exactly the form the `PUT` accepts. Reading sensitive values requires sudo mode.
+2. Edit the file: add, change or remove `KEY=value` lines.
+3. `PUT` the whole file back with the same `sensitive` value:
+
+```json
+{
+  "envFile": "APP_KEY=abc123\nDB_PASSWORD=secure123\nMAIL_HOST=smtp.example.com",
+  "sensitive": true
+}
+```
+
+4. Wait for the single returned process, then restart the affected services once.
+
+**DO NOT** loop over variables and call the single-variable endpoint for each one. **DO NOT** `PUT` only the new or changed keys: every key of the group left out of the file is deleted. Use the single-variable endpoints only when changing exactly one variable. When creating services, set the variables in import.yml with `vault`, `dotEnvVariables` or `dotEnvSecrets` (see [Import: vault and .env keys](#dotenvsecrets)).
+
 ## Variable Precedence
 
-Total order for the bare key (highest wins): **system/platform > yaml-baked `run.envVariables` > service secret/userData > project**.
+Total order for the bare key (highest wins): **system/platform > yaml-baked `run.envVariables` > service custom/secret var > project**.
 
-1. **yaml-baked `run.envVariables` owns its key** — a service secret/userData set on the same key is **rejected** (`userDataDuplicateKey`); the two never coexist. To change a yaml-baked value, edit `zerops.yml` and redeploy.
+1. **yaml-baked `run.envVariables` owns its key** — a service custom or secret var set on the same key is **rejected** (`userDataDuplicateKey`); the two never coexist. To change a yaml-baked value, edit `zerops.yml` and redeploy.
 2. **Service-level** wins over **project-level**.
 3. Build and runtime are **separate environments** -- same key can have different values in each.
 
-**DO NOT** set a secret/service var on a key already declared in `run.envVariables` — the platform rejects it. The yaml var owns the key; edit the yaml and redeploy instead.
+**DO NOT** set a custom or secret service var on a key already declared in `run.envVariables` — the platform rejects it. The yaml var owns the key; edit the yaml and redeploy instead.
 
 ## Build/Runtime Isolation
 
@@ -79,7 +113,7 @@ Cross-service references (`${hostname_varname}`) are **resolved at container sta
 
 | Rule | Behavior |
 |------|----------|
-| `service` (default) | **Siblings are isolated.** A service sees only its own vars + project vars + the explicit `${hostname_varname}` refs it declares in `run.envVariables`. Managed-service connection vars also require an explicit ref. |
+| `service` (default) | **Siblings are isolated.** A service sees only its own vars + project vars (runtime services only) + the explicit `${hostname_varname}` refs it declares in `run.envVariables`. Managed-service connection vars also require an explicit ref. |
 | `none` | Every service sees this service's vars as bare `<host>_KEY` OS env vars. Broad — prefer `service@name` for new projects. |
 | `service@name` | The service with hostname `name` additionally sees this service's vars as bare `<host>_KEY` vars. |
 | `-service@name` | The service with hostname `name` never sees this service's vars, even when `none` is present. |
@@ -103,7 +137,11 @@ services:
 
 ## Project Variables -- Auto-Inherited
 
-Project variables are **automatically available in every service, in both runtime AND build containers** — injected as OS env vars at container start. From application code, read them directly (`process.env.API_URL`). From zerops.yaml, reference them by name with `${VAR_NAME}` — **no `RUNTIME_` prefix** (that prefix is only for lifting a service's own runtime var into its build context).
+Project variables are **automatically available in every runtime service, in both runtime AND build containers** — injected as OS env vars at container start.
+
+**Managed services do NOT receive project variables**: PostgreSQL, MariaDB, MySQL, ClickHouse, Valkey, Kafka, NATS, Elasticsearch, Meilisearch, Typesense, Qdrant, Object Storage and SeaweedFS. Their own vars, `${hostname_varname}` references to other services' vars, and `envIsolation` work as usual.
+
+In runtime services, read them directly from application code (`process.env.API_URL`). From zerops.yaml, reference them by name with `${VAR_NAME}` — **no `RUNTIME_` prefix** (that prefix is only for lifting a service's own runtime var into its build context).
 
 **In shell commands** (buildCommands, initCommands, start) project vars are directly readable:
 ```yaml
@@ -159,24 +197,60 @@ project:
 
 The frontend consumes `API_URL` via plain `${API_URL}` in `build.envVariables` (baked into the bundle at compile time). The API consumes `FRONTEND_URL` via plain `${FRONTEND_URL}` in `run.envVariables` (CORS allow-list). Set the same names on the workspace project via `zerops_env project=true action=set` after provision.
 
-## Secret Variables
+## Secret (Sensitive) Variables
 
-- Defined via GUI, import.yml `envSecrets`, or `dotEnvSecrets`
-- **Read is privilege-gated** -- masked in GUI; via API an admin/write token returns the value verbatim, a read-only token returns `REDACTED` (keyed on `sensitive=true`). In-container the value is plaintext (the app needs it). Project-level `sensitive=true` does NOT persist — only service-level is a true secret surface.
+- **Every user-defined var, project or service, has a `sensitive` flag.** Sensitive = "secret": encrypted at rest with a per-project key, masked in the GUI, plain text inside the containers (the app needs it). Plain = "custom" var.
+- Set via GUI (**Secret variables** section), import.yml (`vault` with `sensitive: true`, `dotEnvSecrets`), or API (`sensitive: true`). **`sensitive` defaults to `false` in every API request body** — omit it and the var is stored plain.
+- A sensitive **system** var (e.g. a generated database password) cannot be changed to plain.
 - Can be updated without redeploy, but the service **must be restarted** to pick it up.
 - A yaml-baked `run.envVariables` key and a secret on the **same key cannot coexist** — the platform rejects the secret with `userDataDuplicateKey`. The yaml owns the key; edit the yaml and redeploy to change it.
 
-### dotEnvSecrets
+### Reading Sensitive Values
 
-Import secrets in `.env` format within import.yml:
+Endpoints below are named by operation ID; search the [OpenAPI spec](https://api.app-prg1.zerops.io/api/rest/public/swagger/openapi.yml) for the ID to get the current path.
+
+- List and detail endpoints return **`REDACTED`** for a sensitive value unless the request is in **sudo mode** AND the role is not read-only. The read-only role never gets the value.
+- Reveal one value: `GetUserDataSensitiveValue` (service var) or `GetProjectEnvSensitiveValue` (project var). Both require sudo mode.
+- Sudo mode: a GUI user enters it by re-authorizing. An API token has it only if created with `sudo: true`, and creating such a token itself requires sudo mode. **A token without sudo always gets `REDACTED`.**
+- Export (`ExportProject`, `ExportServiceStack`) writes sensitive entries as `value: REDACTED` unless called with `reveal=true` (sudo mode). The project env file endpoint (`GetProjectEnvFile`) takes the same `reveal` parameter.
+
+### API Request Bodies
+
+- Single-variable create and update (service and project vars) accept `sensitive` (default `false`). Responses include `sensitive`, `editable` and `internal`.
+- Project create: `envVariables` (plain) and `envSecrets` (sensitive), each an array of `{key, content}`.
+- Service create and trigger-pipeline: `envVarsFile` (plain) and `envSecretsFile` (sensitive), both `.env` text. `userDataEnvFile` is deprecated.
+- Env file read/write: see [Bulk Changes](#bulk-changes--use-the-env-file-endpoint).
+
+**DO NOT** re-import an export containing `value: REDACTED` — the literal string `REDACTED` is stored as the value. Export with `reveal=true` or fill the values in first.
+
+### Import: vault and .env Keys {#dotenvsecrets}
+
+Import.yml keys for env vars (project and service level unless noted):
+
 ```yaml
+#yamlPreprocessor=on
+project:
+  name: my-project
+  vault:
+    LOG_LEVEL: info                 # plain
 services:
   - hostname: app
-    dotEnvSecrets: |
-      APP_KEY=generated_value
+    type: nodejs@22
+    vault:
+      APP_KEY:                      # sensitive: block form, never inline {...}
+        value: <@generateRandomString(<32>)>
+        sensitive: true
+      PORT_OFFSET: 10               # unquoted numbers/booleans are accepted
+    dotEnvSecrets: |                # service level only, all entries sensitive
       DB_PASSWORD=secure123
+    dotEnvVariables: |              # service level only, all entries plain
+      MAIL_HOST=smtp.example.com
 ```
-All entries become secret variables. Requires `#zeropsPreprocessor=on` if using generator functions.
+
+- A `vault` entry is either `KEY: value` (plain) or an object with only `value` and `sensitive`. **Any other key in the object is rejected** — a typo like `sensitve` fails the import, so a secret is never silently stored as plain.
+- **Write sensitive entries in block form, never inline `{ value: ..., sensitive: true }`.** Preprocessor functions can contain commas and brackets that break inline YAML.
+- `envVariables` and `envSecrets` are **deprecated** at both levels but still accepted. Export always writes `vault`.
+- Requires `#yamlPreprocessor=on` if using generator functions.
 
 ## envReplace -- File-Level Substitution
 
@@ -212,4 +286,4 @@ An env-store change (secret or project) propagates to the container in ~5–10s 
 
 ## System-Generated Variables
 
-Zerops auto-generates variables per service (e.g., `hostname`, `PATH`, DB connection strings). Some are **hard-reserved** and rejected if you try to set them — `PATH` (uppercase) returns `userDataUseOfSystemKey` in any `envVariables` block. Overridable platform vars include `envIsolation` / `sshIsolation` / `zeropsSubdomainHost` (and the CDN URLs) — but never `PATH`. Reference any of them from another service with an explicit `${hostname_varname}`.
+Zerops auto-generates variables per service (e.g., `hostname`, `PATH`, DB connection strings). Some are **hard-reserved** and rejected if you try to set them — `PATH` returns `userDataUseOfSystemKey` in any `envVariables` block. **System keys and the `ZEROPS_` prefix are matched case-insensitively**, so `path` and `zerops_foo` are rejected too. `config` is reserved for both project and service variables. `port` is not reserved on runtime services. Overridable platform vars include `envIsolation` / `sshIsolation` / `zeropsSubdomainHost` (and the CDN URLs) — but never `PATH`. Reference any of them from another service with an explicit `${hostname_varname}`.
